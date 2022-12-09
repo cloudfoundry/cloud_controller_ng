@@ -2073,6 +2073,7 @@ RSpec.describe 'Apps' do
         desired_state: 'STOPPED'
     )
     }
+    let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
     let(:stack) { VCAP::CloudController::Stack.make(name: 'redhat') }
 
     let(:update_request) do
@@ -2172,6 +2173,7 @@ RSpec.describe 'Apps' do
     it 'updates an app' do
       space.organization.add_user(user)
       space.add_developer(user)
+      expect_any_instance_of(VCAP::CloudController::Diego::Runner).to_not receive(:update_metric_tags)
       patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
@@ -2216,6 +2218,22 @@ RSpec.describe 'Apps' do
         }
       }
       expect(event.metadata['request']).to eq(metadata_request)
+    end
+
+    context 'when the app has a process that is started' do
+      let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+
+      before do
+        app_model.desired_state = VCAP::CloudController::ProcessModel::STARTED
+      end
+
+      it 'notifies diego that an app has been renamed' do
+        space.organization.add_user(user)
+        space.add_developer(user)
+        expect_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:update_metric_tags)
+        patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
+        expect(last_response.status).to eq(200)
+      end
     end
 
     context 'permissions for updating an app' do

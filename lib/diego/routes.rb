@@ -9,7 +9,7 @@ module Diego
     DESIRE_LRP                   = '/v1/desired_lrp/desire.r2'.freeze
     DESIRED_LRP_BY_PROCESS_GUID  = '/v1/desired_lrps/get_by_process_guid.r2'.freeze
     DESIRED_LRP_SCHEDULING_INFOS = '/v1/desired_lrp_scheduling_infos/list'.freeze
-    UPDATE_DESIRED_LRP           = '/v1/desired_lrp/update'.freeze
+    UPDATE_DESIRED_LRP           = '/v1/desired_lrp/update.r1'.freeze
     REMOVE_DESIRED_LRP           = '/v1/desired_lrp/remove'.freeze
     RETIRE_ACTUAL_LRP            = '/v1/actual_lrps/retire'.freeze
     ACTUAL_LRPS                  = '/v1/actual_lrps/list'.freeze

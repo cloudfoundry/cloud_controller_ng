@@ -36,9 +36,10 @@ module VCAP::CloudController
         routes[SSH_ROUTES_KEY] = ssh_route if ssh_route
 
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
-          instances:  process.instances,
-          annotation: process.updated_at.to_f.to_s,
-          routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
+          instances:   process.instances,
+          annotation:  process.updated_at.to_f.to_s,
+          metric_tags: metric_tags(process),
+          routes:      ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
         )
       end
 

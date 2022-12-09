@@ -23,6 +23,12 @@ module VCAP::CloudController
         with_logging('start') { messenger.send_desire_request(@process) }
       end
 
+      def update_metric_tags
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+
+        with_logging('update_metric_tags') { messenger.send_desire_request(@process) unless @process.staging? }
+      end
+
       def update_routes
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
 

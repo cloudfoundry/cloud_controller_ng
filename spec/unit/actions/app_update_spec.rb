@@ -3,9 +3,11 @@ require 'actions/app_update'
 
 module VCAP::CloudController
   RSpec.describe AppUpdate do
-    subject(:app_update) { AppUpdate.new(user_audit_info) }
+    subject(:app_update) { AppUpdate.new(user_audit_info, runners: runners) }
 
     let(:app_model) { AppModel.make(name: app_name) }
+    let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+    let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
@@ -13,6 +15,8 @@ module VCAP::CloudController
     let(:app_name) { 'original name' }
     let!(:ruby_buildpack) { Buildpack.make(name: 'ruby', stack: stack.name) }
     let(:stack) { Stack.make(name: 'SUSE') }
+    let(:runners) { instance_double(Runners, runner_for_process: runner) }
+    let(:runner) { instance_double(Diego::Runner, update_metric_tags: nil) }
 
     before do
       app_model.lifecycle_data.update(buildpacks: Array(buildpack), stack: Stack.default.name)
@@ -42,7 +46,7 @@ module VCAP::CloudController
         end
 
         context 'when the app_update is triggered by applying a manifest' do
-          subject(:app_update) { AppUpdate.new(user_audit_info, manifest_triggered: true) }
+          subject(:app_update) { AppUpdate.new(user_audit_info, manifest_triggered: true, runners: runners) }
 
           it 'sends manifest_triggered: true to the event repository' do
             expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
@@ -73,6 +77,57 @@ module VCAP::CloudController
           expect(app_model.name).to eq('new name')
           expect(app_model.lifecycle_data.buildpacks).to eq(['http://original.com'])
         end
+
+        context 'when app processes are started' do
+          let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+          let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+
+          it 'updates the metric tags for each process on the backend' do
+            app_update.update(app_model, message, lifecycle)
+
+            expect(runners).to have_received(:runner_for_process).with(web_process)
+            expect(runners).to have_received(:runner_for_process).with(worker_process)
+            expect(runner).to have_received(:update_metric_tags).twice
+          end
+
+          context 'when there is a CannotCommunicateWithDiegoError' do
+            before do
+              allow(runner).to receive(:update_metric_tags).and_invoke(
+                lambda { raise(Diego::Runner::CannotCommunicateWithDiegoError.new) },
+                lambda {}
+              )
+            end
+
+            it 'logs the error for each process and continues' do
+              expect_any_instance_of(Steno::Logger).to receive(:error)
+              expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
+
+              expect(runners).to have_received(:runner_for_process).with(web_process)
+              expect(runners).to have_received(:runner_for_process).with(worker_process)
+            end
+          end
+        end
+
+        context 'when app processes are stopped' do
+          let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
+          let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
+
+          it 'updates the apps name' do
+            expect(app_model.name).to eq('original name')
+
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.name).to eq('new name')
+          end
+
+          it 'does not update the metric tags' do
+            app_update.update(app_model, message, lifecycle)
+
+            expect(runners).to_not have_received(:runner_for_process)
+            expect(runner).to_not have_received(:update_metric_tags)
+          end
+        end
       end
 
       describe 'updating lifecycle' do
@@ -96,6 +151,7 @@ module VCAP::CloudController
           expect(app_model.name).to eq('original name')
           expect(app_model.lifecycle_data.buildpacks).to eq(['http://new-buildpack.url', 'ruby'])
           expect(app_model.lifecycle_data.stack).to eq(stack.name)
+          expect(runner).to_not have_received(:update_metric_tags)
         end
 
         context 'when the lifecycle is invalid' do
