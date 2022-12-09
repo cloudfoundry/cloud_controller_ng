@@ -73,6 +73,7 @@ module VCAP::CloudController
                    credentials = item.credentials
                    cert = credentials&.fetch('cert', '') || ''
                    key = credentials&.fetch('key', '') || ''
+                   ca = credentials&.fetch('ca', '') || ''
                    hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
                    app_guid = item[:app_guid]
 
@@ -83,6 +84,7 @@ module VCAP::CloudController
                    cert_item = injected_item[:binding_data_map][cert] ||= {
                      cert: cert,
                      key: key,
+                     ca: ca,
                      apps: []
                    }
                    cert_item[:apps].push({ hostname: hostname, app_id: app_guid })
