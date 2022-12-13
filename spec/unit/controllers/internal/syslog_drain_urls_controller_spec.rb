@@ -17,6 +17,7 @@ module VCAP::CloudController
         get '/internal/v4/syslog_drain_urls', '{}'
         expect(last_response).to be_successful
         expect(decoded_results.count).to eq(1)
+        expect(decoded_v5_available).to eq(true)
         expect(decoded_results).to include(
           {
             app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -34,6 +35,7 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -52,6 +54,7 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -70,6 +73,7 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -94,6 +98,7 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -116,6 +121,7 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
               app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
@@ -132,6 +138,7 @@ module VCAP::CloudController
         it 'does not include that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).not_to have_key(app_no_binding.guid)
         end
       end
@@ -142,6 +149,7 @@ module VCAP::CloudController
         it 'does not include that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).not_to have_key(app_no_drain.guid)
         end
       end
@@ -152,6 +160,7 @@ module VCAP::CloudController
         it 'includes the app without the empty syslog_drain_urls' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results).not_to have_key(app_empty_drain.guid)
         end
       end
@@ -170,6 +179,7 @@ module VCAP::CloudController
         it 'includes all of the syslog_drain_urls for that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_results[app_obj.guid]['drains'].length).to eq(52)
         end
       end
@@ -187,6 +197,7 @@ module VCAP::CloudController
           [1, 3].each do |size|
             get '/internal/v4/syslog_drain_urls', { 'batch_size' => size }
             expect(last_response).to be_successful
+            expect(decoded_v5_available).to eq(true)
             expect(decoded_results.size).to eq(size)
           end
         end
@@ -235,6 +246,7 @@ module VCAP::CloudController
             'next_id'    => token,
           }
           expect(decoded_results.size).to eq(0)
+          expect(decoded_v5_available).to eq(true)
           expect(decoded_response['next_id']).to be_nil
         end
 
@@ -251,6 +263,7 @@ module VCAP::CloudController
 
             saved_results = decoded_results.dup
             expect(saved_results.size).to eq(2)
+            expect(decoded_v5_available).to eq(true)
           end
         end
 
@@ -268,6 +281,7 @@ module VCAP::CloudController
 
             saved_results = decoded_results.dup
             expect(saved_results.size).to eq(2)
+            expect(decoded_v5_available).to eq(true)
           end
         end
       end
@@ -444,6 +458,10 @@ module VCAP::CloudController
 
     def decoded_next_id
       decoded_response.fetch('next_id')
+    end
+
+    def decoded_v5_available
+      decoded_response.fetch('v5_available')
     end
   end
 end
