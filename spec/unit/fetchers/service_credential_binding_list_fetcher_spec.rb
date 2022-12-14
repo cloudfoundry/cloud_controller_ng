@@ -12,7 +12,7 @@ module VCAP
 
       describe 'no bindings' do
         it 'returns an empty result' do
-          expect(fetcher.fetch(space_guids: :all, message: message).all).to eql([])
+          expect(fetcher.fetch(readable_spaces_query: nil, message: message).all).to eql([])
         end
       end
 
@@ -37,7 +37,7 @@ module VCAP
         let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_binding_details) }
 
         it 'eager loads the specified resources' do
-          dataset = fetcher.fetch(space_guids: :all, message: message, eager_loaded_associations: [:labels_sti_eager_load])
+          dataset = fetcher.fetch(readable_spaces_query: nil, message: message, eager_loaded_associations: [:labels_sti_eager_load])
 
           expect(dataset.all.first.associations.key?(:labels)).to be true
           expect(dataset.all.first.associations.key?(:annotations)).to be false
@@ -45,7 +45,7 @@ module VCAP
 
         context 'when getting everything' do
           it 'returns both key and app bindings' do
-            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
             to_hash = ->(b) {
               {
                 guid: b.guid,
@@ -63,11 +63,12 @@ module VCAP
         context 'when limiting to a space' do
           let(:other_space) { VCAP::CloudController::Space.make }
           let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
+          let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
           let!(:key_other_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance) }
           let!(:app_other_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance) }
 
           it 'returns only the bindings within that space' do
-            bindings = fetcher.fetch(space_guids: [space.guid], message: message).all
+            bindings = fetcher.fetch(readable_spaces_query: readable_spaces_query, message: message).all
             binding_guids = bindings.map(&:guid)
 
             expect(binding_guids).to contain_exactly(key_binding.guid, app_binding.guid)
@@ -82,7 +83,7 @@ module VCAP
           context 'service instance name' do
             let(:params) { { 'service_instance_names' => instance.name } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
             end
           end
@@ -90,7 +91,7 @@ module VCAP
           context 'service instance guid' do
             let(:params) { { 'service_instance_guids' => instance.guid } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
             end
           end
@@ -98,7 +99,7 @@ module VCAP
           context 'app name' do
             let(:params) { { 'app_names' => "#{app_binding.app.name},'some-other-name'" } }
             it 'can filter by app name' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid)
             end
           end
@@ -106,7 +107,7 @@ module VCAP
           context 'app guid' do
             let(:params) { { 'app_guids' => "#{app_binding.app.guid}, 'some-other-guid'" } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid)
             end
           end
@@ -114,7 +115,7 @@ module VCAP
           context 'binding name' do
             let(:params) { { 'names' => "#{key_binding.name},#{app_binding.name}" } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, app_binding.guid)
             end
           end
@@ -122,7 +123,7 @@ module VCAP
           context 'service plan names' do
             let(:params) { { 'service_plan_names' => instance.service_plan.name } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, key_binding.guid)
             end
           end
@@ -130,7 +131,7 @@ module VCAP
           context 'service plan guids' do
             let(:params) { { 'service_plan_guids' => instance.service_plan.guid } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, key_binding.guid)
             end
           end
@@ -138,7 +139,7 @@ module VCAP
           context 'service offering names' do
             let(:params) { { 'service_offering_names' => app_binding.service.name.to_s } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, key_binding.guid)
             end
           end
@@ -146,7 +147,7 @@ module VCAP
           context 'service offering guids' do
             let(:params) { { 'service_offering_guids' => app_binding.service.guid.to_s } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, key_binding.guid)
             end
           end
@@ -166,7 +167,7 @@ module VCAP
 
             let(:params) { { 'label_selector' => 'fruit=strawberry,tier in (backend,worker)' } }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, another_binding.guid)
             end
           end
@@ -176,7 +177,7 @@ module VCAP
               let(:params) { { 'type' => 'app' } }
 
               it 'returns the right result' do
-                bindings = fetcher.fetch(space_guids: :all, message: message).all
+                bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
                 expect(bindings.map(&:guid)).to contain_exactly(app_binding.guid, another_binding.guid)
               end
             end
@@ -185,14 +186,14 @@ module VCAP
               let(:params) { { type: 'key' } }
 
               it 'returns the right result' do
-                bindings = fetcher.fetch(space_guids: :all, message: message).all
+                bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
                 expect(bindings.map(&:guid)).to contain_exactly(key_binding.guid, another_key.guid)
               end
             end
           end
 
           it 'returns all if no filter is passed' do
-            bindings = fetcher.fetch(space_guids: :all, message: message).all
+            bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
             expect(bindings.count).to eq(4)
           end
 
@@ -201,7 +202,7 @@ module VCAP
               { service_instance_guids: ['fake-guid'], service_instance_names: ['fake-name'] }
             }
             it 'returns empty' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings).to be_empty
             end
           end
@@ -211,7 +212,7 @@ module VCAP
               { names: [key_binding.name, another_binding.name], service_instance_guids: [another_instance.guid] }
             }
             it 'returns the right result' do
-              bindings = fetcher.fetch(space_guids: :all, message: message).all
+              bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(another_binding.guid)
             end
           end
@@ -230,7 +231,7 @@ module VCAP
             }
           )
 
-          credential_binding = fetcher.fetch(space_guids: :all, message: message).first
+          credential_binding = fetcher.fetch(readable_spaces_query: nil, message: message).first
           last_operation = credential_binding.last_operation
 
           expect(last_operation).to be_present
