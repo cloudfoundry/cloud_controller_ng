@@ -36,15 +36,21 @@ module CloudFoundry
       end
 
       def space_supporter_and_only_space_supporter?(current_user)
-        return false unless current_user.org_manager_org_ids.limit(1).
-                            union(current_user.org_billing_manager_org_ids.limit(1), from_self: false).
-                            union(current_user.org_auditor_org_ids.limit(1), from_self: false).
-                            union(current_user.space_manager_space_ids.limit(1), from_self: false).
-                            union(current_user.space_auditor_space_ids.limit(1), from_self: false).
-                            union(current_user.space_developer_space_ids.limit(1), from_self: false).
-                            empty?
+        return false if VCAP::CloudController::User.
+                        where do
+                          Sequel.or(
+                            [
+                              [VCAP::CloudController::SpaceDeveloper.select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationManager.select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::SpaceManager.select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::SpaceAuditor.select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationAuditor.select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationBillingManager.select(1).where(user_id: current_user.id).exists, true]
+                            ]
+                          )
+                        end.any?
 
-        current_user.space_supporter_space_ids.limit(1).any?
+        VCAP::CloudController::SpaceSupporter.select(1).where(user_id: current_user.id).any?
       end
 
       def roles
