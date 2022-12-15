@@ -105,6 +105,31 @@ module VCAP::CloudController
               expect(runners).to have_received(:runner_for_process).with(web_process)
               expect(runners).to have_received(:runner_for_process).with(worker_process)
             end
+
+            it 'still modifies the app' do
+              expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
+              app_model.reload
+              expect(app_model.name).to eq('new name')
+            end
+          end
+
+          context 'when there is a different error' do
+            before do
+              allow(runner).to receive(:update_metric_tags).and_raise(RuntimeError, 'some-other-error')
+            end
+
+            it 'does not rescue the error' do
+              expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
+
+              expect(runners).to have_received(:runner_for_process).with(web_process)
+              expect(runners).to_not have_received(:runner_for_process).with(worker_process)
+            end
+
+            it 'still modifies the app' do
+              expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
+              app_model.reload
+              expect(app_model.name).to eq('new name')
+            end
           end
         end
 

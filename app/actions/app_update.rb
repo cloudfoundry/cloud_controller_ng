@@ -33,14 +33,6 @@ module VCAP::CloudController
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
 
-        if message.requested?(:name)
-          app.processes.each do |process|
-            @runners.runner_for_process(process).update_metric_tags if process.state == ProcessModel::STARTED
-          rescue Diego::Runner::CannotCommunicateWithDiegoError => e
-            @logger.error("failed communicating with diego backend: #{e.message}")
-          end
-        end
-
         Repositories::AppEventRepository.new.record_app_update(
           app,
           app.space,
@@ -48,6 +40,14 @@ module VCAP::CloudController
           message.audit_hash,
           manifest_triggered: @manifest_triggered
         )
+      end
+
+      if message.requested?(:name)
+        app.processes.each do |process|
+          @runners.runner_for_process(process).update_metric_tags if process.state == ProcessModel::STARTED
+        rescue Diego::Runner::CannotCommunicateWithDiegoError => e
+          @logger.error("failed communicating with diego backend: #{e.message}")
+        end
       end
 
       app
