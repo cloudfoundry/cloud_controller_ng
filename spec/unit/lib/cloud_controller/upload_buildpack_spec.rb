@@ -10,8 +10,8 @@ module VCAP::CloudController
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }
 
-    let(:sha_valid_zip) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip) }
-    let(:sha_valid_zip2) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip2) }
+    let(:sha_valid_zip) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip) }
+    let(:sha_valid_zip2) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip2) }
 
     let(:valid_zip_manifest_stack) { nil }
     let(:valid_zip) do

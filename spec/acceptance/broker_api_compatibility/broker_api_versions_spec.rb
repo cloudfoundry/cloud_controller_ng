@@ -21,7 +21,7 @@ RSpec.describe 'Broker API Versions' do
       'broker_api_v2.15_spec.rb' => 'c575fd37bc6dc8df4f773719ccef3288',
     }
   end
-  let(:digester) { Digester.new(algorithm: Digest::MD5) }
+  let(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5) }
 
   it 'verifies that there is a broker API test for each minor version' do
     stub_request(:get, 'http://broker-url/v2/catalog').

@@ -1267,8 +1267,8 @@ RSpec.describe 'Tasks' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-task' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
             }
           }
 

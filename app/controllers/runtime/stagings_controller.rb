@@ -153,7 +153,7 @@ module VCAP::CloudController
     def check_file_md5
       return if Rails.env.local?
 
-      digester = Digester.new(algorithm: Digest::MD5, type: :base64digest)
+      digester = Digester.new(algorithm: OpenSSL::Digest::MD5, type: :base64digest)
       file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
 

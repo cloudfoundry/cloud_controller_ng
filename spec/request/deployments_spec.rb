@@ -586,8 +586,8 @@ RSpec.describe 'Deployments' do
             'create-deployment' => {
               'api-version' => 'v3',
               'strategy' => 'rolling',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -605,9 +605,9 @@ RSpec.describe 'Deployments' do
             'rolled-back-app' => {
               'api-version' => 'v3',
               'strategy' => 'rolling',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
-              'revision-id' => Digest::SHA256.hexdigest(revision.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'revision-id' => OpenSSL::Digest::SHA256.hexdigest(revision.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).twice

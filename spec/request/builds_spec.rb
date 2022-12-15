@@ -325,9 +325,9 @@ RSpec.describe 'Builds' do
               'lifecycle' => 'buildpack',
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
               'stack' => 'cflinuxfs3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'build-id' => Digest::SHA256.hexdigest(created_build.guid),
-              'user-id' => Digest::SHA256.hexdigest(developer.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'build-id' => OpenSSL::Digest::SHA256.hexdigest(created_build.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid),
             }
           }
           expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))

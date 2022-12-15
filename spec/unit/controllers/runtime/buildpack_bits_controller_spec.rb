@@ -6,9 +6,9 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::BuildpackBitsController do
     let(:user) { make_user }
     let(:filename) { 'file.zip' }
-    let(:sha_valid_zip) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip) }
-    let(:sha_valid_zip2) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip2) }
-    let(:sha_valid_tar_gz) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_tar_gz) }
+    let(:sha_valid_zip) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip) }
+    let(:sha_valid_zip2) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip2) }
+    let(:sha_valid_tar_gz) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_tar_gz) }
 
     let(:valid_zip_manifest_tmpdir) { Dir.mktmpdir }
     let(:valid_zip_manifest) do

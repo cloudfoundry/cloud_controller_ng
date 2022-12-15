@@ -12,7 +12,7 @@ module VCAP::CloudController
     def upload_buildpack(buildpack, bits_file_path, new_filename)
       return false if buildpack.locked
 
-      sha256 = Digester.new(algorithm: Digest::SHA256).digest_path(bits_file_path)
+      sha256 = Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(bits_file_path)
       new_key = "#{buildpack.guid}_#{sha256}"
       missing_bits = buildpack.key && !buildpack_blobstore.exists?(buildpack.key)
 

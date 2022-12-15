@@ -233,8 +233,8 @@ RSpec.describe 'Apps' do
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'create-app' => {
                 'api-version' => 'v3',
-                'app-id' => Digest::SHA256.hexdigest(app_guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               }
             }.to_json
             expect(logger_spy).to have_received(:info).with(expected_json)
@@ -2260,8 +2260,8 @@ RSpec.describe 'Apps' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'update-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -2568,8 +2568,8 @@ RSpec.describe 'Apps' do
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'start-app' => {
                 'api-version' => 'v3',
-                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -2846,8 +2846,8 @@ RSpec.describe 'Apps' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'stop-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -2983,8 +2983,8 @@ RSpec.describe 'Apps' do
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'restart-app' => {
                 'api-version' => 'v3',
-                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -3399,7 +3399,7 @@ RSpec.describe 'Apps' do
               'origin' => 'buildpack',
               'memory-in-mb' => 300,
               'process-types' => ['web'],
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))

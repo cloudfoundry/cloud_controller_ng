@@ -16,7 +16,7 @@ module CloudController
 
           {
             sha1:   Digester.new.digest_path(complete_package_path),
-            sha256: Digester.new(algorithm: Digest::SHA256).digest_path(complete_package_path),
+            sha256: Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(complete_package_path),
           }
         end
       end

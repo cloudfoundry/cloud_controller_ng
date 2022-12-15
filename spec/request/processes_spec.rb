@@ -996,8 +996,8 @@ RSpec.describe 'Processes' do
               'disk-in-mb' => 20,
               'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
-              'app-id' => Digest::SHA256.hexdigest(process.app.guid),
-              'user-id' => Digest::SHA256.hexdigest(developer.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -1628,8 +1628,8 @@ RSpec.describe 'Processes' do
               'disk-in-mb' => 20,
               'log-rate-in-bytes-per-second' => 40,
               'process-type' => 'web',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(developer.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))

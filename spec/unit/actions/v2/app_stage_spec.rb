@@ -206,9 +206,9 @@ module VCAP::CloudController
                   'lifecycle' =>  'buildpack',
                   'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
                   'stack' =>  'my_stack',
-                  'app-id' =>  Digest::SHA256.hexdigest(process.app.guid),
-                  'build-id' =>  Digest::SHA256.hexdigest(process.latest_build.guid),
-                  'user-id' =>  Digest::SHA256.hexdigest('userguid'),
+                  'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+                  'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.latest_build.guid),
+                  'user-id' =>  OpenSSL::Digest.hexdigest('SHA256', 'userguid'),
                 }
               }
               expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
@@ -246,9 +246,9 @@ module VCAP::CloudController
                     'lifecycle' =>  'kpack',
                     'buildpacks' =>  [],
                     'stack' =>  nil,
-                    'app-id' =>  Digest::SHA256.hexdigest(process.app.guid),
-                    'build-id' =>  Digest::SHA256.hexdigest(process.latest_build.guid),
-                    'user-id' =>  Digest::SHA256.hexdigest('userguid'),
+                    'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+                    'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.latest_build.guid),
+                    'user-id' =>  OpenSSL::Digest.hexdigest('SHA256', 'userguid'),
                   }
                 }
                 expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))

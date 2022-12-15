@@ -1,5 +1,5 @@
-require 'digest'
 require 'json'
+require 'openssl'
 
 module VCAP::CloudController
   class TelemetryLogger
@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       def anonymize(entries)
-        entries.transform_values { |v| Digest::SHA256.hexdigest(v) }
+        entries.transform_values { |v| OpenSSL::Digest::SHA256.hexdigest(v) }
       end
     end
   end
