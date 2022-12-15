@@ -611,7 +611,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, "#{bbs_url}/v1/desired_lrp/update.r1").to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrp/update").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Lifecycle Response' do
@@ -620,7 +620,7 @@ module Diego
         response = client.update_desired_lrp(process_guid, lrp_update)
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
-        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update.r1").with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update").with(
                  body: Bbs::Models::UpdateDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made.once
@@ -637,7 +637,7 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, "#{bbs_url}/v1/desired_lrp/update.r1").to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrp/update").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
