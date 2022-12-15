@@ -22,6 +22,14 @@ module VCAP
         Thread.current[:vcap_request_id]
       end
 
+      def user_guid=(user_guid)
+        if user_guid.nil?
+          Steno.config.context.data.delete('user_guid')
+        else
+          Steno.config.context.data['user_guid'] = user_guid
+        end
+      end
+
       def b3_trace_id=(trace_id)
         Thread.current[:b3_trace_id] = trace_id
         if trace_id.nil?

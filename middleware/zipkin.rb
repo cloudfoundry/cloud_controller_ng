@@ -18,10 +18,12 @@ module CloudFoundry
           'X-B3-SpanId'  => env['HTTP_X_B3_SPANID']
         }
 
-        status, headers, body = @app.call(env)
-
-        ::VCAP::Request.b3_trace_id = nil
-        ::VCAP::Request.b3_span_id = nil
+        begin
+          status, headers, body = @app.call(env)
+        ensure
+          ::VCAP::Request.b3_trace_id = nil
+          ::VCAP::Request.b3_span_id = nil
+        end
 
         [status, headers.merge(zipkin_headers), body]
       end

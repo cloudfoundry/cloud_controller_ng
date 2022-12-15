@@ -32,6 +32,27 @@ module CloudFoundry
           end
         end
 
+        context 'clearing the request id' do
+          context 'and an error is raised when the request is passed' do
+            let(:error) { RuntimeError.new('oops') }
+            before do
+              allow(app).to receive(:call).and_raise(error)
+            end
+
+            it 'sets the request id to nil' do
+              expect { middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id') }.to raise_error(error)
+              expect(::VCAP::Request.current_id).to eq(nil)
+            end
+          end
+
+          context 'and no error is raised when the request is passed' do
+            it 'sets the request id to nil' do
+              middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+              expect(::VCAP::Request.current_id).to eq(nil)
+            end
+          end
+        end
+
         context 'when HTTP_X_VCAP_REQUEST_ID is passed in from outside' do
           it 'includes it in cf.request_id and appends a uuid to ensure uniqueness' do
             middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')

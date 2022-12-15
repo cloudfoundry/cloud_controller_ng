@@ -44,6 +44,12 @@ module CloudFoundry
               expect(passed_env['cf.user_name']).to eq('mrpotato')
             end
           end
+
+          it 'sets the user guid on the request and deletes it afterwards' do
+            expect(::VCAP::Request).to receive(:user_guid=).with('user-id-1')
+            expect(::VCAP::Request).to receive(:user_guid=).with(nil)
+            middleware.call(env)
+          end
         end
 
         context 'when given a UAA client token' do
@@ -56,6 +62,13 @@ module CloudFoundry
               expect(passed_env['cf.user_guid']).to eq('client-id-1')
               expect(passed_env['cf.user_name']).to eq('mrpotato')
             end
+          end
+
+          it 'sets the client id as the user guid on the request and deletes it afterwards' do
+            expect(::VCAP::Request).to receive(:user_guid=).with('client-id-1')
+            expect(::VCAP::Request).to receive(:user_guid=).with(nil)
+
+            middleware.call(env)
           end
         end
 
@@ -151,6 +164,18 @@ module CloudFoundry
                 'title' => 'CF-UaaUnavailable',
               )
             end
+          end
+        end
+
+        context 'when an error is raised after calling the next middleware' do
+          let(:error) { RuntimeError.new('oops') }
+          before do
+            allow(app).to receive(:call).and_raise(error)
+          end
+          it 'unsets the user_guid on the request' do
+            expect(::VCAP::Request).to receive(:user_guid=).with('user-id-1')
+            expect(::VCAP::Request).to receive(:user_guid=).with(nil)
+            expect { middleware.call(env) }.to raise_error(error)
           end
         end
       end
