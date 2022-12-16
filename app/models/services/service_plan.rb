@@ -85,14 +85,14 @@ module VCAP::CloudController
       def organization_visible(organization)
         filter(Sequel.|(
           { public: true },
-          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization) }
+          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization.id) }
         ).&(active: true))
       end
 
       def space_visible(space)
         filter(Sequel.|(
           { public: true },
-          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(space.organization) },
+          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(space.organization_id) },
           { id: ServicePlan.plan_ids_from_private_brokers_by_space(space) }
         ).&(active: true))
       end
@@ -115,10 +115,11 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_list_filter(user)
-      included_ids = ServicePlanVisibility.visible_private_plan_ids_for_user(user).
-                     concat(plan_ids_from_private_brokers(user))
-
-      Sequel.or({ public: true, service_plans__id: included_ids }).&(service_plans__active: true)
+      Sequel.or([
+        [:public, true],
+        [:service_plans__id, ServicePlanVisibility.visible_private_plan_ids_for_user(user)],
+        [:service_plans__id, plan_ids_from_private_brokers(user)]
+      ]).&(service_plans__active: true)
     end
 
     def self.user_visibility_show_filter(user)
@@ -127,27 +128,24 @@ module VCAP::CloudController
     end
 
     def self.plan_ids_from_private_brokers(user)
-      plan_ids_from_brokers(ServiceBroker.where(space_id: user.membership_space_ids))
+      plan_ids_for_space(user.membership_space_ids)
     end
 
     def self.plan_ids_from_private_brokers_by_space(space)
-      plan_ids_from_brokers(ServiceBroker.where(space_id: space.id))
+      plan_ids_for_space(space.id)
     end
 
-    def self.plan_ids_from_brokers(broker_ds)
-      broker_ds.join(:services, service_broker_id: :id).
+    def self.plan_ids_for_space(space_id)
+      ServiceBroker.where(space_id: space_id).
+        join(:services, service_broker_id: :id).
         join(:service_plans, service_id: :id).
-        map(&:id).flatten.uniq
+        select(:service_plans__id).distinct
     end
 
     def self.plan_ids_for_visible_service_instances(user)
-      plan_ids = []
-      user.spaces.each do |space|
-        space.service_instances.select(&:managed_instance?).each do |service_instance|
-          plan_ids << service_instance.service_plan_id
-        end
-      end
-      plan_ids.uniq
+      dataset.select(&:managed_instance?).
+        join(:service_instances, service_plan_id: :id, service_instances__space_id: user.membership_spaces.select(:id)).
+        select(:service_plans__id).distinct
     end
 
     def bindable?

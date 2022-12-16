@@ -193,7 +193,7 @@ module VCAP::CloudController
       end
 
       it 'returns plans from private service brokers in all the spaces the user has roles in' do
-        expect(ServicePlan.plan_ids_from_private_brokers(user)).to(match_array([service_plan_1.id, service_plan_2.id]))
+        expect(ServicePlan.plan_ids_from_private_brokers(user).select_map(:service_plans__id)).to(match_array([service_plan_1.id, service_plan_2.id]))
       end
 
       it "doesn't return plans for private services in spaces the user doesn't have roles in" do
@@ -201,7 +201,7 @@ module VCAP::CloudController
         service = Service.make(service_broker: broker)
         plan = ServicePlan.make(service: service, public: false)
 
-        expect(ServicePlan.plan_ids_from_private_brokers(user)).not_to include plan
+        expect(ServicePlan.plan_ids_from_private_brokers(user).select_map(:service_plans__id)).not_to include plan
       end
     end
 
@@ -230,14 +230,14 @@ module VCAP::CloudController
 
         context 'when the service instances are in spaces that the user has a role in' do
           it 'returns all plans regardless of active or public' do
-            expect(ServicePlan.plan_ids_for_visible_service_instances(user)).
+            expect(ServicePlan.plan_ids_for_visible_service_instances(user).select_map(:service_plans__id)).
               to match_array([service_plan.id, non_public_plan.id, inactive_plan.id])
           end
         end
 
         context 'when the service instances are in spaces that the user does NOT have a role in' do
           it 'does not return service plans associated with that service instance' do
-            expect(ServicePlan.plan_ids_for_visible_service_instances(user)).not_to include(other_plan.id)
+            expect(ServicePlan.plan_ids_for_visible_service_instances(user).select_map(:service_plans__id)).not_to include(other_plan.id)
           end
         end
       end
