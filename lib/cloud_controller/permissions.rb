@@ -156,6 +156,14 @@ class VCAP::CloudController::Permissions
     readable_space_guids_query.select_map(:guid)
   end
 
+  def readable_spaces_query
+    if can_read_globally?
+      raise 'must not be called for users that can read globally'
+    else
+      membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING)
+    end
+  end
+
   def readable_space_guids_query
     if can_read_globally?
       raise 'must not be called for users that can read globally'

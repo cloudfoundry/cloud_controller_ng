@@ -378,6 +378,16 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readables_space_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:authorized_spaces_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
+        expect(permissions.readable_spaces_query).to be(subquery)
+      end
+    end
+
     describe '#readables_space_guids_query' do
       it 'returns subquery from membership' do
         membership = instance_double(Membership)

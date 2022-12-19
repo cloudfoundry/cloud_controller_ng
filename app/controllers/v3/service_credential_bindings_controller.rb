@@ -335,7 +335,7 @@ class ServiceCredentialBindingsController < ApplicationController
     if permission_queryer.can_read_globally?
       nil
     else
-      permission_queryer.readable_space_guids_query
+      permission_queryer.readable_spaces_query
     end
   end
 
