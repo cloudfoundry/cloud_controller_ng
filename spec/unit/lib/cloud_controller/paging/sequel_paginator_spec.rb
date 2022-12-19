@@ -129,6 +129,25 @@ module VCAP::CloudController
         expect(paginated_result.total).to be > 1
       end
 
+      context 'calls DB twice if table is in exclude-from-window-function-with-pagination list' do
+        let(:dataset) { VCAP::CloudController.const_get(VCAP::CloudController::Event.to_s.classify).dataset }
+        let!(:event_1) { VCAP::CloudController.const_get(VCAP::CloudController::Event.to_s.classify).make(guid: '1', created_at: '2022-12-20T10:47:01Z') }
+        let!(:event_2) { VCAP::CloudController.const_get(VCAP::CloudController::Event.to_s.classify).make(guid: '2', created_at: '2022-12-20T10:47:02Z') }
+        let!(:event_3) { VCAP::CloudController.const_get(VCAP::CloudController::Event.to_s.classify).make(guid: '3', created_at: '2022-12-20T10:47:03Z') }
+        let!(:event_4) { VCAP::CloudController.const_get(VCAP::CloudController::Event.to_s.classify).make(guid: '4', created_at: '2022-12-20T10:47:04Z') }
+
+        it 'does not use window function for events table' do
+          options = { page: page, per_page: per_page }
+          pagination_options = PaginationOptions.new(options)
+
+          paginated_result = nil
+          expect {
+            paginated_result = paginator.get_page(dataset, pagination_options)
+          }.to have_queried_db_times(/select/i, 2)
+          expect(paginated_result.total).to be > 1
+        end
+      end
+
       it 'returns correct total results for distinct result' do
         options = { page: page, per_page: per_page, order_by: :key_name }
         pagination_options = PaginationOptions.new(options)
