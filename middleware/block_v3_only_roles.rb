@@ -36,7 +36,7 @@ module CloudFoundry
       end
 
       def space_supporter_and_only_space_supporter?(current_user)
-        return false if VCAP::CloudController::User.db.select(1).
+        return false if VCAP::CloudController::User.
                         where do
                           Sequel.or(
                             [
