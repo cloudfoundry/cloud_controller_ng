@@ -36,20 +36,21 @@ module CloudFoundry
       end
 
       def space_supporter_and_only_space_supporter?(current_user)
-        user_roles =
-          VCAP::CloudController::SpaceManager.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_MANAGER, :type)).limit(1).where(user_id: current_user.id).
-          union(VCAP::CloudController::SpaceDeveloper.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_DEVELOPER, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::SpaceAuditor.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_AUDITOR, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::SpaceSupporter.select(Sequel.as(VCAP::CloudController::RoleTypes::SPACE_SUPPORTER, :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationManager.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER,
-                                                                            :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationBillingManager.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER,
-                                                                                   :type)).limit(1).where(user_id: current_user.id)).
-          union(VCAP::CloudController::OrganizationAuditor.select(Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR,
-                                                                            :type)).limit(1).where(user_id: current_user.id)).
-          all
+        return false if VCAP::CloudController::User.
+                        where do
+                          Sequel.or(
+                            [
+                              [VCAP::CloudController::SpaceDeveloper.limit(1).select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationManager.limit(1).select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::SpaceManager.limit(1).select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::SpaceAuditor.limit(1).select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationAuditor.limit(1).select(1).where(user_id: current_user.id).exists, true],
+                              [VCAP::CloudController::OrganizationBillingManager.limit(1).select(1).where(user_id: current_user.id).exists, true]
+                            ]
+                          )
+                        end.any?
 
-        user_roles.count == 1 && user_roles[0][:type] == 'space_supporter'
+        VCAP::CloudController::SpaceSupporter.where(user_id: current_user.id).any?
       end
 
       def roles
