@@ -10,7 +10,7 @@ module VCAP
         Sequel.as(:service_keys__id, :id),
         Sequel.as(:service_keys__guid, :guid),
         Sequel.as(Types::SERVICE_KEY, :type),
-        Sequel.as(:spaces__guid, :space_guid),
+        Sequel.as(:service_instances__space_id, :space_id),
         Sequel.as(:service_keys__created_at, :created_at),
         Sequel.as(:service_keys__updated_at, :updated_at),
         Sequel.as(:service_keys__name, :name),
@@ -36,15 +36,13 @@ module VCAP
         :service_plans, id: Sequel[:service_instances][:service_plan_id]
       ).left_join(
         :services, id: Sequel[:service_plans][:service_id]
-      ).join(
-        :spaces, id: Sequel[:service_instances][:space_id]
       ).freeze
 
       SERVICE_BINDING_VIEW = Sequel::Model(:service_bindings).select(
         Sequel.as(:service_bindings__id, :id),
         Sequel.as(:service_bindings__guid, :guid),
         Sequel.as(Types::SERVICE_BINDING, :type),
-        Sequel.as(:spaces__guid, :space_guid),
+        Sequel.as(:spaces__id, :space_id),
         Sequel.as(:service_bindings__created_at, :created_at),
         Sequel.as(:service_bindings__updated_at, :updated_at),
         Sequel.as(:service_bindings__name, :name),
