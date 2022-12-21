@@ -133,6 +133,10 @@ class Sequel::Dataset
     end
   end
 
+  def empty_from_sql
+    ' FROM DUAL' if self.db.database_type == :mysql
+  end
+
   @unique_names_in_subquery = nil
 
   class << self
