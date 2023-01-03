@@ -11,6 +11,13 @@ module VCAP::CloudController
 
       def perform
         handler.perform
+      rescue StandardError => e
+        if e.message.size > 2**15
+          message = e.message.truncate_bytes(2**14) + '...This message has been truncated due to size. To read the full message, check stderr'
+          exception = e.class.new(message)
+          exception.set_backtrace(e.backtrace)
+        end
+        raise exception || e
       end
 
       def after(job)
