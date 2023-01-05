@@ -29,6 +29,7 @@ module VCAP::CloudController
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
       self.log_rate_limit   ||= Config.config.get(:default_app_log_rate_limit_in_bytes_per_second)
       self.metadata         ||= {}
+      self.graceful_shutdown||= organization.quota_definition.graceful_shutdown
     end
 
     NO_APP_PORT_SPECIFIED = -1
