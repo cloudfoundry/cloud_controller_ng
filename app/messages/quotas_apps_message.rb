@@ -3,7 +3,7 @@ require 'messages/validators'
 
 module VCAP::CloudController
   class QuotasAppsMessage < BaseMessage
-    register_allowed_keys [:total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, :log_rate_limit_in_bytes_per_second]
+    register_allowed_keys [:total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, :log_rate_limit_in_bytes_per_second, :graceful_shutdown]
 
     validates_with NoAdditionalKeysValidator
 
@@ -26,5 +26,9 @@ module VCAP::CloudController
     validates :log_rate_limit_in_bytes_per_second,
       numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_BIGINT },
       allow_nil: true
+    
+    validates :graceful_shutdown,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_DB_INT },
+      allow_nil: true      
   end
 end

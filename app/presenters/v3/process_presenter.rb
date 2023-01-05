@@ -28,6 +28,7 @@ module VCAP::CloudController
             memory_in_mb:     process.memory,
             disk_in_mb:       process.disk_quota,
             log_rate_limit_in_bytes_per_second: process.log_rate_limit,
+            graceful_shutdown: process.graceful_shutdown,
             health_check: {
               type: process.health_check_type,
               data: health_check_data

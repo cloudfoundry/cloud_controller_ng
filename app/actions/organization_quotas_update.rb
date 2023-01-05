@@ -24,6 +24,7 @@ module VCAP::CloudController
         quota.app_instance_limit = app_instance_limit(message) if message.apps_limits_message.requested? :total_instances
         quota.app_task_limit = app_task_limit(message) if message.apps_limits_message.requested? :per_app_tasks
         quota.log_rate_limit = log_rate_limit(message) if message.apps_limits_message.requested? :log_rate_limit_in_bytes_per_second
+        quota.graceful_shutdown = graceful_shutdown(message) if message.apps_limits_message.requested? :graceful_shutdown
 
         quota.total_services = total_services(message) if message.services_limits_message.requested? :total_service_instances
         quota.total_service_keys = total_service_keys(message) if message.services_limits_message.requested? :total_service_keys
@@ -69,6 +70,10 @@ module VCAP::CloudController
 
     def self.log_rate_limit(message)
       default_if_nil(message.log_rate_limit_in_bytes_per_second, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.graceful_shutdown(message)
+      default_if_nil(message.graceful_shutdown, QuotaDefinition::DEFAULT_GRACEFUL_SHUTDOWN)
     end
 
     def self.total_services(message)
