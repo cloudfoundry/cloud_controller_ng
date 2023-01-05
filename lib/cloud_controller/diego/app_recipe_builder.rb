@@ -98,6 +98,7 @@ module VCAP::CloudController
           ),
           image_username:                   process.desired_droplet.docker_receipt_username,
           image_password:                   process.desired_droplet.docker_receipt_password,
+          graceful_shutdown:                process.graceful_shutdown,
         }.compact
       end
 
