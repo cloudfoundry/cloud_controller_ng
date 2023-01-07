@@ -78,20 +78,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there is kpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack) }
-        let!(:lifecycle_data) { KpackLifecycleDataModel.make(droplet: droplet_model) }
-
-        before do
-          droplet_model.kpack_lifecycle_data = lifecycle_data
-          droplet_model.save
-        end
-
-        it 'returns the string "kpack"' do
-          expect(droplet_model.lifecycle_type).to eq('kpack')
-        end
-      end
-
       context 'when there is no lifecycle data associated to the droplet' do
         let(:droplet_model) { DropletModel.make(:docker) }
 

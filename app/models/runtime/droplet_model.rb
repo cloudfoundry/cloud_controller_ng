@@ -89,12 +89,8 @@ module VCAP::CloudController
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
-    def kpack?
-      lifecycle_type == KpackLifecycleDataModel::LIFECYCLE_TYPE
-    end
-
     def has_docker_image?
-      docker? || kpack?
+      docker?
     end
 
     def docker_ports
@@ -150,7 +146,6 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
-      return KpackLifecycleDataModel::LIFECYCLE_TYPE if kpack_lifecycle_data
 
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end

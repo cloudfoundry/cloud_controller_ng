@@ -4,8 +4,6 @@ module VCAP::CloudController
   class KpackLifecycleDataModel < Sequel::Model(:kpack_lifecycle_data)
     include Serializer
 
-    LIFECYCLE_TYPE = Lifecycles::KPACK
-
     many_to_one :app,
                 class: '::VCAP::CloudController::AppModel',
                 key: :app_guid,

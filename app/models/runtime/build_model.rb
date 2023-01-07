@@ -50,13 +50,8 @@ module VCAP::CloudController
 
     def lifecycle_type
       return Lifecycles::BUILDPACK if buildpack_lifecycle_data
-      return Lifecycles::KPACK if kpack_lifecycle_data
 
       Lifecycles::DOCKER
-    end
-
-    def kpack_lifecycle?
-      lifecycle_type == Lifecycles::KPACK
     end
 
     def buildpack_lifecycle?

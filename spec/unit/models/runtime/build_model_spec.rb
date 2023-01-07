@@ -40,24 +40,6 @@ module VCAP::CloudController
         expect(build_model.lifecycle_type).to eq('buildpack')
       end
 
-      context 'kpack' do
-        let(:kpack_lifecycle_data) do
-          KpackLifecycleDataModel.make(
-            build: build_model,
-          )
-        end
-
-        before do
-          build_model.buildpack_lifecycle_data = nil
-          build_model.kpack_lifecycle_data = kpack_lifecycle_data
-          build_model.save
-        end
-
-        it 'returns the string "kpack" if kpack_lifecycle_data is on the model' do
-          expect(build_model.lifecycle_type).to eq('kpack')
-        end
-      end
-
       it 'returns the string "docker" if there is no buildpack_lifecycle_data is on the model' do
         build_model.buildpack_lifecycle_data = nil
         build_model.save

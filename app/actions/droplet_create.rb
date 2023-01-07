@@ -63,20 +63,6 @@ module VCAP::CloudController
       droplet
     end
 
-    def create_kpack_droplet(build)
-      droplet = droplet_from_build(build)
-
-      DropletModel.db.transaction do
-        droplet.save
-        droplet.kpack_lifecycle_data = build.kpack_lifecycle_data
-      end
-
-      droplet.reload
-      Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
-      record_audit_event(droplet, build.package, user_audit_info_from_build(build))
-      droplet
-    end
-
     private
 
     def droplet_from_build(build)

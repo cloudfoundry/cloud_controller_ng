@@ -174,15 +174,9 @@ module VCAP::CloudController::Validators
       default_lifecycle = VCAP::CloudController::Config.config.get(:default_app_lifecycle)
       lifecycle_type = record.lifecycle_type || default_lifecycle
 
-      if default_lifecycle == lifecycles::KPACK && lifecycle_type == lifecycles::BUILDPACK
-        record.errors.add(:lifecycle_type, message: 'this installation does not support the "buildpack" lifecycle, try "kpack" instead')
-        return
-      end
-
       data_message_class_table = {
         lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
         lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
-        lifecycles::KPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
       }
 
       lifecycle_data_message_class = data_message_class_table[lifecycle_type]

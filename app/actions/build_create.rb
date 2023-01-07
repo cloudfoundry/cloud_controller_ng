@@ -96,7 +96,6 @@ module VCAP::CloudController
 
     def requested_buildpacks_disabled!(lifecycle)
       return if lifecycle.type == Lifecycles::DOCKER
-      return if lifecycle.type == Lifecycles::KPACK
 
       admin_buildpack_records = lifecycle.buildpack_infos.map(&:buildpack_record).compact
       disabled_buildpacks = admin_buildpack_records.reject(&:enabled)
