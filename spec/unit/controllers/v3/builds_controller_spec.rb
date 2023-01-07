@@ -32,7 +32,7 @@ RSpec.describe BuildsController, type: :controller do
       set_current_user_as_role(role: 'admin', org: organization, space: space, user: user)
       expect(VCAP::CloudController::BuildListFetcher).to receive(:fetch_all).with(
         anything,
-        hash_including(eager_loaded_associations: [:labels, :annotations, :kpack_lifecycle_data, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
+        hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
       ).and_call_original
 
       get :index

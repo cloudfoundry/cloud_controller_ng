@@ -59,10 +59,6 @@ module VCAP::CloudController
 
     private
 
-    def k8s_api_client
-      CloudController::DependencyLocator.instance.k8s_api_client
-    end
-
     def record_audit_event(app)
       Repositories::AppEventRepository.new.record_app_delete_request(
         app,
