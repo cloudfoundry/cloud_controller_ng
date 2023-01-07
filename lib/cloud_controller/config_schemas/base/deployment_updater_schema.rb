@@ -52,13 +52,6 @@ module VCAP::CloudController
               optional(:pbkdf2_hmac_iterations) => Integer
             },
 
-            opi: {
-              enabled: bool,
-              url: String,
-              opi_staging: bool,
-              optional(:experimental_enable_crds) => bool,
-            },
-
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
             maximum_app_disk_in_mb: Integer,

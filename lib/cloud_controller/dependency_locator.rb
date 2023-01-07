@@ -24,10 +24,6 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
-require 'cloud_controller/opi/apps_rest_client'
-require 'cloud_controller/opi/instances_client'
-require 'cloud_controller/opi/stager_client'
-require 'cloud_controller/opi/task_client'
 require 'cloud_controller/metrics/prometheus_updater'
 
 module CloudController
@@ -345,15 +341,7 @@ module CloudController
     private
 
     def build_stager_client
-      if config.get(:opi, :opi_staging)
-        build_opi_stager_client
-      else
-        build_bbs_stager_client
-      end
-    end
-
-    def build_opi_stager_client
-      ::OPI::StagerClient.new(config)
+      build_bbs_stager_client
     end
 
     def build_bbs_stager_client
@@ -371,15 +359,7 @@ module CloudController
     end
 
     def build_apps_client
-      if config.get(:opi, :enabled)
-        build_opi_apps_client
-      else
-        build_bbs_apps_client
-      end
-    end
-
-    def build_opi_apps_client
-      ::OPI::Client.new(config)
+      build_bbs_apps_client
     end
 
     def build_bbs_apps_client
@@ -387,15 +367,7 @@ module CloudController
     end
 
     def build_task_client
-      if config.get(:opi, :enabled)
-        build_opi_task_client
-      else
-        build_bbs_task_client
-      end
-    end
-
-    def build_opi_task_client
-      ::OPI::TaskClient.new(config, VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
+      build_bbs_task_client
     end
 
     def build_bbs_task_client
@@ -403,15 +375,7 @@ module CloudController
     end
 
     def build_instances_client
-      if config.get(:opi, :enabled)
-        build_opi_instances_client
-      else
-        build_bbs_instances_client
-      end
-    end
-
-    def build_opi_instances_client
-      ::OPI::InstancesClient.new(config)
+      build_bbs_instances_client
     end
 
     def build_bbs_instances_client

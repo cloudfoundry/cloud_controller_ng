@@ -512,149 +512,53 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#bbs_stager_client' do
-    context 'opi staging is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
-        expect(::OPI::StagerClient).to_not receive(:new)
-        locator.bbs_stager_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi staging is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal',
-            opi_staging: true
-          }
-        )
-      end
-
-      it 'uses opi' do
-        expect(VCAP::CloudController::Diego::BbsStagerClient).to_not receive(:new)
-        expect(::OPI::StagerClient).to receive(:new)
-        locator.bbs_stager_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
+      locator.bbs_stager_client
     end
   end
 
   describe '#bbs_apps_client' do
-    context 'opi is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsAppsClient).to receive(:new).with(diego_client, config)
-        expect(::OPI::Client).to_not receive(:new)
-        locator.bbs_apps_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(**{
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        }.merge(generate_test_kubeconfig))
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi apps client' do
-        expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-        expect(::OPI::Client).to receive(:new).with(locator.config)
-        locator.bbs_apps_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsAppsClient).to receive(:new).with(diego_client, config)
+      locator.bbs_apps_client
     end
   end
 
   describe '#build_instances_client' do
     let(:diego_client) { double }
-    context 'opi is disabled' do
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
-        expect(::OPI::InstancesClient).to_not receive(:new)
-        locator.bbs_instances_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        )
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi apps client' do
-        expect(VCAP::CloudController::Diego::BbsInstancesClient).to_not receive(:new)
-        expect(::OPI::InstancesClient).to receive(:new)
-        locator.bbs_instances_client
-      end
-
-      it 'uses the configured opi url' do
-        expect(::OPI::InstancesClient).to receive(:new).with(locator.config)
-        locator.bbs_instances_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
+      locator.bbs_instances_client
     end
   end
 
   describe '#bbs_task_client' do
-    context 'opi is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
-        expect(::OPI::TaskClient).to_not receive(:new)
-        locator.bbs_task_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        )
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi task client' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to_not receive(:new)
-        expect(::OPI::TaskClient).to receive(:new)
-        locator.bbs_task_client
-      end
-
-      it 'uses the configured opi url' do
-        expect(::OPI::TaskClient).to receive(:new).with(
-          locator.config,
-          VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
-        locator.bbs_task_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
+      locator.bbs_task_client
     end
   end
 end

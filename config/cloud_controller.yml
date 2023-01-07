@@ -307,13 +307,6 @@ diego:
     receive_timeout: 10
   pid_limit: 2048
 
-opi:
-  enabled: false
-  cc_uploader_url: "http://cc-uploader.service.cf.internal:9091"
-  experimental_enable_crds: false
-  url: http://opi.service.cf.internal
-  opi_staging: false
-
 #kubernetes:
 #  host_url: https://main.default.svc.cluster-domain.example
 #  service_account:
