@@ -122,10 +122,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   describe 'Standard endpoints' do
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
-
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
       TestConfig.override(diego: { staging: 'optional', running: 'optional' }, kubernetes: {})
     end
 

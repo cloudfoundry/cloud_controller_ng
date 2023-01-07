@@ -953,10 +953,8 @@ module VCAP::CloudController
         let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
         let!(:service_instance_guid) { service_instance.guid }
         let!(:user) { make_manager_for_org(org) }
-        let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
           stub_deprovision(service_instance, accepts_incomplete: true)
           set_current_user(user, admin: true)
           TestConfig.override(kubernetes: {})

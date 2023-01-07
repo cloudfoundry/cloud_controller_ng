@@ -4,8 +4,6 @@ require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
-require 'kubernetes/api_client'
-require 'kubernetes/route_resource_manager'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -26,7 +24,6 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
-require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/apps_rest_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
@@ -345,48 +342,6 @@ module CloudController
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
     end
 
-    def k8s_api_client
-      config = VCAP::CloudController::Config.config
-      build_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/kpack.io",
-        version: 'v1alpha1',
-        service_account_token: config.kubernetes_service_account_token,
-        ca_crt: config.kubernetes_ca_cert,
-      )
-
-      kpack_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/kpack.io",
-        version: 'v1alpha1',
-        service_account_token: config.kubernetes_service_account_token,
-        ca_crt: config.kubernetes_ca_cert,
-      )
-
-      route_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/networking.cloudfoundry.org",
-        version: 'v1alpha1',
-        service_account_token: config.kubernetes_service_account_token,
-        ca_crt: config.kubernetes_ca_cert,
-      )
-
-      eirini_kube_client = Kubernetes::KubeClientBuilder.build(
-        api_group_url: "#{config.kubernetes_host_url}/apis/eirini.cloudfoundry.org",
-        version: 'v1',
-        service_account_token: config.kubernetes_service_account_token,
-        ca_crt: config.kubernetes_ca_cert,
-      )
-
-      Kubernetes::ApiClient.new(
-        build_kube_client: build_kube_client,
-        kpack_kube_client: kpack_kube_client,
-        route_kube_client: route_kube_client,
-        eirini_kube_client: eirini_kube_client,
-      )
-    end
-
-    def route_resource_manager
-      Kubernetes::RouteResourceManager.new(k8s_api_client)
-    end
-
     private
 
     def build_stager_client
@@ -424,12 +379,7 @@ module CloudController
     end
 
     def build_opi_apps_client
-      opi_apps_client = ::OPI::Client.new(config)
-      if config.get(:opi, :experimental_enable_crds)
-        ::OPI::KubernetesClient.new(config, k8s_api_client, opi_apps_client)
-      else
-        opi_apps_client
-      end
+      ::OPI::Client.new(config)
     end
 
     def build_bbs_apps_client

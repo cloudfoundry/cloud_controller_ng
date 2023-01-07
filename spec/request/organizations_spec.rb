@@ -1317,10 +1317,8 @@ module VCAP::CloudController
         s.add_shared_space(space)
         s
       end
-      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
         AppModel.make(space: space)
         Route.make(space: space)
         org.add_user(associated_user)

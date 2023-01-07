@@ -1898,12 +1898,10 @@ RSpec.describe 'Apps' do
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
     let(:user_email) { nil }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
     it 'deletes an App' do
       space.organization.add_user(user)
       space.add_developer(user)
-      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
       delete "/v3/apps/#{app_model.guid}", nil, user_header
 
       expect(last_response.status).to eq(202)
@@ -1966,7 +1964,6 @@ RSpec.describe 'Apps' do
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
       end
       it_behaves_like 'resource with metadata' do
         let(:resource) { app_model }

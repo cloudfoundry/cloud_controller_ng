@@ -347,37 +347,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a kubernetes api is enabled' do
-        let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-        let(:params) do
-          [
-            {
-              app_guid: app_model.guid,
-              process_type: 'web',
-              app_port: 7000,
-            }
-          ]
-        end
-
-        before do
-          TestConfig.override(
-            kubernetes: {
-              host_url: 'some-kubernetes-host-url'
-            },
-          )
-          allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-          allow(route_resource_manager).to receive(:update_destinations)
-        end
-
-        it 'updates the route resource in kubernetes' do
-          expect {
-            subject.add(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(1)
-
-          expect(route_resource_manager).to have_received(:update_destinations).with(route)
-        end
-      end
-
       context 'protocols' do
         context 'http routes' do
           it 'saves http2 in the db' do
@@ -793,38 +762,6 @@ module VCAP::CloudController
           ).and change { RouteMappingModel.count }.by(0)
         end
       end
-
-      context 'when a kubernetes api is enabled' do
-        let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-
-        let(:params) do
-          [
-            {
-              app_guid: app_model.guid,
-              process_type: 'web',
-              app_port: 7000,
-            }
-          ]
-        end
-
-        before do
-          TestConfig.override(
-            kubernetes: {
-              host_url: 'some-kubernetes-host-url'
-            },
-          )
-          allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-          allow(route_resource_manager).to receive(:update_destinations)
-        end
-
-        it 'updates the route resource in kubernetes' do
-          expect {
-            subject.replace(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(0)
-
-          expect(route_resource_manager).to have_received(:update_destinations).with(route)
-        end
-      end
     end
 
     describe '#delete' do
@@ -934,28 +871,6 @@ module VCAP::CloudController
             subject.delete(RouteMappingModel.last, route, user_audit_info)
           }.not_to raise_error
           expect(RouteMappingModel.count).to eq(102)
-        end
-      end
-
-      context 'when a kubernetes api is enabled' do
-        let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-
-        before do
-          TestConfig.override(
-            kubernetes: {
-              host_url: 'some-kubernetes-host-url'
-            },
-          )
-          allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-          allow(route_resource_manager).to receive(:update_destinations)
-        end
-
-        it 'updates the route resource in kubernetes' do
-          expect {
-            subject.delete(existing_destination, route, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(-1)
-
-          expect(route_resource_manager).to have_received(:update_destinations).with(route)
         end
       end
     end

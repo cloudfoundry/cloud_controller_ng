@@ -1207,13 +1207,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
       let(:route) { Route.make }
-
-      before do
-        allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-        allow(route_resource_manager).to receive(:delete_route)
-      end
 
       it 'marks the apps routes as changed and sends an update to diego' do
         fake_route_handler_app1 = instance_double(ProcessRouteHandler)
@@ -1238,32 +1232,6 @@ module VCAP::CloudController
         expect(fake_route_handler_app2).to receive(:notify_backend_of_route_update)
 
         route.destroy
-      end
-
-      context 'when targeting a Kubernetes API' do
-        before do
-          TestConfig.override(
-            kubernetes: { host_url: 'https://kubernetes.example.com' }
-          )
-        end
-
-        it 'deletes the route resource in Kubernetes' do
-          route.destroy
-          expect(route_resource_manager).to have_received(:delete_route)
-        end
-      end
-
-      context 'when not targeting a Kubernetes API' do
-        before do
-          TestConfig.override(
-            kubernetes: {}
-          )
-        end
-
-        it 'does not delete the route resource in Kubernetes' do
-          route.destroy
-          expect(route_resource_manager).not_to have_received(:delete_route)
-        end
       end
 
       context 'with route bindings' do

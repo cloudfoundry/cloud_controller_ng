@@ -53,26 +53,6 @@ module VCAP::CloudController
           expect(process2_route_handler).to have_received(:update_route_information).with(perform_validation: false)
         end
 
-        describe 'when k8s is configured' do
-          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-          before do
-            TestConfig.override(
-              kubernetes: {
-                host_url: 'some-kubernetes-host-url'
-              },
-            )
-            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-            allow(route_resource_manager).to receive(:update_destinations)
-          end
-
-          it 'removes the destination from the mapped route' do
-            expect(route_mapping).to receive(:destroy).ordered
-            expect(route_resource_manager).to receive(:update_destinations).with(route).ordered
-
-            route_mapping_delete.delete(route_mapping)
-          end
-        end
-
         describe 'audit events' do
           it 'records an event for un mapping a route to an app' do
             route_mapping_delete.delete(route_mapping)

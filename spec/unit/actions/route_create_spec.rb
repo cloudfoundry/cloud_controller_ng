@@ -51,52 +51,6 @@ module VCAP::CloudController
 
           subject.create(message: message, space: space, domain: domain)
         end
-
-        context 'when targeting a Kubernetes API' do
-          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-          let!(:config) do
-            TestConfig.override(
-              kubernetes: {
-                  host_url: 'some-kubernetes-host-url'
-              },
-                )
-          end
-
-          before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-            allow(route_resource_manager).to receive(:create_route)
-          end
-
-          it 'creates a route resource in Kubernetes' do
-            expect {
-              route = subject.create(message: message, space: space, domain: domain)
-
-              expect(route_resource_manager).to have_received(:create_route).with(route)
-            }.to change { Route.count }.by(1)
-          end
-        end
-
-        context 'when not targeting a Kubernetes API' do
-          let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
-          let!(:config) do
-            TestConfig.override(
-              kubernetes: {},
-                )
-          end
-
-          before do
-            allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-            allow(route_resource_manager).to receive(:create_route)
-          end
-
-          it 'does not create a route resource in Kubernetes' do
-            expect {
-              subject.create(message: message, space: space, domain: domain)
-
-              expect(route_resource_manager).to_not have_received(:create_route)
-            }.to change { Route.count }.by(1)
-          end
-        end
       end
 
       context 'when given metadata' do

@@ -574,26 +574,7 @@ RSpec.describe CloudController::DependencyLocator do
       it 'uses the opi apps client' do
         expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
         expect(::OPI::Client).to receive(:new).with(locator.config)
-        expect(::OPI::KubernetesClient).to_not receive(:new)
         locator.bbs_apps_client
-      end
-
-      context 'experimental crds are enabled' do
-        before do
-          TestConfig.override(**{
-            opi: {
-              enabled: true,
-              experimental_enable_crds: true,
-              url: 'http://custom-opi-url.service.cf.internal'
-            }
-          }.merge(generate_test_kubeconfig))
-        end
-
-        it 'uses the opi kubernetes client' do
-          expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-          expect(::OPI::KubernetesClient).to receive(:new).with(locator.config, instance_of(Kubernetes::ApiClient), instance_of(::OPI::Client))
-          locator.bbs_apps_client
-        end
       end
     end
   end
@@ -674,55 +655,6 @@ RSpec.describe CloudController::DependencyLocator do
           VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
         locator.bbs_task_client
       end
-    end
-  end
-
-  describe '#k8s_api_client' do
-    before do
-      ca_file = Tempfile.new('k8s_node_ca.crt')
-      ca_file.write('my crt')
-      ca_file.close
-
-      token_file = Tempfile.new('token.token')
-      token_file.write('token')
-      token_file.close
-
-      TestConfig.override(**generate_test_kubeconfig)
-    end
-
-    it 'creates a k8s client from config' do
-      build_kube_client_arg = nil
-      kpack_kube_client_arg = nil
-      route_kube_client_arg = nil
-      eirini_kube_client_arg = nil
-      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:, eirini_kube_client:|
-        build_kube_client_arg = build_kube_client
-        kpack_kube_client_arg = kpack_kube_client
-        route_kube_client_arg = route_kube_client
-        eirini_kube_client_arg = eirini_kube_client
-      }
-
-      locator.k8s_api_client
-
-      expect(build_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(build_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(build_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
-
-      expect(kpack_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(kpack_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
-
-      expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(route_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
-
-      expect(eirini_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(eirini_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(eirini_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/eirini.cloudfoundry.org'
-    end
-
-    it 'always creates a new kpack client object from config' do
-      expect(locator.k8s_api_client).not_to eq(locator.k8s_api_client)
     end
   end
 end
