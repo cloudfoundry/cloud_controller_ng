@@ -5,16 +5,11 @@ require 'cloud_controller/backends/runners'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/backends/instances_reporters'
 require 'repositories/service_event_repository'
-require 'cloud_controller/config_schemas/kubernetes/api_schema'
 require 'cloud_controller/config_schemas/vms/api_schema'
-require 'cloud_controller/config_schemas/kubernetes/clock_schema'
 require 'cloud_controller/config_schemas/vms/clock_schema'
-require 'cloud_controller/config_schemas/kubernetes/migrate_schema'
 require 'cloud_controller/config_schemas/vms/migrate_schema'
 require 'cloud_controller/config_schemas/vms/route_syncer_schema'
-require 'cloud_controller/config_schemas/kubernetes/worker_schema'
 require 'cloud_controller/config_schemas/vms/worker_schema'
-require 'cloud_controller/config_schemas/kubernetes/deployment_updater_schema'
 require 'cloud_controller/config_schemas/vms/deployment_updater_schema'
 require 'cloud_controller/config_schemas/vms/rotate_database_key_schema'
 require 'utils/hash_utils'
@@ -22,9 +17,6 @@ require 'utils/hash_utils'
 module VCAP::CloudController
   class Config
     class InvalidConfigPath < StandardError
-    end
-
-    class KubernetesApiNotConfigured < StandardError
     end
 
     class << self
@@ -46,11 +38,9 @@ module VCAP::CloudController
       end
 
       def schema_class_for_context(context, config)
-        module_name = config.dig(:kubernetes, :host_url).present? ? 'Kubernetes' : 'Vms'
+        module_name = 'Vms'
         const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
       end
-
-      delegate :kubernetes_api_configured?, to: :config
 
       private
 
@@ -146,57 +136,11 @@ module VCAP::CloudController
       end
     end
 
-    def kubernetes_api_configured?
-      get(:kubernetes, :host_url).present?
-    rescue InvalidConfigPath
-      false
-    end
-
-    def kubernetes_host_url
-      ensure_k8s_api_configured!
-      get(:kubernetes, :host_url)
-    end
-
-    def kpack_config
-      ensure_k8s_api_configured!
-      get(:kubernetes, :kpack)
-    end
-
-    def kpack_builder_namespace
-      ensure_k8s_api_configured!
-      get(:kubernetes, :kpack, :builder_namespace)
-    end
-
-    def kubernetes_workloads_namespace
-      ensure_k8s_api_configured!
-      get(:kubernetes, :workloads_namespace)
-    end
-
-    def kubernetes_ca_cert
-      @kubernetes_ca_cert ||= begin
-        ensure_k8s_api_configured!
-        file = get(:kubernetes, :ca_file)
-        File.read(file)
-      end
-    end
-
-    def kubernetes_service_account_token
-      @kubernetes_service_account_token ||= begin
-        ensure_k8s_api_configured!
-        file = get(:kubernetes, :service_account, :token_file)
-        File.read(file)
-      end
-    end
-
     def package_image_registry_configured?
       !get(:packages, :image_registry).nil?
     end
 
     private
-
-    def ensure_k8s_api_configured!
-      raise KubernetesApiNotConfigured.new('No kubernetes API is configured') unless kubernetes_api_configured?
-    end
 
     def invalid_config_path!(keys)
       raise InvalidConfigPath.new(%("#{keys.join('.')}" is not a valid config key))

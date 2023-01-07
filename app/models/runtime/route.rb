@@ -235,8 +235,6 @@ module VCAP::CloudController
     end
 
     def before_save
-      return if VCAP::CloudController::Config.kubernetes_api_configured?
-
       if internal? && vip_offset.nil?
         len = internal_route_vip_range_len
         raise OutOfVIPException.new('out of vip_offset slots') if self.class.exclude(vip_offset: nil).count >= len
@@ -267,9 +265,6 @@ module VCAP::CloudController
 
       loaded_apps.each do |app|
         ProcessRouteHandler.new(app).notify_backend_of_route_update
-      end
-      if VCAP::CloudController::Config.kubernetes_api_configured?
-        CloudController::DependencyLocator.instance.route_resource_manager.delete_route(self)
       end
     end
 

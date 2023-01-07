@@ -240,16 +240,6 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
-        context 'when kubernetes is enabled (not using routing API)' do
-          before do
-            TestConfig.override(kubernetes: { host_url: 'kube.com' })
-          end
-
-          it 'shows the http protocol' do
-            expect(subject[:supported_protocols]).to eq(['http'])
-          end
-        end
-
         context 'and the routing API is disabled' do
           before do
             allow(routing_api_client).to receive(:enabled?).and_return false

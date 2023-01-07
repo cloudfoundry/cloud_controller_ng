@@ -102,10 +102,6 @@ module VCAP::CloudController
 
         route.reload
 
-        if VCAP::CloudController::Config.kubernetes_api_configured?
-          route_resource_manager.update_destinations(route)
-        end
-
         route
       end
 

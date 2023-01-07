@@ -50,19 +50,6 @@ module VCAP::CloudController
           app.destroy
         end
         logger.info("Deleted app: #{app.guid}")
-
-        if VCAP::CloudController::Config.kubernetes_api_configured?
-          # an app CRD could simplify this garbage collection
-          logger.info("Deleting kpack resources associated with app #{app.guid}")
-          k8s_api_client.delete_image(
-            app.guid,
-            VCAP::CloudController::Config.config.kpack_builder_namespace,
-          )
-          k8s_api_client.delete_builder(
-            "app-#{app.guid}",
-            VCAP::CloudController::Config.config.kpack_builder_namespace,
-          )
-        end
       end
     end
 

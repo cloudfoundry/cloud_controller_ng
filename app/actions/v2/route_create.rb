@@ -14,10 +14,6 @@ module VCAP::CloudController
           r
         end
 
-        if VCAP::CloudController::Config.kubernetes_api_configured?
-          route_resource_manager.create_route(route)
-        end
-
         route
       end
 

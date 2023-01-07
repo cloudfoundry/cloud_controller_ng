@@ -153,10 +153,6 @@ module VCAP::CloudController
 
     private
 
-    def k8s_enabled?
-      Config.config.kubernetes_api_configured?
-    end
-
     def validate_change_owning_organization(organization)
       return if self.new? || owning_organization == organization
 
