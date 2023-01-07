@@ -23,14 +23,6 @@ module VCAP::CloudController
           expect(LifecycleProvider.provide(package, message)).to be_a(BuildpackLifecycle)
         end
       end
-
-      context 'kpack type' do
-        let(:type) { 'kpack' }
-
-        it 'returns a KpackLifecycle' do
-          expect(LifecycleProvider.provide(package, message)).to be_a(KpackLifecycle)
-        end
-      end
     end
 
     context 'when lifecycle type is not requested on the message' do
@@ -50,14 +42,6 @@ module VCAP::CloudController
 
         it 'returns a DockerLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(DockerLifecycle)
-        end
-      end
-
-      context 'kpack type' do
-        let(:app) { AppModel.make(:kpack) }
-
-        it 'returns a KpackLifecycle' do
-          expect(LifecycleProvider.provide(package, message)).to be_a(KpackLifecycle)
         end
       end
     end

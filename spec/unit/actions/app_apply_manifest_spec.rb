@@ -119,19 +119,6 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the app is a kpack app' do
-            let(:app) { AppModel.make(:kpack) }
-            let(:buildpack) { nil }
-            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: 'paketo/bogus' }) }
-
-            it 'calls AppUpdate with the correct arguments' do
-              app_apply_manifest.apply(app.guid, message)
-              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
-              expect(app_update).to have_received(:update).
-                with(app, app_update_message, instance_of(AppKpackLifecycle))
-            end
-          end
-
           context 'when the request is invalid due to failure to update the app' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
 

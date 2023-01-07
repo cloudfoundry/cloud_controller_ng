@@ -2,7 +2,6 @@ require 'messages/buildpack_create_message'
 require 'messages/buildpacks_list_message'
 require 'messages/buildpack_update_message'
 require 'messages/buildpack_upload_message'
-require 'fetchers/kpack_buildpack_list_fetcher'
 require 'fetchers/buildpack_list_fetcher'
 require 'actions/buildpack_create'
 require 'actions/buildpack_delete'
@@ -14,24 +13,13 @@ class BuildpacksController < ApplicationController
   def index
     message = BuildpacksListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-
-    if VCAP::CloudController::Config.kubernetes_api_configured?
-      dataset = KpackBuildpackListFetcher.new.fetch_all(message)
-      render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-        presenter: Presenters::V3::BuildpackPresenter,
-        paginated_result: ListPaginator.new.get_page(dataset, message.try(:pagination_options)),
-        path: '/v3/buildpacks',
-        message: message
-      )
-    else
-      dataset = BuildpackListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildpackPresenter.associated_resources)
-      render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-        presenter: Presenters::V3::BuildpackPresenter,
-        paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-        path: '/v3/buildpacks',
-        message: message
-      )
-    end
+    dataset = BuildpackListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildpackPresenter.associated_resources)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::BuildpackPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/buildpacks',
+      message: message
+    )
   end
 
   def show

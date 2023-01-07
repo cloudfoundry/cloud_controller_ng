@@ -319,79 +319,6 @@ RSpec.describe 'Apps' do
         end
       end
 
-      context 'KpAcK app' do
-        it 'creates a kpack app' do
-          create_request = {
-            name: 'my_app',
-            lifecycle: {
-              type: 'kpack',
-              data: {}
-            },
-            relationships: {
-              space: { data: { guid: space.guid } }
-            }
-          }
-
-          post '/v3/apps', create_request.to_json, user_header.merge({ 'CONTENT_TYPE' => 'application/json' })
-          expect(last_response.status).to eq(201), last_response.body
-
-          created_app = VCAP::CloudController::AppModel.last
-          expected_response = {
-            'name' => 'my_app',
-            'guid' => created_app.guid,
-            'state' => 'STOPPED',
-            'lifecycle' => {
-              'type' => 'kpack',
-              'data' => {
-                'buildpacks' => []
-              },
-            },
-            'relationships' => {
-              'space' => {
-                'data' => {
-                  'guid' => space.guid
-                }
-              }
-            },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
-              'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
-              'packages' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-              'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
-              'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-              'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
-              'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
-              'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
-              'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
-              'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
-              'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
-              'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
-              'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
-            }
-          }
-
-          parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response).to be_a_response_like(expected_response)
-
-          event = VCAP::CloudController::Event.last
-          expect(event.values).to include(
-            type: 'audit.app.create',
-            actee: created_app.guid,
-            actee_type: 'app',
-            actee_name: 'my_app',
-            actor: user.guid,
-            actor_type: 'user',
-            actor_name: user_email,
-            actor_username: user_name,
-            space_guid: space.guid,
-            organization_guid: space.organization.guid,
-          )
-        end
-      end
-
       context 'cc.default_app_lifecycle' do
         let(:create_request) do
           {
@@ -417,20 +344,6 @@ RSpec.describe 'Apps' do
             expect(last_response.status).to eq(201)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['lifecycle']['type']).to eq('buildpack')
-          end
-        end
-
-        context 'cc.default_app_lifecycle is set to kpack' do
-          before do
-            TestConfig.override(default_app_lifecycle: 'kpack')
-          end
-
-          it 'creates an app with the kpack lifecycle when none is specified in the request' do
-            post '/v3/apps', create_request.to_json, user_header
-
-            expect(last_response.status).to eq(201)
-            parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['lifecycle']['type']).to eq('kpack')
           end
         end
       end
