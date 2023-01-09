@@ -11,8 +11,6 @@
 * [Continuous Integration Pipelines](https://ci.cake.capi.land/)
 * [Notes on V3 Architecture](https://github.com/cloudfoundry/cloud_controller_ng/wiki/Notes-on-V3-Architecture)
 * [capi-release](https://github.com/cloudfoundry/capi-release) - The bosh release used to deploy cloud controller
-* [cf-for-k8s](https://github.com/cloudfoundry/cf-for-k8s) - How Cloud Foundry (including Cloud Controller) is deployed against Kubernetes
-* [capi-k8s-release](https://github.com/cloudfoundry/capi-k8s-release) - The parts of cf-for-k8s that are specific to CF API (including Cloud Controller)
 
 ## Components
 
@@ -50,12 +48,6 @@ Cloud Controller currently supports [webdav](http://www.webdav.org/) and the fol
 
 The Cloud Controller on VMs uses [Diego](https://github.com/cloudfoundry/diego-release) to stage and run apps and tasks.
 See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for more details.
-
-When deployed on Kubernetes, Cloud Controller uses
-[kpack](https://github.com/pivotal/kpack) to build images from source with
-[Cloud Native Buildpacks](https://buildpacks.io) and
-[Eirini](https://github.com/cloudfoundry-incubator/eirini) to run apps directly on the Kubernetes cluster.
-
 
 ## Contributing
 
