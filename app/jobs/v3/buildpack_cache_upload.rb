@@ -15,7 +15,7 @@ module VCAP::CloudController
           app = AppModel.find(guid: @app_guid)
 
           if app
-            sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_path(@local_path)
+            sha256_digest = Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(@local_path)
             blobstore_key = Presenters::V3::CacheKeyPresenter.cache_key(guid: @app_guid, stack_name: @stack_name)
 
             FileUtils.chmod('u=wr', @local_path) if blobstore.local?

@@ -354,7 +354,7 @@ RSpec.describe 'Droplets' do
         buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
         error_description: 'example error',
         execution_metadata: 'some-data',
-        droplet_hash: Digest::SHA1.hexdigest(worlds_smallest_tgz_file),
+        droplet_hash: OpenSSL::Digest::SHA1.hexdigest(worlds_smallest_tgz_file),
         sha256_checksum: 'some-sha-256',
         process_types: { 'web' => 'start-command' },
       )

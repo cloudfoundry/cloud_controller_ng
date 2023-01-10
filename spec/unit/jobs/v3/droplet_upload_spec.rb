@@ -27,7 +27,7 @@ module VCAP::CloudController
       describe '#perform' do
         it 'updates the droplet checksums' do
           sha1_digest = Digester.new.digest_file(local_file)
-          sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_file(local_file)
+          sha256_digest = Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(local_file)
 
           job.perform
           expect(droplet.refresh.droplet_hash).to eq(sha1_digest)

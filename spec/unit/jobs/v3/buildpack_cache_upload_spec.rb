@@ -40,7 +40,7 @@ module VCAP::CloudController
         end
 
         it 'updates the buildpack cache checksum' do
-          sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_file(local_file)
+          sha256_digest = Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(local_file)
 
           expect { job.perform }.to change { app.refresh.buildpack_cache_sha256_checksum }.to(sha256_digest)
         end

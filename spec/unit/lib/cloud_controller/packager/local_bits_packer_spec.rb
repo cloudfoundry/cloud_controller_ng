@@ -69,7 +69,7 @@ module CloudController::Packager
         sha256_digester = instance_double(Digester, digest_path: 'expected-sha256')
 
         allow(Digester).to receive(:new).with(no_args).and_return(sha1_digester)
-        allow(Digester).to receive(:new).with(algorithm: Digest::SHA256).and_return(sha256_digester)
+        allow(Digester).to receive(:new).with(algorithm: OpenSSL::Digest::SHA256).and_return(sha256_digester)
 
         result_sha = packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
 

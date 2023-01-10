@@ -75,7 +75,7 @@ module VCAP::CloudController
             layer = {
               name:              buildpack[:name],
               url:               buildpack[:url],
-              destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
+              destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
               layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
               media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
             }
@@ -107,7 +107,7 @@ module VCAP::CloudController
             buildpack_dependency = {
               name:               buildpack[:name],
               from:               buildpack[:url],
-              to:                 "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
+              to:                 "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
               cache_key:          buildpack[:key],
             }
             if buildpack[:sha256]

@@ -34,7 +34,7 @@ module VCAP::CloudController
         'telemetry-time' => rfc3339,
         'some-event' => {
           'api-version' => 'v3',
-          'bogus_key' => Digest::SHA256.hexdigest('bogus_value')
+          'bogus_key' => OpenSSL::Digest.hexdigest('SHA256', 'bogus_value')
         }
       })
     end
@@ -51,7 +51,7 @@ module VCAP::CloudController
         'telemetry-time' => rfc3339,
         'some-event' => {
           'api-version' => 'v3',
-          'anonymize_key' => Digest::SHA256.hexdigest('anonymize_value'),
+          'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
           'safe_key' => 'safe-value',
         }
       })
@@ -85,7 +85,7 @@ module VCAP::CloudController
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => rfc3339,
           'some-event' => {
-            'key' => Digest::SHA256.hexdigest('value'),
+            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
             'api-version' => 'v2',
           }
         })
@@ -102,7 +102,7 @@ module VCAP::CloudController
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => rfc3339,
           'some-event' => {
-            'key' => Digest::SHA256.hexdigest('value'),
+            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
             'api-version' => 'v3',
           }
         })
@@ -119,7 +119,7 @@ module VCAP::CloudController
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => rfc3339,
           'some-event' => {
-            'key' => Digest::SHA256.hexdigest('value'),
+            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
             'api-version' => 'internal',
           }
         })

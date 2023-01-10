@@ -17,7 +17,7 @@ module VCAP::CloudController
 
           if droplet
             sha1_digest = Digester.new.digest_path(@local_path)
-            sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_path(@local_path)
+            sha256_digest = Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(@local_path)
 
             blobstore.cp_to_blobstore(
               @local_path,

@@ -123,7 +123,7 @@ module VCAP::CloudController
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
-    let(:digester) { Digester.new(algorithm: Digest::MD5, type: :base64digest) }
+    let(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5, type: :base64digest) }
 
     let(:buildpack_cache_blobstore) do
       CloudController::DependencyLocator.instance.buildpack_cache_blobstore

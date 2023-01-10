@@ -351,8 +351,8 @@ module VCAP::CloudController
                 'lifecycle' =>  'buildpack',
                 'buildpacks' =>  %w(the-pleasant-buildpack),
                 'stack' =>  'cflinuxfs3',
-                'app-id' =>  Digest::SHA256.hexdigest(staged_app.guid),
-                'build-id' =>  Digest::SHA256.hexdigest(build.guid),
+                'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(staged_app.guid),
+                'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(build.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))

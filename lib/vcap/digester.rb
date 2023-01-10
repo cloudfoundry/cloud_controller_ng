@@ -1,5 +1,7 @@
+require 'openssl'
+
 class Digester
-  ALGORITHM = Digest::SHA1
+  ALGORITHM = OpenSSL::Digest::SHA1
   TYPE = :hexdigest
 
   def initialize(algorithm: ALGORITHM, type: TYPE)

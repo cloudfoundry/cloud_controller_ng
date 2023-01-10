@@ -949,8 +949,8 @@ RSpec.describe 'Packages' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'upload-package' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))

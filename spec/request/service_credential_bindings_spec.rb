@@ -1276,10 +1276,10 @@ RSpec.describe 'v3 service credential bindings' do
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'bind-service' => {
                 'api-version' => 'v3',
-                'service-id' => Digest::SHA256.hexdigest('user-provided'),
-                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
-                'app-id' => Digest::SHA256.hexdigest(app_guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'service-id' => OpenSSL::Digest.hexdigest('SHA256', 'user-provided'),
+                'service-instance-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -1399,10 +1399,10 @@ RSpec.describe 'v3 service credential bindings' do
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'bind-service' => {
                 'api-version' => 'v3',
-                'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
-                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
-                'app-id' => Digest::SHA256.hexdigest(app_guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'service-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
+                'service-instance-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))

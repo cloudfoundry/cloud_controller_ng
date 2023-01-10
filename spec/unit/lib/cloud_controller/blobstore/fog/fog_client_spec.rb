@@ -806,7 +806,7 @@ module CloudController
           it 'correctly downloads byte streams' do
             source_directory_path = File.expand_path('../../../../../fixtures/', File.dirname(__FILE__))
             source_file_path      = File.join(source_directory_path, 'pa/rt/partitioned_key')
-            source_hexdigest      = Digest::SHA2.file(source_file_path).hexdigest
+            source_hexdigest      = OpenSSL::Digest::SHA256.file(source_file_path).hexdigest
 
             pid = spawn("ruby -rwebrick -e'WEBrick::HTTPServer.new(:Port => #{port}, :DocumentRoot => \"#{source_directory_path}\").start'", out: 'test.out', err: 'test.err')
 
@@ -819,7 +819,7 @@ module CloudController
 
               client.download_from_blobstore('partitioned_key', destination_file_path)
 
-              destination_hexdigest = Digest::SHA2.file(destination_file_path).hexdigest
+              destination_hexdigest = OpenSSL::Digest::SHA256.file(destination_file_path).hexdigest
 
               expect(destination_hexdigest).to eq(source_hexdigest)
             ensure
@@ -843,13 +843,13 @@ module CloudController
             source_directory_path = File.join(local_root, directory_key)
 
             source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
-            source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
+            source_hexdigest = OpenSSL::Digest::SHA256.file(source_file_path).hexdigest
 
             destination_file_path = File.join(Dir.mktmpdir, 'hard_file.xyz')
 
             client.download_from_blobstore('partitioned_key', destination_file_path)
 
-            destination_hexdigest = Digest::SHA2.file(destination_file_path).hexdigest
+            destination_hexdigest = OpenSSL::Digest::SHA256.file(destination_file_path).hexdigest
 
             expect(destination_hexdigest).to eq(source_hexdigest)
           end

@@ -31,7 +31,7 @@ RSpec.describe Digester do
   end
 
   describe 'changing the algorithm' do
-    subject(:digester) { Digester.new(algorithm: Digest::MD5) }
+    subject(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5) }
     let(:md5) { '9f3f3f57770f25cb8faa685d7336aa4c' }
 
     it 'uses the given algorithm' do
