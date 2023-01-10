@@ -1683,9 +1683,9 @@ module VCAP::CloudController
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
-      context 'when UAA is disabled' do
+      context 'when UAA is unavailable' do
         before do
-          allow(uaa_client).to receive(:users_for_ids).and_raise(VCAP::CloudController::UaaEndpointDisabled)
+          allow(uaa_client).to receive(:users_for_ids).and_raise(VCAP::CloudController::UaaUnavailable)
         end
 
         it 'returns an error indicating UAA is unavailable' do

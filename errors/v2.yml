@@ -138,11 +138,6 @@
   http_code: 503
   message: "The UAA service is currently unavailable"
 
-20005:
-  name: UaaEndpointDisabled
-  http_code: 501
-  message: "The UAA endpoint needed is disabled"
-
 20006:
   name: UserIsInMultipleOrigins
   http_code: 400

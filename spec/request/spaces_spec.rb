@@ -1569,10 +1569,10 @@ RSpec.describe 'Spaces' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
-    context 'when UAA is disabled' do
+    context 'when UAA is unavailable' do
       before do
         allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-        allow(uaa_client).to receive(:users_for_ids).and_raise(VCAP::CloudController::UaaEndpointDisabled)
+        allow(uaa_client).to receive(:users_for_ids).and_raise(VCAP::CloudController::UaaUnavailable)
       end
 
       it 'returns an error indicating UAA is unavailable' do
