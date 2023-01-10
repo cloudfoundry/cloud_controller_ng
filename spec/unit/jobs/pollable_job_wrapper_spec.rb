@@ -18,26 +18,6 @@ module VCAP::CloudController::Jobs
         expect(job).to receive(:perform)
         pollable_job.perform
       end
-
-      context 'when the job errors with a too long error message' do
-        before do
-          Delayed::Worker.destroy_failed_jobs = false
-        end
-
-        let(:delete_action) { VCAP::CloudController::DropletDelete.new('fake') }
-        let(:job) { DeleteActionJob.new(VCAP::CloudController::DropletModel, 'fake', delete_action) }
-
-        it 'recovers gracefully' do
-          error_message = 'A very long error' * 500_000
-          truncated_error_message = error_message.truncate_bytes(2**14)
-          allow_any_instance_of(DeleteActionJob).to receive(:perform).and_raise error_message
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
-          Delayed::Worker.new.work_off(1)
-          expect(enqueued_job.reload.attempts).to eq 1
-          expect(enqueued_job.last_error.bytesize).to be < 2**15
-          expect(enqueued_job.last_error).to start_with truncated_error_message + '...This message has been truncated due to size. To read the full message, check stderr'
-        end
-      end
     end
 
     describe 'delayed job hooks' do
@@ -209,21 +189,14 @@ module VCAP::CloudController::Jobs
       end
 
       context 'with a big message' do
-        # postgres complains with 15,826
-        # mysql complains with 15,828, so test for failure at that point
-
-        it 'squeezes just right one in' do
-          expect {
-            pollable_job.error(job, BigException.new(message: 'x' * 15_825))
-          }.to_not raise_error
-        end
-
-        it 'gives up' do
-          pg_error = /value too long for type character varying/
-          mysql_error = /Data too long for column 'cf_api_error'/
-          expect {
-            pollable_job.error(job, BigException.new(message: 'x' * 15_828))
-          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
+        it 'truncates the message' do
+          pollable_job.error(job, BigException.new(message: 'x' * 16_001))
+          actual_pollable_job.reload
+          block = YAML.safe_load(actual_pollable_job.cf_api_error)
+          errors = block['errors']
+          expect(errors.size).to eq(1)
+          error = errors[0]['test_mode_info']
+          expect(error['detail']).to end_with('... this was truncated, see logs for full error')
         end
       end
     end
