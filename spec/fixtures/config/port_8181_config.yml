@@ -64,10 +64,6 @@ loggregator:
 doppler:
   url: 'wss://doppler.the-system-domain.com:443'
 
-internal_api:
-  auth_user: internal_user
-  auth_password: internal_password
-
 nginx:
   use_nginx: false
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"

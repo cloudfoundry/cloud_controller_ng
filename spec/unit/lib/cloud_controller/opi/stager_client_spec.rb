@@ -9,10 +9,6 @@ RSpec.describe(OPI::StagerClient) do
         cc_uploader_url: 'http://cc-uploader.service.cf.internal:9091'
       },
       tls_port: 8182,
-      internal_api: {
-        auth_user: 'internal_user',
-        auth_password: 'internal_password'
-      },
       internal_service_hostname: 'api.internal.cf',
       internal_service_port:     '9090',
       kubernetes: kubernetes_config,
@@ -73,7 +69,7 @@ RSpec.describe(OPI::StagerClient) do
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
-          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
+          completion_callback: 'https://api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
           lifecycle: {
             buildpack_lifecycle: {
               droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
@@ -111,7 +107,7 @@ RSpec.describe(OPI::StagerClient) do
                           { name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                           { name: 'MEMORY_LIMIT', value: '256m' },
                           { name: 'VCAP_SERVICES', value: '{}' }],
-            completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
+            completion_callback: 'https://api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
             lifecycle: {
               buildpack_lifecycle: {
                 droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
@@ -175,7 +171,7 @@ RSpec.describe(OPI::StagerClient) do
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
-          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
+          completion_callback: 'https://api.internal.cf:8182/internal/v3/staging/some_staging_guid/build_completed?start=',
           lifecycle: {
             docker_lifecycle: {
               image: 'docker.io/some/image',

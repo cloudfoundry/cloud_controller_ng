@@ -39,11 +39,6 @@ module VCAP::CloudController
               optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
               enable_declarative_asset_downloads: bool,
             },
-
-            internal_api: {
-              auth_user: String,
-              auth_password: String,
-            },
           }
         end
 

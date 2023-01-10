@@ -138,10 +138,6 @@ route_services_enabled: true
 volume_services_enabled: true
 disable_private_domain_cross_space_context_path_route_sharing: false
 
-internal_api:
-  auth_user: internal_user
-  auth_password: internal_password
-
 # App staging parameters
 staging:
   # Max duration for staging process
