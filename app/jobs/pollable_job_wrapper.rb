@@ -67,8 +67,13 @@ module VCAP::CloudController
       private
 
       def convert_to_v3_api_error(exception)
-        v3_hasher = V3ErrorHasher.new(exception)
-        error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
+        if exception.message.length > 16_000
+          message = exception.message[0, 15_000] + '... this was truncated, see logs for full error'
+          new_exception = exception.class.new(message)
+          new_exception.set_backtrace(exception.backtrace)
+        end
+        v3_hasher = V3ErrorHasher.new(new_exception || exception)
+        error_presenter = ErrorPresenter.new(new_exception || exception, Rails.env.test?, v3_hasher)
         YAML.dump(error_presenter.to_hash)
       end
 
