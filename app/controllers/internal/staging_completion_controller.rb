@@ -11,19 +11,6 @@ module VCAP::CloudController
 
     allow_unauthenticated_access
 
-    def initialize(*)
-      super
-      auth = Rack::Auth::Basic::Request.new(env)
-
-      if Config.kubernetes_api_configured?
-        return
-      end
-
-      unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise CloudController::Errors::NotAuthenticated
-      end
-    end
-
     def inject_dependencies(dependencies)
       super
       @stagers = dependencies.fetch(:stagers)
