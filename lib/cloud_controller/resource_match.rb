@@ -68,7 +68,9 @@ module VCAP::CloudController
     end
 
     def allowed_resources
-      @allowed_resources ||= descriptors.select { |descriptor| resource_pool.size_allowed?(descriptor['size']) }
+      @allowed_resources ||= descriptors.select do |descriptor|
+        resource_pool.size_allowed?(descriptor['size']) && resource_pool.mode_allowed?(descriptor['mode'])
+      end
     end
 
     def logger

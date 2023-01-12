@@ -24,7 +24,7 @@ module VCAP::CloudController
         @resource_pool.add_directory(@tmpdir)
 
         without_sizes = @descriptors.map do |d|
-          { 'sha1' => d['sha1'] }
+          { 'sha1' => d['sha1'], 'mode' => '666' }
         end
 
         res = @resource_pool.resource_sizes(without_sizes)
@@ -48,19 +48,29 @@ module VCAP::CloudController
       end
 
       it 'should return true for a size between min and max size' do
-        expect(@resource_pool.send(:size_allowed?, @minimum_size + 1)).to be true
+        expect(@resource_pool.size_allowed?(@minimum_size + 1)).to be true
       end
 
       it 'should return false for a size < min size' do
-        expect(@resource_pool.send(:size_allowed?, @minimum_size - 1)).to be false
+        expect(@resource_pool.size_allowed?(@minimum_size - 1)).to be false
       end
 
       it 'should return false for a size > max size' do
-        expect(@resource_pool.send(:size_allowed?, @maximum_size + 1)).to be false
+        expect(@resource_pool.size_allowed?(@maximum_size + 1)).to be false
       end
 
       it 'should return false for a nil size' do
-        expect(@resource_pool.send(:size_allowed?, nil)).to be nil
+        expect(@resource_pool.size_allowed?(nil)).to be nil
+      end
+    end
+
+    describe '#mode_allowed?' do
+      it 'should return true for a mode >= 600' do
+        expect(@resource_pool.mode_allowed?('666')).to be true
+      end
+
+      it 'should return false for a mode < 600' do
+        expect(@resource_pool.mode_allowed?('444')).to be false
       end
     end
 
