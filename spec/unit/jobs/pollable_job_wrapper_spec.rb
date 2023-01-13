@@ -7,10 +7,7 @@ module VCAP::CloudController::Jobs
   end
 
   RSpec.describe PollableJobWrapper, job_context: :worker do
-    let(:job) {
-      double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil, display_name: 'display name', resource_guid: 'guid', resource_type: 'resource type',
-     operation: 'operation')
-    }
+    let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil) }
     let(:pollable_job) { PollableJobWrapper.new(job) }
 
     describe '#perform' do
@@ -189,14 +186,21 @@ module VCAP::CloudController::Jobs
       end
 
       context 'with a big message' do
-        it 'truncates the message' do
-          pollable_job.error(job, BigException.new(message: 'x' * 16_001))
-          actual_pollable_job.reload
-          block = YAML.safe_load(actual_pollable_job.cf_api_error)
-          errors = block['errors']
-          expect(errors.size).to eq(1)
-          error = errors[0]['test_mode_info']
-          expect(error['detail']).to end_with('... this was truncated, see logs for full error')
+        # postgres complains with 15,826
+        # mysql complains with 15,828, so test for failure at that point
+
+        it 'squeezes just right one in' do
+          expect {
+            pollable_job.error(job, BigException.new(message: 'x' * 15_825))
+          }.to_not raise_error
+        end
+
+        it 'gives up' do
+          pg_error = /value too long for type character varying/
+          mysql_error = /Data too long for column 'cf_api_error'/
+          expect {
+            pollable_job.error(job, BigException.new(message: 'x' * 15_828))
+          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end
     end
