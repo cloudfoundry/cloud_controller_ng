@@ -81,5 +81,13 @@ module VCAP::CloudController
         [:organization_guid, Organization.dataset.where(auditors: user).select_map(:guid)]
       ])
     end
+
+    Event.dataset_module do
+      # Don't use window function for the 'events' table as this table might contain millions of rows
+      # which can lead to a performance degradation.
+      def supports_window_functions?
+        false
+      end
+    end
   end
 end

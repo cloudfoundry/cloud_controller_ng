@@ -2,9 +2,6 @@ require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
   class SequelPaginator
-    # Don't use window function for the 'events' table as this table might contain millions of rows
-    # which can lead to a performance degradation.
-    EXCLUDE_FROM_PAGINATION_WITH_WINDOW_FUNCTION = [:events].freeze
     def get_page(sequel_dataset, pagination_options)
       page = pagination_options.page
       per_page = pagination_options.per_page
@@ -17,7 +14,7 @@ module VCAP::CloudController
 
       sequel_dataset = sequel_dataset.order(sequel_order)
       sequel_dataset = sequel_dataset.order_append(Sequel.asc(Sequel.qualify(table_name, :guid))) if sequel_dataset.model.columns.include?(:guid)
-      records, count = if !EXCLUDE_FROM_PAGINATION_WITH_WINDOW_FUNCTION.include?(table_name) && can_paginate_with_window_function?(sequel_dataset)
+      records, count = if can_paginate_with_window_function?(sequel_dataset)
                          paginate_with_window_function(sequel_dataset, per_page, page, table_name)
                        else
                          paginate_with_extension(sequel_dataset, per_page, page)
