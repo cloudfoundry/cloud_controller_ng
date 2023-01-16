@@ -1875,13 +1875,13 @@ module VCAP::CloudController
                 expect(decoded_response['code']).to eq(20004)
               end
 
-              it 'returns an error when UAA endpoint is disabled' do
-                expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+              it 'returns an error when UAA is unavailable' do
+                expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(501)
-                expect(decoded_response['code']).to eq(20005)
+                expect(last_response.status).to eq(503)
+                expect(decoded_response['code']).to eq(20004)
               end
 
               it 'creates an audit.user.organization_role_add when a role is associated to a space' do
@@ -2059,13 +2059,13 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(20004)
           end
 
-          it 'returns an error when UAA endpoint is disabled' do
-            expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+          it 'returns an error when UAA is unavailable' do
+            expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-            expect(last_response.status).to eq(501)
-            expect(decoded_response['code']).to eq(20005)
+            expect(last_response.status).to eq(503)
+            expect(decoded_response['code']).to eq(20004)
           end
 
           it 'creates an event of type audit.user.organization_role_remove when a user-role association is removed from the organization' do

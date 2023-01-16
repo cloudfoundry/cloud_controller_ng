@@ -335,10 +335,10 @@ RSpec.describe 'Users Request' do
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
 
-        context 'when UAA is disabled' do
+        context 'when UAA is unavailable' do
           before do
             allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['bob-mcjames'], nil).
-              and_raise(VCAP::CloudController::UaaEndpointDisabled)
+              and_raise(VCAP::CloudController::UaaUnavailable)
           end
 
           it 'returns an error indicating UAA is unavailable' do

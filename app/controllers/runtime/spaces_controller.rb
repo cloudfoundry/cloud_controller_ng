@@ -202,8 +202,6 @@ module VCAP::CloudController
           user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
-        rescue UaaEndpointDisabled
-          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
@@ -237,8 +235,6 @@ module VCAP::CloudController
           user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
-        rescue UaaEndpointDisabled
-          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
         raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 

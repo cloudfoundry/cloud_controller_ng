@@ -24,7 +24,7 @@ class UsersController < ApplicationController
       message: message,
       extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
     )
-  rescue VCAP::CloudController::UaaEndpointDisabled
+  rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 

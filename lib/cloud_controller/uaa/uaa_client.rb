@@ -34,7 +34,7 @@ module VCAP::CloudController
       token_issuer.client_credentials_grant
     rescue CF::UAA::NotFound, CF::UAA::BadTarget, CF::UAA::BadResponse => e
       logger.error("UAA request for token failed: #{e.inspect}")
-      raise UaaUnavailable.new
+      raise UaaUnavailable
     end
 
     def users_for_ids(user_ids)
@@ -58,8 +58,9 @@ module VCAP::CloudController
 
       user = results['resources'].first
       user && user['id']
-    rescue CF::UAA::TargetError
-      raise UaaEndpointDisabled
+    rescue CF::UAA::UAAError => e
+      logger.error("Failed to retrieve user id from UAA: #{e.inspect}")
+      raise UaaUnavailable
     end
 
     def ids_for_usernames_and_origins(usernames, origins, precise_username_match=true)
@@ -76,8 +77,9 @@ module VCAP::CloudController
       end
 
       results['resources'].map { |r| r['id'] }
-    rescue CF::UAA::TargetError, CF::UAA::BadTarget
-      raise UaaEndpointDisabled
+    rescue CF::UAA::UAAError => e
+      logger.error("Failed to retrieve user ids from UAA: #{e.inspect}")
+      raise UaaUnavailable
     end
 
     def construct_filter_string(username_filter_string, origin_filter_string)
@@ -95,7 +97,7 @@ module VCAP::CloudController
       results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
-      raise UaaUnavailable.new(e)
+      raise UaaUnavailable
     end
 
     def info
