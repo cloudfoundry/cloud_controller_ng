@@ -129,6 +129,25 @@ module VCAP::CloudController
         expect(paginated_result.total).to be > 1
       end
 
+      context 'events table' do
+        let(:dataset) { Event.dataset }
+        let!(:event_1) { Event.make(guid: '1', created_at: '2022-12-20T10:47:01Z') }
+        let!(:event_2) { Event.make(guid: '2', created_at: '2022-12-20T10:47:02Z') }
+        let!(:event_3) { Event.make(guid: '3', created_at: '2022-12-20T10:47:03Z') }
+        let!(:event_4) { Event.make(guid: '4', created_at: '2022-12-20T10:47:04Z') }
+
+        it 'does not use window function' do
+          options = { page: page, per_page: per_page }
+          pagination_options = PaginationOptions.new(options)
+
+          paginated_result = nil
+          expect {
+            paginated_result = paginator.get_page(dataset, pagination_options)
+          }.to have_queried_db_times(/select/i, 2)
+          expect(paginated_result.total).to be > 1
+        end
+      end
+
       it 'returns correct total results for distinct result' do
         options = { page: page, per_page: per_page, order_by: :key_name }
         pagination_options = PaginationOptions.new(options)
