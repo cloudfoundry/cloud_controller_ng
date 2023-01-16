@@ -18,7 +18,6 @@ module VCAP::CloudController
           previous_droplet = app.droplet
           target_state.apply_to_app(app, user_audit_info)
 
-          revision = nil
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
             log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
@@ -26,7 +25,7 @@ module VCAP::CloudController
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
           end
 
-          previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
+          previous_deployment = DeploymentModel.find(app: app, status_value: DeploymentModel::ACTIVE_STATUS_VALUE)
 
           if app.stopped?
             return deployment_for_stopped_app(
@@ -54,13 +53,7 @@ module VCAP::CloudController
           )
           MetadataUpdate.update(deployment, message)
 
-          if previous_deployment
-            previous_deployment.update(
-              state: DeploymentModel::DEPLOYED_STATE,
-              status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-              status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
-            )
-          end
+          supersede_deployment(previous_deployment)
 
           process = create_deployment_process(app, deployment.guid, revision)
           # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
@@ -183,6 +176,21 @@ module VCAP::CloudController
           previous_deployment.original_web_process_instance_count
         else
           original_web_process.instances
+        end
+      end
+
+      def supersede_deployment(previous_deployment)
+        if previous_deployment
+          new_state = if previous_deployment.state == DeploymentModel::DEPLOYING_STATE
+                        DeploymentModel::DEPLOYED_STATE
+                      else
+                        DeploymentModel::CANCELED_STATE
+                      end
+          previous_deployment.update(
+            state: new_state,
+            status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+            status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
+          )
         end
       end
 
