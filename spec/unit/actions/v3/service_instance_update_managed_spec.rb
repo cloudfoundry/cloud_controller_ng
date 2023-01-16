@@ -6,6 +6,27 @@ require 'messages/service_instance_update_managed_message'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceInstanceUpdateManaged do
+      RSpec.shared_examples 'async service instance update' do
+        it "returns 'true' for update_broker_needed?" do
+          expect(action.update_broker_needed?).to be_truthy
+        end
+
+        it 'locks the service instance' do
+          action.enqueue_update
+
+          original_instance.reload
+          expect(original_instance.last_operation.type).to eq('update')
+          expect(original_instance.last_operation.state).to eq('in progress')
+        end
+
+        it 'enqueues a job' do
+          action.enqueue_update
+
+          expect(Delayed::Job.count).to eq 1
+          expect(Delayed::Job.first).to be_a_fully_pollable_wrapped_job_of(UpdateServiceInstanceJob)
+        end
+      end
+
       subject(:action) { described_class.new(original_instance, message, user_audit_info, audit_hash) }
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: user_guid, user_email: 'example@email.com', user_name: 'best_user' }) }
@@ -375,27 +396,25 @@ module VCAP::CloudController
         end
       end
 
-      describe '#try_update_sync' do
+      describe '#update_sync' do
         describe 'no-op maintenance_info updates' do
-          let(:body) do
-            {
-              maintenance_info: {
-                version: original_maintenance_info[:version]
-              }
-            }
+          let(:body) { { maintenance_info: { version: original_maintenance_info[:version] } } }
+
+          let(:original_service_plan) do
+            ServicePlan.make(
+              service: original_service_offering,
+              maintenance_info: { version: '2.2.0', description: 'new version of plan' }
+            )
           end
 
-          let(:original_service_plan) { ServicePlan.make(
-            service: original_service_offering,
-            maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-          )
-          }
+          it "returns 'false' for update_broker_needed?" do
+            expect(action.update_broker_needed?).to be_falsey
+          end
 
-          it 'returns the current instance unchanged instance' do
-            si, continue_async = action.try_update_sync
+          it 'returns the current unchanged instance' do
+            si = action.update_sync
 
             expect(si).to eq(original_instance)
-            expect(continue_async).to be_falsey
           end
         end
 
@@ -404,23 +423,20 @@ module VCAP::CloudController
             let(:body) do
               {
                 metadata: {
-                  labels: {
-                    foo: 'bar',
-                    'pre.fix/to_delete': nil,
-                  },
-                  annotations: {
-                    alpha: 'beta',
-                    'pre.fix/to_delete': nil,
-                  }
+                  labels: { foo: 'bar', 'pre.fix/to_delete': nil },
+                  annotations: { alpha: 'beta', 'pre.fix/to_delete': nil }
                 }
               }
             end
 
+            it "returns 'false' for update_broker_needed?" do
+              expect(action.update_broker_needed?).to be_falsey
+            end
+
             it 'updates the values in the service instance in the database' do
-              action.try_update_sync
+              action.update_sync
 
               original_instance.reload
-
               expect(original_instance).to have_annotations(
                 { prefix: nil, key: 'alpha', value: 'beta' },
                 { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
@@ -432,7 +448,7 @@ module VCAP::CloudController
             end
 
             it 'creates an audit event' do
-              action.try_update_sync
+              action.update_sync
 
               expect(event_repository).
                 to have_received(:record_service_instance_event).with(
@@ -452,27 +468,22 @@ module VCAP::CloudController
               {
                 name: 'different-name',
                 tags: %w(accounting couchbase nosql),
-                maintenance_info: {
-                  version: original_maintenance_info[:version]
-                },
+                maintenance_info: { version: original_maintenance_info[:version] },
                 metadata: {
-                  labels: {
-                    foo: 'bar',
-                    'pre.fix/to_delete': nil,
-                  },
-                  annotations: {
-                    alpha: 'beta',
-                    'pre.fix/to_delete': nil,
-                  }
+                  labels: { foo: 'bar', 'pre.fix/to_delete': nil },
+                  annotations: { alpha: 'beta', 'pre.fix/to_delete': nil }
                 }
               }
             end
 
+            it "returns 'false' for update_broker_needed?" do
+              expect(action.update_broker_needed?).to be_falsey
+            end
+
             it 'updates the values in the service instance in the database' do
-              action.try_update_sync
+              action.update_sync
 
               original_instance.reload
-
               expect(original_instance.name).to eq('different-name')
               expect(original_instance.tags).to eq(%w(accounting couchbase nosql))
               expect(original_instance).to have_annotations(
@@ -486,29 +497,27 @@ module VCAP::CloudController
             end
 
             it 'does not update the maintenance_info when it is unchanged' do
-              action.try_update_sync
-              original_instance.reload
-              expect(original_instance.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
+              action.update_sync
+
+              expect(original_instance.reload.maintenance_info.symbolize_keys).to eq(original_maintenance_info)
             end
 
-            it 'returns the updated service instance and no need to continue async' do
-              si, continue_async = action.try_update_sync
+            it 'returns the updated service instance' do
+              si = action.update_sync
 
               expect(si).to eq(original_instance.reload)
-              expect(continue_async).to be_falsey
             end
 
             it 'sets last operation to update succeeded' do
-              action.try_update_sync
+              action.update_sync
 
               original_instance.reload
-
               expect(original_instance.last_operation.type).to eq('update')
               expect(original_instance.last_operation.state).to eq('succeeded')
             end
 
             it 'creates an audit event' do
-              action.try_update_sync
+              action.update_sync
 
               expect(event_repository).
                 to have_received(:record_service_instance_event).with(
@@ -527,10 +536,9 @@ module VCAP::CloudController
                 let(:original_service_offering) { Service.make(allow_context_updates: false) }
 
                 it 'succeeds' do
-                  expect { action.try_update_sync }.not_to raise_error
+                  expect { action.update_sync }.not_to raise_error
 
-                  original_instance.reload
-                  expect(original_instance.name).to eq('different-name')
+                  expect(original_instance.reload.name).to eq('different-name')
                 end
               end
             end
@@ -542,225 +550,28 @@ module VCAP::CloudController
                 expect_any_instance_of(ManagedServiceInstance).to receive(:update).
                   and_raise(Sequel::ValidationFailed.new(errors))
 
-                expect { action.try_update_sync }.
-                  to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
+                expect {
+                  action.update_sync
+                }.to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
 
-                expect(original_instance.reload.last_operation.type).to eq('update')
-                expect(original_instance.reload.last_operation.state).to eq('failed')
+                original_instance.reload
+                expect(original_instance.last_operation.type).to eq('update')
+                expect(original_instance.last_operation.state).to eq('failed')
               end
             end
           end
 
           context 'when the update is empty' do
-            let(:body) do
-              {}
+            let(:body) { {} }
+
+            it "returns 'false' for update_broker_needed?" do
+              expect(action.update_broker_needed?).to be_falsey
             end
 
-            it 'succeeds' do
-              si, continue_async = action.try_update_sync
+            it 'returns the updated service instance' do
+              si = action.update_sync
 
               expect(si).to eq(original_instance.reload)
-              expect(continue_async).to be_falsey
-            end
-          end
-
-          context 'when the update requires communication with the broker' do
-            let(:new_plan) { ServicePlan.make }
-            let(:body) do
-              {
-                name: 'new-name',
-                parameters: { foo: 'bar' },
-                tags: %w(bar quz),
-                relationships: {
-                  service_plan: {
-                    data: {
-                      guid: new_plan.guid
-                    }
-                  }
-                }
-              }
-            end
-
-            describe 'fields that trigger broker interaction' do
-              context 'parameters change requested' do
-                let(:body) do
-                  {
-                    parameters: { foo: 'bar' },
-                  }
-                end
-
-                it 'should return continue async' do
-                  _, continue_async = action.try_update_sync
-
-                  expect(continue_async).to be_truthy
-                  original_instance.reload
-                  expect(original_instance.last_operation.type).to eq('update')
-                  expect(original_instance.last_operation.state).to eq('in progress')
-                end
-              end
-
-              context 'plan change requested' do
-                let(:body) do
-                  {
-                    relationships: {
-                      service_plan: {
-                        data: {
-                          guid: new_plan.guid
-                        }
-                      }
-                    }
-                  }
-                end
-
-                it 'should return continue async' do
-                  _, continue_async = action.try_update_sync
-
-                  expect(continue_async).to be_truthy
-                  original_instance.reload
-                  expect(original_instance.last_operation.type).to eq('update')
-                  expect(original_instance.last_operation.state).to eq('in progress')
-                end
-              end
-
-              context 'name change requested' do
-                let!(:original_service_plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-                let!(:original_instance) do
-                  VCAP::CloudController::ManagedServiceInstance.make(
-                    name: 'foo',
-                    service_plan: original_service_plan
-                  )
-                end
-
-                let(:body) do
-                  {
-                    name: 'new-different-name'
-                  }
-                end
-
-                context 'context update is allowed in the broker' do
-                  let!(:offering) do
-                    VCAP::CloudController::Service.make(allow_context_updates: true)
-                  end
-
-                  it 'should return continue async' do
-                    _, continue_async = action.try_update_sync
-
-                    expect(continue_async).to be_truthy
-                    original_instance.reload
-                    expect(original_instance.last_operation.type).to eq('update')
-                    expect(original_instance.last_operation.state).to eq('in progress')
-                  end
-                end
-
-                context 'context update is not allowed in the broker' do
-                  let!(:offering) do
-                    VCAP::CloudController::Service.make(allow_context_updates: false)
-                  end
-
-                  it 'should return continue async false' do
-                    _, continue_async = action.try_update_sync
-
-                    expect(continue_async).to be_falsey
-                  end
-                end
-              end
-
-              context 'maintenance_info requested' do
-                let(:original_service_plan) { ServicePlan.make(
-                  service: original_service_offering,
-                  maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-                )
-                }
-
-                let!(:original_instance) {
-                  VCAP::CloudController::ManagedServiceInstance.make(
-                    name: 'foo',
-                    service_plan: original_service_plan,
-                    maintenance_info: original_maintenance_info
-                  )
-                }
-
-                let(:body) do
-                  {
-                    maintenance_info: { version: '2.2.0' },
-                  }
-                end
-
-                it 'should return continue async' do
-                  _, continue_async = action.try_update_sync
-
-                  expect(continue_async).to be_truthy
-                  original_instance.reload
-                  expect(original_instance.last_operation.type).to eq('update')
-                  expect(original_instance.last_operation.state).to eq('in progress')
-                end
-
-                context 'maintenance_info and other fields' do
-                  let(:body) do
-                    {
-                      maintenance_info: { version: '2.2.0' },
-                      name: 'something-different',
-                      tags: ['a-new-tag'],
-                      parameters: { new_param: 'bartender' },
-                      relationships: {
-                        service_plan: {
-                          data: {
-                            guid: original_instance.service_plan.guid
-                          }
-                        }
-                      }
-                    }
-                  end
-
-                  it 'should return continue async' do
-                    _, continue_async = action.try_update_sync
-
-                    expect(continue_async).to be_truthy
-                    original_instance.reload
-                    expect(original_instance.last_operation.type).to eq('update')
-                    expect(original_instance.last_operation.state).to eq('in progress')
-                  end
-                end
-
-                context 'changing parameters without maintenance_info when the plan was updated' do
-                  let(:body) do
-                    {
-                      name: 'something-different',
-                      tags: ['a-new-tag'],
-                      parameters: { new_param: 'bartender' }
-
-                    }
-                  end
-
-                  it 'should return continue async' do
-                    _, continue_async = action.try_update_sync
-
-                    expect(continue_async).to be_truthy
-                    original_instance.reload
-                    expect(original_instance.last_operation.type).to eq('update')
-                    expect(original_instance.last_operation.state).to eq('in progress')
-                  end
-                end
-              end
-            end
-
-            it 'does not update any attributes' do
-              _, continue_async = action.try_update_sync
-
-              expect(continue_async).to be_truthy
-
-              original_instance.reload
-              expect(original_instance.name).to eq(original_name)
-              expect(original_instance.service_plan).to eq(original_service_plan)
-              expect(original_instance.tags).to eq(%w(accounting mongodb))
-            end
-
-            it 'locks the service instance' do
-              action.try_update_sync
-
-              original_instance.reload
-              expect(original_instance.last_operation.type).to eq('update')
-              expect(original_instance.last_operation.state).to eq('in progress')
             end
           end
         end
@@ -774,29 +585,25 @@ module VCAP::CloudController
 
           it 'raises' do
             expect {
-              action.try_update_sync
+              action.update_sync
             }.to raise_error CloudController::Errors::ApiError do |err|
               expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
             end
           end
 
           context 'with metadata only updates' do
-            let(:body) { {
-              metadata: {
-                labels: {
-                  foo: 'bar',
-                  'pre.fix/to_delete': nil,
-                },
-                annotations: {
-                  alpha: 'beta',
-                  'pre.fix/to_delete': nil,
+            let(:body) do
+              {
+                metadata: {
+                  labels: { foo: 'bar', 'pre.fix/to_delete': nil },
+                  annotations: { alpha: 'beta', 'pre.fix/to_delete': nil }
                 }
               }
-            }
-            }
+            end
+
             it 'raises' do
               expect {
-                action.try_update_sync
+                action.update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
@@ -810,25 +617,19 @@ module VCAP::CloudController
           end
 
           context 'metadata update' do
-            let(:body) { {
-              metadata: {
-                labels: {
-                  foo: 'bar',
-                  'pre.fix/to_delete': nil,
-                },
-                annotations: {
-                  alpha: 'beta',
-                  'pre.fix/to_delete': nil,
+            let(:body) do
+              {
+                metadata: {
+                  labels: { foo: 'bar', 'pre.fix/to_delete': nil },
+                  annotations: { alpha: 'beta', 'pre.fix/to_delete': nil }
                 }
               }
-            }
-            }
+            end
 
             it 'allows metadata updates' do
-              expect { action.try_update_sync }.not_to raise_error
+              expect { action.update_sync }.not_to raise_error
 
               original_instance.reload
-
               expect(original_instance).to have_annotations(
                 { prefix: nil, key: 'alpha', value: 'beta' },
                 { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
@@ -845,7 +646,7 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.try_update_sync
+                action.update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
@@ -859,25 +660,19 @@ module VCAP::CloudController
           end
 
           context 'metadata update' do
-            let(:body) { {
-              metadata: {
-                labels: {
-                  foo: 'bar',
-                  'pre.fix/to_delete': nil,
-                },
-                annotations: {
-                  alpha: 'beta',
-                  'pre.fix/to_delete': nil,
+            let(:body) do
+              {
+                metadata: {
+                  labels: { foo: 'bar', 'pre.fix/to_delete': nil },
+                  annotations: { alpha: 'beta', 'pre.fix/to_delete': nil }
                 }
               }
-            }
-            }
+            end
 
             it 'allows metadata updates' do
-              expect { action.try_update_sync }.not_to raise_error
+              expect { action.update_sync }.not_to raise_error
 
               original_instance.reload
-
               expect(original_instance).to have_annotations(
                 { prefix: nil, key: 'alpha', value: 'beta' },
                 { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
@@ -894,11 +689,125 @@ module VCAP::CloudController
 
             it 'raises' do
               expect {
-                action.try_update_sync
+                action.update_sync
               }.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
             end
+          end
+        end
+      end
+
+      describe '#enqueue_update' do
+        context 'when the update requires communication with the broker' do
+          let(:new_plan) { ServicePlan.make }
+
+          let(:body) do
+            {
+              name: 'new-name',
+              parameters: { foo: 'bar' },
+              tags: %w(bar quz),
+              relationships: { service_plan: { data: { guid: new_plan.guid } } }
+            }
+          end
+
+          describe 'fields that trigger broker interaction' do
+            context 'parameters change requested' do
+              let(:body) { { parameters: { foo: 'bar' } } }
+
+              it_behaves_like 'async service instance update'
+            end
+
+            context 'plan change requested' do
+              let(:body) { { relationships: { service_plan: { data: { guid: new_plan.guid } } } } }
+
+              it_behaves_like 'async service instance update'
+            end
+
+            context 'name change requested' do
+              let!(:original_service_plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
+
+              let!(:original_instance) do
+                VCAP::CloudController::ManagedServiceInstance.make(
+                  name: 'foo',
+                  service_plan: original_service_plan
+                )
+              end
+
+              let(:body) { { name: 'new-different-name' } }
+
+              context 'context update is allowed in the broker' do
+                let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: true) }
+
+                it_behaves_like 'async service instance update'
+              end
+
+              context 'context update is not allowed in the broker' do
+                let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
+
+                it "returns 'false' for update_broker_needed?" do
+                  expect(action.update_broker_needed?).to be_falsey
+                end
+              end
+            end
+
+            context 'maintenance_info requested' do
+              let(:original_service_plan) do
+                ServicePlan.make(
+                  service: original_service_offering,
+                  maintenance_info: { version: '2.2.0', description: 'new version of plan' }
+                )
+              end
+
+              let!(:original_instance) do
+                VCAP::CloudController::ManagedServiceInstance.make(
+                  name: 'foo',
+                  service_plan: original_service_plan,
+                  maintenance_info: original_maintenance_info
+                )
+              end
+
+              let(:body) { { maintenance_info: { version: '2.2.0' } } }
+
+              it_behaves_like 'async service instance update'
+
+              context 'maintenance_info and other fields' do
+                let(:body) do
+                  {
+                    maintenance_info: { version: '2.2.0' },
+                    name: 'something-different',
+                    tags: ['a-new-tag'],
+                    parameters: { new_param: 'bartender' },
+                    relationships: { service_plan: { data: { guid: original_instance.service_plan.guid } } }
+                  }
+                end
+
+                it_behaves_like 'async service instance update'
+              end
+
+              context 'changing parameters without maintenance_info when the plan was updated' do
+                let(:body) do
+                  {
+                    name: 'something-different',
+                    tags: ['a-new-tag'],
+                    parameters: { new_param: 'bartender' }
+                  }
+                end
+
+                it_behaves_like 'async service instance update'
+              end
+            end
+          end
+
+          it_behaves_like 'async service instance update'
+
+          it 'does not update any attributes' do
+            action.enqueue_update
+
+            original_instance.reload
+            expect(original_instance.name).to eq(original_name)
+            expect(original_instance.service_plan).to eq(original_service_plan)
+            expect(original_instance.tags).to eq(%w(accounting mongodb))
           end
         end
       end
@@ -1207,11 +1116,12 @@ module VCAP::CloudController
               end
 
               it 'raises an error and records failure' do
-                expect { action.update(accepts_incomplete: true)
-                }.to raise_error(
-                  ::CloudController::Errors::ApiError,
-                  /The service plan could not be found/
-                )
+                expect {
+                  action.update(accepts_incomplete: true)
+                }.to raise_error CloudController::Errors::ApiError do |err|
+                  expect(err.name).to eq('ServicePlanNotFound')
+                  expect(err.message).to eq('The service plan could not be found: fake-plan')
+                end
 
                 instance = original_instance.reload
                 expect(instance.last_operation.type).to eq('update')
@@ -1317,11 +1227,7 @@ module VCAP::CloudController
           end
 
           it 'raises an error and records failure' do
-            expect { action.update(accepts_incomplete: true)
-            }.to raise_error(
-              StandardError,
-              'boom'
-            )
+            expect { action.update(accepts_incomplete: true) }.to raise_error(StandardError, 'boom')
 
             instance = original_instance.reload
             expect(instance.last_operation.type).to eq('update')
@@ -1611,12 +1517,7 @@ module VCAP::CloudController
           end
 
           it 'updates the last operation description' do
-            expect {
-              action.poll
-            }.to raise_error(
-              StandardError,
-              'boom'
-            )
+            expect { action.poll }.to raise_error(StandardError, 'boom')
 
             expect(ServiceInstance.first.last_operation.type).to eq('update')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')

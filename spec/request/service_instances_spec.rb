@@ -2102,6 +2102,20 @@ RSpec.describe 'V3 service instances' do
             end
           end
         end
+
+        context 'database disconnect error during creation of pollable job' do
+          before do
+            allow(VCAP::CloudController::PollableJobModel).to receive(:create).and_raise(Sequel::DatabaseDisconnectError)
+          end
+
+          it 'sets the last operation to failed' do
+            api_call.call(space_dev_headers)
+
+            service_instance.reload
+            expect(service_instance.last_operation.type).to eq('update')
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+        end
       end
 
       describe 'no changes requested' do

@@ -32,20 +32,29 @@ module VCAP::CloudController
         raise_if_cannot_update!
       end
 
-      def try_update_sync
+      def update_broker_needed?
+        service_name_changed = message.requested?(:name) && service_instance.service.allow_context_updates
+        parameters_changed = message.requested?(:parameters)
+        service_plan_changed = message.service_plan_guid &&
+          message.service_plan_guid != service_instance.service_plan.guid
+
+        maintenance_info_changed = message.maintenance_info_version &&
+          message.maintenance_info_version != service_instance.maintenance_info&.fetch('version', nil)
+
+        service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
+      end
+
+      def update_sync
         if update_metadata_only?
           service_instance.db.transaction do
             MetadataUpdate.update(service_instance, message)
           end
           event_repository.record_service_instance_event(:update, service_instance, message.audit_hash)
-          return service_instance, false
-        end
+        else
+          lock = UpdaterLock.new(service_instance)
+          lock.lock!
 
-        lock = UpdaterLock.new(service_instance)
-        lock.lock!
-
-        begin
-          unless update_broker_needed?
+          begin
             original_service_instance = service_instance.dup
             service_instance.db.transaction do
               service_instance.update(message.updates) if message.updates.any?
@@ -53,16 +62,34 @@ module VCAP::CloudController
             end
             event_repository.record_service_instance_event(:update, original_service_instance, message.audit_hash)
             lock.synchronous_unlock!
-            return service_instance, false
+          rescue Sequel::ValidationFailed => e
+            raise InvalidServiceInstance.new(e.message)
+          ensure
+            lock.unlock_and_fail! if lock.present? && lock.needs_unlock?
           end
+        end
+
+        service_instance
+      end
+
+      def enqueue_update
+        lock = UpdaterLock.new(service_instance)
+        lock.lock!
+
+        begin
+          update_job = VCAP::CloudController::V3::UpdateServiceInstanceJob.new(
+            service_instance.guid,
+            message: message,
+            user_audit_info: user_audit_info,
+            audit_hash: message.audit_hash
+          )
+          pollable_job = Jobs::Enqueuer.new(update_job, queue: Jobs::Queues.generic).enqueue_pollable
           lock.asynchronous_unlock!
-        rescue Sequel::ValidationFailed => e
-          raise InvalidServiceInstance.new(e.message)
         ensure
           lock.unlock_and_fail! if lock.present? && lock.needs_unlock?
         end
 
-        return service_instance, true
+        pollable_job
       end
 
       def update(accepts_incomplete: false)
@@ -75,7 +102,7 @@ module VCAP::CloudController
           previous_values: previous_values,
           maintenance_info: maintenance_info,
           name: message.requested?(:name) ? message.name : service_instance.name,
-          user_guid: @user_audit_info.user_guid
+          user_guid: user_audit_info.user_guid
         )
         raise err if err
 
@@ -92,7 +119,7 @@ module VCAP::CloudController
 
       def poll
         client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
-        details = client.fetch_service_instance_last_operation(service_instance, user_guid: @user_audit_info.user_guid)
+        details = client.fetch_service_instance_last_operation(service_instance, user_guid: user_audit_info.user_guid)
 
         case details[:last_operation][:state]
         when 'succeeded'
@@ -115,10 +142,10 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :service_instance, :message
+      attr_reader :service_instance, :message, :user_audit_info
 
       def event_repository
-        Repositories::ServiceEventRepository.new(@user_audit_info)
+        Repositories::ServiceEventRepository.new(user_audit_info)
       end
 
       def complete_instance_and_save(instance, broker_response)
@@ -180,7 +207,7 @@ module VCAP::CloudController
         fetch_result = {}
         begin
           if service_plan.service.instances_retrievable
-            fetch_result = client.fetch_service_instance(service_instance, user_guid: @user_audit_info.user_guid)
+            fetch_result = client.fetch_service_instance(service_instance, user_guid: user_audit_info.user_guid)
           end
         rescue => e
           logger.info('fetch-service-instance-failed', error: e.class.name, error_message: e.message)
@@ -199,18 +226,6 @@ module VCAP::CloudController
 
       def only_metadata?
         message.requested_keys.one? && message.requested?(:metadata)
-      end
-
-      def update_broker_needed?
-        service_name_changed = message.requested?(:name) && service_instance.service.allow_context_updates
-        parameters_changed = message.requested?(:parameters)
-        service_plan_changed = message.service_plan_guid &&
-          message.service_plan_guid != service_instance.service_plan.guid
-
-        maintenance_info_changed = message.maintenance_info_version &&
-          message.maintenance_info_version != service_instance.maintenance_info&.fetch('version', nil)
-
-        service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
       end
 
       def service_plan
