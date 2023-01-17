@@ -3,7 +3,6 @@ require 'messages/roles_list_message'
 require 'messages/role_show_message'
 require 'fetchers/role_list_fetcher'
 require 'actions/role_create'
-require 'actions/role_guid_populate'
 require 'actions/role_delete'
 require 'presenters/v3/role_presenter'
 require 'decorators/include_role_user_decorator'
@@ -28,7 +27,6 @@ class RolesController < ApplicationController
     message = RolesListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    RoleGuidPopulate.populate
     roles = RoleListFetcher.fetch(message, readable_roles, eager_loaded_associations: Presenters::V3::RolePresenter.associated_resources)
 
     decorators = []
