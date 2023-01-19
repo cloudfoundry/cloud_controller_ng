@@ -92,9 +92,8 @@ class VCAP::CloudController::ResourcePool
   end
 
   def resource_known?(descriptor)
-    size = descriptor['size']
     sha1 = descriptor['sha1']
-    if size_allowed?(size) && valid_sha?(sha1)
+    if valid_sha?(sha1)
       blobstore.exists?(sha1)
     end
   rescue => e
@@ -104,6 +103,10 @@ class VCAP::CloudController::ResourcePool
 
   def size_allowed?(size)
     size && size > minimum_size && size < maximum_size
+  end
+
+  def mode_allowed?(raw_mode)
+    raw_mode && raw_mode.to_i(8) >= 0600
   end
 
   private

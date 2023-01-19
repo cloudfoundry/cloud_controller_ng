@@ -8,7 +8,7 @@ shared_context 'resource pool' do
     @total_allowed_files =
       num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
 
-    @nonexisting_descriptor = { 'sha1' => Digester.new.digest('abc'), 'size' => 1 }
+    @nonexisting_descriptor = { 'sha1' => Digester.new.digest('abc'), 'size' => 1, 'mode' => '666' }
     @tmpdir = Dir.mktmpdir
 
     @descriptors = []
@@ -22,7 +22,8 @@ shared_context 'resource pool' do
 
         descriptor = {
             'sha1' => Digester.new.digest(contents),
-            'size' => contents.length
+            'size' => contents.length,
+            'mode' => '666'
         }
         @descriptors << descriptor
 
