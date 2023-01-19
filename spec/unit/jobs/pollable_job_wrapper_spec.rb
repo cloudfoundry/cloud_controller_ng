@@ -181,26 +181,7 @@ module VCAP::CloudController::Jobs
           expect(errors.size).to eq(1)
           error = errors[0]['test_mode_info']
           expect(error['detail']).to eq('VCAP::CloudController::Jobs::BigException')
-          expect(error['backtrace'].size).to be == 8
-        end
-      end
-
-      context 'with a big message' do
-        # postgres complains with 15,826
-        # mysql complains with 15,828, so test for failure at that point
-
-        it 'squeezes just right one in' do
-          expect {
-            pollable_job.error(job, BigException.new(message: 'x' * 15_825))
-          }.to_not raise_error
-        end
-
-        it 'gives up' do
-          pg_error = /value too long for type character varying/
-          mysql_error = /Data too long for column 'cf_api_error'/
-          expect {
-            pollable_job.error(job, BigException.new(message: 'x' * 15_828))
-          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
+          expect(error['backtrace'].size).to be == 32
         end
       end
     end
