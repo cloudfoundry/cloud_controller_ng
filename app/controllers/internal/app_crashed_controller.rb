@@ -1,6 +1,5 @@
 require 'sinatra'
 require 'controllers/base/base_controller'
-require 'cloud_controller/internal_api'
 
 module VCAP::CloudController
   class AppCrashedController < RestController::BaseController

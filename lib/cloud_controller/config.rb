@@ -18,7 +18,6 @@ require 'cloud_controller/config_schemas/kubernetes/deployment_updater_schema'
 require 'cloud_controller/config_schemas/vms/deployment_updater_schema'
 require 'cloud_controller/config_schemas/vms/rotate_database_key_schema'
 require 'utils/hash_utils'
-require 'cloud_controller/internal_api'
 
 module VCAP::CloudController
   class Config
@@ -124,7 +123,6 @@ module VCAP::CloudController
       run_initializers
 
       ProcessObserver.configure(dependency_locator.stagers, dependency_locator.runners)
-      InternalApi.configure(self)
       @schema_class.configure_components(self)
     end
 

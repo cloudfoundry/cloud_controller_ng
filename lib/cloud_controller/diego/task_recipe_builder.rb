@@ -96,10 +96,9 @@ module VCAP::CloudController
         port   = config.get(:tls_port)
         scheme = 'https'
 
-        auth      = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}"
         host_port = "#{config.get(:internal_service_hostname)}:#{port}"
         path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
-        "#{scheme}://#{auth}@#{host_port}#{path}"
+        "#{scheme}://#{host_port}#{path}"
       end
 
       def cpu_weight(task)

@@ -43,10 +43,6 @@ instance_file_descriptor_limit: 16384
 
 request_timeout_in_seconds: 900
 
-internal_api:
-  auth_user: internal_user
-  auth_password: "internal-password"
-
 nginx:
   use_nginx: false
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"

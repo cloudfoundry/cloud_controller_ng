@@ -61,12 +61,6 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
       let(:staging_guid) { droplet.guid }
 
-      before do
-        @internal_user     = 'internal_user'
-        @internal_password = 'internal_password'
-        authorize @internal_user, @internal_password
-      end
-
       context 'when it is a docker app' do
         let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
 
@@ -197,46 +191,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'authentication' do
-        context 'when running in Kubernetes' do
-          before do
-            TestConfig.override(kubernetes: { host_url: 'example.com' })
-          end
-
-          context 'when missing authentication' do
-            it 'succeeds' do
-              header('Authorization', nil)
-              post url, MultiJson.dump(staging_response)
-              expect(last_response.status).to eq(200)
-            end
-          end
-        end
-
-        context 'when missing authentication' do
-          it 'fails with authentication required' do
-            header('Authorization', nil)
-            post url, staging_response
-            expect(last_response.status).to eq(401)
-          end
-        end
-
-        context 'when using invalid credentials' do
-          it 'fails with authenticatiom required' do
-            authorize 'bar', 'foo'
-            post url, staging_response
-            expect(last_response.status).to eq(401)
-          end
-        end
-
-        context 'when using valid credentials' do
-          it 'succeeds' do
-            allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
-            post url, MultiJson.dump(staging_response)
-            expect(last_response.status).to eq(200)
-          end
-        end
-      end
-
       describe 'validation' do
         context 'when sending invalid json' do
           it 'fails with a 400' do
@@ -272,9 +226,6 @@ module VCAP::CloudController
       end
 
       before do
-        @internal_user     = 'internal_user'
-        @internal_password = 'internal_password'
-        authorize @internal_user, @internal_password
         build.droplet = droplet
       end
 
@@ -427,32 +378,6 @@ module VCAP::CloudController
 
           post "#{url}?start=true", MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
-        end
-      end
-
-      describe 'authentication' do
-        context 'when missing authentication' do
-          it 'fails with authentication required' do
-            header('Authorization', nil)
-            post url, staging_response
-            expect(last_response.status).to eq(401)
-          end
-        end
-
-        context 'when using invalid credentials' do
-          it 'fails with authenticatiom required' do
-            authorize 'bar', 'foo'
-            post url, staging_response
-            expect(last_response.status).to eq(401)
-          end
-        end
-
-        context 'when using valid credentials' do
-          it 'succeeds' do
-            allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
-            post url, MultiJson.dump(staging_response)
-            expect(last_response.status).to eq(200)
-          end
         end
       end
 

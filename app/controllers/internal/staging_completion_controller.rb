@@ -1,6 +1,5 @@
 require 'sinatra'
 require 'controllers/base/base_controller'
-require 'cloud_controller/internal_api'
 require 'cloud_controller/diego/failure_reason_sanitizer'
 require 'cloud_controller/telemetry_logger'
 
@@ -11,19 +10,6 @@ module VCAP::CloudController
     end
 
     allow_unauthenticated_access
-
-    def initialize(*)
-      super
-      auth = Rack::Auth::Basic::Request.new(env)
-
-      if Config.kubernetes_api_configured?
-        return
-      end
-
-      unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise CloudController::Errors::NotAuthenticated
-      end
-    end
 
     def inject_dependencies(dependencies)
       super

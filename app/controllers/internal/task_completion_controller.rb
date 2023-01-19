@@ -1,6 +1,5 @@
 require 'sinatra'
 require 'controllers/base/base_controller'
-require 'cloud_controller/internal_api'
 require 'cloud_controller/diego/task_completion_handler'
 
 module VCAP::CloudController

@@ -46,10 +46,6 @@ module VCAP::CloudController
           Config.new({
             tls_port: tls_port,
             internal_service_hostname: internal_service_hostname,
-            internal_api: {
-              auth_user: user,
-              auth_password: password
-            },
             staging: {
               timeout_in_seconds: 90,
             },
@@ -63,8 +59,6 @@ module VCAP::CloudController
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:tls_port) { '7773' }
-        let(:user) { 'user' }
-        let(:password) { 'pass[%3a]word' }
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol: 'udp',
@@ -157,7 +151,7 @@ module VCAP::CloudController
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cpu_weight).to eq(50)
 
-            expect(result.completion_callback_url).to eq("https://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{tls_port}" \
+            expect(result.completion_callback_url).to eq("https://#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
 
             timeout_action = result.action.timeout_action
@@ -291,7 +285,7 @@ module VCAP::CloudController
 
           it 'sets the completion callback' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
-            expect(result.completion_callback_url).to eq("https://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{tls_port}" \
+            expect(result.completion_callback_url).to eq("https://#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
           end
 
@@ -368,10 +362,6 @@ module VCAP::CloudController
           Config.new({
             tls_port: tls_port,
             internal_service_hostname: internal_service_hostname,
-            internal_api: {
-              auth_user: user,
-              auth_password: password
-            },
             diego: {
               lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
               pid_limit: 100,
@@ -382,8 +372,6 @@ module VCAP::CloudController
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:tls_port) { '7777' }
-        let(:user) { 'user' }
-        let(:password) { 'password' }
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol: 'udp',
