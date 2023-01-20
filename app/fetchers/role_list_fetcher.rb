@@ -17,7 +17,7 @@ module VCAP::CloudController
         end
         if message.requested?(:organization_guids)
           org_ids = Organization.dataset.where(guid: message.organization_guids).select(:id)
-          dataset = dataset.for_organization(organization_id: org_ids)
+          dataset = Role.for_organization(dataset, organization_id: org_ids)
         end
         if message.requested?(:user_guids)
           user_ids = User.dataset.where(guid: message.user_guids).select(:id)

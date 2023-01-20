@@ -5,195 +5,164 @@ module VCAP::CloudController
 
   # Sequel allows to create models based on datasets. The following is a dataset that unions all the individual roles
   # tables and labels each row with a `type` column based on which table it came from
+  module RoleDatasetBuilder
+    def self.org_users_dataset(organization_ids=nil)
+      dataset = OrganizationUser.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_USER, :type),
+       Sequel.as(:role_guid, :guid),
+       :user_id,
+       :organization_id,
+       Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
+       :created_at,
+       :updated_at
+     )
+      dataset = dataset.where(organization_id: organization_ids) if organization_ids.present?
+      dataset
+    end
 
-  def self.role_dataset(organization_id=false)
-    if organization_id
-      spaces_in_org = Space.where(organization_id: organization_id).map(&:id)
-      OrganizationUser.select(
-        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_USER, :type),
+    def self.org_managers_dataset(organization_ids=nil)
+      dataset = OrganizationManager.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER, :type),
+            Sequel.as(:role_guid, :guid),
+            :user_id,
+            :organization_id,
+            Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
+            :created_at,
+            :updated_at
+      )
+      dataset = dataset.where(organization_id: organization_ids) if organization_ids
+
+      dataset
+    end
+
+    def self.org_billing_managers_dataset(organization_ids=nil)
+      dataset = OrganizationBillingManager.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER, :type),
         Sequel.as(:role_guid, :guid),
         :user_id,
         :organization_id,
         Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
         :created_at,
         :updated_at
-      ).where(organization_id: organization_id).union(
-        OrganizationManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at).where(organization_id: organization_id),
-        all: true,
-        from_self: false
-      ).union(
-        OrganizationBillingManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at).where(organization_id: organization_id),
-        all: true,
-        from_self: false
-      ).union(
-        OrganizationAuditor.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at).where(organization_id: organization_id),
-        all: true,
-        from_self: false
-      ).union(
-        SpaceDeveloper.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_DEVELOPER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at).where(space_id: spaces_in_org),
-          all: true,
-          from_self: false
-      ).union(
-        SpaceAuditor.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_AUDITOR, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at).where(space_id: spaces_in_org),
-          all: true,
-          from_self: false
-      ).union(
-        SpaceSupporter.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_SUPPORTER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at).where(space_id: spaces_in_org),
-          all: true,
-          from_self: false
-      ).union(
-        SpaceManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at).where(space_id: spaces_in_org),
-          all: true,
-          from_self: false
-      ).from_self
-    else
-      OrganizationUser.select(
-        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_USER, :type),
+      )
+      dataset = dataset.where(organization_id: organization_ids) if organization_ids
+
+      dataset
+    end
+
+    def self.org_auditors_dataset(organization_ids=nil)
+      dataset = OrganizationAuditor.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR, :type),
         Sequel.as(:role_guid, :guid),
         :user_id,
         :organization_id,
         Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
         :created_at,
         :updated_at
+      )
+      dataset = dataset.where(organization_id: organization_ids) if organization_ids
+      dataset
+    end
+
+    def self.space_developers_dataset(space_ids=nil)
+      dataset = SpaceDeveloper.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::SPACE_DEVELOPER, :type),
+        Sequel.as(:role_guid, :guid),
+        :user_id,
+        Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
+        :space_id,
+        :created_at,
+        :updated_at
+      )
+      dataset = dataset.where(space_id: space_ids) if space_ids
+      dataset
+    end
+
+    def self.space_auditors_dataset(space_ids=nil)
+      dataset = SpaceAuditor.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::SPACE_AUDITOR, :type),
+        Sequel.as(:role_guid, :guid),
+        :user_id,
+        Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
+        :space_id,
+        :created_at,
+        :updated_at
+      )
+      dataset = dataset.where(space_id: space_ids) if space_ids
+      dataset
+    end
+
+    def self.space_supporters_dataset(space_ids=nil)
+      dataset = SpaceSupporter.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::SPACE_SUPPORTER, :type),
+        Sequel.as(:role_guid, :guid),
+        :user_id,
+        Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
+        :space_id,
+        :created_at,
+        :updated_at
+      )
+      dataset = dataset.where(space_id: space_ids) if space_ids
+      dataset
+    end
+
+    def self.space_managers_dataset(space_ids=nil)
+      dataset = SpaceManager.select(
+        Sequel.as(VCAP::CloudController::RoleTypes::SPACE_MANAGER, :type),
+        Sequel.as(:role_guid, :guid),
+        :user_id,
+        Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
+        :space_id,
+        :created_at,
+        :updated_at
+      )
+      dataset = dataset.where(space_id: space_ids) if space_ids
+      dataset
+    end
+
+    def self.role_dataset(organization_id: nil, space_id: nil)
+      spaces_in_org = Space.where(organization_id: organization_id).map(&:id) if organization_id
+      org_users_dataset(organization_id).union(
+        org_managers_dataset(organization_id),
+        all: true,
+        from_self: false
       ).union(
-        OrganizationManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        org_billing_managers_dataset(organization_id),
+        all: true,
+        from_self: false
       ).union(
-        OrganizationBillingManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        org_auditors_dataset(organization_id),
+        all: true,
+        from_self: false
       ).union(
-        OrganizationAuditor.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          :organization_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :space_id),
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        space_developers_dataset(spaces_in_org),
+        all: true,
+        from_self: false
       ).union(
-        SpaceDeveloper.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_DEVELOPER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        space_auditors_dataset(spaces_in_org),
+        all: true,
+        from_self: false
       ).union(
-        SpaceAuditor.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_AUDITOR, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        space_supporters_dataset(spaces_in_org),
+        all: true,
+        from_self: false
       ).union(
-        SpaceSupporter.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_SUPPORTER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
-      ).union(
-        SpaceManager.select(
-          Sequel.as(VCAP::CloudController::RoleTypes::SPACE_MANAGER, :type),
-          Sequel.as(:role_guid, :guid),
-          :user_id,
-          Sequel.as(SPACE_OR_ORGANIZATION_NOT_SPECIFIED, :organization_id),
-          :space_id,
-          :created_at,
-          :updated_at),
-          all: true,
-          from_self: false
+        space_managers_dataset(spaces_in_org),
+        all: true,
+        from_self: false
       ).from_self
     end
   end
 
-  class Role < Sequel::Model(role_dataset)
+  class Role < Sequel::Model(RoleDatasetBuilder.role_dataset)
     many_to_one :user, key: :user_id
     many_to_one :organization, key: :organization_id
     many_to_one :space, key: :space_id
 
     class << self
-      def for_organization(organization_id)
-        self.from do |o|
-          VCAP::CloudController.role_dataset(organization_id)
+      def for_organization(dataset, organization_id)
+        dataset.from do |o|
+          RoleDatasetBuilder.role_dataset(organization_id: organization_id)
         end
       end
     end
