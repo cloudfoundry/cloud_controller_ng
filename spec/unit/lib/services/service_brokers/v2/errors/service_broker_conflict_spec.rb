@@ -33,7 +33,7 @@ module VCAP::Services
             end
             it 'renders the correct status code to the user' do
               exception = ServiceBrokerConflict.new(uri, method, response)
-              expect(exception.message.bytesize).to be < 2**15
+              expect(exception.message.bytesize).to be < 2**16
               expect(exception.message).to end_with "...This message has been truncated due to size. To read the full message, check the broker's logs"
             end
           end

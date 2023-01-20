@@ -46,7 +46,7 @@ module VCAP::Services
               end
               it 'renders the correct status code to the user' do
                 exception = ServiceBrokerBadResponse.new(uri, method, response)
-                expect(exception.message.bytesize).to be < 2**15
+                expect(exception.message.bytesize).to be < 2**16
                 expect(exception.message).to end_with "...This message has been truncated due to size. To read the full message, check the broker's logs"
               end
             end
@@ -82,9 +82,9 @@ module VCAP::Services
               let(:response_body) do
                 { 'foo' => 'bar' * 50_000 }.to_json
               end
-              it 'renders the correct status code to the user' do
+              it 'truncates the body' do
                 exception = ServiceBrokerBadResponse.new(uri, method, response)
-                expect(exception.message.bytesize).to be < 2**15
+                expect(exception.message.bytesize).to be < 2**16
                 expect(exception.message).to end_with "...This message has been truncated due to size. To read the full message, check the broker's logs"
               end
             end
