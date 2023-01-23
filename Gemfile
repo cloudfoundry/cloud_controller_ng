@@ -49,7 +49,7 @@ gem 'vmstat', '~> 2.3'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 6.1.5', '>= 6.1.5.1'
+gem 'actionpack', '~> 6.1.7'
 gem 'actionview', '~> 6.1.5', '>= 6.1.5.1'
 gem 'activemodel', '~> 6.1.5'
 gem 'railties', '~> 6.1.5', '>= 6.1.5.1'
