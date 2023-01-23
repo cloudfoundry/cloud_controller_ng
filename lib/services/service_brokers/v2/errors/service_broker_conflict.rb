@@ -9,6 +9,9 @@ module VCAP::Services
             if parsed_response.is_a?(Hash) && parsed_response.key?('description')
               error_description = parsed_json(response.body)['description']
               error_message = "Service broker error: #{error_description}"
+              if error_message.bytesize > 2**14
+                error_message = error_message.truncate_bytes(2**13) + "...This message has been truncated due to size. To read the full message, check the broker's logs"
+              end
             end
 
             super(

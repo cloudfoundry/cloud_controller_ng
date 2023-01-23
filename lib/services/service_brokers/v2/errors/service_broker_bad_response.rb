@@ -17,6 +17,9 @@ module VCAP::Services
                         'The service broker returned an invalid response. ' \
                                   "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
                       end
+            if message.bytesize > 2**14
+              message = message.truncate_bytes(2**13) + "...This message has been truncated due to size. To read the full message, check the broker's logs"
+            end
 
             super(message, method, response)
           end

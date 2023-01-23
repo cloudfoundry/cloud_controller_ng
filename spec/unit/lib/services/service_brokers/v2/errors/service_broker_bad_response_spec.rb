@@ -37,6 +37,19 @@ module VCAP::Services
               exception = ServiceBrokerBadResponse.new(uri, method, response)
               expect(exception.response_code).to eq 502
             end
+
+            context 'when the description is too long' do
+              let(:response_body) do
+                {
+                  'description' => 'Some error text' * 50_000
+                }.to_json
+              end
+              it 'renders the correct status code to the user' do
+                exception = ServiceBrokerBadResponse.new(uri, method, response)
+                expect(exception.message.bytesize).to be < 2**15
+                expect(exception.message).to end_with "...This message has been truncated due to size. To read the full message, check the broker's logs"
+              end
+            end
           end
 
           context 'without a description in the body' do
@@ -63,6 +76,17 @@ module VCAP::Services
             it 'renders the correct status code to the user' do
               exception = ServiceBrokerBadResponse.new(uri, method, response)
               expect(exception.response_code).to eq 502
+            end
+
+            context 'when the body is too big' do
+              let(:response_body) do
+                { 'foo' => 'bar' * 50_000 }.to_json
+              end
+              it 'renders the correct status code to the user' do
+                exception = ServiceBrokerBadResponse.new(uri, method, response)
+                expect(exception.message.bytesize).to be < 2**15
+                expect(exception.message).to end_with "...This message has been truncated due to size. To read the full message, check the broker's logs"
+              end
             end
           end
         end
