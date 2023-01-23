@@ -146,6 +146,48 @@ module VCAP::CloudController
       end
     end
 
+    describe '#default?' do
+      before { Stack.configure(file) }
+      let(:stack) { Stack.make(name: name) }
+      let(:name) { 'mimi' }
+
+      context 'when config was not set' do
+        before { Stack.configure(nil) }
+
+        it 'raises config not specified error' do
+          expect {
+            stack.default?
+          }.to raise_error(Stack::MissingConfigFileError)
+        end
+      end
+
+      context 'when config was set' do
+        before { Stack.dataset.destroy }
+
+        context 'when the stack has the default name' do
+          let(:name) { 'default-stack-name' }
+
+          it 'returns true' do
+            expect(stack.default?).to be true
+          end
+        end
+
+        context 'when there is NO default stack' do
+          it 'returns false' do
+            expect(stack.default?).to be false
+          end
+        end
+
+        context 'when stack does NOT have the default name' do
+          before { Stack.make(name: 'default-stack-name') }
+
+          it 'returns false' do
+            expect(stack.default?).to be false
+          end
+        end
+      end
+    end
+
     describe '#destroy' do
       let(:stack) { Stack.make }
 
