@@ -325,7 +325,7 @@ GEM
     mustache (1.1.1)
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
-    mysql2 (0.5.4)
+    mysql2 (0.5.5)
     net-ssh (7.0.1)
     netaddr (2.0.6)
     netrc (0.11.0)
@@ -583,7 +583,7 @@ DEPENDENCIES
   mime-types (~> 3.4)
   multi_json
   multipart-parser
-  mysql2 (~> 0.5.4)
+  mysql2 (~> 0.5.5)
   net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
