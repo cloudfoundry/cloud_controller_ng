@@ -73,6 +73,7 @@ RSpec.describe 'Stacks Request' do
         let(:params) do
           {
             names: ['foo', 'bar'],
+            default: true,
             page:   '2',
             per_page:   '10',
             order_by:   'updated_at',
@@ -82,6 +83,7 @@ RSpec.describe 'Stacks Request' do
             updated_ats: { gt: Time.now.utc.iso8601 },
           }
         end
+        let!(:stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
       end
 
       context 'When stacks exist' do
@@ -185,6 +187,43 @@ RSpec.describe 'Stacks Request' do
                   'links' => {
                     'self' => {
                       'href' => "#{link_prefix}/v3/stacks/#{stack3.guid}"
+                    }
+                  }
+                }
+              ]
+            }
+          )
+        end
+
+        it 'returns a list of stacks filtered by whether they are default' do
+          get '/v3/stacks?default=true', nil, user_header
+
+          expect(parsed_response).to be_a_response_like(
+            {
+              'pagination' => {
+                'total_results' => 1,
+                'total_pages' => 1,
+                'first' => {
+                  'href' => "#{link_prefix}/v3/stacks?default=true&page=1&per_page=50"
+                },
+                'last' => {
+                  'href' => "#{link_prefix}/v3/stacks?default=true&page=1&per_page=50"
+                },
+                'next' => nil,
+                'previous' => nil
+              },
+              'resources' => [
+                {
+                  'name' => stack2.name,
+                  'description' => stack2.description,
+                  'guid' => stack2.guid,
+                  'default' => true,
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
                     }
                   }
                 }

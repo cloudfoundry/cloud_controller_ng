@@ -3,7 +3,11 @@ require 'fetchers/stack_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe StackListFetcher do
+    let(:stack_config_file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
+    let(:default_stack_name) { 'default-stack-name' }
     let(:fetcher) { StackListFetcher }
+
+    before { VCAP::CloudController::Stack.configure(stack_config_file) }
 
     describe '#fetch_all' do
       before do
@@ -11,7 +15,7 @@ module VCAP::CloudController
       end
 
       let!(:stack1) { Stack.make }
-      let!(:stack2) { Stack.make }
+      let!(:stack2) { Stack.make(name: default_stack_name) }
 
       let(:message) { StacksListMessage.from_params(filters) }
       subject { fetcher.fetch_all(message) }
@@ -24,12 +28,32 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the stacks are filtered' do
+      context 'when the stacks are filtered by name' do
         let(:filters) { { names: [stack1.name] } }
 
         it 'returns all of the desired stacks' do
           expect(subject).to include(stack1)
           expect(subject).to_not include(stack2)
+        end
+      end
+
+      context 'when the stacks are filtered by default-ness' do
+        context 'when true' do
+          let(:filters) { { default: 'true' } }
+
+          it 'returns all of the desired stacks' do
+            expect(subject).to_not include(stack1)
+            expect(subject).to include(stack2)
+          end
+        end
+
+        context 'when false' do
+          let(:filters) { { default: 'false' } }
+
+          it 'returns all of the desired stacks' do
+            expect(subject).to include(stack1)
+            expect(subject).to_not include(stack2)
+          end
         end
       end
 
