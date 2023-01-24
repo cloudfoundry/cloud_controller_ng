@@ -15,8 +15,8 @@ module VCAP::CloudController
     validates :names, array: true, allow_nil: true
     validates :running_space_guids, array: true, allow_nil: true
     validates :staging_space_guids, array: true, allow_nil: true
-    validates :globally_enabled_running, inclusion: { in: %w(true false) }, allow_nil: true
-    validates :globally_enabled_staging, inclusion: { in: %w(true false) }, allow_nil: true
+    validates :globally_enabled_running, boolean_string: true, allow_nil: true
+    validates :globally_enabled_staging, boolean_string: true, allow_nil: true
 
     def self.from_params(params)
       super(params, %w(names running_space_guids staging_space_guids))

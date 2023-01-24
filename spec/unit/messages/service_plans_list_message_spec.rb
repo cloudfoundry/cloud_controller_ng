@@ -96,7 +96,7 @@ module VCAP::CloudController
         it 'does not accept other values' do
           message = described_class.from_params({ available: 'nope' }.with_indifferent_access)
           expect(message).not_to be_valid
-          expect(message.errors[:available]).to include("only accepts values 'true' or 'false'")
+          expect(message.errors[:available]).to include("must be 'true' or 'false'")
         end
       end
 

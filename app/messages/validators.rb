@@ -40,6 +40,18 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class BooleanStringValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, message: "must be 'true' or 'false'" unless boolean?(value)
+    end
+
+    private
+
+    def boolean?(value)
+      ['true', 'false'].include? value
+    end
+  end
+
   class HashValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       record.errors.add attribute, message: 'must be an object' unless value.is_a?(Hash)

@@ -7,7 +7,7 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
 
     validates :names, array: true, allow_nil: true
-    validates :default, inclusion: { in: %w(true false) }, allow_nil: true
+    validates :default, boolean_string: true, allow_nil: true
 
     def self.from_params(params)
       super(params, %w(names))
