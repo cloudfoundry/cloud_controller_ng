@@ -81,100 +81,86 @@ RSpec.describe 'Revisions' do
     context 'gets all revisions for an app' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions", { per_page: '2' }, user_headers } }
-        let(:revision_response_object) do
-          {
-            'pagination' => {
-              'total_results' => 2,
-              'total_pages' => 1,
-              'first' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions?page=1&per_page=2"
+        let(:revision_response_objects) do
+          [
+            {
+              'guid' => revision.guid,
+              'version' =>  revision.version,
+              'description' => revision.description,
+              'droplet' => {
+                'guid' => revision.droplet_guid
               },
-              'last' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions?page=1&per_page=2"
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
               },
-              'next' => nil,
-              'previous' => nil
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+                },
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
+              'deployable' => true
             },
-            'resources' => [
-              {
-                'guid' => revision.guid,
-                'version' =>  revision.version,
-                'description' => revision.description,
-                'droplet' => {
-                  'guid' => revision.droplet_guid
-                },
-                'relationships' => {
-                  'app' => {
-                    'data' => {
-                      'guid' => app_model.guid
-                    }
-                  }
-                },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
-                  },
-                  'app' => {
-                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
-                  },
-                  'environment_variables' => {
-                    'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-                  },
-                },
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'processes' => {
-                  'web' => {
-                    'command' => nil,
-                  },
-                },
-                'sidecars' => [],
-                'deployable' => true
+            {
+              'guid' => revision2.guid,
+              'version' =>  revision2.version,
+              'description' => revision2.description,
+              'droplet' => {
+                'guid' => revision2.droplet_guid
               },
-              {
-                'guid' => revision2.guid,
-                'version' =>  revision2.version,
-                'description' => revision2.description,
-                'droplet' => {
-                  'guid' => revision2.droplet_guid
-                },
-                'relationships' => {
-                  'app' => {
-                    'data' => {
-                      'guid' => app_model.guid
-                    }
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
                   }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
                 },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
-                  },
-                  'app' => {
-                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
-                  },
-                  'environment_variables' => {
-                    'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
-                  },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'processes' => {
-                  'web' => {
-                    'command' => nil,
-                  },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
                 },
-                'sidecars' => [],
-                'deployable' => true
-              }
-            ]
-          }
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
+              'deployable' => true
+            }
+          ]
         end
         let(:message) { VCAP::CloudController::AppRevisionsListMessage }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_object: revision_response_object)
+          h = Hash.new(code: 200, response_objects: revision_response_objects)
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
           h['no_role'] = { code: 404 }
@@ -585,98 +571,85 @@ RSpec.describe 'Revisions' do
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_headers } }
-      let(:revision_response_object) do
-        {
-          'pagination' => {
-            'total_results' => 2,
-            'total_pages' => 1,
-            'first' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed?page=1&per_page=2"
+      let(:revision_response_objects) do
+        [
+          {
+            'guid' => revision.guid,
+            'version' =>  revision.version,
+            'description' => revision.description,
+            'droplet' => {
+              'guid' => revision.droplet_guid
             },
-            'last' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed?page=1&per_page=2"
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              }
             },
-            'next' => nil,
-            'previous' => nil
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+              },
+              'environment_variables' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+              },
+            },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'processes' => {
+              'web' => {
+                'command' => nil,
+              },
+            },
+            'sidecars' => [],
+            'deployable' => true
           },
-          'resources' => [
-            {
-              'guid' => revision.guid,
-              'version' =>  revision.version,
-              'description' => revision.description,
-              'droplet' => {
-                'guid' => revision.droplet_guid
-              },
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app_model.guid
-                  }
-                }
-              },
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
-                },
-                'environment_variables' => {
-                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-                },
-              },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {
-                'web' => {
-                  'command' => nil,
-                },
-              },
-              'sidecars' => [],
-              'deployable' => true
+          {
+            'guid' => revision2.guid,
+            'version' =>  revision2.version,
+            'description' => revision2.description,
+            'droplet' => {
+              'guid' => revision2.droplet_guid
             },
-            {
-              'guid' => revision2.guid,
-              'version' =>  revision2.version,
-              'description' => revision2.description,
-              'droplet' => {
-                'guid' => revision2.droplet_guid
-              },
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app_model.guid
-                  }
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
                 }
+              }
+            },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
               },
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
-                },
-                'environment_variables' => {
-                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
-                },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
               },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {
-                'web' => {
-                  'command' => nil,
-                },
+              'environment_variables' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
               },
-              'sidecars' => [],
-              'deployable' => true
-            }
-          ]
-        }
+            },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'processes' => {
+              'web' => {
+                'command' => nil,
+              },
+            },
+            'sidecars' => [],
+            'deployable' => true
+          }
+        ]
       end
+
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: revision_response_object)
+        h = Hash.new(code: 200, response_objects: revision_response_objects)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }

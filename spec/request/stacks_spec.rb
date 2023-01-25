@@ -13,54 +13,38 @@ RSpec.describe 'Stacks Request' do
 
     context 'lists all stacks' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-        let(:stacks_response_object) do
-          {
-            'pagination' => {
-              'total_results' => 3,
-              'total_pages' => 2,
-              'first' => {
-                'href' => "#{link_prefix}/v3/stacks?page=1&per_page=2"
-              },
-              'last' => {
-                'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
-              },
-              'next' => {
-                'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
-              },
-              'previous' => nil
-            },
-            'resources' => [
-              {
-                'name' => stack1.name,
-                'description' => stack1.description,
-                'guid' => stack1.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
-                  }
-                }
-              },
-              {
-                'name' => stack2.name,
-                'description' => stack2.description,
-                'guid' => stack2.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
-                  }
+        let(:stacks_response_objects) do
+          [
+            {
+              'name' => stack1.name,
+              'description' => stack1.description,
+              'guid' => stack1.guid,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
                 }
               }
-            ]
-          }
+            },
+            {
+              'name' => stack2.name,
+              'description' => stack2.description,
+              'guid' => stack2.guid,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
+                }
+              }
+            }
+          ]
         end
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_object: stacks_response_object)
+          Hash.new(code: 200, response_objects: stacks_response_objects)
         end
         let!(:stack1) { VCAP::CloudController::Stack.make }
         let!(:stack2) { VCAP::CloudController::Stack.make }

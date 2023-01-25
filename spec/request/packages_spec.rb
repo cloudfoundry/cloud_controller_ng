@@ -267,42 +267,32 @@ RSpec.describe 'Packages' do
 
     context 'when listing all packages for an app' do
       let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/packages", nil, user_headers } }
-      let(:packages_response_object) do
-        {
-          'pagination' => {
-            'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-            'next'          => nil,
-            'previous'      => nil,
-          },
-          'resources' => [
-            {
-              'guid'       => package.guid,
-              'type'       => 'bits',
-              'data'       => {
-                'checksum' => { 'type' => 'sha256', 'value' => anything },
-                'error' => nil
-              },
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'links' => {
-                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
-                'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
-                'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
-              }
+      let(:packages_response_objects) do
+        [
+          {
+            'guid'       => package.guid,
+            'type'       => 'bits',
+            'data'       => {
+              'checksum' => { 'type' => 'sha256', 'value' => anything },
+              'error' => nil
             },
-          ]
-        }
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+              'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+            }
+          },
+        ]
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: packages_response_object)
+        h = Hash.new(code: 200, response_objects: packages_response_objects)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -500,56 +490,46 @@ RSpec.describe 'Packages' do
         state: VCAP::CloudController::PackageModel::READY_STATE,
         docker_image: 'http://location-of-image.com')
     end
-    let(:packages_response_object) do
-      {
-        'pagination' => {
-              'total_results' => 3,
-              'total_pages'   => 2,
-              'first'         => { 'href' => "#{link_prefix}/v3/pagckaes?page=1&per_page=2" },
-              'last'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
-              'next'          => { 'href' => "#{link_prefix}/v3/packages?page=2&per_page=2" },
-              'previous'      => nil,
-            },
-        'resources' => [
-          {
-            'guid'       => bits_package.guid,
-            'type'       => 'bits',
-            'data'       => {
-              'checksum' => { 'type' => 'sha256', 'value' => anything },
-              'error' => nil
-            },
-            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
-              'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
-              'download' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/download" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" },
-            }
+    let(:packages_response_objects) do
+      [
+        {
+          'guid'       => bits_package.guid,
+          'type'       => 'bits',
+          'data'       => {
+            'checksum' => { 'type' => 'sha256', 'value' => anything },
+            'error' => nil
           },
-          {
-            'guid'       => docker_package.guid,
-            'type'       => 'docker',
-            'data'       => {
-              'image'    => 'http://location-of-image.com',
-              'username' => nil,
-              'password' => nil,
-            },
-            'state' => VCAP::CloudController::PackageModel::READY_STATE,
-            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-            'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
-              'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
-            }
+          'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
+            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/download" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" },
           }
-        ]
-      }
+        },
+        {
+          'guid'       => docker_package.guid,
+          'type'       => 'docker',
+          'data'       => {
+            'image'    => 'http://location-of-image.com',
+            'username' => nil,
+            'password' => nil,
+          },
+          'state' => VCAP::CloudController::PackageModel::READY_STATE,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
+            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
+          }
+        }
+      ]
     end
 
     context 'when listing all packages' do
@@ -563,7 +543,11 @@ RSpec.describe 'Packages' do
       }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_object: packages_response_object)
+        h = Hash.new(code: 200, response_objects: packages_response_objects)
+        h['org_auditor'] = { code: 200, response_objects: [] }
+        h['org_billing_manager'] = { code: 200, response_objects: [] }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
