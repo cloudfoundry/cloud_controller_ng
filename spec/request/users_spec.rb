@@ -463,7 +463,6 @@ RSpec.describe 'Users Request' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 404,
-          response_objects: []
         )
         h['admin'] = {
           code: 200,
@@ -864,7 +863,6 @@ RSpec.describe 'Users Request' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 404,
-            response_objects: []
           )
           h['admin'] = {
             code: 200,
