@@ -1896,10 +1896,7 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-            response_object: { errors: [{ detail: "You do not have sufficient permissions for organization with guid '#{shared_org1.guid}' to unshare the domain." }] }
-          )
+          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = {
             code: 204
           }
