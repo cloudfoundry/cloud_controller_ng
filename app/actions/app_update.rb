@@ -40,6 +40,9 @@ module VCAP::CloudController
           message.audit_hash,
           manifest_triggered: @manifest_triggered
         )
+
+        # update process timestamp to trigger convergence if sending fails
+        app.processes.each(&:save) if message.requested?(:name)
       end
 
       if message.requested?(:name)

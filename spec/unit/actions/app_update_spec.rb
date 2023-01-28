@@ -111,6 +111,17 @@ module VCAP::CloudController
               app_model.reload
               expect(app_model.name).to eq('new name')
             end
+
+            it 'updates the process updated_at timestamps so that it still converges' do
+              old_web_process_updated_at = web_process.updated_at
+              old_worker_process_updated_at = worker_process.updated_at
+              sleep 1
+              expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
+              web_process.reload
+              worker_process.reload
+              expect(web_process.updated_at).to be > old_web_process_updated_at
+              expect(worker_process.updated_at).to be > old_worker_process_updated_at
+            end
           end
 
           context 'when there is a different error' do
@@ -129,6 +140,17 @@ module VCAP::CloudController
               expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
               app_model.reload
               expect(app_model.name).to eq('new name')
+            end
+
+            it 'updates the process updated_at timestamps so that it still converges' do
+              old_web_process_updated_at = web_process.updated_at
+              old_worker_process_updated_at = worker_process.updated_at
+              sleep 1
+              expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
+              web_process.reload
+              worker_process.reload
+              expect(web_process.updated_at).to be > old_web_process_updated_at
+              expect(worker_process.updated_at).to be > old_worker_process_updated_at
             end
           end
         end
