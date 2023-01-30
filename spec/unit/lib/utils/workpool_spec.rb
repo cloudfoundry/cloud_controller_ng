@@ -3,7 +3,7 @@ require 'utils/workpool'
 RSpec.describe WorkPool do
   describe '#drain' do
     it 'runs blocks passed in' do
-      wp = WorkPool.new(1)
+      wp = WorkPool.new(size: 1)
       ran = false
       wp.submit do
         ran = true
@@ -13,7 +13,7 @@ RSpec.describe WorkPool do
     end
 
     it 'propagates arguments passed in to the inner block' do
-      wp = WorkPool.new(1)
+      wp = WorkPool.new(size: 1)
       args = []
       wp.submit(1, 2, 3) do |a, b, c|
         args = [a, b, c]
@@ -23,7 +23,7 @@ RSpec.describe WorkPool do
     end
 
     it 'parallelizes up to "size" threads' do
-      wp = WorkPool.new(5)
+      wp = WorkPool.new(size: 5)
 
       require 'benchmark'
       time = Benchmark.realtime do
@@ -38,7 +38,7 @@ RSpec.describe WorkPool do
     end
 
     it 'finishes running work before draining' do
-      wp = WorkPool.new(1)
+      wp = WorkPool.new(size: 1)
       ran = false
       wp.submit do
         sleep 0.1
@@ -52,7 +52,7 @@ RSpec.describe WorkPool do
     context 'when a queued block raises an exception' do
       context 'when store_exceptions is true' do
         it 'exposes the exception after draining' do
-          wp = WorkPool.new(1, store_exceptions: true)
+          wp = WorkPool.new(size: 1, store_exceptions: true)
           exception = RuntimeError.new('Boom')
           wp.submit do
             raise exception
@@ -64,7 +64,7 @@ RSpec.describe WorkPool do
 
         it 'processes other work in the queue' do
           ran = false
-          wp = WorkPool.new(1, store_exceptions: true)
+          wp = WorkPool.new(size: 1, store_exceptions: true)
           wp.submit do
             raise 'Boom'
           end
@@ -77,7 +77,7 @@ RSpec.describe WorkPool do
         end
 
         it 'accumulates all exceptions raised' do
-          wp = WorkPool.new(1, store_exceptions: true)
+          wp = WorkPool.new(size: 1, store_exceptions: true)
 
           3.times do
             wp.submit do
@@ -93,7 +93,7 @@ RSpec.describe WorkPool do
       context 'when store_exceptions is false' do
         it 'processes other work in the queue' do
           ran = false
-          wp = WorkPool.new(1)
+          wp = WorkPool.new(size: 1)
           wp.submit do
             raise 'Boom'
           end
@@ -106,7 +106,7 @@ RSpec.describe WorkPool do
         end
 
         it 'does NOT accumulate exceptions' do
-          wp = WorkPool.new(1)
+          wp = WorkPool.new(size: 1)
 
           3.times do
             wp.submit do
@@ -125,7 +125,7 @@ RSpec.describe WorkPool do
     context 'when there are dead threads in the pool' do
       it 'replaces the dead threads with new ones' do
         thread_count = 2
-        wp = WorkPool.new(thread_count)
+        wp = WorkPool.new(size: thread_count)
         wp.submit do
           1 + 1
         end
@@ -152,7 +152,7 @@ RSpec.describe WorkPool do
     context 'when all of the threads in the pool are healthy' do
       it 'does not modify the healthy threads' do
         thread_count = 2
-        wp = WorkPool.new(thread_count)
+        wp = WorkPool.new(size: thread_count)
         wp.submit do
           1 + 1
         end
