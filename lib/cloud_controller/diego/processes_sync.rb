@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       def initialize(config:, statsd_updater: VCAP::CloudController::Metrics::StatsdUpdater.new)
         @config   = config
-        @workpool = WorkPool.new(store_exceptions: true)
+        @workpool = WorkPool.new(50, store_exceptions: true)
         @statsd_updater = statsd_updater
       end
 
