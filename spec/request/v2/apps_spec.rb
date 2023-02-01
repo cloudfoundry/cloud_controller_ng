@@ -4,13 +4,13 @@ require 'diego/lrp_constants'
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:http_client) { instance_double(Net::HTTP::Persistent, request: nil) }
+  let(:build_client) { instance_double(HTTPClient, post: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
     TestConfig.override(kubernetes: {})
-    allow_any_instance_of(::Diego::Client).to receive(:new_http_client).and_return(http_client)
+    allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
   end
 
   describe 'GET /v2/apps' do
