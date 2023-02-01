@@ -127,14 +127,14 @@ each_run_block = proc do
 
     rspec_config.include SpaceRestrictedResponseGenerators
 
-    rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
+    rspec_config.before(:all) { WebMock.disable_net_connect!(allow: ['codeclimate.com', 'fake.bbs']) }
     rspec_config.before(:all, type: :integration) do
       WebMock.allow_net_connect!
       @uaa_server = FakeUAAServer.new(6789)
       @uaa_server.start
     end
     rspec_config.after(:all, type: :integration) do
-      WebMock.disable_net_connect!(allow: 'codeclimate.com')
+      WebMock.disable_net_connect!(allow: ['codeclimate.com', 'fake.bbs'])
       @uaa_server.stop
     end
 

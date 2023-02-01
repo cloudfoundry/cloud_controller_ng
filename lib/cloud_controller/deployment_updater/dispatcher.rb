@@ -15,7 +15,7 @@ module VCAP::CloudController
           deployments_to_cancel = DeploymentModel.where(state: DeploymentModel::CANCELING_STATE).all
 
           begin
-            workpool = WorkPool.new(50)
+            workpool = WorkPool.new
 
             logger.info("scaling #{deployments_to_scale.size} deployments")
             deployments_to_scale.each do |deployment|

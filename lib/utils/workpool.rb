@@ -1,7 +1,9 @@
 class WorkPool
+  SIZE = 50
+
   attr_reader :exceptions, :threads
 
-  def initialize(size, store_exceptions: false)
+  def initialize(size: SIZE, store_exceptions: false)
     @size = size
     @store_exceptions = store_exceptions
 

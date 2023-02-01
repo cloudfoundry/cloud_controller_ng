@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def self.singleton_workpool
-        @singleton_workpool ||= WorkPool.new(50)
+        @singleton_workpool ||= WorkPool.new
       end
 
       def all_instances_for_app(process)
