@@ -30,6 +30,10 @@ This is the default lifecycle for Cloud Foundry for VMs. When staging an app wit
 compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
 will be created and the droplet will be expanded inside that container to be executed.
 
+If buildpacks are not specified, then Cloud Foundry will automatically detect a
+compatible buildpack, based on the files in an app's package. If a stack is not
+specified, then the app will default to the operator-configured default stack.
+
 **Note**: This lifecycle is not supported on Cloud Foundry for Kubernetes.
 
 #### Buildpack lifecycle object

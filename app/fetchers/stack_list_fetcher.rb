@@ -15,6 +15,13 @@ module VCAP::CloudController
           dataset = dataset.where(name: message.names)
         end
 
+        if message.requested?(:default)
+          condition = { name: Stack.default.name }.yield_self do |c|
+            ActiveModel::Type::Boolean.new.cast(message.default) ? c : Sequel.~(c)
+          end
+          dataset = dataset.where(condition)
+        end
+
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: StackLabelModel,

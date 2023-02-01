@@ -19,7 +19,7 @@ module VCAP::CloudController
     register_allowed_keys(@single_keys + @array_keys)
 
     validates_with NoAdditionalParamsValidator
-    validates :available, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
+    validates :available, boolean_string: true, allow_nil: true
 
     validates :fields, allow_nil: true, fields: {
       allowed: {

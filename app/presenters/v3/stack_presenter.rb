@@ -12,6 +12,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: stack.updated_at,
         name: stack.name,
         description: stack.description,
+        default: stack.default?,
         metadata: {
           labels: hashified_labels(stack.labels),
           annotations: hashified_annotations(stack.annotations),

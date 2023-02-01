@@ -2,8 +2,12 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Stacks Request' do
+  let(:stack_config_file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
+  let(:default_stack_name) { 'default-stack-name' }
   let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+  before { VCAP::CloudController::Stack.configure(stack_config_file) }
 
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
@@ -13,57 +17,44 @@ RSpec.describe 'Stacks Request' do
 
     context 'lists all stacks' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-        let(:stacks_response_object) do
-          {
-            'pagination' => {
-              'total_results' => 3,
-              'total_pages' => 2,
-              'first' => {
-                'href' => "#{link_prefix}/v3/stacks?page=1&per_page=2"
-              },
-              'last' => {
-                'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
-              },
-              'next' => {
-                'href' => "#{link_prefix}/v3/stacks?page=2&per_page=2"
-              },
-              'previous' => nil
-            },
-            'resources' => [
-              {
-                'name' => stack1.name,
-                'description' => stack1.description,
-                'guid' => stack1.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
-                  }
-                }
-              },
-              {
-                'name' => stack2.name,
-                'description' => stack2.description,
-                'guid' => stack2.guid,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
-                  }
+        let(:stacks_response_objects) do
+          [
+            {
+              'name' => stack1.name,
+              'description' => stack1.description,
+              'guid' => stack1.guid,
+              'default' => false,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
                 }
               }
-            ]
-          }
+            },
+            {
+              'name' => stack2.name,
+              'description' => stack2.description,
+              'guid' => stack2.guid,
+              'default' => true,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
+                }
+              }
+            }
+          ]
         end
+
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_object: stacks_response_object)
+          Hash.new(code: 200, response_objects: stacks_response_objects)
         end
         let!(:stack1) { VCAP::CloudController::Stack.make }
-        let!(:stack2) { VCAP::CloudController::Stack.make }
+        let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
       end
     end
 
@@ -82,6 +73,7 @@ RSpec.describe 'Stacks Request' do
         let(:params) do
           {
             names: ['foo', 'bar'],
+            default: true,
             page:   '2',
             per_page:   '10',
             order_by:   'updated_at',
@@ -91,11 +83,12 @@ RSpec.describe 'Stacks Request' do
             updated_ats: { gt: Time.now.utc.iso8601 },
           }
         end
+        let!(:stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
       end
 
       context 'When stacks exist' do
         let!(:stack1) { VCAP::CloudController::Stack.make }
-        let!(:stack2) { VCAP::CloudController::Stack.make }
+        let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
         let!(:stack3) { VCAP::CloudController::Stack.make }
 
         it 'returns a paginated list of stacks' do
@@ -122,6 +115,7 @@ RSpec.describe 'Stacks Request' do
                   'name' => stack1.name,
                   'description' => stack1.description,
                   'guid' => stack1.guid,
+                  'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -135,6 +129,7 @@ RSpec.describe 'Stacks Request' do
                   'name' => stack2.name,
                   'description' => stack2.description,
                   'guid' => stack2.guid,
+                  'default' => true,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -171,6 +166,7 @@ RSpec.describe 'Stacks Request' do
                   'name' => stack1.name,
                   'description' => stack1.description,
                   'guid' => stack1.guid,
+                  'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -184,12 +180,50 @@ RSpec.describe 'Stacks Request' do
                   'name' => stack3.name,
                   'description' => stack3.description,
                   'guid' => stack3.guid,
+                  'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
                   'links' => {
                     'self' => {
                       'href' => "#{link_prefix}/v3/stacks/#{stack3.guid}"
+                    }
+                  }
+                }
+              ]
+            }
+          )
+        end
+
+        it 'returns a list of stacks filtered by whether they are default' do
+          get '/v3/stacks?default=true', nil, user_header
+
+          expect(parsed_response).to be_a_response_like(
+            {
+              'pagination' => {
+                'total_results' => 1,
+                'total_pages' => 1,
+                'first' => {
+                  'href' => "#{link_prefix}/v3/stacks?default=true&page=1&per_page=50"
+                },
+                'last' => {
+                  'href' => "#{link_prefix}/v3/stacks?default=true&page=1&per_page=50"
+                },
+                'next' => nil,
+                'previous' => nil
+              },
+              'resources' => [
+                {
+                  'name' => stack2.name,
+                  'description' => stack2.description,
+                  'guid' => stack2.guid,
+                  'default' => true,
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack2.guid}"
                     }
                   }
                 }
@@ -234,6 +268,7 @@ RSpec.describe 'Stacks Request' do
                     'name' => stack1.name,
                     'description' => stack1.description,
                     'guid' => stack1.guid,
+                    'default' => false,
                     'metadata' => {
                       'labels' => {
                         'release' => 'stable'
@@ -267,6 +302,7 @@ RSpec.describe 'Stacks Request' do
         'name' => stack.name,
         'description' => stack.description,
         'guid' => stack.guid,
+        'default' => false,
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
@@ -581,6 +617,7 @@ RSpec.describe 'Stacks Request' do
         {
           'name' => 'the-name',
           'description' => 'the-description',
+          'default' => false,
           'metadata' => {
             'labels' => {
               'potato' => 'yam'
@@ -642,6 +679,7 @@ RSpec.describe 'Stacks Request' do
         {
           'name' => stack.name,
           'description' => stack.description,
+          'default' => false,
           'metadata' => {
             'labels' => {
               'potato' => 'yam'

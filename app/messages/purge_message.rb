@@ -7,7 +7,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates :purge, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
+    validates :purge, boolean_string: true, allow_nil: true
 
     def self.from_params(params)
       super(params, [])
