@@ -3,14 +3,17 @@ require 'diego/client'
 
 module Diego
   RSpec.describe Client do
-    let(:bbs_url) { 'https://bbs.example.com:4443' }
+    let(:bbs_host) { 'bbs.example.com' }
+    let(:bbs_port) { 4443 }
+    let(:bbs_url) { "https://#{bbs_host}:#{bbs_port}" }
     let(:ca_cert_file) { File.join(Paths::FIXTURES, 'certs/bbs_ca.crt') }
     let(:client_cert_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.crt') }
     let(:client_key_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.key') }
+    let(:timeout) { 10 }
 
     subject(:client) do
       Client.new(url: bbs_url, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file,
-                 connect_timeout: 10, send_timeout: 10, receive_timeout: 10)
+                 connect_timeout: timeout, send_timeout: timeout, receive_timeout: timeout)
     end
 
     describe 'configuration' do
@@ -26,12 +29,12 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/ping').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/ping").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a ping response' do
         expect(client.ping.available).to be_truthy
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/ping')).to have_been_made
+        expect(a_request(:post, "#{bbs_url}/v1/ping")).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -45,11 +48,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/ping').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/ping").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.ping }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/ping")).to have_been_made.times(3)
         end
       end
 
@@ -69,7 +73,7 @@ module Diego
       let(:ttl) { VCAP::CloudController::Diego::APP_LRP_DOMAIN_TTL }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/domains/upsert").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a domain lifecycle response' do
@@ -78,10 +82,10 @@ module Diego
         response = client.upsert_domain(domain: domain, ttl: ttl)
 
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').with(
+        expect(a_request(:post, "#{bbs_url}/v1/domains/upsert").with(
                  body: Bbs::Models::UpsertDomainRequest.encode(expected_domain_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -95,11 +99,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/domains/upsert").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/domains/upsert")).to have_been_made.times(3)
         end
       end
 
@@ -124,7 +129,7 @@ module Diego
       let(:task_definition) { Bbs::Models::TaskDefinition.new }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/tasks/desire.r2").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a task lifecycle response' do
@@ -133,10 +138,10 @@ module Diego
         response = client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
 
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').with(
+        expect(a_request(:post, "#{bbs_url}/v1/tasks/desire.r2").with(
                  body: Bbs::Models::DesireTaskRequest.encode(expected_task_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -152,11 +157,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/tasks/desire.r2").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/desire.r2")).to have_been_made.times(3)
         end
       end
 
@@ -180,7 +186,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/tasks/list.r2").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a tasks response' do
@@ -189,10 +195,10 @@ module Diego
         expected_request = Bbs::Models::TasksRequest.new
 
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
+        expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                  body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       describe 'filtering' do
@@ -202,10 +208,10 @@ module Diego
           expected_request = Bbs::Models::TasksRequest.new(domain: 'some-domain')
 
           expect(response.error).to be_nil
-          expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
-          )).to have_been_made
+          )).to have_been_made.once
         end
 
         it 'filters by cell_id' do
@@ -214,10 +220,10 @@ module Diego
           expected_request = Bbs::Models::TasksRequest.new(cell_id: 'cell-id-thing')
 
           expect(response.error).to be_nil
-          expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
-          )).to have_been_made
+          )).to have_been_made.once
         end
       end
 
@@ -232,11 +238,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/tasks/list.r2").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.tasks }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2")).to have_been_made.times(3)
         end
       end
 
@@ -260,7 +267,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/get_by_task_guid.r2').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a task response' do
@@ -269,10 +276,10 @@ module Diego
         expected_request = Bbs::Models::TaskByGuidRequest.new(task_guid: 'some-guid')
 
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/get_by_task_guid.r2').with(
+        expect(a_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2").with(
                  body: Bbs::Models::TaskByGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -286,11 +293,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/get_by_task_guid.r2').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.task_by_guid('some-guid') }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2")).to have_been_made.times(3)
         end
       end
 
@@ -314,7 +322,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/tasks/cancel").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a task lifecycle response' do
@@ -323,10 +331,10 @@ module Diego
         response = client.cancel_task('some-guid')
 
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').with(
+        expect(a_request(:post, "#{bbs_url}/v1/tasks/cancel").with(
                  body: Bbs::Models::TaskGuidRequest.encode(expected_cancel_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -340,11 +348,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/tasks/cancel").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.cancel_task('some-guid') }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/tasks/cancel")).to have_been_made.times(3)
         end
       end
 
@@ -369,7 +378,7 @@ module Diego
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Lifecycle Response' do
@@ -378,10 +387,10 @@ module Diego
         response = client.desire_lrp(lrp)
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2").with(
                  body: Bbs::Models::DesireLRPRequest.encode(expected_desire_lrp_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -395,11 +404,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.desire_lrp(lrp) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2")).to have_been_made.times(3)
         end
       end
 
@@ -426,7 +436,7 @@ module Diego
       let(:process_guid) { 'process-guid' }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Response' do
@@ -436,10 +446,10 @@ module Diego
         expect(response).to be_a(Bbs::Models::DesiredLRPResponse)
         expect(response.error).to be_nil
         expect(response.desired_lrp).to eq(lrp)
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2").with(
                  body: Bbs::Models::DesiredLRPByProcessGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -455,11 +465,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.desired_lrp_by_process_guid(process_guid) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2")).to have_been_made.times(3)
         end
       end
 
@@ -484,7 +495,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/remove').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrp/remove").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Lifecycle Response' do
@@ -493,10 +504,10 @@ module Diego
         response = client.remove_desired_lrp(process_guid)
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/remove').with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/remove").with(
                  body: Bbs::Models::RemoveDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -510,11 +521,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/remove').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrp/remove").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.remove_desired_lrp(process_guid) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/remove")).to have_been_made.times(3)
         end
       end
 
@@ -539,7 +551,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/actual_lrps/retire").to_return(status: response_status, body: response_body)
       end
 
       it 'returns an Actual LRP Lifecycle Response' do
@@ -548,10 +560,10 @@ module Diego
         response = client.retire_actual_lrp(actual_lrp_key)
         expect(response).to be_a(Bbs::Models::ActualLRPLifecycleResponse)
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').with(
+        expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/retire").with(
                  body: Bbs::Models::RetireActualLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -567,11 +579,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/actual_lrps/retire").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.retire_actual_lrp(actual_lrp_key) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/retire")).to have_been_made.times(3)
         end
       end
 
@@ -590,25 +603,6 @@ module Diego
       end
     end
 
-    describe '#with_request_error_handling' do
-      it 'retries' do
-        tries = 0
-
-        client.with_request_error_handling do
-          tries += 1
-          raise 'error' if tries < 2
-        end
-
-        expect(tries).to be > 1
-      end
-
-      it 'raises an error after all retries fail' do
-        expect {
-          client.with_request_error_handling { raise 'error' }
-        }.to raise_error(RequestError)
-      end
-    end
-
     describe '#update_desired_lrp' do
       let(:process_guid) { 'process-guid' }
       let(:lrp_update) { ::Diego::Bbs::Models::DesiredLRPUpdate.new(instances: 3) }
@@ -617,7 +611,7 @@ module Diego
       let(:response_status) { 200 }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrp/update").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Lifecycle Response' do
@@ -626,10 +620,10 @@ module Diego
         response = client.update_desired_lrp(process_guid, lrp_update)
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update").with(
                  body: Bbs::Models::UpdateDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -643,11 +637,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrp/update").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
           expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update")).to have_been_made.times(3)
         end
       end
 
@@ -677,7 +672,7 @@ module Diego
       let(:actual_lrps) { [::Diego::Bbs::Models::ActualLRP.new] }
       let(:response_status) { 200 }
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/list').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/actual_lrps/list").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a LRP instances response' do
@@ -687,10 +682,10 @@ module Diego
         expect(response).to be_a(Bbs::Models::ActualLRPsResponse)
         expect(response.error).to be_nil
         expect(response.actual_lrps).to eq(actual_lrps)
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/list').with(
+        expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/list").with(
                  body: Bbs::Models::ActualLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
     end
 
@@ -704,7 +699,7 @@ module Diego
       let(:domain) { 'domain' }
 
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').to_return(status: response_status, body: response_body)
+        stub_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list").to_return(status: response_status, body: response_body)
       end
 
       it 'returns a Desired LRP Scheduling Infos Response' do
@@ -714,10 +709,10 @@ module Diego
         expect(response).to be_a(Bbs::Models::DesiredLRPSchedulingInfosResponse)
         expect(response.error).to be_nil
         expect(response.desired_lrp_scheduling_infos).to eq(scheduling_infos)
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').with(
+        expect(a_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list").with(
                  body: Bbs::Models::DesiredLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
-        )).to have_been_made
+        )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -733,13 +728,12 @@ module Diego
 
       context 'when it fails to make the request' do
         before do
-          stub_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').to_raise(StandardError.new('error message'))
+          stub_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list").to_raise(StandardError.new('error message'))
         end
 
         it 'raises' do
-          expect {
-            client.desired_lrp_scheduling_infos(domain)
-          }.to raise_error(RequestError, /error message/)
+          expect { client.desired_lrp_scheduling_infos(domain) }.to raise_error(RequestError, /error message/)
+          expect(a_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list")).to have_been_made.times(3)
         end
       end
 
@@ -774,6 +768,20 @@ module Diego
         expect {
           client.with_request_error_handling { raise 'error' }
         }.to raise_error(RequestError)
+      end
+    end
+
+    describe 'tcp socket initialization' do
+      let(:bbs_host) { 'fake.bbs' } # in WebMock allow-list, see spec/spec_helper.rb
+
+      before do
+        # We don't actually communicate over the socket, we just want to check the invocation.
+        allow(TCPSocket).to receive(:new).and_raise('done!')
+      end
+
+      it 'sets TCPSocket:connect_timeout to HTTPClient:connect_timeout / 2' do
+        expect { client.ping }.to raise_error('done!')
+        expect(TCPSocket).to have_received(:new).with(bbs_host, bbs_port, { connect_timeout: timeout / 2 }).exactly(3).times
       end
     end
   end
