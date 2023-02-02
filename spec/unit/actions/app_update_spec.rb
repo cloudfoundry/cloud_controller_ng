@@ -112,15 +112,23 @@ module VCAP::CloudController
               expect(app_model.name).to eq('new name')
             end
 
-            it 'updates the process updated_at timestamps so that it still converges' do
-              old_web_process_updated_at = web_process.updated_at
-              old_worker_process_updated_at = worker_process.updated_at
-              sleep 1
-              expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
-              web_process.reload
-              worker_process.reload
-              expect(web_process.updated_at).to be > old_web_process_updated_at
-              expect(worker_process.updated_at).to be > old_worker_process_updated_at
+            context 'ensuring convergence' do
+              let!(:web_process) { instance_double(VCAP::CloudController::ProcessModel) }
+              let!(:worker_process) { instance_double(VCAP::CloudController::ProcessModel) }
+
+              before do
+                allow(web_process).to receive(:save)
+                allow(web_process).to receive(:state).and_return(ProcessModel::STARTED)
+                allow(worker_process).to receive(:save)
+                allow(worker_process).to receive(:state).and_return(ProcessModel::STARTED)
+                allow(app_model).to receive(:processes).and_return([web_process, worker_process])
+              end
+
+              it 'updates the process updated_at timestamps so that it still converges' do
+                expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
+                expect(web_process).to have_received(:save)
+                expect(worker_process).to have_received(:save)
+              end
             end
           end
 
@@ -142,15 +150,23 @@ module VCAP::CloudController
               expect(app_model.name).to eq('new name')
             end
 
-            it 'updates the process updated_at timestamps so that it still converges' do
-              old_web_process_updated_at = web_process.updated_at
-              old_worker_process_updated_at = worker_process.updated_at
-              sleep 1
-              expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
-              web_process.reload
-              worker_process.reload
-              expect(web_process.updated_at).to be > old_web_process_updated_at
-              expect(worker_process.updated_at).to be > old_worker_process_updated_at
+            context 'ensuring convergence' do
+              let!(:web_process) { instance_double(VCAP::CloudController::ProcessModel) }
+              let!(:worker_process) { instance_double(VCAP::CloudController::ProcessModel) }
+
+              before do
+                allow(web_process).to receive(:save)
+                allow(web_process).to receive(:state).and_return(ProcessModel::STARTED)
+                allow(worker_process).to receive(:save)
+                allow(worker_process).to receive(:state).and_return(ProcessModel::STARTED)
+                allow(app_model).to receive(:processes).and_return([web_process, worker_process])
+              end
+
+              it 'updates the process updated_at timestamps so that it still converges' do
+                expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
+                expect(web_process).to have_received(:save)
+                expect(worker_process).to have_received(:save)
+              end
             end
           end
         end
