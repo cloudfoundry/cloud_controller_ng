@@ -47,6 +47,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
         expect(result[:updated_at]).to eq(stack.updated_at)
         expect(result[:name]).to eq(stack.name)
         expect(result[:description]).to eq(stack.description)
+        expect(result[:default]).to eq(false)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/stacks/#{stack.guid}")
@@ -67,6 +68,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
         expect(result[:created_at]).to eq(stack.created_at)
         expect(result[:updated_at]).to eq(stack.updated_at)
         expect(result[:name]).to eq(stack.name)
+        expect(result[:default]).to eq(false)
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/stacks/#{stack.guid}")
       end
     end

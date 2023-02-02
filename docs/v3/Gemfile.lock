@@ -1,7 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (7.0.4)
+    activesupport (7.0.4.2)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -15,7 +15,7 @@ GEM
       coffee-script-source
       execjs
     coffee-script-source (1.12.2)
-    concurrent-ruby (1.1.10)
+    concurrent-ruby (1.2.0)
     contracts (0.17)
     dotenv (2.8.1)
     em-websocket (0.5.3)
@@ -97,13 +97,13 @@ GEM
     mini_portile2 (2.8.1)
     mini_racer (0.6.3)
       libv8-node (~> 16.10.0.0)
-    minitest (5.16.3)
-    nokogiri (1.14.0)
+    minitest (5.17.0)
+    nokogiri (1.14.1)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
-    nokogiri (1.14.0-x86_64-darwin)
+    nokogiri (1.14.1-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.14.0-x86_64-linux)
+    nokogiri (1.14.1-x86_64-linux)
       racc (~> 1.4)
     padrino-helpers (0.15.1)
       i18n (>= 0.6.7, < 2)
@@ -114,14 +114,14 @@ GEM
     parslet (2.0.0)
     public_suffix (5.0.0)
     racc (1.6.2)
-    rack (2.2.4)
+    rack (2.2.6.2)
     rack-livereload (0.3.17)
       rack
     rake (13.0.6)
     rb-fsevent (0.11.2)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
-    redcarpet (3.5.1)
+    redcarpet (3.6.0)
     rexml (3.2.5)
     rouge (1.11.1)
     sass (3.7.4)
@@ -160,9 +160,9 @@ DEPENDENCIES
   middleman-sprockets (~> 4.1, >= 4.1.1)
   middleman-syntax (= 2.1.0)
   mini_racer
-  nokogiri (~> 1.14.0)
+  nokogiri (~> 1.14.1)
   rake (>= 12.3.3)
-  redcarpet (~> 3.5.1)
+  redcarpet (~> 3.6.0)
   sass
 
 BUNDLED WITH

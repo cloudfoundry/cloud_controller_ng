@@ -5,6 +5,7 @@
    "updated_at": "2018-11-09T22:43:28Z",
    "name": "my-stack",
    "description": "Here is my stack!",
+   "default": true,
    "metadata": {
      "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
      "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
@@ -40,6 +41,7 @@
       "updated_at": "2018-11-09T22:43:28Z",
       "name": "my-stack-1",
       "description": "This is my first stack!",
+      "default": true,
       "metadata": {
         "labels": {},
         "annotations": {}
@@ -56,6 +58,7 @@
       "updated_at": "2018-11-09T22:43:29Z",
       "name": "my-stack-2",
       "description": "This is my second stack!",
+      "default": false,
       "metadata": {
         "labels": {},
         "annotations": {}

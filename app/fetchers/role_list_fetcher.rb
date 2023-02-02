@@ -5,8 +5,8 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class RoleListFetcher < BaseListFetcher
     class << self
-      def fetch(message, readable_users_dataset, eager_loaded_associations: [])
-        filter(message, readable_users_dataset).eager(eager_loaded_associations)
+      def fetch(message, readable_roles, eager_loaded_associations: [])
+        filter(message, readable_roles).eager(eager_loaded_associations)
       end
 
       private

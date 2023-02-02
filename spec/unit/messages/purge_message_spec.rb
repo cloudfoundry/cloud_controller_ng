@@ -30,7 +30,7 @@ module VCAP::CloudController
         message = PurgeMessage.from_params({ purge: 'nope' }.with_indifferent_access)
 
         expect(message).not_to be_valid
-        expect(message.errors[:purge]).to include("only accepts values 'true' or 'false'")
+        expect(message.errors[:purge]).to include("must be 'true' or 'false'")
       end
     end
 

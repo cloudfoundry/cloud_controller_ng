@@ -23,16 +23,16 @@ module VCAP::CloudController
             values.map do |operator, given_timestamp|
               if operator == RelationalOperators::LESS_THAN_COMPARATOR
                 normalized_timestamp = Time.parse(given_timestamp).utc
-                dataset = dataset.where { Sequel.qualify(klass.table_name, filter) < normalized_timestamp }
+                dataset = dataset.where(Sequel.qualify(klass.table_name, filter) < normalized_timestamp)
               elsif operator == RelationalOperators::LESS_THAN_OR_EQUAL_COMPARATOR
                 normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-                dataset = dataset.where { Sequel.qualify(klass.table_name, filter) <= normalized_timestamp }
+                dataset = dataset.where(Sequel.qualify(klass.table_name, filter) <= normalized_timestamp)
               elsif operator == RelationalOperators::GREATER_THAN_COMPARATOR
                 normalized_timestamp = (Time.parse(given_timestamp).utc + 0.999999).utc
-                dataset = dataset.where { Sequel.qualify(klass.table_name, filter) > normalized_timestamp }
+                dataset = dataset.where(Sequel.qualify(klass.table_name, filter) > normalized_timestamp)
               elsif operator == RelationalOperators::GREATER_THAN_OR_EQUAL_COMPARATOR
                 normalized_timestamp = Time.parse(given_timestamp).utc
-                dataset = dataset.where { Sequel.qualify(klass.table_name, filter) >= normalized_timestamp }
+                dataset = dataset.where(Sequel.qualify(klass.table_name, filter) >= normalized_timestamp)
               end
             end
           else

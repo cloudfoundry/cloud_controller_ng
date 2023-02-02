@@ -41,6 +41,12 @@ module VCAP::CloudController
       super
     end
 
+    def default?
+      self == Stack.default
+    rescue MissingDefaultStackError
+      false
+    end
+
     def self.configure(file_path)
       @config_file = if file_path
                        ConfigFile.new(file_path)

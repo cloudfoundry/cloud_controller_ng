@@ -10,6 +10,7 @@ module VCAP::CloudController
 
       def start_request(request_id, env)
         request = ActionDispatch::Request.new(env)
+        return if health_endpoint?(request)
 
         @logger.info(
           sprintf('Started %<method>s "%<path>s" for user: %<user>s, ip: %<ip>s with vcap-request-id: %<request_id>s at %<at>s',
@@ -24,7 +25,8 @@ module VCAP::CloudController
       end
 
       def complete_request(request_id, status)
-        @incomplete_requests.delete(request_id)
+        return if @incomplete_requests.delete(request_id).nil?
+
         @logger.info("Completed #{status} vcap-request-id: #{request_id}")
       end
 
@@ -44,6 +46,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def health_endpoint?(request)
+        request.fullpath.match(%r{\A/healthz})
+      end
 
       def anonymize_ip(request_ip)
         # Remove last octet of ip if EU GDPR compliance is needed

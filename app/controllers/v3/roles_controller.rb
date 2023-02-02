@@ -52,14 +52,14 @@ class RolesController < ApplicationController
     decorators << IncludeRoleOrganizationDecorator if IncludeRoleOrganizationDecorator.match?(message.include)
     decorators << IncludeRoleSpaceDecorator if IncludeRoleSpaceDecorator.match?(message.include)
 
-    role = readable_roles.first(guid: hashed_params[:guid])
+    role = readable_roles.where(guid: hashed_params[:guid]).first
     resource_not_found!(:role) unless role
 
     render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators: decorators)
   end
 
   def destroy
-    role = readable_roles.first(guid: hashed_params[:guid])
+    role = readable_roles.where(guid: hashed_params[:guid]).first
     resource_not_found!(:role) unless role
 
     if role.for_space?
@@ -145,7 +145,11 @@ class RolesController < ApplicationController
     if permission_queryer.can_read_globally?
       Role
     else
-      Role.where(space_id: visible_space_ids).or(organization_id: visible_org_ids)
+      # This rather complex filter should be applied to the overall Role dataset and is thus using the (virtual row)
+      # block syntax.
+      readable_by_space = { space_id: visible_space_ids }
+      readable_by_org = { organization_id: visible_org_ids }
+      Role.where { Sequel.|(readable_by_space, readable_by_org) }
     end
   end
 
