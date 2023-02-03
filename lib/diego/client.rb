@@ -1,13 +1,14 @@
 require 'diego/bbs/bbs'
 require 'diego/errors'
 require 'diego/routes'
+require 'http/httpclient'
 
 module Diego
   class Client
     PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
 
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:,
-      connect_timeout:, send_timeout:, receive_timeout:)
+                   connect_timeout:, send_timeout:, receive_timeout:)
       ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
       @client = build_client(
         url,
@@ -24,7 +25,7 @@ module Diego
         client.post(Routes::PING)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::PingResponse)
     end
 
@@ -35,7 +36,7 @@ module Diego
         client.post(Routes::UPSERT_DOMAIN, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::UpsertDomainResponse)
     end
 
@@ -46,7 +47,7 @@ module Diego
         client.post(Routes::DESIRE_TASK, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::TaskLifecycleResponse)
     end
 
@@ -57,7 +58,7 @@ module Diego
         client.post(Routes::TASK_BY_GUID, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::TaskResponse)
     end
 
@@ -68,7 +69,7 @@ module Diego
         client.post(Routes::LIST_TASKS, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::TasksResponse)
     end
 
@@ -79,7 +80,7 @@ module Diego
         client.post(Routes::CANCEL_TASK, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::TaskLifecycleResponse)
     end
 
@@ -90,7 +91,7 @@ module Diego
         client.post(Routes::DESIRE_LRP, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
@@ -101,7 +102,7 @@ module Diego
         client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPResponse)
     end
 
@@ -112,7 +113,7 @@ module Diego
         client.post(Routes::UPDATE_DESIRED_LRP, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
@@ -123,7 +124,7 @@ module Diego
         client.post(Routes::REMOVE_DESIRED_LRP, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPLifecycleResponse)
     end
 
@@ -134,7 +135,7 @@ module Diego
         client.post(Routes::RETIRE_ACTUAL_LRP, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::ActualLRPLifecycleResponse)
     end
 
@@ -145,7 +146,7 @@ module Diego
         client.post(Routes::DESIRED_LRP_SCHEDULING_INFOS, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPSchedulingInfosResponse)
     end
 
@@ -156,7 +157,7 @@ module Diego
         client.post(Routes::ACTUAL_LRPS, request, PROTOBUF_HEADER)
       end
 
-      validate_status!(response: response, statuses: [200])
+      validate_status_200!(response)
       protobuf_decode!(response.body, Bbs::Models::ActualLRPsResponse)
     end
 
@@ -180,8 +181,8 @@ module Diego
       raise EncodeError.new(e.message)
     end
 
-    def validate_status!(response:, statuses:)
-      raise ResponseError.new("failed with status: #{response.status}, body: #{response.body}") unless statuses.include?(response.status)
+    def validate_status_200!(response)
+      raise ResponseError.new("failed with status: #{response.status}, body: #{response.body}") unless response.status == 200
     end
 
     def protobuf_decode!(message, protobuf_decoder)
@@ -191,11 +192,12 @@ module Diego
     end
 
     def build_client(url, ca_cert_file, client_cert_file, client_key_file,
-      connect_timeout, send_timeout, receive_timeout)
-      client                 = HTTPClient.new(base_url: url)
-      client.connect_timeout = connect_timeout
-      client.send_timeout    = send_timeout
-      client.receive_timeout = receive_timeout
+                     connect_timeout, send_timeout, receive_timeout)
+      client                        = HTTPClient.new(base_url: url)
+      client.socket_connect_timeout = connect_timeout / 2
+      client.connect_timeout        = connect_timeout
+      client.send_timeout           = send_timeout
+      client.receive_timeout        = receive_timeout
       client.ssl_config.set_client_cert_file(client_cert_file, client_key_file)
       client.ssl_config.set_trust_ca(ca_cert_file)
       client
