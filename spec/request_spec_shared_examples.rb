@@ -78,6 +78,9 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
         api_call.call(headers)
 
+        unrecognized_keys = expected_codes_and_responses[role].keys - [:code, :response_guids, :response_objects, :scopes,]
+        fail("Unrecognized expected_codes_and_responses key(s) for #{role}: #{unrecognized_keys}") unless unrecognized_keys.empty?
+
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response).to have_status_code(expected_response_code)
 
@@ -126,6 +129,9 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         )
 
         api_call.call(headers)
+
+        unrecognized_keys = expected_codes_and_responses[role].keys - [:code, :errors, :response_guid, :response_object, :scopes,]
+        fail("Unrecognized expected_codes_and_responses key(s) for #{role}: #{unrecognized_keys}") unless unrecognized_keys.empty?
 
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response).to have_status_code(expected_response_code)
@@ -195,6 +201,9 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
         )
         api_call.call(headers)
 
+        unrecognized_keys = expected_codes_and_responses[role].keys - [:code, :scopes, :errors,]
+        fail("Unrecognized expected_codes_and_responses key(s) for #{role}: #{unrecognized_keys}") unless unrecognized_keys.empty?
+
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response).to have_status_code(expected_response_code)
 
@@ -210,6 +219,11 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
               actor_name: email,
               actor_username: user_name,
             }))
+          end
+        elsif (400...499).cover? expected_response_code
+          expected_errors = expected_codes_and_responses[role][:errors]
+          unless expected_errors.nil?
+            expect({ errors: errors_without_test_mode_info(parsed_response) }).to match_json_response({ errors: expected_errors })
           end
         end
       end

@@ -61,7 +61,7 @@ RSpec.describe 'V3 service plans' do
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_objects: create_plan_json(service_plan)).tap do |r|
+          Hash.new(code: 200, response_object: create_plan_json(service_plan)).tap do |r|
             r['unauthenticated'] = { code: 404 }
             r['no_role'] = { code: 404 }
           end
