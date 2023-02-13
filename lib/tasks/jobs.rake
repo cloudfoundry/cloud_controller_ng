@@ -1,3 +1,5 @@
+require 'delayed_job/quit_trap'
+
 namespace :jobs do
   desc 'Clear the delayed_job queue.'
   task :clear do
