@@ -113,8 +113,8 @@ module VCAP::CloudController
 
       def running_or_starting?(lrp)
         translated_state = LrpStateTranslator.translate_lrp_state(lrp)
-        return true if VCAP::CloudController::Diego::LRP_RUNNING == translated_state
-        return true if VCAP::CloudController::Diego::LRP_STARTING == translated_state
+        return true if translated_state == VCAP::CloudController::Diego::LRP_RUNNING
+        return true if translated_state == VCAP::CloudController::Diego::LRP_STARTING
 
         false
       end
