@@ -16,7 +16,7 @@ class SpaceFeaturesController < ApplicationController
   def show
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    resource_not_found!(:feature) unless SPACE_FEATURE == hashed_params[:name]
+    resource_not_found!(:feature) unless hashed_params[:name] == SPACE_FEATURE
 
     render status: :ok, json: Presenters::V3::SpaceSshFeaturePresenter.new(space)
   end
@@ -27,7 +27,7 @@ class SpaceFeaturesController < ApplicationController
 
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
-    resource_not_found!(:feature) unless SPACE_FEATURE == hashed_params[:name]
+    resource_not_found!(:feature) unless hashed_params[:name] == SPACE_FEATURE
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
