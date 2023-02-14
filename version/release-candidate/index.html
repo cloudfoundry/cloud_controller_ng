@@ -1487,7 +1487,7 @@ Procfile for the same app.</p>
 <li>When a parameter accepts multiple values, these will be represented as a comma-delimited list of strings (see <a href="#filters">filters</a>).</li>
 </ul>
 
-<p>Because commas are used to separate list entries, <strong>parameter values that contain commas must be percent-encoded</strong>. For example, to retrieve apps named either <code class="prettyprint">a,b</code> or <code class="prettyprint">c,d</code>, the query parameter would look like <code class="prettyprint">names=a%2Cb,c%2Cd</code>. Note that the commas within the app names are encoded (as <code class="prettyprint">%2C</code>), but the comma separating the two app names is not. The resulting query parameter must be encoded a second time before sending it to the API, e.g. <code class="prettyprint">cf curl /v3/apps?names=a%2A2Cb,c%2A2Cd</code>.</p>
+<p>Because commas are used to separate list entries, <strong>parameter values that contain commas must be percent-encoded</strong>. For example, to retrieve apps named either <code class="prettyprint">a,b</code> or <code class="prettyprint">c,d</code>, the query parameter would look like <code class="prettyprint">names=a%2Cb,c%2Cd</code>. Note that the commas within the app names are encoded (as <code class="prettyprint">%2C</code>), but the comma separating the two app names is not. The resulting query parameter must be encoded a second time before sending it to the API, e.g. <code class="prettyprint">cf curl /v3/apps?names=a%252Cb,c%252Cd</code>.</p>
 <h2 id="relationships">Relationships</h2>
 
 <p>Relationships represent associations between resources. When relationships are mutable, they can be
