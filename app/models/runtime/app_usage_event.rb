@@ -9,5 +9,10 @@ module VCAP::CloudController
       :buildpack_guid, :buildpack_name,
       :package_state, :previous_package_state, :parent_app_guid,
       :parent_app_name, :process_type, :task_name, :task_guid
+    AppUsageEvent.dataset_module do
+      def supports_window_functions?
+        false
+      end
+    end
   end
 end

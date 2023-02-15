@@ -148,6 +148,26 @@ module VCAP::CloudController
         end
       end
 
+      context 'AppUsageEvents table' do
+        before do
+          AppUsageEvent.make(guid: '1', created_at: '2022-12-20T10:47:01Z')
+          AppUsageEvent.make(guid: '2', created_at: '2022-12-20T10:47:02Z')
+          AppUsageEvent.make(guid: '3', created_at: '2022-12-20T10:47:03Z')
+          AppUsageEvent.make(guid: '4', created_at: '2022-12-20T10:47:04Z')
+        end
+
+        it 'does not use window function' do
+          options = { page: page, per_page: per_page }
+          pagination_options = PaginationOptions.new(options)
+
+          paginated_result = nil
+          expect {
+            paginated_result = paginator.get_page(AppUsageEvent.dataset, pagination_options)
+          }.to have_queried_db_times(/over/i, 0)
+          expect(paginated_result.total).to be > 1
+        end
+      end
+
       it 'returns correct total results for distinct result' do
         options = { page: page, per_page: per_page, order_by: :key_name }
         pagination_options = PaginationOptions.new(options)
