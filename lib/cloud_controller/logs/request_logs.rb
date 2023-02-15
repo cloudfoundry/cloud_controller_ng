@@ -19,7 +19,9 @@ module VCAP::CloudController
                   user: env['cf.user_guid'],
                   ip: anonymize_ip(request.ip),
                   request_id: request_id,
-                  at: Time.now.utc)
+                  at: Time.now.utc),
+          { request_method: request.request_method,
+            request_fullpath: request.filtered_path }
         )
         @incomplete_requests.store(request_id, env)
       end
@@ -27,7 +29,9 @@ module VCAP::CloudController
       def complete_request(request_id, status)
         return if @incomplete_requests.delete(request_id).nil?
 
-        @logger.info("Completed #{status} vcap-request-id: #{request_id}")
+        @logger.info("Completed #{status} vcap-request-id: #{request_id}",
+                     { cc_status_code: status }
+        )
       end
 
       def log_incomplete_requests
@@ -40,7 +44,9 @@ module VCAP::CloudController
                     path: request.filtered_path,
                     user: env['cf.user_guid'],
                     ip: anonymize_ip(request.ip),
-                    request_id: request_id)
+                    request_id: request_id),
+            { request_method: request.request_method,
+              request_fullpath: request.filtered_path }
           )
         end
       end
