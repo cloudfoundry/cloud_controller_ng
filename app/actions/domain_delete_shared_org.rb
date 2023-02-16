@@ -12,7 +12,7 @@ module VCAP::CloudController
       Domain.db.transaction do
         raise OrgError.new if org_error(domain, shared_organization)
 
-        raise RouteError.new if routes?(domain, shared_organization.guid)
+        raise RouteError.new if routes?(domain, shared_organization)
 
         domain.remove_shared_organization(shared_organization)
       end
@@ -22,10 +22,11 @@ module VCAP::CloudController
       !(domain.shared_organizations.include?(shared_organization) && domain.owning_organization) || domain.owning_organization.guid == shared_organization.guid
     end
 
-    def self.routes?(domain, org_guid)
-      domain.routes.any? do |route|
-        route.space.organization_guid == org_guid
-      end
+    def self.routes?(domain, shared_organization)
+      domain.routes_dataset.
+        join(:spaces, id: :space_id).
+        where(spaces__organization_id: shared_organization.id).
+        any?
     end
   end
 end
