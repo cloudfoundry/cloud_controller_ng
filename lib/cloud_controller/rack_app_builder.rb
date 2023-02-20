@@ -27,8 +27,8 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
         use Honeycomb::Rack::Middleware, client: Honeycomb.client if config.get(:honeycomb)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
-        use CloudFoundry::Middleware::RequestLogs, request_logs
         use CloudFoundry::Middleware::Zipkin
+        use CloudFoundry::Middleware::RequestLogs, request_logs
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
             logger: Steno.logger('cc.rate_limiter'),
