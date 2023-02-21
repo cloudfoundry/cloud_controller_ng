@@ -30,7 +30,7 @@ module VCAP::CloudController
         return if @incomplete_requests.delete(request_id).nil?
 
         @logger.info("Completed #{status} vcap-request-id: #{request_id}",
-                     { cc_status_code: status }
+                     { status_code: status }
         )
       end
 

@@ -45,7 +45,7 @@ module VCAP::CloudController::Logs
 
           it 'logs the completion of the request' do
             request_logs.complete_request(request_id, status)
-            expect(logger).to have_received(:info).with(/Completed 200 vcap-request-id: ID/, { cc_status_code: 200 })
+            expect(logger).to have_received(:info).with(/Completed 200 vcap-request-id: ID/, { status_code: 200 })
           end
         end
 
