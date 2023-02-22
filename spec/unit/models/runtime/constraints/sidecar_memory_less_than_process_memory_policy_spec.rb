@@ -4,7 +4,7 @@ RSpec.describe 'max instance memory policies' do
   let(:policy_target) { double(instance_memory_limit: 150) }
   let(:error_name) { :random_memory_error }
 
-  describe AppMaxInstanceMemoryPolicy do
+  describe SidecarMemoryLessThanProcessMemoryPolicy do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 30, type: 'web', app: app_model) }
 
@@ -49,6 +49,15 @@ RSpec.describe 'max instance memory policies' do
       let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, nil) }
 
       it 'does not error' do
+        expect(validator.valid?).to eq true
+      end
+    end
+
+    context 'when updating a sidecar' do
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 19, type: 'web', app: app_model) }
+      let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, 9, sidecar_1) }
+
+      it 'does not count the exisiting sidecar twice' do
         expect(validator.valid?).to eq true
       end
     end

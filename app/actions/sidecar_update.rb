@@ -49,7 +49,7 @@ module VCAP::CloudController
           app_guid: sidecar.app_guid,
           type: process_types,
         )
-        policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, memory)
+        policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, memory, sidecar)
 
         raise InvalidSidecar.new(policy.message) if !policy.valid?
       end
