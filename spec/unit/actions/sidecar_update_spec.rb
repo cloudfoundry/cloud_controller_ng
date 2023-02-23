@@ -164,6 +164,31 @@ module VCAP::CloudController
             )
           end
         end
+
+        context 'the memory allocated to the sidecar exceeds half the memory allocated for the newly associated process' do
+          let(:sidecar) do
+            SidecarModel.make(
+              name:          'my_sidecar',
+              command:       'rackup',
+              app:           app,
+              memory:        250,
+            )
+          end
+
+          let(:params) do
+            {
+              memory_in_mb: 251,
+            }
+          end
+
+          let!(:process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
+          let!(:new_process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
+
+          it 'its only counted once for all processes and succeeds' do
+            SidecarUpdate.update(sidecar, message)
+            expect(sidecar.memory).to eq 251
+          end
+        end
       end
     end
   end
