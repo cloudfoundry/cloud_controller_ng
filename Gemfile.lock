@@ -343,7 +343,7 @@ GEM
       parallel
     parser (3.2.1.0)
       ast (~> 2.4.1)
-    pg (1.4.5)
+    pg (1.4.6)
     posix-spawn (0.3.15)
     prometheus-client (4.0.0)
     pry (0.14.1)
