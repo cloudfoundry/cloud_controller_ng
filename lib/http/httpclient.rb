@@ -27,7 +27,7 @@ module HTTPClientMonkeyPatch
       end
       socket
     rescue SystemCallError, SocketError => e
-      raise e.new(e.message + " (#{host}:#{port})")
+      raise e.exception(e.message + " (#{host}:#{port})")
     end
   end
 end
