@@ -20,15 +20,23 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
       end
 
+      def success(job)
+        with_request_id_set do
+          super(job)
+        end
+      end
+
       def error(job, e)
-        error_presenter = if e.instance_of?(CloudController::Errors::CompoundError)
-                            ErrorPresenter.new(e, false, V3ErrorHasher.new(e))
-                          else
-                            ErrorPresenter.new(e)
-                          end
-        log_error(error_presenter, job)
-        save_error(error_presenter, job)
-        super(job, e)
+        with_request_id_set do
+          error_presenter = if e.instance_of?(CloudController::Errors::CompoundError)
+                              ErrorPresenter.new(e, false, V3ErrorHasher.new(e))
+                            else
+                              ErrorPresenter.new(e)
+                            end
+          log_error(error_presenter, job)
+          save_error(error_presenter, job)
+          super(job, e)
+        end
       end
 
       private
@@ -40,12 +48,10 @@ module VCAP::CloudController
       end
 
       def log_error(error_presenter, job)
-        with_request_id_set do
-          if error_presenter.client_error?
-            logger.info(error_presenter.log_message, job_guid: job.guid)
-          else
-            logger.error(error_presenter.log_message, job_guid: job.guid)
-          end
+        if error_presenter.client_error?
+          logger.info(error_presenter.log_message, job_guid: job.guid)
+        else
+          logger.error(error_presenter.log_message, job_guid: job.guid)
         end
       end
 
