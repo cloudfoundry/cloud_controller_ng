@@ -12,9 +12,17 @@ module VCAP::Services::ServiceBrokers::V2
     def initialize(attrs)
       http_client_attrs = attrs.slice(:url, :auth_username, :auth_password)
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
-      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
+      log_errors = VCAP::CloudController::Config.config.get(:broker_client_response_parser, :log_errors)
+      log_validators = VCAP::CloudController::Config.config.get(:broker_client_response_parser, :log_validators)
+      log_response_fields = VCAP::CloudController::Config.config.get(:broker_client_response_parser, :log_response_fields)
+      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(
+        @http_client.url,
+        log_errors: log_errors,
+        log_validators: log_validators,
+        log_response_fields: log_response_fields
+      )
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
-      @config = VCAP::CloudController::Config.config
+      @cc_service_key_client_name = VCAP::CloudController::Config.config.get(:cc_service_key_client_name)
     end
 
     def catalog(user_guid: nil)
@@ -78,7 +86,7 @@ module VCAP::Services::ServiceBrokers::V2
         context: context_hash(key.service_instance),
       }
 
-      body[:bind_resource][:credential_client_id] = @config.get(:cc_service_key_client_name) if @config.get(:cc_service_key_client_name).present?
+      body[:bind_resource][:credential_client_id] = @cc_service_key_client_name unless @cc_service_key_client_name.nil?
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       begin
@@ -261,7 +269,7 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_instance_last_operation(instance, user_guid: nil)
       path = service_instance_last_operation_path(instance)
       response = @http_client.get(path, user_guid: user_guid)
-      parsed_response = @response_parser.parse_fetch_state(path, response)
+      parsed_response = @response_parser.parse_fetch_service_instance_last_operation(path, response)
       last_operation_hash = parsed_response.delete('last_operation') || {}
 
       result = {
@@ -311,13 +319,13 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_instance(instance, user_guid: nil)
       path = service_instance_resource_path(instance)
       response = @http_client.get(path, user_guid: user_guid)
-      @response_parser.parse_fetch_instance_parameters(path, response).deep_symbolize_keys
+      @response_parser.parse_fetch_service_instance(path, response).deep_symbolize_keys
     end
 
     def fetch_service_binding(service_binding, user_guid: nil)
       path = service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)
       response = @http_client.get(path, user_guid: user_guid)
-      @response_parser.parse_fetch_binding_parameters(path, response).deep_symbolize_keys
+      @response_parser.parse_fetch_service_binding(path, response).deep_symbolize_keys
     end
 
     private
@@ -331,9 +339,7 @@ module VCAP::Services::ServiceBrokers::V2
           app_annotations: hashified_public_annotations(binding.app.annotations)
         }
       when VCAP::CloudController::ServiceKey
-        if @config.get(:cc_service_key_client_name).present?
-          return { credential_client_id: @config.get(:cc_service_key_client_name) }
-        end
+        return { credential_client_id: @cc_service_key_client_name } unless @cc_service_key_client_name.nil?
 
         {}
       when VCAP::CloudController::RouteBinding

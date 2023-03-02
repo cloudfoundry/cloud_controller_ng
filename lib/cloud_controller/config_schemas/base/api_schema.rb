@@ -185,6 +185,11 @@ module VCAP::CloudController
             broker_client_default_async_poll_interval_seconds: Integer,
             broker_client_max_async_poll_duration_minutes: Integer,
             broker_client_async_poll_exponential_backoff_rate: Numeric,
+            optional(:broker_client_response_parser) => {
+              log_errors: bool,
+              log_validators: bool,
+              log_response_fields: Hash
+            },
             optional(:uaa_client_name) => String,
             optional(:uaa_client_secret) => String,
             optional(:uaa_client_scope) => String,
