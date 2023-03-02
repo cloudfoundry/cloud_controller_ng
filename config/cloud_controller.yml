@@ -62,6 +62,15 @@ broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
 broker_client_async_poll_exponential_backoff_rate: 1.0
 
+broker_client_response_parser:
+  log_errors: true
+  log_validators: true
+  log_response_fields:
+    fetch_service_instance_last_operation:
+      - state
+    fetch_service_binding_last_operation:
+      - state
+
 shared_isolation_segment_name: 'shared'
 
 info:

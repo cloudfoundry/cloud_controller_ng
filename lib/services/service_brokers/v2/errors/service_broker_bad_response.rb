@@ -27,15 +27,6 @@ module VCAP::Services
           def response_code
             502
           end
-
-          def to_h
-            hash = super
-            hash['http'] = {
-              'method' => method,
-              'status' => status,
-            }
-            hash
-          end
         end
       end
     end

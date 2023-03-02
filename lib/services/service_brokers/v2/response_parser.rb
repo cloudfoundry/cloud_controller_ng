@@ -2,178 +2,173 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       class ResponseParser
-        def initialize(url)
+        def initialize(url, log_errors: nil, log_validators: nil, log_response_fields: nil)
           @url = url
           @logger = Steno.logger('cc.service_broker.v2.client')
+          @log_errors = log_errors || false
+          @log_validators = log_validators || false
+          @log_response_fields = log_response_fields || {}
         end
 
         def parse_provision(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
+          parse_unvalidated_response_with_validator(:provision, :put, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200, 201
+                JsonSchemaValidator.new(@logger, provision_response_schema,
+                                        SuccessValidator.new(state: 'succeeded'))
+              when 202
+                JsonSchemaValidator.new(@logger, provision_response_schema,
+                                        SuccessValidator.new(state: 'in progress'))
+              when 409
+                FailingValidator.new(Errors::ServiceBrokerConflict)
+              when 422
+                FailWhenValidator.new(
+                  'error',
+                  {
+                    'AsyncRequired' => Errors::AsyncRequired,
+                    'ConcurrencyError' => Errors::ConcurrencyError,
+                    'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
+                  },
+                  FailingValidator.new(Errors::ServiceBrokerBadResponse),
+                  )
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200, 201
-              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
-                  SuccessValidator.new(state: 'succeeded'))
-            when 202
-              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
-                  SuccessValidator.new(state: 'in progress'))
-            when 409
-              FailingValidator.new(Errors::ServiceBrokerConflict)
-            when 422
-              FailWhenValidator.new(
-                'error',
-                {
-                  'AsyncRequired' => Errors::AsyncRequired,
-                  'ConcurrencyError' => Errors::ConcurrencyError,
-                  'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
-                },
-                FailingValidator.new(Errors::ServiceBrokerBadResponse),
-              )
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
         def parse_bind(path, response, opts={})
-          unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
+          parse_unvalidated_response_with_validator(:bind, :put, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200, 201
+                JsonObjectValidator.new(@logger,
+                  CredentialsValidator.new(
+                    SyslogDrainValidator.new(opts[:service_guid],
+                      RouteServiceURLValidator.new(
+                        VolumeMountsValidator.new(opts[:service_guid],
+                          SuccessValidator.new(state: 'succeeded'))))))
+              when 202
+                JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
+              when 409
+                FailingValidator.new(Errors::ServiceBrokerConflict)
+              when 422
+                FailWhenValidator.new('error',
+                                      { 'RequiresApp' => Errors::AppRequired,
+                                        'AsyncRequired' => Errors::AsyncRequired,
+                                        'ConcurrencyError' => Errors::ConcurrencyError },
+                                        FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200, 201
-              JsonObjectValidator.new(@logger,
-                CredentialsValidator.new(
-                  SyslogDrainValidator.new(opts[:service_guid],
-                    RouteServiceURLValidator.new(
-                      VolumeMountsValidator.new(opts[:service_guid],
-                        SuccessValidator.new(state: 'succeeded'))))))
-            when 202
-              JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
-            when 409
-              FailingValidator.new(Errors::ServiceBrokerConflict)
-            when 422
-              FailWhenValidator.new('error',
-                                    { 'RequiresApp' => Errors::AppRequired,
-                                      'AsyncRequired' => Errors::AsyncRequired,
-                                      'ConcurrencyError' => Errors::ConcurrencyError },
-                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
         def parse_unbind(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
+          parse_unvalidated_response_with_validator(:unbind, :delete, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200
+                JsonObjectValidator.new(@logger,
+                    SuccessValidator.new(state: 'succeeded'))
+              when 201
+                IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+              when 202
+                JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
+              when 410
+                @logger.warn("Already deleted: #{unvalidated_response.uri}")
+                SuccessValidator.new { |res| {} }
+              when 422
+                FailWhenValidator.new('error', {
+                  'AsyncRequired' => Errors::AsyncRequired,
+                  'ConcurrencyError' => Errors::ConcurrencyError
+                }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonObjectValidator.new(@logger,
-                  SuccessValidator.new(state: 'succeeded'))
-            when 201
-              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
-            when 202
-              JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
-            when 410
-              @logger.warn("Already deleted: #{unvalidated_response.uri}")
-              SuccessValidator.new { |res| {} }
-            when 422
-              FailWhenValidator.new('error', {
-                'AsyncRequired' => Errors::AsyncRequired,
-                'ConcurrencyError' => Errors::ConcurrencyError
-              }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
         def parse_deprovision(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
+          parse_unvalidated_response_with_validator(:deprovision, :delete, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200
+                JsonObjectValidator.new(@logger,
+                  SuccessValidator.new(state: 'succeeded'))
+              when 201
+                IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+              when 202
+                JsonSchemaValidator.new(@logger, deprovision_response_schema,
+                    SuccessValidator.new(state: 'in progress'))
+              when 410
+                @logger.warn("Already deleted: #{unvalidated_response.uri}")
+                SuccessValidator.new { |res| {} }
+              when 422
+                FailWhenValidator.new('error', {
+                  'AsyncRequired' => Errors::AsyncRequired,
+                  'ConcurrencyError' => Errors::ConcurrencyError
+                }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
-            when 201
-              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
-            when 202
-              JsonSchemaValidator.new(@logger, deprovision_service_instance_response_schema,
-                  SuccessValidator.new(state: 'in progress'))
-            when 410
-              @logger.warn("Already deleted: #{unvalidated_response.uri}")
-              SuccessValidator.new { |res| {} }
-            when 422
-              FailWhenValidator.new('error', {
-                'AsyncRequired' => Errors::AsyncRequired,
-                'ConcurrencyError' => Errors::ConcurrencyError
-              }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
         def parse_catalog(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
+          parse_unvalidated_response_with_validator(:catalog, :get, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200
+                JsonObjectValidator.new(@logger, SuccessValidator.new)
+              when 201, 202
+                JsonObjectValidator.new(@logger,
+                  FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonObjectValidator.new(@logger, SuccessValidator.new)
-            when 201, 202
-              JsonObjectValidator.new(@logger,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
         def parse_update(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:patch, @url, path, response)
+          parse_unvalidated_response_with_validator(:update, :patch, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200
+                JsonSchemaValidator.new(@logger, update_response_schema,
+                  SuccessValidator.new(state: 'succeeded'))
+              when 201
+                IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+              when 202
+                JsonSchemaValidator.new(@logger, update_response_schema,
+                  SuccessValidator.new(state: 'in progress'))
+              when 422
+                FailWhenValidator.new('error', {
+                  'AsyncRequired' => Errors::AsyncRequired,
+                  'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
+                 },
+                  FailingValidator.new(Errors::ServiceBrokerRequestRejected))
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonSchemaValidator.new(@logger, update_service_instance_schema,
-                SuccessValidator.new(state: 'succeeded'))
-            when 201
-              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
-            when 202
-              JsonSchemaValidator.new(@logger, update_service_instance_schema,
-                SuccessValidator.new(state: 'in progress'))
-            when 422
-              FailWhenValidator.new('error', {
-                'AsyncRequired' => Errors::AsyncRequired,
-                'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
-               },
-                FailingValidator.new(Errors::ServiceBrokerRequestRejected))
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
-        def parse_fetch_state(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
-
-          validator =
+        def parse_fetch_state(path, response, type)
+          parse_unvalidated_response_with_validator(type, :get, path, response) do |unvalidated_response|
             case unvalidated_response.code
             when 200
               JsonObjectValidator.new(
@@ -194,40 +189,57 @@ module VCAP::Services
             else
               CommonErrorValidator.new(FailingValidator.new(Errors::ServiceBrokerBadResponse))
             end
-
-          validator.validate(**unvalidated_response.to_hash)
+          end
         end
 
-        def parse_fetch_parameters(path, response, schema)
-          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
+        def parse_fetch_parameters(path, response, schema, type)
+          parse_unvalidated_response_with_validator(type, :get, path, response) do |unvalidated_response|
+            validator =
+              case unvalidated_response.code
+              when 200
+                JsonSchemaValidator.new(@logger, schema, SuccessValidator.new)
+              else
+                FailingValidator.new(Errors::ServiceBrokerBadResponse)
+              end
 
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonSchemaValidator.new(@logger, schema, SuccessValidator.new)
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-
-          validator.validate(**unvalidated_response.to_hash)
+            CommonErrorValidator.new(validator)
+          end
         end
 
-        def parse_fetch_instance_parameters(path, response)
-          parse_fetch_parameters(path, response, fetch_instance_parameters_response_schema)
+        def parse_fetch_service_instance(path, response)
+          parse_fetch_parameters(path, response, fetch_service_instance_response_schema, :fetch_service_instance)
         end
 
-        def parse_fetch_binding_parameters(path, response)
-          parse_fetch_parameters(path, response, fetch_binding_parameters_response_schema)
+        def parse_fetch_service_binding(path, response)
+          parse_fetch_parameters(path, response, fetch_service_binding_response_schema, :fetch_service_binding)
+        end
+
+        def parse_fetch_service_instance_last_operation(path, response)
+          parse_fetch_state(path, response, :fetch_service_instance_last_operation)
         end
 
         def parse_fetch_service_binding_last_operation(path, response)
-          parse_fetch_state(path, response)
+          parse_fetch_state(path, response, :fetch_service_binding_last_operation)
+        end
+
+        def parse_unvalidated_response_with_validator(type, method, path, response)
+          log_context = { type: type, method: method, url: @url, path: path, code: response.code.to_i }
+          begin
+            unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+            fields = @log_response_fields[type] || []
+            unvalidated_response.log_response_fields(@logger, fields, log_context) unless fields.empty?
+
+            validator = yield unvalidated_response
+            @logger.info('validators', log_context.merge({ validators: validator.stack })) if @log_validators
+            validator.validate(**unvalidated_response.to_hash)
+          rescue => e
+            @logger.error(e.class, log_context.merge({ description: e.to_h['description'] })) if @log_errors
+            raise e
+          end
         end
 
         def async_binding_response_schema
-          {
+          [:async_binding_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -236,11 +248,11 @@ module VCAP::Services
                 'maxLength' => 10_000,
               },
             },
-          }
+          }]
         end
 
-        def provision_service_instance_response_schema
-          {
+        def provision_response_schema
+          [:provision_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -252,11 +264,11 @@ module VCAP::Services
                 'maxLength' => 10_000,
               },
             },
-          }
+          }]
         end
 
-        def deprovision_service_instance_response_schema
-          {
+        def deprovision_response_schema
+          [:deprovision_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -265,11 +277,11 @@ module VCAP::Services
                 'maxLength' => 10_000,
               },
             },
-          }
+          }]
         end
 
-        def update_service_instance_schema
-          {
+        def update_response_schema
+          [:update_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -281,11 +293,11 @@ module VCAP::Services
                 'maxLength' => 10_000
               },
             }
-          }
+          }]
         end
 
-        def fetch_instance_parameters_response_schema
-          {
+        def fetch_service_instance_response_schema
+          [:fetch_service_instance_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -302,11 +314,11 @@ module VCAP::Services
                 'type' => 'object',
               },
             },
-          }
+          }]
         end
 
-        def fetch_binding_parameters_response_schema
-          {
+        def fetch_service_binding_response_schema
+          [:fetch_service_binding_response_schema, {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
@@ -356,21 +368,22 @@ module VCAP::Services
                 },
               },
             }
-          }
+          }]
         end
 
         class UnvalidatedResponse
           attr_reader :code, :uri
 
-          def initialize(method, uri, path, response)
+          def initialize(method, url, path, response)
             @method = method
+            @uri = URI(url + path).to_s
             @code = response.code.to_i
-            @uri = URI(uri + path).to_s
             @response = response
+            @parsed_response = nil
           end
 
-          def body
-            response.body
+          def log_response_fields(logger, fields, log_context)
+            logger.info('unvalidated_response', log_context.merge({ selective_fields: select_fields(fields) }))
           end
 
           def to_hash
@@ -379,14 +392,49 @@ module VCAP::Services
               uri: @uri,
               code: @code,
               response: @response,
+              parsed_response: @parsed_response
             }
+          end
+
+          def select_fields(fields)
+            @parsed_response ||= MultiJson.load(@response.body)
+            data = {}
+            fields.each do |field|
+              value = @parsed_response[field]
+              data[field] = value if value
+            end
+            data
+          rescue MultiJson::ParseError
+            'could not parse response'
           end
         end
 
-        class VolumeMountsValidator
-          def initialize(service_guid, validator)
+        class Validator
+          def initialize(validator)
             @validator = validator
+          end
+
+          def name
+            self.class.name&.demodulize || 'Validator'
+          end
+
+          def info
+            self.name
+          end
+
+          def stack
+            [info] + (@validator&.stack || [])
+          end
+        end
+
+        class VolumeMountsValidator < Validator
+          def initialize(service_guid, validator)
             @service_guid = service_guid
+            super(validator)
+          end
+
+          def info
+            self.name + (@service_guid ? "[#{@service_guid}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -444,10 +492,14 @@ module VCAP::Services
           end
         end
 
-        class SyslogDrainValidator
+        class SyslogDrainValidator < Validator
           def initialize(service_guid, validator)
-            @validator = validator
             @service_guid = service_guid
+            super(validator)
+          end
+
+          def info
+            self.name + (@service_guid ? "[#{@service_guid}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -461,11 +513,7 @@ module VCAP::Services
           end
         end
 
-        class CredentialsValidator
-          def initialize(validator)
-            @validator = validator
-          end
-
+        class CredentialsValidator < Validator
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             parsed_response ||= MultiJson.load(response.body)
             if parsed_response['credentials'] && !parsed_response['credentials'].is_a?(Hash)
@@ -480,11 +528,7 @@ module VCAP::Services
           end
         end
 
-        class RouteServiceURLValidator
-          def initialize(validator)
-            @validator = validator
-          end
-
+        class RouteServiceURLValidator < Validator
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             parsed_response ||= MultiJson.load(response.body)
 
@@ -513,11 +557,11 @@ module VCAP::Services
           end
         end
 
-        class FailWhenValidator
+        class FailWhenValidator < Validator
           def initialize(key, error_class_map, validator)
             @key = key
             @error_class_map = error_class_map
-            @validator = validator
+            super(validator)
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -537,7 +581,7 @@ module VCAP::Services
           end
         end
 
-        class SuccessValidator
+        class SuccessValidator < Validator
           def initialize(state: nil, &block)
             @processor = if block_given?
                            block
@@ -559,6 +603,12 @@ module VCAP::Services
                              broker_response.merge(base_body)
                            end
                          end
+            @state = state
+            super(nil)
+          end
+
+          def info
+            self.name + (@state ? "[#{@state}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -566,9 +616,10 @@ module VCAP::Services
           end
         end
 
-        class FailingValidator
+        class FailingValidator < Validator
           def initialize(error_class)
             @error_class = error_class
+            super(nil)
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -576,9 +627,10 @@ module VCAP::Services
           end
         end
 
-        class IgnoreDescriptionKeyFailingValidator
+        class IgnoreDescriptionKeyFailingValidator < Validator
           def initialize(error_class)
             @error_class = error_class
+            super(nil)
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -586,10 +638,10 @@ module VCAP::Services
           end
         end
 
-        class JsonObjectValidator
+        class JsonObjectValidator < Validator
           def initialize(logger, validator)
             @logger = logger
-            @validator = validator
+            super(validator)
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -613,10 +665,14 @@ module VCAP::Services
           end
         end
 
-        class StateValidator
+        class StateValidator < Validator
           def initialize(valid_states, validator)
             @valid_states = valid_states
-            @validator = validator
+            super(validator)
+          end
+
+          def info
+            self.name + (@valid_states ? "[#{@valid_states.join(',')}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -640,11 +696,7 @@ module VCAP::Services
           end
         end
 
-        class CommonErrorValidator
-          def initialize(validator)
-            @validator = validator
-          end
-
+        class CommonErrorValidator < Validator
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             case code
             when 401
@@ -662,11 +714,7 @@ module VCAP::Services
           end
         end
 
-        class ParametersValidator
-          def initialize(validator)
-            @validator = validator
-          end
-
+        class ParametersValidator < Validator
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             parsed_response ||= MultiJson.load(response.body)
             parameters = parsed_response['parameters']
@@ -680,18 +728,23 @@ module VCAP::Services
           end
         end
 
-        class JsonSchemaValidator
+        class JsonSchemaValidator < Validator
           def initialize(logger, schema, validator)
             @logger = logger
-            @schema = schema
-            @validator = validator
+            @schema_name = schema[0]
+            @schema = schema[1]
+            super(validator)
+          end
+
+          def info
+            self.name + (@schema_name ? "[#{@schema_name}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             begin
               parsed_response ||= MultiJson.load(response.body)
             rescue MultiJson::ParseError
-              @logger.warn "MultiJson parse error `#{response.try(:body).inspect}'"
+              @logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
             end
 
             unless parsed_response.is_a?(Hash)
@@ -718,7 +771,11 @@ module VCAP::Services
           end
         end
 
-        class BadRequestValidator
+        class BadRequestValidator < Validator
+          def initialize
+            super(nil)
+          end
+
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             description = 'Bad request'
             begin

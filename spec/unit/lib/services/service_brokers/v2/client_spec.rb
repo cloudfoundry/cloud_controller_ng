@@ -22,7 +22,7 @@ module VCAP::Services::ServiceBrokers::V2
         with({ url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password }).
         and_return(http_client)
 
-      allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).
+      allow(OrphanMitigator).to receive(:new).
         and_return(orphan_mitigator)
 
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
@@ -33,6 +33,34 @@ module VCAP::Services::ServiceBrokers::V2
         Client.new(client_attrs.merge(extra_arg: 'foo'))
 
         expect(HttpClient).to have_received(:new).with(client_attrs)
+      end
+
+      context 'ResponseParser' do
+        before do
+          TestConfig.override(broker_client_response_parser: nil)
+
+          allow(ResponseParser).to receive(:new)
+        end
+
+        it 'creates ResponseParser with correct attrs' do
+          client
+          expect(ResponseParser).to have_received(:new).with(service_broker.broker_url, log_errors: nil, log_validators: nil, log_response_fields: nil)
+        end
+
+        context 'additional logging config provided' do
+          before do
+            TestConfig.override(broker_client_response_parser: {
+              log_errors: true,
+              log_validators: true,
+              log_response_fields: { type: ['field'] }
+            })
+          end
+
+          it 'creates ResponseParser with correct attrs' do
+            client
+            expect(ResponseParser).to have_received(:new).with(service_broker.broker_url, log_errors: true, log_validators: true, log_response_fields: { type: ['field'] })
+          end
+        end
       end
     end
 
@@ -354,7 +382,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           before do
             allow(response_parser).to receive(:parse_provision).and_raise(error)
-            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+            allow(ResponseParser).to receive(:new).and_return(response_parser)
           end
 
           context 'Errors::ServiceBrokerApiTimeout error' do
@@ -1202,7 +1230,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           before do
             allow(response_parser).to receive(:parse_bind).and_raise(error)
-            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+            allow(ResponseParser).to receive(:new).and_return(response_parser)
           end
 
           context 'Errors::ServiceBrokerApiTimeout error' do
@@ -1678,7 +1706,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             before do
               allow(response_parser).to receive(:parse_bind).and_raise(error)
-              allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+              allow(ResponseParser).to receive(:new).and_return(response_parser)
             end
 
             context 'Errors::ServiceBrokerApiTimeout error' do
@@ -2379,7 +2407,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'response parsing errors' do
           let(:response_parser) { instance_double(ResponseParser) }
           before do
-            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+            allow(ResponseParser).to receive(:new).and_return(response_parser)
           end
 
           errors = [

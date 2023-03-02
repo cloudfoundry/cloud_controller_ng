@@ -15,7 +15,9 @@ module VCAP::Services
         @url = attrs.fetch(:url)
         @auth_username = attrs.fetch(:auth_username)
         @auth_password = attrs.fetch(:auth_password)
+        @verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
         @broker_client_timeout = VCAP::CloudController::Config.config.get(:broker_client_timeout_seconds)
+        @header_api_info_location = "#{VCAP::CloudController::Config.config.get(:external_domain)}/v2/info"
         @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
       end
 
@@ -40,7 +42,7 @@ module VCAP::Services
 
       private
 
-      attr_reader :auth_username, :auth_password, :broker_client_timeout, :extra_path, :logger
+      attr_reader :auth_username, :auth_password, :verify_mode, :broker_client_timeout, :header_api_info_location, :logger
 
       def uri_for(path)
         URI(url + path)
@@ -51,7 +53,7 @@ module VCAP::Services
         client.set_auth(nil, auth_username, auth_password)
         client.ssl_config.set_default_paths
 
-        client.ssl_config.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+        client.ssl_config.verify_mode = verify_mode
         client.connect_timeout = broker_client_timeout
         client.receive_timeout = broker_client_timeout
         client.send_timeout = broker_client_timeout
@@ -99,7 +101,7 @@ module VCAP::Services
           VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
           VCAP::Request::HEADER_BROKER_API_REQUEST_IDENTITY => SecureRandom.uuid,
           'Accept' => 'application/json',
-          VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config.get(:external_domain)}/v2/info"
+          VCAP::Request::HEADER_API_INFO_LOCATION => header_api_info_location
         }
       end
 
