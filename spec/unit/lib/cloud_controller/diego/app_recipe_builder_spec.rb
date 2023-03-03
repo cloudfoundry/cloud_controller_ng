@@ -1178,6 +1178,8 @@ module VCAP::CloudController
           result = builder.build_app_lrp_update(existing_lrp)
           expect(result.instances).to eq(7)
           expect(result.annotation).to eq(Time.at(2).to_f.to_s)
+          expect(result.metric_tags).to have_key('app_name')
+          expect(result.metric_tags['app_name'].static).to eq(app_model.name)
         end
 
         describe 'routes' do

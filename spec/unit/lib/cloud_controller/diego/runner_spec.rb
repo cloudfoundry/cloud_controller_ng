@@ -83,6 +83,41 @@ module VCAP::CloudController
         end
       end
 
+      describe '#update_metric_tags' do
+        context 'when the app is started' do
+          it 'desires an app, relying on its state to convey the change' do
+            expect(messenger).to receive(:send_desire_request).with(process)
+            runner.update_metric_tags
+          end
+        end
+
+        context 'when an app is in staging status' do
+          let(:process) { ProcessModelFactory.make(state: 'STARTED') }
+
+          before do
+            BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
+            process.reload
+          end
+
+          it 'should not update metric tags' do
+            allow(messenger).to receive(:send_desire_request)
+
+            runner.update_metric_tags
+
+            expect(messenger).to_not have_received(:send_desire_request)
+          end
+        end
+
+        context 'when the app has not been started' do
+          let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
+
+          it 'does not desire an app and raises an exception' do
+            expect(messenger).to_not receive(:send_desire_request)
+            expect { runner.update_metric_tags }.to raise_error(CloudController::Errors::ApiError, /App not started/)
+          end
+        end
+      end
+
       describe '#update_routes' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do

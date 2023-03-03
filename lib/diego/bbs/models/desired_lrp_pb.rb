@@ -61,6 +61,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "diego.bbs.models.DesiredLRPUpdate" do
     optional :routes, :message, 2, "diego.bbs.models.ProtoRoutes"
+    map :metric_tags, :string, :message, 4, "diego.bbs.models.MetricTagValue"
     oneof :optional_instances do
       optional :instances, :int32, 1
     end

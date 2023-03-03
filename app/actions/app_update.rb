@@ -7,10 +7,11 @@ module VCAP::CloudController
     class DropletNotFound < StandardError; end
     class InvalidApp < StandardError; end
 
-    def initialize(user_audit_info, manifest_triggered: false)
+    def initialize(user_audit_info, manifest_triggered: false, runners: nil)
       @user_audit_info = user_audit_info
       @logger = Steno.logger('cc.action.app_update')
       @manifest_triggered = manifest_triggered
+      @runners = runners || CloudController::DependencyLocator.instance.runners
     end
 
     def update(app, message, lifecycle)
@@ -39,6 +40,17 @@ module VCAP::CloudController
           message.audit_hash,
           manifest_triggered: @manifest_triggered
         )
+
+        # update process timestamp to trigger convergence if sending fails
+        app.processes.each(&:save) if message.requested?(:name)
+      end
+
+      if message.requested?(:name)
+        app.processes.each do |process|
+          @runners.runner_for_process(process).update_metric_tags if process.state == ProcessModel::STARTED
+        rescue Diego::Runner::CannotCommunicateWithDiegoError => e
+          @logger.error("failed communicating with diego backend: #{e.message}")
+        end
       end
 
       app
