@@ -150,7 +150,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(10)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
               'detail' => 'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
               'title' => 'CF-UnprocessableEntity',
@@ -278,7 +278,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
               'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
               'title' => 'CF-UnprocessableEntity',
@@ -323,7 +323,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
               'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
               'title' => 'CF-UnprocessableEntity',
@@ -348,7 +348,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
               'detail' => "For application 'burger-king': Specified unknown buildpack name: \"badpack\"",
               'title' => 'CF-UnprocessableEntity',
@@ -396,7 +396,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
                 'detail' => "For application 'blah': Docker cannot be configured for a buildpack lifecycle app.",
                 'title' => 'CF-UnprocessableEntity',
@@ -714,7 +714,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
             expect(response.status).to eq(422)
             errors = parsed_body['errors']
             expect(errors.size).to eq(2)
-            expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+            expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
               {
                 'detail' => 'For application \'honey\': Process "web": Instances must be greater than or equal to 0',
                 'title' => 'CF-UnprocessableEntity',

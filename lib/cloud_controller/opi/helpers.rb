@@ -102,9 +102,7 @@ module OPI
   end
 
   def self.vcap_application(process)
-    VCAP::VarsBuilder.new(process).to_hash.reject do |k, _v|
-      [:users].include? k
-    end
+    VCAP::VarsBuilder.new(process).to_hash.except(:users)
   end
 
   def self.process_guid(process)

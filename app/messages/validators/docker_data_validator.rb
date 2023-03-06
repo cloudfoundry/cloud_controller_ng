@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def extra_keys
-      disallowed_params = (record.try(:data) || {}).reject { |key, _| allowed_keys.include? key }
+      disallowed_params = (record.try(:data) || {}).except(*allowed_keys)
       disallowed_params.keys
     end
 

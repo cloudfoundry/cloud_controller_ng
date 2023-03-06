@@ -514,7 +514,7 @@ module VCAP::CloudController
           event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
 
           expect(event.metadata.keys).to eq(['request'])
-          expect(event.metadata['request'].reject { |key, _value| key == 'parameters' }).to eq(params)
+          expect(event.metadata['request'].except('parameters')).to eq(params)
         end
 
         it 'allows no params' do

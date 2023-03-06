@@ -1,6 +1,6 @@
 module CloudController
   class DomainDecorator
-    DOMAIN_REGEX = /\A(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\Z/ix.freeze
+    DOMAIN_REGEX = /\A(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\Z/ix
     DOMAIN_DELIMITER = '.'.freeze
 
     attr_reader :name
