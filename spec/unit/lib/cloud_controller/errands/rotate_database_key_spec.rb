@@ -147,6 +147,15 @@ module VCAP::CloudController
           expect(service_instance.credentials).to eq(instance_credentials)
         end
 
+        it 'does not change the updated_at field' do
+          updated_at = app.reload.values[:updated_at]
+
+          sleep(1.5) # ensure that timestamp in `updated_at` would change
+          RotateDatabaseKey.perform(batch_size: 1)
+
+          expect(app.reload.values[:updated_at]).to eq(updated_at)
+        end
+
         it 'does not re-encrypt values that are already encrypted with the new label' do
           expect(Encryptor).not_to receive(:encrypt).
             with(JSON.dump(env_vars_2), app_new_key_label.salt)
