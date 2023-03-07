@@ -4,7 +4,6 @@ module VCAP::CloudController
 
     CLONED_ATTRIBUTES = [
       :buildpack_receipt_buildpack_guid,
-      :salt,
       :process_types,
       :buildpack_receipt_buildpack,
       :execution_metadata,
