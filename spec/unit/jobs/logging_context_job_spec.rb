@@ -8,7 +8,7 @@ module VCAP::CloudController
       end
       let(:request_id) { 'abc123' }
       let(:background_logger) { instance_double(Steno::Logger).as_null_object }
-
+      let(:job) { double('Job', guid: 'gregid').as_null_object }
       let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 
       before do
@@ -76,8 +76,39 @@ module VCAP::CloudController
         end
       end
 
+      context '#success(job)' do
+        it "sets the thread-local VCAP Request ID during execution of the wrapped job's success method" do
+          expect(handler).to receive(:success) do
+            expect(::VCAP::Request.current_id).to eq request_id
+          end
+
+          logging_context_job.success(job)
+        end
+
+        it "restores the original VCAP Request ID after execution of the wrapped job's success method" do
+          random_request_id          = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          logging_context_job.success(job)
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+
+        it "restores the original VCAP Request ID after exception within execution of the wrapped job's success method" do
+          allow(handler).to receive(:success) do
+            raise 'runtime test exception'
+          end
+
+          random_request_id          = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          expect { logging_context_job.success(job) }.to raise_error 'runtime test exception'
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+      end
+
       context '#error(job, exception)' do
-        let(:job) { double('Job', guid: 'gregid').as_null_object }
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
 
         before do
@@ -101,15 +132,15 @@ module VCAP::CloudController
           logging_context_job.error(job, 'exception')
         end
 
-        it 'sets the thread-local VCAP Request ID while logging method' do
-          expect(background_logger).to receive(:info) do
+        it "sets the thread-local VCAP Request ID during execution of the wrapped job's error method" do
+          expect(handler).to receive(:error) do
             expect(::VCAP::Request.current_id).to eq request_id
           end
 
           logging_context_job.error(job, 'exception')
         end
 
-        it "restores the original VCAP Request ID after execution of the wrapped job's perform method" do
+        it "restores the original VCAP Request ID after execution of the wrapped job's error method" do
           random_request_id          = SecureRandom.uuid
           ::VCAP::Request.current_id = random_request_id
 
@@ -118,7 +149,7 @@ module VCAP::CloudController
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
 
-        it "restores the original VCAP Request ID after exception within execution of the wrapped job's perform method" do
+        it "restores the original VCAP Request ID after exception within execution of the wrapped job's error method" do
           allow(handler).to receive(:error) do
             raise 'runtime test exception'
           end
