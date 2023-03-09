@@ -570,7 +570,7 @@ module VCAP::CloudController
       open_ports = ports || []
 
       if docker?
-        has_mapping_without_port = route_mappings.any? { |mapping| !mapping.has_app_port_specified? }
+        has_mapping_without_port = route_mappings_dataset.where(app_port: ProcessModel::NO_APP_PORT_SPECIFIED).any?
         needs_docker_ports = docker_ports.present? && (has_mapping_without_port || open_ports.empty?)
 
         if needs_docker_ports

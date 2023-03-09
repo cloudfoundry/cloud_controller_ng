@@ -204,7 +204,7 @@ module VCAP::CloudController
     end
 
     def shared?
-      shared_spaces.any?
+      shared_spaces_dataset.any?
     end
 
     def has_bindings?
