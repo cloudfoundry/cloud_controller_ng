@@ -43,7 +43,7 @@ module VCAP::Services
           end
 
           context 'when the broker response body is valid' do
-            let(:broker_response_body) { '{}' }
+            let(:broker_response_body) { '{"foo": "bar"}' }
             it 'does not raise' do
               expect { json_validator.validate(**broker_response.to_hash) }.not_to raise_error
             end
@@ -52,9 +52,9 @@ module VCAP::Services
               expect(json_validator.validate(**broker_response.to_hash)).to eql('inner-validator-result')
             end
 
-            it 'calls the inner validator with the same parameters it was passed' do
+            it 'calls the inner validator with the same parameters it was passed, plus the parsed_response' do
               json_validator.validate(**broker_response.to_hash)
-              expect(inner_validator).to have_received(:validate).with(broker_response.to_hash)
+              expect(inner_validator).to have_received(:validate).with(broker_response.to_hash.merge({ parsed_response: { 'foo' => 'bar' } }))
             end
           end
 

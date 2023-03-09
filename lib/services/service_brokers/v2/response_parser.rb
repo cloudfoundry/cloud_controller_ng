@@ -389,9 +389,9 @@ module VCAP::Services
             @service_guid = service_guid
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             service = VCAP::CloudController::Service.first(guid: @service_guid)
-            parsed_response = MultiJson.load(response.body)
+            parsed_response ||= MultiJson.load(response.body)
 
             if !parsed_response['volume_mounts'].nil? && !service.requires.include?('volume_mount')
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, not_required_error_description)
@@ -408,7 +408,7 @@ module VCAP::Services
               end
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           def validate_mount(method, uri, response, mount_info)
@@ -450,14 +450,14 @@ module VCAP::Services
             @service_guid = service_guid
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             service = VCAP::CloudController::Service.first(guid: @service_guid)
-            parsed_response = MultiJson.load(response.body)
+            parsed_response ||= MultiJson.load(response.body)
             if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
               raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
         end
 
@@ -466,13 +466,13 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
-            parsed_response = MultiJson.load(response.body)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
+            parsed_response ||= MultiJson.load(response.body)
             if parsed_response['credentials'] && !parsed_response['credentials'].is_a?(Hash)
               raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_message)
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           def error_message
@@ -485,8 +485,8 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
-            parsed_response = MultiJson.load(response.body)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
+            parsed_response ||= MultiJson.load(response.body)
 
             url = parsed_response['route_service_url']
             if url
@@ -503,7 +503,7 @@ module VCAP::Services
               end
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           private
@@ -520,9 +520,9 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             begin
-              parsed_response = MultiJson.load(response.body)
+              parsed_response ||= MultiJson.load(response.body)
             rescue MultiJson::ParseError
               @validator.validate(method: method, uri: uri, code: code, response: response)
               return
@@ -532,7 +532,7 @@ module VCAP::Services
               error_class = @error_class_map[parsed_response[@key].to_s]
               raise error_class.new(uri.to_s, method, response)
             else
-              @validator.validate(method: method, uri: uri, code: code, response: response)
+              @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
             end
           end
         end
@@ -542,8 +542,9 @@ module VCAP::Services
             @processor = if block_given?
                            block
                          else
-                           ->(response) do
-                             broker_response = MultiJson.load(response.body)
+                           ->(response, parsed_response) do
+                             parsed_response ||= MultiJson.load(response.body)
+                             broker_response = parsed_response.dup
                              state ||= broker_response.delete('state')
                              return broker_response unless state
 
@@ -560,8 +561,8 @@ module VCAP::Services
                          end
           end
 
-          def validate(method:, uri:, code:, response:)
-            @processor.call(response)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
+            @processor.call(response, parsed_response)
           end
         end
 
@@ -570,7 +571,7 @@ module VCAP::Services
             @error_class = error_class
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             raise @error_class.new(uri.to_s, method, response)
           end
         end
@@ -580,7 +581,7 @@ module VCAP::Services
             @error_class = error_class
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             raise @error_class.new(uri.to_s, method, response, ignore_description_key: true)
           end
         end
@@ -591,9 +592,9 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             begin
-              parsed_response = MultiJson.load(response.body)
+              parsed_response ||= MultiJson.load(response.body)
             rescue MultiJson::ParseError
               @logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
             end
@@ -602,7 +603,7 @@ module VCAP::Services
               raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_description(response))
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           private
@@ -618,11 +619,11 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
-            parsed_response = MultiJson.load(response.body)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
+            parsed_response ||= MultiJson.load(response.body)
             state = state_from_parsed_response(parsed_response)
             if @valid_states.include?(state)
-              @validator.validate(method: method, uri: uri, code: code, response: response)
+              @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
             else
               raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response, error_description(state))
             end
@@ -631,8 +632,7 @@ module VCAP::Services
           private
 
           def state_from_parsed_response(parsed_response)
-            parsed_response ||= {}
-            parsed_response['state']
+            (parsed_response || {})['state']
           end
 
           def error_description(actual)
@@ -645,7 +645,7 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             case code
             when 401
               raise Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
@@ -658,7 +658,7 @@ module VCAP::Services
             when 500..599
               raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
             end
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
         end
 
@@ -667,8 +667,8 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
-            parsed_response = MultiJson.load(response.body)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
+            parsed_response ||= MultiJson.load(response.body)
             parameters = parsed_response['parameters']
 
             if parameters && !parameters.is_a?(Hash)
@@ -676,7 +676,7 @@ module VCAP::Services
                 'The service broker response contained a parameters field that was not a JSON object.')
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
         end
 
@@ -687,9 +687,9 @@ module VCAP::Services
             @validator = validator
           end
 
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             begin
-              parsed_response = MultiJson.load(response.body)
+              parsed_response ||= MultiJson.load(response.body)
             rescue MultiJson::ParseError
               @logger.warn "MultiJson parse error `#{response.try(:body).inspect}'"
             end
@@ -710,7 +710,7 @@ module VCAP::Services
               raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response, "\n" + err_msgs.join("\n"))
             end
 
-            @validator.validate(method: method, uri: uri, code: code, response: response)
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           def remove_trailing_validation_schema_id(err_msg)
@@ -719,10 +719,10 @@ module VCAP::Services
         end
 
         class BadRequestValidator
-          def validate(method:, uri:, code:, response:)
+          def validate(method:, uri:, code:, response:, parsed_response: nil)
             description = 'Bad request'
             begin
-              parsed_response = MultiJson.load(response.body)
+              parsed_response ||= MultiJson.load(response.body)
               description = parsed_response['description'] if parsed_response.is_a?(Hash) && parsed_response.key?('description')
             rescue MultiJson::ParseError
             end
