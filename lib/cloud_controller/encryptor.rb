@@ -161,7 +161,9 @@ module VCAP::CloudController
           raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
           raise 'Field "encryption_iterations" does not exist' unless columns.include?(:encryption_iterations)
 
-          encrypted_fields << { field_name: field_name, salt_name: salt_name }
+          fields = { field_name: field_name, salt_name: salt_name }
+          fields.merge!({ storage_column: storage_column }) if storage_column
+          encrypted_fields << fields
 
           Encryptor.encrypted_classes << self.name
 
