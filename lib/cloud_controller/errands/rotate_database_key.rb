@@ -53,7 +53,7 @@ module VCAP::CloudController
             row.lock!
             encrypt_row(encrypted_fields, row)
             row.modified!(:updated_at)
-            row.save(validate: false)
+            row.save(validate: false, changed: true)
           rescue Sequel::NoExistingObject
             raise Sequel::Rollback
           rescue StandardError => e

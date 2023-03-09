@@ -50,6 +50,11 @@ module VCAP::CloudController
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
+  AppModel.blueprint(:all_fields) do
+    droplet_guid { Sham.guid }
+    buildpack_cache_sha256_checksum { Sham.guid }
+  end
+
   AppModel.blueprint(:kpack) do
     name { Sham.name }
     space { Space.make }
@@ -118,6 +123,22 @@ module VCAP::CloudController
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
+  DropletModel.blueprint(:all_fields) do
+    execution_metadata { 'some-metadata' }
+    error_id { 'error-id' }
+    error_description { 'a-error' }
+    staging_memory_in_mb { 256 }
+    staging_disk_in_mb { 256 }
+    buildpack_receipt_buildpack { 'a-buildpack' }
+    buildpack_receipt_buildpack_guid { Sham.guid }
+    buildpack_receipt_detect_output { 'buildpack-output' }
+    docker_receipt_image { 'docker-iamge' }
+    package_guid { Sham.guid }
+    build_guid { Sham.guid }
+    docker_receipt_username { 'a-user' }
+    sidecars { 'a-sidecar' }
+  end
+
   DropletModel.blueprint(:docker) do
     guid { Sham.guid }
     droplet_hash { nil }
@@ -163,7 +184,9 @@ module VCAP::CloudController
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
+    disk_in_mb {}
     sequence_id { Sham.sequence_id }
+    failure_reason {}
   end
 
   TaskModel.blueprint(:running) do
@@ -252,23 +275,13 @@ module VCAP::CloudController
 
   Route.blueprint do
     space { Space.make }
-
-    domain do
-      PrivateDomain.make(
-        owning_organization: space.organization,
-      )
-    end
-
+    domain { PrivateDomain.make(owning_organization: space.organization) }
     host { Sham.host }
   end
 
   Route.blueprint(:tcp) do
     port { Sham.port }
-    domain do
-      SharedDomain.make(
-        :tcp,
-      )
-    end
+    domain { SharedDomain.make(:tcp) }
   end
 
   Space.blueprint do
@@ -359,6 +372,15 @@ module VCAP::CloudController
     service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
     maintenance_info           {}
+  end
+
+  ManagedServiceInstance.blueprint(:all_fields) do
+    gateway_data               { 'some data' }
+    dashboard_url              { Sham.url }
+    syslog_drain_url           { Sham.url }
+    tags                       { ['a-tag', 'another-tag'] }
+    route_service_url          { Sham.url }
+    maintenance_info           { 'maintenance info' }
   end
 
   ManagedServiceInstance.blueprint(:routing) do
@@ -508,6 +530,18 @@ module VCAP::CloudController
     auth_password     { Sham.auth_password }
   end
 
+  ServiceBroker.blueprint(:space_scoped) do
+    space_id          { Space.make.id }
+  end
+
+  ServiceBrokerUpdateRequest.blueprint do
+    name { Sham.name }
+    broker_url { Sham.url }
+    authentication { '{"credentials":{"username":"new-admin","password":"welcome"}}' }
+    service_broker_id {}
+    fk_service_brokers_id {}
+  end
+
   ServiceDashboardClient.blueprint do
     uaa_id          { Sham.name }
     service_broker  { ServiceBroker.make }
@@ -587,6 +621,15 @@ module VCAP::CloudController
     stack { Stack.make.name }
   end
 
+  BuildpackLifecycleDataModel.blueprint(:all_fields) do
+    buildpacks { ['http://example.com/repo.git'] }
+    stack { Stack.make.name }
+    app_guid { Sham.guid }
+    droplet_guid { Sham.guid }
+    admin_buildpack_name { 'admin-bp' }
+    build_guid { Sham.guid }
+  end
+
   KpackLifecycleDataModel.blueprint do
     build { BuildModel.make }
     buildpacks { [] }
@@ -595,6 +638,12 @@ module VCAP::CloudController
   BuildpackLifecycleBuildpackModel.blueprint do
     admin_buildpack_name { Buildpack.make(name: 'ruby').name }
     buildpack_url { nil }
+  end
+
+  BuildpackLifecycleBuildpackModel.blueprint(:all_fields) do
+    buildpack_lifecycle_data_guid { BuildpackLifecycleDataModel.make.guid }
+    version { Sham.version }
+    buildpack_name { Sham.name }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint(:custom_buildpack) do
