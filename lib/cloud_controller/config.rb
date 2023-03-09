@@ -226,7 +226,7 @@ module VCAP::CloudController
     end
 
     def run_initializers_in_directory(path)
-      Dir.glob(File.expand_path(path, __FILE__)).sort.each do |file|
+      Dir.glob(File.expand_path(path, __FILE__)).each do |file|
         require file
         method = File.basename(file).sub('.rb', '').tr('-', '_')
         CCInitializers.send(method, @config_hash)

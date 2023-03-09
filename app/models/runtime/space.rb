@@ -11,7 +11,7 @@ module VCAP::CloudController
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
     class DBNameUniqueRaceError < Sequel::ValidationFailed; end
 
-    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     SELECT_NEWEST_PROCESS = lambda { |_, processes|
       newest_processes = {}
       processes.group_by(&:app_guid).each do |_, processes_for_app|

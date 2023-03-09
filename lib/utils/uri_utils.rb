@@ -1,6 +1,6 @@
 module UriUtils
-  SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x.freeze
-  GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x.freeze
+  SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
+  GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
 
   def self.is_uri?(candidate)
     !!(candidate.is_a?(String) && /\A#{URI::DEFAULT_PARSER.make_regexp}\Z/ =~ candidate && URI(candidate))

@@ -39,7 +39,7 @@ module VCAP::CloudController
 
     validates :name,
       format: {
-        with: /\./.freeze,
+        with: /\./,
         message: 'must contain at least one "."',
       }
 

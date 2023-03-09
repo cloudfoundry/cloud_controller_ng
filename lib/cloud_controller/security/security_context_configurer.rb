@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       private
 
-      UUID_REGEX = /\A[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}\z/i.freeze
+      UUID_REGEX = /\A[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}\z/i
 
       def decode_token(header_token)
         token_information = @token_decoder.decode_token(header_token)

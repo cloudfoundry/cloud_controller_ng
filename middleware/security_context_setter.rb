@@ -4,9 +4,9 @@ module CloudFoundry
       UUID_REGEX = '[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}'.freeze
       UPLOADS_PATH_REGEX = Regexp.union(
         [
-          %r{/v3/packages/#{UUID_REGEX}/upload}i.freeze,
-          %r{/v3/buildpacks/#{UUID_REGEX}/upload}i.freeze,
-          %r{/v3/droplets/#{UUID_REGEX}/upload}i.freeze
+          %r{/v3/packages/#{UUID_REGEX}/upload}i,
+          %r{/v3/buildpacks/#{UUID_REGEX}/upload}i,
+          %r{/v3/droplets/#{UUID_REGEX}/upload}i
         ]
       )
 

@@ -49,9 +49,7 @@ module VCAP::CloudController
       end
 
       def vcap_application(memory_limit:)
-        VCAP::VarsBuilder.new(process, memory_limit: memory_limit).to_hash.reject do |k, _v|
-          EXCLUDE.include? k
-        end
+        VCAP::VarsBuilder.new(process, memory_limit: memory_limit).to_hash.except(*EXCLUDE)
       end
 
       def sidecar_memory_total

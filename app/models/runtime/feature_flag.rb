@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class FeatureFlag < Sequel::Model
-    FF_ERROR_MESSAGE_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    FF_ERROR_MESSAGE_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
     class UndefinedFeatureFlagError < StandardError
     end

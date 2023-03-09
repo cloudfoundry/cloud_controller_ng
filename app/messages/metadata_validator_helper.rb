@@ -8,8 +8,8 @@ module VCAP::CloudController::Validators
     MAX_METADATA_KEY_SIZE = 63
     MAX_METADATA_PREFIX_SIZE = 253
 
-    INVALID_CHAR_REGEX = /[^\w\-\.]/.freeze
-    ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/.freeze
+    INVALID_CHAR_REGEX = /[^\w\-\.]/
+    ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/
 
     RESERVED_DOMAIN = 'cloudfoundry.org'.freeze
 

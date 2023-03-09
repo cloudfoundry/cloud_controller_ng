@@ -18,7 +18,7 @@ module VCAP
               (?<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)
             )?
             $
-      /x.freeze
+      /x
 
     class << self
       def valid?(version)

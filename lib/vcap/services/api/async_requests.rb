@@ -1,7 +1,6 @@
 # Copyright (c) 2009-2011 VMware, Inc.
 require 'eventmachine'
 require 'em-http-request'
-require 'fiber'
 require 'httpclient'
 
 require 'vcap/services/api/const'
