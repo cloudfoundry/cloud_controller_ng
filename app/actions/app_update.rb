@@ -42,10 +42,10 @@ module VCAP::CloudController
         )
 
         # update process timestamp to trigger convergence if sending fails
-        app.processes.each(&:save) if message.requested?(:name)
+        app.processes.each(&:save) if updating_metric_tags?(message)
       end
 
-      if message.requested?(:name)
+      if updating_metric_tags?(message)
         app.processes.each do |process|
           @runners.runner_for_process(process).update_metric_tags if process.state == ProcessModel::STARTED
         rescue Diego::Runner::CannotCommunicateWithDiegoError => e
@@ -65,7 +65,11 @@ module VCAP::CloudController
     end
 
     def custom_buildpacks_disabled?
-      VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
+      Config.config.get(:disable_custom_buildpacks)
+    end
+
+    def updating_metric_tags?(message)
+      message.requested?(:name) && Config.config.get(:update_metric_tags_on_rename)
     end
 
     def validate_not_changing_lifecycle_type!(app, lifecycle)

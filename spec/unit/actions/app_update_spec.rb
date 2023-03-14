@@ -82,6 +82,19 @@ module VCAP::CloudController
           let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
           let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
 
+          context 'when sending updates is disabled' do
+            before do
+              TestConfig.config[:update_metric_tags_on_rename] = false
+            end
+
+            it 'does not update metric tags for each process on the backend' do
+              app_update.update(app_model, message, lifecycle)
+
+              expect(runners).to_not have_received(:runner_for_process)
+              expect(runner).to_not have_received(:update_metric_tags)
+            end
+          end
+
           it 'updates the metric tags for each process on the backend' do
             app_update.update(app_model, message, lifecycle)
 
@@ -122,6 +135,18 @@ module VCAP::CloudController
                 allow(worker_process).to receive(:save)
                 allow(worker_process).to receive(:state).and_return(ProcessModel::STARTED)
                 allow(app_model).to receive(:processes).and_return([web_process, worker_process])
+              end
+
+              context 'when sending updates is disabled' do
+                before do
+                  TestConfig.config[:update_metric_tags_on_rename] = false
+                end
+
+                it 'does not update the process updated_at timestamps' do
+                  expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
+                  expect(web_process).to_not have_received(:save)
+                  expect(worker_process).to_not have_received(:save)
+                end
               end
 
               it 'updates the process updated_at timestamps so that it still converges' do
