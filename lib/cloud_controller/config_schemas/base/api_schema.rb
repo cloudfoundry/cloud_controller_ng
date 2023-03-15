@@ -364,6 +364,8 @@ module VCAP::CloudController
               write_key: String,
               dataset: String,
             },
+
+            update_metric_tags_on_rename: bool
           }
         end
         # rubocop:enable Metrics/BlockLength
