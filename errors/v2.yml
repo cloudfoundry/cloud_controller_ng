@@ -1348,3 +1348,8 @@
   name: EiriniLRPError
   http_code: 422
   message: "Failed to %s LRP resource: '%s'"
+
+420000:
+  name: KorifiError
+  http_code: 500
+  message: "%s"
