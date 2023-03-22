@@ -15,7 +15,7 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Organizations|Organizations|
 |Quota Definitions|Organization Quotas|[Organization Quotas in V3](#organization-quotas-in-v3)
 |Resource Matches|Resource Matches|
-|Routes, Route Mappings|Routes|[Routes in V3](#routes-in-v3)|
+|Routes, Route Mappings|Routes, Destinations|[Routes in V3](#routes-in-v3)|
 |Security Groups|Security Groups|[Security Groups in V3](#security-groups-in-v3)|
 |Services|Service Offerings|[Service Offerings in V3](#service-offerings-in-v3)
 |Service Bindings, Service Keys|Service Keys|
