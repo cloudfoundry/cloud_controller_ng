@@ -33537,7 +33537,7 @@ Audit event of type <code class="prettyprint">audit.service_route_binding.update
 </tr>
 <tr>
 <td>Routes, Route Mappings</td>
-<td>Routes</td>
+<td>Routes, Destinations</td>
 <td><a href="#routes-in-v3">Routes in V3</a></td>
 </tr>
 <tr>
@@ -33705,7 +33705,7 @@ Read more about <a href="#restage">restaging</a> in V3.</p>
 
 <p>In V3, these concepts have been collapsed into a single route resource. Now, a route can have one or more &ldquo;destinations&rdquo; listed on it. These represent a mapping from the route to a resource that can serve traffic (e.g. a process of an app).</p>
 
-<p>Read more about <a href="#routes">routes and destinations</a>.</p>
+<p>Read more about <a href="#routes">routes, destinations, and ports</a>.</p>
 <h3 id="security-groups-in-v3">Security Groups in V3</h3>
 
 <p>In V2, security groups which apply to <em>all</em> spaces in a Cloud Foundry deployment are termed &ldquo;default&rdquo;, as in &ldquo;default for running apps&rdquo; and &ldquo;default for staging apps&rdquo;. For example, to apply a default security group to all apps in the running lifecycle, one would <code class="prettyprint">PUT /v2/config/running_security_groups/:guid</code></p>
