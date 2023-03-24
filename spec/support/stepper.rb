@@ -117,14 +117,14 @@ class Stepper
 
   def instrument(target, method_name, before: nil, after: nil, &block)
     example.allow(target).
-      to example.receive(method_name).and_wrap_original do |original_method, *args, &method_block|
+      to example.receive(method_name).and_wrap_original do |original_method, *args, **kwargs, &method_block|
       result = nil
       if before
         step(before) do
-          result = original_method.call(*args, &method_block)
+          result = original_method.call(*args, **kwargs, &method_block)
         end
       else
-        result = original_method.call(*args, &method_block)
+        result = original_method.call(*args, **kwargs, &method_block)
       end
 
       step(after) if after

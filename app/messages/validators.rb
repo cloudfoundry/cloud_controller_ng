@@ -359,7 +359,7 @@ module VCAP::CloudController::Validators
     private
 
     def opinionated_iso_8601(timestamp, record, attribute)
-      if timestamp !~ /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/
+      if /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/ !~ timestamp.to_s
         record.errors.add(attribute, message: "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
       end
     end
