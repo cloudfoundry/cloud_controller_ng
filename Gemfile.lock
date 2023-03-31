@@ -503,7 +503,7 @@ GEM
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 6.0)
       tzinfo
-    thin (1.8.1)
+    thin (1.8.2)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
       rack (>= 1, < 3)
