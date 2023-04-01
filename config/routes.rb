@@ -311,6 +311,9 @@ Rails.application.routes.draw do
   delete '/buildpacks/:guid', to: 'buildpacks#destroy'
   post '/buildpacks/:guid/upload', to: 'buildpacks#upload'
 
+  # blobs
+  get '/blobs', to: 'blobs#show'
+
   # feature flags
   get '/feature_flags', to: 'feature_flags#index'
   get '/feature_flags/:name', to: 'feature_flags#show'

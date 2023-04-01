@@ -1,5 +1,8 @@
+require 'erb'
+
 module Credhub
   class Client
+    CHUNK_SIZE=50_000
     def initialize(credhub_url, uaa_client)
       @credhub_url = credhub_url
       @uaa_client = uaa_client
@@ -9,8 +12,51 @@ module Credhub
       response = with_request_error_handling do
         client.get("/api/v1/data?name=#{reference_name}&current=true", nil, { 'Authorization' => auth_header, 'Content-Type' => 'application/json' })
       end
-      response_body = JSON.parse(response.body)
+      response_body = response.body
       response_body['data'][0]['value']
+    end
+
+    def get_chunked_credential_by_name(path)
+      response = ""
+      find_credentials_in_path(path).sort.each do |chunk|
+        response += get_credential_by_name(chunk)
+      end
+      response
+    end
+
+    def credential_exists?(path)
+      find_credentials_in_path(path).length > 0
+    end
+
+    def save_credential(path, value)
+      chunk_number = 1
+      value.scan(/.{1,#{CHUNK_SIZE}}/m) do |chunk|
+        with_request_error_handling do
+          body = {
+            'type' => 'value',
+            'name' => "#{path}_#{chunk_number.to_s.rjust(10, '0')}",
+            'value' => chunk,
+          }
+          client.put("/api/v1/data", body, { 'Authorization' => auth_header, 'Content-Type' => 'application/json' })
+        end
+        chunk_number += 1
+      end
+    end
+
+    def find_credentials_in_path(path)
+      response = with_request_error_handling do
+        client.get("/api/v1/data?name-like=#{ERB::Util.url_encode(path)}", nil, { 'Authorization' => auth_header, 'Content-Type' => 'application/json' })
+      end
+      response_body = response.body
+      response_body['credentials'].map {|credential| credential['name']}
+    end
+
+    def delete_credential(path)
+      find_credentials_in_path(path).each do |chunk|
+        with_request_error_handling do
+          client.delete("/api/v1/data?name=#{ERB::Util.url_encode(chunk)}", nil, { 'Authorization' => auth_header, 'Content-Type' => 'application/json' })
+        end
+      end
     end
 
     private
@@ -49,7 +95,7 @@ module Credhub
     end
 
     def build_client
-      client = HTTPClient.new(base_url: credhub_url)
+      client = JSONClient.new(base_url: credhub_url)
       client.ssl_config.set_trust_ca(VCAP::CloudController::Config.config.get(:credhub_api, :ca_cert_path))
       client
     end
@@ -65,7 +111,7 @@ module Credhub
 
   class Error < StandardError
     def self.from_response(response)
-      response_body = JSON.parse(response.body)
+      response_body = response.body
       error_message = response_body['error']
       if response_body['error_description']
         error_message += ": #{response_body['error_description']}"

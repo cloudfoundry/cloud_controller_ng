@@ -1,4 +1,5 @@
 require 'cloud_controller/blobstore/client'
+require 'cloud_controller/blobstore/credhub_client'
 require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
@@ -12,6 +13,8 @@ module CloudController
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
         if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
+        elsif options[:blobstore_type] == 'credhub'
+          provide_credhub(options, directory_key, root_dir)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -48,6 +51,14 @@ module CloudController
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
           Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
+        end
+
+        def provide_credhub(options, directory_key, root_dir)
+          CredhubClient.new(
+            credhub_client: CloudController::DependencyLocator.instance.credhub_client,
+            directory_key: directory_key,
+            root_dir: root_dir,
+          )
         end
 
         def provide_webdav(options, directory_key, root_dir)
