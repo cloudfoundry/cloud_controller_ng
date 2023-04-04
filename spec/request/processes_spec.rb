@@ -499,6 +499,7 @@ RSpec.describe 'Processes' do
             name: process.name,
             uris: process.uris,
             host: 'toast',
+            availability_zone: 'az_1',
             net_info: net_info_1,
             uptime: 12345,
             mem_quota:  process[:memory] * 1024 * 1024,
@@ -550,11 +551,12 @@ RSpec.describe 'Processes' do
               'internal_tls_proxy_port' => 61007
             }
           ],
-          'uptime'         => 12345,
-          'mem_quota'      => 1073741824,
-          'disk_quota'     => 1073741824,
-          'fds_quota'      => 16384,
-          'log_rate_limit' => 1_048_576
+          'uptime'              => 12345,
+          'mem_quota'           => 1073741824,
+          'disk_quota'          => 1073741824,
+          'fds_quota'           => 16384,
+          'log_rate_limit'      => 1_048_576,
+          'availability_zone'   => 'az_1'
         }]
     }
     end

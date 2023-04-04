@@ -14,13 +14,14 @@ module VCAP::CloudController
       let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
       let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
 
-      def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
+      def make_actual_lrp(instance_guid:, index:, state:, error:, since:, availability_zone:'az_1')
         ::Diego::Bbs::Models::ActualLRP.new(
           actual_lrp_key:          ::Diego::Bbs::Models::ActualLRPKey.new(index: index),
           actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid),
           state:                   state,
           placement_error:         error,
           since:                   since,
+          availability_zone:       availability_zone,
         )
       end
 

@@ -68,6 +68,7 @@ module VCAP::CloudController::Presenters::V3
               disk_quota: process[:disk_quota] * 1024 * 1024,
               log_rate_limit: process[:log_rate_limit],
               fds_quota: process.file_descriptors,
+              availability_zone: 'az_1',
               usage: {
                 time: '2015-12-08 16:54:48 -0800',
                 cpu:  80,
@@ -90,6 +91,7 @@ module VCAP::CloudController::Presenters::V3
               disk_quota: process[:disk_quota] * 1024 * 1024,
               log_rate_limit: process[:log_rate_limit],
               fds_quota: process.file_descriptors,
+              availability_zone: 'az_2',
               usage: {
                 time: '2015-03-13 16:54:48 -0800',
                 cpu:  70,
@@ -122,6 +124,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
         expect(result[0][:log_rate_limit]).to eq(process[:log_rate_limit])
         expect(result[0][:fds_quota]).to eq(process.file_descriptors)
+        expect(result[0][:availability_zone]).to eq('az_1')
         expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
                                           cpu: 80,
                                           mem: 128,
@@ -136,6 +139,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:host]).to eq('toast')
         expect(result[1][:instance_ports]).to eq(instance_ports_2)
         expect(result[1][:uptime]).to eq(42)
+        expect(result[0][:availability_zone]).to eq('az_1')
         expect(result[1][:usage]).to eq({ time: '2015-03-13 16:54:48 -0800',
                                           cpu: 70,
                                           mem: 128,
