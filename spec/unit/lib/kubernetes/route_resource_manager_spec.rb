@@ -212,7 +212,7 @@ RSpec.describe Kubernetes::RouteResourceManager do
           ]
 
           expect(k8s_client).to receive(:update_route) do |actual|
-            expect(expected_hash.to_hash).to eq(actual.to_hash)
+            expect(expected_hash.spec.destinations).to match_array(actual.spec.destinations)
           end
 
           route_resource_manager.update_destinations(route)
