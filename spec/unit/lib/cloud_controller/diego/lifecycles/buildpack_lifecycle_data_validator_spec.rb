@@ -19,6 +19,18 @@ module VCAP::CloudController
       end
     end
 
+    context 'when stack is nil and buildpack is nonexistant' do
+      let(:stack) { nil }
+      let(:buildpack_name_or_url) { 'nonexistant_buildpack' }
+      let(:buildpack) { nil }
+
+      it 'is not valid' do
+        expect(validator).not_to be_valid
+        expect(validator.errors_on(:stack)).to include('must be an existing stack')
+        expect(validator.errors_on(:buildpack)).to include('"nonexistant_buildpack" must be an existing admin buildpack or a valid git URI')
+      end
+    end
+
     context 'when given a buildpack url' do
       let(:buildpack_name_or_url) { 'http://yeah.com' }
       let(:buildpack) { nil }
@@ -63,10 +75,11 @@ module VCAP::CloudController
 
       context 'when given an invalid BuildpackInfo' do
         let(:buildpack_infos) { [buildpack_info, BuildpackInfo.new('invalid-bp', nil)] }
+        let(:stack) { Stack.make(name: 'existing_stack') }
 
         it 'includes an error for the invalid buildpack' do
           expect(validator).not_to be_valid
-          expect(validator.errors[:buildpack]).to include('"invalid-bp" must be an existing admin buildpack or a valid git URI')
+          expect(validator.errors[:buildpack]).to include('"invalid-bp" for stack "existing_stack" must be an existing admin buildpack or a valid git URI')
         end
       end
     end
