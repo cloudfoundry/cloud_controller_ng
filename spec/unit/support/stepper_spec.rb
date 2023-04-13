@@ -338,9 +338,13 @@ RSpec.describe 'Stepper' do
       record(:method_four, [arg1, arg2], { kwarg1: kwarg1, kwarg2: kwarg2 }, block, "[#{Thread.current.name}]")
     end
 
-    def record(*args)
+    def record(*args, **kwargs)
       mutex.lock
-      calls << args
+      if kwargs.empty?
+        calls << args
+      else
+        calls << args + [kwargs]
+      end
       mutex.unlock
     end
 
