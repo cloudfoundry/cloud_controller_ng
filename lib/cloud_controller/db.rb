@@ -41,6 +41,7 @@ module VCAP::CloudController
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_expiration_extension(db, opts)
       add_connection_validator_extension(db, opts)
+      db.extension(:requires_unique_column_names_in_subquery)
       db
     end
 
@@ -135,26 +136,6 @@ class Sequel::Dataset
 
   def empty_from_sql
     ' FROM DUAL' if self.db.database_type == :mysql
-  end
-
-  @unique_names_in_subquery = nil
-
-  class << self
-    attr_accessor :unique_names_in_subquery
-  end
-
-  # MySQL does not allow duplicate column names in a subquery select list, whereas PostgreSQL and MariaDB do.
-  def requires_unique_column_names_in_subquery_select_list?
-    if self.class.unique_names_in_subquery.nil?
-      begin
-        self.db.fetch('SELECT * FROM (SELECT 1 AS a, 1 AS a) AS t1').all
-        self.class.unique_names_in_subquery = false
-      rescue Sequel::DatabaseError
-        self.class.unique_names_in_subquery = true
-      end
-    end
-
-    self.class.unique_names_in_subquery
   end
 end
 
