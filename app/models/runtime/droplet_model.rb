@@ -89,10 +89,6 @@ module VCAP::CloudController
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
-    def has_docker_image?
-      docker?
-    end
-
     def docker_ports
       exposed_ports = []
       if self.execution_metadata.present?
