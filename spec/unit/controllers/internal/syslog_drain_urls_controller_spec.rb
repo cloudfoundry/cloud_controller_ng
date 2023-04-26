@@ -300,6 +300,10 @@ module VCAP::CloudController
       let(:instance9) { UserProvidedServiceInstance.make(space: app_obj3.space) }
       let(:instance10) { UserProvidedServiceInstance.make(space: app_obj4.space) }
       let(:instance11) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance12) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance13) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance14) { UserProvidedServiceInstance.make(space: app_obj.space) }
+      let(:instance15) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
       let!(:binding_with_drain4) { ServiceBinding.make(
         syslog_drain_url: 'barfoo',
@@ -349,6 +353,30 @@ module VCAP::CloudController
         service_instance: instance11,
         credentials: { 'foo' => '', 'cert' => '', 'ca' => '' })
       }
+      let!(:binding_with_drain12) { ServiceBinding.make(
+        syslog_drain_url: 'collision_test',
+        app: app_obj,
+        service_instance: instance12,
+        credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
+      }
+      let!(:binding_with_drain13) { ServiceBinding.make(
+        syslog_drain_url: 'collision_test',
+        app: app_obj,
+        service_instance: instance13,
+        credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' })
+      }
+      let!(:binding_with_drain14) { ServiceBinding.make(
+        syslog_drain_url: 'collision_test',
+        app: app_obj,
+        service_instance: instance14,
+        credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' })
+      }
+      let!(:binding_with_drain15) { ServiceBinding.make(
+        syslog_drain_url: 'collision_test',
+        app: app_obj,
+        service_instance: instance15,
+        credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' })
+      }
 
       it 'returns a list of syslog drain urls and their credentials' do
         get '/internal/v5/syslog_drain_urls', '{}'
@@ -360,7 +388,7 @@ module VCAP::CloudController
           end
         end
 
-        expect(sorted_results.count).to eq(7)
+        expect(sorted_results.count).to eq(8)
 
         expect(sorted_results).to eq(
           [
@@ -384,6 +412,25 @@ module VCAP::CloudController
                    'apps' => [
                      { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
                      { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+            { 'url' => 'collision_test',
+              'credentials' => [
+                { 'cert' => '',
+                  'key' => '',
+                  'ca' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                { 'cert' => '',
+                  'key' => 'has-key',
+                  'ca' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                { 'cert' => '',
+                  'key' => '',
+                  'ca' => 'has-ca',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                { 'cert' => 'has-cert',
+                  'key' => '',
+                  'ca' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+              ] },
             { 'url' => 'fish%2cfinger',
               'credentials' => [
                 { 'cert' => '',
