@@ -81,7 +81,7 @@ module VCAP::CloudController
                      url: syslog_drain_url,
                      binding_data_map: {}
                    }
-                   cert_item = injected_item[:binding_data_map][cert] ||= {
+                   cert_item = injected_item[:binding_data_map][[key, cert, ca]] ||= {
                      cert: cert,
                      key: key,
                      ca: ca,
