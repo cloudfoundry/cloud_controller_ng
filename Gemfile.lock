@@ -119,7 +119,7 @@ GEM
     codeclimate-test-reporter (1.0.9)
       simplecov (<= 0.13)
     coderay (1.1.3)
-    concurrent-ruby (1.2.0)
+    concurrent-ruby (1.2.2)
     cookiejar (0.3.3)
     crack (0.4.5)
       rexml
@@ -261,7 +261,7 @@ GEM
     http-form_data (2.3.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.12.0)
+    i18n (1.13.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.4)
@@ -305,8 +305,8 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
-    mini_portile2 (2.8.1)
-    minitest (5.17.0)
+    mini_portile2 (2.8.2)
+    minitest (5.18.0)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -359,7 +359,7 @@ GEM
     puma (5.6.5)
       nio4r (~> 2.0)
     racc (1.6.2)
-    rack (2.2.6.4)
+    rack (2.2.7)
     rack-protection (3.0.6)
       rack
     rack-test (2.1.0)
@@ -406,9 +406,9 @@ GEM
       rspec-mocks (~> 3.12.0)
     rspec-collection_matchers (1.2.0)
       rspec-expectations (>= 2.99.0.beta1)
-    rspec-core (3.12.0)
+    rspec-core (3.12.2)
       rspec-support (~> 3.12.0)
-    rspec-expectations (3.12.0)
+    rspec-expectations (3.12.3)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
     rspec-instafail (1.0.0)
@@ -416,17 +416,17 @@ GEM
     rspec-its (1.3.0)
       rspec-core (>= 3.0.0)
       rspec-expectations (>= 3.0.0)
-    rspec-mocks (3.12.3)
+    rspec-mocks (3.12.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
-    rspec-rails (6.0.1)
+    rspec-rails (6.0.2)
       actionpack (>= 6.1)
       activesupport (>= 6.1)
       railties (>= 6.1)
-      rspec-core (~> 3.11)
-      rspec-expectations (~> 3.11)
-      rspec-mocks (~> 3.11)
-      rspec-support (~> 3.11)
+      rspec-core (~> 3.12)
+      rspec-expectations (~> 3.12)
+      rspec-mocks (~> 3.12)
+      rspec-support (~> 3.12)
     rspec-support (3.12.0)
     rspec-wait (0.0.9)
       rspec (>= 3, < 4)
@@ -533,7 +533,7 @@ GEM
       rexml
     yajl-ruby (1.4.3)
     yard (0.9.34)
-    zeitwerk (2.6.7)
+    zeitwerk (2.6.8)
 
 PLATFORMS
   ruby
@@ -604,7 +604,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 6.0.1)
+  rspec-rails (~> 6.0.2)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
   rubocop (~> 1.50.2)
