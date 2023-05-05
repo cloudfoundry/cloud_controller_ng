@@ -383,7 +383,7 @@ module VCAP::CloudController
         expect(last_response).to be_successful
 
         sorted_results = decoded_results.sort { |a, b| a['url'] <=> b['url'] }.each do |binding|
-          binding['credentials'].sort! { |a, b| a['cert'] <=> b['cert'] }.each do |credential|
+          binding['credentials'].sort! { |a, b| [a['key'], a['cert'], a['ca']] <=> [b['key'], b['cert'], b['ca']] }.each do |credential|
             credential['apps'].sort! { |a, b| a['hostname'] <=> b['hostname'] }
           end
         end
@@ -419,15 +419,15 @@ module VCAP::CloudController
                   'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
                 { 'cert' => '',
-                  'key' => 'has-key',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
-                { 'cert' => '',
                   'key' => '',
                   'ca' => 'has-ca',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
                 { 'cert' => 'has-cert',
                   'key' => '',
+                  'ca' => '',
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                { 'cert' => '',
+                  'key' => 'has-key',
                   'ca' => '',
                   'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
               ] },
