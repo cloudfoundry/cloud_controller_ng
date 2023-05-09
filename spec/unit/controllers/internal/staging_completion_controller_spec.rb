@@ -209,7 +209,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let!(:droplet) { DropletModel.make }
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs3', build: build) }
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs4', build: build) }
       let(:staging_guid) { build.guid }
       let(:buildpacks) do [
         {
@@ -301,7 +301,7 @@ module VCAP::CloudController
                 'api-version' => 'internal',
                 'lifecycle' =>  'buildpack',
                 'buildpacks' =>  %w(the-pleasant-buildpack),
-                'stack' =>  'cflinuxfs3',
+                'stack' =>  'cflinuxfs4',
                 'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(staged_app.guid),
                 'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(build.guid),
               }

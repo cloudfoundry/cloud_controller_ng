@@ -1816,7 +1816,7 @@ RSpec.describe 'Apps' do
           type: 'buildpack',
           data: {
             buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-            stack: 'cflinuxfs3'
+            stack: 'cflinuxfs4'
           }
         }
       }
@@ -1881,7 +1881,7 @@ RSpec.describe 'Apps' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs3',
+                  'stack' => 'cflinuxfs4',
                 },
               },
               'package' => { 'guid' => package.guid, },
@@ -1910,7 +1910,7 @@ RSpec.describe 'Apps' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs3',
+                  'stack' => 'cflinuxfs4',
                 },
               },
               'package' => { 'guid' => package.guid, },

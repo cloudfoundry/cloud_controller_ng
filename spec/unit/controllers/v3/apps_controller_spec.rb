@@ -365,7 +365,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               {
                 name: 'some-name',
                 relationships: { space: { data: { guid: space.guid } } },
-                lifecycle: { type: 'buildpack', data: { stack: 'cflinuxfs3' } }
+                lifecycle: { type: 'buildpack', data: { stack: 'cflinuxfs4' } }
               }
             end
 
@@ -376,7 +376,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               lifecycle_data = response_body['lifecycle']['data']
 
               expect(response.status).to eq 201
-              expect(lifecycle_data['stack']).to eq 'cflinuxfs3'
+              expect(lifecycle_data['stack']).to eq 'cflinuxfs4'
               expect(lifecycle_data['buildpack']).to be_nil
             end
           end

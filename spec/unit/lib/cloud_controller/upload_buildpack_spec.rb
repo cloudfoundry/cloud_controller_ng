@@ -46,7 +46,7 @@ module VCAP::CloudController
       context 'and the upload to the blobstore succeeds' do
         context 'stack from manifest' do
           context 'manifest file is too large (>1mb)' do
-            let(:valid_zip_manifest_stack) { 'cflinuxfs3' }
+            let(:valid_zip_manifest_stack) { 'cflinuxfs4' }
             let(:zip_with_massive_manifest) do
               zip_name = File.join(tmpdir, filename)
               TestZip.create(zip_name, 1, 1024) do |zipfile|
@@ -54,7 +54,7 @@ module VCAP::CloudController
                   zipfile.get_output_stream('manifest.yml') do |f|
                     alphachars = Array('A'..'Z')
                     megabyte_string = (0...(1024 * 1024)).map { alphachars.sample }.join
-                    f.write("---\nstack: cflinuxfs3\nabsurdly_long_value: " + megabyte_string)
+                    f.write("---\nstack: cflinuxfs4\nabsurdly_long_value: " + megabyte_string)
                   end
                 end
               end
@@ -101,7 +101,7 @@ module VCAP::CloudController
           context 'stack previously unknown' do
             let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
             context 'and the stack exists' do
-              let(:valid_zip_manifest_stack) { 'cflinuxfs3_new' }
+              let(:valid_zip_manifest_stack) { 'cflinuxfs4_new' }
               before do
                 VCAP::CloudController::Stack.create(name: valid_zip_manifest_stack)
               end
@@ -217,7 +217,7 @@ module VCAP::CloudController
         end
 
         context 'when the same bits are uploaded twice' do
-          let(:buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'buildpack2', stack: 'cflinuxfs3', position: 0 }) }
+          let(:buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'buildpack2', stack: 'cflinuxfs4', position: 0 }) }
 
           it 'should have different keys' do
             upload_buildpack.upload_buildpack(buildpack, valid_zip2, filename)

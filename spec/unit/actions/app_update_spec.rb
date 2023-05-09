@@ -284,7 +284,7 @@ module VCAP::CloudController
                 type: 'buildpack',
                 data: {
                   buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
-                  stack:      'cflinuxfs3'
+                  stack:      'cflinuxfs4'
                 }
               }
             })

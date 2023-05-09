@@ -286,16 +286,16 @@ diego:
   use_privileged_containers_for_staging: false
   enable_declarative_asset_downloads: false
   lifecycle_bundles:
-    "buildpack/cflinuxfs3": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+    "buildpack/cflinuxfs4": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
     "buildpack/windows": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
   droplet_destinations:
-    "cflinuxfs3": "/home/vcap"
+    "cflinuxfs4": "/home/vcap"
     "windows": "/Users/vcap"
     "windows2012R2": "/"
   insecure_docker_registry_list: []
-  docker_staging_stack: 'cflinuxfs3'
+  docker_staging_stack: 'cflinuxfs4'
   bbs:
     url: https://bbs.service.cf.internal:8889
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key

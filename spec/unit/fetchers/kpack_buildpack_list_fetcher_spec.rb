@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:client) { instance_double(Kubernetes::ApiClient) }
     let(:filters) { {} }
 
-    let(:cflinuxfs3_stackname) { 'cflinuxfs3-stack' }
+    let(:cflinuxfs4_stackname) { 'cflinuxfs4-stack' }
     let(:builder_namespace) { 'custom-cf-workloads-staging' }
 
     let(:default_builder_created_at_str) { '2020-06-27T03:13:07Z' }
@@ -24,7 +24,7 @@ module VCAP::CloudController
             { group: [{ id: 'paketo-community/ruby' }] },
             { group: [{ id: 'paketo-buildpacks/java' }] },
           ],
-          stack: cflinuxfs3_stackname,
+          stack: cflinuxfs4_stackname,
         },
         status: {
           builderMetadata: [
@@ -44,7 +44,7 @@ module VCAP::CloudController
             }
           ],
           stack: {
-            id: 'org.cloudfoundry.stacks.cflinuxfs3'
+            id: 'org.cloudfoundry.stacks.cflinuxfs4'
           }
         }
       )
@@ -72,7 +72,7 @@ module VCAP::CloudController
         expect(buildpack1.name).to(eq('paketo-community/ruby'))
         expect(buildpack1.id).to(eq('paketo-community/ruby@0.0.11'))
         expect(buildpack1.filename).to(eq('paketo-community/ruby@0.0.11'))
-        expect(buildpack1.stack).to(eq('org.cloudfoundry.stacks.cflinuxfs3'))
+        expect(buildpack1.stack).to(eq('org.cloudfoundry.stacks.cflinuxfs4'))
         expect(buildpack1.guid).to(be_blank)
         expect(buildpack1.state).to(eq('READY'))
         expect(buildpack1.position).to(eq(0))
@@ -86,7 +86,7 @@ module VCAP::CloudController
         expect(buildpack2.name).to(eq('paketo-buildpacks/java'))
         expect(buildpack2.id).to(eq('paketo-buildpacks/java@1.14.0'))
         expect(buildpack2.filename).to(eq('paketo-buildpacks/java@1.14.0'))
-        expect(buildpack2.stack).to(eq('org.cloudfoundry.stacks.cflinuxfs3'))
+        expect(buildpack2.stack).to(eq('org.cloudfoundry.stacks.cflinuxfs4'))
         expect(buildpack2.guid).to(be_blank)
         expect(buildpack2.state).to(eq('READY'))
         expect(buildpack2.position).to(eq(0))

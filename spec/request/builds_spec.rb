@@ -37,7 +37,7 @@ RSpec.describe 'Builds' do
           type: 'buildpack',
           data: {
             buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-            stack: 'cflinuxfs3'
+            stack: 'cflinuxfs4'
           },
         },
         package: {
@@ -85,7 +85,7 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs3'
+              'stack' => 'cflinuxfs4'
             },
           },
           'package' => {
@@ -212,7 +212,7 @@ RSpec.describe 'Builds' do
             creationTimestamp: '1/1',
           },
           spec: {
-            stack: 'cflinuxfs3-stack',
+            stack: 'cflinuxfs4-stack',
             store: 'cf-buildpack-store',
             serviceAccount: 'gcr-service-account',
             order: [
@@ -226,7 +226,7 @@ RSpec.describe 'Builds' do
               { id: 'paketo-community/ruby', version: '0.0.11' },
             ],
             stack: {
-              id: 'org.cloudfoundry.stacks.cflinuxfs3'
+              id: 'org.cloudfoundry.stacks.cflinuxfs4'
             },
             conditions: [
               {
@@ -324,7 +324,7 @@ RSpec.describe 'Builds' do
               'api-version' => 'v3',
               'lifecycle' => 'buildpack',
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs3',
+              'stack' => 'cflinuxfs4',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'build-id' => OpenSSL::Digest::SHA256.hexdigest(created_build.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid),
@@ -379,7 +379,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-        stack: 'cflinuxfs3' } } }
+        stack: 'cflinuxfs4' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -476,7 +476,7 @@ RSpec.describe 'Builds' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs3',
+                  'stack' => 'cflinuxfs4',
                 },
               },
               'package' => { 'guid' => package.guid, },
@@ -505,7 +505,7 @@ RSpec.describe 'Builds' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs3',
+                  'stack' => 'cflinuxfs4',
                 },
               },
               'package' => { 'guid' => second_package.guid, },
@@ -576,7 +576,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-        stack: 'cflinuxfs3' } } }
+        stack: 'cflinuxfs4' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -604,7 +604,7 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs3',
+              'stack' => 'cflinuxfs4',
             },
           },
           'package' => {
