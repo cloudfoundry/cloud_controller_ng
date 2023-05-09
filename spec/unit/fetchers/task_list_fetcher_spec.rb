@@ -11,7 +11,7 @@ module VCAP::CloudController
     let!(:task_for_app2) { TaskModel.make(app_guid: app2_in_space1.guid) }
 
     let!(:label_for_task_in_space1) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'value') }
-    let!(:label_for_task_in_space1_jr) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'slimjim') }
+    let!(:label_for_task_in_space1_jr) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key_jr', value: 'slimjim') }
 
     let(:space2) { Space.make }
     let(:app_in_space2) { AppModel.make(space_guid: space2.guid) }

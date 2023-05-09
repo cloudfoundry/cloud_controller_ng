@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let!(:label) { AppLabelModel.make }
-      let!(:label2) { AppLabelModel.make }
+      let!(:label2) { AppLabelModel.make(key_prefix: 'prefix', key_name: 'foo') }
 
       it 'deletes and cancels the label' do
         label_delete.delete([label, label2])

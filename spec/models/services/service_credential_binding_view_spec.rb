@@ -30,10 +30,10 @@ module VCAP::CloudController
           it 'eager loads successfully' do
             binding = ServiceBinding.make
             lb1 = ServiceBindingLabelModel.make(service_binding: binding)
-            lb2 = ServiceBindingLabelModel.make(service_binding: binding)
+            lb2 = ServiceBindingLabelModel.make(service_binding: binding, key_prefix: 'prefix', key_name: 'foo')
             key = ServiceKey.make
             lk1 = ServiceKeyLabelModel.make(service_key: key)
-            lk2 = ServiceKeyLabelModel.make(service_key: key)
+            lk2 = ServiceKeyLabelModel.make(service_key: key, key_prefix: 'prefix2', key_name: 'foo2')
 
             eager_loaded_service_credential_bindings = nil
             expect {
@@ -55,10 +55,10 @@ module VCAP::CloudController
           it 'eager loads successfully' do
             binding = ServiceBinding.make
             lb1 = ServiceBindingAnnotationModel.make(service_binding: binding)
-            lb2 = ServiceBindingAnnotationModel.make(service_binding: binding)
+            lb2 = ServiceBindingAnnotationModel.make(service_binding: binding, key_prefix: 'prefix', key: 'foo')
             key = ServiceKey.make
             lk1 = ServiceKeyAnnotationModel.make(service_key: key)
-            lk2 = ServiceKeyAnnotationModel.make(service_key: key)
+            lk2 = ServiceKeyAnnotationModel.make(service_key: key, key_prefix: 'prefix2', key: 'foo2')
 
             eager_loaded_service_credential_bindings = nil
             expect {

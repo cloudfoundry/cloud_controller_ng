@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let!(:annotation) { AppAnnotationModel.make }
-      let!(:annotation2) { AppAnnotationModel.make }
+      let!(:annotation2) { AppAnnotationModel.make(key_prefix: 'prefix', key: 'foo') }
 
       it 'deletes and cancels the annotation' do
         annotation_delete.delete([annotation, annotation2])
