@@ -3,7 +3,7 @@ class BoshErrandEnvironment
     @config = config
 
     VCAP::CloudController::StenoConfigurer.new(config.get(:logging)).configure do |steno_config_hash|
-      steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout)
+      steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout) if config.get(:logging, :stdout_sink_enabled)
     end
   end
 
