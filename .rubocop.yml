@@ -489,7 +489,7 @@ Lint/NoReturnInBeginEndBlocks: # (new in 1.2)
   Enabled: true
 
 Style/CollectionCompact: # (new in 1.2)
-  Enabled: true
+  Enabled: false
 
 Style/NegatedIfElseCondition: # (new in 1.2)
   Enabled: true
