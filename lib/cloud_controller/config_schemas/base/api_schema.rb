@@ -97,6 +97,10 @@ module VCAP::CloudController
               optional(:ca_cert_path) => String,
             },
 
+            optional(:redis) => {
+              socket: String
+            },
+
             staging: {
               timeout_in_seconds: Integer,
               minimum_staging_memory_mb: Integer,

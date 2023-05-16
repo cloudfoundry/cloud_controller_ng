@@ -1,29 +1,71 @@
 require 'mixins/client_ip'
 require 'mixins/user_reset_interval'
+require 'redis'
 
 module CloudFoundry
   module Middleware
     class ExpiringRequestCounter
       include CloudFoundry::Middleware::UserResetInterval
 
-      Counter = Struct.new(:value, :expires_at)
-
-      def initialize(key_prefix)
+      def initialize(key_prefix, redis_connection_pool_size: nil)
         @key_prefix = key_prefix
-        @mutex = Mutex.new
-        @data = {}
+        @redis_connection_pool_size = redis_connection_pool_size
       end
 
       def increment(user_guid, reset_interval_in_minutes, logger)
         key = "#{@key_prefix}:#{user_guid}"
         expires_in = next_expires_in(user_guid, reset_interval_in_minutes)
-        @mutex.synchronize do
-          if !@data.key?(key) || (ttl = @data[key].expires_at - Time.now.to_i) <= 0 # not existing or expired
-            @data[key] = Counter.new(1, Time.now.to_i + expires_in)
-            [1, expires_in]
-          else
-            [@data[key].value += 1, ttl]
+        store.increment(key, expires_in, logger)
+      end
+
+      private
+
+      def store
+        return @store if defined?(@store)
+
+        redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
+        @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket, @redis_connection_pool_size)
+      end
+
+      class InMemoryStore
+        Counter = Struct.new(:value, :expires_at)
+
+        def initialize
+          @mutex = Mutex.new
+          @data = {}
+        end
+
+        def increment(key, expires_in, _)
+          @mutex.synchronize do
+            if !@data.key?(key) || (ttl = @data[key].expires_at - Time.now.to_i) <= 0 # not existing or expired
+              @data[key] = Counter.new(1, Time.now.to_i + expires_in)
+              [1, expires_in]
+            else
+              [@data[key].value += 1, ttl]
+            end
           end
+        end
+      end
+
+      class RedisStore
+        def initialize(socket, connection_pool_size)
+          connection_pool_size ||= VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+          @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
+            Redis.new(timeout: 1, path: socket)
+          end
+        end
+
+        def increment(key, expires_in, logger)
+          _, count_str, ttl_int = @redis.multi do |transaction|
+            transaction.set(key, 0, ex: expires_in, nx: true) # nx => set only if not exists
+            transaction.incr(key)
+            transaction.ttl(key)
+          end
+
+          [count_str.to_i, ttl_int]
+        rescue Redis::BaseError => e
+          logger.error("Redis error: #{e.inspect}")
+          [1, expires_in]
         end
       end
     end
