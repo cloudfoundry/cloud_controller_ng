@@ -6,17 +6,16 @@ module CloudFoundry
       let(:app) { double(:app) }
       let(:logger) { double }
       let(:path_info) { '/v3/service_instances' }
-      let(:user_env) { { 'cf.user_guid' => 'user_guid', 'PATH_INFO' => path_info } }
+      let(:user_guid) { SecureRandom.uuid }
+      let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path_info } }
       let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
-      let(:concurrent_limit) { 1 }
+      let(:max_concurrent_requests) { 1 }
       let(:broker_timeout) { 60 }
       let(:middleware) {
-        ServiceBrokerRequestCounter.instance.limit = concurrent_limit
-        ServiceBrokerRateLimiter.new(app, logger: logger, broker_timeout_seconds: broker_timeout)
+        ServiceBrokerRateLimiter.new(app, logger: logger, max_concurrent_requests: max_concurrent_requests, broker_timeout_seconds: broker_timeout)
       }
 
       before(:each) do
-        Singleton.__init__(ServiceBrokerRequestCounter)
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
         allow(logger).to receive(:info)
         allow(app).to receive(:call) do
@@ -45,7 +44,7 @@ module CloudFoundry
           expect(statuses).to include(200)
           expect(statuses).to include(429)
           expect(app).to have_received(:call).once
-          expect(logger).to have_received(:info).with "Service broker concurrent rate limit exceeded for user 'user_guid'"
+          expect(logger).to have_received(:info).with("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
         end
 
         it 'counts concurrent requests per user' do
@@ -60,7 +59,7 @@ module CloudFoundry
           expect(app).to have_received(:call).twice
         end
 
-        it 'still releases when an error occurs in another middleware' do
+        it 'still decrements when an error occurs in another middleware' do
           allow(app).to receive(:call).and_raise 'an error'
           expect { middleware.call(user_env) }.to raise_error('an error')
           allow(app).to receive(:call).and_return [200, {}, 'a body']
@@ -69,7 +68,7 @@ module CloudFoundry
         end
 
         describe 'errors' do
-          let(:concurrent_limit) { 0 }
+          let(:max_concurrent_requests) { 0 }
 
           context 'when the path is /v2/*' do
             let(:path_info) { '/v2/service_instances' }
@@ -83,7 +82,7 @@ module CloudFoundry
                   'description' => 'Service broker concurrent request limit exceeded',
                   'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
                 )
-                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+                expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
             end
           end
@@ -100,22 +99,18 @@ module CloudFoundry
                   'detail' => 'Service broker concurrent request limit exceeded',
                   'title' => 'CF-ServiceBrokerRateLimitExceeded',
                 )
-                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+                expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
             end
           end
 
           context 'when broker_client_timeout_seconds is reduced' do
             let(:broker_timeout) { 3 }
-            let(:middleware) {
-              ServiceBrokerRequestCounter.instance.limit = concurrent_limit
-              ServiceBrokerRateLimiter.new(app, logger: logger, broker_timeout_seconds: broker_timeout)
-            }
 
             it 'reduces the suggested delay in the Retry-After header' do
               Timecop.freeze do
                 _, response_headers, _ = middleware.call(user_env)
-                expect(response_headers['Retry-After']).to be_between(Time.now + (broker_timeout * 0.5).floor, Time.now + (broker_timeout * 1.5).ceil)
+                expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
             end
           end
@@ -123,8 +118,8 @@ module CloudFoundry
       end
 
       describe 'skipped requests' do
-        let(:request_counter) { double }
-        before(:each) { middleware.instance_variable_set('@request_counter', request_counter) }
+        let(:concurrent_request_counter) { double }
+        before(:each) { middleware.instance_variable_set('@concurrent_request_counter', concurrent_request_counter) }
 
         context 'user is an admin' do
           before do
@@ -133,7 +128,7 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:try_acquire?)
+            expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
         end
@@ -143,7 +138,7 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:try_acquire?)
+            expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
         end
@@ -153,9 +148,62 @@ module CloudFoundry
 
           it 'does not rate limit them' do
             _, _, _ = middleware.call(user_env)
-            expect(request_counter).not_to receive(:try_acquire?)
+            expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
+        end
+      end
+    end
+
+    RSpec.describe ConcurrentRequestCounter do
+      let(:concurrent_request_counter) { ConcurrentRequestCounter.new('test') }
+      let(:user_guid) { SecureRandom.uuid }
+      let(:max_concurrent_requests) { 5 }
+      let(:logger) { double('logger', info: nil) }
+
+      before do
+        concurrent_request_counter # instantiate counter
+      end
+
+      describe '#initialize' do
+        it 'sets the @key_prefix' do
+          expect(concurrent_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
+        end
+      end
+
+      describe '#try_increment?' do
+        it 'returns true for a new user' do
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+        end
+
+        it 'returns true for a recurring user performing the maximum allowed concurrent requests' do
+          (max_concurrent_requests - 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+        end
+
+        it 'returns false for a recurring user with too many concurrent requests' do
+          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+        end
+
+        it 'returns true again for a recurring user after a single decrement' do
+          (max_concurrent_requests + 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+          concurrent_request_counter.decrement(user_guid, logger)
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+        end
+      end
+
+      describe '#decrement' do
+        it 'decreases the number of concurrent requests, allowing for another concurrent request' do
+          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+          concurrent_request_counter.decrement(user_guid, logger)
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+        end
+
+        it 'does not decrease the number of concurrent requests below zero' do
+          concurrent_request_counter.decrement(user_guid, logger)
+          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
         end
       end
     end

@@ -3,45 +3,28 @@ require 'mixins/user_reset_interval'
 
 module CloudFoundry
   module Middleware
-    class RequestCounter
+    class ExpiringRequestCounter
       include CloudFoundry::Middleware::UserResetInterval
 
-      RequestCount = Struct.new(:requests, :valid_until)
+      Counter = Struct.new(:value, :expires_at)
 
-      def initialize
+      def initialize(key_prefix)
+        @key_prefix = key_prefix
         @mutex = Mutex.new
         @data = {}
       end
 
-      def get(user_guid, reset_interval_in_minutes, logger)
+      def increment(user_guid, reset_interval_in_minutes, logger)
+        key = "#{@key_prefix}:#{user_guid}"
+        expires_in = next_expires_in(user_guid, reset_interval_in_minutes)
         @mutex.synchronize do
-          return create_new_request_count(user_guid, reset_interval_in_minutes) unless @data.key? user_guid
-
-          request_count = @data[user_guid]
-          if request_count.valid_until < Time.now.utc
-            logger.info("Resetting request count of #{request_count.requests} for user '#{user_guid}'")
-            return create_new_request_count(user_guid, reset_interval_in_minutes)
+          if !@data.key?(key) || (ttl = @data[key].expires_at - Time.now.to_i) <= 0 # not existing or expired
+            @data[key] = Counter.new(1, Time.now.to_i + expires_in)
+            [1, expires_in]
+          else
+            [@data[key].value += 1, ttl]
           end
-
-          [request_count.requests, request_count.valid_until]
         end
-      end
-
-      def increment(user_guid)
-        @mutex.synchronize do
-          request_count = @data[user_guid]
-          request_count.requests += 1
-          @data[user_guid] = request_count
-        end
-      end
-
-      private
-
-      def create_new_request_count(user_guid, reset_interval_in_minutes)
-        requests = 0
-        valid_until = next_reset_interval(user_guid, reset_interval_in_minutes)
-        @data[user_guid] = RequestCount.new(requests, valid_until)
-        [requests, valid_until]
       end
     end
 
@@ -66,10 +49,10 @@ module CloudFoundry
     class BaseRateLimiter
       include CloudFoundry::Middleware::ClientIp
 
-      def initialize(app, logger, request_counter, reset_interval, header_suffix=nil)
+      def initialize(app, logger, expiring_request_counter, reset_interval, header_suffix=nil)
         @app = app
         @logger = logger
-        @request_counter = request_counter
+        @expiring_request_counter = expiring_request_counter
         @reset_interval = reset_interval
         @header_suffix = header_suffix
       end
@@ -77,21 +60,16 @@ module CloudFoundry
       def call(env)
         rate_limit_headers = RateLimitHeaders.new(@header_suffix)
 
-        request = ActionDispatch::Request.new(env)
-
         if apply_rate_limiting?(env)
-          user_guid = user_token?(env) ? env['cf.user_guid'] : client_ip(request)
+          user_guid = user_token?(env) ? env['cf.user_guid'] : client_ip(ActionDispatch::Request.new(env))
 
-          count, valid_until = @request_counter.get(user_guid, @reset_interval, @logger)
-          new_request_count = count + 1
+          count, expires_in = @expiring_request_counter.increment(user_guid, @reset_interval, @logger)
 
           rate_limit_headers.limit = global_request_limit(env).to_s
-          rate_limit_headers.reset = valid_until.to_i.to_s
-          rate_limit_headers.remaining = estimate_remaining(env, new_request_count)
+          rate_limit_headers.reset = (Time.now.to_i + expires_in).to_s
+          rate_limit_headers.remaining = estimate_remaining(env, count)
 
-          return too_many_requests!(env, rate_limit_headers) if exceeded_rate_limit(new_request_count, env)
-
-          @request_counter.increment(user_guid)
+          return too_many_requests!(expires_in, env, rate_limit_headers) if exceeded_rate_limit(count, env)
         end
 
         status, headers, body = @app.call(env)
@@ -142,9 +120,9 @@ module CloudFoundry
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
 
-      def too_many_requests!(env, rate_limit_headers)
+      def too_many_requests!(expires_in, env, rate_limit_headers)
         headers = {}
-        headers['Retry-After'] = rate_limit_headers.reset
+        headers['Retry-After'] = expires_in.to_s
         headers['Content-Type'] = 'text/plain; charset=utf-8'
         message = rate_limit_error(env).to_json
         headers['Content-Length'] = message.length.to_s
