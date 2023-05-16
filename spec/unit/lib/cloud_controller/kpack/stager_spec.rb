@@ -37,7 +37,7 @@ module Kpack
         },
         spec: {
           stack: {
-            name: 'cflinuxfs3-stack',
+            name: 'cflinuxfs4-stack',
             kind: 'ClusterStack',
           },
           store: {
@@ -61,7 +61,7 @@ module Kpack
             { id: 'paketo-community/ruby', version: '0.0.11' },
           ],
           stack: {
-            id: 'org.cloudfoundry.stacks.cflinuxfs3'
+            id: 'org.cloudfoundry.stacks.cflinuxfs4'
           },
           conditions: [
             {
@@ -233,7 +233,7 @@ module Kpack
               tag: "gcr.io/capi-images/#{package.app.guid}-builder",
               serviceAccount: 'gcr-service-account',
               stack: Kubeclient::Resource.new({
-                name: 'cflinuxfs3-stack',
+                name: 'cflinuxfs4-stack',
                 kind: 'ClusterStack',
               }),
               store: Kubeclient::Resource.new({
@@ -281,7 +281,7 @@ module Kpack
                 tag: "gcr.io/capi-images/#{package.app.guid}-builder",
                 serviceAccount: 'gcr-service-account',
                 stack: Kubeclient::Resource.new({
-                  name: 'cflinuxfs3-stack',
+                  name: 'cflinuxfs4-stack',
                   kind: 'ClusterStack',
                 }),
                 store: Kubeclient::Resource.new({

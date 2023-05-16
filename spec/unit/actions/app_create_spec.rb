@@ -15,7 +15,7 @@ module VCAP::CloudController
       let(:buildpack) { Buildpack.make }
       let(:buildpack_identifier) { buildpack.name }
       let(:relationships) { { space: { data: { guid: space_guid } } } }
-      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs3' } } }
+      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs4' } } }
       let(:lifecycle) { AppBuildpackLifecycle.new(message) }
       let(:message) do
         AppCreateMessage.new(
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
       describe 'buildpacks' do
         let(:unready_buildpack) { Buildpack.make(name: 'unready', filename: nil) }
-        let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [unready_buildpack.name], stack: 'cflinuxfs3' } } }
+        let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [unready_buildpack.name], stack: 'cflinuxfs4' } } }
 
         it 'does not allow buildpacks that are not READY' do
           expect {

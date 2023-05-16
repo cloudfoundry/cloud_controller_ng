@@ -5,13 +5,13 @@ Filters are specified as individual query parameters in V3
 ```
 
 ```shell
-curl "https://api.example.org/v2/apps?q=name+IN+dora,broker;stack:cflinuxfs3" \
+curl "https://api.example.org/v2/apps?q=name+IN+dora,broker;stack:cflinuxfs4" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps?names=dora,broker&stacks=cflinuxfs3" \
+curl "https://api.example.org/v3/apps?names=dora,broker&stacks=cflinuxfs4" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```

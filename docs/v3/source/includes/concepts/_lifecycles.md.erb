@@ -21,7 +21,7 @@ Example Buildpack Lifecycle
   "type": "buildpack",
   "data": {
     "buildpacks": ["java_buildpack"],
-    "stack": "cflinuxfs3"
+    "stack": "cflinuxfs4"
   }
 }
 ```
@@ -42,7 +42,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
 **data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
 
 ### Docker lifecycle
 

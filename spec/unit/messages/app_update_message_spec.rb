@@ -49,7 +49,7 @@ module VCAP::CloudController
                     type: 'buildpack',
                     data: {
                         buildpacks: ['java'],
-                        stack: 'cflinuxfs3'
+                        stack: 'cflinuxfs4'
                     }
                 }
             }

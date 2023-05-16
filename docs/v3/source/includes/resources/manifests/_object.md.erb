@@ -31,7 +31,7 @@ applications:
     parameters:
       key1: value1
       key2: value2
-  stack: cflinuxfs3
+  stack: cflinuxfs4
   metadata:
     annotations:
       contact: "bob@example.com jane@example.com"
@@ -99,7 +99,7 @@ Name | Type | Description
 **routes** | _array of [route configurations](#space-manifest-route-level-configuration)_  | List declaring HTTP and TCP routes to be mapped to the app.
 **services** | _array of [service configurations](#space-manifest-service-level-configuration)_ | A list of service-instances to bind to the app
 **sidecars** | _array of [sidecar configurations](#space-manifest-sidecar-level-configuration)_ | A list of configurations for individual sidecars
-**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs3`
+**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
 **metadata.labels** | _[label object](#labels)_ | Labels applied to the app
 **metadata.annotations** | _[annotation object](#annotations)_ | Annotations applied to the app
 **buildpack**  | _string_ | **DEPRECATED in favor of the `buildpacks` field above**

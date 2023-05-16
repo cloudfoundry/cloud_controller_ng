@@ -340,7 +340,7 @@ RSpec.describe 'buildpacks' do
                 "metadata": {
                   "annotations": {
                     "kapp.k14s.io/identity": "v1;cf-workloads-staging/kpack.io/Builder/cf-default-builder;kpack.io/v1alpha1",
-                    "kapp.k14s.io/original": "{\"apiVersion\":\"kpack.io/v1alpha1\",\"kind\":\"Builder\",\"metadata\":{\"labels\":{\"kapp.k14s.io/app\":\"1593227539339407000\",\"kapp.k14s.io/association\":\"v1.b29251cc7bb0f9e1950aad9f9ea1d82a\"},\"name\":\"cf-default-builder\",\"namespace\":\"cf-workloads-staging\"},\"spec\":{\"order\":[{\"group\":[{\"id\":\"paketo-community/ruby\"}]},{\"group\":[{\"id\":\"paketo-community/python\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/java\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nodejs\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/go\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/dotnet-core\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/php\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/httpd\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nginx\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/procfile\"}]}],\"serviceAccount\":\"cc-kpack-registry-service-account\",\"stack\":\"cflinuxfs3-stack\",\"store\":\"cf-buildpack-store\",\"tag\":\"gcr.io/cf-capi-arya/cf-workloads/cf-default-builder\"}}",
+                    "kapp.k14s.io/original": "{\"apiVersion\":\"kpack.io/v1alpha1\",\"kind\":\"Builder\",\"metadata\":{\"labels\":{\"kapp.k14s.io/app\":\"1593227539339407000\",\"kapp.k14s.io/association\":\"v1.b29251cc7bb0f9e1950aad9f9ea1d82a\"},\"name\":\"cf-default-builder\",\"namespace\":\"cf-workloads-staging\"},\"spec\":{\"order\":[{\"group\":[{\"id\":\"paketo-community/ruby\"}]},{\"group\":[{\"id\":\"paketo-community/python\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/java\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nodejs\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/go\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/dotnet-core\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/php\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/httpd\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/nginx\"}]},{\"group\":[{\"id\":\"paketo-buildpacks/procfile\"}]}],\"serviceAccount\":\"cc-kpack-registry-service-account\",\"stack\":\"cflinuxfs4-stack\",\"store\":\"cf-buildpack-store\",\"tag\":\"gcr.io/cf-capi-arya/cf-workloads/cf-default-builder\"}}",
                     "kapp.k14s.io/original-diff-md5": "c6e94dc94aed3401b5d0f26ed6c0bff3"
                   },
                   "creationTimestamp": "2020-06-27T03:13:07Z",
@@ -429,7 +429,7 @@ RSpec.describe 'buildpacks' do
                     }
                   ],
                   "serviceAccount": "cc-kpack-registry-service-account",
-                  "stack": "cflinuxfs3-stack",
+                  "stack": "cflinuxfs4-stack",
                   "store": "cf-buildpack-store",
                   "tag": "gcr.io/cf-capi-arya/cf-workloads/cf-default-builder"
                 },
@@ -646,7 +646,7 @@ RSpec.describe 'buildpacks' do
                   "latestImage": "gcr.io/cf-capi-arya/cf-workloads/cf-default-builder@sha256:6fe98d20624f29b89ec03b69b12f9b01a1826c0e14158b7dc66bc32bcadcb299",
                   "observedGeneration": 1,
                   "stack": {
-                    "id": "org.cloudfoundry.stacks.cflinuxfs3",
+                    "id": "org.cloudfoundry.stacks.cflinuxfs4",
                     "runImage": "gcr.io/paketo-buildpacks/run@sha256:84f7b60192e69036cb363b2fc7d9834cff69dcbcf7aaf8c058d986fdee6941c3"
                   }
                 }

@@ -13,9 +13,9 @@ module VCAP::CloudController
 
     describe '#stack' do
       it 'persists the stack' do
-        lifecycle_data.stack = 'cflinuxfs3'
+        lifecycle_data.stack = 'cflinuxfs4'
         lifecycle_data.save
-        expect(lifecycle_data.reload.stack).to eq 'cflinuxfs3'
+        expect(lifecycle_data.reload.stack).to eq 'cflinuxfs4'
       end
     end
 
@@ -381,11 +381,11 @@ module VCAP::CloudController
 
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
-        { buildpacks: buildpacks || [], stack: 'cflinuxfs3' }
+        { buildpacks: buildpacks || [], stack: 'cflinuxfs4' }
       end
       let(:buildpacks) { [buildpack] }
       let(:buildpack) { 'ruby' }
-      let(:stack) { 'cflinuxfs3' }
+      let(:stack) { 'cflinuxfs4' }
 
       before do
         Buildpack.make(name: 'ruby')

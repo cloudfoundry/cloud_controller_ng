@@ -11,7 +11,7 @@ module VCAP::CloudController
         let(:space) { Space.make(guid: 'space-guid', name: 'space-name', organization: org,) }
         let(:app) { AppModel.make(guid: 'app-guid', name: 'app-name', space: space) }
         let(:app_manifest_message) {
-          AppManifestMessage.create_from_yml({ name: app.name, instances: 4, routes: [{ route: 'app.bommel' }], buildpack: 'ruby', stack: 'cflinuxfs3' })
+          AppManifestMessage.create_from_yml({ name: app.name, instances: 4, routes: [{ route: 'app.bommel' }], buildpack: 'ruby', stack: 'cflinuxfs4' })
         }
         let(:app_guid_message_hash) { { app.guid => app_manifest_message } }
 
@@ -51,14 +51,14 @@ module VCAP::CloudController
                     name: app-name
                     routes:
                     - :route: app.bommel
-                    stack: cflinuxfs3
+                    stack: cflinuxfs4
                     original_yaml:
                       :name: app-name
                       :instances: 4
                       :routes:
                       - :route: app.bommel
                       :buildpack: ruby
-                      :stack: cflinuxfs3
+                      :stack: cflinuxfs4
                     validation_context:#{' '}
                     errors: !ruby/object:ActiveModel::Errors
                       base: *1
@@ -84,7 +84,7 @@ module VCAP::CloudController
                         :data:
                           :buildpacks:
                           - ruby
-                          :stack: cflinuxfs3
+                          :stack: cflinuxfs4
                       validation_context:#{' '}
                       errors: !ruby/object:ActiveModel::Errors
                         base: *3

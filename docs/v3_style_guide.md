@@ -698,7 +698,7 @@ collection.
 When multiple filters are provided, the results **MUST** match all specified
 filters.
 
-Empty filters (`/v3/apps?names=` or `/v3/buildpacks?stack=cflinuxfs2,`) matches
+Empty filters (`/v3/apps?names=` or `/v3/buildpacks?stack=cflinuxfs4,`) matches
 on [Active Support's definition of
 blank](https://guides.rubyonrails.org/active_support_core_extensions.html#blank-questionmark-and-present-questionmark)
 meaning that `nil`, `""` and `[]` will be valid matches for the empty filter.
