@@ -5,8 +5,6 @@ require 'http/httpclient'
 
 module Diego
   class Client
-    PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
-
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:,
                    connect_timeout:, send_timeout:, receive_timeout:)
       ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
@@ -33,7 +31,7 @@ module Diego
       request = protobuf_encode!({ domain: domain, ttl: ttl.to_i }, Bbs::Models::UpsertDomainRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::UPSERT_DOMAIN, request, PROTOBUF_HEADER)
+        client.post(Routes::UPSERT_DOMAIN, request, headers)
       end
 
       validate_status_200!(response)
@@ -44,7 +42,7 @@ module Diego
       request = protobuf_encode!({ task_definition: task_definition, domain: domain, task_guid: task_guid }, Bbs::Models::DesireTaskRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_TASK, request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRE_TASK, request, headers)
       end
 
       validate_status_200!(response)
@@ -55,7 +53,7 @@ module Diego
       request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskByGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::TASK_BY_GUID, request, PROTOBUF_HEADER)
+        client.post(Routes::TASK_BY_GUID, request, headers)
       end
 
       validate_status_200!(response)
@@ -66,7 +64,7 @@ module Diego
       request = protobuf_encode!({ domain: domain, cell_id: cell_id }, Bbs::Models::TasksRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::LIST_TASKS, request, PROTOBUF_HEADER)
+        client.post(Routes::LIST_TASKS, request, headers)
       end
 
       validate_status_200!(response)
@@ -77,7 +75,7 @@ module Diego
       request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::CANCEL_TASK, request, PROTOBUF_HEADER)
+        client.post(Routes::CANCEL_TASK, request, headers)
       end
 
       validate_status_200!(response)
@@ -88,7 +86,7 @@ module Diego
       request = protobuf_encode!({ desired_lrp: lrp }, Bbs::Models::DesireLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRE_LRP, request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRE_LRP, request, headers)
       end
 
       validate_status_200!(response)
@@ -99,7 +97,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::DesiredLRPByProcessGuidRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, headers)
       end
 
       validate_status_200!(response)
@@ -110,7 +108,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid, update: lrp_update }, Bbs::Models::UpdateDesiredLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::UPDATE_DESIRED_LRP, request, PROTOBUF_HEADER)
+        client.post(Routes::UPDATE_DESIRED_LRP, request, headers)
       end
 
       validate_status_200!(response)
@@ -121,7 +119,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::RemoveDesiredLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::REMOVE_DESIRED_LRP, request, PROTOBUF_HEADER)
+        client.post(Routes::REMOVE_DESIRED_LRP, request, headers)
       end
 
       validate_status_200!(response)
@@ -132,7 +130,7 @@ module Diego
       request = protobuf_encode!({ actual_lrp_key: actual_lrp_key }, Bbs::Models::RetireActualLRPRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::RETIRE_ACTUAL_LRP, request, PROTOBUF_HEADER)
+        client.post(Routes::RETIRE_ACTUAL_LRP, request, headers)
       end
 
       validate_status_200!(response)
@@ -143,7 +141,7 @@ module Diego
       request = protobuf_encode!({ domain: domain }, Bbs::Models::DesiredLRPsRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::DESIRED_LRP_SCHEDULING_INFOS, request, PROTOBUF_HEADER)
+        client.post(Routes::DESIRED_LRP_SCHEDULING_INFOS, request, headers)
       end
 
       validate_status_200!(response)
@@ -154,7 +152,7 @@ module Diego
       request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::ActualLRPsRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::ACTUAL_LRPS, request, PROTOBUF_HEADER)
+        client.post(Routes::ACTUAL_LRPS, request, headers)
       end
 
       validate_status_200!(response)
@@ -201,6 +199,10 @@ module Diego
       client.ssl_config.set_client_cert_file(client_cert_file, client_key_file)
       client.ssl_config.set_trust_ca(ca_cert_file)
       client
+    end
+
+    def headers
+      { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => ::VCAP::Request.current_id.to_s.split(':')[0].to_s }
     end
   end
 end

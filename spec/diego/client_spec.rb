@@ -10,10 +10,16 @@ module Diego
     let(:client_cert_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.crt') }
     let(:client_key_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.key') }
     let(:timeout) { 10 }
+    let(:request_id) { '522960b781af4039b8b91a20ff6c0394' }
 
     subject(:client) do
       Client.new(url: bbs_url, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file,
                  connect_timeout: timeout, send_timeout: timeout, receive_timeout: timeout)
+    end
+
+    before do
+      # from middleware/vcap_request_id.rb
+      ::VCAP::Request.current_id = "#{request_id}::b62be6c2-0f2c-4199-94d3-41a69e00f67d"
     end
 
     describe 'configuration' do
@@ -84,7 +90,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/domains/upsert").with(
                  body: Bbs::Models::UpsertDomainRequest.encode(expected_domain_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -140,7 +146,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/tasks/desire.r2").with(
                  body: Bbs::Models::DesireTaskRequest.encode(expected_task_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -197,7 +203,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                  body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -210,7 +216,7 @@ module Diego
           expect(response.error).to be_nil
           expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
-                   headers: { 'Content-Type' => 'application/x-protobuf' }
+                   headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
           )).to have_been_made.once
         end
 
@@ -222,7 +228,7 @@ module Diego
           expect(response.error).to be_nil
           expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
-                   headers: { 'Content-Type' => 'application/x-protobuf' }
+                   headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
           )).to have_been_made.once
         end
       end
@@ -278,7 +284,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2").with(
                  body: Bbs::Models::TaskByGuidRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -333,7 +339,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/tasks/cancel").with(
                  body: Bbs::Models::TaskGuidRequest.encode(expected_cancel_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -389,7 +395,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2").with(
                  body: Bbs::Models::DesireLRPRequest.encode(expected_desire_lrp_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -448,7 +454,7 @@ module Diego
         expect(response.desired_lrp).to eq(lrp)
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2").with(
                  body: Bbs::Models::DesiredLRPByProcessGuidRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -506,7 +512,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/remove").with(
                  body: Bbs::Models::RemoveDesiredLRPRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -562,7 +568,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/retire").with(
                  body: Bbs::Models::RetireActualLRPRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -622,7 +628,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update").with(
                  body: Bbs::Models::UpdateDesiredLRPRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -684,7 +690,7 @@ module Diego
         expect(response.actual_lrps).to eq(actual_lrps)
         expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/list").with(
                  body: Bbs::Models::ActualLRPsRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
     end
@@ -711,7 +717,7 @@ module Diego
         expect(response.desired_lrp_scheduling_infos).to eq(scheduling_infos)
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list").with(
                  body: Bbs::Models::DesiredLRPsRequest.encode(expected_request).to_s,
-                 headers: { 'Content-Type' => 'application/x-protobuf' }
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
         )).to have_been_made.once
       end
 
@@ -782,6 +788,27 @@ module Diego
       it 'sets TCPSocket:connect_timeout to HTTPClient:connect_timeout / 2' do
         expect { client.ping }.to raise_error('done!')
         expect(TCPSocket).to have_received(:new).with(bbs_host, bbs_port, { connect_timeout: timeout / 2 }).exactly(3).times
+      end
+    end
+
+    describe '#headers' do
+      let(:response_body) { Bbs::Models::UpsertDomainResponse.encode(Bbs::Models::UpsertDomainResponse.new(error: nil)).to_s }
+      let(:response_status) { 200 }
+      let(:domain) { 'domain' }
+      let(:ttl) { VCAP::CloudController::Diego::APP_LRP_DOMAIN_TTL }
+
+      before do
+        ::VCAP::Request.current_id = nil
+        stub_request(:post, "#{bbs_url}/v1/domains/upsert").to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns an empty X-Vcap-Request-Id header when a nil current_id is provided' do
+        response = client.upsert_domain(domain: domain, ttl: ttl)
+
+        expect(response.error).to be_nil
+        expect(a_request(:post, "#{bbs_url}/v1/domains/upsert").with(
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => '' }
+        )).to have_been_made.once
       end
     end
   end
