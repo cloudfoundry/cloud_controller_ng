@@ -71,7 +71,7 @@ module VCAP::CloudController
               name_to_lookup = buildpack.buildpack_url
               name_to_print = CloudController::UrlSecretObfuscator.obfuscate(buildpack.buildpack_url)
             end
-            detect_output = droplet.buildpack_receipt_buildpack&.==(name_to_lookup) ? droplet.buildpack_receipt_detect_output : nil
+            detect_output = droplet.buildpack_receipt_buildpack.==(name_to_lookup) ? droplet.buildpack_receipt_detect_output : nil
             {
               name: name_to_print,
               detect_output: detect_output,
