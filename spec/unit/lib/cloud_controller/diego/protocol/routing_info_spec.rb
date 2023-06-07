@@ -206,6 +206,20 @@ module VCAP::CloudController
               end
             end
 
+            context 'with multiple route mapping to the same route with different apps' do
+              let(:process) { ProcessModelFactory.make(space: space, diego: true) }
+              let(:process2) { ProcessModelFactory.make(space: space, diego: true) }
+              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route_without_service) }
+              let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route_without_service) }
+
+              it 'returns only one route without duplications' do
+                expected_http = { 'hostname' => route_without_service.uri, 'port' => 8080, 'protocol' => 'http1' }
+
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
+                expect(ri['http_routes']).to contain_exactly expected_http
+              end
+            end
+
             context 'when using a router group' do
               let(:router_group_type) { 'http' }
               let(:domain) { SharedDomain.make(name: 'httpdomain.com', router_group_guid: router_group_guid) }
@@ -301,6 +315,20 @@ module VCAP::CloudController
 
                 expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
                 expect(ri['tcp_routes']).to match_array expected_routes
+              end
+            end
+
+            context 'with multiple route mappings to the same route with different apps' do
+              let(:process) { ProcessModelFactory.make(space: space, diego: true) }
+              let(:process2) { ProcessModelFactory.make(space: space, diego: true) }
+              let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: tcp_route, app_port: 9090) }
+              let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: tcp_route, app_port: 9090) }
+
+              it 'returns only one route without duplications' do
+                expected_route = { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 }
+
+                expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
+                expect(ri['tcp_routes']).to contain_exactly expected_route
               end
             end
           end

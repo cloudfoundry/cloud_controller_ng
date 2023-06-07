@@ -28,34 +28,33 @@ module VCAP::CloudController
         private
 
         def http_info
-          relevant_http_routes = process.routes.reject do |route|
-            route.internal? || route.tcp?
+          route_mappings = process.route_mappings.reject do |route_mapping|
+            route_mapping.route.internal? || route_mapping.route.tcp?
           end
 
-          relevant_http_routes.each_with_object([]) do |r, http_info|
-            r.route_mappings.each do |route_mapping|
-              info = { 'hostname' => r.uri }
-              info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-              info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
-              info['port'] = get_port_to_use(route_mapping)
-              info['protocol'] = route_mapping.protocol
-              http_info.push(info)
-            end
+          route_mappings.map do |route_mapping|
+            r = route_mapping.route
+            info = { 'hostname' => r.uri }
+            info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+            info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
+            info['port'] = get_port_to_use(route_mapping)
+            info['protocol'] = route_mapping.protocol
+            info
           end
         end
 
         def tcp_info
-          relevant_tcp_routes = process.routes.select do |r|
+          route_mappings = process.route_mappings.select do |route_mapping|
+            r = route_mapping.route
             r.tcp? && !r.internal?
           end
 
-          relevant_tcp_routes.each_with_object([]) do |r, tcp_info|
-            r.route_mappings.each do |route_mapping|
-              info = { 'router_group_guid' => r.domain.router_group_guid }
-              info['external_port'] = r.port
-              info['container_port'] = get_port_to_use(route_mapping)
-              tcp_info.push(info)
-            end
+          route_mappings.map do |route_mapping|
+            r = route_mapping.route
+            info = { 'router_group_guid' => r.domain.router_group_guid }
+            info['external_port'] = r.port
+            info['container_port'] = get_port_to_use(route_mapping)
+            info
           end
         end
 
