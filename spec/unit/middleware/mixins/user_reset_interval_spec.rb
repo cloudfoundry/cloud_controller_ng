@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'mixins/client_ip'
 
 module CloudFoundry
   module Middleware
@@ -7,30 +6,35 @@ module CloudFoundry
       let(:implementor) do
         Class.new { include CloudFoundry::Middleware::UserResetInterval }.new
       end
-      let(:reset_interval_in_minutes) { 60 }
       let(:user_guid) { 'user_guid' }
+      let(:reset_interval_in_minutes) { 60 }
       let(:user_guid_offset) { 1170.seconds }
 
-      before(:each) { Timecop.freeze Time.now.utc.beginning_of_hour }
-      after(:each) { Timecop.return }
+      context "time is set to beginning of hour + the user's offset" do
+        before(:each) { Timecop.freeze Time.now.beginning_of_hour + user_guid_offset }
+        after(:each) { Timecop.return }
 
-      it 'returns the next time interval including offset' do
-        next_interval = implementor.next_reset_interval(user_guid, reset_interval_in_minutes)
-        expect(next_interval).to eq(Time.now.utc.beginning_of_hour + user_guid_offset)
-      end
-
-      it 'returns a new interval that is reset_interval_in_minutes later when current time is after offset' do
-        Timecop.freeze(Time.now.utc.beginning_of_hour + user_guid_offset + 1.minutes) do
-          next_interval = implementor.next_reset_interval(user_guid, reset_interval_in_minutes)
-          expect(next_interval).to eq(Time.now.utc.beginning_of_hour + user_guid_offset + reset_interval_in_minutes.minutes)
+        it 'returns expires_in that equals the reset interval' do
+          expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)
+          expect(expires_in).to eq(reset_interval_in_minutes.minutes.to_i)
         end
       end
 
-      it 'returns offsets between 0 and 1 times the reset_interval' do
+      context 'time is set to beginning of hour' do
+        before(:each) { Timecop.freeze Time.now.beginning_of_hour }
+        after(:each) { Timecop.return }
+
+        it "returns expires_in that equals the user's offset" do
+          expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)
+          expect(expires_in).to eq(user_guid_offset.to_i)
+        end
+      end
+
+      it 'returns expires_in values between 0 and the reset interval' do
         1000.times do
           guid = SecureRandom.alphanumeric
-          next_interval = implementor.next_reset_interval(guid, reset_interval_in_minutes)
-          expect(next_interval).to be_within(reset_interval_in_minutes.minutes).of(Time.now.utc.beginning_of_hour)
+          expires_in = implementor.next_expires_in(guid, reset_interval_in_minutes)
+          expect(expires_in).to be_between(0, reset_interval_in_minutes.minutes.to_i)
         end
       end
     end

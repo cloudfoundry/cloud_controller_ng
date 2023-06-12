@@ -16,12 +16,7 @@ module CloudFoundry
           }
         )
       end
-      let(:request_counter) { double }
-      before(:each) {
-        middleware.instance_variable_set('@request_counter', request_counter)
-        allow(request_counter).to receive(:get).and_return([0, Time.now.utc])
-        allow(request_counter).to receive(:increment)
-      }
+      let(:expiring_request_counter) { double }
 
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:per_process_general_limit) { 100 }
@@ -30,39 +25,49 @@ module CloudFoundry
       let(:global_unauthenticated_limit) { 100 }
       let(:interval) { 60 }
       let(:logger) { double('logger', info: nil) }
+      let(:expires_in) { 10.minutes.to_i }
 
       let(:unauthenticated_env) { { some: 'env' } }
-      let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
       let(:user_1_guid) { 'user-id-1' }
-      let(:user_2_guid) { 'user-id-2' }
       let(:user_1_env) { { 'cf.user_guid' => user_1_guid } }
-      let(:user_2_env) { { 'cf.user_guid' => user_2_guid } }
+
+      let(:frozen_time) { Time.utc(2015, 10, 21, 7, 28) + Time.zone_offset('PDT') }
+      let(:frozen_epoch) { frozen_time.to_i }
+
+      before(:each) do
+        middleware.instance_variable_set('@expiring_request_counter', expiring_request_counter)
+        allow(expiring_request_counter).to receive(:increment).and_return([1, expires_in])
+        Timecop.freeze frozen_time
+      end
+
+      after(:each) do
+        Timecop.return
+      end
 
       describe 'headers' do
         describe 'X-RateLimit-Limit' do
           it 'shows the user the total request limit' do
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
-
-            _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
           end
         end
 
         describe 'X-RateLimit-Remaining' do
+          let(:user_2_guid) { 'user-id-2' }
+          let(:user_2_env) { { 'cf.user_guid' => user_2_guid } }
+
           it 'shows the user the number of remaining requests rounded down to nearest 10%' do
-            allow(request_counter).to receive(:get).and_return([0, Time.now.utc])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('900')
 
-            allow(request_counter).to receive(:get).and_return([10, Time.now.utc])
+            allow(expiring_request_counter).to receive(:increment).and_return([11, expires_in])
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('800')
           end
 
           it "tracks user's remaining requests independently" do
-            expect(request_counter).to receive(:get).with(user_1_guid, interval, logger).and_return([0, Time.now.utc])
-            expect(request_counter).to receive(:get).with(user_2_guid, interval, logger).and_return([10, Time.now.utc])
+            expect(expiring_request_counter).to receive(:increment).with(user_1_guid, interval, logger).and_return([1, expires_in])
+            expect(expiring_request_counter).to receive(:increment).with(user_2_guid, interval, logger).and_return([11, expires_in])
 
             _, response_headers, _ = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('900')
@@ -74,35 +79,32 @@ module CloudFoundry
 
         describe 'X-RateLimit-Reset' do
           it 'shows the user when the interval will expire' do
-            valid_until = Time.now.utc.beginning_of_hour + interval.minutes
-            allow(request_counter).to receive(:get).and_return([0, valid_until])
             _, response_headers, _ = middleware.call(user_1_env)
-            expect(response_headers['X-RateLimit-Reset'].to_i).to eq(valid_until.utc.to_i)
+            expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in).to_s)
           end
         end
       end
 
       it 'increments the counter and allows the request to continue' do
         _, _, _ = middleware.call(user_1_env)
-        expect(request_counter).to have_received(:increment).with(user_1_guid)
+        expect(expiring_request_counter).to have_received(:increment).with(user_1_guid, interval, logger)
         expect(app).to have_received(:call)
       end
 
       it 'does not drop headers created in next middleware' do
         allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
-        _, headers, _ = middleware.call({})
+        _, headers, _ = middleware.call(user_1_env)
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
       describe 'when the user is not logged in' do
+        let(:expires_in_2) { expires_in + 5.minutes.to_i }
+
         describe 'when the user has basic auth credentials' do
-          it 'exempts them from rate limiting' do
-            _, response_headers, _ = middleware.call(basic_auth_env)
-            expect(request_counter).not_to have_received(:get)
-            expect(request_counter).not_to have_received(:increment)
-            expect(response_headers['X-RateLimit-Limit']).to be_nil
-            expect(response_headers['X-RateLimit-Remaining']).to be_nil
-            expect(response_headers['X-RateLimit-Reset']).to be_nil
+          let(:basic_auth_env) { { 'HTTP_AUTHORIZATION' => ActionController::HttpAuthentication::Basic.encode_credentials('user', 'pass') } }
+
+          it_behaves_like 'exempted from rate limiting' do
+            let(:env) { basic_auth_env }
           end
         end
 
@@ -110,19 +112,18 @@ module CloudFoundry
           context 'when the user is hitting a path starting with "/internal"' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/internal/pants/1234') }
 
-            it_behaves_like 'endpoint exempts from rate limiting' do
+            it_behaves_like 'exempted from rate limiting' do
               let(:env) { unauthenticated_env }
             end
           end
 
-          context 'when the user is hitting containing, but NOT starting with "/internal"' do
+          context 'when the user is hitting a path containing, but NOT starting with "/internal"' do
             let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/pants/internal/1234', headers: headers) }
 
             it 'rate limits them' do
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-              expect(request_counter).to receive(:get).with('forwarded_ip', interval, logger).and_return([0, Time.now.utc])
-              expect(request_counter).to receive(:increment).with('forwarded_ip')
+              expect(expiring_request_counter).to receive(:increment).with('forwarded_ip', interval, logger).and_return([0, expires_in])
               _, response_headers, _ = middleware.call(unauthenticated_env)
               expect(response_headers['X-RateLimit-Limit']).to_not be_nil
               expect(response_headers['X-RateLimit-Remaining']).to_not be_nil
@@ -132,34 +133,34 @@ module CloudFoundry
         end
 
         describe 'exempting root endpoints' do
-          context 'when the user is hitting a root path /' do
+          context 'when the user is hitting the / path' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/') }
 
-            it_behaves_like 'endpoint exempts from rate limiting' do
+            it_behaves_like 'exempted from rate limiting' do
               let(:env) { unauthenticated_env }
             end
           end
 
-          context 'when the user is hitting a root path /v2/info' do
+          context 'when the user is hitting the /v2/info path' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/info') }
 
-            it_behaves_like 'endpoint exempts from rate limiting' do
+            it_behaves_like 'exempted from rate limiting' do
               let(:env) { unauthenticated_env }
             end
           end
 
-          context 'when the user is hitting a root path /v3' do
+          context 'when the user is hitting the /v3 path' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3') }
 
-            it_behaves_like 'endpoint exempts from rate limiting' do
+            it_behaves_like 'exempted from rate limiting' do
               let(:env) { unauthenticated_env }
             end
           end
 
-          context 'when the user is hitting a root path /healthz' do
+          context 'when the user is hitting the /healthz path' do
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/healthz') }
 
-            it_behaves_like 'endpoint exempts from rate limiting' do
+            it_behaves_like 'exempted from rate limiting' do
               let(:env) { unauthenticated_env }
             end
           end
@@ -185,26 +186,21 @@ module CloudFoundry
           end
 
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
-            valid_until = Time.now.utc
-            valid_until_2 = Time.now.utc
-
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
-            expect(request_counter).to receive(:get).with(forwarded_ip, interval, logger).and_return([0, valid_until])
-            expect(request_counter).to receive(:increment).with(forwarded_ip)
+            expect(expiring_request_counter).to receive(:increment).with(forwarded_ip, interval, logger).and_return([1, expires_in])
             _, response_headers, _ = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('90')
-            expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.to_i.to_s)
+            expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in).to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
-            expect(request_counter).to receive(:get).with(forwarded_ip_2, interval, logger).and_return([2, valid_until_2])
-            expect(request_counter).to receive(:increment).with(forwarded_ip_2)
+            expect(expiring_request_counter).to receive(:increment).with(forwarded_ip_2, interval, logger).and_return([3, expires_in_2])
             _, response_headers, _ = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('70')
-            expect(response_headers['X-RateLimit-Reset']).to eq(valid_until_2.to_i.to_s)
+            expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in_2).to_s)
           end
         end
 
-        describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
+        describe 'when there is no "HTTP_X_FORWARDED_FOR" header' do
           let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'X_HEADER' => 'nope' }) }
           let(:ip) { 'some-ip' }
           let(:ip_2) { 'some-ip-2' }
@@ -218,22 +214,17 @@ module CloudFoundry
           end
 
           it 'identifies them by the request ip' do
-            valid_until = Time.now.utc.beginning_of_hour
-            valid_until_2 = Time.now.utc.beginning_of_hour + 5.minutes
-            allow(request_counter).to receive(:get).with(ip, interval, logger).and_return([0, valid_until])
-            allow(request_counter).to receive(:get).with(ip_2, interval, logger).and_return([2, valid_until_2])
-
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
+            expect(expiring_request_counter).to receive(:increment).with(ip, interval, logger).and_return([1, expires_in])
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(request_counter).to have_received(:increment).with(ip)
             expect(response_headers['X-RateLimit-Remaining']).to eq('90')
-            expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+            expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in).to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
+            expect(expiring_request_counter).to receive(:increment).with(ip_2, interval, logger).and_return([3, expires_in_2])
             _, response_headers, _ = middleware.call(unauthenticated_env)
-            expect(request_counter).to have_received(:increment).with(ip_2)
             expect(response_headers['X-RateLimit-Remaining']).to eq('70')
-            expect(response_headers['X-RateLimit-Reset']).to eq(valid_until_2.utc.to_i.to_s)
+            expect(response_headers['X-RateLimit-Reset']).to eq((frozen_epoch + expires_in_2).to_s)
           end
         end
       end
@@ -244,61 +235,55 @@ module CloudFoundry
         before do
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
         end
+
         it 'does not rate limit' do
-          _, _, _ = middleware.call(user_1_env)
-          _, _, _ = middleware.call(user_1_env)
+          2.times { middleware.call(user_1_env) }
           status, response_headers, _ = middleware.call(user_1_env)
           expect(response_headers).not_to include('X-RateLimit-Remaining')
           expect(status).to eq(200)
           expect(app).to have_received(:call).at_least(:once)
-          expect(request_counter).to_not have_received(:get)
-          expect(request_counter).to_not have_received(:increment)
+          expect(expiring_request_counter).to_not have_received(:increment)
         end
       end
 
       context 'when limit has exceeded' do
-        let(:path_info) { '/v2/foo' }
-        let(:middleware_env) do
-          { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info }
+        let(:path_info) { '/v3/foo' }
+        let(:user_1_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info } }
+
+        before(:each) do
+          allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 1, expires_in])
         end
-        before(:each) { allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, Time.now.utc]) }
 
         it 'returns 429 response' do
-          status, _, _ = middleware.call(middleware_env)
+          status, _, _ = middleware.call(user_1_env)
           expect(status).to eq(429)
         end
 
-        it 'does not increment the request counter' do
-          _, _, _ = middleware.call(middleware_env)
-          expect(request_counter).to_not have_received(:increment)
-        end
-
         it 'prevents "X-RateLimit-Remaining" from going lower than zero' do
-          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 100, Time.now.utc])
-          _, response_headers, _ = middleware.call(middleware_env)
+          allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 100, expires_in])
+          _, response_headers, _ = middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining']).to eq('0')
         end
 
         it 'contains the correct headers' do
-          valid_until = Time.now.utc
-          allow(request_counter).to receive(:get).and_return([per_process_general_limit + 1, valid_until])
           error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
           allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
-
-          _, response_headers, _ = middleware.call(middleware_env)
-          expect(response_headers['Retry-After']).to eq(valid_until.utc.to_i.to_s)
+          _, response_headers, _ = middleware.call(user_1_env)
+          expect(response_headers['Retry-After']).to eq(expires_in.to_s)
           expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
           expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
         end
 
         it 'ends the request' do
-          _, _, _ = middleware.call(middleware_env)
+          _, _, _ = middleware.call(user_1_env)
           expect(app).not_to have_received(:call)
         end
 
         context 'when the path is /v2/*' do
+          let(:path_info) { '/v2/foo' }
+
           it 'formats the response error in v2 format' do
-            _, _, body = middleware.call(middleware_env)
+            _, _, body = middleware.call(user_1_env)
             json_body = JSON.parse(body.first)
             expect(json_body).to include(
               'code' => 10013,
@@ -309,10 +294,8 @@ module CloudFoundry
         end
 
         context 'when the path is /v3/*' do
-          let(:path_info) { '/v3/foo' }
-
           it 'formats the response error in v3 format' do
-            _, _, body = middleware.call(middleware_env)
+            _, _, body = middleware.call(user_1_env)
             json_body = JSON.parse(body.first)
             expect(json_body['errors'].first).to include(
               'code' => 10013,
@@ -323,11 +306,9 @@ module CloudFoundry
         end
 
         context 'when the user is unauthenticated' do
-          let(:path_info) { '/v3/foo' }
           let(:unauthenticated_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
 
           it 'suggests they log in' do
-            allow(request_counter).to receive(:get).and_return([per_process_unauthenticated_limit + 1, Time.now.utc])
             _, response_headers, body = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('0')
             json_body = JSON.parse(body.first)
@@ -341,64 +322,43 @@ module CloudFoundry
       end
     end
 
-    RSpec.describe RequestCounter do
-      let(:request_counter) { RequestCounter.new }
+    RSpec.describe ExpiringRequestCounter do
+      let(:expiring_request_counter) { ExpiringRequestCounter.new('test') }
+      let(:stubbed_expires_in) { 30.minutes.to_i }
+      let(:user_guid) { SecureRandom.uuid }
       let(:reset_interval_in_minutes) { 60 }
-      let(:logger) { double('logger', info: nil) }
-      let(:user_guid) { 'user-id' }
-      let(:user_guid_2) { 'user-id-2' }
+      let(:logger) { double('logger') }
 
-      describe 'get' do
-        before(:each) do
-          Timecop.freeze
+      before do
+        allow(expiring_request_counter).to receive(:next_expires_in).and_return(stubbed_expires_in)
+      end
+
+      describe '#initialize' do
+        it 'sets the @key_prefix' do
+          expect(expiring_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
         end
-        after(:each) do Timecop.return end
+      end
 
-        it 'should return next offset valid until interval and 0 requests for a new user' do
-          new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
-
-          count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-          expect(count).to eq(0)
-          expect(valid_until).to eq(new_valid_until)
-        end
-
-        it 'should return offset valid untils for different users' do
-          new_valid_until_1 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-          expect(request_counter).to receive(:next_reset_interval).with(user_guid, reset_interval_in_minutes).and_return(new_valid_until_1)
-          _, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-          expect(valid_until).to eq(new_valid_until_1)
-
-          new_valid_until_2 = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes - 5.minutes
-          expect(request_counter).to receive(:next_reset_interval).with(user_guid_2, reset_interval_in_minutes).and_return(new_valid_until_2)
-          _, valid_until = request_counter.get(user_guid_2, reset_interval_in_minutes, logger)
-          expect(valid_until).to eq(new_valid_until_2)
+      describe '#increment' do
+        it 'calls next_expires_in with the given user guid and reset interval' do
+          expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+          expect(expiring_request_counter).to have_received(:next_expires_in).with(user_guid, reset_interval_in_minutes)
         end
 
-        it 'should return valid until and requests for an existing user' do
-          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
-          _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-          request_counter.increment(user_guid)
-
-          Timecop.travel(original_valid_until - 1.minutes) do
-            count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-            expect(count).to eq(1)
-            expect(valid_until).to eq(original_valid_until)
-          end
+        it 'returns count=1 and expires_in for a new user' do
+          count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+          expect(count).to eq(1)
+          expect(expires_in).to eq(stubbed_expires_in)
         end
 
-        it 'should return new valid until and 0 requests for an existing user with expired rate limit' do
-          expect(request_counter).to receive(:next_reset_interval).and_return(Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes)
-          _, original_valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-          request_counter.increment(user_guid)
+        it 'returns count=2 and expires_in minus the elapsed time for a recurring user' do
+          expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
 
-          Timecop.travel(original_valid_until + 1.minutes) do
-            new_valid_until = Time.now.utc.beginning_of_hour + reset_interval_in_minutes.minutes
-            expect(request_counter).to receive(:next_reset_interval).and_return(new_valid_until)
-            count, valid_until = request_counter.get(user_guid, reset_interval_in_minutes, logger)
-            expect(count).to eq(0)
-            expect(valid_until).to eq(new_valid_until)
-            expect(logger).to have_received(:info).with "Resetting request count of 1 for user 'user-id'"
+          elapsed_seconds = 10
+          Timecop.travel(Time.now + elapsed_seconds.seconds) do
+            count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+            expect(count).to eq(2)
+            expect(expires_in).to eq(stubbed_expires_in - elapsed_seconds)
           end
         end
       end

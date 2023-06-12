@@ -3,14 +3,14 @@ require 'base_rate_limiter'
 module CloudFoundry
   module Middleware
     class RateLimiter < BaseRateLimiter
-      REQUEST_COUNTER = RequestCounter.new
+      EXPIRING_REQUEST_COUNTER = ExpiringRequestCounter.new('rate-limit')
 
       def initialize(app, opts)
         @per_process_general_limit         = opts[:per_process_general_limit]
         @global_general_limit              = opts[:global_general_limit]
         @per_process_unauthenticated_limit = opts[:per_process_unauthenticated_limit]
         @global_unauthenticated_limit      = opts[:global_unauthenticated_limit]
-        super(app, opts[:logger], REQUEST_COUNTER, opts[:interval])
+        super(app, opts[:logger], EXPIRING_REQUEST_COUNTER, opts[:interval])
       end
 
       private

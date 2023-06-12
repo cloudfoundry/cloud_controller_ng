@@ -105,6 +105,7 @@ module VCAP::CloudController
             expect(CloudFoundry::Middleware::ServiceBrokerRateLimiter).to have_received(:new).with(
               anything,
               logger: instance_of(Steno::Logger),
+              max_concurrent_requests: TestConfig.config_instance.get(:max_concurrent_service_broker_requests),
               broker_timeout_seconds: TestConfig.config_instance.get(:broker_client_timeout_seconds)
             )
           end
