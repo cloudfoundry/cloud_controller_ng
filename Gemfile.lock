@@ -79,7 +79,6 @@ GEM
       activesupport (>= 3.2)
       i18n
     ast (2.4.2)
-    awesome_print (1.9.2)
     azure-core (0.1.15)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
@@ -549,7 +548,6 @@ DEPENDENCIES
   activemodel (~> 6.1.7)
   addressable
   allowy (>= 2.1.0)
-  awesome_print
   azure-storage-blob!
   byebug
   cf-copilot (= 0.0.14)
