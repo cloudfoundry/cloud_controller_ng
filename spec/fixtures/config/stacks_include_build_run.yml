@@ -1,0 +1,16 @@
+default: "default-stack-name"
+
+stacks:
+  - name: "cflinuxfs4"
+    description: "cflinuxfs4"
+  - name: "default-stack-name"
+    description: "default-stack-description"
+  - name: "cider"
+    description: "cider-description"
+    build_rootfs_image: "cider-build"
+    run_rootfs_image: "cider-run"
+  - name: "separate-build-run-images"
+    description: "A stack that has different rootfs images for building and running apps"
+    build_rootfs_image: "build"
+    run_rootfs_image: "run"
+
