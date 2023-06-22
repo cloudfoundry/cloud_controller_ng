@@ -70,7 +70,7 @@ module VCAP::CloudController
       context 'when config was set' do
         before { Stack.configure(file) }
 
-        context 'when there are no stacks' do
+        context 'when there are no stacks in the database' do
           before { Stack.dataset.destroy }
 
           it 'creates them all' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
             expect(default_stack.description).to eq('default-stack-description')
           end
 
-          context 'when there are existing stacks' do
+          context 'when there are existing stacks in the database' do
             before do
               Stack.dataset.destroy
               Stack.populate
@@ -94,7 +94,7 @@ module VCAP::CloudController
             end
 
             context 'and the config file would change an existing stack' do
-              it 'should warn' do
+              it 'should warn and not update' do
                 cider = Stack.find(name: 'cider')
                 cider.description = 'cider-description has changed'
                 cider.save
@@ -105,6 +105,9 @@ module VCAP::CloudController
                 expect(mock_logger).to receive(:warn).with('stack.populate.collision', { 'name' => 'cider', 'description' => 'cider-description' })
 
                 Stack.populate
+
+                second_lookup = Stack.find(name: 'cider')
+                expect(second_lookup.description).to eq('cider-description has changed')
               end
             end
           end
