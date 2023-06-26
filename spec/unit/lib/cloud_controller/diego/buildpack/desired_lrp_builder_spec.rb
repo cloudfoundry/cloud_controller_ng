@@ -216,7 +216,7 @@ module VCAP::CloudController
                 )
               end
 
-              context 'when searching for a lifecycle associated with a nonexistant stack' do
+              context "when searching for a lifecycle associated with a stack that is not configured in the Cloud Controller's lifecycle_bundles config" do
                 let(:lifecycle_bundles) do
                   { "hot-potato": '/path/to/lifecycle.tgz' }
                 end
@@ -227,7 +227,7 @@ module VCAP::CloudController
                 end
               end
 
-              context 'when searching for a droplet destination associated with a nonexistant stack' do
+              context "when searching for a droplet destination associated with a stack that is not configured in the Cloud Controller's droplet_destinations config" do
                 let(:droplet_destinations) do
                   { "hot-potato": '/value/from/config/based/on/stack' }
                 end
