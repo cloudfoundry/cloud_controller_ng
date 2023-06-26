@@ -5,6 +5,11 @@ module VCAP::CloudController
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
         subject(:builder) { DesiredLrpBuilder.new(config, opts) }
+        before do
+          Stack.create(name: 'potato-stack')
+          Stack.create(name: 'stack-thats-not-in-config')
+        end
+
         let(:stack) { 'potato-stack' }
         let(:opts) do
           {
@@ -55,6 +60,33 @@ module VCAP::CloudController
 
             it 'returns a constructed root_fs' do
               expect(builder.root_fs).to eq('preloaded:potato-stack')
+            end
+          end
+
+          context 'when the stack does not exist' do
+            let(:stack) { 'does-not-exist' }
+
+            it 'raises an error' do
+              expect {
+                builder.root_fs
+              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+            end
+          end
+
+          context 'when the stack has separate run and build root_fs images' do
+            let(:stack) { 'two-images-stack' }
+
+            before do
+              Stack.create(
+                name: stack,
+                description: 'a stack with separate build and run rootfses',
+                run_rootfs_image: 'run-image',
+                build_rootfs_image: 'build-image',
+              )
+            end
+
+            it 'returns the run root_fs' do
+              expect(builder.root_fs).to eq('preloaded:run-image')
             end
           end
         end
