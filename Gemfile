@@ -73,7 +73,6 @@ group :db do
 end
 
 group :operations do
-  gem 'awesome_print'
   gem 'pry-byebug'
 end
 

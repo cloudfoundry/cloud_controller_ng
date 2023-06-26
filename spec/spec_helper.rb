@@ -60,7 +60,6 @@ init_block = proc do
   require 'machinist/object'
   require 'rack/test'
   require 'timecop'
-  require 'awesome_print'
 
   require 'steno'
   require 'webmock/rspec'
