@@ -122,7 +122,10 @@ module VCAP::CloudController
         end
 
         def stack
-          "preloaded:#{lifecycle_data[:stack]}"
+          @stack ||= Stack.find(name: lifecycle_stack)
+          raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
+
+          "preloaded:#{@stack.build_rootfs_image}"
         end
 
         def lifecycle_stack
