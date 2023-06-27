@@ -13,7 +13,6 @@ module VCAP::CloudController
           @config = config
           @task = task
           @lifecycle_data = lifecycle_data
-          @stack = lifecycle_data[:stack]
         end
 
         def action
@@ -55,8 +54,8 @@ module VCAP::CloudController
         def image_layers
           return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
-          raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
+          destination = @config.get(:diego, :droplet_destinations)[lifecycle_stack.to_sym]
+          raise InvalidStack.new("no droplet destination defined for requested stack '#{lifecycle_stack}'") unless destination
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
