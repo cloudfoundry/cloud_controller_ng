@@ -87,7 +87,10 @@ module VCAP::CloudController
         end
 
         def stack
-          "preloaded:#{lifecycle_stack}"
+          @stack ||= Stack.find(name: lifecycle_stack)
+          raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
+
+          "preloaded:#{@stack.run_rootfs_image}"
         end
 
         def cached_dependencies
