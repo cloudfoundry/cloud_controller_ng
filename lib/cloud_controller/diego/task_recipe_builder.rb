@@ -70,7 +70,7 @@ module VCAP::CloudController
           privileged:                       config.get(:diego, :use_privileged_containers_for_staging),
           result_file:                      STAGING_RESULT_FILE,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
-          root_fs:                          "preloaded:#{action_builder.stack}",
+          root_fs:                          action_builder.stack,
           action:                           timeout(action_builder.action, timeout_ms: config.get(:staging, :timeout_in_seconds).to_i * 1000),
           environment_variables:            action_builder.task_environment_variables,
           legacy_download_user:             LEGACY_DOWNLOAD_USER,

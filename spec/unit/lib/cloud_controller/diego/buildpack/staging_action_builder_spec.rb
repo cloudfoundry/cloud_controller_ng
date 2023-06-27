@@ -577,7 +577,7 @@ module VCAP::CloudController
 
         describe '#stack' do
           it 'returns the stack' do
-            expect(builder.stack).to eq('buildpack-stack')
+            expect(builder.stack).to eq('preloaded:buildpack-stack')
           end
         end
 

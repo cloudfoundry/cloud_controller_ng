@@ -122,7 +122,7 @@ module VCAP::CloudController
         end
 
         def stack
-          lifecycle_data[:stack]
+          "preloaded:#{lifecycle_data[:stack]}"
         end
 
         def lifecycle_stack
