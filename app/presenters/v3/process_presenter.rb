@@ -22,6 +22,7 @@ module VCAP::CloudController
             guid:             process.guid,
             created_at:       process.created_at,
             updated_at:       process.updated_at,
+            version:          process.version,
             type:             process.type,
             command:          redact(process.specified_or_detected_command),
             instances:        process.instances,

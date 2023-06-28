@@ -129,6 +129,7 @@ RSpec.describe 'Processes' do
             'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
+            'version'      => web_process.version,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/actions/scale", 'method' => 'POST' },
@@ -159,6 +160,7 @@ RSpec.describe 'Processes' do
             'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
+            'version'      => worker_process.version,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/actions/scale", 'method' => 'POST' },
@@ -417,6 +419,7 @@ RSpec.describe 'Processes' do
         'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
@@ -658,6 +661,7 @@ RSpec.describe 'Processes' do
         },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
@@ -801,6 +805,7 @@ RSpec.describe 'Processes' do
         'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
@@ -1155,6 +1160,7 @@ RSpec.describe 'Processes' do
             'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
+            'version'      => process1.version,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/actions/scale", 'method' => 'POST' },
@@ -1189,6 +1195,7 @@ RSpec.describe 'Processes' do
             'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
+            'version'      => process2.version,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/actions/scale", 'method' => 'POST' },
@@ -1308,6 +1315,7 @@ RSpec.describe 'Processes' do
         'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
@@ -1410,6 +1418,7 @@ RSpec.describe 'Processes' do
         },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
@@ -1520,6 +1529,7 @@ RSpec.describe 'Processes' do
         'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
+        'version'      => process.version,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
