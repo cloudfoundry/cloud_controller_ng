@@ -86,6 +86,8 @@ module VCAP::CloudController::Presenters::V3
       context('when health_check_type is http') do
         it 'presents the process as a hash' do
           expect(result[:guid]).to eq(process.guid)
+          expect(result[:version]).to be_a_guid
+          expect(result[:version]).to eq(process.version)
           expect(result[:instances]).to eq(3)
           expect(result[:memory_in_mb]).to eq(42)
           expect(result[:disk_in_mb]).to eq(37)
@@ -106,6 +108,8 @@ module VCAP::CloudController::Presenters::V3
         let(:health_check_type) { 'port' }
         it 'presents the process as a hash without a health_check/data/endpoint' do
           expect(result[:guid]).to eq(process.guid)
+          expect(result[:version]).to be_a_guid
+          expect(result[:version]).to eq(process.version)
           expect(result[:instances]).to eq(3)
           expect(result[:memory_in_mb]).to eq(42)
           expect(result[:disk_in_mb]).to eq(37)
