@@ -38,7 +38,10 @@ module VCAP::CloudController
         end
 
         def root_fs
-          "preloaded:#{@stack}"
+          @stack_obj ||= Stack.find(name: @stack)
+          raise CloudController::Errors::ApiError.new_from_details('StackNotFound', @stack) unless @stack_obj
+
+          "preloaded:#{@stack_obj.run_rootfs_image}"
         end
 
         def setup

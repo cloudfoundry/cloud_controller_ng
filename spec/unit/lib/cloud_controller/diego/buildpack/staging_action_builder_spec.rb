@@ -32,6 +32,7 @@ module VCAP::CloudController
           end
         end
         let(:env) { double(:env) }
+        let(:stack) { 'buildpack-stack' }
         let(:lifecycle_data) do
           {
             app_bits_download_uri:              'http://app_bits_download_uri.example.com/path/to/bits',
@@ -39,7 +40,7 @@ module VCAP::CloudController
             build_artifacts_cache_upload_uri:   'http://build_artifacts_cache_upload_uri.example.com/path/to/bits',
             buildpacks:                         buildpacks,
             droplet_upload_uri:                 'http://droplet_upload_uri.example.com/path/to/bits',
-            stack:                              'buildpack-stack',
+            stack:                              stack,
             buildpack_cache_checksum:           'bp-cache-checksum',
             app_bits_checksum:                  { type: 'sha256', value: 'package-checksum' },
           }
@@ -51,6 +52,8 @@ module VCAP::CloudController
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-buildpack-bundle').and_return('generated-uri')
           allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return(generated_environment)
           TestConfig.override(credhub_api: nil)
+
+          Stack.create(name: 'buildpack-stack')
         end
 
         describe '#action' do
@@ -576,8 +579,30 @@ module VCAP::CloudController
         end
 
         describe '#stack' do
+          before do
+            Stack.create(name: 'separate-build-and-run', run_rootfs_image: 'run-image', build_rootfs_image: 'build-image')
+          end
+
           it 'returns the stack' do
-            expect(builder.stack).to eq('buildpack-stack')
+            expect(builder.stack).to eq('preloaded:buildpack-stack')
+          end
+
+          context 'when the stack does not exist' do
+            let(:stack) { 'does-not-exist' }
+
+            it 'raises an error' do
+              expect {
+                builder.stack
+              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+            end
+          end
+
+          context 'when the stack has separate build and run rootfs images' do
+            let(:stack) { 'separate-build-and-run' }
+
+            it 'returns the build rootfs image' do
+              expect(builder.stack).to eq('preloaded:build-image')
+            end
           end
         end
 

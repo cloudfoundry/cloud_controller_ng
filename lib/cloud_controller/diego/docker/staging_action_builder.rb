@@ -68,7 +68,7 @@ module VCAP::CloudController
         end
 
         def stack
-          config.get(:diego, :docker_staging_stack)
+          "preloaded:#{config.get(:diego, :docker_staging_stack)}"
         end
 
         def task_environment_variables; end

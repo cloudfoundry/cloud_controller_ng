@@ -133,7 +133,7 @@ module VCAP::CloudController
 
         describe '#stack' do
           it 'returns the configured docker_staging_stack' do
-            expect(builder.stack).to eq('docker-staging-stack')
+            expect(builder.stack).to eq('preloaded:docker-staging-stack')
           end
         end
 

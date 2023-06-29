@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :description }
-      it { is_expected.to import_attributes :name, :description }
+      it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
+      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
     end
 
     describe '.configure' do
@@ -70,7 +70,7 @@ module VCAP::CloudController
       context 'when config was set' do
         before { Stack.configure(file) }
 
-        context 'when there are no stacks' do
+        context 'when there are no stacks in the database' do
           before { Stack.dataset.destroy }
 
           it 'creates them all' do
@@ -83,7 +83,58 @@ module VCAP::CloudController
             expect(default_stack.description).to eq('default-stack-description')
           end
 
-          context 'when there are existing stacks' do
+          describe 'build and run rootfs image names' do
+            context 'when the build or run rootfs image names are blank' do
+              it 'uses the stack name instead' do
+                Stack.populate
+                cflinuxfs4 = Stack.find(name: 'cflinuxfs4')
+                expect(cflinuxfs4.build_rootfs_image).to eq 'cflinuxfs4'
+                expect(cflinuxfs4.run_rootfs_image).to eq 'cflinuxfs4'
+              end
+            end
+
+            context 'when the build or run rootfs image names are provided' do
+              it 'sets the field values' do
+                Stack.configure(File.join(Paths::FIXTURES, 'config/stacks_include_build_run.yml'))
+                Stack.populate
+
+                separate_images = Stack.find(name: 'separate-build-run-images')
+                expect(separate_images.build_rootfs_image).to eq 'build'
+                expect(separate_images.run_rootfs_image).to eq 'run'
+              end
+            end
+
+            context 'when an existing stack would have its rootfs images changed' do
+              before do
+                Stack.configure(file)
+                Stack.populate
+              end
+
+              it 'warns and does not update' do
+                Stack.configure(File.join(Paths::FIXTURES, 'config/stacks_include_build_run.yml'))
+
+                mock_logger = double
+                allow(Steno).to receive(:logger).and_return(mock_logger)
+
+                expect(mock_logger).to receive(:warn).with(
+                  'stack.populate.collision',
+                  {
+                    'name' => 'cider',
+                    'description' => 'cider-description',
+                    'build_rootfs_image' => 'cider-build',
+                    'run_rootfs_image' => 'cider-run',
+                  })
+
+                Stack.populate
+
+                cider = Stack.find(name: 'cider')
+                expect(cider.build_rootfs_image).to eq 'cider'
+                expect(cider.run_rootfs_image).to eq 'cider'
+              end
+            end
+          end
+
+          context 'when there are existing stacks in the database' do
             before do
               Stack.dataset.destroy
               Stack.populate
@@ -94,7 +145,7 @@ module VCAP::CloudController
             end
 
             context 'and the config file would change an existing stack' do
-              it 'should warn' do
+              it 'should warn and not update' do
                 cider = Stack.find(name: 'cider')
                 cider.description = 'cider-description has changed'
                 cider.save
@@ -105,6 +156,9 @@ module VCAP::CloudController
                 expect(mock_logger).to receive(:warn).with('stack.populate.collision', { 'name' => 'cider', 'description' => 'cider-description' })
 
                 Stack.populate
+
+                second_lookup = Stack.find(name: 'cider')
+                expect(second_lookup.description).to eq('cider-description has changed')
               end
             end
           end

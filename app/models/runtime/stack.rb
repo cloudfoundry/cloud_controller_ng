@@ -25,8 +25,8 @@ module VCAP::CloudController
 
     plugin :serialization
 
-    export_attributes :name, :description
-    import_attributes :name, :description
+    export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
+    import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
 
     strip_attributes :name
 
@@ -45,6 +45,14 @@ module VCAP::CloudController
       self == Stack.default
     rescue MissingDefaultStackError
       false
+    end
+
+    def build_rootfs_image
+      super || self.name
+    end
+
+    def run_rootfs_image
+      super || self.name
     end
 
     def self.configure(file_path)
@@ -83,7 +91,7 @@ module VCAP::CloudController
           Steno.logger('cc.stack').warn('stack.populate.collision', hash)
         end
       else
-        create(hash.slice('name', 'description'))
+        create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
       end
     end
 
@@ -108,6 +116,8 @@ module VCAP::CloudController
           'stacks'  => [{
             'name'        => String,
             'description' => String,
+            optional('build_rootfs_image') => String,
+            optional('run_rootfs_image') => String,
           }]
         }
       end

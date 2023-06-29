@@ -124,7 +124,7 @@ module VCAP::CloudController
           let(:lifecycle_action_builder) do
             instance_double(
               Buildpack::StagingActionBuilder,
-              stack: 'potato-stack',
+              stack: 'preloaded:potato-stack',
               action: buildpack_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
@@ -211,7 +211,7 @@ module VCAP::CloudController
           let(:lifecycle_action_builder) do
             instance_double(
               Docker::StagingActionBuilder,
-              stack: 'docker-stack',
+              stack: 'preloaded:docker-stack',
               action: docker_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,

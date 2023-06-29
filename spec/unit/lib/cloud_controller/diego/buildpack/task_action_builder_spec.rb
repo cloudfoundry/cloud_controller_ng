@@ -235,8 +235,30 @@ module VCAP::CloudController
         end
 
         describe '#stack' do
+          before do
+            Stack.create(name: 'potato-stack')
+            Stack.create(name: 'separate-build-and-run', run_rootfs_image: 'run-image', build_rootfs_image: 'build-image')
+          end
+
           it 'returns the stack' do
             expect(builder.stack).to eq('preloaded:potato-stack')
+          end
+
+          context 'when the stack does not exist in the database' do
+            let(:stack) { 'does-not-exist' }
+            it 'raises an error' do
+              expect {
+                builder.stack
+              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+            end
+          end
+
+          context 'when the stack has separate build and run rootfs images' do
+            let(:stack) { 'separate-build-and-run' }
+
+            it 'returns the run image name' do
+              expect(builder.stack).to eq('preloaded:run-image')
+            end
           end
         end
 
