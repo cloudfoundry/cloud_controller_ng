@@ -2,7 +2,12 @@ require 'spec_helper'
 require 'presenters/v3/stack_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
-  let(:stack) { VCAP::CloudController::Stack.make }
+  let(:stack) do
+    VCAP::CloudController::Stack.make(
+      run_rootfs_image: 'run-image',
+      build_rootfs_image: 'build-image',
+    )
+  end
 
   let!(:release_label) do
     VCAP::CloudController::StackLabelModel.make(
@@ -47,6 +52,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
         expect(result[:updated_at]).to eq(stack.updated_at)
         expect(result[:name]).to eq(stack.name)
         expect(result[:description]).to eq(stack.description)
+        expect(result[:run_rootfs_image]).to eq(stack.run_rootfs_image)
+        expect(result[:build_rootfs_image]).to eq(stack.build_rootfs_image)
         expect(result[:default]).to eq(false)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
@@ -57,10 +64,17 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
     context 'when optional fields are missing' do
       before do
         stack.description = nil
+        stack.run_rootfs_image = nil
+        stack.build_rootfs_image = nil
       end
 
       it 'still presents their keys with nil values' do
         expect(result.fetch(:description)).to be_nil
+      end
+
+      it 'presents their fallback values' do
+        expect(result.fetch(:run_rootfs_image)).to eq(stack.name)
+        expect(result.fetch(:build_rootfs_image)).to eq(stack.name)
       end
 
       it 'still presents all other values' do
