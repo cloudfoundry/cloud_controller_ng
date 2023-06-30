@@ -166,6 +166,44 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
       end
 
+      context 'when the v3 mode is not a string' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: 123
+              }
+            ]
+          }
+        end
+
+        it 'has the correct error message' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string mode')
+        end
+      end
+
+      context 'when the v3 mode is not a POSIX file permissions string' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '9876'
+              }
+            ]
+          }
+        end
+
+        it 'has the correct error message' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with an incorrect mode')
+        end
+      end
+
       context 'when there are multiple validation violations' do
         let(:params) do
           {
