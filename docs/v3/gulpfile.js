@@ -62,6 +62,21 @@ function checkInternalLinksAndExit(htmlPath) {
   }
 }
 
+function checkSyntaxErrorsAndExit(htmlPath) {
+  const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
+  const syntaxErrors = $('code .err');
+  if (syntaxErrors.length) {
+    syntaxErrors.each((_index, errorElement) => {
+      console.error('⚠️ v3 docs error: Found syntax error');
+      console.error('👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇')
+      console.error($(errorElement.parentNode).text());
+      console.error('👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆\n')
+    });
+
+    process.exit(1)
+  }
+}
+
 function checkPathAndExit(path, options, done) {
   const app = express();
   app.use(express.static(path));
@@ -102,6 +117,7 @@ gulp.task('default', gulp.series('webserver'));
 
 gulp.task('checkV3docs', gulp.series('build', done => {
   checkInternalLinksAndExit('build/index.html');
+  checkSyntaxErrorsAndExit('build/index.html');
 
   checkPathAndExit('build', {
     checkLinks: true,
