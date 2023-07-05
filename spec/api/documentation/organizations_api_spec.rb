@@ -164,7 +164,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         put 'v2/organizations/:guid/users' do
           example 'Associate User with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -178,7 +178,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         delete 'v2/organizations/:guid/users' do
           example 'Remove User with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_user.guid)
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -219,7 +219,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         put 'v2/organizations/:guid/managers' do
           example 'Associate Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -233,7 +233,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         delete 'v2/organizations/:guid/managers' do
           example 'Remove Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager_guid)
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -273,7 +273,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         put 'v2/organizations/:guid/billing_managers' do
           example 'Associate Billing Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -287,7 +287,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         delete 'v2/organizations/:guid/billing_managers' do
           example 'Remove Billing Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_billing_manager_guid)
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -327,7 +327,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         put 'v2/organizations/:guid/auditors' do
           example 'Associate Auditor with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
@@ -341,7 +341,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         delete 'v2/organizations/:guid/auditors' do
           example 'Remove Auditor with the Organization by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor_guid)
             allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 

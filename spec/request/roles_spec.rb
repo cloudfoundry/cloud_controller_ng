@@ -13,7 +13,7 @@ RSpec.describe 'Roles Request' do
   let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
   before do
-    allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+    allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
     allow(uaa_client).to receive(:usernames_for_ids).with([user_with_role.guid]).and_return(
       { user_with_role.guid => 'mona' }
     )

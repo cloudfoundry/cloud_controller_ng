@@ -11,7 +11,7 @@ module VCAP::CloudController
     def self.dependencies
       [
         :username_and_roles_populating_collection_renderer,
-        :uaa_client,
+        :uaa_username_lookup_client,
         :services_event_repository,
         :user_event_repository,
         :organization_event_repository,
@@ -21,7 +21,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
-      @uaa_client = dependencies.fetch(:uaa_client)
+      @uaa_username_lookup_client = dependencies.fetch(:uaa_username_lookup_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
       @organization_event_repository = dependencies.fetch(:organization_event_repository)
@@ -194,7 +194,7 @@ module VCAP::CloudController
 
         begin
           validate_origin_for_username!(origin, username)
-          user_id = @uaa_client.id_for_username(username, origin: origin.presence)
+          user_id = @uaa_username_lookup_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         end
@@ -204,7 +204,7 @@ module VCAP::CloudController
       end
 
       define_method("add_#{role}_by_user_id") do |guid, user_id|
-        username = @uaa_client.usernames_for_ids([user_id])[user_id]
+        username = @uaa_username_lookup_client.usernames_for_ids([user_id])[user_id]
 
         add_role(guid, role, user_id, username || '')
       end
@@ -227,7 +227,7 @@ module VCAP::CloudController
 
         begin
           validate_origin_for_username!(origin, username)
-          user_id = @uaa_client.id_for_username(username, origin: origin.presence)
+          user_id = @uaa_username_lookup_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         end

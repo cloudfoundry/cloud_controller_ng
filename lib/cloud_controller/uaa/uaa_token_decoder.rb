@@ -107,11 +107,11 @@ module VCAP::CloudController
     end
 
     def asymmetric_key
-      @asymmetric_key ||= UaaVerificationKeys.new(uaa_client.info)
+      @asymmetric_key ||= UaaVerificationKeys.new(uaa_username_lookup_client.info)
     end
 
-    def uaa_client
-      ::CloudController::DependencyLocator.instance.uaa_client
+    def uaa_username_lookup_client
+      ::CloudController::DependencyLocator.instance.uaa_username_lookup_client
     end
 
     def uaa_issuer

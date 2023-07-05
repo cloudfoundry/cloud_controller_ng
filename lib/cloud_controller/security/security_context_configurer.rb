@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       def is_user_in_uaadb?(id)
-        CloudController::DependencyLocator.instance.uaa_client.usernames_for_ids(Array(id)).present?
+        CloudController::DependencyLocator.instance.uaa_username_lookup_client.usernames_for_ids(Array(id)).present?
       end
 
       def is_uuid_shaped?(id)

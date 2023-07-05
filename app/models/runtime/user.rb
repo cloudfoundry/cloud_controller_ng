@@ -239,8 +239,8 @@ module VCAP::CloudController
     end
 
     def self.uaa_users_info(user_guids)
-      uaa_client = CloudController::DependencyLocator.instance.uaa_client
-      uaa_client.users_for_ids(user_guids)
+      uaa_username_lookup_client = CloudController::DependencyLocator.instance.uaa_username_lookup_client
+      uaa_username_lookup_client.users_for_ids(user_guids)
     end
 
     def self.user_visibility_filter(_)

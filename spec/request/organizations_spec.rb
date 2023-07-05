@@ -19,7 +19,7 @@ module VCAP::CloudController
       Domain.dataset.destroy # this will clean up the seeded test domains
       TestConfig.override(kubernetes: {})
 
-      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
       allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
         { user.guid => 'Ragnaros' }
       )

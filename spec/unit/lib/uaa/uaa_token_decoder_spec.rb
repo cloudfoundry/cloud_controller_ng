@@ -20,7 +20,7 @@ module VCAP::CloudController
     let(:logger) { double(Steno::Logger) }
 
     before do
-      allow(::CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(::CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
       allow(uaa_client).to receive(:info).and_return(uaa_info)
       allow(Steno).to receive(:logger).with('cc.uaa_token_decoder').and_return(logger)
       # undo global stubbing in spec_helper.rb

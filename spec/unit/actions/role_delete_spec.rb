@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
       allow(user_with_role).to receive(:username).and_return('kiwi')
     end
 

@@ -11,7 +11,7 @@ module VCAP::CloudController
       subject(:org_create) { OrganizationCreate.new(user_audit_info: user_audit_info) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
         allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
           { user.guid => 'Ragnaros' }
         )

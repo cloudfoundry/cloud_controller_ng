@@ -13,12 +13,12 @@ module VCAP::CloudController
 
       def filter(message, dataset)
         if message.requested?(:usernames)
-          guids = uaa_client.ids_for_usernames_and_origins(message.usernames, message.origins)
+          guids = uaa_username_lookup_client.ids_for_usernames_and_origins(message.usernames, message.origins)
           dataset = dataset.where(guid: guids)
         end
 
         if message.requested?(:partial_usernames)
-          guids = uaa_client.ids_for_usernames_and_origins(message.partial_usernames, message.origins, false)
+          guids = uaa_username_lookup_client.ids_for_usernames_and_origins(message.partial_usernames, message.origins, false)
           dataset = dataset.where(guid: guids)
         end
 
@@ -34,8 +34,8 @@ module VCAP::CloudController
         super(message, dataset, User)
       end
 
-      def uaa_client
-        CloudController::DependencyLocator.instance.uaa_client
+      def uaa_username_lookup_client
+        CloudController::DependencyLocator.instance.uaa_username_lookup_client
       end
     end
   end

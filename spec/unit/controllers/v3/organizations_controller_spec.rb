@@ -9,7 +9,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     before do
       set_current_user(user)
-      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
       allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
         { user.guid => 'Ragnaros' }
       )
