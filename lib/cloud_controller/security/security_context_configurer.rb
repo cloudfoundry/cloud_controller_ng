@@ -28,6 +28,7 @@ module VCAP::CloudController
       end
 
       def is_user_in_uaadb?(id)
+        # TODO: [UAA ZONES] This should be a lookup over all zones.
         CloudController::DependencyLocator.instance.uaa_username_lookup_client.usernames_for_ids(Array(id)).present?
       end
 

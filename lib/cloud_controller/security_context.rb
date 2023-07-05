@@ -81,5 +81,9 @@ module VCAP::CloudController
 
       ''
     end
+
+    def self.zone_id
+      token['zid'] if valid_token?
+    end
   end
 end

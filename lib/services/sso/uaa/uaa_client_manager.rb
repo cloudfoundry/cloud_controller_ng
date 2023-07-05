@@ -104,6 +104,7 @@ module VCAP::Services::SSO::UAA
     end
 
     def create_uaa_client
+      # TODO: [UAA ZONES] Is this use case relevant for zones?
       VCAP::CloudController::UaaClient.new(
         uaa_target: uaa_target,
         client_id:  VCAP::CloudController::Config.config.get(:uaa_client_name),

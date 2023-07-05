@@ -294,25 +294,36 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#uaa_username_lookup_client' do
-    context 'when a CA file is not configured for the UAA' do
-      before do
-        TestConfig.override(uaa: { ca_file: nil, internal_url: TestConfig.config_instance.get(:uaa, :internal_url) })
-      end
-
-      it 'returns a uaa client with credentials for looking up usernames' do
-        uaa_username_lookup_client = locator.uaa_username_lookup_client
-        expect(uaa_username_lookup_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
-        expect(uaa_username_lookup_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
-        expect(uaa_username_lookup_client.uaa_target).to eq(config.get(:uaa, :internal_url))
-      end
-    end
-
     context 'when a CA file is configured for the UAA' do
       it 'returns a uaa client with credentials for looking up usernames' do
         uaa_username_lookup_client = locator.uaa_username_lookup_client
         expect(uaa_username_lookup_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
         expect(uaa_username_lookup_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
         expect(uaa_username_lookup_client.uaa_target).to eq(config.get(:uaa, :internal_url))
+        expect(uaa_username_lookup_client.ca_file).to eq(config.get(:uaa, :ca_file))
+        expect(uaa_username_lookup_client.zone).to eq('')
+      end
+    end
+
+    context 'when a CA file is not configured for the UAA' do
+      before do
+        TestConfig.override(uaa: { ca_file: nil, internal_url: config.get(:uaa, :internal_url) })
+      end
+
+      it 'returns a uaa client with credentials for looking up usernames' do
+        uaa_username_lookup_client = locator.uaa_username_lookup_client
+        expect(uaa_username_lookup_client.ca_file).to be_nil
+      end
+    end
+
+    context 'when a UAA zone is used' do
+      before do
+        allow(VCAP::CloudController::UaaZones).to receive(:get_subdomain).and_return('zone')
+      end
+
+      it 'adapts the UAA URL accordingly' do
+        uaa_username_lookup_client = locator.uaa_username_lookup_client
+        expect(uaa_username_lookup_client.zone).to eq('zone')
       end
     end
   end

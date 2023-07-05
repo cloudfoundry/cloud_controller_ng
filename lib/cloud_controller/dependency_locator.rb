@@ -274,9 +274,23 @@ module CloudController
       create_paginated_collection_renderer(collection_transformer: RouterGroupTypePopulator.new(routing_api_client))
     end
 
+    def uaa_zone_lookup_client
+      unless config.get(:cc_zone_lookup_client_name).nil?
+        # TODO: [UAA ZONES] Cache client?
+        UaaClient.new(
+          uaa_target: config.get(:uaa, :internal_url),
+          client_id: config.get(:cc_zone_lookup_client_name),
+          secret: config.get(:cc_zone_lookup_client_secret),
+          ca_file: config.get(:uaa, :ca_file),
+        )
+      end
+    end
+
     def uaa_username_lookup_client
+      # TODO: [UAA ZONES] Cache client per zone id? Is subdomain change allowed/supported?
       UaaClient.new(
         uaa_target: config.get(:uaa, :internal_url),
+        zone: UaaZones.get_subdomain(uaa_zone_lookup_client, VCAP::CloudController::SecurityContext.zone_id),
         client_id: config.get(:cloud_controller_username_lookup_client_name),
         secret: config.get(:cloud_controller_username_lookup_client_secret),
         ca_file: config.get(:uaa, :ca_file),

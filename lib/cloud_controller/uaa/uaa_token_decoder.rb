@@ -64,12 +64,12 @@ module VCAP::CloudController
         tries -= 1
         # If we uncover issues due to attempting to decode with every
         # key, we can revisit: https://www.pivotaltracker.com/story/show/132270761
-        asymmetric_key.value.each do |key|
+        asymmetric_key(decode_token_zone_id(auth_token)).value.each do |key|
           return decode_token_with_key(auth_token, pkey: key)
         rescue CF::UAA::InvalidSignature => e
           last_error = e
         end
-        asymmetric_key.refresh
+        # asymmetric_key.refresh - TODO: [UAA ZONES] Enable once keys are cached.
       end
       raise last_error
     end
@@ -90,12 +90,19 @@ module VCAP::CloudController
 
       raise BadToken.new('Incorrect token') unless access_token?(token)
 
-      if token['iss'] != uaa_issuer
-        @uaa_issuer = nil
-        raise BadToken.new('Incorrect issuer') if token['iss'] != uaa_issuer
+      if token['iss'] != uaa_issuer(token['zid'])
+        # TODO: [UAA ZONES] Clear cached issuer for this zone id.
+        raise BadToken.new('Incorrect issuer') # if token['iss'] != uaa_issuer(token['zid']) - TODO: [UAA ZONES] Enable once issuers are cached.
       end
 
       token
+    end
+
+    def decode_token_zone_id(token)
+      segments = token.split('.')
+      raise CF::UAA::InvalidTokenFormat.new('Not enough or too many segments') if segments.length < 2 || segments.length > 3
+
+      CF::UAA::Util.json_decode64(segments[1], :sym)[:zid]
     end
 
     def symmetric_key
@@ -106,37 +113,30 @@ module VCAP::CloudController
       config[:symmetric_secret2]
     end
 
-    def asymmetric_key
-      @asymmetric_key ||= UaaVerificationKeys.new(uaa_username_lookup_client.info)
+    def asymmetric_key(zone_id)
+      # TODO: [UAA ZONES] Cache keys per zone id.
+      UaaVerificationKeys.new(uaa_client(zone_id).info)
     end
 
-    def uaa_username_lookup_client
-      ::CloudController::DependencyLocator.instance.uaa_username_lookup_client
-    end
-
-    def uaa_issuer
-      @uaa_issuer ||= with_request_error_handling do
-        fetch_uaa_issuer
+    def uaa_issuer(zone_id)
+      # TODO: [UAA ZONES] Cache issuer per zone id.
+      with_request_error_handling do
+        fetch_uaa_issuer(zone_id)
       end
     end
 
-    def fetch_uaa_issuer
-      response = http_client.get('.well-known/openid-configuration')
-      raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
-
-      JSON.parse(response.body).fetch('issuer')
+    def fetch_uaa_issuer(zone_id)
+      uaa_client(zone_id).http_get('/.well-known/openid-configuration')['issuer']
+    rescue CF::UAA::UAAError
+      raise 'Could not retrieve issuer information from UAA'
     end
 
-    def http_client
-      uaa_target                    = config[:internal_url]
-      uaa_ca                        = config[:ca_file]
-      client                        = HTTPClient.new(base_url: uaa_target)
-      client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      if !uaa_ca.nil? && !uaa_ca.empty?
-        client.ssl_config.set_trust_ca(uaa_ca)
-      end
-
-      client
+    def uaa_client(zone_id)
+      UaaClient.new(
+        uaa_target: config[:internal_url],
+        subdomain: UaaZones.get_subdomain(CloudController::DependencyLocator.instance.uaa_zone_lookup_client, zone_id),
+        ca_file: config[:ca_file],
+      )
     end
 
     def with_request_error_handling(&blk)

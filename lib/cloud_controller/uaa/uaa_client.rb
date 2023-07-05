@@ -1,25 +1,58 @@
 module VCAP::CloudController
+  class UaaHttpClient
+    include CF::UAA::Http
+
+    def initialize(target, auth_header, options={})
+      @target = target
+      @auth_header = auth_header
+      initialize_http_options(options)
+    end
+
+    def get(path)
+      json_get(@target, path, nil, headers)
+    end
+
+    private
+
+    def headers
+      @auth_header.empty? ? {} : { 'authorization' => @auth_header }
+    end
+  end
+
   class UaaClient
-    attr_reader :uaa_target, :client_id, :secret, :ca_file, :http_timeout
+    attr_reader :subdomain, :zone, :client_id, :secret, :ca_file, :http_timeout
 
     def self.default_http_timeout
       @default_http_timeout ||= VCAP::CloudController::Config.config.get(:uaa, :client_timeout)
     end
 
     def auth_header
-      token = UaaTokenCache.get_token(client_id)
-      return token if token
+      return '' if client_id.empty?
 
-      UaaTokenCache.set_token(client_id, token_info.auth_header, expires_in: token_info.info['expires_in'])
+      # TODO: [UAA ZONES] Cache token per client_id + subdomain.
+      # token = UaaTokenCache.get_token(client_id)
+      # return token if token
+      #
+      # UaaTokenCache.set_token(client_id, token_info.auth_header, expires_in: token_info.info['expires_in'])
       token_info.auth_header
     end
 
-    def initialize(uaa_target:, client_id:, secret:, ca_file:)
+    def initialize(uaa_target:, subdomain: '', zone: '', client_id: '', secret: '', ca_file:)
       @uaa_target = uaa_target
+      @subdomain = subdomain
+      @zone = zone
       @client_id = client_id
       @secret = secret
       @ca_file = ca_file
       @http_timeout = self.class.default_http_timeout
+    end
+
+    def uaa_target
+      return @uaa_target if subdomain.empty?
+
+      uri = Addressable::URI.parse(@uaa_target)
+      uri.host = "#{subdomain}.#{uri.host}"
+      uri.to_s
     end
 
     def get_clients(client_ids)
@@ -54,7 +87,8 @@ module VCAP::CloudController
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
       filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
-      results = query(:user_id, includeInactive: true, filter: filter_string)
+      # TODO: [UAA ZONES] Is the changed query semantically identical?
+      results = query(:user, filter: filter_string, sort_by: 'username', attributes: 'id')
 
       user = results['resources'].first
       user && user['id']
@@ -69,12 +103,8 @@ module VCAP::CloudController
       origin_filter_string = origins&.map { |o| "origin eq \"#{o}\"" }&.join(' or ')
 
       filter_string = construct_filter_string(username_filter_string, origin_filter_string)
-
-      if precise_username_match
-        results = query(:user_id, includeInactive: true, filter: filter_string)
-      else
-        results = query(:user, filter: filter_string, attributes: 'id')
-      end
+      # TODO: [UAA ZONES] Is the changed query semantically identical?
+      results = query(:user, filter: filter_string, sort_by: 'username', attributes: 'id')
 
       results['resources'].map { |r| r['id'] }
     rescue CF::UAA::UAAError => e
@@ -92,7 +122,8 @@ module VCAP::CloudController
 
     def origins_for_username(username)
       filter_string = %(username eq "#{username}")
-      results = query(:user_id, includeInactive: true, filter: filter_string)
+      # TODO: [UAA ZONES] Is the changed query semantically identical?
+      results = query(:user, filter: filter_string, sort_by: 'username', attributes: 'id,origin')
 
       results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
@@ -102,6 +133,10 @@ module VCAP::CloudController
 
     def info
       CF::UAA::Info.new(uaa_target, uaa_connection_opts)
+    end
+
+    def http_get(path)
+      http_client.get(path)
     end
 
     private
@@ -121,10 +156,6 @@ module VCAP::CloudController
       yield
     end
 
-    def scim
-      CF::UAA::Scim.new(uaa_target, auth_header, uaa_connection_opts)
-    end
-
     def fetch_users(user_ids)
       return {} unless user_ids.present?
 
@@ -132,7 +163,9 @@ module VCAP::CloudController
 
       user_ids.each_slice(200) do |batch|
         filter_string = batch.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-        results = query(:user_id, filter: filter_string, count: batch.length)
+        filter_string = %/active eq true and ( #{filter_string} )/
+        # TODO: [UAA ZONES] Is the changed query semantically identical?
+        results = query(:user, filter: filter_string, count: batch.length, sort_by: 'username', attributes: 'id,username,origin')
         results['resources'].each do |user|
           results_hash[user['id']] = user
         end
@@ -141,8 +174,20 @@ module VCAP::CloudController
       results_hash
     end
 
+    def scim
+      opts = uaa_connection_opts
+      opts.merge!({ zone: zone }) unless zone.empty?
+      CF::UAA::Scim.new(uaa_target, auth_header, opts)
+    end
+
     def token_issuer
+      raise ArgumentError.new('TokenIssuer requires client_id') if client_id.empty?
+
       CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, uaa_connection_opts)
+    end
+
+    def http_client
+      UaaHttpClient.new(uaa_target, auth_header, uaa_connection_opts)
     end
 
     def uaa_connection_opts
@@ -155,6 +200,17 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.uaa_client')
+    end
+  end
+
+  class UaaZones
+    def self.get_subdomain(uaa_client, zone_id)
+      return '' if uaa_client.nil? || zone_id.nil?
+
+      zone = uaa_client.http_get("/identity-zones/#{zone_id}")
+      zone['subdomain']
+    rescue CF::UAA::NotFound
+      raise 'invalid zone id'
     end
   end
 end

@@ -16,12 +16,10 @@ module VCAP::CloudController
     end
 
     let(:uaa_info) { double(CF::UAA::Info) }
-    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     let(:logger) { double(Steno::Logger) }
 
     before do
-      allow(::CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
-      allow(uaa_client).to receive(:info).and_return(uaa_info)
+      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:info).and_return(uaa_info)
       allow(Steno).to receive(:logger).with('cc.uaa_token_decoder').and_return(logger)
       # undo global stubbing in spec_helper.rb
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_call_original
@@ -53,7 +51,7 @@ module VCAP::CloudController
     describe '#decode_token' do
       before do
         Timecop.freeze(Time.now.utc)
-        stub_request(:get, uaa_issuer_info_url).to_return(body: { 'issuer' => uaa_issuer_string }.to_json)
+        stub_request(:get, uaa_issuer_info_url).to_return(headers: { 'content-type' => 'application/json' }, body: { 'issuer' => uaa_issuer_string }.to_json)
       end
       after { Timecop.return }
 
@@ -87,13 +85,14 @@ module VCAP::CloudController
                 expect(subject.decode_token("bearer #{token}")).to eq(token_content)
               end
 
-              it 'caches the issuer info from UAA' do
-                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
-                subject.decode_token("bearer #{token}")
-                subject.decode_token("bearer #{token}")
-
-                expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
-              end
+              # TODO: [UAA ZONES] Enable once issuers are cached.
+              # it 'caches the issuer info from UAA' do
+              #   token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key' })
+              #   subject.decode_token("bearer #{token}")
+              #   subject.decode_token("bearer #{token}")
+              #
+              #   expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+              # end
             end
 
             context 'when the second key decodes the token' do
@@ -103,13 +102,14 @@ module VCAP::CloudController
                 expect(subject.decode_token("bearer #{token}")).to eq(token_content)
               end
 
-              it 'caches the issuer info from UAA' do
-                token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key2' })
-                subject.decode_token("bearer #{token}")
-                subject.decode_token("bearer #{token}")
-
-                expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
-              end
+              # TODO: [UAA ZONES] Enable once issuers are cached.
+              # it 'caches the issuer info from UAA' do
+              #   token = CF::UAA::TokenCoder.encode(token_content, { skey: 'symmetric-key2' })
+              #   subject.decode_token("bearer #{token}")
+              #   subject.decode_token("bearer #{token}")
+              #
+              #   expect(WebMock).to have_requested(:get, uaa_issuer_info_url).once
+              # end
             end
 
             context 'when no CA certificate is configured to use with the interal UAA URL' do
@@ -157,7 +157,7 @@ module VCAP::CloudController
                 stub_request(:get, uaa_issuer_info_url).
                   to_return(status: 404).then.
                   to_return(status: 404).then.
-                  to_return(body: { 'issuer' => uaa_issuer_string }.to_json)
+                  to_return(headers: { 'content-type' => 'application/json' }, body: { 'issuer' => uaa_issuer_string }.to_json)
               end
 
               it 'eventually decodes the token' do
@@ -222,8 +222,9 @@ module VCAP::CloudController
               expect(uaa_info).to receive(:validation_keys_hash)
               expect(subject.decode_token("bearer #{token}")).to eq(token_content)
 
-              expect(uaa_info).not_to receive(:validation_keys_hash)
-              expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+              # TODO: [UAA ZONES] Enable once UaaVerificationKeys are cached.
+              # expect(uaa_info).not_to receive(:validation_keys_hash)
+              # expect(subject.decode_token("bearer #{token}")).to eq(token_content)
             end
 
             describe 're-fetching key' do
@@ -260,17 +261,18 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the token issuer is out of date' do
-            let(:token_issuer_string) { 'https://totally.different.issuer/uaa' }
-            let(:invalid_issuer) { 'oops' }
-
-            it 'calls uaa_issuer twice' do
-              token = generate_token(rsa_key, token_content)
-              allow_any_instance_of(UaaTokenDecoder).to receive(:fetch_uaa_issuer).and_return(invalid_issuer, token_issuer_string)
-
-              expect(subject.decode_token("bearer #{token}")).to eq(token_content)
-            end
-          end
+          # TODO: [UAA ZONES] Enable once issuers are cached.
+          # context 'when the token issuer is out of date' do
+          #   let(:token_issuer_string) { 'https://totally.different.issuer/uaa' }
+          #   let(:invalid_issuer) { 'oops' }
+          #
+          #   it 'calls uaa_issuer twice' do
+          #     token = generate_token(rsa_key, token_content)
+          #     allow_any_instance_of(UaaTokenDecoder).to receive(:fetch_uaa_issuer).and_return(invalid_issuer, token_issuer_string)
+          #
+          #     expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+          #   end
+          # end
 
           context 'when UAA responds with a non-200 while fetching the issuer' do
             let(:token_issuer_string) { uaa_issuer_string }
@@ -280,7 +282,7 @@ module VCAP::CloudController
                 stub_request(:get, uaa_issuer_info_url).
                   to_return(status: 404).then.
                   to_return(status: 404).then.
-                  to_return(body: { 'issuer' => uaa_issuer_string }.to_json)
+                  to_return(headers: { 'content-type' => 'application/json' }, body: { 'issuer' => uaa_issuer_string }.to_json)
               end
 
               it 'eventually decodes the token' do

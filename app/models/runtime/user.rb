@@ -239,6 +239,8 @@ module VCAP::CloudController
     end
 
     def self.uaa_users_info(user_guids)
+      # TODO: [UAA ZONES] For admins this should be a lookup over all zones.
+      # VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       uaa_username_lookup_client = CloudController::DependencyLocator.instance.uaa_username_lookup_client
       uaa_username_lookup_client.users_for_ids(user_guids)
     end

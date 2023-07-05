@@ -194,6 +194,9 @@ module VCAP::CloudController
             optional(:uaa_client_secret) => String,
             optional(:uaa_client_scope) => String,
 
+            optional(:cc_zone_lookup_client_name) => String,
+            optional(:cc_zone_lookup_client_secret) => String,
+
             cloud_controller_username_lookup_client_name: String,
             cloud_controller_username_lookup_client_secret: String,
 
