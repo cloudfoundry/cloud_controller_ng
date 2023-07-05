@@ -3,7 +3,7 @@ module VCAP::CloudController
     def self.dependencies
       %i[
         username_populating_collection_renderer
-        uaa_client
+        uaa_username_lookup_client
         username_populating_object_renderer
         user_event_repository
       ]
@@ -45,7 +45,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @object_renderer = dependencies[:username_populating_object_renderer]
-      @uaa_client = dependencies.fetch(:uaa_client)
+      @uaa_username_lookup_client = dependencies.fetch(:uaa_username_lookup_client)
       @collection_renderer = dependencies[:username_populating_collection_renderer]
       @user_event_repository = dependencies.fetch(:user_event_repository)
     end
@@ -113,7 +113,7 @@ module VCAP::CloudController
     def remove_related(related_guid, name, user_guid, find_model=model)
       response = super(related_guid, name, user_guid, find_model)
       user = User.first(guid: user_guid)
-      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
+      user.username = @uaa_username_lookup_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       if find_model == Space
         @user_event_repository.record_space_role_remove(
@@ -139,7 +139,7 @@ module VCAP::CloudController
     def add_space_role(user_guid, relationship, space_guid)
       space = Space.first(guid: space_guid)
       user = User.first(guid: user_guid)
-      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
+      user.username = @uaa_username_lookup_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       @request_attrs = { 'space' => space_guid, verb: 'add', relation: relationship, related_guid: space_guid }
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
     def add_organization_role(user_guid, relationship, org_guid)
       organization = Organization.first(guid: org_guid)
       user = User.first(guid: user_guid)
-      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
+      user.username = @uaa_username_lookup_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       @request_attrs = { 'organization' => org_guid, verb: 'add', relation: relationship, related_guid: org_guid }
 

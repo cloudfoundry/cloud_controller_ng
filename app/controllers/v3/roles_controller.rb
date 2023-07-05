@@ -127,8 +127,7 @@ class RolesController < ApplicationController
 
   def fetch_role_owner_with_name(role)
     user = User.first(id: role.user_id)
-    uaa_client = CloudController::DependencyLocator.instance.uaa_client
-    UsernamePopulator.new(uaa_client).transform(user)
+    UsernamePopulator.new(uaa_username_lookup_client).transform(user)
     user
   end
 
@@ -175,11 +174,10 @@ class RolesController < ApplicationController
 
   def lookup_user_guid_in_uaa(username, given_origin, creating_space_role: false)
     FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
-    uaa_client = CloudController::DependencyLocator.instance.uaa_client
 
     origin = given_origin
     if given_origin.nil?
-      origins = uaa_client.origins_for_username(username).sort
+      origins = uaa_username_lookup_client.origins_for_username(username).sort
 
       if origins.length > 1
         unprocessable!(
@@ -190,11 +188,15 @@ class RolesController < ApplicationController
       origin = origins[0]
     end
 
-    guid = uaa_client.id_for_username(username, origin:)
+    guid = uaa_username_lookup_client.id_for_username(username, origin:)
     return guid if guid
 
     unprocessable_space_user! if creating_space_role
     unprocessable!("No user exists with the username '#{username}' and origin '#{origin}'.") if given_origin
     unprocessable!("No user exists with the username '#{username}'.")
+  end
+
+  def uaa_username_lookup_client
+    CloudController::DependencyLocator.instance.uaa_username_lookup_client
   end
 end

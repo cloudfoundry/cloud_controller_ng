@@ -2,12 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe UaaTokenCache do
-    let(:url) { 'http://uaa.example.com' }
-    let(:client_id) { ' ' }
-    let(:secret) { 'secret_key' }
-    let(:expected_uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file', http_timeout: TestConfig.config_instance.get(:uaa, :client_timeout) } }
-
-    subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
+    let(:client_id) { 'client-id' }
 
     before do
       UaaTokenCache.clear!
