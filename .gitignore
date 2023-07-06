@@ -1,5 +1,6 @@
 *~
 .idea
+*.iml
 .vscode
 .yardoc
 .byebug_history
@@ -20,9 +21,11 @@ doc
 .DS_Store
 log
 tmp
+out
 tags
 test.err
 test.out
+!/.devcontainer/**/*
 
 #DOCS
 
