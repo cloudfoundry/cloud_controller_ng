@@ -1,0 +1,19 @@
+version: "3.3"
+services:
+
+  # Dev Container
+  codespace:
+    container_name: codespace
+    build:
+      context: .devcontainer/images/devcontainer
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    volumes:
+      - .:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    network_mode: host
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined

@@ -1,0 +1,81 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "[Postgres] CloudController",
+            "type": "Ruby",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "program": "bin/cloud_controller",
+            "args": [
+                "-c",
+                "tmp/cloud_controller.yml"
+            ],
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb"
+            }
+        },
+        {
+            "name": "[Mariadb] CloudController",
+            "type": "Ruby",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "program": "bin/cloud_controller",
+            "args": [
+                "-c",
+                "tmp/cloud_controller.yml"
+            ],
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb"
+            }
+        },
+        {
+            "name": "[Mariadb] Unittests",
+            "type": "Ruby",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "program": "bin/rake",
+            "args": [
+                "spec:all"
+            ],
+            "env": {
+                "DB": "mysql",
+                "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@localhost:3306"
+            }
+        },
+        {
+            "name": "[Postgres] Unittests",
+            "type": "Ruby",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "program": "bin/rake",
+            "args": [
+                "spec:all"
+            ],
+            "env": {
+                "DB": "postgres",
+                "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@localhost:5432"
+            }
+        },
+        {
+            "name": "Rubocop",
+            "type": "Ruby",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "program": "bin/rake",
+            "args": [
+                "rubocop_autocorrect"
+            ]
+        }
+    ]
+}

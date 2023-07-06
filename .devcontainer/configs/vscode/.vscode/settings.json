@@ -1,0 +1,3 @@
+{
+  "rubyTestExplorer.rspecCommand": "DB=postgres POSTGRES_CONNECTION_PREFIX='postgres://postgres:supersecret@localhost:5432' bundle exec rspec"
+}
