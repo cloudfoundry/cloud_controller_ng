@@ -119,7 +119,7 @@ GEM
       simplecov (<= 0.13)
     coderay (1.1.3)
     concurrent-ruby (1.2.2)
-    connection_pool (2.3.0)
+    connection_pool (2.4.1)
     cookiejar (0.3.3)
     crack (0.4.5)
       rexml
@@ -388,9 +388,9 @@ GEM
       ffi (~> 1.0)
     rbs (2.8.4)
     recursive-open-struct (1.1.3)
-    redis (5.0.5)
+    redis (5.0.6)
       redis-client (>= 0.9.0)
-    redis-client (0.11.1)
+    redis-client (0.14.1)
       connection_pool
     regexp_parser (2.8.1)
     representable (3.2.0)
