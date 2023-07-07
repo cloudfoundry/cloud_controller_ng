@@ -14827,6 +14827,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 <h3 id="the-process-stats-object">The process stats object</h3>
+
+<p>The process stats object provides information about the status of an individual instance of a process.</p>
 <pre class="highlight plaintext"><code>Example process stats object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -15070,6 +15072,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 <h3 id="get-stats-for-a-process">Get stats for a process</h3>
+
+<p>Process stats are objects that represent the individual instances of a process.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/stats"</span> <span class="se">\</span>
@@ -15107,8 +15111,30 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"disk_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">1073741824</span><span class="p">,</span><span class="w">
       </span><span class="nt">"fds_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="p">,</span><span class="w">
       </span><span class="nt">"isolation_segment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example_iso_segment"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"log_rate_limit"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"index"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"usage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"cpu"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"log_rate"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T21:34:04+00:00"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"disk_quota"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fds_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"instance_ports"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"isolation_segment"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"log_rate_limit"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"mem_quota"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"uptime"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
