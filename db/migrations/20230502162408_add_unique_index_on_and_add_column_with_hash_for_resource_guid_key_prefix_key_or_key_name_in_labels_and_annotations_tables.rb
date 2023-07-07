@@ -1,4 +1,3 @@
-require File.expand_path('../helpers/remove_duplicates', __dir__)
 require 'digest'
 
 Sequel.migration do
@@ -56,241 +55,262 @@ Sequel.migration do
   }
 
   up do
-    collate_opts = {}
-    dbtype = if self.class.name.match?(/mysql/i)
-               collate_opts[:collate] = :utf8_bin
-               'mysql'
-             elsif self.class.name.match?(/postgres/i)
-               'postgres'
-             else
-               raise 'unknown database'
-             end
+    transaction do
+      collate_opts = {}
+      dbtype = if self.class.name.match?(/mysql/i)
+                 collate_opts[:collate] = :utf8_bin
+                 'mysql'
+               elsif self.class.name.match?(/postgres/i)
+                 'postgres'
+               else
+                 raise 'unknown database'
+               end
 
-    # remove duplicates in label tables
-    label_tables_to_migrate.each do |table, table_short|
-      remove_duplicates(self, table, :resource_guid, :key_prefix, :key_name)
-    end
-    # remove duplicates in annotation tables
-    annotaion_tables_to_migrate.each do |table, table_short|
-      remove_duplicates(self, table, :resource_guid, :key_prefix, :key)
-    end
+      # remove duplicates in label tables
+      label_tables_to_migrate.each do |table, table_short|
+        self[table].for_update.all
+        dup_groups = self[table].
+                     select(Sequel.function(:max, :id)).
+                     group_by(:resource_guid, :key_prefix, :key_name).
+                     having { count.function.* > 0 }
 
-    # add new column, hash, unique index and triggers for label tables
-    label_tables_to_migrate.each do |table, table_short|
-      prefix = table_short.to_s
-      index = prefix + '_resource_guid_key_prefix_key_name_hash_idx'
-      insert_trigger = prefix + '_add_unique_hash_insert_trigger'
-      update_trigger = prefix + '_add_unique_hash_update_trigger'
-
-      if dbtype == 'mysql'
-        run <<-SQL
-          ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_name_hash varchar(70) NOT NULL DEFAULT '0';
-        SQL
-        run <<-SQL
-          UPDATE #{table} SET resource_guid_key_prefix_key_name_hash=(SHA2(
-              CONCAT(
-              COALESCE(resource_guid, '' ) ,
-              COALESCE(key_prefix , '')  ,
-              COALESCE(key_name ,'')
-              ),
-              256));
-        SQL
-        run <<-SQL
-          ALTER TABLE #{table} ADD UNIQUE INDEX #{index} (resource_guid_key_prefix_key_name_hash);
-        SQL
-        run <<-SQL
-         CREATE TRIGGER #{insert_trigger} BEFORE INSERT ON #{table} FOR EACH ROW BEGIN
-                                SET NEW.`resource_guid_key_prefix_key_name_hash` = SHA2(
-                  CONCAT(
-                    COALESCE(NEW.`resource_guid`, '' ) ,
-                    COALESCE(NEW.`key_prefix` , '')  ,
-                    COALESCE(NEW.`key_name` ,'')
-                  ),
-                  256);
-          END ;
-        SQL
-        run <<-SQL
-
-         CREATE TRIGGER #{update_trigger} BEFORE UPDATE ON #{table} FOR EACH ROW BEGIN
-                                SET NEW.`resource_guid_key_prefix_key_name_hash` = SHA2(
-                  CONCAT(
-                    COALESCE(NEW.`resource_guid`, '' ) ,
-                    COALESCE(NEW.`key_prefix` , '')  ,
-                    COALESCE(NEW.`key_name` ,'')
-                  ),
-                  256);
-          END ;
-        SQL
-      elsif dbtype == 'postgres'
-        run <<-SQL
-          ALTER TABLE #{table} DROP COLUMN IF EXISTS resource_guid_key_prefix_key_name_hash ;
-          ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_name_hash varchar(70) NOT NULL DEFAULT '0';
-        SQL
-        run <<-SQL
-          UPDATE #{table} SET resource_guid_key_prefix_key_name_hash=(encode(digest(
-            COALESCE("resource_guid", '' ) || COALESCE("key_prefix", '')  ||
-            COALESCE("key_name", ''), 'sha256'), 'hex'));
-        SQL
-        run <<-SQL
-          CREATE UNIQUE INDEX #{index} ON #{table} (resource_guid_key_prefix_key_name_hash);
-        SQL
-        run <<-SQL
-          CREATE OR REPLACE FUNCTION labels_add_unique_hash()
-            RETURNS TRIGGER
-            LANGUAGE PLPGSQL
-            AS
-          $$
-          BEGIN
-            NEW."resource_guid_key_prefix_key_name_hash" = encode(digest(
-            COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
-            COALESCE(NEW."key_name", ''), 'sha256'), 'hex');
-
-            RETURN NEW;
-          END;
-          $$;
-        SQL
-        run <<-SQL
-          drop trigger if exists #{insert_trigger} on #{table};
-          CREATE TRIGGER #{insert_trigger}
-          BEFORE INSERT
-          ON #{table}
-          FOR EACH ROW
-          EXECUTE PROCEDURE labels_add_unique_hash();
-          END;
-        SQL
-        run <<-SQL
-          CREATE OR REPLACE FUNCTION labels_add_unique_update_hash()
-            RETURNS TRIGGER
-            LANGUAGE PLPGSQL
-            AS
-          $$
-          BEGIN
-            NEW."resource_guid_key_prefix_key_name_hash" = encode(digest(
-            COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
-            COALESCE(NEW."key_name", ''), 'sha256'), 'hex');
-
-            RETURN NEW;
-          END;
-          $$;
-        SQL
-        run <<-SQL
-          drop trigger if exists #{update_trigger} on #{table};
-          CREATE TRIGGER #{update_trigger}
-          BEFORE UPDATE
-          ON #{table}
-          FOR EACH ROW
-          EXECUTE PROCEDURE labels_add_unique_update_hash();
-          END;
-        SQL
+        self[table].exclude(id: dup_groups).each do |row|
+          self[table].where(id: row[:id]).delete
+        end
       end
-    end
 
-    # add new column, hash, unique index and triggers for annotation tables
-    annotaion_tables_to_migrate.each do |table, table_short|
-      prefix = table_short.to_s
-      index = prefix + '_resource_guid_key_prefix_key_hash_idx'
-      insert_trigger = prefix + '_add_unique_hash_insert_trigger'
-      update_trigger = prefix + '_add_unique_hash_update_trigger'
+      # remove duplicates in annotation tables
+      annotaion_tables_to_migrate.each do |table, table_short|
+        self[table].for_update.all
+        dup_groups = self[table].
+                     select(Sequel.function(:max, :id)).
+                     group_by(:resource_guid, :key_prefix, :key).
+                     having { count.function.* > 0 }
 
-      if dbtype == 'mysql'
-        run <<-SQL
-          ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_hash varchar(70) NOT NULL DEFAULT '0';
-        SQL
-        run <<-SQL
-          UPDATE #{table} SET resource_guid_key_prefix_key_hash=(SHA2(
-              CONCAT(
-              COALESCE(resource_guid, '' ) ,
-              COALESCE(key_prefix , '')  ,
-              COALESCE(#{table}.key ,'')
-              ),
-              256));
-        SQL
-        run <<-SQL
-          ALTER TABLE #{table} ADD UNIQUE INDEX #{index} (resource_guid_key_prefix_key_hash);
-        SQL
-        run <<-SQL
-         CREATE TRIGGER #{insert_trigger} BEFORE INSERT ON #{table} FOR EACH ROW BEGIN
-                                SET NEW.`resource_guid_key_prefix_key_hash` = SHA2(
-                  CONCAT(
-                    COALESCE(NEW.`resource_guid`, '' ) ,
-                    COALESCE(NEW.`key_prefix` , '')  ,
-                    COALESCE(NEW.`key` ,'')
-                  ),
-                  256);
-          END ;
-        SQL
-        run <<-SQL
-         CREATE TRIGGER #{update_trigger} BEFORE UPDATE ON #{table} FOR EACH ROW BEGIN
-                                SET NEW.`resource_guid_key_prefix_key_hash` = SHA2(
-                  CONCAT(
-                    COALESCE(NEW.`resource_guid`, '' ) ,
-                    COALESCE(NEW.`key_prefix` , '')  ,
-                    COALESCE(NEW.`key` ,'')
-                  ),
-                  256);
-          END ;
-        SQL
-      elsif dbtype == 'postgres'
-        run <<-SQL
-          ALTER TABLE #{table} DROP COLUMN IF EXISTS resource_guid_key_prefix_key_hash ;
-          ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_hash varchar(70) NOT NULL DEFAULT '0';
-        SQL
-        run <<-SQL
-          UPDATE #{table} SET resource_guid_key_prefix_key_hash=(encode(digest(
-            COALESCE("resource_guid", '' ) || COALESCE("key_prefix", '')  ||
-            COALESCE("key", ''), 'sha256'), 'hex'));
-        SQL
-        run <<-SQL
-          CREATE UNIQUE INDEX #{index} ON #{table} (resource_guid_key_prefix_key_hash);
-        SQL
-        run <<-SQL
-          CREATE OR REPLACE FUNCTION annotations_add_unique_hash()
-            RETURNS TRIGGER
-            LANGUAGE PLPGSQL
-            AS
-          $$
-          BEGIN
-            NEW."resource_guid_key_prefix_key_hash" = encode(digest(
-            COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
-            COALESCE(NEW."key", ''), 'sha256'), 'hex');
+        self[table].exclude(id: dup_groups).each do |row|
+          self[table].where(id: row[:id]).delete
+        end
+      end
 
-            RETURN NEW;
-          END;
-          $$;
-        SQL
-        run <<-SQL
-          drop trigger if exists #{insert_trigger} on #{table};
-          CREATE TRIGGER #{insert_trigger}
-          BEFORE INSERT
-          ON #{table}
-          FOR EACH ROW
-          EXECUTE PROCEDURE annotations_add_unique_hash();
-          END;
-        SQL
-        run <<-SQL
-          CREATE OR REPLACE FUNCTION annotations_add_unique_update_hash()
-            RETURNS TRIGGER
-            LANGUAGE PLPGSQL
-            AS
-          $$
-          BEGIN
-            NEW."resource_guid_key_prefix_key_hash" = encode(digest(
-            COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
-            COALESCE(NEW."key", ''), 'sha256'), 'hex');
+      # add new column, hash, unique index and triggers for label tables
+      label_tables_to_migrate.each do |table, table_short|
+        prefix = table_short.to_s
+        index = prefix + '_resource_guid_key_prefix_key_name_hash_idx'
+        insert_trigger = prefix + '_add_unique_hash_insert_trigger'
+        update_trigger = prefix + '_add_unique_hash_update_trigger'
 
-            RETURN NEW;
-          END;
-          $$;
-        SQL
-        run <<-SQL
-          drop trigger if exists #{update_trigger} on #{table};
-          CREATE TRIGGER #{update_trigger}
-          BEFORE UPDATE
-          ON #{table}
-          FOR EACH ROW
-          EXECUTE PROCEDURE annotations_add_unique_update_hash();
-          END;
-        SQL
+        if dbtype == 'mysql'
+          run <<-SQL
+            ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_name_hash varchar(70) NOT NULL DEFAULT '0';
+          SQL
+          run <<-SQL
+            UPDATE #{table} SET resource_guid_key_prefix_key_name_hash=(SHA2(
+                CONCAT(
+                COALESCE(resource_guid, '' ) ,
+                COALESCE(key_prefix , '')  ,
+                COALESCE(key_name ,'')
+                ),
+                256));
+          SQL
+          run <<-SQL
+            ALTER TABLE #{table} ADD UNIQUE INDEX #{index} (resource_guid_key_prefix_key_name_hash);
+          SQL
+          run <<-SQL
+           CREATE TRIGGER #{insert_trigger} BEFORE INSERT ON #{table} FOR EACH ROW BEGIN
+                                  SET NEW.`resource_guid_key_prefix_key_name_hash` = SHA2(
+                    CONCAT(
+                      COALESCE(NEW.`resource_guid`, '' ) ,
+                      COALESCE(NEW.`key_prefix` , '')  ,
+                      COALESCE(NEW.`key_name` ,'')
+                    ),
+                    256);
+            END ;
+          SQL
+          run <<-SQL
+
+           CREATE TRIGGER #{update_trigger} BEFORE UPDATE ON #{table} FOR EACH ROW BEGIN
+                                  SET NEW.`resource_guid_key_prefix_key_name_hash` = SHA2(
+                    CONCAT(
+                      COALESCE(NEW.`resource_guid`, '' ) ,
+                      COALESCE(NEW.`key_prefix` , '')  ,
+                      COALESCE(NEW.`key_name` ,'')
+                    ),
+                    256);
+            END ;
+
+          SQL
+        elsif dbtype == 'postgres'
+          run <<-SQL
+            ALTER TABLE #{table} DROP COLUMN IF EXISTS resource_guid_key_prefix_key_name_hash ;
+            ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_name_hash varchar(70) NOT NULL DEFAULT '0';
+          SQL
+          run <<-SQL
+            UPDATE #{table} SET resource_guid_key_prefix_key_name_hash=(encode(digest(
+              COALESCE("resource_guid", '' ) || COALESCE("key_prefix", '')  ||
+              COALESCE("key_name", ''), 'sha256'), 'hex'));
+          SQL
+          run <<-SQL
+            CREATE UNIQUE INDEX #{index} ON #{table} (resource_guid_key_prefix_key_name_hash);
+          SQL
+          run <<-SQL
+            CREATE OR REPLACE FUNCTION labels_add_unique_hash()
+              RETURNS TRIGGER
+              LANGUAGE PLPGSQL
+              AS
+            $$
+            BEGIN
+              NEW."resource_guid_key_prefix_key_name_hash" = encode(digest(
+              COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
+              COALESCE(NEW."key_name", ''), 'sha256'), 'hex');
+
+              RETURN NEW;
+            END;
+            $$;
+          SQL
+          run <<-SQL
+            drop trigger if exists #{insert_trigger} on #{table};
+            CREATE TRIGGER #{insert_trigger}
+            BEFORE INSERT
+            ON #{table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE labels_add_unique_hash();
+            END;
+          SQL
+          run <<-SQL
+            CREATE OR REPLACE FUNCTION labels_add_unique_update_hash()
+              RETURNS TRIGGER
+              LANGUAGE PLPGSQL
+              AS
+            $$
+            BEGIN
+              NEW."resource_guid_key_prefix_key_name_hash" = encode(digest(
+              COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
+              COALESCE(NEW."key_name", ''), 'sha256'), 'hex');
+
+              RETURN NEW;
+            END;
+            $$;
+          SQL
+          run <<-SQL
+            drop trigger if exists #{update_trigger} on #{table};
+            CREATE TRIGGER #{update_trigger}
+            BEFORE UPDATE
+            ON #{table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE labels_add_unique_update_hash();
+            END;
+          SQL
+        end
+      end
+
+      # add new column, hash, unique index and triggers for annotation tables
+      annotaion_tables_to_migrate.each do |table, table_short|
+        prefix = table_short.to_s
+        index = prefix + '_resource_guid_key_prefix_key_hash_idx'
+        insert_trigger = prefix + '_add_unique_hash_insert_trigger'
+        update_trigger = prefix + '_add_unique_hash_update_trigger'
+
+        if dbtype == 'mysql'
+          run <<-SQL
+            ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_hash varchar(70) NOT NULL DEFAULT '0';
+          SQL
+          run <<-SQL
+            UPDATE #{table} SET resource_guid_key_prefix_key_hash=(SHA2(
+                CONCAT(
+                COALESCE(resource_guid, '' ) ,
+                COALESCE(key_prefix , '')  ,
+                COALESCE(#{table}.key ,'')
+                ),
+                256));
+          SQL
+          run <<-SQL
+            ALTER TABLE #{table} ADD UNIQUE INDEX #{index} (resource_guid_key_prefix_key_hash);
+          SQL
+          run <<-SQL
+           CREATE TRIGGER #{insert_trigger} BEFORE INSERT ON #{table} FOR EACH ROW BEGIN
+                                  SET NEW.`resource_guid_key_prefix_key_hash` = SHA2(
+                    CONCAT(
+                      COALESCE(NEW.`resource_guid`, '' ) ,
+                      COALESCE(NEW.`key_prefix` , '')  ,
+                      COALESCE(NEW.`key` ,'')
+                    ),
+                    256);
+            END ;
+          SQL
+          run <<-SQL
+           CREATE TRIGGER #{update_trigger} BEFORE UPDATE ON #{table} FOR EACH ROW BEGIN
+                                  SET NEW.`resource_guid_key_prefix_key_hash` = SHA2(
+                    CONCAT(
+                      COALESCE(NEW.`resource_guid`, '' ) ,
+                      COALESCE(NEW.`key_prefix` , '')  ,
+                      COALESCE(NEW.`key` ,'')
+                    ),
+                    256);
+            END;
+
+          SQL
+        elsif dbtype == 'postgres'
+          run <<-SQL
+            ALTER TABLE #{table} DROP COLUMN IF EXISTS resource_guid_key_prefix_key_hash ;
+            ALTER TABLE #{table} ADD COLUMN resource_guid_key_prefix_key_hash varchar(70) NOT NULL DEFAULT '0';
+          SQL
+          run <<-SQL
+            UPDATE #{table} SET resource_guid_key_prefix_key_hash=(encode(digest(
+              COALESCE("resource_guid", '' ) || COALESCE("key_prefix", '')  ||
+              COALESCE("key", ''), 'sha256'), 'hex'));
+          SQL
+          run <<-SQL
+            CREATE UNIQUE INDEX #{index} ON #{table} (resource_guid_key_prefix_key_hash);
+          SQL
+          run <<-SQL
+            CREATE OR REPLACE FUNCTION annotations_add_unique_hash()
+              RETURNS TRIGGER
+              LANGUAGE PLPGSQL
+              AS
+            $$
+            BEGIN
+              NEW."resource_guid_key_prefix_key_hash" = encode(digest(
+              COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
+              COALESCE(NEW."key", ''), 'sha256'), 'hex');
+
+              RETURN NEW;
+            END;
+            $$;
+          SQL
+          run <<-SQL
+            drop trigger if exists #{insert_trigger} on #{table};
+            CREATE TRIGGER #{insert_trigger}
+            BEFORE INSERT
+            ON #{table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE annotations_add_unique_hash();
+            END;
+          SQL
+          run <<-SQL
+            CREATE OR REPLACE FUNCTION annotations_add_unique_update_hash()
+              RETURNS TRIGGER
+              LANGUAGE PLPGSQL
+              AS
+            $$
+            BEGIN
+              NEW."resource_guid_key_prefix_key_hash" = encode(digest(
+              COALESCE(NEW."resource_guid", '' ) || COALESCE(NEW."key_prefix", '')  ||
+              COALESCE(NEW."key", ''), 'sha256'), 'hex');
+
+              RETURN NEW;
+            END;
+            $$;
+          SQL
+          run <<-SQL
+            drop trigger if exists #{update_trigger} on #{table};
+            CREATE TRIGGER #{update_trigger}
+            BEFORE UPDATE
+            ON #{table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE annotations_add_unique_update_hash();
+            END;
+          SQL
+        end
       end
     end
   end
