@@ -156,54 +156,124 @@ module CloudFoundry
     end
 
     RSpec.describe ConcurrentRequestCounter do
-      let(:concurrent_request_counter) { ConcurrentRequestCounter.new('test') }
-      let(:user_guid) { SecureRandom.uuid }
-      let(:max_concurrent_requests) { 5 }
-      let(:logger) { double('logger', info: nil) }
+      store_implementations = []
+      store_implementations << :in_memory   # Test the ConcurrentRequestCounter::InMemoryStore
+      store_implementations << :mock_redis  # Test the ConcurrentRequestCounter::RedisStore with MockRedis
 
-      before do
-        concurrent_request_counter # instantiate counter
-      end
+      store_implementations.each do |store_implementation|
+        describe store_implementation do
+          let(:concurrent_request_counter) { ConcurrentRequestCounter.new('test') }
+          let(:store) { concurrent_request_counter.instance_variable_get(:@store) }
+          let(:user_guid) { SecureRandom.uuid }
+          let(:max_concurrent_requests) { 5 }
+          let(:logger) { double('logger', info: nil) }
 
-      describe '#initialize' do
-        it 'sets the @key_prefix' do
-          expect(concurrent_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
-        end
-      end
+          before do
+            TestConfig.override(redis: { socket: 'foo' }, puma: { max_threads: 123 }) unless store_implementation == :in_memory
 
-      describe '#try_increment?' do
-        it 'returns true for a new user' do
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
-        end
+            allow(ConnectionPool::Wrapper).to receive(:new).and_call_original
+            concurrent_request_counter.send(:store) # instantiate counter and store implementation
+          end
 
-        it 'returns true for a recurring user performing the maximum allowed concurrent requests' do
-          (max_concurrent_requests - 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
-        end
+          describe '#initialize' do
+            it 'sets the @key_prefix' do
+              expect(concurrent_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
+            end
 
-        it 'returns false for a recurring user with too many concurrent requests' do
-          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
-        end
+            it 'instantiates the appropriate store class' do
+              if store_implementation == :in_memory
+                expect(store).to be_kind_of(ConcurrentRequestCounter::InMemoryStore)
+              else
+                expect(store).to be_kind_of(ConcurrentRequestCounter::RedisStore)
+              end
+            end
 
-        it 'returns true again for a recurring user after a single decrement' do
-          (max_concurrent_requests + 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-          concurrent_request_counter.decrement(user_guid, logger)
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
-        end
-      end
+            it 'uses a connection pool size that equals the maximum puma threads' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
 
-      describe '#decrement' do
-        it 'decreases the number of concurrent requests, allowing for another concurrent request' do
-          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-          concurrent_request_counter.decrement(user_guid, logger)
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
-        end
+              expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 123)
+            end
 
-        it 'does not decrease the number of concurrent requests below zero' do
-          concurrent_request_counter.decrement(user_guid, logger)
-          max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-          expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+            context 'with custom connection pool size' do
+              let(:concurrent_request_counter) { ConcurrentRequestCounter.new('test', redis_connection_pool_size: 456) }
+
+              it 'uses the provided connection pool size' do
+                skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+                expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 456)
+              end
+            end
+          end
+
+          describe '#try_increment?' do
+            it 'calls @store.try_increment? with the prefixed user guid and the given maximum concurrent requests and logger' do
+              allow(store).to receive(:try_increment?).and_call_original
+              concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)
+              expect(store).to have_received(:try_increment?).with("test:#{user_guid}", max_concurrent_requests, logger)
+            end
+
+            it 'returns true for a new user' do
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+            end
+
+            it 'returns true for a recurring user performing the maximum allowed concurrent requests' do
+              (max_concurrent_requests - 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+            end
+
+            it 'returns false for a recurring user with too many concurrent requests' do
+              max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+            end
+
+            it 'returns true again for a recurring user after a single decrement' do
+              (max_concurrent_requests + 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+              concurrent_request_counter.decrement(user_guid, logger)
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+            end
+
+            it 'returns true in case of a Redis error' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+              allow_any_instance_of(MockRedis::StringMethods).to receive(:incr).and_raise(Redis::ConnectionError)
+              allow_any_instance_of(Redis).to receive(:incr).and_raise(Redis::ConnectionError)
+              allow(logger).to receive(:error)
+
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(logger).to have_received(:error).with(/Redis error/)
+            end
+          end
+
+          describe '#decrement' do
+            it 'calls @store.decrement with the prefixed user guid and the given logger' do
+              allow(store).to receive(:decrement).and_call_original
+              concurrent_request_counter.decrement(user_guid, logger)
+              expect(store).to have_received(:decrement).with("test:#{user_guid}", logger)
+            end
+
+            it 'decreases the number of concurrent requests, allowing for another concurrent request' do
+              max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+              concurrent_request_counter.decrement(user_guid, logger)
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+            end
+
+            it 'does not decrease the number of concurrent requests below zero' do
+              concurrent_request_counter.decrement(user_guid, logger)
+              max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
+              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+            end
+
+            it 'writes an error log in case of a Redis error' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+              allow_any_instance_of(MockRedis::StringMethods).to receive(:decr).and_raise(Redis::ConnectionError)
+              allow_any_instance_of(Redis).to receive(:decr).and_raise(Redis::ConnectionError)
+              allow(logger).to receive(:error)
+
+              concurrent_request_counter.decrement(user_guid, logger)
+              expect(logger).to have_received(:error).with(/Redis error/)
+            end
+          end
         end
       end
     end

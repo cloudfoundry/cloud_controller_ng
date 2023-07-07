@@ -323,42 +323,98 @@ module CloudFoundry
     end
 
     RSpec.describe ExpiringRequestCounter do
-      let(:expiring_request_counter) { ExpiringRequestCounter.new('test') }
-      let(:stubbed_expires_in) { 30.minutes.to_i }
-      let(:user_guid) { SecureRandom.uuid }
-      let(:reset_interval_in_minutes) { 60 }
-      let(:logger) { double('logger') }
+      store_implementations = []
+      store_implementations << :in_memory   # Test the ExpiringRequestCounter::InMemoryStore
+      store_implementations << :mock_redis  # Test the ExpiringRequestCounter::RedisStore with MockRedis
 
-      before do
-        allow(expiring_request_counter).to receive(:next_expires_in).and_return(stubbed_expires_in)
-      end
+      store_implementations.each do |store_implementation|
+        describe store_implementation do
+          let(:expiring_request_counter) { ExpiringRequestCounter.new('test') }
+          let(:stubbed_expires_in) { 30.minutes.to_i }
+          let(:store) { expiring_request_counter.instance_variable_get(:@store) }
+          let(:user_guid) { SecureRandom.uuid }
+          let(:reset_interval_in_minutes) { 60 }
+          let(:logger) { double('logger') }
 
-      describe '#initialize' do
-        it 'sets the @key_prefix' do
-          expect(expiring_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
-        end
-      end
+          before do
+            TestConfig.override(redis: { socket: 'foo' }, puma: { max_threads: 123 }) unless store_implementation == :in_memory
 
-      describe '#increment' do
-        it 'calls next_expires_in with the given user guid and reset interval' do
-          expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
-          expect(expiring_request_counter).to have_received(:next_expires_in).with(user_guid, reset_interval_in_minutes)
-        end
+            allow(ConnectionPool::Wrapper).to receive(:new).and_call_original
+            expiring_request_counter.send(:store) # instantiate counter and store implementation
+            allow(expiring_request_counter).to receive(:next_expires_in).and_return(stubbed_expires_in)
+          end
 
-        it 'returns count=1 and expires_in for a new user' do
-          count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
-          expect(count).to eq(1)
-          expect(expires_in).to eq(stubbed_expires_in)
-        end
+          describe '#initialize' do
+            it 'sets the @key_prefix' do
+              expect(expiring_request_counter.instance_variable_get(:@key_prefix)).to eq('test')
+            end
 
-        it 'returns count=2 and expires_in minus the elapsed time for a recurring user' do
-          expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+            it 'instantiates the appropriate store class' do
+              if store_implementation == :in_memory
+                expect(store).to be_kind_of(ExpiringRequestCounter::InMemoryStore)
+              else
+                expect(store).to be_kind_of(ExpiringRequestCounter::RedisStore)
+              end
+            end
 
-          elapsed_seconds = 10
-          Timecop.travel(Time.now + elapsed_seconds.seconds) do
-            count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
-            expect(count).to eq(2)
-            expect(expires_in).to eq(stubbed_expires_in - elapsed_seconds)
+            it 'uses a connection pool size that equals the maximum puma threads' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+              expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 123)
+            end
+
+            context 'with custom connection pool size' do
+              let(:expiring_request_counter) { ExpiringRequestCounter.new('test', redis_connection_pool_size: 456) }
+
+              it 'uses the provided connection pool size' do
+                skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+                expect(ConnectionPool::Wrapper).to have_received(:new).with(size: 456)
+              end
+            end
+          end
+
+          describe '#increment' do
+            it 'calls next_expires_in with the given user guid and reset interval' do
+              expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+              expect(expiring_request_counter).to have_received(:next_expires_in).with(user_guid, reset_interval_in_minutes)
+            end
+
+            it 'calls @store.increment with the prefixed user guid, stubbed expires_in and given logger' do
+              allow(store).to receive(:increment).and_call_original
+              expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+              expect(store).to have_received(:increment).with("test:#{user_guid}", stubbed_expires_in, logger)
+            end
+
+            it 'returns count=1 and expires_in for a new user' do
+              count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+              expect(count).to eq(1)
+              expect(expires_in).to eq(stubbed_expires_in)
+            end
+
+            it 'returns count=2 and expires_in minus the elapsed time for a recurring user' do
+              expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+
+              elapsed_seconds = 10
+              Timecop.travel(Time.now + elapsed_seconds.seconds) do
+                count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+                expect(count).to eq(2)
+                expect(expires_in).to eq(stubbed_expires_in - elapsed_seconds)
+              end
+            end
+
+            it 'returns count=1 and expires_in in case of a Redis error' do
+              skip('Not relevant for InMemoryStore') if store_implementation == :in_memory
+
+              allow_any_instance_of(MockRedis::TransactionWrapper).to receive(:multi).and_raise(Redis::ConnectionError)
+              allow_any_instance_of(Redis).to receive(:multi).and_raise(Redis::ConnectionError)
+              allow(logger).to receive(:error)
+
+              count, expires_in = expiring_request_counter.increment(user_guid, reset_interval_in_minutes, logger)
+              expect(count).to eq(1)
+              expect(expires_in).to eq(stubbed_expires_in)
+              expect(logger).to have_received(:error).with(/Redis error/)
+            end
           end
         end
       end

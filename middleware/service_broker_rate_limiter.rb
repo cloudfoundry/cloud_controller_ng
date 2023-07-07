@@ -1,26 +1,77 @@
 require 'concurrent-ruby'
+require 'redis'
 
 module CloudFoundry
   module Middleware
     class ConcurrentRequestCounter
-      def initialize(key_prefix)
+      def initialize(key_prefix, redis_connection_pool_size: nil)
         @key_prefix = key_prefix
-        @mutex = Mutex.new
-        @data = {}
+        @redis_connection_pool_size = redis_connection_pool_size
       end
 
       def try_increment?(user_guid, max_concurrent_requests, logger)
         key = "#{@key_prefix}:#{user_guid}"
-        @mutex.synchronize do
-          @data[key] = Concurrent::Semaphore.new(max_concurrent_requests) unless @data.key?(key)
-          @data[key].try_acquire
-        end
+        store.try_increment?(key, max_concurrent_requests, logger)
       end
 
       def decrement(user_guid, logger)
         key = "#{@key_prefix}:#{user_guid}"
-        @mutex.synchronize do
-          @data[key].release if @data.key?(key)
+        store.decrement(key, logger)
+      end
+
+      private
+
+      def store
+        return @store if defined?(@store)
+
+        redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
+        @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket, @redis_connection_pool_size)
+      end
+
+      class InMemoryStore
+        def initialize
+          @mutex = Mutex.new
+          @data = {}
+        end
+
+        def try_increment?(key, max_concurrent_requests, _)
+          @mutex.synchronize do
+            @data[key] = Concurrent::Semaphore.new(max_concurrent_requests) unless @data.key?(key)
+            @data[key].try_acquire
+          end
+        end
+
+        def decrement(key, _)
+          @mutex.synchronize do
+            @data[key].release if @data.key?(key)
+          end
+        end
+      end
+
+      class RedisStore
+        def initialize(socket, connection_pool_size)
+          connection_pool_size ||= VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+          @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
+            Redis.new(timeout: 1, path: socket)
+          end
+        end
+
+        def try_increment?(key, max_concurrent_requests, logger)
+          count_str = @redis.incr(key)
+          return true if count_str.to_i <= max_concurrent_requests
+
+          @redis.decr(key)
+          false
+        rescue Redis::BaseError => e
+          logger.error("Redis error: #{e.inspect}")
+          true
+        end
+
+        def decrement(key, logger)
+          count_str = @redis.decr(key)
+          @redis.incr(key) if count_str.to_i < 0
+        rescue Redis::BaseError => e
+          logger.error("Redis error: #{e.inspect}")
         end
       end
     end

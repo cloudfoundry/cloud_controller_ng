@@ -119,6 +119,7 @@ GEM
       simplecov (<= 0.13)
     coderay (1.1.3)
     concurrent-ruby (1.2.2)
+    connection_pool (2.3.0)
     cookiejar (0.3.3)
     crack (0.4.5)
       rexml
@@ -308,6 +309,8 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.8.2)
     minitest (5.18.1)
+    mock_redis (0.34.0)
+      ruby2_keywords
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -385,6 +388,10 @@ GEM
       ffi (~> 1.0)
     rbs (2.8.4)
     recursive-open-struct (1.1.3)
+    redis (5.0.5)
+      redis-client (>= 0.9.0)
+    redis-client (0.11.1)
+      connection_pool
     regexp_parser (2.8.1)
     representable (3.2.0)
       declarative (< 0.1.0)
@@ -580,6 +587,7 @@ DEPENDENCIES
   machinist (~> 1.0.6)
   membrane (~> 1.0)
   mime-types (~> 3.4)
+  mock_redis
   multi_json
   multipart-parser
   mysql2 (~> 0.5.5)
@@ -600,6 +608,7 @@ DEPENDENCIES
   rack-test
   railties (~> 6.1.7, >= 6.1.7.3)
   rake
+  redis
   retryable
   rfc822
   roodi
