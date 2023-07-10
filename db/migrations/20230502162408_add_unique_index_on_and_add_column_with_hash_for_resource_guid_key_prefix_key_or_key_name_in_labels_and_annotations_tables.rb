@@ -94,7 +94,7 @@ Sequel.migration do
 
       # add new column, hash, unique index and triggers for label tables
       label_tables_to_migrate.each do |table, table_short|
-        prefix = table_short.to_s
+        prefix = table_short
         index = prefix + '_resource_guid_key_prefix_key_name_hash_idx'
         insert_trigger = prefix + '_add_unique_hash_insert_trigger'
         update_trigger = prefix + '_add_unique_hash_update_trigger'
@@ -205,7 +205,7 @@ Sequel.migration do
 
       # add new column, hash, unique index and triggers for annotation tables
       annotaion_tables_to_migrate.each do |table, table_short|
-        prefix = table_short.to_s
+        prefix = table_short
         index = prefix + '_resource_guid_key_prefix_key_hash_idx'
         insert_trigger = prefix + '_add_unique_hash_insert_trigger'
         update_trigger = prefix + '_add_unique_hash_update_trigger'
@@ -316,46 +316,52 @@ Sequel.migration do
   end
 
   down do
+    collate_opts = {}
+    dbtype = if self.class.name.match?(/mysql/i)
+               collate_opts[:collate] = :utf8_bin
+               'mysql'
+             elsif self.class.name.match?(/postgres/i)
+               'postgres'
+             else
+               raise 'unknown database'
+             end
+
     label_tables_to_migrate.each do |table, table_short|
-      self[table].filter(key_prefix: '').all.each do |t|
-        t.update(key_prefix: nil)
-      end
-      self[table].filter(key_name: '').all.each do |t|
-        t.update(key: nil)
-      end
-      self[table].filter(resource_guid: '').all.each do |t|
-        t.update(resource_guid: nil)
-      end
-      prefix = table_short.to_s
-      index = prefix + '_resource_guid_key_prefix_key_name_hash_idx'
+      prefix = table_short
       insert_trigger = prefix + '_add_unique_hash_insert_trigger'
       update_trigger = prefix + '_add_unique_hash_update_trigger'
       alter_table table do
-        drop_index [:resource_guid_key_prefix_key_name_hash], name: index, type: :unique
-        drop_column [:resource_guid_key_prefix_key_name_hash]
-        drop_trigger [:resource_guid_key_prefix_key_name_hash], name: insert_trigger
-        drop_trigger [:resource_guid_key_prefix_key_name_hash], name: update_trigger
+        drop_column :resource_guid_key_prefix_key_name_hash
+      end
+      if dbtype == 'mysql'
+        run <<-SQL
+          DROP TRIGGER #{insert_trigger};
+          DROP TRIGGER #{update_trigger};
+        SQL
+      elsif dbtype == 'postgres'
+        run <<-SQL
+          DROP TRIGGER #{insert_trigger} on #{table};
+          DROP TRIGGER #{update_trigger} on #{table};
+        SQL
       end
     end
     annotaion_tables_to_migrate.each do |table, table_short|
-      self[table].filter(key_prefix: '').all.each do |t|
-        t.update(key_prefix: nil)
-      end
-      self[table].filter(key: '').all.each do |t|
-        t.update(key: nil)
-      end
-      self[table].filter(resource_guid: '').all.each do |t|
-        t.update(resource_guid: nil)
-      end
-      prefix = table_short.to_s
-      index = prefix + '_resource_guid_key_prefix_key_hash_idx'
+      prefix = table_short
       insert_trigger = prefix + '_add_unique_hash_insert_trigger'
       update_trigger = prefix + '_add_unique_hash_update_trigger'
       alter_table table do
-        drop_index [:resource_guid_key_prefix_key_hash], name: index, type: :unique
-        drop_column [:resource_guid_key_prefix_key_hash]
-        drop_trigger [:resource_guid_key_prefix_key_hash], name: insert_trigger
-        drop_trigger [:resource_guid_key_prefix_key_hash], name: update_trigger
+        drop_column :resource_guid_key_prefix_key_hash
+      end
+      if dbtype == 'mysql'
+        run <<-SQL
+          DROP TRIGGER #{insert_trigger};
+          DROP TRIGGER #{update_trigger};
+        SQL
+      elsif dbtype == 'postgres'
+        run <<-SQL
+          DROP TRIGGER #{insert_trigger} on #{table};
+          DROP TRIGGER #{update_trigger} on #{table};
+        SQL
       end
     end
   end
