@@ -7,7 +7,6 @@ module VCAP::CloudController
     CLEANUPS = [
       { name: 'app_usage_events', class: Jobs::Runtime::AppUsageEventsCleanup, time: '18:00', arg_from_config: [:app_usage_events, :cutoff_age_in_days] },
       { name: 'audit_events', class: Jobs::Runtime::EventsCleanup, time: '20:00', arg_from_config: [:audit_events, :cutoff_age_in_days] },
-      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup, time: '21:00', arg_from_config: [:failed_jobs, :cutoff_age_in_days] },
       { name: 'service_usage_events', class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00', arg_from_config: [:service_usage_events, :cutoff_age_in_days] },
       { name: 'completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00', arg_from_config: [:completed_tasks, :cutoff_age_in_days] },
       { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
@@ -23,6 +22,7 @@ module VCAP::CloudController
     FREQUENTS = [
       { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup },
       { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup },
+      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup }
     ].freeze
 
     def initialize(config)
@@ -69,7 +69,7 @@ module VCAP::CloudController
         }
         @clock.schedule_frequent_worker_job(**clock_opts) do
           klass = job_config[:class]
-          klass.new(@config.get(job_config[:name].to_sym, :expiration_in_seconds))
+          klass.new(**@config.get(job_config[:name].to_sym).reject { |k| [:frequency_in_seconds].include?(k) })
         end
       end
     end

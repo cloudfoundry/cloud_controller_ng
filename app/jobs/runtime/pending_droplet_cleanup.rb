@@ -6,7 +6,7 @@ module VCAP::CloudController
 
         attr_reader :expiration_in_seconds
 
-        def initialize(expiration_in_seconds)
+        def initialize(expiration_in_seconds:)
           @expiration_in_seconds = expiration_in_seconds
         end
 

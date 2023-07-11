@@ -18,7 +18,7 @@ module VCAP::CloudController
           },
           app_usage_events: { cutoff_age_in_days: 1, },
           audit_events: { cutoff_age_in_days: 3, },
-          failed_jobs: { cutoff_age_in_days: 4, },
+          failed_jobs: { frequency_in_seconds: 400, cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10 },
           service_usage_events: { cutoff_age_in_days: 5, },
           completed_tasks: { cutoff_age_in_days: 6, },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
@@ -67,12 +67,6 @@ module VCAP::CloudController
           expect(args).to eql(name: 'audit_events', at: '20:00', priority: 0)
           expect(Jobs::Runtime::EventsCleanup).to receive(:new).with(3).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::EventsCleanup)
-        end
-
-        expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'failed_jobs', at: '21:00', priority: 0)
-          expect(Jobs::Runtime::FailedJobsCleanup).to receive(:new).with(4).and_call_original
-          expect(block.call).to be_instance_of(Jobs::Runtime::FailedJobsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
@@ -143,14 +137,20 @@ module VCAP::CloudController
         allow(clock).to receive(:schedule_frequent_inline_job)
         expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
           expect(args).to eql(name: 'pending_droplets', interval: 300)
-          expect(Jobs::Runtime::PendingDropletCleanup).to receive(:new).with(600).and_call_original
+          expect(Jobs::Runtime::PendingDropletCleanup).to receive(:new).with(expiration_in_seconds: 600).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PendingDropletCleanup)
         end
 
         expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
           expect(args).to eql(name: 'pending_builds', interval: 400)
-          expect(Jobs::Runtime::PendingBuildCleanup).to receive(:new).with(700).and_call_original
+          expect(Jobs::Runtime::PendingBuildCleanup).to receive(:new).with(expiration_in_seconds: 700).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PendingBuildCleanup)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'failed_jobs', interval: 400)
+          expect(Jobs::Runtime::FailedJobsCleanup).to receive(:new).with(cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::FailedJobsCleanup)
         end
 
         schedule.start
