@@ -334,15 +334,11 @@ Sequel.migration do
         drop_column :resource_guid_key_prefix_key_name_hash
       end
       if dbtype == 'mysql'
-        run <<-SQL
-          DROP TRIGGER #{insert_trigger};
-          DROP TRIGGER #{update_trigger};
-        SQL
+        run("DROP TRIGGER IF EXISTS `#{insert_trigger}`;")
+        run("DROP TRIGGER IF EXISTS `#{update_trigger}`;")
       elsif dbtype == 'postgres'
-        run <<-SQL
-          DROP TRIGGER #{insert_trigger} on #{table};
-          DROP TRIGGER #{update_trigger} on #{table};
-        SQL
+        run("DROP TRIGGER IF EXISTS #{insert_trigger} ON #{table};")
+        run("DROP TRIGGER IF EXISTS #{update_trigger} ON #{table};")
       end
     end
     annotaion_tables_to_migrate.each do |table, table_short|
@@ -353,15 +349,11 @@ Sequel.migration do
         drop_column :resource_guid_key_prefix_key_hash
       end
       if dbtype == 'mysql'
-        run <<-SQL
-          DROP TRIGGER #{insert_trigger};
-          DROP TRIGGER #{update_trigger};
-        SQL
+        run("DROP TRIGGER IF EXISTS `#{insert_trigger}`;")
+        run("DROP TRIGGER IF EXISTS `#{update_trigger}`;")
       elsif dbtype == 'postgres'
-        run <<-SQL
-          DROP TRIGGER #{insert_trigger} on #{table};
-          DROP TRIGGER #{update_trigger} on #{table};
-        SQL
+        run("DROP TRIGGER IF EXISTS #{insert_trigger} ON #{table};")
+        run("DROP TRIGGER IF EXISTS #{update_trigger} ON #{table};")
       end
     end
   end
