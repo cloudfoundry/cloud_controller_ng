@@ -936,8 +936,8 @@ query param can be used with a single resource or a list of resources.</p>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b90f287b-fcdd-4cbb-9523-1a8dbd2a9837"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"staticfile"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
-   </span><span class="s2">"included"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"included"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"spaces"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
          </span><span class="p">{</span><span class="w">
             </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00b76d5c-5176-4cbc-be5d-0bd76363dca9"</span><span class="p">,</span><span class="w">
@@ -19413,9 +19413,8 @@ and unweighted destinations for a route is not allowed.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
   </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
-    </span><span class="p">}</span><span class="err">,</span><span class="w">
-  </span><span class="s2">"links"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -19423,7 +19422,7 @@ and unweighted destinations for a route is not allowed.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
-</span><span class="err">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 </span></code></pre>
 
 <p>This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)</p>
