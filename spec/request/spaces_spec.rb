@@ -231,9 +231,9 @@ RSpec.describe 'Spaces' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guid: space.guid)
 
-        h['org_auditor'] =                 { code: 404, response_guid: nil }
-        h['org_billing_manager'] =         { code: 404, response_guid: nil }
-        h['no_role'] =                     { code: 404, response_object: nil }
+        h['org_auditor']         = { code: 404, response_guid: nil }
+        h['org_billing_manager'] = { code: 404, response_guid: nil }
+        h['no_role']             = { code: 404, response_object: nil }
         h
       end
 
@@ -485,12 +485,12 @@ RSpec.describe 'Spaces' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid, space3.guid])
 
-        h['org_auditor'] =                 { code: 200, response_guids: [] }
-        h['org_billing_manager'] =         { code: 200, response_guids: [] }
-        h['space_manager'] =               { code: 200, response_guids: [space1.guid] }
-        h['space_auditor'] =               { code: 200, response_guids: [space1.guid] }
-        h['space_developer'] =             { code: 200, response_guids: [space1.guid] }
-        h['space_supporter'] = { code: 200, response_guids: [space1.guid] }
+        h['org_auditor']         = { code: 200, response_guids: [] }
+        h['org_billing_manager'] = { code: 200, response_guids: [] }
+        h['space_manager']       = { code: 200, response_guids: [space1.guid] }
+        h['space_auditor']       = { code: 200, response_guids: [space1.guid] }
+        h['space_developer']     = { code: 200, response_guids: [space1.guid] }
+        h['space_supporter']     = { code: 200, response_guids: [space1.guid] }
 
         h['no_role'] = { code: 200, response_objects: [] }
         h
@@ -1224,9 +1224,9 @@ RSpec.describe 'Spaces' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_object: expected_response)
 
-        h['org_auditor'] =                 { code: 404, response_guid: nil }
-        h['org_billing_manager'] =         { code: 404, response_guid: nil }
-        h['no_role'] =                     { code: 404, response_object: nil }
+        h['org_auditor']         = { code: 404, response_guid: nil }
+        h['org_billing_manager'] = { code: 404, response_guid: nil }
+        h['no_role']             = { code: 404, response_object: nil }
         h
       end
 
@@ -1256,11 +1256,11 @@ RSpec.describe 'Spaces' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403)
-        h['no_role'] =             { code: 404 }
-        h['org_auditor'] =         { code: 404 }
+        h['no_role']             = { code: 404 }
+        h['org_auditor']         = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
-        h['org_manager'] =         { code: 403 }
-        h['admin'] =               { code: 200 }
+        h['org_manager']         = { code: 403 }
+        h['admin']               = { code: 200 }
         h
       end
 
