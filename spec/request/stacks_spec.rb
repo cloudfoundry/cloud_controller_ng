@@ -22,6 +22,8 @@ RSpec.describe 'Stacks Request' do
             {
               'name' => stack1.name,
               'description' => stack1.description,
+              'run_rootfs_image' => stack1.run_rootfs_image,
+              'build_rootfs_image' => stack1.build_rootfs_image,
               'guid' => stack1.guid,
               'default' => false,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -36,6 +38,8 @@ RSpec.describe 'Stacks Request' do
             {
               'name' => stack2.name,
               'description' => stack2.description,
+              'run_rootfs_image' => stack2.run_rootfs_image,
+              'build_rootfs_image' => stack2.build_rootfs_image,
               'guid' => stack2.guid,
               'default' => true,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -114,6 +118,8 @@ RSpec.describe 'Stacks Request' do
                 {
                   'name' => stack1.name,
                   'description' => stack1.description,
+                  'run_rootfs_image' => stack1.run_rootfs_image,
+                  'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -128,6 +134,8 @@ RSpec.describe 'Stacks Request' do
                 {
                   'name' => stack2.name,
                   'description' => stack2.description,
+                  'run_rootfs_image' => stack2.run_rootfs_image,
+                  'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -165,6 +173,8 @@ RSpec.describe 'Stacks Request' do
                 {
                   'name' => stack1.name,
                   'description' => stack1.description,
+                  'run_rootfs_image' => stack1.run_rootfs_image,
+                  'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -179,6 +189,8 @@ RSpec.describe 'Stacks Request' do
                 {
                   'name' => stack3.name,
                   'description' => stack3.description,
+                  'run_rootfs_image' => stack3.run_rootfs_image,
+                  'build_rootfs_image' => stack3.build_rootfs_image,
                   'guid' => stack3.guid,
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -216,6 +228,8 @@ RSpec.describe 'Stacks Request' do
                 {
                   'name' => stack2.name,
                   'description' => stack2.description,
+                  'run_rootfs_image' => stack2.run_rootfs_image,
+                  'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -267,6 +281,8 @@ RSpec.describe 'Stacks Request' do
                   {
                     'name' => stack1.name,
                     'description' => stack1.description,
+                    'run_rootfs_image' => stack1.run_rootfs_image,
+                    'build_rootfs_image' => stack1.build_rootfs_image,
                     'guid' => stack1.guid,
                     'default' => false,
                     'metadata' => {
@@ -301,6 +317,8 @@ RSpec.describe 'Stacks Request' do
       {
         'name' => stack.name,
         'description' => stack.description,
+        'run_rootfs_image' => stack.run_rootfs_image,
+        'build_rootfs_image' => stack.build_rootfs_image,
         'guid' => stack.guid,
         'default' => false,
         'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -617,6 +635,8 @@ RSpec.describe 'Stacks Request' do
         {
           'name' => 'the-name',
           'description' => 'the-description',
+          'run_rootfs_image' => created_stack.run_rootfs_image,
+          'build_rootfs_image' => created_stack.build_rootfs_image,
           'default' => false,
           'metadata' => {
             'labels' => {
@@ -679,6 +699,8 @@ RSpec.describe 'Stacks Request' do
         {
           'name' => stack.name,
           'description' => stack.description,
+          'run_rootfs_image' => stack.run_rootfs_image,
+          'build_rootfs_image' => stack.build_rootfs_image,
           'default' => false,
           'metadata' => {
             'labels' => {

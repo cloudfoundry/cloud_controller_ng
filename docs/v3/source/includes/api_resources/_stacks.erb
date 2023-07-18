@@ -5,6 +5,8 @@
    "updated_at": "2018-11-09T22:43:28Z",
    "name": "my-stack",
    "description": "Here is my stack!",
+   "build_rootfs_image": "my-stack",
+   "run_rootfs_image": "my-stack",
    "default": true,
    "metadata": {
      "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
@@ -40,6 +42,8 @@
       "created_at": "2018-11-09T22:43:28Z",
       "updated_at": "2018-11-09T22:43:28Z",
       "name": "my-stack-1",
+      "build_rootfs_image": "my-stack-1-build",
+      "run_rootfs_image": "my-stack-1-run",
       "description": "This is my first stack!",
       "default": true,
       "metadata": {
@@ -58,6 +62,8 @@
       "updated_at": "2018-11-09T22:43:29Z",
       "name": "my-stack-2",
       "description": "This is my second stack!",
+      "build_rootfs_image": "my-stack-2-build",
+      "run_rootfs_image": "my-stack-2-run",
       "default": false,
       "metadata": {
         "labels": {},
