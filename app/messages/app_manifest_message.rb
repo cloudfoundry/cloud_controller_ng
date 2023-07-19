@@ -23,6 +23,9 @@ module VCAP::CloudController
       :health_check_invocation_timeout,
       :health_check_timeout,
       :health_check_type,
+      :readiness_health_check_http_endpoint,
+      :readiness_health_check_type,
+      :readiness_health_check_invocation_timeout,
       :instances,
       :metadata,
       :memory,
@@ -208,10 +211,17 @@ module VCAP::CloudController
       mapping[:health_check_http_endpoint] = health_check_http_endpoint if requested?(:health_check_http_endpoint)
       mapping[:timeout] = timeout if requested?(:timeout)
       mapping[:health_check_invocation_timeout] = health_check_invocation_timeout if requested?(:health_check_invocation_timeout)
+      mapping[:readiness_health_check_invocation_timeout] = readiness_health_check_invocation_timeout if requested?(:readiness_health_check_invocation_timeout)
+      mapping[:readiness_health_check_http_endpoint] = readiness_health_check_http_endpoint if requested?(:readiness_health_check_http_endpoint)
 
       if requested?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(health_check_type)
       end
+
+      if requested?(:readiness_health_check_type)
+        mapping[:readiness_health_check_type] = converted_health_check_type(readiness_health_check_type)
+      end
+
       mapping
     end
 
@@ -221,12 +231,17 @@ module VCAP::CloudController
       mapping[:health_check_http_endpoint] = params[:health_check_http_endpoint] if params.key?(:health_check_http_endpoint)
       mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       mapping[:health_check_invocation_timeout] = params[:health_check_invocation_timeout] if params.key?(:health_check_invocation_timeout)
+      mapping[:readiness_health_check_invocation_timeout] = params[:readiness_health_check_invocation_timeout] if params.key?(:readiness_health_check_invocation_timeout)
+      mapping[:readiness_health_check_http_endpoint] = params[:readiness_health_check_http_endpoint] if params.key?(:readiness_health_check_http_endpoint)
       mapping[:timeout] = params[:timeout] if params.key?(:timeout)
       mapping[:type] = params[:type]
 
       if params.key?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
         mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
+      end
+      if params.key?(:readiness_health_check_type)
+        mapping[:readiness_health_check_type] = converted_health_check_type(params[:readiness_health_check_type])
       end
       mapping
     end
