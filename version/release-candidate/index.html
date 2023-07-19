@@ -30752,6 +30752,8 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -30799,6 +30801,16 @@ An application will automatically use buildpacks associated with the application
 <td>The description of the stack</td>
 </tr>
 <tr>
+<td><strong>build_rootfs_image</strong></td>
+<td>_string</td>
+<td>The name of the stack image associated with staging/building Apps. If a stack does not have unique images, this will be the same as the stack name.</td>
+</tr>
+<tr>
+<td><strong>run_rootfs_image</strong></td>
+<td>_string</td>
+<td>The name of the stack image associated with running Apps + Tasks. If a stack does not have unique images, this will be the same as the stack name.</td>
+</tr>
+<tr>
 <td><strong>default</strong></td>
 <td><em>boolean</em></td>
 <td>Whether the stack is configured to be the default stack for new applications.</td>
@@ -30842,6 +30854,8 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -30935,6 +30949,8 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -30997,6 +31013,8 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1-build"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1-run"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -31015,6 +31033,8 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my second stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-build"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-run"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -31348,6 +31368,8 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"key"</span><span class="p">:</span><span class="s2">"value"</span><span class="p">},</span><span class="w">
