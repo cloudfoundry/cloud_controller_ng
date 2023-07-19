@@ -3,7 +3,7 @@ require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ProcessUpdateMessage < MetadataBaseMessage
-    register_allowed_keys [:command, :health_check]
+    register_allowed_keys [:command, :health_check, :readiness_health_check]
 
     def initialize(params={})
       super(params)
@@ -46,6 +46,22 @@ module VCAP::CloudController
     allow_nil: true,
     uri_path: true
 
+    validates :readiness_health_check_type,
+    inclusion: {
+      in: [HealthCheckTypes::PORT, HealthCheckTypes::PROCESS, HealthCheckTypes::HTTP],
+      message: 'must be "port", "process", or "http"'
+    },
+    if: -> { readiness_health_check && readiness_health_check.key?(:type) }
+
+    validates :readiness_health_check_invocation_timeout,
+    allow_nil: true,
+    numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: MAX_DB_INT }
+
+    validates :readiness_health_check_endpoint,
+    length: { maximum: 255 },
+    allow_nil: true,
+    uri_path: true
+
     def health_check_type
       HashUtils.dig(health_check, :type)
     end
@@ -62,6 +78,19 @@ module VCAP::CloudController
       HashUtils.dig(health_check, :data, :endpoint)
     end
 
+    def readiness_health_check_type
+      HashUtils.dig(readiness_health_check, :type)
+    end
+
+    def readiness_health_check_invocation_timeout
+      HashUtils.dig(readiness_health_check, :data, :invocation_timeout)
+    end
+
+    def readiness_health_check_endpoint
+      HashUtils.dig(readiness_health_check, :data, :endpoint)
+    end
+
+    # TODO: prob add something here eventually
     def audit_hash
       super(exclude: [:health_check_type, :health_check_timeout, :health_check_invocation_timeout, :health_check_endpoint])
     end
