@@ -311,14 +311,6 @@ module VCAP::CloudController
               reset_interval_in_minutes: Integer,
             },
 
-            opi: {
-              enabled: bool,
-              url: String,
-              opi_staging: bool,
-              cc_uploader_url: String,
-              optional(:experimental_enable_crds) => bool,
-            },
-
             allow_app_ssh_access: bool,
 
             optional(:external_host) => String,

@@ -48,10 +48,6 @@ module VCAP::CloudController
           )
         end
 
-        if VCAP::CloudController::Config.kubernetes_api_configured?
-          route_resource_manager.update_destinations(route_mapping.route)
-        end
-
         route_mapping
       rescue Sequel::ValidationFailed => e
         if e.errors && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]) && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]).include?(:unique)

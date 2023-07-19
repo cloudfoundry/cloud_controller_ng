@@ -89,7 +89,6 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
-    # TODO: only fail if also not `kpack` app lifecycle
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end

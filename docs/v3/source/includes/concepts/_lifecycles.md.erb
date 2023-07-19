@@ -34,8 +34,6 @@ If buildpacks are not specified, then Cloud Foundry will automatically detect a
 compatible buildpack, based on the files in an app's package. If a stack is not
 specified, then the app will default to the operator-configured default stack.
 
-**Note**: This lifecycle is not supported on Cloud Foundry for Kubernetes.
-
 #### Buildpack lifecycle object
 
 Name | Type | Description
@@ -67,33 +65,3 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `docker`
 **data** | _object_ | Data is not used by the Docker lifecycle; valid value is `{}`
-
-### Kpack lifecycle
-
-```
-Example Kpack Lifecycle
-```
-
-```json
-{
-  "type": "kpack",
-  "data": {
-    "buildpacks": ["paketo-buildpacks/java"]
-  }
-}
-```
-
-This is the default lifecycle for Cloud Foundry for Kubernetes. When staging an app with this lifecycle, the app source code will be
-built into an OCI image using a [Cloud Native Buildpack](https://buildpacks.io/) and [kpack](https://github.com/pivotal/kpack).
-This image is published to the app image registry and a `docker` lifecycle droplet is created referring to the image.
-
-When running an app with this lifecycle, a container is created and the OCI image is executed inside of it.
-
-**Note**: This lifecycle is not supported on Cloud Foundry for VMs.
-
-#### Kpack lifecycle object
-
-Name | Type | Description
----- | ---- | -----------
-**type** | _string_ | `kpack`
-**data.buildpacks** | _list of strings_ | An optional list of buildpack names. Specify an empty list to auto-detect a suitable buildpack during staging

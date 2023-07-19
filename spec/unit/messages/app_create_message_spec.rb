@@ -16,7 +16,7 @@ module VCAP::CloudController
                   happy: 'annotation',
                 },
             },
-            lifecycle: { type: 'kpack', data: {} }
+            lifecycle: { type: 'docker', data: {} }
         }
       message = AppCreateMessage.new(params)
       expect(message).to be_valid
@@ -294,7 +294,7 @@ module VCAP::CloudController
               message = AppCreateMessage.new(params)
 
               expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker, kpack')
+              expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker')
             end
           end
 

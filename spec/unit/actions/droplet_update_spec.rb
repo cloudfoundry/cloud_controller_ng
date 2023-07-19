@@ -120,30 +120,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when the droplet type is kpack' do
-          let!(:docker_droplet) do
-            VCAP::CloudController::DropletModel.make(:kpack)
-          end
-
-          let(:message) do
-            VCAP::CloudController::DropletUpdateMessage.new({
-              image: 'new-image-reference'
-            })
-          end
-
-          context 'the image of a staged kpack droplet is requested to be updated' do
-            before do
-              docker_droplet.update(docker_receipt_image: 'some-image-reference')
-            end
-
-            it 'updates the droplet record with new image reference' do
-              expect(message).to be_valid
-              updated_droplet = droplet_update.update(docker_droplet, message)
-              expect(updated_droplet.docker_receipt_image).to eq 'new-image-reference'
-            end
-          end
-        end
       end
     end
   end

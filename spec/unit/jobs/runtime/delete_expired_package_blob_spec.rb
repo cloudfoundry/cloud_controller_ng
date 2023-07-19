@@ -10,33 +10,8 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       context 'when using a package registry' do
-        let(:registry_delete) { instance_double(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete) }
-
         before do
           TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
-          allow(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to receive(:new).and_return(registry_delete)
-          allow(registry_delete).to receive(:perform)
-        end
-
-        context 'when the package type is bits' do
-          it 'delegates to registry delete job' do
-            job.perform
-
-            expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).to have_received(:new).
-              with(package.bits_image_reference(digest: false))
-            expect(registry_delete).to have_received(:perform)
-          end
-        end
-
-        context 'when the package type is docker' do
-          let(:type) { PackageModel::DOCKER_TYPE }
-
-          it 'does not perform registry deletion' do
-            job.perform
-
-            expect(VCAP::CloudController::Jobs::Kubernetes::RegistryDelete).not_to have_received(:new)
-            expect(registry_delete).not_to have_received(:perform)
-          end
         end
 
         it 'nils the package_hash and sha256_checksum values' do

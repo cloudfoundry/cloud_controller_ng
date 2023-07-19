@@ -148,13 +148,6 @@ module VCAP::CloudController
               routing_client_secret: String,
             },
 
-            opi: {
-              enabled: bool,
-              url: String,
-              opi_staging: bool,
-              optional(:experimental_enable_crds) => bool,
-            },
-
             allow_app_ssh_access: bool,
 
             perform_blob_cleanup: bool,

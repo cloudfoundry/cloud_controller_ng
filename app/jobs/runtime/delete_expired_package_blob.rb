@@ -1,4 +1,3 @@
-require 'jobs/kubernetes/registry_delete'
 require 'jobs/runtime/blobstore_delete'
 
 module VCAP::CloudController
@@ -42,7 +41,7 @@ module VCAP::CloudController
         def create_package_source_deletion_job(package)
           return Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore) unless package_registry_configured?
 
-          package.bits? ? Jobs::Kubernetes::RegistryDelete.new(package.bits_image_reference) : nil
+          nil
         end
       end
     end

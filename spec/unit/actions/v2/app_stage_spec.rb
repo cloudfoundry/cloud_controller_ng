@@ -214,47 +214,6 @@ module VCAP::CloudController
               expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
             end
           end
-
-          context 'kpack lifecycle' do
-            before do
-              TestConfig.override(
-                kubernetes: {
-                  host_url: 'https://kubernetes.example.com',
-                  kpack: {
-                    builder_namespace: 'cf-workloads-staging',
-                    registry_service_account_name: 'fake-registry-service-account',
-                    registry_tag_base: 'gcr.io/fake-image-repository',
-                  }
-                },
-              )
-              allow_any_instance_of(Kpack::Stager).to receive(:stage).and_return 'staging-complete'
-              allow_any_instance_of(::VCAP::CloudController::KpackBuildpackListFetcher).to receive(:fetch_all).and_return([OpenStruct.new(name: 'paketo/java')])
-            end
-
-            it 'logs build creates' do
-              Timecop.freeze do
-                app = AppModel.make(:kpack)
-                process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
-                PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
-
-                action.stage(process)
-                expected_json = {
-                  'telemetry-source' => 'cloud_controller_ng',
-                  'telemetry-time' => Time.now.to_datetime.rfc3339,
-                  'create-build' => {
-                    'api-version' => 'v2',
-                    'lifecycle' =>  'kpack',
-                    'buildpacks' =>  [],
-                    'stack' =>  nil,
-                    'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-                    'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.latest_build.guid),
-                    'user-id' =>  OpenSSL::Digest.hexdigest('SHA256', 'userguid'),
-                  }
-                }
-                expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
-              end
-            end
-          end
         end
       end
     end

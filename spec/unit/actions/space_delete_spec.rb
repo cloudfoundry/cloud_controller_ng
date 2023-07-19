@@ -15,10 +15,8 @@ module VCAP::CloudController
       let(:space_dataset) { Space.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
-      let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
         TestConfig.override(kubernetes: {})
       end
 

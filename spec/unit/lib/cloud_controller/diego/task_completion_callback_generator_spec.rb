@@ -29,20 +29,6 @@ module VCAP::CloudController
             )
           end
         end
-
-        context 'when kubernetes is configured' do
-          let(:kubernetes_config) do
-            {
-              host_url: 'https://main.default.svc.cluster-domain.example',
-            }
-          end
-
-          it 'configures the callback url with http and relies on Istio for mTLS' do
-            expect(generator.generate(task)).to eq(
-              "http://google.com:9090/internal/v4/tasks/#{task.guid}/completed"
-            )
-          end
-        end
       end
     end
   end

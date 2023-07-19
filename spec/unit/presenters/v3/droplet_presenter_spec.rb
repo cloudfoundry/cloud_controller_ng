@@ -232,36 +232,6 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
-      context 'kpack lifecycle' do
-        let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :kpack,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE
-          )
-        end
-
-        before do
-          droplet.docker_receipt_image = 'test-image'
-          droplet.save
-        end
-
-        it 'presents the docker image and lifecycle data' do
-          expect(result[:image]).to eq('test-image')
-          expect(result[:lifecycle][:type]).to eq('kpack')
-          expect(result[:lifecycle][:data]).to eq({})
-          expect(result[:links][:download]).to be_nil
-        end
-
-        context 'when show_secrets is false' do
-          let(:result) { DropletPresenter.new(droplet, show_secrets: false).to_hash }
-
-          it 'redacts the process_types and execution_metadata' do
-            expect(result[:process_types]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-            expect(result[:execution_metadata]).to eq('[PRIVATE DATA HIDDEN]')
-          end
-        end
-      end
-
       context 'when there are labels and annotations for the droplet' do
         let!(:release_label) do
           VCAP::CloudController::DropletLabelModel.make(

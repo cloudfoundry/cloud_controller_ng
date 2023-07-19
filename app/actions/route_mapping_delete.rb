@@ -29,10 +29,6 @@ module VCAP::CloudController
           route_handlers.each do |handler|
             handler.update_route_information(perform_validation: false)
           end
-
-          if VCAP::CloudController::Config.kubernetes_api_configured?
-            route_resource_manager.update_destinations(route_mapping.route.reload)
-          end
         end
       end
     end

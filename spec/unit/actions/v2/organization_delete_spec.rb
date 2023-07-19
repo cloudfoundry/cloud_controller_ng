@@ -37,10 +37,8 @@ module VCAP::CloudController
         let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
         let(:user) { User.make }
         let(:user_email) { 'user@example.com' }
-        let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
           stub_deprovision(service_instance, accepts_incomplete: true)
           stub_deprovision(service_instance_2, accepts_incomplete: true)
         end

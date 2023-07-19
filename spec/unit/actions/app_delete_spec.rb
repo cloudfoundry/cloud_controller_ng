@@ -10,13 +10,6 @@ module VCAP::CloudController
 
     let!(:app) { AppModel.make }
     let!(:app_dataset) { [app] }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
-    let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager, update_destinations: nil) }
-
-    before do
-      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-      allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-    end
 
     describe '#delete' do
       it 'deletes the app record' do
@@ -46,19 +39,6 @@ module VCAP::CloudController
         )
 
         app_delete.delete(app_dataset)
-      end
-
-      context 'when the kubernetes api is configured' do
-        before do
-          TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
-        end
-
-        it 'deletes the associated kpack resources' do
-          build_namespace = VCAP::CloudController::Config.config.kpack_builder_namespace
-          expect(k8s_api_client).to receive(:delete_image).with(app.guid, build_namespace)
-          expect(k8s_api_client).to receive(:delete_builder).with("app-#{app.guid}", build_namespace)
-          app_delete.delete(app_dataset)
-        end
       end
 
       describe 'recursive deletion' do

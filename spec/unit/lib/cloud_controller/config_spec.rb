@@ -300,19 +300,6 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the config has a "kubernetes" key' do
-              let(:config_contents) {
-                { 'kubernetes' => { 'host_url' => 'kubernetes.example.com' } }
-              }
-
-              it 'uses the Kubernetes schema to validate the config' do
-                allow(VCAP::CloudController::ConfigSchemas::Kubernetes::ApiSchema).to receive(:validate)
-                Config.load_from_file(cc_config_file.path, context: :api).config_hash
-
-                expect(VCAP::CloudController::ConfigSchemas::Kubernetes::ApiSchema).to have_received(:validate)
-              end
-            end
-
             context 'when the config has no "kubernetes" key' do
               let(:config_contents) {
                 { 'some_non_kubernetes_key' => true }
@@ -544,46 +531,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#kubernetes_service_account_token' do
-      subject(:config_instance) { Config.new(test_config_hash.merge(k8s_config_hash)) }
-
-      let(:k8s_config_hash) do
-        {
-          kubernetes: {
-            service_account: { token_file: service_account_token_file.path },
-            host_url: 'http://k8s.example.com',
-          }
-        }
-      end
-
-      let(:expected_service_account_token) { 'service-account-token' }
-      let(:service_account_token_file) do
-        Tempfile.new('service_account_token').tap do |file|
-          file.write(expected_service_account_token)
-          file.close
-        end
-      end
-
-      it 'returns the contents' do
-        expect(config_instance.kubernetes_service_account_token).to(eq(expected_service_account_token))
-      end
-
-      context 'when no kubernetes api is configured' do
-        let(:k8s_config_hash) do
-          {
-            kubernetes: {
-              service_account: { token_file: service_account_token_file.path },
-              host_url: '',
-            }
-          }
-        end
-
-        it 'raises' do
-          expect { config_instance.kubernetes_service_account_token }.to(raise_error(Config::KubernetesApiNotConfigured))
-        end
-      end
-    end
-
     describe 'broker_client_async_poll_exponential_backoff_rate' do
       let(:cc_config_file) do
         config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
@@ -634,46 +581,6 @@ module VCAP::CloudController
           it 'succeeds' do
             expect(config.get(:broker_client_async_poll_exponential_backoff_rate)).to eq 1
           end
-        end
-      end
-    end
-
-    describe '#kubernetes_ca_cert' do
-      subject(:config_instance) { Config.new(test_config_hash.merge(k8s_config_hash)) }
-
-      let(:k8s_config_hash) do
-        {
-          kubernetes: {
-            ca_file: ca_file.path,
-            host_url: 'http://k8s.example.com',
-          }
-        }
-      end
-
-      let(:expected_ca_cert) { 'some-ca' }
-      let(:ca_file) do
-        Tempfile.new('ca_file').tap do |file|
-          file.write(expected_ca_cert)
-          file.close
-        end
-      end
-
-      it 'returns the contents' do
-        expect(config_instance.kubernetes_ca_cert).to(eq(expected_ca_cert))
-      end
-
-      context 'when no kubernetes api is configured' do
-        let(:k8s_config_hash) do
-          {
-            kubernetes: {
-              ca_file: ca_file.path,
-              host_url: '',
-            }
-          }
-        end
-
-        it 'raises' do
-          expect { config_instance.kubernetes_ca_cert }.to(raise_error(Config::KubernetesApiNotConfigured))
         end
       end
     end

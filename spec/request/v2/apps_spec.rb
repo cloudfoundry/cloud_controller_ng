@@ -583,21 +583,6 @@ RSpec.describe 'Apps' do
           expect(app_model.lifecycle_type).to eq('buildpack')
         end
       end
-
-      context 'cc.default_app_lifecycle is set to kpack' do
-        before do
-          TestConfig.override(default_app_lifecycle: 'kpack')
-        end
-
-        it 'creates an app with the kpack lifecycle when none is specified in the request' do
-          post '/v2/apps', create_request.to_json, headers_for(user)
-
-          expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
-          app_model = VCAP::CloudController::AppModel.first(guid: parsed_response['metadata']['guid'])
-          expect(app_model.lifecycle_type).to eq('kpack')
-        end
-      end
     end
 
     context 'telemetry' do
@@ -1137,11 +1122,6 @@ RSpec.describe 'Apps' do
 
   describe 'DELETE /v2/apps/:guid' do
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let(:k8s_api_client) { instance_double(Kubernetes::ApiClient, delete_image: nil, delete_builder: nil) }
-
-    before do
-      allow(CloudController::DependencyLocator.instance).to receive(:k8s_api_client).and_return(k8s_api_client)
-    end
 
     it 'deletes the specified app' do
       delete "/v2/apps/#{process.guid}", nil, headers_for(user)

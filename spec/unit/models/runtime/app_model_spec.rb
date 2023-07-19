@@ -276,18 +276,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'the model contains kpack_lifecycle_data' do
-        before { KpackLifecycleDataModel.make(app: app_model) }
-
-        it 'returns the string "kpack" if kpack_lifecycle_data is on the model' do
-          expect(app_model.lifecycle_type).to eq('kpack')
-        end
-      end
-
-      context 'the model does not contain buildpack_lifecycle_data or kpack_lifecycle_data' do
+      context 'the model does not contain buildpack_lifecycle_data' do
         before do
           app_model.buildpack_lifecycle_data = nil
-          app_model.kpack_lifecycle_data = nil
           app_model.save
         end
 

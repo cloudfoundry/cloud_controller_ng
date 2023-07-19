@@ -24,22 +24,6 @@ module VCAP::CloudController
             TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
           end
 
-          context 'when the package type is bits' do
-            it 'schedules a job to the delete the package from the container registry' do
-              expect {
-                package_delete.delete(package)
-              }.to change {
-                Delayed::Job.count
-              }.by(1)
-
-              job = Delayed::Job.last
-              expect(job.handler).to include('VCAP::CloudController::Jobs::Kubernetes::RegistryDelete')
-              expect(job.handler).to include(package.bits_image_reference(digest: false))
-              expect(job.queue).to eq(Jobs::Queues.generic)
-              expect(job.guid).not_to be_nil
-            end
-          end
-
           context 'when the package type is docker' do
             let!(:package) { PackageModel.make(type: PackageModel::DOCKER_TYPE) }
 

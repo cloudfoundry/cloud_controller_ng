@@ -4,7 +4,6 @@ module VCAP::CloudController
   module V2
     RSpec.describe RouteMappingCreate do
       let(:logger) { instance_double(Steno::Logger) }
-      let(:route_resource_manager) { instance_double(Kubernetes::RouteResourceManager) }
       subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process, request_attrs, logger) }
 
       let(:space) { app.space }
@@ -22,8 +21,6 @@ module VCAP::CloudController
 
       before do
         allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
-        allow(CloudController::DependencyLocator.instance).to receive(:route_resource_manager).and_return(route_resource_manager)
-        allow(route_resource_manager).to receive(:update_destinations)
       end
 
       describe '#add' do
@@ -40,23 +37,6 @@ module VCAP::CloudController
         it 'delegates to the route handler to update route information' do
           route_mapping_create.add
           expect(route_handler).to have_received(:update_route_information)
-        end
-
-        context 'when targeting a Kubernetes API' do
-          before do
-            TestConfig.override(kubernetes: { host_url: 'https://kubernetes.example.com' })
-          end
-
-          it 'updates a route resource in Kubernetes' do
-            expect {
-              route_mapping = route_mapping_create.add
-
-              expect(route_resource_manager).to have_received(:update_destinations).with(route_mapping.route)
-
-              expect(route_mapping.route.guid).to eq(route.guid)
-              expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
-            }.to change { RouteMappingModel.count }.by(1)
-          end
         end
 
         describe 'app_port' do
@@ -290,7 +270,7 @@ module VCAP::CloudController
           let(:router_group_guid) { 'router-group-guid-1' }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: router_group_guid) }
-          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client, route_resource_manager: route_resource_manager) }
+          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
           let(:tcp_domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: router_group_guid) }
           let(:route) { Route.make(domain: tcp_domain, port: 5155, space: space) }
 

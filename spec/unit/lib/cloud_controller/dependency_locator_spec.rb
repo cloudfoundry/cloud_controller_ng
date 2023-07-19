@@ -512,237 +512,53 @@ RSpec.describe CloudController::DependencyLocator do
   end
 
   describe '#bbs_stager_client' do
-    context 'opi staging is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
-        expect(::OPI::StagerClient).to_not receive(:new)
-        locator.bbs_stager_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi staging is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal',
-            opi_staging: true
-          }
-        )
-      end
-
-      it 'uses opi' do
-        expect(VCAP::CloudController::Diego::BbsStagerClient).to_not receive(:new)
-        expect(::OPI::StagerClient).to receive(:new)
-        locator.bbs_stager_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
+      locator.bbs_stager_client
     end
   end
 
   describe '#bbs_apps_client' do
-    context 'opi is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsAppsClient).to receive(:new).with(diego_client, config)
-        expect(::OPI::Client).to_not receive(:new)
-        locator.bbs_apps_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(**{
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        }.merge(generate_test_kubeconfig))
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi apps client' do
-        expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-        expect(::OPI::Client).to receive(:new).with(locator.config)
-        expect(::OPI::KubernetesClient).to_not receive(:new)
-        locator.bbs_apps_client
-      end
-
-      context 'experimental crds are enabled' do
-        before do
-          TestConfig.override(**{
-            opi: {
-              enabled: true,
-              experimental_enable_crds: true,
-              url: 'http://custom-opi-url.service.cf.internal'
-            }
-          }.merge(generate_test_kubeconfig))
-        end
-
-        it 'uses the opi kubernetes client' do
-          expect(VCAP::CloudController::Diego::BbsAppsClient).to_not receive(:new)
-          expect(::OPI::KubernetesClient).to receive(:new).with(locator.config, instance_of(Kubernetes::ApiClient), instance_of(::OPI::Client))
-          locator.bbs_apps_client
-        end
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsAppsClient).to receive(:new).with(diego_client, config)
+      locator.bbs_apps_client
     end
   end
 
   describe '#build_instances_client' do
     let(:diego_client) { double }
-    context 'opi is disabled' do
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
-        expect(::OPI::InstancesClient).to_not receive(:new)
-        locator.bbs_instances_client
-      end
+    before do
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        )
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi apps client' do
-        expect(VCAP::CloudController::Diego::BbsInstancesClient).to_not receive(:new)
-        expect(::OPI::InstancesClient).to receive(:new)
-        locator.bbs_instances_client
-      end
-
-      it 'uses the configured opi url' do
-        expect(::OPI::InstancesClient).to receive(:new).with(locator.config)
-        locator.bbs_instances_client
-      end
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
+      locator.bbs_instances_client
     end
   end
 
   describe '#bbs_task_client' do
-    context 'opi is disabled' do
-      let(:diego_client) { double }
+    let(:diego_client) { double }
 
-      before do
-        allow(::Diego::Client).to receive(:new).and_return(diego_client)
-      end
-
-      it 'uses diego' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
-        expect(::OPI::TaskClient).to_not receive(:new)
-        locator.bbs_task_client
-      end
-    end
-
-    context 'opi is enabled' do
-      before do
-        TestConfig.override(
-          opi: {
-            enabled: true,
-            url: 'http://custom-opi-url.service.cf.internal'
-          }
-        )
-        allow(::Diego::Client).to receive(:new)
-      end
-
-      it 'uses the opi task client' do
-        expect(VCAP::CloudController::Diego::BbsTaskClient).to_not receive(:new)
-        expect(::OPI::TaskClient).to receive(:new)
-        locator.bbs_task_client
-      end
-
-      it 'uses the configured opi url' do
-        expect(::OPI::TaskClient).to receive(:new).with(
-          locator.config,
-          VCAP::CloudController::Diego::TaskEnvironmentVariableCollector)
-        locator.bbs_task_client
-      end
-    end
-  end
-
-  describe '#k8s_api_client' do
     before do
-      ca_file = Tempfile.new('k8s_node_ca.crt')
-      ca_file.write('my crt')
-      ca_file.close
-
-      token_file = Tempfile.new('token.token')
-      token_file.write('token')
-      token_file.close
-
-      TestConfig.override(**generate_test_kubeconfig)
+      allow(::Diego::Client).to receive(:new).and_return(diego_client)
     end
 
-    it 'creates a k8s client from config' do
-      build_kube_client_arg = nil
-      kpack_kube_client_arg = nil
-      route_kube_client_arg = nil
-      eirini_kube_client_arg = nil
-      allow(Kubernetes::ApiClient).to receive(:new) { |build_kube_client:, kpack_kube_client:, route_kube_client:, eirini_kube_client:|
-        build_kube_client_arg = build_kube_client
-        kpack_kube_client_arg = kpack_kube_client
-        route_kube_client_arg = route_kube_client
-        eirini_kube_client_arg = eirini_kube_client
-      }
-
-      locator.k8s_api_client
-
-      expect(build_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(build_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(build_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
-
-      expect(kpack_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(kpack_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(kpack_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/kpack.io'
-
-      expect(route_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(route_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(route_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/networking.cloudfoundry.org'
-
-      expect(eirini_kube_client_arg.ssl_options).to eq({ ca: 'my crt' })
-      expect(eirini_kube_client_arg.auth_options).to eq({ bearer_token: 'token' })
-      expect(eirini_kube_client_arg.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/eirini.cloudfoundry.org'
-    end
-
-    it 'always creates a new kpack client object from config' do
-      expect(locator.k8s_api_client).not_to eq(locator.k8s_api_client)
+    it 'uses diego' do
+      expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(config, diego_client)
+      locator.bbs_task_client
     end
   end
-end
-
-def generate_test_kubeconfig
-  ca_file = Tempfile.new('k8s_node_ca.crt')
-  ca_file.write('my crt')
-  ca_file.close
-
-  token_file = Tempfile.new('token.token')
-  token_file.write('token')
-  token_file.close
-
-  {
-    kubernetes: {
-      host_url: 'https://my.kubernetes.io',
-      service_account: {
-        token_file: token_file.path,
-      },
-      ca_file: ca_file.path
-    },
-  }
 end

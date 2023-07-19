@@ -11,7 +11,6 @@ module VCAP::CloudController
 
     validate :state_is_in_final_states, if: state_requested?
     validate :staged_includes_lifecycle_data, if: state_requested?
-    validate :kpack_lifecycle_has_image, if: state_requested?
     validate :lifecycle_type_is_supported, if: state_requested?
     validates :error, string: true, allow_nil: true
 
@@ -27,18 +26,8 @@ module VCAP::CloudController
       end
     end
 
-    def kpack_lifecycle_has_image
-      if lifecycle&.dig(:type) == Lifecycles::KPACK && lifecycle.dig(:data, :image).blank?
-        errors.add(:lifecycle, "'kpack' lifecycle builds require the resulting image in data")
-      end
-    end
-
     def lifecycle_type_is_supported
       return if state != BuildModel::STAGED_STATE
-
-      unless [Lifecycles::KPACK].include?(lifecycle&.dig(:type))
-        errors.add(:lifecycle, 'lifecycle type must be kpack')
-      end
     end
   end
 end

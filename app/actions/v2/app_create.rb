@@ -68,9 +68,6 @@ module VCAP::CloudController
             data:          docker_data
           })
           PackageCreate.create_without_event(create_message)
-        elsif Config.config.get(:default_app_lifecycle) == VCAP::CloudController::Lifecycles::KPACK
-          KpackLifecycleDataModel.create(app: app)
-          app.kpack_lifecycle_data(reload: true)
         else
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
           # because mysql will deadlock when requests happen concurrently otherwise.
