@@ -81,10 +81,12 @@ It will try to connect to those databases with the following connection string:
 * postgres: `postgres://postgres@localhost:5432/cc_test`
 * mysql: `mysql2://root:password@localhost:3306/cc_test`
 
-To specify a custom username, password, host, or port for either database type, you can override the default
-connection string prefix (the part before the `cc_test` database name) by setting the `MYSQL_CONNECTION_PREFIX`
-and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including 
-the database name, you can set the `DB_CONNECTION_STRING` environment variable.  This will restrict you to only 
+To specify a custom username, password, host, or port for either database type,
+you can override the default connection string prefix (the part before the
+`cc_test` database name) by setting the `MYSQL_CONNECTION_PREFIX` and/or
+`POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full
+connection string, including the database name, you can set the
+`DB_CONNECTION_STRING` environment variable.  This will restrict you to only
 running tests in serial, however.
 
 For example, to run unit tests in parallel with a custom mysql username and password, you could execute:
