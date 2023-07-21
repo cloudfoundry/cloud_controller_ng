@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 
 gem 'addressable'
 gem 'allowy', '>= 2.1.0'
-gem 'cf-copilot', '0.0.14'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.1'

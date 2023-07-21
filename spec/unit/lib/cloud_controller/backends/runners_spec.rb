@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         it 'finds a diego backend' do
           expect(runners).to receive(:diego_runner).with(process).and_call_original
-          expect(runner).to be_a(CopilotRunnerDelegator)
+          expect(runner).to be_a(Diego::Runner)
         end
 
         context 'when the app has a docker image' do
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           it 'finds a diego backend' do
             expect(runners).to receive(:diego_runner).with(process).and_call_original
-            expect(runner).to be_a(CopilotRunnerDelegator)
+            expect(runner).to be_a(Diego::Runner)
           end
         end
       end

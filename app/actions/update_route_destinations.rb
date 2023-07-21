@@ -59,7 +59,6 @@ module VCAP::CloudController
             route_mapping = RouteMappingModel[rm]
             route_mapping.destroy
 
-            Copilot::Adapter.unmap_route(route_mapping)
             route_mapping.processes.each do |process|
               processes_to_ports_map[process] ||= { to_add: [], to_delete: [] }
               processes_to_ports_map[process][:to_delete] << route_mapping.app_port unless process.route_mappings_dataset.any? do |process_route_mapping|
@@ -80,7 +79,6 @@ module VCAP::CloudController
             route_mapping = RouteMappingModel.new(rm)
             route_mapping.save
 
-            Copilot::Adapter.map_route(route_mapping)
             route_mapping.processes.each do |process|
               processes_to_ports_map[process] ||= { to_add: [], to_delete: [] }
               processes_to_ports_map[process][:to_add] << route_mapping.app_port
