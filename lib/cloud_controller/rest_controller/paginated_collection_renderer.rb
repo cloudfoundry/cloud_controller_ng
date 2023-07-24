@@ -15,6 +15,8 @@ module VCAP::CloudController::RestController
       @max_inline_relations_depth = opts.fetch(:max_inline_relations_depth)
       @default_inline_relations_depth = 0
 
+      @pagination_limit = opts.fetch(:pagination_limit)
+
       @collection_transformer = opts[:collection_transformer]
     end
 
@@ -42,16 +44,10 @@ module VCAP::CloudController::RestController
       page = opts[:page] || 1
       order_applicator = OrderApplicator.new(opts)
       order_direction = opts[:order_direction] || 'asc'
-
       page_size = opts[:results_per_page] || @default_results_per_page
-      if page_size > @max_results_per_page
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
-      end
-
       inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
-      if inline_relations_depth > @max_inline_relations_depth
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
-      end
+
+      validate(page, page_size, inline_relations_depth)
 
       ordered_dataset = order_applicator.apply(dataset)
       paginated_dataset = ordered_dataset.extension(:pagination).paginate(page, page_size)
@@ -85,6 +81,20 @@ module VCAP::CloudController::RestController
     end
 
     private
+
+    def validate(page, page_size, inline_relations_depth)
+      if page_size > @max_results_per_page
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
+      end
+
+      if !@pagination_limit.nil? && page * page_size > @pagination_limit
+        raise CloudController::Errors::ApiError.new_from_details('PaginationLimitExceeded', @pagination_limit.to_s)
+      end
+
+      if inline_relations_depth > @max_inline_relations_depth
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
+      end
+    end
 
     def fetch_and_process_records(paginated_dataset, controller, inline_relations_depth, orphans, opts)
       dataset = @eager_loader.eager_load_dataset(

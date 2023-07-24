@@ -506,6 +506,7 @@ module CloudController
       eager_loader = opts[:eager_loader] || VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer = opts[:serializer] || VCAP::CloudController::RestController::PreloadedObjectSerializer.new
       max_results_per_page = opts[:max_results_per_page] || config.get(:renderer, :max_results_per_page)
+      pagination_limit = opts[:pagination_limit] || config.get(:renderer, :pagination_limit)
       default_results_per_page = opts[:default_results_per_page] || config.get(:renderer, :default_results_per_page)
       max_inline_relations_depth = opts[:max_inline_relations_depth] || config.get(:renderer, :max_inline_relations_depth)
       collection_transformer = opts[:collection_transformer]
@@ -514,7 +515,8 @@ module CloudController
         max_results_per_page: max_results_per_page,
         default_results_per_page: default_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer
+        collection_transformer: collection_transformer,
+        pagination_limit: pagination_limit
       })
     end
   end
