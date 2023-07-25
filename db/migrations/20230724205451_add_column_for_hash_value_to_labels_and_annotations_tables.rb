@@ -66,7 +66,6 @@ Sequel.migration do
     end
   end
 
-
   down do
     label_tables_to_migrate.each do |table, table_short|
       alter_table table do
