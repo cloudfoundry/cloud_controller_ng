@@ -28,9 +28,15 @@ module VCAP::CloudController
       it 'excludes nested health check keys' do
         message = ProcessUpdateMessage.new(
           {
-            health_check: { type: 'type', data: { timeout: 4, endpoint: 'something', invocation_timeout: 7 } }
+            health_check: { type: 'type', data: { timeout: 4, endpoint: 'something', invocation_timeout: 7 } },
+            readiness_health_check: { type: 'http', data: { timeout: 5, endpoint: '/meow', invocation_timeout: 8 } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something', 'invocation_timeout' => 7 } } })
+        expect(message.audit_hash).to eq(
+          {
+            'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something', 'invocation_timeout' => 7 } },
+            'readiness_health_check' => { 'type' => 'http', 'data' => { 'timeout' => 5, 'endpoint' => '/meow', 'invocation_timeout' => 8 } }
+          }
+        )
       end
     end
 
@@ -312,6 +318,164 @@ module VCAP::CloudController
             message = ProcessUpdateMessage.new(params)
             expect(message).not_to be_valid
             expect(message.errors[:health_check_endpoint]).to include('must be a valid URI path')
+          end
+        end
+      end
+
+      context 'readiness health check properties' do
+        context 'when readiness_health_check_type is http' do
+          let(:params) { { readiness_health_check: { type: 'http' } } }
+
+          it 'is valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when readiness_health_check_type is process' do
+          let(:params) { { readiness_health_check: { type: 'process' } } }
+
+          it 'is valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when readiness_health_check_type is port' do
+          let(:params) { { readiness_health_check: { type: 'port' } } }
+
+          it 'is valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when readiness_health_check_type is invalid' do
+          let(:params) { { readiness_health_check: { type: 'invalid' } } }
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:readiness_health_check_type]).to include('must be "port", "process", or "http"')
+          end
+        end
+
+        context 'when readiness_health_check_type is nil' do
+          let(:params) { { readiness_health_check: { type: nil } } }
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:readiness_health_check_type]).to include('must be "port", "process", or "http"')
+          end
+        end
+
+        context 'when readiness_health_check_invocation_timeout is not an integer' do
+          let(:params) do
+            {
+              readiness_health_check: {
+                type: 'http',
+                data: {
+                  invocation_timeout: 0.2
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be an integer')
+          end
+        end
+
+        context 'when readiness_health_check_invocation_timeout is less than one' do
+          let(:params) do
+            {
+              readiness_health_check: {
+                type: 'http',
+                data: {
+                  invocation_timeout: 0
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+          end
+        end
+
+        context 'when readiness_health_check_invocation_timeout is > the the max value allowed in the database' do
+          let(:params) do
+            {
+              readiness_health_check: {
+                type: 'port',
+                data: {
+                  invocation_timeout: MetadataBaseMessage::MAX_DB_INT + 1
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be less than or equal to 2147483647')
+          end
+        end
+
+        context 'when readiness_health_check_timeout and endpoint are not requested' do
+          let(:params) do
+            {
+              readiness_health_check: {
+                type: 'http'
+              }
+            }
+          end
+
+          it 'is valid' do
+            message = ProcessUpdateMessage.new(params)
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when readiness_health_check_endpoint is requested' do
+          let(:endpoint) { '/healthcheck' }
+          let(:params) do
+            {
+              readiness_health_check: {
+                type: 'http',
+                data: {
+                  endpoint: endpoint.to_s
+                }
+              }
+            }
+          end
+
+          it 'is valid' do
+            message = ProcessUpdateMessage.new(params)
+            expect(message).to be_valid
+          end
+
+          context 'when endpoint is not a valid URI path' do
+            let(:endpoint) { "some words that aren't a uri" }
+
+            it 'is not valid' do
+              message = ProcessUpdateMessage.new(params)
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_endpoint]).to include('must be a valid URI path')
+            end
           end
         end
       end

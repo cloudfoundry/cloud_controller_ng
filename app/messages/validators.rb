@@ -158,6 +158,14 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class ReadinessHealthCheckValidator < ActiveModel::Validator
+    def validate(record)
+      if record.readiness_health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
+        record.errors.add(:readiness_health_check_type, message: 'must be "http" to set a health check HTTP endpoint')
+      end
+    end
+  end
+
   class OrgVisibilityValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       return if value.nil?
