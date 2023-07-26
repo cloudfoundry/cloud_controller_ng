@@ -28,9 +28,8 @@ module VCAP::CloudController
         expect(message.requested?(:readiness_health_check_type)).to be_falsey
         expect(message.requested?(:readiness_health_check_timeout)).to be_falsey
 
-        message = ProcessUpdateMessage.new({ readiness_health_check: { type: 'type', data: { timeout: 4, invocation_timeout: 7 } } })
+        message = ProcessUpdateMessage.new({ readiness_health_check: { type: 'type', data: { invocation_timeout: 7 } } })
         expect(message.requested?(:readiness_health_check_type)).to be_truthy
-        expect(message.requested?(:readiness_health_check_timeout)).to be_truthy
         expect(message.requested?(:readiness_health_check_invocation_timeout)).to be_truthy
       end
     end
@@ -40,12 +39,12 @@ module VCAP::CloudController
         message = ProcessUpdateMessage.new(
           {
             health_check: { type: 'type', data: { timeout: 4, endpoint: 'something', invocation_timeout: 7 } },
-            readiness_health_check: { type: 'http', data: { timeout: 5, endpoint: '/meow', invocation_timeout: 8 } }
+            readiness_health_check: { type: 'http', data: { endpoint: '/meow', invocation_timeout: 8 } }
           })
         expect(message.audit_hash).to eq(
           {
             'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something', 'invocation_timeout' => 7 } },
-            'readiness_health_check' => { 'type' => 'http', 'data' => { 'timeout' => 5, 'endpoint' => '/meow', 'invocation_timeout' => 8 } }
+            'readiness_health_check' => { 'type' => 'http', 'data' => { 'endpoint' => '/meow', 'invocation_timeout' => 8 } }
           }
         )
       end

@@ -3,14 +3,12 @@ require 'spec_helper'
 RSpec.describe ReadinessHealthCheckPolicy do
   let(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:readiness_health_check_type) {}
-  let(:readiness_health_check_timeout) {}
   let(:readiness_health_check_invocation_timeout) {}
   let(:readiness_health_check_http_endpoint) {}
 
   subject(:validator) {
     ReadinessHealthCheckPolicy.new(
       process,
-      readiness_health_check_timeout,
       readiness_health_check_invocation_timeout,
       readiness_health_check_type,
       readiness_health_check_http_endpoint
@@ -23,16 +21,6 @@ RSpec.describe ReadinessHealthCheckPolicy do
 
       it 'raises an error on the correct key' do
         expect(validator).to validate_with_error(process, :readiness_health_check_type, 'must be one of http, port, process')
-      end
-    end
-  end
-
-  describe 'health_check_timeout' do
-    context 'when there is an error' do
-      let(:readiness_health_check_timeout) { -10 }
-
-      it 'sets the error on the correct key' do
-        expect(validator).to validate_with_error(process, :health_check_timeout, :less_than_one)
       end
     end
   end
@@ -73,7 +61,7 @@ RSpec.describe ReadinessHealthCheckPolicy do
       let(:ports) { [] }
       subject(:validator) do
         process.ports = ports
-        ReadinessHealthCheckPolicy.new(process, readiness_health_check_timeout, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint)
+        ReadinessHealthCheckPolicy.new(process,  readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint)
       end
 
       describe 'readiness health check type is not "ports"' do

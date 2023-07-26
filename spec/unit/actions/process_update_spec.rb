@@ -13,8 +13,7 @@ module VCAP::CloudController
     end
     let(:readiness_health_check) do
       {
-        type: 'process',
-        data: { timeout: 20 }
+        type: 'process'
       }
     end
     let(:message) do
@@ -366,8 +365,7 @@ module VCAP::CloudController
                 'data' => { 'timeout' => 20 }
               },
               'readiness_health_check' => {
-                'type' => 'process',
-                'data' => { 'timeout' => 20 }
+                'type' => 'process'
               },
               'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
             },
@@ -391,8 +389,7 @@ module VCAP::CloudController
                   'data' => { 'timeout' => 20 }
                 },
                 'readiness_health_check' => {
-                  'type' => 'process',
-                  'data' => { 'timeout' => 20 }
+                  'type' => 'process'
                 },
                 'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
               },
