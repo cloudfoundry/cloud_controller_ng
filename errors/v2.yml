@@ -1329,11 +1329,6 @@
   http_code: 422
   message: "Cannot stop the app while it is deploying, please cancel the deployment before stopping the app."
 
-390025:
-  name: PaginationLimitExceeded
-  http_code: 422
-  message: "You've requested too many pages. You can't ask for resources with an index greater than %s (equal to the number of pages per request times the page number). Please limit your request to return fewer results."
-
 400001:
   name: KubernetesRouteResourceError
   http_code: 422

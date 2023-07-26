@@ -15,7 +15,7 @@ module VCAP::CloudController::RestController
       @max_inline_relations_depth = opts.fetch(:max_inline_relations_depth)
       @default_inline_relations_depth = 0
 
-      @pagination_limit = opts.fetch(:pagination_limit)
+      @pagination_depth_limit = opts.fetch(:pagination_depth_limit)
 
       @collection_transformer = opts[:collection_transformer]
     end
@@ -87,8 +87,8 @@ module VCAP::CloudController::RestController
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
       end
 
-      if !@pagination_limit.nil? && page * page_size > @pagination_limit
-        raise CloudController::Errors::ApiError.new_from_details('PaginationLimitExceeded', @pagination_limit.to_s)
+      if !@pagination_depth_limit.nil? && page * page_size > @pagination_depth_limit
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "(page * per_page) must be less than #{@pagination_depth_limit}")
       end
 
       if inline_relations_depth > @max_inline_relations_depth

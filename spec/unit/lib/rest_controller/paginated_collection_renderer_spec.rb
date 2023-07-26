@@ -15,14 +15,14 @@ module VCAP::CloudController::RestController
         max_results_per_page: max_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
         collection_transformer: collection_transformer,
-        pagination_limit: pagination_limit
+        pagination_depth_limit: pagination_depth_limit
       }
     end
     let(:default_results_per_page) { 100_000 }
     let(:max_results_per_page) { 100_000 }
     let(:max_inline_relations_depth) { 100_000 }
     let(:collection_transformer) { nil }
-    let(:pagination_limit) { nil }
+    let(:pagination_depth_limit) { nil }
 
     describe '#render_json' do
       let(:opts) do
@@ -33,13 +33,13 @@ module VCAP::CloudController::RestController
             orphan_relations: orphan_relations,
             exclude_relations: exclude_relations,
             include_relations: include_relations,
-            pagination_limit: pagination_limit
+            pagination_depth_limit: pagination_depth_limit
         }
       end
       let(:page) { nil }
       let(:inline_relations_depth) { nil }
       let(:results_per_page) { nil }
-      let(:pagination_limit) { nil }
+      let(:pagination_depth_limit) { nil }
       let(:orphan_relations) { nil }
       let(:exclude_relations) { nil }
       let(:include_relations) { nil }
@@ -113,9 +113,9 @@ module VCAP::CloudController::RestController
         end
       end
 
-      context 'when pagination_limit' do
+      context 'when pagination_depth_limit' do
         context 'is more than the requested resources index(page*max_results_per_page)' do
-          let(:pagination_limit) { 100 }
+          let(:pagination_depth_limit) { 100 }
           let(:opts) do
             {
               results_per_page: 9,
@@ -128,7 +128,7 @@ module VCAP::CloudController::RestController
         end
 
         context 'equals to the requested resources index(page*max_results_per_page)' do
-          let(:pagination_limit) { 100 }
+          let(:pagination_depth_limit) { 100 }
           let(:opts) do
             {
               results_per_page: 10,
@@ -141,7 +141,7 @@ module VCAP::CloudController::RestController
         end
 
         context 'is less than the requested resources index(page*max_results_per_page)' do
-          let(:pagination_limit) { 100 }
+          let(:pagination_depth_limit) { 100 }
           let(:opts) do
             {
               results_per_page: 11,
@@ -149,7 +149,7 @@ module VCAP::CloudController::RestController
             }
           end
           it 'raises ApiError error' do
-            expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, /You can't ask for resources with an index greater than/)
+            expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, 'The query parameter is invalid: (page * per_page) must be less than 100')
           end
         end
       end
