@@ -2,22 +2,25 @@ require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
   class SequelPaginator
-    def get_page(sequel_dataset, pagination_options)
+    def get_page(dataset, pagination_options)
       page = pagination_options.page
       per_page = pagination_options.per_page
-      order_by = pagination_options.order_by
       order_direction = pagination_options.order_direction
+      order_by = pagination_options.order_by
+      table_name = dataset.model.table_name
+      has_guid_column = dataset.model.columns.include?(:guid)
 
-      table_name = sequel_dataset.model.table_name
-      column_name = Sequel.qualify(table_name, order_by)
-      sequel_order = order_direction == 'asc' ? Sequel.asc(column_name) : Sequel.desc(column_name)
+      order_type = Sequel.send(order_direction, Sequel.qualify(table_name, order_by))
+      dataset = dataset.order(order_type)
 
-      sequel_dataset = sequel_dataset.order(sequel_order)
-      sequel_dataset = sequel_dataset.order_append(Sequel.asc(Sequel.qualify(table_name, :guid))) if sequel_dataset.model.columns.include?(:guid)
-      records, count = if can_paginate_with_window_function?(sequel_dataset)
-                         paginate_with_window_function(sequel_dataset, per_page, page, table_name)
+      if order_by != 'id' && has_guid_column
+        dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid)))
+      end
+
+      records, count = if can_paginate_with_window_function?(dataset)
+                         paginate_with_window_function(dataset, per_page, page, table_name)
                        else
-                         paginate_with_extension(sequel_dataset, per_page, page)
+                         paginate_with_extension(dataset, per_page, page)
                        end
 
       PaginatedResult.new(records, count, pagination_options)
