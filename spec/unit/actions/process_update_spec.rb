@@ -11,10 +11,17 @@ module VCAP::CloudController
         data: { timeout: 20 }
       }
     end
+    let(:readiness_health_check) do
+      {
+        type: 'process',
+        data: { timeout: 20 }
+      }
+    end
     let(:message) do
       ProcessUpdateMessage.new(
         command: 'new',
         health_check: health_check,
+        readiness_health_check: readiness_health_check,
         metadata: {
           labels: {
             freaky: 'wednesday',
@@ -62,61 +69,38 @@ module VCAP::CloudController
         expect(process).to have_annotations({ key: 'tokyo', value: 'grapes' })
       end
 
-      context 'when the new healthcheck is http' do
-        let(:health_check) do
-          {
-            type: 'http',
-            data: {
-              endpoint: '/healthcheck',
-              invocation_timeout: 10
+      context 'health check properties' do
+        context 'when the new healthcheck is http' do
+          let(:health_check) do
+            {
+              type: 'http',
+              data: {
+                endpoint: '/healthcheck',
+                invocation_timeout: 10
+              }
             }
-          }
+          end
+
+          it 'updates the requested changes on the process' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('new')
+            expect(process.health_check_type).to eq('http')
+            expect(process.health_check_http_endpoint).to eq('/healthcheck')
+            expect(process.health_check_invocation_timeout).to eq(10)
+          end
         end
 
-        it 'updates the requested changes on the process' do
-          process_update.update(process, message, NonManifestStrategy)
-
-          process.reload
-          expect(process.command).to eq('new')
-          expect(process.health_check_type).to eq('http')
-          expect(process.health_check_http_endpoint).to eq('/healthcheck')
-          expect(process.health_check_invocation_timeout).to eq(10)
-        end
-      end
-
-      context 'when the old healthcheck is http and the new healtcheck is not' do
-        let!(:process) do
-          ProcessModel.make(
-            :process,
-            command:              'initial command',
-            health_check_type:    'http',
-            health_check_http_endpoint: '/healthcheck',
-            health_check_timeout: 10,
-            ports:                [1574, 3389]
-          )
-        end
-
-        let(:health_check) do
-          {
-            type: 'port',
-          }
-        end
-
-        it 'clears the HTTP endpoint field' do
-          process_update.update(process, message, NonManifestStrategy)
-
-          process.reload
-          expect(process.command).to eq('new')
-          expect(process.health_check_type).to eq('port')
-          expect(process.health_check_http_endpoint).to be_nil
-        end
-
-        context 'when nothing else is changed' do
+        context 'when the old healthcheck is http and the new healtcheck is not' do
           let!(:process) do
             ProcessModel.make(
               :process,
+              command:              'initial command',
               health_check_type:    'http',
               health_check_http_endpoint: '/healthcheck',
+              health_check_timeout: 10,
+              ports:                [1574, 3389]
             )
           end
 
@@ -126,75 +110,247 @@ module VCAP::CloudController
             }
           end
 
+          it 'clears the HTTP endpoint field' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('new')
+            expect(process.health_check_type).to eq('port')
+            expect(process.health_check_http_endpoint).to be_nil
+          end
+
+          context 'when nothing else is changed' do
+            let!(:process) do
+              ProcessModel.make(
+                :process,
+                health_check_type:    'http',
+                health_check_http_endpoint: '/healthcheck',
+              )
+            end
+
+            let(:health_check) do
+              {
+                type: 'port',
+              }
+            end
+
+            it 'does not create a new process version' do
+              old_version = process.version
+              process_update.update(process, message, NonManifestStrategy)
+
+              process.reload
+              expect(process.health_check_type).to eq('port')
+              expect(process.version).to eq(old_version)
+            end
+          end
+        end
+
+        context 'when no changes are requested' do
+          let(:message_without_changes) { ProcessUpdateMessage.new({}) }
+
+          before do
+            process.update(health_check_invocation_timeout: 11)
+          end
+
+          it 'does not update the process' do
+            process_update.update(process, message_without_changes, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('initial command')
+            expect(process.health_check_type).to eq('port')
+            expect(process.health_check_timeout).to eq(10)
+            expect(process.health_check_invocation_timeout).to eq(11)
+          end
+        end
+
+        context 'when partial health check update is requested' do
+          let(:health_check) do
+            {
+              type: 'process',
+              data: {}
+            }
+          end
+
+          it 'updates just the requested information' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.health_check_type).to eq('process')
+            expect(process.health_check_timeout).to eq(10)
+          end
+        end
+
+        context 'when only updating the health_check_type' do
+          let(:health_check) { { type: 'process' } }
+
           it 'does not create a new process version' do
             old_version = process.version
             process_update.update(process, message, NonManifestStrategy)
 
             process.reload
-            expect(process.health_check_type).to eq('port')
+            expect(process.health_check_type).to eq('process')
+            expect(process.version).to eq(old_version)
+          end
+        end
+
+        context 'when only updating the health_check http enpoint' do
+          let(:health_check) { { data: { endpoint: '/two' } } }
+
+          it 'does not create a new process version' do
+            old_version = process.version
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.health_check_http_endpoint).to eq('/two')
             expect(process.version).to eq(old_version)
           end
         end
       end
 
-      context 'when no changes are requested' do
-        let(:message_without_changes) { ProcessUpdateMessage.new({}) }
+      context 'readiness health checks' do
+        context 'when the new readiness healthcheck is http' do
+          let(:readiness_health_check) do
+            {
+              type: 'http',
+              data: {
+                endpoint: '/ready',
+                invocation_timeout: 10
+              }
+            }
+          end
 
-        before do
-          process.update(health_check_invocation_timeout: 11)
+          it 'updates the requested changes on the process' do
+            process
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('new')
+            expect(process.readiness_health_check_type).to eq('http')
+            expect(process.readiness_health_check_http_endpoint).to eq('/ready')
+            expect(process.readiness_health_check_invocation_timeout).to eq(10)
+          end
         end
 
-        it 'does not update the process' do
-          process_update.update(process, message_without_changes, NonManifestStrategy)
+        context 'when the old readiness healthcheck is http and the new readiness healtcheck is not' do
+          let!(:process) do
+            ProcessModel.make(
+              :process,
+              command:              'initial command',
+              readiness_health_check_type:    'http',
+              readiness_health_check_http_endpoint: '/ready',
+              health_check_timeout: 10,
+              ports:                [1574, 3389]
+            )
+          end
 
-          process.reload
-          expect(process.command).to eq('initial command')
-          expect(process.health_check_type).to eq('port')
-          expect(process.health_check_timeout).to eq(10)
-          expect(process.health_check_invocation_timeout).to eq(11)
-        end
-      end
+          let(:readiness_health_check) do
+            {
+              type: 'port',
+            }
+          end
 
-      context 'when partial health check update is requested' do
-        let(:health_check) do
-          {
-            type: 'process',
-            data: {}
-          }
-        end
+          it 'clears the HTTP endpoint field' do
+            process_update.update(process, message, NonManifestStrategy)
 
-        it 'updates just the requested information' do
-          process_update.update(process, message, NonManifestStrategy)
+            process.reload
+            expect(process.command).to eq('new')
+            expect(process.readiness_health_check_type).to eq('port')
+            expect(process.readiness_health_check_http_endpoint).to be_nil
+          end
 
-          process.reload
-          expect(process.health_check_type).to eq('process')
-          expect(process.health_check_timeout).to eq(10)
-        end
-      end
+          context 'when nothing else is changed' do
+            let!(:process) do
+              ProcessModel.make(
+                :process,
+                readiness_health_check_type:    'http',
+                readiness_health_check_http_endpoint: '/ready',
+              )
+            end
 
-      context 'when only updating the health_check_type' do
-        let(:health_check) { { type: 'process' } }
+            let(:readiness_health_check) do
+              {
+                type: 'port',
+              }
+            end
 
-        it 'does not create a new process version' do
-          old_version = process.version
-          process_update.update(process, message, NonManifestStrategy)
+            it 'does not create a new process version' do
+              old_version = process.version
+              process_update.update(process, message, NonManifestStrategy)
 
-          process.reload
-          expect(process.health_check_type).to eq('process')
-          expect(process.version).to eq(old_version)
-        end
-      end
+              process.reload
+              expect(process.readiness_health_check_type).to eq('port')
+              expect(process.version).to eq(old_version)
+            end
+          end
 
-      context 'when only updating the health_check http enpoint' do
-        let(:health_check) { { data: { endpoint: '/two' } } }
+          context 'when no changes are requested' do
+            let(:message_without_changes) { ProcessUpdateMessage.new({}) }
 
-        it 'does not create a new process version' do
-          old_version = process.version
-          process_update.update(process, message, NonManifestStrategy)
+            before do
+              process.update(readiness_health_check_invocation_timeout: 11)
+            end
 
-          process.reload
-          expect(process.health_check_http_endpoint).to eq('/two')
-          expect(process.version).to eq(old_version)
+            it 'does not update the process' do
+              process_update.update(process, message_without_changes, NonManifestStrategy)
+
+              # Testing that these are set ahead of time
+              expect(process.command).to eq('initial command')
+              expect(process.readiness_health_check_type).to eq('http')
+              expect(process.health_check_timeout).to eq(10)
+              expect(process.readiness_health_check_invocation_timeout).to eq(11)
+
+              process.reload
+              # Testing that they are the same after reload
+              expect(process.command).to eq('initial command')
+              expect(process.readiness_health_check_type).to eq('http')
+              expect(process.health_check_timeout).to eq(10)
+              expect(process.readiness_health_check_invocation_timeout).to eq(11)
+            end
+          end
+
+          context 'when partial readiness health check update is requested' do
+            let(:readiness_health_check) do
+              {
+                type: 'process',
+                data: {}
+              }
+            end
+            let(:health_check) { {} }
+
+            it 'updates just the requested information' do
+              process_update.update(process, message, NonManifestStrategy)
+
+              process.reload
+              expect(process.readiness_health_check_type).to eq('process')
+              expect(process.health_check_timeout).to eq(10)
+            end
+          end
+
+          context 'when only updating the readiness_health_check_type' do
+            let(:readiness_health_check) { { type: 'process' } }
+
+            it 'does not create a new process version' do
+              old_version = process.version
+              process_update.update(process, message, NonManifestStrategy)
+
+              process.reload
+              expect(process.readiness_health_check_type).to eq('process')
+              expect(process.version).to eq(old_version)
+            end
+          end
+
+          context 'when only updating the readiness health_check http enpoint' do
+            let(:readiness_health_check) { { data: { endpoint: '/two' } } }
+
+            it 'does not create a new process version' do
+              old_version = process.version
+              process_update.update(process, message, NonManifestStrategy)
+
+              process.reload
+              expect(process.readiness_health_check_http_endpoint).to eq('/two')
+              expect(process.version).to eq(old_version)
+            end
+          end
         end
       end
 
@@ -206,6 +362,10 @@ module VCAP::CloudController
             {
               'command'      => 'new',
               'health_check' => {
+                'type' => 'process',
+                'data' => { 'timeout' => 20 }
+              },
+              'readiness_health_check' => {
                 'type' => 'process',
                 'data' => { 'timeout' => 20 }
               },
@@ -227,6 +387,10 @@ module VCAP::CloudController
               {
                 'command'      => 'new',
                 'health_check' => {
+                  'type' => 'process',
+                  'data' => { 'timeout' => 20 }
+                },
+                'readiness_health_check' => {
                   'type' => 'process',
                   'data' => { 'timeout' => 20 }
                 },

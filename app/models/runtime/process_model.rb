@@ -147,9 +147,11 @@ module VCAP::CloudController
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :detected_buildpack_guid, :environment_json,
-      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version, :command,
-      :console, :debug, :staging_task_id, :package_state, :health_check_type,
-      :health_check_timeout, :health_check_http_endpoint, :staging_failed_reason,
+      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version,
+      :command, :console, :debug, :staging_task_id, :package_state,
+      :health_check_type, :health_check_timeout, :health_check_http_endpoint,
+      :readiness_health_check_type, :readiness_health_check_http_endpoint,
+      :readiness_health_check_invocation_timeout, :staging_failed_reason,
       :staging_failed_description, :diego, :docker_image, :package_updated_at,
       :detected_start_command, :enable_ssh, :ports
 
@@ -158,7 +160,9 @@ module VCAP::CloudController
       :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
       :service_binding_guids, :route_guids, :health_check_type,
       :health_check_http_endpoint, :health_check_timeout, :diego,
-      :docker_image, :app_guid, :enable_ssh, :ports
+      :readiness_health_check_type, :readiness_health_check_http_endpoint,
+      :readiness_health_check_invocation_timeout, :docker_image, :app_guid, :enable_ssh,
+      :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
@@ -265,7 +269,8 @@ module VCAP::CloudController
         MinLogRateLimitPolicy.new(self),
         AppMaxLogRateLimitPolicy.new(self, space, 'exceeds space log rate quota'),
         AppMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota'),
-        HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
+        HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint),
+        ReadinessHealthCheckPolicy.new(self, health_check_timeout, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint),
         DockerPolicy.new(self),
         PortsPolicy.new(self)
       ]
@@ -277,30 +282,14 @@ module VCAP::CloudController
       copy_buildpack_errors
 
       validates_includes APP_STATES, :state, allow_missing: true, message: 'must be one of ' + APP_STATES.join(', ')
-      validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
-      validate_health_check_type_and_port_presence_are_in_agreement
       validation_policies.map(&:validate)
-      validate_health_check_http_endpoint
       validate_sidecar_memory if modified?(:memory)
     end
 
     def validate_sidecar_memory
       if !SidecarMemoryLessThanProcessMemoryPolicy.new([self]).valid?
         errors.add(:memory, :process_memory_insufficient_for_sidecars)
-      end
-    end
-
-    def validate_health_check_http_endpoint
-      if health_check_type == HealthCheckTypes::HTTP && !UriUtils.is_uri_path?(health_check_http_endpoint)
-        errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URI path: #{health_check_http_endpoint}")
-      end
-    end
-
-    def validate_health_check_type_and_port_presence_are_in_agreement
-      default_to_port = nil
-      if [default_to_port, HealthCheckTypes::PORT].include?(health_check_type) && ports == []
-        errors.add(:ports, 'array cannot be empty when health check type is "port"')
       end
     end
 
@@ -342,6 +331,8 @@ module VCAP::CloudController
       # * memory is changed
       # * health check type is changed
       # * health check http endpoint is changed
+      # * readiness health check type is changed
+      # * readiness health check http endpoint is changed
       # * ports were changed by the user
       #
       # this is to indicate that the running state of an application has changed,
@@ -351,7 +342,9 @@ module VCAP::CloudController
         (column_changed?(:state) ||
         (column_changed?(:memory) && !skip_process_version_update) ||
         (column_changed?(:health_check_type) && !skip_process_version_update) ||
+        (column_changed?(:readiness_health_check_type) && !skip_process_version_update) ||
         (column_changed?(:health_check_http_endpoint) && !skip_process_version_update) ||
+        (column_changed?(:readiness_health_check_http_endpoint) && !skip_process_version_update) ||
         (@ports_changed_by_user && !skip_process_version_update)
       )
     end
