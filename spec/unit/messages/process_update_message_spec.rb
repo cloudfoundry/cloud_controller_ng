@@ -22,6 +22,17 @@ module VCAP::CloudController
         expect(message.requested?(:health_check_timeout)).to be_truthy
         expect(message.requested?(:health_check_invocation_timeout)).to be_truthy
       end
+
+      it 'handles nested readiness health check keys' do
+        message = ProcessUpdateMessage.new({ requested: 'thing' })
+        expect(message.requested?(:readiness_health_check_type)).to be_falsey
+        expect(message.requested?(:readiness_health_check_timeout)).to be_falsey
+
+        message = ProcessUpdateMessage.new({ readiness_health_check: { type: 'type', data: { timeout: 4, invocation_timeout: 7 } } })
+        expect(message.requested?(:readiness_health_check_type)).to be_truthy
+        expect(message.requested?(:readiness_health_check_timeout)).to be_truthy
+        expect(message.requested?(:readiness_health_check_invocation_timeout)).to be_truthy
+      end
     end
 
     describe '#audit_hash' do

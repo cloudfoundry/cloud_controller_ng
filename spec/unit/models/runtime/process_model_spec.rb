@@ -203,6 +203,7 @@ module VCAP::CloudController
         expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
         expect_validator(HealthCheckPolicy)
+        expect_validator(ReadinessHealthCheckPolicy)
         expect_validator(DockerPolicy)
       end
 
@@ -304,83 +305,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'health_check_http_endpoint' do
-        subject(:process) { ProcessModelFactory.make }
-
-        it 'can be set to the root path' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = '/'
-          expect(process).to be_valid
-        end
-
-        it 'can be set to a valid uri path' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = '/v2'
-          expect(process).to be_valid
-        end
-
-        it 'needs a uri path' do
-          process.health_check_type = 'http'
-          expect(process).to_not be_valid
-          expect(process.errors.on(:health_check_http_endpoint)).to be_present
-        end
-
-        it 'cannot be set to a relative path' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = 'relative/path'
-          expect(process).to_not be_valid
-          expect(process.errors.on(:health_check_http_endpoint)).to be_present
-        end
-
-        it 'cannot be set to an empty string' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = ' '
-          expect(process).to_not be_valid
-          expect(process.errors.on(:health_check_http_endpoint)).to be_present
-        end
-      end
-
-      describe 'health_check_invocation_timeout' do
-        subject(:process) { ProcessModelFactory.make }
-
-        it 'can be set for http health checks' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = '/'
-          process.health_check_invocation_timeout = 5
-          expect(process).to be_valid
-        end
-
-        it 'must be a postive integer' do
-          process.health_check_type          = 'http'
-          process.health_check_http_endpoint = '/'
-          process.health_check_invocation_timeout = -13.5
-          expect(process).not_to be_valid
-        end
-      end
-
-      describe 'health_check_type' do
-        subject(:process) { ProcessModelFactory.make }
-
-        it "defaults to 'port'" do
-          expect(process.health_check_type).to eq('port')
-        end
-
-        it "can be set to 'none'" do
-          process.health_check_type = 'none'
-          expect(process).to be_valid
-        end
-
-        it "can be set to 'process'" do
-          process.health_check_type = 'process'
-          expect(process).to be_valid
-        end
-
-        it "can not be set to 'bogus'" do
-          process.health_check_type = 'bogus'
-          expect(process).to_not be_valid
-          expect(process.errors.on(:health_check_type)).to be_present
-        end
-      end
 
       describe 'instances' do
         subject(:process) { ProcessModelFactory.make }
@@ -573,39 +497,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe 'ports and health check type' do
-        subject(:process) { ProcessModelFactory.make }
-
-        describe 'health check type is not "ports"' do
-          before do
-            process.health_check_type = 'process'
-          end
-
-          it 'allows empty ports' do
-            process.ports = []
-            expect { process.save }.to_not raise_error
-          end
-        end
-
-        describe 'health check type is "port"' do
-          before do
-            process.health_check_type = 'port'
-          end
-
-          it 'disallows empty ports' do
-            process.ports = []
-            expect { process.save }.to raise_error(/ports array/)
-          end
-        end
-
-        describe 'health check type is not specified' do
-          it 'disallows empty ports' do
-            process = ProcessModel.new(ports: [], app: parent_app)
-            expect { process.save }.to raise_error(/ports array/)
-          end
-        end
-      end
     end
 
     describe 'Serialization' do
@@ -626,6 +517,9 @@ module VCAP::CloudController
           :health_check_http_endpoint,
           :health_check_timeout,
           :health_check_type,
+          :readiness_health_check_http_endpoint,
+          :readiness_health_check_invocation_timeout,
+          :readiness_health_check_type,
           :instances,
           :log_rate_limit,
           :memory,
@@ -660,6 +554,9 @@ module VCAP::CloudController
           :health_check_http_endpoint,
           :health_check_timeout,
           :health_check_type,
+          :readiness_health_check_http_endpoint,
+          :readiness_health_check_invocation_timeout,
+          :readiness_health_check_type,
           :instances,
           :log_rate_limit,
           :memory,
@@ -982,12 +879,6 @@ module VCAP::CloudController
           process = ProcessModelFactory.make
           expect(process.health_check_timeout).to eq(nil)
         end
-
-        it 'should not raise error if value is nil' do
-          expect {
-            ProcessModelFactory.make(health_check_timeout: nil)
-          }.to_not raise_error
-        end
       end
 
       context 'when a valid health_check_timeout is specified' do
@@ -1287,6 +1178,16 @@ module VCAP::CloudController
             process.ports = [8081]
             expect { process.save }.not_to change(process, :version)
           end
+
+          it 'should not update the version for readiness_health_check_type' do
+            process.readiness_health_check_type = 'port'
+            expect { process.save }.not_to change(process, :version)
+          end
+
+          it 'should not update the version for readiness_health_check_http_endpoint' do
+            process.readiness_health_check_http_endpoint = '/two'
+            expect { process.save }.not_to change(process, :version)
+          end
         end
 
         it 'should update the version when changing :memory' do
@@ -1298,11 +1199,6 @@ module VCAP::CloudController
           expect { process.update(memory: 999) }.to change(process, :version)
         end
 
-        it 'should update the version when changing :health_check_type' do
-          process.health_check_type = 'none'
-          expect { process.save }.to change(process, :version)
-        end
-
         it 'should not update the version when changing :instances' do
           process.instances = 8
           expect { process.save }.to_not change(process, :version)
@@ -1312,10 +1208,27 @@ module VCAP::CloudController
           expect { process.update(instances: 8) }.to_not change(process, :version)
         end
 
+        it 'should update the version when changing :health_check_type' do
+          process.health_check_type = 'none'
+          expect { process.save }.to change(process, :version)
+        end
+
         it 'should update the version when changing health_check_http_endpoint' do
           process.update(health_check_type: 'http', health_check_http_endpoint: '/oldpath')
           expect {
             process.update(health_check_http_endpoint: '/newpath')
+          }.to change { process.version }
+        end
+
+        it 'should update the version when changing :readiness_health_check_type' do
+          process.readiness_health_check_type = 'port'
+          expect { process.save }.to change(process, :version)
+        end
+
+        it 'should update the version when changing readiness_health_check_http_endpoint' do
+          process.update(readiness_health_check_type: 'http', readiness_health_check_http_endpoint: '/oldpath')
+          expect {
+            process.update(readiness_health_check_http_endpoint: '/newpath')
           }.to change { process.version }
         end
       end

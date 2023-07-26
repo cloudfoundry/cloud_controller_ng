@@ -79,6 +79,7 @@ module VCAP::CloudController
       super(params)
       @requested_keys << :health_check_timeout if requested? :timeout
       @requested_keys << :health_check_endpoint if requested? :health_check_http_endpoint
+      @requested_keys << :readiness_health_check_endpoint if requested? :readiness_health_check_http_endpoint
     end
 
     def health_check_endpoint
@@ -87,6 +88,10 @@ module VCAP::CloudController
 
     def health_check_timeout
       timeout
+    end
+
+    def readiness_health_check_endpoint
+      readiness_health_check_http_endpoint
     end
   end
 end
