@@ -1,7 +1,7 @@
 class ReadinessHealthCheckPolicy < HealthCheckPolicy
   def initialize(process, health_check_invocation_timeout, health_check_type, health_check_http_endpoint)
     super(process, nil, health_check_invocation_timeout, health_check_type, health_check_http_endpoint)
-    @valid_health_check_types = VCAP::CloudController::HealthCheckTypes.constants_to_array - [VCAP::CloudController::HealthCheckTypes::NONE]
+    @valid_health_check_types = VCAP::CloudController::HealthCheckTypes.readiness_types
     @var_to_symbol = {
       'type' => :readiness_health_check_type,
       'invocation_timeout' => :readiness_health_check_invocation_timeout,

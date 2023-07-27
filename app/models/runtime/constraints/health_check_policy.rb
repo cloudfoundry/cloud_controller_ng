@@ -9,7 +9,7 @@ class HealthCheckPolicy
     @health_check_invocation_timeout = health_check_invocation_timeout
     @health_check_type = health_check_type
     @health_check_http_endpoint = health_check_http_endpoint
-    @valid_health_check_types = VCAP::CloudController::HealthCheckTypes.constants_to_array
+    @valid_health_check_types = VCAP::CloudController::HealthCheckTypes.all_types
     @var_to_symbol = {
       'timeout' => :health_check_timeout,
       'type' => :health_check_type,
