@@ -213,7 +213,7 @@ RSpec.describe CloudController::DependencyLocator do
         max_results_per_page: 100_000,
         default_results_per_page: 100_001,
         max_inline_relations_depth: 100_002,
-        pagination_depth_limit: 100_003,
+        max_total_results: 100_003,
         collection_transformer: nil
       }
 
@@ -245,7 +245,7 @@ RSpec.describe CloudController::DependencyLocator do
       renderer = double('renderer')
       expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
         to receive(:new).
-        with(eager_loader, serializer, opts.merge(max_results_per_page: 10_000, pagination_depth_limit: nil)).
+        with(eager_loader, serializer, opts.merge(max_results_per_page: 10_000, max_total_results: nil)).
         and_return(renderer)
 
       expect(locator.large_paginated_collection_renderer).to eq(renderer)

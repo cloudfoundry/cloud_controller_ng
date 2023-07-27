@@ -450,7 +450,7 @@ module VCAP::CloudController
           max_results_per_page: config.get(:renderer, :max_results_per_page),
           default_results_per_page: config.get(:renderer, :default_results_per_page),
           max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
-          pagination_depth_limit: config.get(:renderer, :pagination_depth_limit)
+          max_total_results: config.get(:renderer, :max_total_results)
         })
     end
 

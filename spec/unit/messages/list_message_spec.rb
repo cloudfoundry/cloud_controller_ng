@@ -65,7 +65,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'maximum_result with pagination_depth_limit not configured' do
+    describe 'maximum_result with max_total_results not configured' do
       it 'is valid if page and per_page is nil' do
         message = ListMessage.from_params({ page: nil, per_page: nil }, [])
         expect(message).to be_valid
@@ -94,8 +94,8 @@ module VCAP::CloudController
       end
     end
 
-    describe 'maximum_result with pagination_depth_limit set to 10_000' do
-      before { TestConfig.override(renderer: { pagination_depth_limit: 10_000 }) }
+    describe 'maximum_result with max_total_results set to 10_000' do
+      before { TestConfig.override(renderer: { max_total_results: 10_000 }) }
 
       it 'is valid if page and per_page is nil' do
         message = ListMessage.from_params({ page: nil, per_page: nil }, [])
