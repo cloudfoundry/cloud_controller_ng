@@ -68,8 +68,9 @@ module VCAP::CloudController
       end
 
       def validate_maximum_result(page, per_page, record)
-        if (page || PaginationOptions::PAGE_DEFAULT).to_i * (per_page || PaginationOptions::PER_PAGE_DEFAULT).to_i > 9223372036854775807
-          record.errors.add(:maximum_result, '(page * per_page) must be less than 9223372036854775807')
+        maximum_result = VCAP::CloudController::Config.config.get(:renderer, :max_total_results) || 9223372036854775807
+        if (page || PaginationOptions::PAGE_DEFAULT).to_i * (per_page || PaginationOptions::PER_PAGE_DEFAULT).to_i > maximum_result
+          record.errors.add(:maximum_result, "(page * per_page) must be less than #{maximum_result}")
         end
       end
     end

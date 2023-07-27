@@ -14,13 +14,15 @@ module VCAP::CloudController::RestController
         default_results_per_page: default_results_per_page,
         max_results_per_page: max_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer
+        collection_transformer: collection_transformer,
+        max_total_results: max_total_results
       }
     end
     let(:default_results_per_page) { 100_000 }
     let(:max_results_per_page) { 100_000 }
     let(:max_inline_relations_depth) { 100_000 }
     let(:collection_transformer) { nil }
+    let(:max_total_results) { nil }
 
     describe '#render_json' do
       let(:opts) do
@@ -30,12 +32,14 @@ module VCAP::CloudController::RestController
             inline_relations_depth: inline_relations_depth,
             orphan_relations: orphan_relations,
             exclude_relations: exclude_relations,
-            include_relations: include_relations
+            include_relations: include_relations,
+            max_total_results: max_total_results
         }
       end
       let(:page) { nil }
       let(:inline_relations_depth) { nil }
       let(:results_per_page) { nil }
+      let(:max_total_results) { nil }
       let(:orphan_relations) { nil }
       let(:exclude_relations) { nil }
       let(:include_relations) { nil }
@@ -105,6 +109,47 @@ module VCAP::CloudController::RestController
 
           it 'renders limits number of results to default_results_per_page' do
             expect(JSON.parse(render_json_call)['resources'].size).to eq(1)
+          end
+        end
+      end
+
+      context 'when max_total_results' do
+        context 'is more than the requested resources index(page*max_results_per_page)' do
+          let(:max_total_results) { 100 }
+          let(:opts) do
+            {
+              results_per_page: 9,
+              page: 11
+            }
+          end
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+
+        context 'equals to the requested resources index(page*max_results_per_page)' do
+          let(:max_total_results) { 100 }
+          let(:opts) do
+            {
+              results_per_page: 10,
+              page: 10
+            }
+          end
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+
+        context 'is less than the requested resources index(page*max_results_per_page)' do
+          let(:max_total_results) { 100 }
+          let(:opts) do
+            {
+              results_per_page: 11,
+              page: 10
+            }
+          end
+          it 'raises ApiError error' do
+            expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, 'The query parameter is invalid: (page * per_page) must be less than 100')
           end
         end
       end

@@ -215,6 +215,7 @@ module VCAP::CloudController
               max_results_per_page: Integer,
               default_results_per_page: Integer,
               max_inline_relations_depth: Integer,
+              optional(:max_total_results) => Integer,
             },
 
             logcache: {
