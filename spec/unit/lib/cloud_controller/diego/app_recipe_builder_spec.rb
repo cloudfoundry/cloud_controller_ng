@@ -571,9 +571,9 @@ module VCAP::CloudController
           end
 
           context 'readiness health check' do
-            context 'when the readiness health check type is not set' do
+            context 'when the readiness health check type defaults to process' do
               before do
-                process.readiness_health_check_type = ''
+                process.readiness_health_check_type = 'process'
               end
 
               it 'does not add any readiness health checks for backwards compatibility' do
