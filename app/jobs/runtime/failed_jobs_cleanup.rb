@@ -21,20 +21,19 @@ module VCAP::CloudController
           old_delayed_jobs.delete
 
           unless max_number_of_failed_delayed_jobs.nil?
-            ids_from_failed_jobs_that_are_too_much = Delayed::Job.
-                                                     where(Sequel.lit('failed_at is not null')).
-                                                     order(Sequel.desc(:id)).
-                                                     offset(max_number_of_failed_delayed_jobs.to_i).
-                                                     # Mysql handles offset differently, therefore using a large
-                                                     # number to mimic unlimited offset
-                                                     limit(1844674407370955161).
-                                                     select(:id)
+            ids_exceeding_limit = Delayed::Job.
+                                  where(Sequel.lit('failed_at is not null')).
+                                  order(Sequel.desc(:id)).
+                                  offset(max_number_of_failed_delayed_jobs.to_i).
+                                  # Mysql handles offset differently, therefore using a large
+                                  # number to mimic unlimited offset
+                                  limit(1844674407370955161).
+                                  select(:id)
 
-            logger.info("Cleaning up #{ids_from_failed_jobs_that_are_too_much.count} Failed Delayed Jobs because they exceed max_number_of_failed_delayed_jobs")
+            logger.info("Cleaning up #{ids_exceeding_limit.count} Failed Delayed Jobs because they exceed max_number_of_failed_delayed_jobs")
 
-            Delayed::Job.where(id: ids_from_failed_jobs_that_are_too_much).delete
+            Delayed::Job.where(id: ids_exceeding_limit).delete
           end
-          logger.info('Cleaning up ')
         end
 
         def job_name_in_configuration

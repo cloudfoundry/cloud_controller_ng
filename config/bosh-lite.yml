@@ -30,6 +30,7 @@ audit_events:
 
 failed_jobs:
   cutoff_age_in_days: 31
+  frequency_in_seconds: 144000 #4h
 
 completed_tasks:
   cutoff_age_in_days: 31

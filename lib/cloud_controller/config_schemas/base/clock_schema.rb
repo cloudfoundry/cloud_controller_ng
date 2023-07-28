@@ -23,7 +23,7 @@ module VCAP::CloudController
             },
             failed_jobs: {
               cutoff_age_in_days: Integer,
-              max_number_of_failed_delayed_jobs: Integer,
+              optional(:max_number_of_failed_delayed_jobs) => Integer,
               frequency_in_seconds: Integer,
             },
             completed_tasks: {
