@@ -196,15 +196,10 @@ module VCAP::CloudController
         checks = generate_liveness_and_startup_health_check_defintion(lrp_builder)
         readiness_checks = generate_readiness_health_check_definition(lrp_builder)
 
-        if checks.empty? && readiness_checks.empty?
-          return
-        elsif checks.empty?
-          return  ::Diego::Bbs::Models::CheckDefinition.new(readiness_checks: readiness_checks)
-        elsif readiness_checks.empty?
-          return  ::Diego::Bbs::Models::CheckDefinition.new(checks: checks)
-        else
-          return  ::Diego::Bbs::Models::CheckDefinition.new(checks: checks, readiness_checks: readiness_checks)
-        end
+        params = {}
+        params[:checks] = checks unless checks.empty?
+        params[:readiness_checks] = readiness_checks unless readiness_checks.empty?
+        ::Diego::Bbs::Models::CheckDefinition.new(**params) unless params.empty?
       end
 
       def generate_readiness_health_check_definition(lrp_builder)
