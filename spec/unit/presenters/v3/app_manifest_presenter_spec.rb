@@ -125,6 +125,7 @@ module VCAP::CloudController::Presenters::V3
               'command' => process1.command,
               'health-check-type' => process1.health_check_type,
               'health-check-http-endpoint' => process1.health_check_http_endpoint,
+              'readiness-health-check-type' => process1.readiness_health_check_type,
               'timeout' => process1.health_check_timeout,
             },
             {
@@ -134,6 +135,7 @@ module VCAP::CloudController::Presenters::V3
               'memory' => "#{process2.memory}M",
               'disk_quota' => "#{process2.disk_quota}M",
               'health-check-type' => process2.health_check_type,
+              'readiness-health-check-type' => process2.readiness_health_check_type,
             }
           ])
           expect(application[:sidecars]).to eq(
@@ -173,6 +175,7 @@ module VCAP::CloudController::Presenters::V3
                 'memory' => "#{process1.memory}M",
                 'disk_quota' => "#{process1.disk_quota}M",
                 'health-check-type' => process1.health_check_type,
+                'readiness-health-check-type' => process1.readiness_health_check_type,
               },
               {
                 'type' => process2.type,
@@ -181,6 +184,7 @@ module VCAP::CloudController::Presenters::V3
                 'memory' => "#{process2.memory}M",
                 'disk_quota' => "#{process2.disk_quota}M",
                 'health-check-type' => process2.health_check_type,
+                'readiness-health-check-type' => process2.readiness_health_check_type,
               }
             ])
           end
