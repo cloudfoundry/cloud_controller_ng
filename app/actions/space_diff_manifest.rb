@@ -105,6 +105,9 @@ module VCAP::CloudController
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
               'health-check-type',
+              'readiness-health-check-http-endpoint',
+              'readiness-health-check-invocation-timeout',
+              'readiness-health-check-type',
               'instances',
               'memory',
               'timeout'
