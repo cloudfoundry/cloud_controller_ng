@@ -13,6 +13,12 @@
       "timeout": null
     }
   },
+  "readiness_health_check": {
+    "type": "process",
+    "data": {
+      "invocation_timeout": null
+    }
+  },
   "relationships": {
     "app": {
       "data": {
@@ -84,6 +90,12 @@
           "timeout": null
         }
       },
+      "readiness_health_check": {
+        "type": "process",
+        "data": {
+          "invocation_timeout": null
+        }
+      },
       "relationships": {
         "app": {
           "data": {
@@ -134,6 +146,13 @@
         "type": "process",
         "data": {
           "timeout": null
+        }
+      },
+      "readiness_health_check": {
+        "type": "http",
+        "data": {
+          "endpoint": "/ready",
+          "invocation_timeout": 2
         }
       },
       "relationships": {
@@ -234,6 +253,16 @@
   "type": "port",
   "data": {
     "timeout": null
+  }
+}
+<% end %>
+
+<% content_for :readiness_health_check  do %>
+{
+  "type": "http",
+  "data": {
+    "endpoint": "/ready",
+    "invocation_timeout": 2
   }
 }
 <% end %>
