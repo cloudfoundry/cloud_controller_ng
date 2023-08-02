@@ -11,6 +11,8 @@ module VCAP::CloudController
       let!(:space) { Space.make }
       let!(:app_model1) { AppModel.make(space: space) }
       let!(:app_model2) { AppModel.make }
+      let!(:app_model3) { AppModel.make }
+      let!(:app_model4) { AppModel.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
 
@@ -78,7 +80,7 @@ module VCAP::CloudController
         expect {
           paginated_result = paginator.get_page(eager_dataset, pagination_options)
         }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 2 : 3)
-        expect(paginated_result.total).to eq(2)
+        expect(paginated_result.total).to eq(4)
         expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
       end
 
@@ -90,7 +92,7 @@ module VCAP::CloudController
         expect {
           paginated_result = paginator.get_page(eager_graph_dataset, pagination_options)
         }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
-        expect(paginated_result.total).to eq(2)
+        expect(paginated_result.total).to eq(4)
         expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
       end
 
@@ -115,6 +117,41 @@ module VCAP::CloudController
           paginated_result = paginator.get_page(orphaned_blob_dataset, pagination_options)
         }.not_to raise_error
         expect(paginated_result.total).to be 1
+      end
+
+      it 'does not order by GUID when the primary order is by ID' do
+        options = { page: page, per_page: 2, order_by: 'id', order_direction: 'asc' }
+
+        pagination_options = PaginationOptions.new(options)
+        expect {
+          paginator.get_page(dataset, pagination_options)
+        }.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC LIMIT/i, 1)
+        expect {
+          paginator.get_page(dataset, pagination_options)
+        }.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
+      end
+
+      it 'produces a descending order which is exactly the reverse order of the ascending ordering' do
+        app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')
+        app_model2.update(guid: '2', created_at: '2019-12-25T13:00:01Z')
+        app_model3.update(guid: '3', created_at: '2019-12-25T13:00:01Z')
+        app_model4.update(guid: '4', created_at: '2019-12-25T13:00:02Z')
+
+        options = { page: page, per_page: 4, order_by: 'created_at', order_direction: 'desc' }
+        pagination_options = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.guid).to eq(app_model4.guid)
+        expect(paginated_result.records.second.guid).to eq(app_model3.guid)
+        expect(paginated_result.records.third.guid).to eq(app_model2.guid)
+        expect(paginated_result.records.fourth.guid).to eq(app_model1.guid)
+
+        options = { page: page, per_page: 4, order_by: 'created_at', order_direction: 'asc' }
+        pagination_options = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.guid).to eq(app_model1.guid)
+        expect(paginated_result.records.second.guid).to eq(app_model2.guid)
+        expect(paginated_result.records.third.guid).to eq(app_model3.guid)
+        expect(paginated_result.records.fourth.guid).to eq(app_model4.guid)
       end
 
       it 'only calls DB once if DB supports pagination with window function' do
