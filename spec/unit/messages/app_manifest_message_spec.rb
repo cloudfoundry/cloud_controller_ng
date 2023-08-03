@@ -714,9 +714,11 @@ module VCAP::CloudController
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
+                'health_check_interval' => 'yucca',
                 'readiness_health_check_type' => 'meow-tuber',
                 'readiness_health_check_invocation_timeout' => -8,
                 'readiness_health_check_http_endpoint' => 'potato potahto',
+                'readiness_health_check_interval' => 'yucca',
                 'command' => '',
                 'timeout' => 'yam'
               }
@@ -731,7 +733,9 @@ module VCAP::CloudController
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
                 'health_check_invocation_timeout' => 'yucca',
+                'health_check_interval' => -1,
                 'readiness_health_check_invocation_timeout' => 'cat-jicima',
+                'readiness_health_check_interval' => -1,
                 'command' => '',
                 'timeout' => 'yam'
               }
@@ -746,7 +750,7 @@ module VCAP::CloudController
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).to_not be_valid
-              expect(message.errors).to have(23).items
+              expect(message.errors).to have(27).items
               expect(message.errors.full_messages).to match_array([
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -757,6 +761,8 @@ module VCAP::CloudController
                 'Process "type1": Health check type must be "port", "process", or "http"',
                 'Process "type1": Health check type must be "http" to set a health check HTTP endpoint',
                 'Process "type1": Health check invocation timeout is not a number',
+                'Process "type1": Health check interval is not a number',
+                'Process "type1": Readiness health check interval is not a number',
                 'Process "type1": Readiness health check type must be "port", "process", or "http"',
                 'Process "type1": Readiness health check invocation timeout must be greater than or equal to 1',
                 'Process "type1": Readiness health check http endpoint must be a valid URI path',
@@ -771,6 +777,8 @@ module VCAP::CloudController
                 'Process "type2": Health check type must be "http" to set a health check HTTP endpoint',
                 'Process "type2": Health check invocation timeout is not a number',
                 'Process "type2": Readiness health check invocation timeout is not a number',
+                'Process "type2": Health check interval must be greater than or equal to 1',
+                'Process "type2": Readiness health check interval must be greater than or equal to 1',
               ])
             end
           end
@@ -1132,6 +1140,7 @@ module VCAP::CloudController
           'health-check-type': 'port',
           'readiness-health-check-type': 'http',
           'readiness-health-check-invocation-timeout': 2,
+          'readiness-health-check-interval': 3,
           'readiness-health-check-http-endpoint': '/potato-potahto',
           disk_quota: '23M'
         }
@@ -1144,6 +1153,7 @@ module VCAP::CloudController
             health_check_type: 'port',
             readiness_health_check_type: 'http',
             readiness_health_check_invocation_timeout: 2,
+            readiness_health_check_interval: 3,
             readiness_health_check_http_endpoint: '/potato-potahto',
             disk_quota: '23M',
           }
@@ -1154,12 +1164,13 @@ module VCAP::CloudController
         let(:parsed_yaml) do
           {
             'name' => 'eugene', name: 'blah', processes: [
-              { type: 'web', 'health-check-type': 'port', disk_quota: '23M' },
+              { type: 'web', 'health-check-type': 'port', 'health-check-interval': 4, disk_quota: '23M', },
               { type: 'worker', 'health-check-type': 'port', disk_quota: '23M' },
               {
                 type: 'song',
                 'readiness-health-check-type': 'http',
                 'readiness-health-check-invocation-timeout': 2,
+                'readiness-health-check-interval': 3,
                 'readiness-health-check-http-endpoint': '/potato-potahto',
                 disk_quota: '23M'
               },
@@ -1173,6 +1184,7 @@ module VCAP::CloudController
               processes: [
                 { type: 'web',
                   health_check_type: 'port',
+                  health_check_interval: 4,
                   disk_quota: '23M', },
                 { type: 'worker',
                   health_check_type: 'port',
@@ -1180,6 +1192,7 @@ module VCAP::CloudController
                 { type: 'song',
                   readiness_health_check_type: 'http',
                   readiness_health_check_invocation_timeout: 2,
+                  readiness_health_check_interval: 3,
                   readiness_health_check_http_endpoint: '/potato-potahto',
                   disk_quota: '23M', },
               ]
@@ -1556,8 +1569,10 @@ module VCAP::CloudController
             'health-check-type' => health_check_type,
             'health-check-http-endpoint' => health_check_http_endpoint,
             'health-check-invocation-timeout' => health_check_invocation_timeout,
+            'health-check-interval' => health_check_interval,
             'readiness-health-check-type' => readiness_health_check_type,
             'readiness-health-check-invocation-timeout' => readiness_health_check_invocation_timeout,
+            'readiness-health-check-interval' => readiness_health_check_interval,
             'readiness-health-check-http-endpoint' => readiness_health_check_http_endpoint,
             'timeout' => health_check_timeout
           }
@@ -1567,9 +1582,11 @@ module VCAP::CloudController
         let(:health_check_type) { 'http' }
         let(:health_check_http_endpoint) { '/endpoint' }
         let(:health_check_invocation_timeout) { 1361 }
+        let(:health_check_interval) { 1362 }
         let(:health_check_timeout) { 10 }
         let(:readiness_health_check_type) { 'http' }
         let(:readiness_health_check_invocation_timeout) { 2 }
+        let(:readiness_health_check_interval) { 3 }
         let(:readiness_health_check_http_endpoint) { '/potato-potahto' }
 
         context 'when new properties are specified' do
@@ -1582,8 +1599,10 @@ module VCAP::CloudController
             expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/endpoint')
             expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
             expect(message.manifest_process_update_messages.first.health_check_invocation_timeout).to eq(1361)
+            expect(message.manifest_process_update_messages.first.health_check_interval).to eq(1362)
             expect(message.manifest_process_update_messages.first.readiness_health_check_type).to eq('http')
             expect(message.manifest_process_update_messages.first.readiness_health_check_invocation_timeout).to eq(2)
+            expect(message.manifest_process_update_messages.first.readiness_health_check_interval).to eq(3)
             expect(message.manifest_process_update_messages.first.readiness_health_check_http_endpoint).to eq('/potato-potahto')
           end
         end

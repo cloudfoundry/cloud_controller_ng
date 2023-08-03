@@ -228,63 +228,127 @@ module VCAP::CloudController
         end
       end
 
-      context 'when health_check invocation timeout is not an integer' do
-        let(:params) do
-          {
-            health_check: {
-              type: 'http',
-              data: {
-                invocation_timeout: 0.2
+      describe 'health_check_invocation_timeout' do
+        context 'when health_check invocation timeout is not an integer' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'http',
+                data: {
+                  invocation_timeout: 0.2
+                }
               }
             }
-          }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_invocation_timeout]).to include('must be an integer')
+          end
         end
 
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
+        context 'when health_check invocation timeout is less than one' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'http',
+                data: {
+                  invocation_timeout: 0
+                }
+              }
+            }
+          end
 
-          expect(message).not_to be_valid
-          expect(message.errors[:health_check_invocation_timeout]).to include('must be an integer')
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+          end
+        end
+
+        context 'when health_check invocation timeout is > the the max value allowed in the database' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'port',
+                data: {
+                  invocation_timeout: MetadataBaseMessage::MAX_DB_INT + 1
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_invocation_timeout]).to include('must be less than or equal to 2147483647')
+          end
         end
       end
 
-      context 'when health_check invocation timeout is less than one' do
-        let(:params) do
-          {
-            health_check: {
-              type: 'http',
-              data: {
-                invocation_timeout: 0
+      describe 'health_check_interval' do
+        context 'when health_check interval is not an integer' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'http',
+                data: {
+                  interval: 0.2
+                }
               }
             }
-          }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_interval]).to include('must be an integer')
+          end
         end
 
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
-        end
-      end
-
-      context 'when health_check invocation timeout is > the the max value allowed in the database' do
-        let(:params) do
-          {
-            health_check: {
-              type: 'port',
-              data: {
-                invocation_timeout: MetadataBaseMessage::MAX_DB_INT + 1
+        context 'when health_check interval is less than one' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'http',
+                data: {
+                  interval: 0
+                }
               }
             }
-          }
+          end
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_interval]).to include('must be greater than or equal to 1')
+          end
         end
 
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
+        context 'when health_check interval is > the the max value allowed in the database' do
+          let(:params) do
+            {
+              health_check: {
+                type: 'port',
+                data: {
+                  interval: MetadataBaseMessage::MAX_DB_INT + 1
+                }
+              }
+            }
+          end
 
-          expect(message).not_to be_valid
-          expect(message.errors[:health_check_invocation_timeout]).to include('must be less than or equal to 2147483647')
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_interval]).to include('must be less than or equal to 2147483647')
+          end
         end
       end
 
@@ -442,6 +506,68 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be less than or equal to 2147483647')
+          end
+        end
+
+        describe 'readiness_health_check_interval' do
+          context 'not an integer' do
+            let(:params) do
+              {
+                readiness_health_check: {
+                  type: 'http',
+                  data: {
+                    interval: 0.2
+                  }
+                }
+              }
+            end
+
+            it 'is not valid' do
+              message = ProcessUpdateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_interval]).to include('must be an integer')
+            end
+          end
+
+          context 'less than one' do
+            let(:params) do
+              {
+                readiness_health_check: {
+                  type: 'http',
+                  data: {
+                    interval: 0
+                  }
+                }
+              }
+            end
+
+            it 'is not valid' do
+              message = ProcessUpdateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_interval]).to include('must be greater than or equal to 1')
+            end
+          end
+
+          context 'interval is > the the max value allowed in the database' do
+            let(:params) do
+              {
+                readiness_health_check: {
+                  type: 'port',
+                  data: {
+                    interval: MetadataBaseMessage::MAX_DB_INT + 1
+                  }
+                }
+              }
+            end
+
+            it 'is not valid' do
+              message = ProcessUpdateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_interval]).to include('must be less than or equal to 2147483647')
+            end
           end
         end
 

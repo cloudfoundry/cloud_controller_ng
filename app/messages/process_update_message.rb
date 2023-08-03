@@ -44,6 +44,10 @@ module VCAP::CloudController
     allow_nil: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: MAX_DB_INT }
 
+    validates :health_check_interval,
+    allow_nil: true,
+    numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: MAX_DB_INT }
+
     validates :health_check_endpoint,
     length: { maximum: 255 },
     allow_nil: true,
@@ -57,6 +61,10 @@ module VCAP::CloudController
     if: -> { readiness_health_check && readiness_health_check.key?(:type) }
 
     validates :readiness_health_check_invocation_timeout,
+    allow_nil: true,
+    numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: MAX_DB_INT }
+
+    validates :readiness_health_check_interval,
     allow_nil: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: MAX_DB_INT }
 
@@ -77,6 +85,10 @@ module VCAP::CloudController
       HashUtils.dig(health_check, :data, :invocation_timeout)
     end
 
+    def health_check_interval
+      HashUtils.dig(health_check, :data, :interval)
+    end
+
     def health_check_endpoint
       HashUtils.dig(health_check, :data, :endpoint)
     end
@@ -87,6 +99,10 @@ module VCAP::CloudController
 
     def readiness_health_check_invocation_timeout
       HashUtils.dig(readiness_health_check, :data, :invocation_timeout)
+    end
+
+    def readiness_health_check_interval
+      HashUtils.dig(readiness_health_check, :data, :interval)
     end
 
     def readiness_health_check_endpoint
