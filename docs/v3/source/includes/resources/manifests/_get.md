@@ -33,7 +33,12 @@ applications:
     memory: 512M
     log-rate-limit-per-second: 1KB
     disk_quota: 1024M
-    health-check-type: port
+    health-check-type: http
+    health-check-http-endpoint: /healthy
+    health-check-invocation-timeout: 10
+    readiness-health-check-type: http
+    readiness-health-check-http-endpoint: /ready
+    readiness-health-check-invocation-timeout: 20
 ```
 
 Generate a manifest for an app and its underlying processes.
