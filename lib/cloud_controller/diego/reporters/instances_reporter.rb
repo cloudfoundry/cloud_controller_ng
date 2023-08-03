@@ -24,10 +24,12 @@ module VCAP::CloudController
 
           current_time_ns = Time.now.to_f * 1e9
           translated_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
+          routable = actual_lrp.has_routable? ? actual_lrp.routable : true
           result = {
-            state:  translated_state,
-            uptime: nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
-            since:  nanoseconds_to_seconds(actual_lrp.since),
+            state:    translated_state,
+            routable: routable,
+            uptime:   nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
+            since:    nanoseconds_to_seconds(actual_lrp.since),
           }
 
           result[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
