@@ -475,6 +475,19 @@ module VCAP::CloudController
                   expect(monitor_args).to eq(['-port=4444', '-timeout=10s'])
                 end
               end
+
+              context 'when there is an interval' do
+                before do
+                  process.health_check_interval = 7
+                end
+
+                it 'sets the connect_timeout_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.interval_ms).to eq(7_000)
+                end
+              end
             end
 
             context 'when the health check type is set to "http"' do
@@ -610,6 +623,19 @@ module VCAP::CloudController
                   tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
                   expect(tcp_check.port).to eq(4444)
                   expect(tcp_check.connect_timeout_ms).to eq(10_000)
+                end
+              end
+
+              context 'when there is an interval defined' do
+                before do
+                  process.readiness_health_check_interval = 77
+                end
+
+                it 'sets the interval_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.interval_ms).to eq(77_000)
                 end
               end
             end
