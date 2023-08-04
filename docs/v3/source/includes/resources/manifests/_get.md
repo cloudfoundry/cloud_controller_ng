@@ -36,9 +36,11 @@ applications:
     health-check-type: http
     health-check-http-endpoint: /healthy
     health-check-invocation-timeout: 10
+    health-check-interval: 5
     readiness-health-check-type: http
     readiness-health-check-http-endpoint: /ready
     readiness-health-check-invocation-timeout: 20
+    readiness-health-check-interval: 5
 ```
 
 Generate a manifest for an app and its underlying processes.
