@@ -38,6 +38,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :actual_lrp_instance_key, :message, 2, "diego.bbs.models.ActualLRPInstanceKey"
     optional :actual_lrp_net_info, :message, 3, "diego.bbs.models.ActualLRPNetInfo"
     repeated :actual_lrp_internal_routes, :message, 4, "diego.bbs.models.ActualLRPInternalRoute"
+    map :metric_tags, :string, :string, 5
+    oneof :optional_routable do
+      optional :Routable, :bool, 6
+    end
   end
   add_message "diego.bbs.models.CrashActualLRPRequest" do
     optional :actual_lrp_key, :message, 1, "diego.bbs.models.ActualLRPKey"

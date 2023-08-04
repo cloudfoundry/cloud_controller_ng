@@ -7,24 +7,22 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "diego.bbs.models.CheckDefinition" do
     repeated :checks, :message, 1, "diego.bbs.models.Check"
     optional :log_source, :string, 2
-    repeated :readiness_checks, :message, 3, "diego.bbs.models.ReadinessCheck"
+    repeated :readiness_checks, :message, 3, "diego.bbs.models.Check"
   end
   add_message "diego.bbs.models.Check" do
-    optional :tcp_check, :message, 1, "diego.bbs.models.TCPCheck"
-    optional :http_check, :message, 2, "diego.bbs.models.HTTPCheck"
-  end
-  add_message "diego.bbs.models.ReadinessCheck" do
     optional :tcp_check, :message, 1, "diego.bbs.models.TCPCheck"
     optional :http_check, :message, 2, "diego.bbs.models.HTTPCheck"
   end
   add_message "diego.bbs.models.TCPCheck" do
     optional :port, :uint32, 1
     optional :connect_timeout_ms, :uint64, 2
+    optional :interval_ms, :uint64, 3
   end
   add_message "diego.bbs.models.HTTPCheck" do
     optional :port, :uint32, 1
     optional :request_timeout_ms, :uint64, 2
     optional :path, :string, 3
+    optional :interval_ms, :uint64, 4
   end
 end
 
@@ -33,7 +31,6 @@ module Diego
     module Models
       CheckDefinition = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.CheckDefinition").msgclass
       Check = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.Check").msgclass
-      ReadinessCheck = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ReadinessCheck").msgclass
       TCPCheck = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.TCPCheck").msgclass
       HTTPCheck = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.HTTPCheck").msgclass
     end
