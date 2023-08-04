@@ -123,13 +123,15 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'readiness_health_check' => {
               'type' => 'process',
               'data' => {
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -160,13 +162,15 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'readiness_health_check' => {
               'type' => 'process',
               'data' => {
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -425,13 +429,15 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'readiness_health_check' => {
           'type' => 'process',
           'data' => {
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -630,17 +636,18 @@ RSpec.describe 'Processes' do
     let(:process) do
       VCAP::CloudController::ProcessModel.make(
         :process,
-        app:                  app_model,
-        revision:             revision,
-        type:                 'web',
-        instances:            2,
-        memory:               1024,
-        disk_quota:           1024,
-        log_rate_limit:            1_048_576,
-        command:              'rackup',
-        ports:                [4444, 5555],
-        health_check_type:    'port',
-        health_check_timeout: 10
+        app:                   app_model,
+        revision:              revision,
+        type:                  'web',
+        instances:             2,
+        memory:                1024,
+        disk_quota:            1024,
+        log_rate_limit:             1_048_576,
+        command:               'rackup',
+        ports:                 [4444, 5555],
+        health_check_type:     'port',
+        health_check_timeout:  10,
+        health_check_interval: 5
       )
     end
 
@@ -650,13 +657,15 @@ RSpec.describe 'Processes' do
         health_check: {
           type: 'process',
           data: {
-            timeout: 20
+            timeout: 20,
+            interval: 5
           }
         },
         readiness_health_check: {
           type: 'port',
           data: {
-            invocation_timeout: 10
+            invocation_timeout: 10,
+            interval: 6
           }
         },
         metadata: metadata,
@@ -680,13 +689,15 @@ RSpec.describe 'Processes' do
           'type' => 'process',
           'data' => {
             'timeout' => 20,
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => 5
           }
         },
         'readiness_health_check' => {
           'type' => 'port',
           'data' => {
-            'invocation_timeout' => 10
+            'invocation_timeout' => 10,
+            'interval' => 6
           }
         },
         'created_at'   => iso8601,
@@ -776,12 +787,14 @@ RSpec.describe 'Processes' do
             'type' => 'process',
             'data' => {
               'timeout' => 20,
+              'interval' => 5
             }
           },
           'readiness_health_check' => {
             'type' => 'port',
             'data' => {
-              'invocation_timeout' => 10
+              'invocation_timeout' => 10,
+              'interval' => 6
             }
           },
           'metadata' => {
@@ -837,13 +850,15 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'readiness_health_check' => {
           'type' => 'process',
           "data" => {
-            "invocation_timeout" => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -1198,13 +1213,15 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'readiness_health_check' => {
               'type' => 'process',
               'data' => {
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -1239,13 +1256,15 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'readiness_health_check' => {
               'type' => 'process',
               'data' => {
-                'invocation_timeout' => nil
+                'invocation_timeout' => nil,
+                'interval' => nil
               }
             },
             'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -1365,13 +1384,15 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'readiness_health_check' => {
           'type' => 'process',
           'data' => {
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'metadata' => { 'annotations' => {}, 'labels' => {} },
@@ -1458,6 +1479,7 @@ RSpec.describe 'Processes' do
           type: 'http',
           data: {
             invocation_timeout: 10,
+            interval: 7,
             endpoint: '/ready'
           }
         },
@@ -1483,14 +1505,16 @@ RSpec.describe 'Processes' do
           'data' => {
             'timeout' => 20,
             'endpoint' => '/healthcheck',
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'readiness_health_check' => {
           'type' => 'http',
           'data' => {
             'endpoint' => '/ready',
-            'invocation_timeout' => 10
+            'invocation_timeout' => 10,
+            'interval' => 7
           }
         },
         'created_at'   => iso8601,
@@ -1551,7 +1575,8 @@ RSpec.describe 'Processes' do
             'type' => 'http',
             'data' => {
               'endpoint' => '/ready',
-              'invocation_timeout' => 10
+              'invocation_timeout' => 10,
+              'interval' => 7
             }
           },
           'metadata' => {
@@ -1607,13 +1632,15 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'readiness_health_check' => {
           'type' => 'process',
           'data' => {
-            'invocation_timeout' => nil
+            'invocation_timeout' => nil,
+            'interval' => nil
           }
         },
         'metadata' => { 'annotations' => {}, 'labels' => {} },

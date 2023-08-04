@@ -8,17 +8,18 @@ module VCAP::CloudController::Presenters::V3
       let(:health_check_type) { 'http' }
       let(:process) {
         VCAP::CloudController::ProcessModel.make(
-          diego:                true,
-          app_guid:             app_model.guid,
-          instances:            3,
-          memory:               42,
-          disk_quota:           37,
-          command:              'rackup',
-          metadata:             {},
-          health_check_type:    health_check_type,
-          health_check_timeout: 51,
+          diego:                      true,
+          app_guid:                   app_model.guid,
+          instances:                  3,
+          memory:                     42,
+          disk_quota:                 37,
+          command:                    'rackup',
+          metadata:                   {},
+          health_check_type:          health_check_type,
+          health_check_timeout:       51,
+          health_check_interval:      23,
           health_check_http_endpoint: '/healthcheck',
-          created_at:           Time.at(1)
+          created_at:                 Time.at(1)
         )
       }
       let(:result) { ProcessPresenter.new(process).to_hash }
@@ -94,6 +95,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:command]).to eq('rackup')
           expect(result[:health_check][:type]).to eq(health_check_type)
           expect(result[:health_check][:data][:timeout]).to eq(51)
+          expect(result[:health_check][:data][:interval]).to eq(23)
           expect(result[:health_check][:data][:endpoint]).to eq('/healthcheck')
           expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
           expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
