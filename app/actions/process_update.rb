@@ -35,6 +35,7 @@ module VCAP::CloudController
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
 
         process.health_check_invocation_timeout = message.health_check_invocation_timeout if message.requested?(:health_check_invocation_timeout)
+        process.health_check_interval = message.health_check_interval if message.requested?(:health_check_interval)
         if message.requested?(:health_check_type) && message.health_check_type != HealthCheckTypes::HTTP
           process.health_check_http_endpoint = nil
           process.skip_process_version_update = true
@@ -44,6 +45,7 @@ module VCAP::CloudController
         end
 
         process.readiness_health_check_invocation_timeout = message.readiness_health_check_invocation_timeout if message.requested?(:readiness_health_check_invocation_timeout)
+        process.readiness_health_check_interval = message.readiness_health_check_interval if message.requested?(:readiness_health_check_interval)
         if message.requested?(:readiness_health_check_type) && message.readiness_health_check_type != HealthCheckTypes::HTTP
           process.readiness_health_check_http_endpoint = nil
           process.skip_process_version_update = true

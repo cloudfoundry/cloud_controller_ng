@@ -11,9 +11,11 @@ module VCAP::CloudController
       @requested_keys << :health_check_type if HashUtils.dig(params, :health_check)&.key?(:type)
       @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:timeout)
       @requested_keys << :health_check_invocation_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:invocation_timeout)
+      @requested_keys << :health_check_interval if HashUtils.dig(params, :health_check, :data)&.key?(:interval)
       @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data)&.key?(:endpoint)
       @requested_keys << :readiness_health_check_type if HashUtils.dig(params, :readiness_health_check)&.key?(:type)
       @requested_keys << :readiness_health_check_invocation_timeout if HashUtils.dig(params, :readiness_health_check, :data)&.key?(:invocation_timeout)
+      @requested_keys << :readiness_health_check_interval if HashUtils.dig(params, :readiness_health_check, :data)&.key?(:interval)
       @requested_keys << :readiness_health_check_endpoint if HashUtils.dig(params, :readiness_health_check, :data)&.key?(:endpoint)
     end
 
@@ -114,9 +116,11 @@ module VCAP::CloudController
         :health_check_type,
         :health_check_timeout,
         :health_check_invocation_timeout,
+        :health_check_interval,
         :health_check_endpoint,
         :readiness_health_check_type,
         :readiness_health_check_invocation_timeout,
+        :readiness_health_check_interval,
         :readiness_health_check_endpoint
       ])
     end
