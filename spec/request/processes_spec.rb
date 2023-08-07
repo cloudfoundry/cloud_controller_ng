@@ -856,7 +856,7 @@ RSpec.describe 'Processes' do
         },
         'readiness_health_check' => {
           'type' => 'process',
-          "data" => {
+          'data' => {
             'invocation_timeout' => nil,
             'interval' => nil
           }

@@ -73,7 +73,8 @@ RSpec.describe ReadinessHealthCheckPolicy do
       let(:ports) { [] }
       subject(:validator) do
         process.ports = ports
-        ReadinessHealthCheckPolicy.new(process, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint, readiness_health_check_interval)
+        ReadinessHealthCheckPolicy.new(process, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint,
+readiness_health_check_interval)
       end
 
       describe 'readiness health check type is not "ports"' do

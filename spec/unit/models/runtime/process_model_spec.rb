@@ -305,7 +305,6 @@ module VCAP::CloudController
         end
       end
 
-
       describe 'instances' do
         subject(:process) { ProcessModelFactory.make }
 
