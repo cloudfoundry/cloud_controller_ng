@@ -475,6 +475,7 @@ RSpec.describe 'Processes' do
     let(:net_info_1) {
       {
         address: '1.2.3.4',
+        instance_address: '5.6.7.8',
         ports: [
           {
             host_port: 8080,
@@ -538,7 +539,8 @@ RSpec.describe 'Processes' do
             'disk' => 1024,
             'log_rate' => 1024,
           },
-          'host'           => 'toast',
+          'host' => 'toast',
+          'instance_internal_ip' => '5.6.7.8',
           'instance_ports' => [
             {
               'external' => 8080,
