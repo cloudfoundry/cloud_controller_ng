@@ -87,13 +87,16 @@
       "health_check": {
         "type": "port",
         "data": {
-          "timeout": null
+          "timeout": null,
+          "invocation_timeout": null,
+          "interval": null
         }
       },
       "readiness_health_check": {
         "type": "process",
         "data": {
-          "invocation_timeout": null
+          "invocation_timeout": null,
+          "interval": null
         }
       },
       "relationships": {
@@ -145,14 +148,16 @@
       "health_check": {
         "type": "process",
         "data": {
-          "timeout": null
+          "invocation_timeout": null,
+          "interval": null
         }
       },
       "readiness_health_check": {
         "type": "http",
         "data": {
           "endpoint": "/ready",
-          "invocation_timeout": 2
+          "invocation_timeout": 2,
+          "interval": 5
         }
       },
       "relationships": {
