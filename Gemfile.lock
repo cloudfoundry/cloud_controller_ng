@@ -302,8 +302,7 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.8.4)
     minitest (5.18.1)
-    mock_redis (0.36.0)
-      ruby2_keywords
+    mock_redis (0.37.0)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
