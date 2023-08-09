@@ -20,6 +20,7 @@ Name | Type | Description
 **log_rate_limit_in_bytes_per_second** | _integer_ | The log rate in bytes per second allocated per instance 
 **disk_in_mb** | _integer_ | The disk in MB allocated per instance
 **health_check** | [_health check object_](#the-health-check-object) | The health check to perform on the process
+**readiness_health_check** | [_readiness health check object_](#the-readiness-health-check-object) | The readiness health check to perform on the process
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the process belongs to
 **relationships.revision** | [_to-one relationship_](#to-one-relationships) | The app revision the process is currently running
 **metadata.labels** | [_label object_](#labels) | Labels applied to the process

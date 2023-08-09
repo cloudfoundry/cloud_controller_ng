@@ -150,19 +150,16 @@ module VCAP::CloudController
       :memory, :instances, :disk_quota, :log_rate_limit, :state, :version,
       :command, :console, :debug, :staging_task_id, :package_state,
       :health_check_type, :health_check_timeout, :health_check_http_endpoint,
-      :readiness_health_check_type, :readiness_health_check_http_endpoint,
-      :readiness_health_check_invocation_timeout, :staging_failed_reason,
-      :staging_failed_description, :diego, :docker_image, :package_updated_at,
-      :detected_start_command, :enable_ssh, :ports
+      :staging_failed_reason, :staging_failed_description, :diego,
+      :docker_image, :package_updated_at, :detected_start_command, :enable_ssh,
+      :ports
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
       :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
       :service_binding_guids, :route_guids, :health_check_type,
       :health_check_http_endpoint, :health_check_timeout, :diego,
-      :readiness_health_check_type, :readiness_health_check_http_endpoint,
-      :readiness_health_check_invocation_timeout, :docker_image, :app_guid, :enable_ssh,
-      :ports
+      :docker_image, :app_guid, :enable_ssh, :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
