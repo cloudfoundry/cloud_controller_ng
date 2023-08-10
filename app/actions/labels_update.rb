@@ -14,14 +14,26 @@ module VCAP::CloudController
             label_klass.find(resource_guid: resource.guid, key_prefix: prefix, key_name: name).try(:destroy)
             next
           end
-          label = label_klass.find_or_create(resource_guid: resource.guid, key_prefix: prefix, key_name: name)
-          label.update(value: label_value)
+          begin
+            tries ||= 2
+            label_klass.db.transaction(savepoint: true) do
+              label = label_klass.find_or_create(resource_guid: resource.guid, key_prefix: prefix.to_s, key_name: name)
+              label.update(value: label_value)
+            end
+          rescue Sequel::UniqueConstraintViolation => e
+            if (tries -= 1).positive?
+              retry
+            else
+              v3_api_error!(:UniquenessError, e.message)
+            end
+          end
         end
 
         ending_label_count_for_resource = label_klass.where(resource_guid: resource.guid).count
         validate_max_label_limit!(labels, starting_label_count_for_resource, ending_label_count_for_resource)
         labels
       end
+
 
       private
 

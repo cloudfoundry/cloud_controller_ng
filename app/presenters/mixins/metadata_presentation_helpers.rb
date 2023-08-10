@@ -25,7 +25,7 @@ module VCAP::CloudController::Presenters::Mixins
 
     def hashified_metadata(metadata)
       metadata.each_with_object({}) do |m, memo|
-        key = [m.key_prefix, m.key_name].compact.join(VCAP::CloudController::MetadataHelpers::KEY_SEPARATOR)
+        key = [m.key_prefix.empty? ? nil : m.key_prefix, m.key_name].compact.join(VCAP::CloudController::MetadataHelpers::KEY_SEPARATOR)
         memo[key] = m.value
       end
     end

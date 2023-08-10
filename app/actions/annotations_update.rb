@@ -12,18 +12,28 @@ module VCAP::CloudController
           # if the key has a prefix, but we can find its whole text in the key column,
           # it needs to be reformed in the newer, prefix-aware format.
           # see decisions/0004-adding-key-prefix-to-annotations.md.
-          if prefix.present?
+          if prefix.nil?
             annotation_klass.find(resource_guid: resource.guid, key: key)&.destroy
           end
-
-          annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key_name, key_prefix: prefix)
 
           if value.nil? && destroy_nil # this is delete
             annotation.try(:destroy)
             next
           end
 
-          annotation.update(value: value)
+          begin
+            tries ||= 2
+            annotation_klass.db.transaction(savepoint: true) do
+              annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key_name, key_prefix: prefix.to_s)
+              annotation.update(value: value)
+            end
+          rescue Sequel::UniqueConstraintViolation => e
+            if (tries -= 1).positive?
+              retry
+            else
+              v3_api_error!(:UniquenessError, e.message)
+            end
+          end
         end
 
         ending_annotation_count_for_resource = annotation_klass.where(resource_guid: resource.guid).count
