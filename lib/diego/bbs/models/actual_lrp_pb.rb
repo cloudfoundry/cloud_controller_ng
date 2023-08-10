@@ -50,6 +50,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :modification_tag, :message, 9, "diego.bbs.models.ModificationTag"
     optional :presence, :enum, 10, "diego.bbs.models.ActualLRP.Presence"
     repeated :actual_lrp_internal_routes, :message, 11, "diego.bbs.models.ActualLRPInternalRoute"
+    map :metric_tags, :string, :string, 12
+    oneof :optional_routable do
+      optional :routable, :bool, 13
+    end
   end
   add_enum "diego.bbs.models.ActualLRP.Presence" do
     value :ORDINARY, 0

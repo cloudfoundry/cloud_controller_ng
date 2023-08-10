@@ -1422,10 +1422,10 @@ RSpec.describe 'Apps' do
         expect(parsed_response).to be_a_response_like(
           {
             '0' => {
-              'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
+              'state' => 'RUNNING', 'routable' => true, 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
             },
             '1' => {
-              'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
+              'state' => 'RUNNING', 'routable' => true, 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
             }
           }
         )
