@@ -4,11 +4,12 @@ require 'utils/uri_utils'
 # NOTE: nothing uses just the BaseHealthCheckPolicy. It is only used for
 # inheritance.
 class BaseHealthCheckPolicy
-  def initialize(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint)
+  def initialize(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
     @process = process
     @errors = process.errors
     @health_check_timeout = health_check_timeout
     @health_check_invocation_timeout = health_check_invocation_timeout
+    @health_check_interval = health_check_interval
     @health_check_type = health_check_type
     @health_check_http_endpoint = health_check_http_endpoint
     @valid_health_check_types = VCAP::CloudController::HealthCheckTypes.all_types
@@ -16,6 +17,7 @@ class BaseHealthCheckPolicy
       'timeout' => { sym: :health_check_timeout, str: 'health check timeout' },
       'type' => { sym: :health_check_type, str: 'health check type' },
       'invocation_timeout' => { sym: :health_check_invocation_timeout, str: 'health check invocation timeout' },
+      'interval' => { sym: :health_check_interval, str: 'health check interval' },
       'endpoint' => { sym: :health_check_http_endpoint, str: 'health check endpoint' },
     }
   end
@@ -24,6 +26,7 @@ class BaseHealthCheckPolicy
     validate_type
     validate_timeout
     validate_invocation_timeout
+    validate_interval
     validate_health_check_type_and_port_presence_are_in_agreement
     validate_health_check_http_endpoint
   end
@@ -52,6 +55,12 @@ class BaseHealthCheckPolicy
     return unless @health_check_invocation_timeout
 
     @errors.add(@var_presenter['invocation_timeout'][:sym], :less_than_one) if @health_check_invocation_timeout < 1
+  end
+
+  def validate_interval
+    return unless @health_check_interval
+
+    @errors.add(@var_presenter['interval'][:sym], :less_than_one) if @health_check_interval < 1
   end
 
   def validate_health_check_type_and_port_presence_are_in_agreement

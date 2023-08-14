@@ -356,8 +356,10 @@ module VCAP::CloudController
         let(:bbs_instances_response) do
           [
             make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
-            make_actual_lrp_with_routable(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns, routable: true),
-            make_actual_lrp_with_routable(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns, routable: false),
+            make_actual_lrp_with_routable(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns,
+routable: true),
+            make_actual_lrp_with_routable(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns,
+routable: false),
           ]
         end
 

@@ -8,9 +8,11 @@ module VCAP::CloudController
       :health_check_http_endpoint,
       :health_check_invocation_timeout,
       :health_check_type,
+      :health_check_interval,
       :readiness_health_check_http_endpoint,
       :readiness_health_check_invocation_timeout,
       :readiness_health_check_type,
+      :readiness_health_check_interval,
       :timeout,
       :type
     ]
@@ -51,6 +53,11 @@ module VCAP::CloudController
       numericality: { only_integer: true, greater_than_or_equal_to: 1 },
       if: proc { |a| a.requested?(:health_check_invocation_timeout) }
 
+    validates :health_check_interval,
+      allow_nil: true,
+      numericality: { only_integer: true, greater_than_or_equal_to: 1 },
+      if: proc { |a| a.requested?(:health_check_interval) }
+
     validates :readiness_health_check_type,
       inclusion: {
         in: [HealthCheckTypes::PORT, HealthCheckTypes::PROCESS, HealthCheckTypes::HTTP],
@@ -69,6 +76,11 @@ module VCAP::CloudController
       allow_nil: true,
       uri_path: true,
       if: proc { |a| a.requested?(:readiness_health_check_http_endpoint) }
+
+    validates :readiness_health_check_interval,
+      allow_nil: true,
+      numericality: { only_integer: true, greater_than_or_equal_to: 1 },
+      if: proc { |a| a.requested?(:readiness_health_check_interval) }
 
     validates :timeout,
       allow_nil: true,

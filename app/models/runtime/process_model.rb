@@ -266,8 +266,8 @@ module VCAP::CloudController
         MinLogRateLimitPolicy.new(self),
         AppMaxLogRateLimitPolicy.new(self, space, 'exceeds space log rate quota'),
         AppMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota'),
-        HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint),
-        ReadinessHealthCheckPolicy.new(self, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint),
+        HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval),
+        ReadinessHealthCheckPolicy.new(self, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint, readiness_health_check_interval),
         DockerPolicy.new(self),
         PortsPolicy.new(self)
       ]

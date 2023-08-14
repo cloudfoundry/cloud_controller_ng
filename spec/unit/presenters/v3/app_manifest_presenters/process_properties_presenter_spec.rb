@@ -39,9 +39,11 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           health_check_type: 'http',
           health_check_http_endpoint: '/healthy',
           health_check_invocation_timeout: 10,
+          health_check_interval: 5,
           readiness_health_check_type: 'http',
-          readiness_health_check_http_endpoint:'/ready',
+          readiness_health_check_http_endpoint: '/ready',
           readiness_health_check_invocation_timeout: 20,
+          readiness_health_check_interval: 7,
           health_check_timeout: 30
         )
       end
@@ -57,9 +59,11 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'health-check-type' => 'http',
           'health-check-http-endpoint' => '/healthy',
           'health-check-invocation-timeout' => 10,
+          'health-check-interval' => 5,
           'readiness-health-check-type' => 'http',
           'readiness-health-check-http-endpoint' => '/ready',
           'readiness-health-check-invocation-timeout' => 20,
+          'readiness-health-check-interval' => 7,
           'timeout' => 30
         })
       end

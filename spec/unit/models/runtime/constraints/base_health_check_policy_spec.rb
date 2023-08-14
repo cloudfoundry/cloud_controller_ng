@@ -5,11 +5,21 @@ RSpec.describe BaseHealthCheckPolicy do
   let(:health_check_type) {}
   let(:health_check_timeout) {}
   let(:health_check_invocation_timeout) {}
+  let(:health_check_interval) {}
   let(:health_check_http_endpoint) {}
 
   let(:max_health_check_timeout) { 512 }
 
-  subject(:validator) { BaseHealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint) }
+  subject(:validator) do
+    BaseHealthCheckPolicy.new(
+      process,
+      health_check_timeout,
+      health_check_invocation_timeout,
+      health_check_type,
+      health_check_http_endpoint,
+      health_check_interval
+    )
+  end
 
   describe 'health_check_type' do
     context 'defaults' do
@@ -133,11 +143,44 @@ RSpec.describe BaseHealthCheckPolicy do
     end
   end
 
+  describe 'health_check_interval' do
+    context 'when a health_check_interval is less than zero' do
+      let(:health_check_interval) { -10 }
+
+      it 'registers error' do
+        expect(validator).to validate_with_error(process, :health_check_interval, :less_than_one)
+      end
+    end
+
+    context 'when a health_check_interval is zero' do
+      let(:health_check_interval) { 0 }
+
+      it 'registers error' do
+        expect(validator).to validate_with_error(process, :health_check_interval, :less_than_one)
+      end
+    end
+
+    context 'when a health_check_interval is greater than zero' do
+      let(:health_check_interval) { 10 }
+
+      it 'does not register error' do
+        expect(validator).to validate_without_error(process)
+      end
+    end
+  end
+
   describe 'empty ports and health_check_type' do
     let(:ports) { [] }
     subject(:validator) do
       process.ports = ports
-      BaseHealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint)
+      BaseHealthCheckPolicy.new(
+        process,
+        health_check_timeout,
+        health_check_invocation_timeout,
+        health_check_type,
+        health_check_http_endpoint,
+        health_check_interval
+      )
     end
 
     describe 'health check type is not "ports"' do

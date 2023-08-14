@@ -227,20 +227,23 @@ module VCAP::CloudController
 
       def build_readiness_check(port, index)
         timeout_ms = (process.readiness_health_check_invocation_timeout || 0) * 1000
+        interval_ms = (process.readiness_health_check_interval || 0) * 1000
 
         if process.readiness_health_check_type == HealthCheckTypes::HTTP && index == 0
-          ::Diego::Bbs::Models::ReadinessCheck.new(http_check:
+          ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
               path: process.readiness_health_check_http_endpoint,
               port: port,
-              request_timeout_ms: timeout_ms
+              request_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         else
-          ::Diego::Bbs::Models::ReadinessCheck.new(tcp_check:
+          ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
-              connect_timeout_ms: timeout_ms
+              connect_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         end
@@ -248,20 +251,23 @@ module VCAP::CloudController
 
       def build_check(port, index)
         timeout_ms = (process.health_check_invocation_timeout || 0) * 1000
+        interval_ms = (process.health_check_interval || 0) * 1000
 
         if process.health_check_type == HealthCheckTypes::HTTP && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
               path: process.health_check_http_endpoint,
               port: port,
-              request_timeout_ms: timeout_ms
+              request_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
-              connect_timeout_ms: timeout_ms
+              connect_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         end

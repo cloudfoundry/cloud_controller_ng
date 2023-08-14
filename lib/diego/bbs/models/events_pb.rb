@@ -20,6 +20,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "diego.bbs.models.ActualLRPInstanceCreatedEvent" do
     optional :actual_lrp, :message, 1, "diego.bbs.models.ActualLRP"
+    optional :trace_id, :string, 2
   end
   add_message "diego.bbs.models.ActualLRPInfo" do
     optional :actual_lrp_net_info, :message, 3, "diego.bbs.models.ActualLRPNetInfo"
@@ -30,25 +31,33 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :since, :int64, 8
     optional :modification_tag, :message, 9, "diego.bbs.models.ModificationTag"
     optional :presence, :enum, 10, "diego.bbs.models.ActualLRP.Presence"
+    oneof :optional_routable do
+      optional :Routable, :bool, 11
+    end
   end
   add_message "diego.bbs.models.ActualLRPInstanceChangedEvent" do
     optional :actual_lrp_key, :message, 1, "diego.bbs.models.ActualLRPKey"
     optional :actual_lrp_instance_key, :message, 2, "diego.bbs.models.ActualLRPInstanceKey"
     optional :before, :message, 3, "diego.bbs.models.ActualLRPInfo"
     optional :after, :message, 4, "diego.bbs.models.ActualLRPInfo"
+    optional :trace_id, :string, 5
   end
   add_message "diego.bbs.models.ActualLRPInstanceRemovedEvent" do
     optional :actual_lrp, :message, 1, "diego.bbs.models.ActualLRP"
+    optional :trace_id, :string, 2
   end
   add_message "diego.bbs.models.DesiredLRPCreatedEvent" do
     optional :desired_lrp, :message, 1, "diego.bbs.models.DesiredLRP"
+    optional :trace_id, :string, 2
   end
   add_message "diego.bbs.models.DesiredLRPChangedEvent" do
     optional :before, :message, 1, "diego.bbs.models.DesiredLRP"
     optional :after, :message, 2, "diego.bbs.models.DesiredLRP"
+    optional :trace_id, :string, 3
   end
   add_message "diego.bbs.models.DesiredLRPRemovedEvent" do
     optional :desired_lrp, :message, 1, "diego.bbs.models.DesiredLRP"
+    optional :trace_id, :string, 2
   end
   add_message "diego.bbs.models.ActualLRPCrashedEvent" do
     optional :actual_lrp_key, :message, 1, "diego.bbs.models.ActualLRPKey"

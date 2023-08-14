@@ -8,12 +8,18 @@ module VCAP::CloudController
     let(:health_check) do
       {
         type: 'process',
-        data: { timeout: 20 }
+        data: {
+          timeout: 20,
+          interval: 7
+        }
       }
     end
     let(:readiness_health_check) do
       {
-        type: 'process'
+        type: 'process',
+        data: {
+          interval: 8
+        }
       }
     end
     let(:message) do
@@ -36,13 +42,14 @@ module VCAP::CloudController
     let!(:process) do
       ProcessModel.make(
         :process,
-        type: 'web',
-        command:              'initial command',
-        health_check_type:    'port',
-        health_check_timeout: 10,
-        ports:                [1574, 3389],
-        app: app,
-        state: 'STARTED'
+        type:                  'web',
+        command:               'initial command',
+        health_check_type:     'port',
+        health_check_timeout:  10,
+        health_check_interval: 5,
+        ports:                 [1574, 3389],
+        app:                   app,
+        state:                 'STARTED'
       )
     end
 
@@ -58,6 +65,7 @@ module VCAP::CloudController
         expect(process.command).to eq('new')
         expect(process.health_check_type).to eq('process')
         expect(process.health_check_timeout).to eq(20)
+        expect(process.health_check_interval).to eq(7)
       end
 
       it 'updates the process metadata' do
@@ -213,7 +221,8 @@ module VCAP::CloudController
               type: 'http',
               data: {
                 endpoint: '/ready',
-                invocation_timeout: 10
+                invocation_timeout: 10,
+                interval: 5
               }
             }
           end
@@ -227,6 +236,7 @@ module VCAP::CloudController
             expect(process.readiness_health_check_type).to eq('http')
             expect(process.readiness_health_check_http_endpoint).to eq('/ready')
             expect(process.readiness_health_check_invocation_timeout).to eq(10)
+            expect(process.readiness_health_check_interval).to eq(5)
           end
         end
 
@@ -237,6 +247,7 @@ module VCAP::CloudController
               command:              'initial command',
               readiness_health_check_type:    'http',
               readiness_health_check_http_endpoint: '/ready',
+              readiness_health_check_interval: 5,
               health_check_timeout: 10,
               ports:                [1574, 3389]
             )
@@ -297,6 +308,7 @@ module VCAP::CloudController
               expect(process.readiness_health_check_type).to eq('http')
               expect(process.health_check_timeout).to eq(10)
               expect(process.readiness_health_check_invocation_timeout).to eq(11)
+              expect(process.readiness_health_check_interval).to eq(5)
 
               process.reload
               # Testing that they are the same after reload
@@ -304,6 +316,7 @@ module VCAP::CloudController
               expect(process.readiness_health_check_type).to eq('http')
               expect(process.health_check_timeout).to eq(10)
               expect(process.readiness_health_check_invocation_timeout).to eq(11)
+              expect(process.readiness_health_check_interval).to eq(5)
             end
           end
 
@@ -362,10 +375,11 @@ module VCAP::CloudController
               'command'      => 'new',
               'health_check' => {
                 'type' => 'process',
-                'data' => { 'timeout' => 20 }
+                'data' => { 'timeout' => 20, 'interval' => 7 }
               },
               'readiness_health_check' => {
-                'type' => 'process'
+                'type' => 'process',
+                'data' => { 'interval' => 8 }
               },
               'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
             },
@@ -386,10 +400,11 @@ module VCAP::CloudController
                 'command'      => 'new',
                 'health_check' => {
                   'type' => 'process',
-                  'data' => { 'timeout' => 20 }
+                  'data' => { 'timeout' => 20, 'interval' => 7 }
                 },
                 'readiness_health_check' => {
-                  'type' => 'process'
+                  'type' => 'process',
+                  'data' => { 'interval' => 8 }
                 },
                 'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
               },
