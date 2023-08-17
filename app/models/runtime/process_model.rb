@@ -322,6 +322,7 @@ readiness_health_check_interval),
       super
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def version_needs_to_be_updated?
       # change version if:
       #
@@ -346,6 +347,7 @@ readiness_health_check_interval),
         (@ports_changed_by_user && !skip_process_version_update)
       )
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def enable_ssh
       app.enable_ssh

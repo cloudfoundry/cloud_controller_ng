@@ -5,6 +5,7 @@ module VCAP::CloudController
   class ProcessUpdateMessage < MetadataBaseMessage
     register_allowed_keys [:command, :health_check, :readiness_health_check]
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def initialize(params={})
       super(params)
       params = params.deep_symbolize_keys
@@ -18,6 +19,7 @@ module VCAP::CloudController
       @requested_keys << :readiness_health_check_interval if HashUtils.dig(params, :readiness_health_check, :data)&.key?(:interval)
       @requested_keys << :readiness_health_check_endpoint if HashUtils.dig(params, :readiness_health_check, :data)&.key?(:endpoint)
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def self.command_requested?
       @command_requested ||= proc { |a| a.requested?(:command) }

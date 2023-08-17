@@ -10,6 +10,7 @@ module VCAP::CloudController
       @manifest_triggered = manifest_triggered
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def update(process, message, strategy_class)
       if process.web? && process.app.deploying?
         raise InvalidProcess.new('Cannot update this process while a deployment is in flight.')
@@ -61,5 +62,6 @@ module VCAP::CloudController
     rescue Sequel::ValidationFailed => e
       raise InvalidProcess.new(e.message)
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
   end
 end

@@ -229,6 +229,7 @@ module VCAP::CloudController
       mapping
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def process_update_attributes_from_process(params)
       mapping = {}
       mapping[:command] = params[:command] || 'null' if params.key?(:command)
@@ -251,6 +252,7 @@ module VCAP::CloudController
       end
       mapping
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def env_update_attribute_mapping
       mapping = {}
