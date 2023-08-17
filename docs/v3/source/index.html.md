@@ -209,6 +209,7 @@ includes:
   - resources/processes/header
   - resources/processes/object
   - resources/processes/health_check_object
+  - resources/processes/readiness_health_check_object
   - resources/processes/stats_object
   - resources/processes/get
   - resources/processes/stats

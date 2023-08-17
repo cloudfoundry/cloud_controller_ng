@@ -46,9 +46,9 @@ module VCAP::CloudController
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) {
       {
-        0 => { state: 'RUNNING', uptime: 50, since: 2 },
-        1 => { state: 'RUNNING', uptime: 50, since: 2 },
-        2 => { state: 'RUNNING', uptime: 50, since: 2 },
+        0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+        1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+        2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
       }
     }
     let(:instances_reporters) { double(:instance_reporters) }
@@ -259,9 +259,34 @@ module VCAP::CloudController
         let(:current_deploying_instances) { 3 }
         let(:all_instances_results) {
           {
-            0 => { state: 'RUNNING', uptime: 50, since: 2 },
-            1 => { state: 'STARTING', uptime: 50, since: 2 },
-            2 => { state: 'STARTING', uptime: 50, since: 2 },
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+          }
+        }
+
+        it 'does not scales the process' do
+          expect {
+            subject.scale
+          }.not_to change {
+            web_process.reload.instances
+          }
+
+          expect {
+            subject.scale
+          }.not_to change {
+            deploying_web_process.reload.instances
+          }
+        end
+      end
+
+      context 'when one of the deploying_web_process instances is not routable' do
+        let(:current_deploying_instances) { 3 }
+        let(:all_instances_results) {
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
           }
         }
 
@@ -284,9 +309,9 @@ module VCAP::CloudController
         let(:current_deploying_instances) { 3 }
         let(:all_instances_results) {
           {
-            0 => { state: 'RUNNING', uptime: 50, since: 2 },
-            1 => { state: 'FAILING', uptime: 50, since: 2 },
-            2 => { state: 'FAILING', uptime: 50, since: 2 },
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
           }
         }
 
@@ -327,9 +352,9 @@ module VCAP::CloudController
         context 'when some instances are crashing' do
           let(:all_instances_results) {
             {
-              0 => { state: 'RUNNING', uptime: 50, since: 2 },
-              1 => { state: 'FAILING', uptime: 50, since: 2 },
-              2 => { state: 'FAILING', uptime: 50, since: 2 },
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
             }
           }
 
@@ -355,9 +380,9 @@ module VCAP::CloudController
         context 'when instances are failing' do
           let(:all_instances_results) {
             {
-              0 => { state: 'RUNNING', uptime: 50, since: 2 },
-              1 => { state: 'FAILING', uptime: 50, since: 2 },
-              2 => { state: 'FAILING', uptime: 50, since: 2 },
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
             }
           }
 

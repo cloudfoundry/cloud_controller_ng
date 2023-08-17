@@ -475,6 +475,19 @@ module VCAP::CloudController
                   expect(monitor_args).to eq(['-port=4444', '-timeout=10s'])
                 end
               end
+
+              context 'when there is an interval' do
+                before do
+                  process.health_check_interval = 7
+                end
+
+                it 'sets the connect_timeout_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.interval_ms).to eq(7_000)
+                end
+              end
             end
 
             context 'when the health check type is set to "http"' do
@@ -566,6 +579,107 @@ module VCAP::CloudController
                 lrp              = builder.build_app_lrp
                 check_definition = lrp.check_definition
                 expect(check_definition).to be_nil
+              end
+            end
+          end
+
+          context 'readiness health check' do
+            context 'when the readiness health check type defaults to process' do
+              before do
+                process.readiness_health_check_type = 'process'
+              end
+
+              it 'does not add any readiness health checks for backwards compatibility' do
+                lrp = builder.build_app_lrp
+                expect(lrp.check_definition.readiness_checks).to be_empty
+              end
+            end
+
+            context 'when the readiness health check type is set to "port"' do
+              before do
+                process.readiness_health_check_type = 'port'
+              end
+
+              it 'adds a TCP readiness health check definition' do
+                lrp       = builder.build_app_lrp
+                tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
+                expect(tcp_check.port).to eq(4444)
+                expect(tcp_check.connect_timeout_ms).to eq(0)
+              end
+
+              it 'does not set connection timeouts' do
+                lrp       = builder.build_app_lrp
+                tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
+                expect(tcp_check.connect_timeout_ms).to eq(0)
+              end
+
+              context 'when there is an invocation_timeout' do
+                before do
+                  process.readiness_health_check_invocation_timeout = 10
+                end
+
+                it 'sets the connect_timeout_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.connect_timeout_ms).to eq(10_000)
+                end
+              end
+
+              context 'when there is an interval defined' do
+                before do
+                  process.readiness_health_check_interval = 77
+                end
+
+                it 'sets the interval_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.readiness_checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.interval_ms).to eq(77_000)
+                end
+              end
+            end
+
+            context 'when the health check type is set to "http"' do
+              before do
+                process.readiness_health_check_type          = 'http'
+                process.readiness_health_check_http_endpoint = '/http-endpoint'
+                process.readiness_health_check_invocation_timeout = 10
+              end
+
+              it 'adds an HTTP readiness health check definition using the first port' do
+                lrp        = builder.build_app_lrp
+                http_check = lrp.check_definition.readiness_checks.first.http_check
+                expect(http_check.port).to eq(4444)
+                expect(http_check.path).to eq('/http-endpoint')
+                expect(http_check.request_timeout_ms).to eq(10000)
+              end
+
+              it 'defaults the HTTP invocation timeout to zero' do
+                process.readiness_health_check_invocation_timeout = nil
+                lrp = builder.build_app_lrp
+                http_check = lrp.check_definition.readiness_checks.first.http_check
+                expect(http_check.port).to eq(4444)
+                expect(http_check.path).to eq('/http-endpoint')
+                expect(http_check.request_timeout_ms).to eq(0)
+              end
+
+              it 'keeps a TCP readiness health check definition for other ports' do
+                lrp       = builder.build_app_lrp
+                tcp_check = lrp.check_definition.readiness_checks[1].tcp_check
+                expect(tcp_check.port).to eq(5555)
+              end
+            end
+
+            context 'when the readiness health check type is not recognized' do
+              before do
+                process.readiness_health_check_type = 'meow'
+              end
+
+              it 'does not add readiness healthcheck definitions' do
+                lrp              = builder.build_app_lrp
+                check_definition = lrp.check_definition
+                expect(check_definition.readiness_checks).to be_empty
               end
             end
           end

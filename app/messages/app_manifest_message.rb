@@ -21,8 +21,13 @@ module VCAP::CloudController
       :env,
       :health_check_http_endpoint,
       :health_check_invocation_timeout,
+      :health_check_interval,
       :health_check_timeout,
       :health_check_type,
+      :readiness_health_check_http_endpoint,
+      :readiness_health_check_type,
+      :readiness_health_check_invocation_timeout,
+      :readiness_health_check_interval,
       :instances,
       :metadata,
       :memory,
@@ -208,19 +213,33 @@ module VCAP::CloudController
       mapping[:health_check_http_endpoint] = health_check_http_endpoint if requested?(:health_check_http_endpoint)
       mapping[:timeout] = timeout if requested?(:timeout)
       mapping[:health_check_invocation_timeout] = health_check_invocation_timeout if requested?(:health_check_invocation_timeout)
+      mapping[:health_check_interval] = health_check_interval if requested?(:health_check_interval)
+      mapping[:readiness_health_check_invocation_timeout] = readiness_health_check_invocation_timeout if requested?(:readiness_health_check_invocation_timeout)
+      mapping[:readiness_health_check_interval] = readiness_health_check_interval if requested?(:readiness_health_check_interval)
+      mapping[:readiness_health_check_http_endpoint] = readiness_health_check_http_endpoint if requested?(:readiness_health_check_http_endpoint)
 
       if requested?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(health_check_type)
       end
+
+      if requested?(:readiness_health_check_type)
+        mapping[:readiness_health_check_type] = converted_health_check_type(readiness_health_check_type)
+      end
+
       mapping
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def process_update_attributes_from_process(params)
       mapping = {}
       mapping[:command] = params[:command] || 'null' if params.key?(:command)
       mapping[:health_check_http_endpoint] = params[:health_check_http_endpoint] if params.key?(:health_check_http_endpoint)
       mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       mapping[:health_check_invocation_timeout] = params[:health_check_invocation_timeout] if params.key?(:health_check_invocation_timeout)
+      mapping[:health_check_interval] = params[:health_check_interval] if params.key?(:health_check_interval)
+      mapping[:readiness_health_check_invocation_timeout] = params[:readiness_health_check_invocation_timeout] if params.key?(:readiness_health_check_invocation_timeout)
+      mapping[:readiness_health_check_interval] = params[:readiness_health_check_interval] if params.key?(:readiness_health_check_interval)
+      mapping[:readiness_health_check_http_endpoint] = params[:readiness_health_check_http_endpoint] if params.key?(:readiness_health_check_http_endpoint)
       mapping[:timeout] = params[:timeout] if params.key?(:timeout)
       mapping[:type] = params[:type]
 
@@ -228,8 +247,12 @@ module VCAP::CloudController
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
         mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       end
+      if params.key?(:readiness_health_check_type)
+        mapping[:readiness_health_check_type] = converted_health_check_type(params[:readiness_health_check_type])
+      end
       mapping
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def env_update_attribute_mapping
       mapping = {}

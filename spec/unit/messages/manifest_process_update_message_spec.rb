@@ -120,42 +120,234 @@ module VCAP::CloudController
         end
       end
 
-      context 'when health check timeout is a number' do
-        let(:params) { { health_check_invocation_timeout: 333 } }
+      context 'health check invocation timeout' do
+        context 'its a number' do
+          let(:params) { { health_check_invocation_timeout: 333 } }
 
-        it 'is valid' do
-          expect(message).to be_valid
-        end
-      end
-
-      context 'when health check timeout is not a number' do
-        let(:params) { { health_check_invocation_timeout: 'velma' } }
-
-        it 'is not valid' do
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors[:health_check_invocation_timeout]).to include('is not a number')
-        end
-      end
-
-      context 'when health check timeout is not a valid number' do
-        context 'when health check timeout is negative' do
-          let(:params) { { health_check_invocation_timeout: -10_000 } }
-
-          it 'is not valid' do
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+          it 'is valid' do
+            expect(message).to be_valid
           end
         end
 
-        context 'when health check timeout is 0' do
-          let(:params) { { health_check_invocation_timeout: 0 } }
+        context 'not a number' do
+          let(:params) { { health_check_invocation_timeout: 'velma' } }
 
           it 'is not valid' do
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+            expect(message.errors[:health_check_invocation_timeout]).to include('is not a number')
+          end
+        end
+
+        context 'not a valid number' do
+          context 'is negative' do
+            let(:params) { { health_check_invocation_timeout: -10_000 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+            end
+          end
+
+          context 'set to 0' do
+            let(:params) { { health_check_invocation_timeout: 0 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+            end
+          end
+        end
+      end
+
+      context 'health check interval' do
+        context 'its a number' do
+          let(:params) { { health_check_interval: 333 } }
+
+          it 'is valid' do
+            expect(message).to be_valid
+          end
+        end
+
+        context 'is not a number' do
+          let(:params) { { health_check_interval: 'velma' } }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors[:health_check_interval]).to include('is not a number')
+          end
+        end
+
+        context 'not a valid number' do
+          context 'negative' do
+            let(:params) { { health_check_interval: -10_000 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:health_check_interval]).to include('must be greater than or equal to 1')
+            end
+          end
+
+          context 'set to 0' do
+            let(:params) { { health_check_interval: 0 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:health_check_interval]).to include('must be greater than or equal to 1')
+            end
+          end
+        end
+      end
+
+      context 'readiness health check properties' do
+        describe 'readiness_health_check_type' do
+          context 'when readiness_health_check type is port' do
+            let(:params) { { readiness_health_check_type: 'port' } }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when readiness_health_check type is process' do
+            let(:params) { { readiness_health_check_type: 'process' } }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when readiness_health_check type is http' do
+            let(:params) { { readiness_health_check_type: 'http' } }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when readiness_health_check type is invalid' do
+            let(:params) { { readiness_health_check_type: 'meow' } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_type]).to include('must be "port", "process", or "http"')
+            end
+          end
+        end
+
+        context 'when readiness health check timeout is a number' do
+          let(:params) { { readiness_health_check_invocation_timeout: 333 } }
+
+          it 'is valid' do
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when readiness health check timeout is not a number' do
+          let(:params) { { readiness_health_check_invocation_timeout: 'velma' } }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors[:readiness_health_check_invocation_timeout]).to include('is not a number')
+          end
+        end
+
+        context 'when readiness health check timeout is not a valid number' do
+          context 'when readiness health check timeout is negative' do
+            let(:params) { { readiness_health_check_invocation_timeout: -10_000 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+            end
+          end
+
+          context 'when readiness health check timeout is 0' do
+            let(:params) { { readiness_health_check_invocation_timeout: 0 } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:readiness_health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+            end
+          end
+        end
+
+        describe 'readiness health check interval' do
+          context 'its a number' do
+            let(:params) { { readiness_health_check_interval: 333 } }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+
+          context 'is not a number' do
+            let(:params) { { readiness_health_check_interval: 'velma' } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:readiness_health_check_interval]).to include('is not a number')
+            end
+          end
+
+          context 'not a valid number' do
+            context 'negative' do
+              let(:params) { { readiness_health_check_interval: -10_000 } }
+
+              it 'is not valid' do
+                expect(message).not_to be_valid
+                expect(message.errors.count).to eq(1)
+                expect(message.errors[:readiness_health_check_interval]).to include('must be greater than or equal to 1')
+              end
+            end
+
+            context 'set to 0' do
+              let(:params) { { readiness_health_check_interval: 0 } }
+
+              it 'is not valid' do
+                expect(message).not_to be_valid
+                expect(message.errors.count).to eq(1)
+                expect(message.errors[:readiness_health_check_interval]).to include('must be greater than or equal to 1')
+              end
+            end
+          end
+        end
+
+        describe 'readiness_health_check_http_endpoint' do
+          context 'when readiness_health_check_http_endpoint is a valid URI path and type is http' do
+            let(:params) { { readiness_health_check_type: 'http', readiness_health_check_http_endpoint: '/validendpoint' } }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when readiness_health_check_http_endpoint is not a valid URI path' do
+            let(:params) { { readiness_health_check_http_endpoint: 'hello there' } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors[:readiness_health_check_http_endpoint]).to include('must be a valid URI path')
+            end
+          end
+
+          context 'when health check type is not http and endpoint is specified' do
+            let(:params) { { readiness_health_check_type: 'port', readiness_health_check_http_endpoint: '/endpoint' } }
+
+            it 'is not valid' do
+              expect(message).not_to be_valid
+              expect(message.errors.count).to eq(1)
+              expect(message.errors[:readiness_health_check_type]).to include('must be "http" to set a health check HTTP endpoint')
+            end
           end
         end
       end

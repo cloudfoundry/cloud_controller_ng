@@ -17,6 +17,7 @@ module VCAP::CloudController
       METRIC_TAG_VALUE = ::Diego::Bbs::Models::MetricTagValue
 
       MONITORED_HEALTH_CHECK_TYPES = [HealthCheckTypes::PORT, HealthCheckTypes::HTTP, ''].map(&:freeze).freeze
+      MONITORED_READINESS_HEALTH_CHECK_TYPES = [HealthCheckTypes::PORT, HealthCheckTypes::HTTP].map(&:freeze).freeze
 
       def initialize(config:, process:, ssh_key: SSHKey.new)
         @config  = config
@@ -192,7 +193,28 @@ module VCAP::CloudController
       end
 
       def generate_healthcheck_definition(lrp_builder)
-        return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
+        checks = generate_liveness_and_startup_health_check_defintion(lrp_builder)
+        readiness_checks = generate_readiness_health_check_definition(lrp_builder)
+
+        params = {}
+        params[:checks] = checks unless checks.empty?
+        params[:readiness_checks] = readiness_checks unless readiness_checks.empty?
+        ::Diego::Bbs::Models::CheckDefinition.new(**params) unless params.empty?
+      end
+
+      def generate_readiness_health_check_definition(lrp_builder)
+        return [] unless MONITORED_READINESS_HEALTH_CHECK_TYPES.include?(process.readiness_health_check_type)
+
+        ports = lrp_builder.ports
+        readiness_checks = []
+        ports.each_with_index do |port, index|
+          readiness_checks << build_readiness_check(port, index)
+        end
+        readiness_checks
+      end
+
+      def generate_liveness_and_startup_health_check_defintion(lrp_builder)
+        return [] unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
         desired_ports = lrp_builder.ports
         checks        = []
@@ -200,25 +222,52 @@ module VCAP::CloudController
           checks << build_check(port, index)
         end
 
-        ::Diego::Bbs::Models::CheckDefinition.new(checks: checks)
+        checks
       end
 
-      def build_check(port, index)
-        timeout_ms = (process.health_check_invocation_timeout || 0) * 1000
+      def build_readiness_check(port, index)
+        timeout_ms = (process.readiness_health_check_invocation_timeout || 0) * 1000
+        interval_ms = (process.readiness_health_check_interval || 0) * 1000
 
-        if process.health_check_type == HealthCheckTypes::HTTP && index == 0
+        if process.readiness_health_check_type == HealthCheckTypes::HTTP && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
-              path: process.health_check_http_endpoint,
+              path: process.readiness_health_check_http_endpoint,
               port: port,
-              request_timeout_ms: timeout_ms
+              request_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
-              connect_timeout_ms: timeout_ms
+              connect_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
+            )
+          )
+        end
+      end
+
+      def build_check(port, index)
+        timeout_ms = (process.health_check_invocation_timeout || 0) * 1000
+        interval_ms = (process.health_check_interval || 0) * 1000
+
+        if process.health_check_type == HealthCheckTypes::HTTP && index == 0
+          ::Diego::Bbs::Models::Check.new(http_check:
+            ::Diego::Bbs::Models::HTTPCheck.new(
+              path: process.health_check_http_endpoint,
+              port: port,
+              request_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
+            )
+          )
+        else
+          ::Diego::Bbs::Models::Check.new(tcp_check:
+            ::Diego::Bbs::Models::TCPCheck.new(
+              port: port,
+              connect_timeout_ms: timeout_ms,
+              interval_ms: interval_ms
             )
           )
         end

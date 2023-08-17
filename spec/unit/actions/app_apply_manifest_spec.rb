@@ -388,6 +388,42 @@ module VCAP::CloudController
           end
         end
 
+        describe 'updating readiness health check type' do
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', readiness_health_check_type: 'port' }) }
+          let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
+          let(:process) { ProcessModel.make }
+          let(:app) { process.app }
+
+          context 'when the request is invalid' do
+            let(:message) { AppManifestMessage.create_from_yml({ readiness_health_check_type: 'http' }) }
+
+            before do
+              allow(process_update).
+                to receive(:update).and_raise(ProcessUpdate::InvalidProcess.new('invalid process'))
+            end
+
+            it 'bubbles up the error' do
+              expect {
+                app_apply_manifest.apply(app.guid, message)
+              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+            end
+          end
+
+          context 'when the request is valid' do
+            it 'returns the app' do
+              expect(
+                app_apply_manifest.apply(app.guid, message)
+              ).to eq(app)
+            end
+
+            it 'calls ProcessUpdate with the correct arguments' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
+            end
+          end
+        end
+
         describe 'updating health check invocation_timeout' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', health_check_invocation_timeout: 47 }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }

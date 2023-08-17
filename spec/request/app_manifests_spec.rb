@@ -38,6 +38,8 @@ RSpec.describe 'App Manifests' do
         command: 'Do a thing',
         health_check_type: 'http',
         health_check_http_endpoint: '/foobar',
+        readiness_health_check_type: 'http',
+        readiness_health_check_http_endpoint: '/foobaz',
         health_check_timeout: 5,
         log_rate_limit: 1_048_576,
       )
@@ -110,6 +112,7 @@ RSpec.describe 'App Manifests' do
                   'disk_quota' => "#{process.disk_quota}M",
                   'log-rate-limit-per-second' => '1M',
                   'health-check-type' => process.health_check_type,
+                  'readiness-health-check-type' => process.readiness_health_check_type
                 },
                 {
                   'type' => worker_process.type,
@@ -120,6 +123,8 @@ RSpec.describe 'App Manifests' do
                   'command' => worker_process.command,
                   'health-check-type' => worker_process.health_check_type,
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
+                  'readiness-health-check-type' => worker_process.readiness_health_check_type,
+                  'readiness-health-check-http-endpoint' => worker_process.readiness_health_check_http_endpoint,
                   'timeout' => worker_process.health_check_timeout,
                 },
               ],
@@ -209,6 +214,7 @@ RSpec.describe 'App Manifests' do
                   'disk_quota' => "#{process.disk_quota}M",
                   'log-rate-limit-per-second' => -1,
                   'health-check-type' => process.health_check_type,
+                  'readiness-health-check-type' => process.readiness_health_check_type
                 },
                 {
                   'type' => worker_process.type,
@@ -219,6 +225,8 @@ RSpec.describe 'App Manifests' do
                   'command' => worker_process.command,
                   'health-check-type' => worker_process.health_check_type,
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
+                  'readiness-health-check-type' => worker_process.readiness_health_check_type,
+                  'readiness-health-check-http-endpoint' => worker_process.readiness_health_check_http_endpoint,
                   'timeout' => worker_process.health_check_timeout,
                 },
               ],

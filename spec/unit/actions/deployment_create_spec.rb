@@ -173,9 +173,14 @@ module VCAP::CloudController
             expect(deploying_web_process.metadata).to eq(web_process.metadata)
             expect(deploying_web_process.detected_buildpack).to eq(web_process.detected_buildpack)
             expect(deploying_web_process.health_check_timeout).to eq(web_process.health_check_timeout)
+            expect(deploying_web_process.health_check_interval).to eq(web_process.health_check_interval)
             expect(deploying_web_process.health_check_type).to eq(web_process.health_check_type)
             expect(deploying_web_process.health_check_http_endpoint).to eq(web_process.health_check_http_endpoint)
             expect(deploying_web_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
+            expect(deploying_web_process.readiness_health_check_type).to eq(web_process.readiness_health_check_type)
+            expect(deploying_web_process.readiness_health_check_http_endpoint).to eq(web_process.readiness_health_check_http_endpoint)
+            expect(deploying_web_process.readiness_health_check_invocation_timeout).to eq(web_process.readiness_health_check_invocation_timeout)
+            expect(deploying_web_process.readiness_health_check_interval).to eq(web_process.readiness_health_check_interval)
             expect(deploying_web_process.enable_ssh).to eq(web_process.enable_ssh)
             expect(deploying_web_process.ports).to eq(web_process.ports)
             expect(deploying_web_process.revision).to eq(app.latest_revision)
@@ -207,6 +212,11 @@ module VCAP::CloudController
                 health_check_type: 'http',
                 health_check_http_endpoint: '/old_dawg',
                 health_check_invocation_timeout: 9,
+                health_check_interval: 10,
+                readiness_health_check_type: 'http',
+                readiness_health_check_http_endpoint: '/ready',
+                readiness_health_check_invocation_timeout: 21,
+                readiness_health_check_interval: 11,
                 log_rate_limit: 11,
                 enable_ssh: true,
                 ports: [],
@@ -229,6 +239,11 @@ module VCAP::CloudController
                 health_check_type: 'port',
                 health_check_http_endpoint: '/new_cat',
                 health_check_invocation_timeout: 10,
+                health_check_interval: 11,
+                readiness_health_check_type: 'http',
+                readiness_health_check_http_endpoint: '/new_ready',
+                readiness_health_check_invocation_timeout: 22,
+                readiness_health_check_interval: 15,
                 log_rate_limit: 12,
                 enable_ssh: false,
                 ports: nil,
@@ -254,6 +269,11 @@ module VCAP::CloudController
               expect(deploying_web_process.health_check_type).to eq(newer_web_process.health_check_type)
               expect(deploying_web_process.health_check_http_endpoint).to eq(newer_web_process.health_check_http_endpoint)
               expect(deploying_web_process.health_check_invocation_timeout).to eq(newer_web_process.health_check_invocation_timeout)
+              expect(deploying_web_process.health_check_interval).to eq(newer_web_process.health_check_interval)
+              expect(deploying_web_process.readiness_health_check_type).to eq(newer_web_process.readiness_health_check_type)
+              expect(deploying_web_process.readiness_health_check_http_endpoint).to eq(newer_web_process.readiness_health_check_http_endpoint)
+              expect(deploying_web_process.readiness_health_check_invocation_timeout).to eq(newer_web_process.readiness_health_check_invocation_timeout)
+              expect(deploying_web_process.readiness_health_check_interval).to eq(newer_web_process.readiness_health_check_interval)
               expect(deploying_web_process.enable_ssh).to eq(newer_web_process.enable_ssh)
               expect(deploying_web_process.ports).to eq(newer_web_process.ports)
             end

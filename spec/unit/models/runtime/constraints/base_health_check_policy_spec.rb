@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe HealthCheckPolicy do
+RSpec.describe BaseHealthCheckPolicy do
   let(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:health_check_type) {}
   let(:health_check_timeout) {}
@@ -10,9 +10,16 @@ RSpec.describe HealthCheckPolicy do
 
   let(:max_health_check_timeout) { 512 }
 
-  subject(:validator) {
-    HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
-  }
+  subject(:validator) do
+    BaseHealthCheckPolicy.new(
+      process,
+      health_check_timeout,
+      health_check_invocation_timeout,
+      health_check_type,
+      health_check_http_endpoint,
+      health_check_interval
+    )
+  end
 
   describe 'health_check_type' do
     context 'defaults' do
@@ -166,7 +173,14 @@ RSpec.describe HealthCheckPolicy do
     let(:ports) { [] }
     subject(:validator) do
       process.ports = ports
-      HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
+      BaseHealthCheckPolicy.new(
+        process,
+        health_check_timeout,
+        health_check_invocation_timeout,
+        health_check_type,
+        health_check_http_endpoint,
+        health_check_interval
+      )
     end
 
     describe 'health check type is not "ports"' do
@@ -188,8 +202,8 @@ RSpec.describe HealthCheckPolicy do
     describe 'health check type is not specified' do
       let(:health_check_type) { nil }
 
-      it 'disallows empty ports' do
-        expect(validator).to validate_with_error(process, :ports, 'array cannot be empty when health check type is "port"')
+      it 'allows empty ports' do
+        expect(validator).to validate_without_error(process)
       end
     end
   end

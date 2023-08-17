@@ -22,7 +22,8 @@ module VCAP::CloudController
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
                   'log-rate-limit-per-second' => '1M',
-                  'health-check-type' =>  process1.health_check_type
+                  'health-check-type' =>  process1.health_check_type,
+                  'readiness-health-check-type' =>  process1.readiness_health_check_type
                 },
                 {
                   'type' => process2.type,
@@ -30,7 +31,8 @@ module VCAP::CloudController
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
                   'log-rate-limit-per-second' => '1M',
-                  'health-check-type' =>  process2.health_check_type
+                  'health-check-type' =>  process2.health_check_type,
+                  'readiness-health-check-type' =>  process2.readiness_health_check_type
                 }
               ]
             },
@@ -278,14 +280,20 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['memory'] = '2G'
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '4G'
             default_manifest['applications'][0]['processes'][0]['health-check-type'] = 'process'
+            default_manifest['applications'][0]['processes'][0]['health-check-interval'] = 10
+            default_manifest['applications'][0]['processes'][0]['readiness-health-check-type'] = 'port'
+            default_manifest['applications'][0]['processes'][0]['readiness-health-check-interval'] = 20
             default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '2G'
           end
           it 'returns the diff formatted' do
             expect(subject).to eq([
+              { 'op' => 'add', 'path' => '/applications/0/processes/0/health-check-interval', 'value' => 10 },
+              { 'op' => 'add', 'path' => '/applications/0/processes/0/readiness-health-check-interval', 'value' => 20 },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'value' => '2048M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/log-rate-limit-per-second', 'value' => '2G', 'was' => '1M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/health-check-type', 'value' => 'process', 'was' => 'port' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/readiness-health-check-type', 'value' => 'port', 'was' => 'process' },
             ])
           end
         end

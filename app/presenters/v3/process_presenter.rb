@@ -16,8 +16,11 @@ module VCAP::CloudController
         end
 
         def to_hash
-          health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
+          health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout, interval: process.health_check_interval }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
+
+          readiness_health_check_data = { invocation_timeout: process.readiness_health_check_invocation_timeout, interval: process.readiness_health_check_interval }
+          readiness_health_check_data[:endpoint] = process.readiness_health_check_http_endpoint if process.readiness_health_check_type == HealthCheckTypes::HTTP
           {
             guid:             process.guid,
             created_at:       process.created_at,
@@ -32,6 +35,10 @@ module VCAP::CloudController
             health_check: {
               type: process.health_check_type,
               data: health_check_data
+            },
+            readiness_health_check: {
+              type: process.readiness_health_check_type,
+              data: readiness_health_check_data
             },
             relationships: {
               app: { data: { guid: process.app_guid } },

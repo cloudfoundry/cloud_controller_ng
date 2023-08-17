@@ -23,6 +23,12 @@ module VCAP::CloudController
         )
       end
 
+      def make_actual_lrp_with_routable(instance_guid:, index:, state:, error:, since:, routable:)
+        lrp = make_actual_lrp(instance_guid: instance_guid, index: index, state: state, error: error, since: since)
+        lrp.routable = routable
+        lrp
+      end
+
       before { Timecop.freeze(Time.at(1.day.ago.to_i)) }
       after { Timecop.return }
 
@@ -350,8 +356,10 @@ module VCAP::CloudController
         let(:bbs_instances_response) do
           [
             make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
-            make_actual_lrp(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns),
-            make_actual_lrp(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns),
+            make_actual_lrp_with_routable(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns,
+routable: true),
+            make_actual_lrp_with_routable(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns,
+routable: false),
           ]
         end
 
@@ -362,9 +370,9 @@ module VCAP::CloudController
         it 'reports on all instances for the provided process' do
           expect(instances_reporter.all_instances_for_app(process)).to eq(
             {
-              0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
-              1 => { state: 'STARTING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
-              2 => { state: 'CRASHED', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
+              0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true },
+              1 => { state: 'STARTING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true },
+              2 => { state: 'CRASHED', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: false },
             }
           )
         end
@@ -377,7 +385,7 @@ module VCAP::CloudController
 
             it 'report the instance as "STARTED"' do
               expect(instances_reporter.all_instances_for_app(process)).to eq(
-                { 0 => { state: 'STARTING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds } }
+                { 0 => { state: 'STARTING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true } }
               )
             end
           end
@@ -389,7 +397,7 @@ module VCAP::CloudController
 
             it 'report the instance as "DOWN"' do
               expect(instances_reporter.all_instances_for_app(process)).to eq(
-                { 0 => { state: 'DOWN', details: 'some-error', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds } }
+                { 0 => { state: 'DOWN', details: 'some-error', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true } }
               )
             end
           end
@@ -407,9 +415,9 @@ module VCAP::CloudController
           it 'reports the instance as "DOWN"' do
             expect(instances_reporter.all_instances_for_app(process)).to eq(
               {
-                0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
+                0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true },
                 1 => { state: 'DOWN', uptime: 0 },
-                2 => { state: 'CRASHED', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
+                2 => { state: 'CRASHED', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true },
               }
             )
           end
@@ -427,7 +435,7 @@ module VCAP::CloudController
           it 'ignores the superfluous instances' do
             expect(instances_reporter.all_instances_for_app(process)).to eq(
               {
-                0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds },
+                0 => { state: 'RUNNING', uptime: two_days_in_seconds, since: two_days_ago_since_epoch_seconds, routable: true },
               }
             )
           end

@@ -104,7 +104,12 @@ module VCAP::CloudController
               'log-rate-limit-per-second',
               'health-check-http-endpoint',
               'health-check-invocation-timeout',
+              'health-check-interval',
               'health-check-type',
+              'readiness-health-check-http-endpoint',
+              'readiness-health-check-invocation-timeout',
+              'readiness-health-check-interval',
+              'readiness-health-check-type',
               'instances',
               'memory',
               'timeout'

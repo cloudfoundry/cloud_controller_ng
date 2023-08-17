@@ -34,7 +34,19 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
     end
 
     describe '#process_hash' do
-      let(:process) { VCAP::CloudController::ProcessModel.make }
+      let(:process) do
+        VCAP::CloudController::ProcessModel.make(
+          health_check_type: 'http',
+          health_check_http_endpoint: '/healthy',
+          health_check_invocation_timeout: 10,
+          health_check_interval: 5,
+          readiness_health_check_type: 'http',
+          readiness_health_check_http_endpoint: '/ready',
+          readiness_health_check_invocation_timeout: 20,
+          readiness_health_check_interval: 7,
+          health_check_timeout: 30
+        )
+      end
 
       it 'renders a compact hash of the process' do
         hash = subject.process_hash(process)
@@ -44,7 +56,15 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           'memory' => '1024M',
           'disk_quota' => '1024M',
           'log-rate-limit-per-second' => '1M',
-          'health-check-type' => 'port',
+          'health-check-type' => 'http',
+          'health-check-http-endpoint' => '/healthy',
+          'health-check-invocation-timeout' => 10,
+          'health-check-interval' => 5,
+          'readiness-health-check-type' => 'http',
+          'readiness-health-check-http-endpoint' => '/ready',
+          'readiness-health-check-invocation-timeout' => 20,
+          'readiness-health-check-interval' => 7,
+          'timeout' => 30
         })
       end
     end

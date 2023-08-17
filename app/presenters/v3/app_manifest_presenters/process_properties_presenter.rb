@@ -18,6 +18,12 @@ module VCAP::CloudController
               'command' => process.command,
               'health-check-type' => process.health_check_type,
               'health-check-http-endpoint' => process.health_check_http_endpoint,
+              'health-check-invocation-timeout' => process.health_check_invocation_timeout,
+              'health-check-interval' => process.health_check_interval,
+              'readiness-health-check-type' => process.readiness_health_check_type,
+              'readiness-health-check-http-endpoint' => process.readiness_health_check_http_endpoint,
+              'readiness-health-check-invocation-timeout' => process.readiness_health_check_invocation_timeout,
+              'readiness-health-check-interval' => process.readiness_health_check_interval,
               'timeout' => process.health_check_timeout,
             }.compact
           end

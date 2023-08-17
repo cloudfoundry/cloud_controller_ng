@@ -139,6 +139,9 @@ RSpec.describe SpaceManifestsController, type: :controller do
             'health-check-http-endpoint' => '/endpoint',
             'health-check-invocation-timeout' => -22,
             'health-check-type' => 'foo',
+            'readiness_health-check-http-endpoint' => 'potato-potahto',
+            'readiness_health-check-invocation-timeout' => -2,
+            'readiness_health-check-type' => 'meow',
             'timeout' => -42,
             'random-route' => -42,
             'routes' => [{ 'route' => 'garbage' }],
@@ -149,7 +152,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(10)
+          expect(errors.size).to eq(14)
           expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
             {
               'detail' => 'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -177,6 +180,22 @@ RSpec.describe SpaceManifestsController, type: :controller do
             'code' => 10008
           }, {
             'detail' => 'For application \'blah\': Process "web": Health check invocation timeout must be greater than or equal to 1',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'For application \'blah\': Process "web": Readiness health check type must be "http" to set a health check HTTP endpoint',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'For application \'blah\': Process "web": Readiness health check type must be "port", "process", or "http"',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'For application \'blah\': Process "web": Readiness health check invocation timeout must be greater than or equal to 1',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'For application \'blah\': Process "web": Readiness health check http endpoint must be a valid URI path',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
@@ -507,6 +526,69 @@ RSpec.describe SpaceManifestsController, type: :controller do
         expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
           expect(aspace).to eq space
           expect(app_guid_message_hash.entries.first[1].health_check_invocation_timeout).to eq 55
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a readiness-health-check-type' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'readiness-health-check-type' => 'process' }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
+
+        expect(response.status).to eq(202)
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].readiness_health_check_type).to eq 'process'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a readiness-health-check-http-endpoint' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'readiness-health-check-http-endpoint' => '/ready' }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
+
+        expect(response.status).to eq(202)
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].readiness_health_check_http_endpoint).to eq '/ready'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a readiness-health-check-invocation-timeout' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'readiness-health-check-invocation-timeout' => 55 }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
+
+        expect(response.status).to eq(202)
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].readiness_health_check_invocation_timeout).to eq 55
           expect(action).to eq app_apply_manifest_action
         end
       end

@@ -1,31 +1,12 @@
-class HealthCheckPolicy
-  def initialize(process, health_check_timeout, health_check_invocation_timeout)
-    @process = process
-    @errors = process.errors
-    @health_check_timeout = health_check_timeout
-    @health_check_invocation_timeout = health_check_invocation_timeout
-  end
-
-  def validate
-    validate_timeout
-    validate_invocation_timeout
-  end
-
+class HealthCheckPolicy < BaseHealthCheckPolicy
   private
 
-  def validate_timeout
-    return unless @health_check_timeout
+  def is_health_check_type_port
+    return true if @health_check_type == VCAP::CloudController::HealthCheckTypes::PORT
+    # liveness and startup health checks default to type port, this results in the health check type
+    # being stored as nil in the db
+    return true if @health_check_type.nil?
 
-    @errors.add(:health_check_timeout, :less_than_one) if @health_check_timeout < 1
-    max_timeout = VCAP::CloudController::Config.config.get(:maximum_health_check_timeout)
-    if @health_check_timeout > max_timeout
-      @errors.add(:health_check_timeout, "Maximum exceeded: max #{max_timeout}s")
-    end
-  end
-
-  def validate_invocation_timeout
-    return unless @health_check_invocation_timeout
-
-    @errors.add(:health_check_invocation_timeout, :less_than_one) if @health_check_invocation_timeout < 1
+    return false
   end
 end
