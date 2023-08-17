@@ -129,7 +129,8 @@ module VCAP::CloudController
       left_primary_key: [:app_guid, :type], left_key: [:app_guid, :process_type],
       right_primary_key: :guid, right_key: :route_guid,
       distinct:     true,
-      order:        Sequel.asc(:id)
+      order:        Sequel.asc(:id),
+      eager:        :domain
 
     many_to_many :sidecars,
       class:             'VCAP::CloudController::SidecarModel',

@@ -1255,12 +1255,26 @@ module VCAP::CloudController
     end
 
     describe 'uris' do
+      let(:process) { ProcessModelFactory.make(app: parent_app) }
+
       it 'should return the fqdns and paths on the app' do
-        process = ProcessModelFactory.make(app: parent_app)
         domain = PrivateDomain.make(name: 'mydomain.com', owning_organization: org)
         route  = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
         RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
         expect(process.uris).to eq(['myhost.mydomain.com/my%20path'])
+      end
+
+      it 'should eager load domains' do
+        domains = 2.times.map { |i| PrivateDomain.make(name: "domain#{i}.com", owning_organization: org) }
+        routes = 4.times.map { |i| Route.make(host: "host#{i}", domain: domains[i % 2], space: space) }
+        routes.each { |route| RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+
+        uris = nil
+        expect {
+          uris = process.uris
+        }.to have_queried_db_times(/select \* from .domains. where/i, 1)
+
+        expect(uris.length).to eq(4)
       end
     end
 
