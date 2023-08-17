@@ -10,12 +10,26 @@ module VCAP::CloudController
         labels.each do |label_key, label_value|
           label_key = label_key.to_s
           prefix, name = VCAP::CloudController::MetadataHelpers.extract_prefix(label_key)
-          if label_value.nil? && destroy_nil
-            label_klass.find(resource_guid: resource.guid, key_prefix: prefix, key_name: name).try(:destroy)
+
+          if label_value.nil? && destroy_nil # Delete Label
+            label_klass.where(resource_guid: resource.guid, key_name: name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
             next
           end
-          label = label_klass.find_or_create(resource_guid: resource.guid, key_prefix: prefix, key_name: name)
-          label.update(value: label_value)
+
+          begin
+            tries ||= 2
+            label_klass.db.transaction(savepoint: true) do
+              label = label_klass.where(resource_guid: resource.guid, key_name: name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).first
+              label ||= label_klass.create(resource_guid: resource.guid, key_name: name, key_prefix: prefix)
+              label.update(value: label_value)
+            end
+          rescue Sequel::UniqueConstraintViolation => e
+            if (tries -= 1).positive?
+              retry
+            else
+              v3_api_error!(:UniquenessError, e.message)
+            end
+          end
         end
 
         ending_label_count_for_resource = label_klass.where(resource_guid: resource.guid).count

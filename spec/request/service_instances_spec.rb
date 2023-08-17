@@ -2812,7 +2812,7 @@ RSpec.describe 'V3 service instances' do
 
       before do
         VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'banana', service_instance: instance)
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'avocado', service_instance: instance)
+        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'spice', value: 'cinnamon', service_instance: instance)
         VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'contact', value: 'marie', service_instance: instance)
         VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'email', value: 'some@example.com', service_instance: instance)
       end
