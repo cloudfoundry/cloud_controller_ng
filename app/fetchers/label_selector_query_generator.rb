@@ -23,13 +23,15 @@ module VCAP::CloudController
       def guids_for_set_inclusion(label_klass, requirement)
         label_klass.
           select(:resource_guid).
-          where(key_prefix: requirement.key_prefix, key_name: requirement.key_name, value: requirement.values)
+          where(key_name: requirement.key_name, value: requirement.values).
+          where(Sequel.or([[:key_prefix, requirement.key_prefix], [:key_prefix, requirement.key_prefix.to_s]]))
       end
 
       def guids_for_existence(label_klass, requirement)
         label_klass.
           select(:resource_guid).
-          where(key_prefix: requirement.key_prefix, key_name: requirement.key_name)
+          where(key_name: requirement.key_name).
+          where(Sequel.or([[:key_prefix, requirement.key_prefix], [:key_prefix, requirement.key_prefix.to_s]]))
       end
     end
   end

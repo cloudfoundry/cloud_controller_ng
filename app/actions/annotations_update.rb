@@ -16,14 +16,25 @@ module VCAP::CloudController
             annotation_klass.find(resource_guid: resource.guid, key: key)&.destroy
           end
 
-          annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key_name, key_prefix: prefix)
-
-          if value.nil? && destroy_nil # this is delete
-            annotation.try(:destroy)
+          if value.nil? && destroy_nil # Delete Annotation
+            annotation_klass.where(resource_guid: resource.guid, key: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
             next
           end
 
-          annotation.update(value: value)
+          begin
+            tries ||= 2
+            annotation_klass.db.transaction(savepoint: true) do
+              annotation = annotation_klass.where(resource_guid: resource.guid, key: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).first
+              annotation ||= annotation_klass.create(resource_guid: resource.guid, key: key_name.to_s, key_prefix: prefix.to_s)
+              annotation.update(value: value)
+            end
+          rescue Sequel::UniqueConstraintViolation => e
+            if (tries -= 1).positive?
+              retry
+            else
+              v3_api_error!(:UniquenessError, e.message)
+            end
+          end
         end
 
         ending_annotation_count_for_resource = annotation_klass.where(resource_guid: resource.guid).count
