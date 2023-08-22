@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class BuildAnnotationModel < Sequel::Model(:build_annotations_migration_view)
+  class BuildAnnotationModel < Sequel::Model(:build_annotations)
     set_primary_key :id
     many_to_one :build,
                 class: 'VCAP::CloudController::BuildModel',

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class RevisionAnnotationModel < Sequel::Model(:revision_annotations_migration_view)
+  class RevisionAnnotationModel < Sequel::Model(:revision_annotations)
     set_primary_key :id
     many_to_one :revision,
                 class: 'VCAP::CloudController::RevisionModel',

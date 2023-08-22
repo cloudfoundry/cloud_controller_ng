@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServiceBrokerAnnotationModel < Sequel::Model(:service_broker_annotations_migration_view)
+  class ServiceBrokerAnnotationModel < Sequel::Model(:service_broker_annotations)
     set_primary_key :id
     many_to_one :service_broker,
                 primary_key: :guid,

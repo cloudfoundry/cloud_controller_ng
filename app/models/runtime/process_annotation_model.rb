@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ProcessAnnotationModel < Sequel::Model(:process_annotations_migration_view)
+  class ProcessAnnotationModel < Sequel::Model(:process_annotations)
     set_primary_key :id
     many_to_one :process,
                 class: 'VCAP::CloudController::ProcessModel',

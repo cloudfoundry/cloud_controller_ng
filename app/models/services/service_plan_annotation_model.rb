@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServicePlanAnnotationModel < Sequel::Model(:service_plan_annotations_migration_view)
+  class ServicePlanAnnotationModel < Sequel::Model(:service_plan_annotations)
     set_primary_key :id
     many_to_one :service_plan,
                 class: 'VCAP::CloudController::ServicePlan',

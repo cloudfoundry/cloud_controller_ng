@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class UserAnnotationModel < Sequel::Model(:user_annotations_migration_view)
+  class UserAnnotationModel < Sequel::Model(:user_annotations)
     set_primary_key :id
     many_to_one :user,
                 class: 'VCAP::CloudController::UserModel',

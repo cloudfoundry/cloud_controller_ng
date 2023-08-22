@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class IsolationSegmentAnnotationModel < Sequel::Model(:isolation_segment_annotations_migration_view)
+  class IsolationSegmentAnnotationModel < Sequel::Model(:isolation_segment_annotations)
     set_primary_key :id
     many_to_one :isolation_segment,
                 class: 'VCAP::CloudController::IsolationSegment',

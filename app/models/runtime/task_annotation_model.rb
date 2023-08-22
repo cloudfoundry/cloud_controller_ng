@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class TaskAnnotationModel < Sequel::Model(:task_annotations_migration_view)
+  class TaskAnnotationModel < Sequel::Model(:task_annotations)
     set_primary_key :id
     many_to_one :task,
                 class: 'VCAP::CloudController::TaskModel',

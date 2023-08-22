@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DropletAnnotationModel < Sequel::Model(:droplet_annotations_migration_view)
+  class DropletAnnotationModel < Sequel::Model(:droplet_annotations)
     set_primary_key :id
     many_to_one :droplet,
                 class: 'VCAP::CloudController::DropletModel',

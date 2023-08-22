@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class RouteBindingAnnotationModel < Sequel::Model(:route_binding_annotations_migration_view)
+  class RouteBindingAnnotationModel < Sequel::Model(:route_binding_annotations)
     set_primary_key :id
     many_to_one :route_binding,
                 primary_key: :guid,

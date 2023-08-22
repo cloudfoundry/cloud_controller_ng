@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class StackAnnotationModel < Sequel::Model(:stack_annotations_migration_view)
+  class StackAnnotationModel < Sequel::Model(:stack_annotations)
     set_primary_key :id
     many_to_one :stack,
                 class: 'VCAP::CloudController::Stack',

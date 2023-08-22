@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppAnnotationModel < Sequel::Model(:app_annotations_migration_view)
+  class AppAnnotationModel < Sequel::Model(:app_annotations)
     set_primary_key :id
     many_to_one :app,
                 class: 'VCAP::CloudController::AppModel',
