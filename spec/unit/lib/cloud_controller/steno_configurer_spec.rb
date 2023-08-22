@@ -4,7 +4,7 @@ require 'steno/codec_rfc3339'
 module VCAP::CloudController
   RSpec.describe StenoConfigurer do
     let(:config_hash) do
-      { level: 'debug2' }
+      { level: 'fatal' }
     end
     subject(:configurer) { StenoConfigurer.new(config_hash) }
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
         configurer.configure do |steno_config_hash|
           block_called = true
           expect(steno_config_hash.fetch(:context)).to be_a Steno::Context::ThreadLocal
-          expect(steno_config_hash.fetch(:default_log_level)).to eq :debug2
+          expect(steno_config_hash.fetch(:default_log_level)).to eq :fatal
           expect(steno_config_hash.fetch(:codec)).to be_a Steno::Codec::JsonRFC3339
         end
 
