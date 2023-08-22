@@ -9,13 +9,6 @@ module VCAP::CloudController
           key = key.to_s
           prefix, key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
 
-          # if the key has a prefix, but we can find its whole text in the key column,
-          # it needs to be reformed in the newer, prefix-aware format.
-          # see decisions/0004-adding-key-prefix-to-annotations.md.
-          if prefix.present?
-            annotation_klass.find(resource_guid: resource.guid, key: key)&.destroy
-          end
-
           if value.nil? && destroy_nil # Delete Annotation
             annotation_klass.where(resource_guid: resource.guid, key: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
             next

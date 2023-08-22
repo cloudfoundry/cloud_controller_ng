@@ -25,12 +25,6 @@ module VCAP::CloudController
         let!(:annotation_model) do
           AppAnnotationModel.create(resource_guid: app.guid, key: 'clodefloundry.org/release', value: 'stable2')
         end
-
-        it 'splits the old key into prefix/key' do
-          AnnotationsUpdate.update(app, annotations, AppAnnotationModel)
-          expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'clodefloundry.org/release')).to be_nil
-          expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'clodefloundry.org', key: 'release').value).to eq 'stable'
-        end
       end
 
       context 'no annotation updates' do
