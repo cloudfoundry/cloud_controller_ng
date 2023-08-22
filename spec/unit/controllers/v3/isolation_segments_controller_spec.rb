@@ -625,7 +625,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         end
 
         context 'when isolation segment has metadata' do
-          let!(:label) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key: 'string', value: 'string2', resource_guid: isolation_segment_model1.guid) }
+          let!(:label) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model1.guid) }
 
           it 'returns a 204 and deletes only the specified isolation segment' do
             delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json

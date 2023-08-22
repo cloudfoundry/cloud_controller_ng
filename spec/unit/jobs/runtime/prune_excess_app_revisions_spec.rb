@@ -37,7 +37,7 @@ module VCAP::CloudController
           total = 50
           (1..50).each do |i|
             revision = RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
-            RevisionAnnotationModel.make(revision: revision, key: i, value: i)
+            RevisionAnnotationModel.make(revision: revision, key_name: i, value: i)
             RevisionLabelModel.make(revision: revision, key_name: i, value: i)
           end
 

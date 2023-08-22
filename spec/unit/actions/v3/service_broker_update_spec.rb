@@ -93,8 +93,8 @@ module VCAP
         end
 
         it 'updates metadata' do
-          expect(existing_service_broker).to have_labels({ key: 'potato', value: 'yam' })
-          expect(existing_service_broker).to have_annotations({ key: 'style', value: 'mashed' })
+          expect(existing_service_broker).to have_labels({ key_name: 'potato', value: 'yam' })
+          expect(existing_service_broker).to have_annotations({ key_name: 'style', value: 'mashed' })
         end
       end
 
@@ -139,7 +139,7 @@ module VCAP
           expect(service_broker_update_request.authentication).to eq('{"credentials":{"username":"new-admin","password":"welcome"}}')
           expect(service_broker_update_request.labels[0][:key_name]).to eq('potato')
           expect(service_broker_update_request.labels[0][:value]).to eq('yam')
-          expect(service_broker_update_request.annotations[0][:key]).to eq('style')
+          expect(service_broker_update_request.annotations[0][:key_name]).to eq('style')
           expect(service_broker_update_request.annotations[0][:value]).to eq('mashed')
         end
 

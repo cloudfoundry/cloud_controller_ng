@@ -27,8 +27,8 @@ module VCAP::CloudController
           expect(space.organization).to eq(org)
           expect(space.name).to eq('my-space')
           expect(space).to have_labels(
-            { prefix: nil, key: 'release', value: 'stable' },
-            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' }
+            { prefix: nil, key_name: 'release', value: 'stable' },
+            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
           )
         end
 

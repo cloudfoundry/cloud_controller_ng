@@ -35,7 +35,7 @@ module VCAP::CloudController
           updated_org.reload
           expect(updated_org.labels.first.key_name).to eq 'freaky'
           expect(updated_org.labels.first.value).to eq 'wednesday'
-          expect(updated_org.annotations.first.key).to eq 'hello'
+          expect(updated_org.annotations.first.key_name).to eq 'hello'
           expect(updated_org.annotations.first.value).to eq 'there'
         end
 

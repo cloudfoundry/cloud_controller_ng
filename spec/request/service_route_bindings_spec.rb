@@ -597,8 +597,8 @@ RSpec.describe 'v3 service route bindings' do
         expect(binding.route).to eq(route)
         expect(binding.route_service_url).to be_nil
 
-        expect(binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
-        expect(binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
+        expect(binding).to have_labels({ prefix: nil, key_name: 'peanut', value: 'butter' })
+        expect(binding).to have_annotations({ prefix: nil, key_name: 'number', value: 'eight' })
       end
 
       it 'responds with a job resource' do
@@ -1014,8 +1014,8 @@ RSpec.describe 'v3 service route bindings' do
           expect(@binding.service_instance).to eq(service_instance)
           expect(@binding.route).to eq(route)
           expect(@binding.route_service_url).to eq(route_service_url)
-          expect(@binding).to have_labels({ prefix: nil, key: 'peanut', value: 'butter' })
-          expect(@binding).to have_annotations({ prefix: nil, key: 'number', value: 'eight' })
+          expect(@binding).to have_labels({ prefix: nil, key_name: 'peanut', value: 'butter' })
+          expect(@binding).to have_annotations({ prefix: nil, key_name: 'number', value: 'eight' })
 
           expect(parsed_response).to match_json_response(
             expected_json(

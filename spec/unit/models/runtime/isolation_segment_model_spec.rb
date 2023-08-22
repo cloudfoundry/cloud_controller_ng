@@ -187,7 +187,7 @@ module VCAP::CloudController
 
     describe 'metadata' do
       let!(:label) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
-      let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
+      let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
 
       it 'deletes metadata on destroy' do
         isolation_segment_model.destroy

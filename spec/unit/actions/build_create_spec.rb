@@ -105,11 +105,11 @@ module VCAP::CloudController
           expect(build.created_by_user_name).to eq('charles')
           expect(build.created_by_user_email).to eq('charles@las.gym')
           expect(build).to have_labels(
-            { prefix: nil, key: 'release', value: 'stable' },
-                            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            { prefix: nil, key_name: 'release', value: 'stable' },
+                            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
             )
           expect(build).to have_annotations(
-            { key: 'anno', value: 'tations' }
+            { key_name: 'anno', value: 'tations' }
           )
         end
 

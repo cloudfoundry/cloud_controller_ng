@@ -901,11 +901,11 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the metadata is valid' do
         let!(:app_annotation) do
-          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key: 'existing_anno', value: 'original-value')
+          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key_name: 'existing_anno', value: 'original-value')
         end
 
         let!(:delete_annotation) do
-          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key: 'please', value: 'delete me')
+          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key_name: 'please', value: 'delete me')
         end
 
         let(:request_body) do

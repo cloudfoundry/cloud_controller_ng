@@ -97,7 +97,7 @@ module VCAP::CloudController
           total = 50
           (1..50).each do |i|
             deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
-            DeploymentAnnotationModel.make(deployment: deployment, key: i, value: i)
+            DeploymentAnnotationModel.make(deployment: deployment, key_name: i, value: i)
             DeploymentLabelModel.make(deployment: deployment, key_name: i, value: i)
           end
 

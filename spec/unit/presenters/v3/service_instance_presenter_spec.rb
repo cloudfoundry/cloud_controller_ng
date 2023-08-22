@@ -24,13 +24,13 @@ module VCAP::CloudController::Presenters::V3
       )
 
       VCAP::CloudController::ServiceInstanceAnnotationModel.make(
-        key: 'altitude',
+        key_name: 'altitude',
         value: '14,412',
         resource_guid: service_instance.guid,
       )
 
       VCAP::CloudController::ServiceInstanceAnnotationModel.make(
-        key: 'maize',
+        key_name: 'maize',
         value: 'hfcs',
         resource_guid: service_instance.guid,
       )

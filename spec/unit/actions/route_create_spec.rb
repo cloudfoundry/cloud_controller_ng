@@ -104,7 +104,7 @@ module VCAP::CloudController
 
           route = Route.last
           expect(route.annotations.length).to eq(1)
-          expect(route.annotations[0].key).to eq('anno')
+          expect(route.annotations[0].key_name).to eq('anno')
           expect(route.annotations[0].value).to eq('tation')
         end
       end

@@ -26,8 +26,8 @@ module VCAP::CloudController
         stack_update.update(stack, message)
 
         stack.reload
-        expect(stack).to have_labels({ key: 'freaky', value: 'wednesday' })
-        expect(stack).to have_annotations({ key: 'tokyo', value: 'grapes' })
+        expect(stack).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+        expect(stack).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
       end
     end
   end

@@ -32,7 +32,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:domain_annotation) do
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
-            key: 'contacts',
+            key_name: 'contacts',
             value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
           )
         end
@@ -85,7 +85,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:domain_annotation) do
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
-            key: 'contacts',
+            key_name: 'contacts',
             value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
           )
         end
@@ -201,7 +201,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:domain_annotation) do
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
-            key: 'contacts',
+            key_name: 'contacts',
             value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
           )
         end

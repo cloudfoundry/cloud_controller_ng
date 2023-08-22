@@ -2069,13 +2069,13 @@ RSpec.describe 'Apps' do
 
       VCAP::CloudController::AppAnnotationModel.make(
         resource_guid: app_model.guid,
-        key: 'anno1',
+        key_name: 'anno1',
         value: 'original-value',
       )
 
       VCAP::CloudController::AppAnnotationModel.make(
         resource_guid: app_model.guid,
-        key: 'please',
+        key_name: 'please',
         value: 'delete this',
       )
     end

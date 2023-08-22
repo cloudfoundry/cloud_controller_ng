@@ -16,8 +16,8 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         expect(binding.last_operation.state).to eq('initial')
         expect(binding.last_operation.type).to eq('create')
 
-        expect(binding).to have_labels({ prefix: nil, key: 'foo', value: 'bar' })
-        expect(binding).to have_annotations({ prefix: nil, key: 'foz', value: 'baz' })
+        expect(binding).to have_labels({ prefix: nil, key_name: 'foo', value: 'bar' })
+        expect(binding).to have_annotations({ prefix: nil, key_name: 'foz', value: 'baz' })
       end
 
       it 'responds with a job resource' do

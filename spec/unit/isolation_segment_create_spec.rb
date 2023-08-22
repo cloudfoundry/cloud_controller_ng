@@ -22,12 +22,12 @@ module VCAP::CloudController
 
         expect(iso_seg.name).to eq('my-iso-seg')
         expect(iso_seg).to have_labels(
-          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-          { prefix: nil, key: 'release', value: 'stable' }
+          { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+          { prefix: nil, key_name: 'release', value: 'stable' }
         )
         expect(iso_seg).to have_annotations(
-          { key: 'tomorrow', value: 'land' },
-          { key: 'backstreet', value: 'boys' }
+          { key_name: 'tomorrow', value: 'land' },
+          { key_name: 'backstreet', value: 'boys' }
         )
       end
 

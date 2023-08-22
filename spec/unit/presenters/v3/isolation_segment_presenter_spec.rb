@@ -4,7 +4,7 @@ require 'presenters/v3/isolation_segment_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe IsolationSegmentPresenter do
     let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(
-      key: 'vegetable',
+      key_name: 'vegetable',
       value: 'asparagus',
       resource_guid: isolation_segment.guid,
     )

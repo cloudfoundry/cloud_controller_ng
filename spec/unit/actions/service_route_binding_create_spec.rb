@@ -43,8 +43,8 @@ module VCAP::CloudController
             expect(precursor.service_instance).to eq(service_instance)
             expect(precursor.route).to eq(route)
             expect(precursor).to have_labels(
-              { prefix: nil, key: 'release', value: 'stable' },
-              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+              { prefix: nil, key_name: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
             )
             expect(precursor.route_service_url).to be_nil
             expect(precursor.last_operation.type).to eq('create')

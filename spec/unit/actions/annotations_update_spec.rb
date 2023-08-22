@@ -18,12 +18,12 @@ module VCAP::CloudController
 
       it 'updates the annotations' do
         AnnotationsUpdate.update(app, annotations, AppAnnotationModel)
-        expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'clodefloundry.org', key: 'release').value).to eq 'stable'
+        expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'clodefloundry.org', key_name: 'release').value).to eq 'stable'
       end
 
       context 'when lazily migrating old annotations' do
         let!(:annotation_model) do
-          AppAnnotationModel.create(resource_guid: app.guid, key: 'clodefloundry.org/release', value: 'stable2')
+          AppAnnotationModel.create(resource_guid: app.guid, key_name: 'clodefloundry.org/release', value: 'stable2')
         end
       end
 
@@ -47,22 +47,22 @@ module VCAP::CloudController
         end
 
         let!(:old_annotation) do
-          AppAnnotationModel.create(resource_guid: app.guid, key: 'release', value: 'unstable')
+          AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release', value: 'unstable')
         end
 
         let!(:annotation_to_be_deleted) do
-          AppAnnotationModel.create(resource_guid: app.guid, key: 'please', value: 'delete me')
+          AppAnnotationModel.create(resource_guid: app.guid, key_name: 'please', value: 'delete me')
         end
 
         let!(:prefixed_annotation_to_be_deleted) do
-          AppAnnotationModel.create(resource_guid: app.guid, key_prefix: 'pre.fix', key: 'release', value: 'delete me')
+          AppAnnotationModel.create(resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release', value: 'delete me')
         end
 
         it 'updates the old annotation' do
           subject
           expect(old_annotation.reload.value).to eq 'stable'
-          expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'please')).to be_nil
-          expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'pre.fix', key: 'release')).to be_nil
+          expect(AppAnnotationModel.find(resource_guid: app.guid, key_name: 'please')).to be_nil
+          expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release')).to be_nil
           expect(AppAnnotationModel.count).to eq 1
         end
 
@@ -102,8 +102,8 @@ module VCAP::CloudController
         context 'app already has max annotations' do
           context 'annotations added exceeds max annotations' do
             let!(:app_with_annotations) do
-              AppAnnotationModel.create(resource_guid: app.guid, key: 'release1', value: 'veryunstable')
-              AppAnnotationModel.create(resource_guid: app.guid, key: 'release2', value: 'stillunstable')
+              AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+              AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
             end
 
             let(:annotations) do
@@ -126,10 +126,10 @@ module VCAP::CloudController
 
         context 'annotations exceed max annotations' do
           let!(:app_with_annotations) do
-            AppAnnotationModel.create(resource_guid: app.guid, key: 'release', value: 'unstable')
-            AppAnnotationModel.create(resource_guid: app.guid, key: 'release1', value: 'veryunstable')
-            AppAnnotationModel.create(resource_guid: app.guid, key: 'release2', value: 'stillunstable')
-            AppAnnotationModel.create(resource_guid: app.guid, key: 'release3', value: 'help')
+            AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release', value: 'unstable')
+            AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+            AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+            AppAnnotationModel.create(resource_guid: app.guid, key_name: 'release3', value: 'help')
           end
 
           context 'deleting old annotation' do
@@ -143,7 +143,7 @@ module VCAP::CloudController
               TestConfig.override(max_annotations_per_resource: 2)
               subject
 
-              expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'release1')).to be_nil
+              expect(AppAnnotationModel.find(resource_guid: app.guid, key_name: 'release1')).to be_nil
             end
           end
 
@@ -158,7 +158,7 @@ module VCAP::CloudController
               TestConfig.override(max_annotations_per_resource: 2)
               subject
 
-              expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'release').value).to eq 'stable'
+              expect(AppAnnotationModel.find(resource_guid: app.guid, key_name: 'release').value).to eq 'stable'
             end
           end
         end

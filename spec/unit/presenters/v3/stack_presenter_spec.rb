@@ -28,7 +28,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
 
   let!(:mountain_annotation) do
     VCAP::CloudController::StackAnnotationModel.make(
-      key: 'altitude',
+      key_name: 'altitude',
       value: '14,412',
       resource_guid: stack.guid,
     )
@@ -36,7 +36,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
 
   let!(:plain_annotation) do
     VCAP::CloudController::StackAnnotationModel.make(
-      key: 'maize',
+      key_name: 'maize',
       value: 'hfcs',
       resource_guid: stack.guid,
     )

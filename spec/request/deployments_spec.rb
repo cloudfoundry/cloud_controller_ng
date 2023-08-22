@@ -323,11 +323,11 @@ RSpec.describe 'Deployments' do
 
         deployment = VCAP::CloudController::DeploymentModel.last
         expect(deployment).to have_labels(
-          { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-          { prefix: nil, key: 'release', value: 'stable' }
+          { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+          { prefix: nil, key_name: 'release', value: 'stable' }
         )
         expect(deployment).to have_annotations(
-          { key: 'potato', value: 'idaho' },
+          { key_name: 'potato', value: 'idaho' },
         )
 
         expect(parsed_response).to be_a_response_like({

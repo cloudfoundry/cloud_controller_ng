@@ -34,7 +34,7 @@ module VCAP::CloudController::Presenters::Mixins
         let(:prefixless_label) do
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
-            key: 'cake_type',
+            key_name: 'cake_type',
             value: 'birthday'
           )
         end
@@ -64,7 +64,7 @@ module VCAP::CloudController::Presenters::Mixins
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
             key_prefix: 'subject.edu',
-            key: 'philosophy',
+            key_name: 'philosophy',
             value: 'All we are is dust in the wind, dude'
           )
         end
@@ -72,14 +72,14 @@ module VCAP::CloudController::Presenters::Mixins
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
             key_prefix: 'nynex.net',
-            key: 'contacts',
+            key_name: 'contacts',
             value: 'Bill tel(1111111) email(bill@s.preston), Test tel(222222) pager(3333333#555) email(theodore@logan)'
           )
         end
         let(:prefixless_annotation) do
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
-            key: 'pies',
+            key_name: 'pies',
             value: 'apple, blueberry, marionberry, pumpkin, rhuharb, coconut creme, lemon meringue'
           )
         end

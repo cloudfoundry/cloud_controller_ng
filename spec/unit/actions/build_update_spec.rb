@@ -63,11 +63,11 @@ module VCAP::CloudController
 
             build.reload
             expect(build).to have_labels(
-              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'fruit', value: 'strawberries' },
-                { prefix: nil, key: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                { prefix: nil, key_name: 'fruit', value: 'strawberries' },
+                { prefix: nil, key_name: 'release', value: 'stable' },
               )
-            expect(build).to have_annotations({ key: 'potato', value: 'idaho' })
+            expect(build).to have_annotations({ key_name: 'potato', value: 'idaho' })
           end
         end
       end
@@ -88,12 +88,12 @@ module VCAP::CloudController
             build_update.update(build, message)
             build.reload
             expect(build).to have_labels(
-              { prefix: nil, key: 'fruit', value: 'pears' },
-                { prefix: nil, key: 'truck', value: 'hino' },
+              { prefix: nil, key_name: 'fruit', value: 'pears' },
+                { prefix: nil, key_name: 'truck', value: 'hino' },
               )
             expect(build).to have_annotations(
-              { key: 'potato', value: 'celandine' },
-                { key: 'beet', value: 'formanova' },
+              { key_name: 'potato', value: 'celandine' },
+                { key_name: 'beet', value: 'formanova' },
               )
           end
         end
@@ -112,14 +112,14 @@ module VCAP::CloudController
             build_update.update(build, message)
             build.reload
             expect(build).to have_labels(
-              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'release', value: 'stable' },
-                { prefix: nil, key: 'truck', value: 'hino' },
-                { prefix: nil, key: 'newstuff', value: 'here' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                { prefix: nil, key_name: 'release', value: 'stable' },
+                { prefix: nil, key_name: 'truck', value: 'hino' },
+                { prefix: nil, key_name: 'newstuff', value: 'here' },
               )
             expect(build).to have_annotations(
-              { key: 'potato', value: 'idaho' },
-                { key: 'asparagus', value: 'crunchy' },
+              { key_name: 'potato', value: 'idaho' },
+                { key_name: 'asparagus', value: 'crunchy' },
               )
           end
         end

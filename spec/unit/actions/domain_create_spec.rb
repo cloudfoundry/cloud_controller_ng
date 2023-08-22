@@ -79,11 +79,11 @@ module VCAP::CloudController
             expect(domain.internal).to eq(internal)
             expect(domain.guid).to_not be_nil
             expect(domain).to have_labels(
-              { prefix: nil, key: 'release', value: 'stable' },
-                              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+              { prefix: nil, key_name: 'release', value: 'stable' },
+                              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
               )
             expect(domain).to have_annotations(
-              { key: 'anno', value: 'tations' }
+              { key_name: 'anno', value: 'tations' }
             )
           end
         end
@@ -122,11 +122,11 @@ module VCAP::CloudController
           expect(domain.owning_organization_guid).to eq organization.guid
           expect(domain.shared_organizations).to contain_exactly(shared_org1, shared_org2)
           expect(domain).to have_labels(
-            { prefix: nil, key: 'release', value: 'stable' },
-                            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            { prefix: nil, key_name: 'release', value: 'stable' },
+                            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
             )
           expect(domain).to have_annotations(
-            { key: 'anno', value: 'tations' }
+            { key_name: 'anno', value: 'tations' }
           )
         end
       end
@@ -154,11 +154,11 @@ module VCAP::CloudController
             expect(domain.router_group_guid).to eq(router_group_guid[:guid])
             expect(domain.guid).to_not be_nil
             expect(domain).to have_labels(
-              { prefix: nil, key: 'release', value: 'stable' },
-              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+              { prefix: nil, key_name: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
             )
             expect(domain).to have_annotations(
-              { key: 'anno', value: 'tations' }
+              { key_name: 'anno', value: 'tations' }
             )
           end
         end

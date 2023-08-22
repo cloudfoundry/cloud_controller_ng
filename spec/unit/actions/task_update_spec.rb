@@ -26,8 +26,8 @@ module VCAP::CloudController
         task_update.update(task, message)
 
         task.reload
-        expect(task).to have_labels({ key: 'freaky', value: 'wednesday' })
-        expect(task).to have_annotations({ key: 'tokyo', value: 'grapes' })
+        expect(task).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+        expect(task).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
       end
     end
   end

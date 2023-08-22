@@ -5,7 +5,7 @@ RSpec::Matchers.define :have_annotations do |*expected|
     actual_annotations = actual.annotations.map do |annotation|
       {
         prefix: annotation.key_prefix,
-        key: annotation.key_name,
+        key_name: annotation.key_name,
         value: annotation.value,
       }
     end
@@ -14,7 +14,7 @@ RSpec::Matchers.define :have_annotations do |*expected|
       expected = expected.map do |annotation|
         {
           prefix: annotation.with_indifferent_access[:prefix],
-          key: annotation.with_indifferent_access[:key],
+          key_name: annotation.with_indifferent_access[:key_name],
           value: annotation.with_indifferent_access[:value],
         }
       end

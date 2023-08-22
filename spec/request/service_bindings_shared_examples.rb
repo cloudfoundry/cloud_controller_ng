@@ -68,8 +68,8 @@ RSpec.shared_examples 'metadata update for service binding' do |audit_name|
     end
 
     it 'can still update metadata' do
-      expect(binding).to have_labels({ prefix: nil, key: 'potato', value: 'sweet' })
-      expect(binding).to have_annotations({ prefix: nil, key: 'style', value: 'mashed' }, { prefix: nil, key: 'amount', value: 'all' })
+      expect(binding).to have_labels({ prefix: nil, key_name: 'potato', value: 'sweet' })
+      expect(binding).to have_annotations({ prefix: nil, key_name: 'style', value: 'mashed' }, { prefix: nil, key_name: 'amount', value: 'all' })
     end
 
     it 'does not update last operation' do

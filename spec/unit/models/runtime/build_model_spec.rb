@@ -278,7 +278,7 @@ module VCAP::CloudController
 
       describe 'metadata' do
         let!(:label) { VCAP::CloudController::BuildLabelModel.make(key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
-        let!(:annotation) { VCAP::CloudController::BuildAnnotationModel.make(key: 'string', value: 'string2', resource_guid: build_model.guid) }
+        let!(:annotation) { VCAP::CloudController::BuildAnnotationModel.make(key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
 
         it 'can access its annotations and labels' do
           expect(label.resource_guid).to eq(build_model.guid)

@@ -75,12 +75,12 @@ module VCAP::CloudController
         expect(service_instance.last_operation.description).to eq('Operation succeeded')
 
         expect(service_instance).to have_labels(
-          { prefix: nil, key: 'foo', value: 'bar' },
-          { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+          { prefix: nil, key_name: 'foo', value: 'bar' },
+          { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
         )
         expect(service_instance).to have_annotations(
-          { prefix: nil, key: 'alpha', value: 'beta' },
-          { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+          { prefix: nil, key_name: 'alpha', value: 'beta' },
+          { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
         )
       end
 

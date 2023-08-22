@@ -46,7 +46,7 @@ RSpec.describe 'App Manifests' do
     end
 
     let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app_model.guid, key_name: 'potato', value: 'idaho') }
-    let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key: 'style', value: 'mashed') }
+    let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key_name: 'style', value: 'mashed') }
 
     let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app_model) }
     let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app_model) }

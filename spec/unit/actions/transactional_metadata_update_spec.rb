@@ -39,8 +39,8 @@ module VCAP::CloudController
         it 'adds metadata to a resource' do
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
-          expect(updated_resource).to have_labels({ key: 'freaky', value: 'wednesday' })
-          expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'grapes' })
+          expect(updated_resource).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+          expect(updated_resource).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
 
           resource.reload
           expect(resource).to eq(updated_resource)
@@ -50,7 +50,7 @@ module VCAP::CloudController
       context 'when the resource has existing metadata' do
         before do
           VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: resource.guid, key_name: 'freaky', value: 'tuesday')
-          VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: resource.guid, key: 'tokyo', value: 'apples')
+          VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: resource.guid, key_name: 'tokyo', value: 'apples')
         end
 
         context 'and no metadata is specified' do
@@ -63,8 +63,8 @@ module VCAP::CloudController
             resource.reload
 
             expect(resource).to eq(updated_resource)
-            expect(updated_resource).to have_labels({ key: 'freaky', value: 'tuesday' })
-            expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'apples' })
+            expect(updated_resource).to have_labels({ key_name: 'freaky', value: 'tuesday' })
+            expect(updated_resource).to have_annotations({ key_name: 'tokyo', value: 'apples' })
           end
         end
 
@@ -85,20 +85,20 @@ module VCAP::CloudController
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
           expect(updated_resource).to have_labels(
-            { key: 'freaky', value: 'tuesday' },
-            { key: 'another_label', value: 'new-label' },
+            { key_name: 'freaky', value: 'tuesday' },
+            { key_name: 'another_label', value: 'new-label' },
           )
           expect(updated_resource).to have_annotations(
-            { key: 'tokyo', value: 'apples' },
-            { key: 'another_annotation', value: 'new-annotation' }
+            { key_name: 'tokyo', value: 'apples' },
+            { key_name: 'another_annotation', value: 'new-annotation' }
           )
         end
 
         it 'can update existing values' do
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
-          expect(updated_resource).to have_labels({ key: 'freaky', value: 'wednesday' })
-          expect(updated_resource).to have_annotations({ key: 'tokyo', value: 'grapes' })
+          expect(updated_resource).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+          expect(updated_resource).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
         end
 
         it 'can delete existing values' do

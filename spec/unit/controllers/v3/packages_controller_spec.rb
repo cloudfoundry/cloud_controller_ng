@@ -457,12 +457,12 @@ RSpec.describe PackagesController, type: :controller do
 
         package.reload
         expect(package).to have_labels(
-          { key: 'fruit', value: 'passionfruit' },
-          { key: 'truck', value: 'hino' }
+          { key_name: 'fruit', value: 'passionfruit' },
+          { key_name: 'truck', value: 'hino' }
         )
         expect(package).to have_annotations(
-          { key: 'potato', value: 'adora' },
-          { key: 'beet', value: 'formanova' }
+          { key_name: 'potato', value: 'adora' },
+          { key_name: 'beet', value: 'formanova' }
         )
       end
 
@@ -482,7 +482,7 @@ RSpec.describe PackagesController, type: :controller do
 
           expect(response.status).to eq(200)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'hino' })
-          expect(package).to have_labels({ key: 'truck', value: 'hino' })
+          expect(package).to have_labels({ key_name: 'truck', value: 'hino' })
         end
       end
       context 'when an empty request is sent' do
@@ -595,7 +595,7 @@ RSpec.describe PackagesController, type: :controller do
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'formanova' })
 
           package.reload
-          expect(package).to have_annotations({ key: 'beet', value: 'formanova' })
+          expect(package).to have_annotations({ key_name: 'beet', value: 'formanova' })
         end
       end
     end

@@ -311,8 +311,8 @@ RSpec.describe 'V3 service plans' do
       before do
         VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: guid_1, key_name: 'one', value: 'foo')
         VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: guid_2, key_name: 'two', value: 'bar')
-        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_1, key: 'alpha', value: 'A1')
-        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_2, key: 'beta', value: 'B2')
+        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_1, key_name: 'alpha', value: 'A1')
+        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_2, key_name: 'beta', value: 'B2')
       end
 
       it 'displays the metadata correctly' do

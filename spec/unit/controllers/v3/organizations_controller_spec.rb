@@ -619,8 +619,8 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         org.reload
         expect(org.name).to eq('Fire')
-        expect(org).to have_labels({ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' })
-        expect(org).to have_annotations({ key: 'potato', value: 'idaho' }, { key: 'beet', value: 'golden' })
+        expect(org).to have_labels({ key_name: 'fruit', value: 'passionfruit' }, { key_name: 'truck', value: 'mazda5' })
+        expect(org).to have_annotations({ key_name: 'potato', value: 'idaho' }, { key_name: 'beet', value: 'golden' })
       end
 
       it 'deletes annotations' do
@@ -638,7 +638,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
 
         org.reload
-        expect(org).to have_annotations({ key: 'beet', value: 'golden' })
+        expect(org).to have_annotations({ key_name: 'beet', value: 'golden' })
       end
 
       context 'when a label is deleted' do
@@ -659,7 +659,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
 
           org.reload
-          expect(org).to have_labels({ key: 'truck', value: 'mazda5' })
+          expect(org).to have_labels({ key_name: 'truck', value: 'mazda5' })
         end
       end
 

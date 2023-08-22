@@ -438,12 +438,12 @@ module VCAP::CloudController
 
               original_instance.reload
               expect(original_instance).to have_annotations(
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                { prefix: nil, key_name: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
               )
               expect(original_instance).to have_labels(
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+                { prefix: nil, key_name: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
               )
             end
 
@@ -487,12 +487,12 @@ module VCAP::CloudController
               expect(original_instance.name).to eq('different-name')
               expect(original_instance.tags).to eq(%w(accounting couchbase nosql))
               expect(original_instance).to have_annotations(
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                { prefix: nil, key_name: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
               )
               expect(original_instance).to have_labels(
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+                { prefix: nil, key_name: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
               )
             end
 
@@ -631,12 +631,12 @@ module VCAP::CloudController
 
               original_instance.reload
               expect(original_instance).to have_annotations(
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                { prefix: nil, key_name: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
               )
               expect(original_instance).to have_labels(
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+                { prefix: nil, key_name: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
               )
             end
           end
@@ -674,12 +674,12 @@ module VCAP::CloudController
 
               original_instance.reload
               expect(original_instance).to have_annotations(
-                { prefix: nil, key: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                { prefix: nil, key_name: 'alpha', value: 'beta' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
               )
               expect(original_instance).to have_labels(
-                { prefix: nil, key: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
+                { prefix: nil, key_name: 'foo', value: 'bar' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
               )
             end
           end
@@ -910,10 +910,10 @@ module VCAP::CloudController
             expect(instance.last_operation.type).to eq('update')
             expect(instance.last_operation.state).to eq('succeeded')
 
-            expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-{ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
-            expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-{ prefix: nil, key: 'release', value: 'stable' })
+            expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+{ prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+            expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+{ prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'logs an audit event' do
@@ -964,8 +964,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
-                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' })
               end
             end
 
@@ -1006,8 +1006,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
-                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' })
               end
             end
 
@@ -1060,8 +1060,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
-                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' })
               end
             end
 
@@ -1103,8 +1103,8 @@ module VCAP::CloudController
                 expect(instance.last_operation.type).to eq('update')
                 expect(instance.last_operation.state).to eq('succeeded')
 
-                expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' })
-                expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' })
+                expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' })
+                expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' })
               end
             end
 
@@ -1386,10 +1386,10 @@ module VCAP::CloudController
             expect(instance.last_operation.type).to eq('update')
             expect(instance.last_operation.state).to eq('succeeded')
 
-            expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-              { prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
-            expect(instance).to have_labels({ prefix: 'pre.fix', key: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-              { prefix: nil, key: 'release', value: 'stable' })
+            expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+            expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+              { prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'updates an audit event' do

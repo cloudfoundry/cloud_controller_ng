@@ -1,12 +1,12 @@
 module VCAP::CloudController
-  class DomainAnnotationModel < Sequel::Model(:domain_annotations)
+  class DomainAnnotationModel < Sequel::Model(:domain_annotations_migration_view)
+    set_primary_key :id
     many_to_one :domain,
                 class: 'VCAP::CloudController::DomainModel',
                 primary_key: :guid,
                 key: :resource_guid,
                 without_guid_generation: true
 
-    def_column_alias(:key_name, :key)
     include MetadataModelMixin
   end
 end

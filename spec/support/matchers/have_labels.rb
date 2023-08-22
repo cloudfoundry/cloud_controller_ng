@@ -5,7 +5,7 @@ RSpec::Matchers.define :have_labels do |*expected|
     actual_labels = actual.labels.map do |label|
       {
         prefix: label.key_prefix,
-        key: label.key_name,
+        key_name: label.key_name,
         value: label.value,
       }
     end
@@ -14,7 +14,7 @@ RSpec::Matchers.define :have_labels do |*expected|
       expected = expected.map do |label|
         {
           prefix: label.with_indifferent_access[:prefix],
-          key: label.with_indifferent_access[:key],
+          key_name: label.with_indifferent_access[:key_name],
           value: label.with_indifferent_access[:value],
         }
       end
