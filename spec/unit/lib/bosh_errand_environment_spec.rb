@@ -5,7 +5,7 @@ RSpec.describe BoshErrandEnvironment do
   let(:config) { VCAP::CloudController::Config.new(
     {
       db: DbConfig.new.config,
-      logging: { level: 'debug2', stdout_sink_enabled: stdout_sink_enabled }
+      logging: { level: 'fatal', stdout_sink_enabled: stdout_sink_enabled }
     },
     context: :rotate_database_key)
   }

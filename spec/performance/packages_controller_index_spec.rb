@@ -19,7 +19,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
     before do
       TestConfig.override(
         db: {
-          log_level: 'debug',
+          log_level: 'fatal',
       }
         # logging.level: 'debug2'
       )

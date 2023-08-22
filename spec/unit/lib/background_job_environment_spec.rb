@@ -5,7 +5,7 @@ RSpec.describe BackgroundJobEnvironment do
     allow(Steno).to receive(:init)
 
     TestConfig.override(
-      logging: { level: 'debug2' },
+      logging: { level: 'fatal' },
     )
   end
   let(:config) { VCAP::CloudController::Config.config }

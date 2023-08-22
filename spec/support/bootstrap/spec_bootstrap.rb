@@ -23,7 +23,7 @@ module VCAP::CloudController
       logger = ActiveSupport::Logger.new(File.join(Paths::ARTIFACTS, 'telemetry_spec.log'))
       TelemetryLogger.init(logger)
 
-      StenoConfigurer.new(level: 'debug2').configure do |steno_config_hash|
+      StenoConfigurer.new(level: 'fatal').configure do |steno_config_hash|
         steno_config_hash[:sinks] = [Steno::Sink::IO.for_file(log_filename)]
       end
 
