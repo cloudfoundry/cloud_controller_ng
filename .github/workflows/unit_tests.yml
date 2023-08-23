@@ -1,5 +1,7 @@
 name: Unit Tests
-
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.workflow }}'
+  cancel-in-progress: true
 on:
   workflow_dispatch:
   pull_request:
