@@ -24,6 +24,7 @@ jobs:
   Rubocop:
     runs-on: ubuntu-latest
     steps:
+    - uses: hmarr/debug-action@v2
     - uses: actions/checkout@v3
     - uses: ./.github/workflows/composite/setup
     - name: Run Rubocop
@@ -47,7 +48,9 @@ jobs:
         image: ${{ matrix.image }}
         env:
           POSTGRES_PASSWORD: rootpassword
+          PGDATA: /dev/shm/pgdata/data
         options: >-
+          --mount type=tmpfs,destination=/dev/shm/pgdata/data
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
@@ -55,6 +58,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
+    - uses: hmarr/debug-action@v2
     - uses: actions/checkout@v3
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
@@ -79,10 +83,17 @@ jobs:
         env:
           MYSQL_DATABASE: cc_test
           MYSQL_ROOT_PASSWORD: password
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+          MYSQL_DATA_DIR: /dev/shm/mysql/data
+        options: >-
+          --mount type=tmpfs,destination=/dev/shm/mysql/data
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
         ports:
           - 3306:3306
     steps:
+    - uses: hmarr/debug-action@v2
     - uses: actions/checkout@v3
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
