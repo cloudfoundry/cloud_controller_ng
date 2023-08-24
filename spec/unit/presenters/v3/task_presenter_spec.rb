@@ -34,14 +34,14 @@ module VCAP::CloudController::Presenters::V3
     end
     let!(:mountain_annotation) do
       VCAP::CloudController::TaskAnnotationModel.make(
-        key: 'altitude',
+        key_name: 'altitude',
         value: '14,412',
         resource_guid: task.guid,
       )
     end
     let!(:plain_annotation) do
       VCAP::CloudController::TaskAnnotationModel.make(
-        key: 'maize',
+        key_name: 'maize',
         value: 'hfcs',
         resource_guid: task.guid,
       )

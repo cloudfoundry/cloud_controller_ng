@@ -196,8 +196,8 @@ RSpec.describe 'Space Manifests' do
       expect(app1_model.service_bindings.map(&:service_instance)).to contain_exactly(service_instance_1, service_instance_2)
       expect(service_instance_1.service_bindings.first.name).to be_nil
       expect(service_instance_2.service_bindings.first.name).to eq(binding_name)
-      expect(app1_model).to have_labels({ key: 'potato', value: 'yam' }, { prefix: 'myspace.com', key: 'songs', value: 'missing' })
-      expect(app1_model).to have_annotations({ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' })
+      expect(app1_model).to have_labels({ key_name: 'potato', value: 'yam' }, { prefix: 'myspace.com', key_name: 'songs', value: 'missing' })
+      expect(app1_model).to have_annotations({ key_name: 'potato', value: 'idaho' }, { key_name: 'juice', value: 'newton' })
 
       app2_model.reload
       lifecycle_data = app2_model.lifecycle_data
@@ -213,10 +213,10 @@ RSpec.describe 'Space Manifests' do
       expect(app2_model.service_bindings.length).to eq 1
       expect(app2_model.service_bindings.first.service_instance).to eq service_instance_1
       expect(app2_model).to have_labels(
-        { key: 'potato', value: 'yam' }
+        { key_name: 'potato', value: 'yam' }
       )
       expect(app2_model).to have_annotations(
-        { key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' }
+        { key_name: 'potato', value: 'idaho' }, { key_name: 'juice', value: 'newton' }
       )
     end
 

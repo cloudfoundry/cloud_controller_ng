@@ -175,7 +175,7 @@ module VCAP::CloudController
 
       it 'deletes associated resources' do
         label = ServiceInstanceLabelModel.make(resource_guid: service_instance.guid, key_name: 'foo', value: 'bar')
-        annotation = ServiceInstanceAnnotationModel.make(resource_guid: service_instance.guid, key: 'alpha', value: 'beta')
+        annotation = ServiceInstanceAnnotationModel.make(resource_guid: service_instance.guid, key_name: 'alpha', value: 'beta')
 
         service_instance.destroy
 

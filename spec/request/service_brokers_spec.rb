@@ -820,10 +820,10 @@ RSpec.describe 'V3 service brokers' do
         expect(broker.auth_password).to eq('welcome')
         expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
 
-        expect(broker).to have_labels({ prefix: nil, key: 'potato', value: 'sweet' })
+        expect(broker).to have_labels({ prefix: nil, key_name: 'potato', value: 'sweet' })
         expect(broker).to have_annotations(
-          { prefix: nil, key: 'style', value: 'mashed' },
-          { prefix: nil, key: 'amount', value: 'all' }
+          { prefix: nil, key_name: 'style', value: 'mashed' },
+          { prefix: nil, key_name: 'amount', value: 'all' }
         )
       end
 
@@ -860,10 +860,10 @@ RSpec.describe 'V3 service brokers' do
           expect(last_response).to have_status_code(200)
 
           broker.reload
-          expect(broker).to have_labels({ prefix: nil, key: 'potato', value: 'sweet' })
+          expect(broker).to have_labels({ prefix: nil, key_name: 'potato', value: 'sweet' })
           expect(broker).to have_annotations(
-            { prefix: nil, key: 'style', value: 'mashed' },
-            { prefix: nil, key: 'amount', value: 'all' }
+            { prefix: nil, key_name: 'style', value: 'mashed' },
+            { prefix: nil, key_name: 'amount', value: 'all' }
           )
           expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
         end

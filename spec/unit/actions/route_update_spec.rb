@@ -64,12 +64,12 @@ module VCAP::CloudController
 
             route.reload
             expect(route).to have_labels(
-              { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
-              { prefix: nil, key: 'fruit', value: 'strawberries' },
-              { prefix: nil, key: 'cuisine', value: 'thai' },
+              { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
+              { prefix: nil, key_name: 'fruit', value: 'strawberries' },
+              { prefix: nil, key_name: 'cuisine', value: 'thai' },
             )
             expect(route).to have_annotations(
-              { key: 'potato', value: 'idaho' }
+              { key_name: 'potato', value: 'idaho' }
             )
           end
         end
@@ -91,12 +91,12 @@ module VCAP::CloudController
             subject.update(route: route, message: message)
             route.reload
             expect(route).to have_labels(
-              { prefix: nil, key: 'fruit', value: 'peach' },
-              { prefix: nil, key: 'clothing', value: 'blouse' },
+              { prefix: nil, key_name: 'fruit', value: 'peach' },
+              { prefix: nil, key_name: 'clothing', value: 'blouse' },
             )
             expect(route).to have_annotations(
-              { key: 'potato', value: 'celandine' },
-              { key: 'beet', value: 'formanova' },
+              { key_name: 'potato', value: 'celandine' },
+              { key_name: 'beet', value: 'formanova' },
             )
           end
         end
@@ -117,14 +117,14 @@ module VCAP::CloudController
             route.reload
 
             expect(route).to have_labels(
-              { prefix: 'doordash.com', key: 'potato', value: 'mashed' },
-              { prefix: nil, key: 'clothing', value: 'blouse' },
-              { prefix: nil, key: 'newstuff', value: 'here' },
-              { prefix: nil, key: 'cuisine', value: 'thai' },
+              { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
+              { prefix: nil, key_name: 'clothing', value: 'blouse' },
+              { prefix: nil, key_name: 'newstuff', value: 'here' },
+              { prefix: nil, key_name: 'cuisine', value: 'thai' },
             )
             expect(route).to have_annotations(
-              { key: 'potato', value: 'idaho' },
-              { key: 'asparagus', value: 'crunchy' },
+              { key_name: 'potato', value: 'idaho' },
+              { key_name: 'asparagus', value: 'crunchy' },
             )
           end
         end

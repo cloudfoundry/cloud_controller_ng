@@ -295,7 +295,7 @@ module VCAP::CloudController
       end
       let!(:annotation) do
         VCAP::CloudController::DropletAnnotationModel.make(
-          key: 'vegetable',
+          key_name: 'vegetable',
           value: 'asparagus',
           resource_guid: droplet.guid
         )
@@ -305,7 +305,7 @@ module VCAP::CloudController
         expect(droplet.labels.first.key_prefix).to be_nil
         expect(droplet.labels.first.key_name).to eq('potato')
         expect(droplet.labels.first.value).to eq('spielgasse')
-        expect(droplet.annotations.first.key).to eq('vegetable')
+        expect(droplet.annotations.first.key_name).to eq('vegetable')
         expect(droplet.annotations.first.value).to eq('asparagus')
       end
     end

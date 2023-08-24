@@ -76,8 +76,8 @@ module VCAP::CloudController
           expect(instance.last_operation.type).to eq('create')
           expect(instance.last_operation.state).to eq('initial')
 
-          expect(instance).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
-          expect(instance).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
+          expect(instance).to have_annotations({ prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+          expect(instance).to have_labels({ prefix: nil, key_name: 'release', value: 'stable' })
         end
 
         describe 'broker is unavaliable' do
@@ -345,8 +345,8 @@ module VCAP::CloudController
             expect(instance.last_operation.type).to eq('create')
             expect(instance.last_operation.state).to eq('succeeded')
 
-            expect(instance).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
-            expect(instance).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
+            expect(instance).to have_annotations({ prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+            expect(instance).to have_labels({ prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'logs an audit event' do
@@ -391,8 +391,8 @@ module VCAP::CloudController
             expect(instance.last_operation.state).to eq('in progress')
             expect(instance.last_operation.broker_provided_operation).to eq(broker_provided_operation)
 
-            expect(instance).to have_annotations({ prefix: 'seriouseats.com', key: 'potato', value: 'fried' })
-            expect(instance).to have_labels({ prefix: nil, key: 'release', value: 'stable' })
+            expect(instance).to have_annotations({ prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+            expect(instance).to have_labels({ prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'logs a start create audit event' do

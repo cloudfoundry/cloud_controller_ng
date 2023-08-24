@@ -91,7 +91,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'potato', value: 'idaho') }
-        let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app.guid, key: 'style', value: 'mashed') }
+        let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app.guid, key_name: 'style', value: 'mashed') }
 
         let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app) }
         let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app) }

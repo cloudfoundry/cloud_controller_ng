@@ -128,7 +128,7 @@ module VCAP::CloudController
           web_process.annotations.each do |annotation|
             ProcessAnnotationModel.create(
               key_prefix: annotation.key_prefix,
-              key: annotation.key,
+              key_name: annotation.key_name,
               value: annotation.value,
               resource_guid: p.guid)
           end

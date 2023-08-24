@@ -77,7 +77,7 @@ module VCAP::CloudController::Presenters::V3
         let!(:annotation) do
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
-            key: 'contacts',
+            key_name: 'contacts',
             value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
           )
         end

@@ -29,7 +29,7 @@ module VCAP
           let!(:annotation) {
             ServiceBrokerAnnotationModel.create(
               service_broker: broker,
-              key: 'style',
+              key_name: 'style',
               value: 'mashed'
             )
           }
@@ -54,7 +54,7 @@ module VCAP
           let!(:update_broker_annotation_request) {
             ServiceBrokerUpdateRequestAnnotationModel.create(
               service_broker_update_request: update_broker_request,
-              key: 'style',
+              key_name: 'style',
               value: 'baked'
             )
           }
@@ -96,7 +96,7 @@ module VCAP
             expect(broker.labels[0][:key_name]).to eq('potato')
             expect(broker.labels[0][:value]).to eq('sweet')
 
-            expect(broker.annotations[0][:key]).to eq('style')
+            expect(broker.annotations[0][:key_name]).to eq('style')
             expect(broker.annotations[0][:value]).to eq('baked')
 
             service_offerings = Service.where(service_broker_id: broker.id)
@@ -415,7 +415,7 @@ module VCAP
               expect(broker.labels[0][:key_name]).to eq('potato')
               expect(broker.labels[0][:value]).to eq('yam')
 
-              expect(broker.annotations[0][:key]).to eq('style')
+              expect(broker.annotations[0][:key_name]).to eq('style')
               expect(broker.annotations[0][:value]).to eq('mashed')
 
               service_offerings = Service.where(service_broker_id: broker.id)

@@ -129,7 +129,7 @@ module VCAP::CloudController
         service = Service.make(service_broker: service_broker)
         service_plan = ServicePlan.make(service: service)
         label = ServiceBrokerLabelModel.make(resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
-        annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key: 'alpha', value: 'beta')
+        annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key_name: 'alpha', value: 'beta')
 
         service_broker.destroy
 

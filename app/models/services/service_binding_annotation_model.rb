@@ -1,11 +1,10 @@
 module VCAP::CloudController
-  class ServiceBindingAnnotationModel < Sequel::Model(:service_binding_annotations)
+  class ServiceBindingAnnotationModel < Sequel::Model(:service_binding_annotations_migration_view)
+    set_primary_key :id
     many_to_one :service_binding,
       primary_key: :guid,
       key: :resource_guid,
       without_guid_generation: true
-
-    def_column_alias(:key_name, :key)
     include MetadataModelMixin
   end
 end

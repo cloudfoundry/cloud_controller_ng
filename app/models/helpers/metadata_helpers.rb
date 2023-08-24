@@ -24,9 +24,9 @@ module VCAP::CloudController
       def extract_prefix(metadata_key)
         return [nil, metadata_key] unless metadata_key.include?(KEY_SEPARATOR)
 
-        prefix, name = metadata_key.split(KEY_SEPARATOR)
-        name ||= ''
-        [prefix, name]
+        prefix, key_name = metadata_key.split(KEY_SEPARATOR)
+        key_name ||= ''
+        [prefix, key_name]
       end
     end
   end

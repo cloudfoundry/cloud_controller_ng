@@ -10,15 +10,15 @@ module VCAP::CloudController
           prefix, key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
 
           if value.nil? && destroy_nil # Delete Annotation
-            annotation_klass.where(resource_guid: resource.guid, key: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
+            annotation_klass.where(resource_guid: resource.guid, key_name: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
             next
           end
 
           begin
             tries ||= 2
             annotation_klass.db.transaction(savepoint: true) do
-              annotation = annotation_klass.where(resource_guid: resource.guid, key: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).first
-              annotation ||= annotation_klass.create(resource_guid: resource.guid, key: key_name.to_s, key_prefix: prefix.to_s)
+              annotation = annotation_klass.where(resource_guid: resource.guid, key_name: key_name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).first
+              annotation ||= annotation_klass.create(resource_guid: resource.guid, key_name: key_name.to_s, key_prefix: prefix.to_s)
               annotation.update(value: value)
             end
           rescue Sequel::UniqueConstraintViolation => e

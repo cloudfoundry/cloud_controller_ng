@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         let!(:annotation) do
           VCAP::CloudController::DropletAnnotationModel.make(
-            key: 'University',
+            key_name: 'University',
             value: 'Toronto',
             resource_guid: droplet.guid
           )
@@ -47,10 +47,10 @@ module VCAP::CloudController
           expect(message).to be_valid
           updated_droplet = droplet_update.update(droplet, message)
 
-          expect(updated_droplet).to have_labels({ key: 'freaky', value: 'wednesday' })
+          expect(updated_droplet).to have_labels({ key_name: 'freaky', value: 'wednesday' })
           expect(updated_droplet).to have_annotations(
-            { key: 'University', value: 'Toronto' },
-            { key: 'reason', value: 'add some more annotations' }
+            { key_name: 'University', value: 'Toronto' },
+            { key_name: 'reason', value: 'add some more annotations' }
           )
         end
       end

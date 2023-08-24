@@ -26,8 +26,8 @@ module VCAP::CloudController
         revision_update.update(revision, message)
 
         revision.reload
-        expect(revision).to have_labels({ key: 'freaky', value: 'wednesday' })
-        expect(revision).to have_annotations({ key: 'tokyo', value: 'grapes' })
+        expect(revision).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+        expect(revision).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
       end
     end
   end

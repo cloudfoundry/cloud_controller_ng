@@ -164,8 +164,8 @@ RSpec.describe 'V3 service offerings' do
       before do
         VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid, key_name: 'one', value: 'foo')
         VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid, key_name: 'two', value: 'bar')
-        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key: 'alpha', value: 'A1')
-        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key: 'beta', value: 'B2')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key_name: 'alpha', value: 'A1')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid, key_name: 'beta', value: 'B2')
       end
 
       it 'displays the metadata correctly' do
@@ -323,8 +323,8 @@ RSpec.describe 'V3 service offerings' do
       before do
         VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid_1, key_name: 'one', value: 'foo')
         VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: guid_2, key_name: 'two', value: 'bar')
-        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_1, key: 'alpha', value: 'A1')
-        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_2, key: 'beta', value: 'B2')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_1, key_name: 'alpha', value: 'A1')
+        VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: guid_2, key_name: 'beta', value: 'B2')
       end
 
       it 'displays the metadata correctly' do

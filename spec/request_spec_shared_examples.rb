@@ -256,7 +256,7 @@ RSpec.shared_examples 'resource with metadata' do
   end
 
   it 'can be deleted when it has associated annotations' do
-    resource.add_annotation(key: 'foo', key_prefix: 'bar', value: 'some value')
+    resource.add_annotation(key_name: 'foo', key_prefix: 'bar', value: 'some value')
     api_call.call
     expect(last_response.status).to eq(202).or eq(204)
     if last_response.status == 202

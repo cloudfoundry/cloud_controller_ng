@@ -51,12 +51,12 @@ module VCAP::CloudController
           expect(app.environment_variables).to eq(environment_variables.stringify_keys)
 
           expect(app).to have_labels(
-            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-            { prefix: nil, key: 'release', value: 'stable' }
+            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+            { prefix: nil, key_name: 'release', value: 'stable' }
           )
           expect(app).to have_annotations(
-            { key: 'superhero', value: 'Bummer-boy' },
-            { key: 'superpower', value: 'Bums you out' }
+            { key_name: 'superhero', value: 'Bummer-boy' },
+            { key_name: 'superpower', value: 'Bums you out' }
           )
         end
 

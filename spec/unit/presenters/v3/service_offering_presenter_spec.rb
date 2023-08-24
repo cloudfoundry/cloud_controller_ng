@@ -53,7 +53,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
 
   let!(:mountain_annotation) do
     VCAP::CloudController::ServiceOfferingAnnotationModel.make(
-      key: 'altitude',
+      key_name: 'altitude',
       value: '14,412',
       resource_guid: service_offering.guid,
     )

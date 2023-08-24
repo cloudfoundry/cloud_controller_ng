@@ -72,8 +72,8 @@ module VCAP::CloudController
         process_update.update(process, message, NonManifestStrategy)
 
         process.reload
-        expect(process).to have_labels({ key: 'freaky', value: 'wednesday' })
-        expect(process).to have_annotations({ key: 'tokyo', value: 'grapes' })
+        expect(process).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+        expect(process).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
       end
 
       context 'health check properties' do

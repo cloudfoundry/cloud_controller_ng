@@ -949,8 +949,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.last_operation.type).to eq('create')
         expect(instance.last_operation.state).to eq('succeeded')
-        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' })
-        expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
+        expect(instance).to have_annotations({ prefix: nil, key_name: 'foo', value: 'bar' })
+        expect(instance).to have_labels({ prefix: nil, key_name: 'baz', value: 'qux' })
       end
 
       context 'when the name has already been taken' do
@@ -1045,8 +1045,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.service_plan).to eq(service_plan)
 
-        expect(instance).to have_annotations({ prefix: nil, key: 'foo', value: 'bar' }, { prefix: 'pre.fix', key: 'wow', value: 'baz' })
-        expect(instance).to have_labels({ prefix: nil, key: 'baz', value: 'qux' })
+        expect(instance).to have_annotations({ prefix: nil, key_name: 'foo', value: 'bar' }, { prefix: 'pre.fix', key_name: 'wow', value: 'baz' })
+        expect(instance).to have_labels({ prefix: nil, key_name: 'baz', value: 'qux' })
 
         expect(instance.last_operation.type).to eq('create')
         expect(instance.last_operation.state).to eq('initial')
@@ -1700,14 +1700,14 @@ RSpec.describe 'V3 service instances' do
           expect(service_instance.tags).to eq(%w(baz quz))
 
           expect(service_instance).to have_annotations(
-            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
-            { prefix: nil, key: 'potato', value: 'idaho' },
-            { prefix: nil, key: 'style', value: 'mashed' },
+            { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+            { prefix: nil, key_name: 'potato', value: 'idaho' },
+            { prefix: nil, key_name: 'style', value: 'mashed' },
           )
           expect(service_instance).to have_labels(
-            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' },
-            { prefix: nil, key: 'potato', value: 'yam' },
-            { prefix: nil, key: 'style', value: 'baked' }
+            { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+            { prefix: nil, key_name: 'potato', value: 'yam' },
+            { prefix: nil, key_name: 'style', value: 'baked' }
           )
 
           expect(service_instance.last_operation.type).to eq('update')
@@ -1801,12 +1801,12 @@ RSpec.describe 'V3 service instances' do
           expect(service_instance.reload.tags).to eq(%w(foo bar))
 
           expect(service_instance).to have_annotations(
-            { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-            { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+            { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
+            { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
           )
           expect(service_instance).to have_labels(
-            { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-            { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
+            { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
+            { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
           )
         end
 
@@ -2056,12 +2056,12 @@ RSpec.describe 'V3 service instances' do
                 expect(service_instance.reload.tags).to eq(%w(foo bar))
                 expect(service_instance.service_plan).to eq(original_service_plan)
                 expect(service_instance).to have_annotations(
-                  { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-                  { prefix: 'pre.fix', key: 'fox', value: 'bushy' },
+                  { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
+                  { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
                 )
                 expect(service_instance).to have_labels(
-                  { prefix: 'pre.fix', key: 'to_delete', value: 'value' },
-                  { prefix: 'pre.fix', key: 'tail', value: 'fluffy' }
+                  { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
+                  { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
                 )
               end
 
@@ -2617,8 +2617,8 @@ RSpec.describe 'V3 service instances' do
         expect(instance.space).to eq(space)
         expect(instance.last_operation.type).to eq('update')
         expect(instance.last_operation.state).to eq('succeeded')
-        expect(instance).to have_labels({ prefix: 'pre.fix', key: 'tail', value: 'fluffy' }, { prefix: nil, key: 'foo', value: 'bar' })
-        expect(instance).to have_annotations({ prefix: 'pre.fix', key: 'fox', value: 'bushy' }, { prefix: nil, key: 'alpha', value: 'beta' })
+        expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }, { prefix: nil, key_name: 'foo', value: 'bar' })
+        expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }, { prefix: nil, key_name: 'alpha', value: 'beta' })
       end
 
       context 'when the request is invalid' do

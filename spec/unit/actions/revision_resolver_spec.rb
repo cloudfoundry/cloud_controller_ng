@@ -167,7 +167,7 @@ module VCAP::CloudController
           end
 
           it 'does not copy metadata to the new rollback revision' do
-            RevisionAnnotationModel.make(revision: initial_revision, key: 'foo', value: 'bar')
+            RevisionAnnotationModel.make(revision: initial_revision, key_name: 'foo', value: 'bar')
             RevisionLabelModel.make(revision: initial_revision, key_name: 'baz', value: 'qux')
 
             rollback_revision = RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)

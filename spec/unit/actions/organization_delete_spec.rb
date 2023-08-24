@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
       let!(:org1_annotation) do
         OrganizationAnnotationModel.make(
-          key: 'city',
+          key_name: 'city',
           value: 'Monticello',
           resource_guid: org_1.guid
         )

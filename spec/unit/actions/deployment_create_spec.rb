@@ -51,8 +51,8 @@ module VCAP::CloudController
           deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
           deploying_web_process = deployment.deploying_web_process
 
-          expect(deploying_web_process).to have_labels({ key: 'freaky', value: 'wednesday' })
-          expect(deploying_web_process).to have_annotations({ key: 'tokyo', value: 'grapes' })
+          expect(deploying_web_process).to have_labels({ key_name: 'freaky', value: 'wednesday' })
+          expect(deploying_web_process).to have_annotations({ key_name: 'tokyo', value: 'grapes' })
         end
       end
 
@@ -471,12 +471,12 @@ module VCAP::CloudController
               deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
               expect(deployment).to have_labels(
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'release', value: 'stable' }
+                { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                { prefix: nil, key_name: 'release', value: 'stable' }
               )
               expect(deployment).to have_annotations(
-                { key: 'superhero', value: 'Bummer-boy' },
-                { key: 'superpower', value: 'Bums you out' }
+                { key_name: 'superhero', value: 'Bummer-boy' },
+                { key_name: 'superpower', value: 'Bums you out' }
               )
             end
           end
@@ -560,12 +560,12 @@ module VCAP::CloudController
                 deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
                 expect(deployment).to have_labels(
-                  { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                  { prefix: nil, key: 'release', value: 'stable' }
+                  { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                  { prefix: nil, key_name: 'release', value: 'stable' }
                 )
                 expect(deployment).to have_annotations(
-                  { key: 'superhero', value: 'Bummer-boy' },
-                  { key: 'superpower', value: 'Bums you out' }
+                  { key_name: 'superhero', value: 'Bummer-boy' },
+                  { key_name: 'superpower', value: 'Bums you out' }
                 )
               end
             end
@@ -729,12 +729,12 @@ module VCAP::CloudController
               it 'saves the metadata to the new deployment' do
                 deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
                 expect(deployment).to have_labels(
-                  { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                  { prefix: nil, key: 'release', value: 'stable' }
+                  { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                  { prefix: nil, key_name: 'release', value: 'stable' }
                 )
                 expect(deployment).to have_annotations(
-                  { key: 'superhero', value: 'Bummer-boy' },
-                  { key: 'superpower', value: 'Bums you out' }
+                  { key_name: 'superhero', value: 'Bummer-boy' },
+                  { key_name: 'superpower', value: 'Bums you out' }
                 )
               end
             end
@@ -988,12 +988,12 @@ module VCAP::CloudController
             it 'saves the metadata to the new deployment' do
               deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
               expect(deployment).to have_labels(
-                { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
-                { prefix: nil, key: 'release', value: 'stable' }
+                { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+                { prefix: nil, key_name: 'release', value: 'stable' }
               )
               expect(deployment).to have_annotations(
-                { key: 'superhero', value: 'Bummer-boy' },
-                { key: 'superpower', value: 'Bums you out' }
+                { key_name: 'superhero', value: 'Bummer-boy' },
+                { key_name: 'superpower', value: 'Bums you out' }
               )
             end
           end

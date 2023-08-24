@@ -28,14 +28,14 @@ module VCAP::CloudController::Presenters::V3
 
     let!(:organization_annotation_the_first) do
       VCAP::CloudController::OrganizationAnnotationModel.make(
-        key: 'city',
+        key_name: 'city',
         value: 'Monticello',
         resource_guid: organization.guid
       )
     end
     let!(:organization_annotation_the_second) do
       VCAP::CloudController::OrganizationAnnotationModel.make(
-        key: 'state',
+        key_name: 'state',
         value: 'Indiana',
         resource_guid: organization.guid
       )

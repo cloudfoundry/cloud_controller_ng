@@ -51,7 +51,7 @@ module VCAP::CloudController::Presenters::V3
 
       let!(:mountain_annotation) do
         VCAP::CloudController::ProcessAnnotationModel.make(
-          key: 'altitude',
+          key_name: 'altitude',
           value: '14,412',
           resource_guid: process.guid,
         )
@@ -59,7 +59,7 @@ module VCAP::CloudController::Presenters::V3
 
       let!(:plain_annotation) do
         VCAP::CloudController::ProcessAnnotationModel.make(
-          key: 'maize',
+          key_name: 'maize',
           value: 'hfcs',
           resource_guid: process.guid,
         )
