@@ -52,6 +52,61 @@ See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for
 ## Contributing
 
 Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/main/CONTRIBUTING.md) and the [Cloud Foundry Code of Conduct](https://cloudfoundry.org/code-of-conduct/)
+### Predefined Development Environment
+
+To commence your work in a fully equipped development environment, you have two main options:
+
+1. **GitHub Codespaces**: GitHub Codespaces provisions a virtual machine with essential core services, such as S3 Blobstore, Database, and NGINX. It also establishes a connection that your IDE can use (VSCode is recommended). To initiate a codespace, click on the green button within the GitHub UI(upper right corner) and select the 'Codespaces' tab.
+
+2. **Local Environment**: This option allows you to establish an environment on your local machine with the same core services as GitHub Codespaces, using Docker.
+
+A script in the project's root directory provides convenient shortcuts to set up an environment locally:
+
+```
+Usage: ./devenv.sh COMMAND
+
+Commands:
+  create     - Setting up the development environment(containers)
+  start      - Starting the development environment(containers), a existing fully set up set of containers must exist.
+  stop       - Stopping but not removing the development environment(containers)
+  destroy    - Stopping and removing the development environment(containers)
+  runconfigs - Copies matching run configurations for intellij and vscode into the respective folders
+  help       - Print this help text
+```
+
+To run this script, ensure the following are installed on your local system:
+
+- Ruby (Refer to the .ruby-version file for the correct version)
+- [Bundler](https://bundler.io/)
+- [Docker](https://www.docker.com/) (Feature "Allow privileged port mapping" must be enabled in Avanced Options on Docker Desktop for Mac, docker must be accessable without root permissions)
+- [Docker Compose](https://github.com/docker/compose)
+- [PSQL CLI](https://www.postgresql.org/docs/current/app-psql.html)
+- [MYSQL CLI](https://dev.mysql.com/doc/refman/8.0/en/mysql.html)
+- [UAAC](https://github.com/cloudfoundry/cf-uaac)
+- [yq 4+](https://github.com/mikefarah/yq)
+
+Upon executing `./devenv.sh create`, the necessary containers will be set up and the databases will be initialized and migrated. 
+
+
+
+As an optional step, execute `./devenv.sh runconfigs` to copy predefined settings and run configurations for this project into `.vscode` and `.idea` directories for VSCode and IntelliJ/RubyMine/JetBrains IDEs. These configurations are opinionated and, hence, not provided by default, but they do offer common configurations to debug `rspecs`, `cloud_controller`, `local_worker`, and `generic_worker`.
+
+#### Credentials
+
+This Setup automatically creates a user in UAA for login in the cloud_controller, and sets Passwords for Postgres and Mysql.
+In case you need them to configure them somewhere else (e.g. database visualizers):
+- Postgres: postgres:supersecret@localhost:5432
+- MySQL: root:supersecret@127.0.0.1:3306
+- UAA Admin: 
+```bash
+uaac target http://localhost:8080 --skip-ssl-validation
+uaac token client get admin -s "adminsecret"
+```
+- CF Admin:
+```bash
+cf api http://localhost
+cf login -u ccadmin -p secret
+```
 
 ### Unit Tests
 **TLDR:** Always run `bundle exec rake` before committing

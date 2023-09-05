@@ -1,0 +1,112 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "[Postgres] CloudController",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/cloud_controller",
+            "script": "-c tmp/cloud_controller.yml",
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb"
+            }
+        },
+        {
+            "name": "[Mariadb] CloudController",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/cloud_controller",
+            "script": "-c tmp/cloud_controller.yml",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb"
+            }
+        },
+        {
+            "name": "[Mariadb] Unittests",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "spec:all",
+            "env": {
+                "DB": "mysql",
+                "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@localhost:3306"
+            }
+        },
+        {
+            "name": "[Postgres] Unittests",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "spec:all",
+            "env": {
+                "DB": "postgres",
+                "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@localhost:5432"
+            }
+        },
+        {
+            "name": "[Mariadb] CC Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:generic",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb"
+            }
+        },
+        {
+            "name": "[Postgres] CC Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:generic",
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb"
+            }
+        },
+        {
+            "name": "[Mariadb] CC Local Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:local",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb"
+            }
+        },
+        {
+            "name": "[Postgres] CC Local Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:local",
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb"
+            }
+        }
+    ]
+}

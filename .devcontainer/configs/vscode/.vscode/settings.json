@@ -1,0 +1,16 @@
+{
+  "ruby-spec-runner.rspecEnv": {
+    "DB": "postgres",
+    "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@localhost:5432",
+    "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@localhost:3306"
+  },
+  "ruby.rubocop.autocorrectOnSave": true,
+  "ruby.rubocop.configFilePath": ".rubocop.yml",
+  "ruby.rubocop.hideDisableSuggestions": true,
+  "ruby.rubocop.useBundler": true,
+  "ruby.rubocop.useServer": true,
+  "ruby.rubocop.onSave": true,
+  "solargraph.useBundler": false,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true
+}

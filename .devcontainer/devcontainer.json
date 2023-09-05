@@ -1,0 +1,54 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+{
+    "name": "Cloud Controller Dev Environment",
+    "hostRequirements": {
+        "cpus": 4,
+        "memory": "8gb",
+        "storage": "32gb"
+    },
+    "dockerComposeFile": [
+        "../docker-compose.yml",
+        "docker-compose.override.yml"
+    ],
+    "service": "codespace",
+    "runServices": [
+        "postgres",
+        "mysql",
+        "uaa",
+        "minio",
+        "catsbroker",
+        "nginx"
+    ],
+    "workspaceFolder": "/workspace",
+    "initializeCommand": ".devcontainer/scripts/codespaces_init.sh",
+    "onCreateCommand": ".devcontainer/scripts/codespaces_start.sh",
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Set *default* container specific settings.json values on container create.
+            "settings": {},
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "oderwat.indent-rainbow",
+                "KoichiSasada.vscode-rdbg",
+                "Fooo.ruby-spec-runner",
+                "castwide.solargraph",
+                "eamodio.gitlens",
+                "github.vscode-github-actions"
+            ]
+        }
+    },
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [
+        80,
+        1234,
+        9292,
+        9393,
+        9000,
+        9001,
+        8080,
+        3306,
+        5432
+    ]
+}

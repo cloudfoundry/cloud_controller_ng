@@ -39,11 +39,13 @@ runs:
         sudo wget -O /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${{ inputs.BOSH_CLI_VERSION }}-linux-amd64 && sudo chmod +x /usr/local/bin/bosh
       shell: bash
       working-directory: ${{ inputs.WORKING_DIRECTORY }}
+    - name: Setup Bundler
+      run: |
+        mkdir .bundle
+        echo -e 'BUNDLE_WITHOUT: "development"' > .bundle/config
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
         working-directory: ${{ inputs.WORKING_DIRECTORY }}
-    - name: Install Ruby dependencies
-      run: bundle install
-      shell: bash
-      working-directory: ${{ inputs.WORKING_DIRECTORY }}
