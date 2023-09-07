@@ -27,6 +27,8 @@ Sequel.migration do
   ].freeze
   annotation_tables = table_base_names.map { |tbn| "#{tbn}_annotations" }.freeze
 
+  no_transaction # Disable automatic transactions
+
   up do
     annotation_tables.each do |table|
       # Output all annotations with a forward Slash
