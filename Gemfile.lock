@@ -49,22 +49,22 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (6.1.7.4)
-      actionview (= 6.1.7.4)
-      activesupport (= 6.1.7.4)
+    actionpack (6.1.7.6)
+      actionview (= 6.1.7.6)
+      activesupport (= 6.1.7.6)
       rack (~> 2.0, >= 2.0.9)
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.2.0)
-    actionview (6.1.7.4)
-      activesupport (= 6.1.7.4)
+    actionview (6.1.7.6)
+      activesupport (= 6.1.7.6)
       builder (~> 3.1)
       erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.1, >= 1.2.0)
-    activemodel (6.1.7.4)
-      activesupport (= 6.1.7.4)
-    activesupport (6.1.7.4)
+    activemodel (6.1.7.6)
+      activesupport (= 6.1.7.6)
+    activesupport (6.1.7.6)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -375,9 +375,9 @@ GEM
     rails-html-sanitizer (1.6.0)
       loofah (~> 2.21)
       nokogiri (~> 1.14)
-    railties (6.1.7.4)
-      actionpack (= 6.1.7.4)
-      activesupport (= 6.1.7.4)
+    railties (6.1.7.6)
+      actionpack (= 6.1.7.6)
+      activesupport (= 6.1.7.6)
       method_source
       rake (>= 12.2)
       thor (~> 1.0)
@@ -556,7 +556,7 @@ PLATFORMS
 
 DEPENDENCIES
   actionpack (~> 6.1.7)
-  actionview (~> 6.1.7, >= 6.1.7.3)
+  actionview (~> 6.1.7, >= 6.1.7.5)
   activemodel (~> 6.1.7)
   addressable
   allowy (>= 2.1.0)
@@ -609,7 +609,7 @@ DEPENDENCIES
   public_suffix
   puma
   rack-test
-  railties (~> 6.1.7, >= 6.1.7.3)
+  railties (~> 6.1.7, >= 6.1.7.5)
   rake
   redis
   retryable
