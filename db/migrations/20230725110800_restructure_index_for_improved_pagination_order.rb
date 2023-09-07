@@ -547,6 +547,7 @@ Sequel.migration do
     },
   ]
 
+  no_transaction
   up do
     index_migration_data.each do |index_migration|
       transaction do
