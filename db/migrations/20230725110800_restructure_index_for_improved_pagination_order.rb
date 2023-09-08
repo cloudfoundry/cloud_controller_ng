@@ -547,7 +547,8 @@ Sequel.migration do
     },
   ]
 
-  no_transaction
+  no_transaction # Disable automatic transactions
+
   up do
     index_migration_data.each do |index_migration|
       transaction do
