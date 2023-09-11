@@ -103,7 +103,11 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def destroy
     not_found! unless service_credential_binding.present?
-    unauthorized! unless can_bind_in_active_space?(binding_space)
+    if service_credential_binding.is_a?(ServiceKey)
+      unauthorized! unless can_write_to_active_space?(binding_space)
+    else
+      unauthorized! unless can_bind_in_active_space?(binding_space)
+    end
     suspended! unless is_space_active?(binding_space)
 
     type = service_credential_binding.is_a?(ServiceKey) ? :key : :credential
