@@ -89,7 +89,7 @@ group :test do
   gem 'rspec-rails', '~> 6.0.3'
   gem 'rspec-wait'
   gem 'rspec_api_documentation', '>= 6.1.0'
-  gem 'rubocop', '~> 1.56.2'
+  gem 'rubocop', '~> 1.56.3'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end
