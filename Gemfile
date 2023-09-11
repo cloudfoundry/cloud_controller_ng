@@ -50,10 +50,10 @@ gem 'vmstat', '~> 2.3'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 6.1.7'
-gem 'actionview', '~> 6.1.7', '>= 6.1.7.5'
-gem 'activemodel', '~> 6.1.7'
-gem 'railties', '~> 6.1.7', '>= 6.1.7.5'
+gem 'actionpack', '~> 7.0.8'
+gem 'actionview', '~> 7.0.8'
+gem 'activemodel', '~> 7.0.8'
+gem 'railties', '~> 7.0.8'
 
 gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
 
