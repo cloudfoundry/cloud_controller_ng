@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e -u
+
+ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
+cd "${ROOT_DIR_PATH}"
+
+db=postgres
+docker_image=cloudfoundry/tas-runtime-postgres
+
+# This script only works for postgres because the tas-runtime mysql images do
+# not have ruby on them.
+
+docker run \
+   --rm \
+   -it \
+   --privileged \
+   -v "${PWD}:/cloud_controller_ng" \
+   -e "DB=$db" \
+   --cap-add ALL \
+   -w /cloud_controller_ng \
+   $docker_image \
+   /bin/bash /cloud_controller_ng/scripts/start-db-in-docker.sh

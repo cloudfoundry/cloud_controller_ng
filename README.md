@@ -116,6 +116,14 @@ keep it up to date, documenting the purpose of the various types of tests.
 
 By default `rspec` will randomly pick between postgres and mysql.
 
+#### Running the Units Tests in Docker
+
+If you don't want to set up a up a test DB locally, you can run
+`./scripts/start-db-in-docker.sh`. This script will start a docker container
+with a running postgres. Then you can run the tests from the docker container
+by running `rspec`.
+
+#### Running the Test DB Locally
 If postgres is not running on your OSX machine, you can start up a server by doing the following:
 ```
 brew services start postgresql
