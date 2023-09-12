@@ -2060,9 +2060,10 @@ RSpec.describe 'v3 service credential bindings' do
       }
     }
     let(:binding) { VCAP::CloudController::ServiceBinding.make(**binding_details) }
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
 
     context 'user provided services' do
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
+
       context 'permissions' do
         let(:db_check) {
           lambda {
@@ -2124,50 +2125,49 @@ RSpec.describe 'v3 service credential bindings' do
           accepts_incomplete: true,
         }
       end
-
-      context 'permissions' do
-        let(:db_check) {
-          lambda {
-            expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
-          }
+      let(:db_check) {
+        lambda {
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
         }
-
-        context 'users in the originating service instance space' do
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-            let(:expected_codes_and_responses) do
-              responses_for_space_restricted_async_delete_endpoint(
-                permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
-              )
-            end
-          end
-
-          it_behaves_like 'permissions for delete endpoint when organization is suspended', 202,
-                          SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
-        end
-
-        context 'users in the space where the SI has been shared to' do
-          let(:original_org) { VCAP::CloudController::Organization.make }
-          let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
-
-          before do
-            service_instance.add_shared_space(space)
-          end
-
-          it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
-            let(:expected_codes_and_responses) do
-              responses_for_space_restricted_async_delete_endpoint(
-                permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
-              )
-            end
-          end
-
-          it_behaves_like 'permissions for delete endpoint when organization is suspended', 202,
-                          SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
-        end
-      end
+      }
 
       context 'app binding' do
+        context 'permissions' do
+          context 'users in the originating service instance space' do
+            it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+              let(:expected_codes_and_responses) do
+                responses_for_space_restricted_async_delete_endpoint(
+                  permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+                )
+              end
+            end
+
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202,
+                            SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
+          end
+
+          context 'users in the space where the SI has been shared to' do
+            let(:original_org) { VCAP::CloudController::Organization.make }
+            let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
+            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+            before do
+              service_instance.add_shared_space(space)
+            end
+
+            it_behaves_like 'permissions for delete endpoint', ['space_supporter'] do
+              let(:expected_codes_and_responses) do
+                responses_for_space_restricted_async_delete_endpoint(
+                  permitted_roles: SpaceRestrictedResponseGenerators.default_write_permitted_roles + ['space_supporter']
+                )
+              end
+            end
+
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202,
+                            SpaceRestrictedResponseGenerators.default_suspended_roles + ['space_supporter']
+          end
+        end
+
         it_behaves_like 'service credential binding delete endpoint',
           'service_binding',
           VCAP::CloudController::ServiceBinding,
@@ -2178,6 +2178,44 @@ RSpec.describe 'v3 service credential bindings' do
       context 'key bindings' do
         let(:bound_app) { nil }
         let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+
+        context 'permissions' do
+          context 'users in the originating service instance space' do
+            it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+              let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }
+            end
+
+            it_behaves_like 'permissions for delete endpoint when organization is suspended', 202
+          end
+
+          context 'users in the space where the SI has been shared to' do
+            let(:original_org) { VCAP::CloudController::Organization.make }
+            let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
+            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+
+            before do
+              service_instance.add_shared_space(space)
+            end
+
+            let(:expected_codes_and_responses) do
+              h = Hash.new(code: 404)
+              h['admin'] = { code: 202 }
+              h['admin_read_only'] = h['global_auditor'] = { code: 403 }
+              h
+            end
+
+            it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+            context 'when organization is suspended' do
+              before do
+                org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+              end
+
+              it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+            end
+          end
+        end
+
         it_behaves_like 'service credential binding delete endpoint',
           'service_key',
           VCAP::CloudController::ServiceKey,
