@@ -273,7 +273,7 @@ module VCAP::CloudController
     end
 
     def members
-      User.where(id: OrganizationRole.where(organization_id: id).select(:user_id))
+      User.where(id: OrganizationRole.where(organization_id: id).distinct.select(:user_id))
     end
 
     private
