@@ -3,9 +3,10 @@ require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[StatsdUpdater.new, PrometheusUpdater.new])
+    def initialize(start_time, log_counter, logger, statsd_updater=StatsdUpdater.new, prometheus_updater=PrometheusUpdater.new)
       @start_time = start_time
-      @updaters = updaters
+      @statsd_updater = statsd_updater
+      @prometheus_updater = prometheus_updater
       @log_counter = log_counter
       @logger = logger
       @known_job_queues = {
@@ -47,7 +48,7 @@ module VCAP::CloudController::Metrics
       running_task_count = running_tasks.count
       running_task_memory = running_tasks.sum(:memory_in_mb)
       running_task_memory = 0 if running_task_memory.nil?
-      @updaters.each { |u| u.update_task_stats(running_task_count, running_task_memory) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_task_stats(running_task_count, running_task_memory) }
     end
 
     def update_log_counts
@@ -58,19 +59,19 @@ module VCAP::CloudController::Metrics
         hash[level_name] = counts.fetch(level_name.to_s, 0)
       end
 
-      @updaters.each { |u| u.update_log_counts(hash) }
+      @statsd_updater.update_log_counts(hash)
     end
 
     def update_deploying_count
       deploying_count = VCAP::CloudController::DeploymentModel.deploying_count
 
-      @updaters.each { |u| u.update_deploying_count(deploying_count) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_deploying_count(deploying_count) }
     end
 
     def update_user_count
       user_count = VCAP::CloudController::User.count
 
-      @updaters.each { |u| u.update_user_count(user_count) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_user_count(user_count) }
     end
 
     def update_job_queue_length
@@ -84,13 +85,13 @@ module VCAP::CloudController::Metrics
       end
 
       pending_job_count_by_queue.reverse_merge!(@known_job_queues)
-      @updaters.each { |u| u.update_job_queue_length(pending_job_count_by_queue, total) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_job_queue_length(pending_job_count_by_queue, total) }
     end
 
     def update_thread_info
       local_thread_info = thread_info
 
-      @updaters.each { |u| u.update_thread_info(local_thread_info) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_thread_info(local_thread_info) }
     end
 
     def update_failed_job_count
@@ -104,7 +105,7 @@ module VCAP::CloudController::Metrics
       end
 
       failed_jobs_by_queue.reverse_merge!(@known_job_queues)
-      @updaters.each { |u| u.update_failed_job_count(failed_jobs_by_queue, total) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_failed_job_count(failed_jobs_by_queue, total) }
     end
 
     def update_vitals
@@ -120,7 +121,7 @@ module VCAP::CloudController::Metrics
         num_cores: VCAP::HostSystem.new.num_cores
       }
 
-      @updaters.each { |u| u.update_vitals(vitals) }
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_vitals(vitals) }
     end
 
     def thread_info

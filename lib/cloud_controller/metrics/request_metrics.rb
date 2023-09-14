@@ -15,7 +15,6 @@ module VCAP::CloudController
         @statsd.increment 'cc.requests.outstanding'
 
         @prometheus_updater.update_gauge_metric(:cc_requests_outstanding_gauge, @counter, 'Requests Outstanding Gauge')
-        @prometheus_updater.increment_gauge_metric(:cc_requests_outstanding, 'Requests Outstanding')
       end
 
       def complete_request(status)
@@ -30,9 +29,7 @@ module VCAP::CloudController
         end
 
         @prometheus_updater.update_gauge_metric(:cc_requests_outstanding_gauge, @counter, 'Requests Outstanding Gauge')
-        @prometheus_updater.decrement_gauge_metric(:cc_requests_outstanding, 'Requests Outstanding')
         @prometheus_updater.increment_gauge_metric(:cc_requests_completed, 'Requests Completed')
-        @prometheus_updater.increment_gauge_metric(http_status_metric.gsub('.', '_').to_sym, "Times HTTP status #{http_status_code} have been received")
       end
     end
   end

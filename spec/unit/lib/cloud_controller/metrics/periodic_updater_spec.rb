@@ -3,9 +3,9 @@ require 'cloud_controller/metrics/periodic_updater'
 
 module VCAP::CloudController::Metrics
   RSpec.describe PeriodicUpdater do
-    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, logger, [updater1, updater2]) }
-    let(:updater1) { double(:updater1) }
-    let(:updater2) { double(:updater2) }
+    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, logger, statsd_updater, prometheus_updater) }
+    let(:statsd_updater) { double(:statsd_updater) }
+    let(:prometheus_updater) { double(:prometheus_updater) }
     let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
     let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
     let(:start_time) { Time.now.utc - 90 }
@@ -29,8 +29,8 @@ module VCAP::CloudController::Metrics
 
     describe 'task stats' do
       before do
-        allow(updater1).to receive(:update_task_stats)
-        allow(updater2).to receive(:update_task_stats)
+        allow(statsd_updater).to receive(:update_task_stats)
+        allow(prometheus_updater).to receive(:update_task_stats)
       end
 
       describe 'number of tasks' do
@@ -42,8 +42,8 @@ module VCAP::CloudController::Metrics
 
           periodic_updater.update_task_stats
 
-          expect(updater1).to have_received(:update_task_stats).with(2, anything)
-          expect(updater2).to have_received(:update_task_stats).with(2, anything)
+          expect(statsd_updater).to have_received(:update_task_stats).with(2, anything)
+          expect(prometheus_updater).to have_received(:update_task_stats).with(2, anything)
         end
       end
 
@@ -55,38 +55,38 @@ module VCAP::CloudController::Metrics
 
         periodic_updater.update_task_stats
 
-        expect(updater1).to have_received(:update_task_stats).with(anything, 513)
-        expect(updater2).to have_received(:update_task_stats).with(anything, 513)
+        expect(statsd_updater).to have_received(:update_task_stats).with(anything, 513)
+        expect(prometheus_updater).to have_received(:update_task_stats).with(anything, 513)
       end
 
       context 'when there are no running tasks' do
         it 'properly reports 0' do
           periodic_updater.update_task_stats
-          expect(updater1).to have_received(:update_task_stats).with(0, 0)
-          expect(updater2).to have_received(:update_task_stats).with(0, 0)
+          expect(statsd_updater).to have_received(:update_task_stats).with(0, 0)
+          expect(prometheus_updater).to have_received(:update_task_stats).with(0, 0)
         end
       end
     end
 
     describe '#setup_updates' do
       before do
-        allow(updater1).to receive(:update_user_count)
-        allow(updater1).to receive(:update_job_queue_length)
-        allow(updater1).to receive(:update_thread_info)
-        allow(updater1).to receive(:update_failed_job_count)
-        allow(updater1).to receive(:update_vitals)
-        allow(updater1).to receive(:update_log_counts)
-        allow(updater1).to receive(:update_task_stats)
-        allow(updater1).to receive(:update_deploying_count)
+        allow(statsd_updater).to receive(:update_user_count)
+        allow(statsd_updater).to receive(:update_job_queue_length)
+        allow(statsd_updater).to receive(:update_thread_info)
+        allow(statsd_updater).to receive(:update_failed_job_count)
+        allow(statsd_updater).to receive(:update_vitals)
+        allow(statsd_updater).to receive(:update_log_counts)
+        allow(statsd_updater).to receive(:update_task_stats)
+        allow(statsd_updater).to receive(:update_deploying_count)
 
-        allow(updater2).to receive(:update_user_count)
-        allow(updater2).to receive(:update_job_queue_length)
-        allow(updater2).to receive(:update_thread_info)
-        allow(updater2).to receive(:update_failed_job_count)
-        allow(updater2).to receive(:update_vitals)
-        allow(updater2).to receive(:update_log_counts)
-        allow(updater2).to receive(:update_task_stats)
-        allow(updater2).to receive(:update_deploying_count)
+        allow(prometheus_updater).to receive(:update_user_count)
+        allow(prometheus_updater).to receive(:update_job_queue_length)
+        allow(prometheus_updater).to receive(:update_thread_info)
+        allow(prometheus_updater).to receive(:update_failed_job_count)
+        allow(prometheus_updater).to receive(:update_vitals)
+        allow(prometheus_updater).to receive(:update_log_counts)
+        allow(prometheus_updater).to receive(:update_task_stats)
+        allow(prometheus_updater).to receive(:update_deploying_count)
 
         allow(EventMachine).to receive(:add_periodic_timer)
       end
@@ -208,22 +208,22 @@ module VCAP::CloudController::Metrics
 
       before do
         allow(VCAP::CloudController::DeploymentModel).to receive(:deploying_count).and_return(deploying_count)
-        allow(updater1).to receive(:update_deploying_count)
-        allow(updater2).to receive(:update_deploying_count)
+        allow(statsd_updater).to receive(:update_deploying_count)
+        allow(prometheus_updater).to receive(:update_deploying_count)
       end
 
       it 'sends the number of deploying deployments' do
         periodic_updater.update_deploying_count
 
-        expect(updater1).to have_received(:update_deploying_count).with(deploying_count)
-        expect(updater2).to have_received(:update_deploying_count).with(deploying_count)
+        expect(statsd_updater).to have_received(:update_deploying_count).with(deploying_count)
+        expect(prometheus_updater).to have_received(:update_deploying_count).with(deploying_count)
       end
     end
 
     describe '#update_user_count' do
       before do
-        allow(updater1).to receive(:update_user_count)
-        allow(updater2).to receive(:update_user_count)
+        allow(statsd_updater).to receive(:update_user_count)
+        allow(prometheus_updater).to receive(:update_user_count)
       end
 
       it 'includes the number of users' do
@@ -231,15 +231,15 @@ module VCAP::CloudController::Metrics
 
         periodic_updater.update_user_count
 
-        expect(updater1).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
-        expect(updater2).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
+        expect(statsd_updater).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
+        expect(prometheus_updater).to have_received(:update_user_count).with(VCAP::CloudController::User.count)
       end
     end
 
     describe '#update_job_queue_length' do
       before do
-        allow(updater1).to receive(:update_job_queue_length)
-        allow(updater2).to receive(:update_job_queue_length)
+        allow(statsd_updater).to receive(:update_job_queue_length)
+        allow(prometheus_updater).to receive(:update_job_queue_length)
       end
 
       context 'when local queue has pending jobs' do
@@ -255,8 +255,8 @@ module VCAP::CloudController::Metrics
           }
           expected_total = 1
 
-          expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-          expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         end
       end
 
@@ -269,8 +269,8 @@ module VCAP::CloudController::Metrics
           }
           expected_total = 0
 
-          expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-          expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         end
       end
 
@@ -288,8 +288,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 3
 
-        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
 
       it 'finds jobs which have not been attempted yet' do
@@ -305,8 +305,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 2
 
-        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
 
       it 'ignores jobs that have already been attempted' do
@@ -320,8 +320,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 0
 
-        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
 
       it '"resets" pending job count to 0 after they have been emitted' do
@@ -336,8 +336,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 2
 
-        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
 
         Delayed::Job.dataset.delete
         periodic_updater.update_job_queue_length
@@ -348,15 +348,15 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 0
 
-        expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
     end
 
     describe '#update_failed_job_count' do
       before do
-        allow(updater1).to receive(:update_failed_job_count)
-        allow(updater2).to receive(:update_failed_job_count)
+        allow(statsd_updater).to receive(:update_failed_job_count)
+        allow(prometheus_updater).to receive(:update_failed_job_count)
       end
 
       context 'when local queue has failed jobs' do
@@ -373,8 +373,8 @@ module VCAP::CloudController::Metrics
           }
           expected_total = 1
 
-          expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-          expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
         end
       end
 
@@ -391,8 +391,8 @@ module VCAP::CloudController::Metrics
           }
           expected_total = 0
 
-          expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-          expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
         end
       end
 
@@ -413,8 +413,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 3
 
-        expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
       end
 
       it '"resets" failed job count to 0 after they have been emitted' do
@@ -430,8 +430,8 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 2
 
-        expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
 
         Delayed::Job.dataset.delete
         periodic_updater.update_failed_job_count
@@ -442,15 +442,15 @@ module VCAP::CloudController::Metrics
         }
         expected_total = 0
 
-        expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
       end
     end
 
     describe '#update_thread_info' do
       before do
-        allow(updater1).to receive(:update_thread_info)
-        allow(updater2).to receive(:update_thread_info)
+        allow(statsd_updater).to receive(:update_thread_info)
+        allow(prometheus_updater).to receive(:update_thread_info)
 
         periodic_updater.update_thread_info
       end
@@ -471,8 +471,8 @@ module VCAP::CloudController::Metrics
           }
         }
 
-        expect(updater1).to have_received(:update_thread_info).with(expected_thread_info)
-        expect(updater2).to have_received(:update_thread_info).with(expected_thread_info)
+        expect(statsd_updater).to have_received(:update_thread_info).with(expected_thread_info)
+        expect(prometheus_updater).to have_received(:update_thread_info).with(expected_thread_info)
       end
 
       context 'when resultqueue and/or threadqueue is not a queue' do
@@ -495,16 +495,15 @@ module VCAP::CloudController::Metrics
             }
           }
 
-          expect(updater1).to have_received(:update_thread_info).with(expected_thread_info)
-          expect(updater2).to have_received(:update_thread_info).with(expected_thread_info)
+          expect(statsd_updater).to have_received(:update_thread_info).with(expected_thread_info)
         end
       end
     end
 
     describe '#update_vitals' do
       before do
-        allow(updater1).to receive(:update_vitals)
-        allow(updater2).to receive(:update_vitals)
+        allow(statsd_updater).to receive(:update_vitals)
+        allow(prometheus_updater).to receive(:update_vitals)
 
         allow(VCAP::Stats).to receive_messages(process_memory_bytes_and_cpu: [1.1, 2], cpu_load_average: 0.5, memory_used_bytes: 542, memory_free_bytes: 927)
         allow_any_instance_of(VCAP::HostSystem).to receive(:num_cores).and_return(4)
@@ -513,7 +512,7 @@ module VCAP::CloudController::Metrics
       it 'update the vitals on all updaters' do
         periodic_updater.update_vitals
 
-        expect(updater1).to have_received(:update_vitals) do |expected_vitals|
+        expect(statsd_updater).to have_received(:update_vitals) do |expected_vitals|
           expect(expected_vitals[:uptime]).to be_within(1).of(Time.now.to_i - start_time.to_i)
           expect(expected_vitals[:cpu_load_avg]).to eq(0.5)
           expect(expected_vitals[:mem_used_bytes]).to eq(542)
@@ -523,7 +522,7 @@ module VCAP::CloudController::Metrics
           expect(expected_vitals[:num_cores]).to eq(4)
         end
 
-        expect(updater2).to have_received(:update_vitals) do |expected_vitals|
+        expect(prometheus_updater).to have_received(:update_vitals) do |expected_vitals|
           expect(expected_vitals[:uptime]).to be_within(1).of(Time.now.to_i - start_time.to_i)
           expect(expected_vitals[:cpu_load_avg]).to eq(0.5)
           expect(expected_vitals[:mem_used_bytes]).to eq(542)
@@ -565,8 +564,8 @@ module VCAP::CloudController::Metrics
       end
 
       before do
-        allow(updater1).to receive(:update_log_counts)
-        allow(updater2).to receive(:update_log_counts)
+        allow(statsd_updater).to receive(:update_log_counts)
+        allow(prometheus_updater).to receive(:update_log_counts)
 
         allow(log_counter).to receive(:counts).and_return(count)
       end
@@ -574,8 +573,7 @@ module VCAP::CloudController::Metrics
       it 'update the log counts on all updaters' do
         periodic_updater.update_log_counts
 
-        expect(updater1).to have_received(:update_log_counts).with(expected)
-        expect(updater2).to have_received(:update_log_counts).with(expected)
+        expect(statsd_updater).to have_received(:update_log_counts).with(expected)
       end
 
       it 'fills in zeros for levels without counts' do
@@ -584,30 +582,29 @@ module VCAP::CloudController::Metrics
 
         periodic_updater.update_log_counts
 
-        expect(updater1).to have_received(:update_log_counts).with(expected)
-        expect(updater2).to have_received(:update_log_counts).with(expected)
+        expect(statsd_updater).to have_received(:update_log_counts).with(expected)
       end
     end
 
     describe '#update!' do
       before do
-        allow(updater1).to receive(:update_user_count)
-        allow(updater1).to receive(:update_job_queue_length)
-        allow(updater1).to receive(:update_thread_info)
-        allow(updater1).to receive(:update_failed_job_count)
-        allow(updater1).to receive(:update_vitals)
-        allow(updater1).to receive(:update_log_counts)
-        allow(updater1).to receive(:update_task_stats)
-        allow(updater1).to receive(:update_deploying_count)
+        allow(statsd_updater).to receive(:update_user_count)
+        allow(statsd_updater).to receive(:update_job_queue_length)
+        allow(statsd_updater).to receive(:update_thread_info)
+        allow(statsd_updater).to receive(:update_failed_job_count)
+        allow(statsd_updater).to receive(:update_vitals)
+        allow(statsd_updater).to receive(:update_log_counts)
+        allow(statsd_updater).to receive(:update_task_stats)
+        allow(statsd_updater).to receive(:update_deploying_count)
 
-        allow(updater2).to receive(:update_user_count)
-        allow(updater2).to receive(:update_job_queue_length)
-        allow(updater2).to receive(:update_thread_info)
-        allow(updater2).to receive(:update_failed_job_count)
-        allow(updater2).to receive(:update_vitals)
-        allow(updater2).to receive(:update_log_counts)
-        allow(updater2).to receive(:update_task_stats)
-        allow(updater2).to receive(:update_deploying_count)
+        allow(prometheus_updater).to receive(:update_user_count)
+        allow(prometheus_updater).to receive(:update_job_queue_length)
+        allow(prometheus_updater).to receive(:update_thread_info)
+        allow(prometheus_updater).to receive(:update_failed_job_count)
+        allow(prometheus_updater).to receive(:update_vitals)
+        allow(prometheus_updater).to receive(:update_log_counts)
+        allow(prometheus_updater).to receive(:update_task_stats)
+        allow(prometheus_updater).to receive(:update_deploying_count)
       end
 
       it 'calls all update methods' do
