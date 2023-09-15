@@ -276,7 +276,7 @@ GEM
     jaro_winkler (1.5.4)
     json (2.6.3)
     json-diff (0.4.1)
-    json-schema (4.0.0)
+    json-schema (4.1.1)
       addressable (>= 2.8)
     json_pure (2.6.3)
     jwt (2.7.1)
