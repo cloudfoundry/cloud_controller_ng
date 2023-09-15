@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
 
-      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client, prometheus_updater)
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, request_logs)
 
@@ -168,7 +168,7 @@ module VCAP::CloudController
         @log_counter,
         Steno.logger('cc.api'),
         VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
-        VCAP::CloudController::Metrics::PrometheusUpdater.new
+        prometheus_updater
         )
     end
 
@@ -178,6 +178,10 @@ module VCAP::CloudController
       logger.info("configuring statsd server at #{@config.get(:statsd_host)}:#{@config.get(:statsd_port)}")
       Statsd.logger = Steno.logger('statsd.client')
       @statsd_client = Statsd.new(@config.get(:statsd_host), @config.get(:statsd_port))
+    end
+
+    def prometheus_updater
+      CloudController::DependencyLocator.instance.prometheus_updater
     end
   end
 end

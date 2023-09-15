@@ -3,7 +3,7 @@ require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger, statsd_updater=StatsdUpdater.new, prometheus_updater=PrometheusUpdater.new)
+    def initialize(start_time, log_counter, logger, statsd_updater, prometheus_updater)
       @start_time = start_time
       @statsd_updater = statsd_updater
       @prometheus_updater = prometheus_updater
