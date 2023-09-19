@@ -166,6 +166,98 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
       end
 
+      context 'when the v3 mode is not a string' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: 123
+              }
+            ]
+          }
+        end
+
+        it 'has the correct error message' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string mode')
+        end
+      end
+
+      context 'when the v3 mode is not a POSIX mode' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: 'abcd'
+              }
+            ]
+          }
+        end
+
+        it 'has the correct error message' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with an incorrect mode')
+        end
+      end
+
+      context 'when the v3 mode is a valid full POSIX mode' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '100644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid ' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when the v3 mode is a valid partial POSIX mode and it just has the 4 octal permissions part' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '0644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid ' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when the v3 mode is a valid partial POSIX mode and it just has the 3 octal permissions part' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid ' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'when there are multiple validation violations' do
         let(:params) do
           {
