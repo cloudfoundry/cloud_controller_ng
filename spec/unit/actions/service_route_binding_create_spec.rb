@@ -114,8 +114,8 @@ module VCAP::CloudController
 
               it 'raises an error' do
                 expect { action.precursor(service_instance, route, message: message) }.to raise_error(
-                 ServiceRouteBindingCreate::RouteBindingAlreadyExists,
-                 'The route and service instance are already bound'
+                  ServiceRouteBindingCreate::RouteBindingAlreadyExists,
+                  'The route and service instance are already bound'
                )
               end
             end
