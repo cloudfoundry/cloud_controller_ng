@@ -1618,7 +1618,7 @@ RSpec.describe 'v3 service route bindings' do
         end
       end
 
-      context 'when there is an operation in progress' do
+      context "when last binding operation is in 'create in progress' state" do
         before do
           binding.save_with_new_operation({}, {
             type: 'create',
@@ -1636,6 +1636,46 @@ RSpec.describe 'v3 service route bindings' do
               'code' => 10008,
             })
           )
+        end
+      end
+
+      context "when last binding operation is in 'create initial' state" do
+        before do
+          binding.save_with_new_operation({}, {
+            type: 'create',
+            state: 'initial'
+          })
+        end
+
+        it 'returns the appropriate error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(404)
+          expect(parsed_response['errors']).to include(
+             include({
+               'detail' => 'Creation of binding route initial',
+               'title' => 'CF-ResourceNotFound',
+               'code' => 10010,
+             })
+          )
+        end
+      end
+
+      context "when last binding operation is in 'create failed' state" do
+        before do
+          binding.save_with_new_operation({}, {
+            type: 'create',
+            state: 'failed'
+          })
+        end
+
+        it 'returns an error' do
+          api_call.call(admin_headers)
+          expect(last_response).to have_status_code(404)
+          expect(parsed_response['errors']).to include(include({
+            'detail' => 'Creation of binding route failed',
+            'title' => 'CF-ResourceNotFound',
+            'code' => 10010,
+         }))
         end
       end
     end

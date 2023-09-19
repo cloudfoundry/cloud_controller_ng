@@ -45,6 +45,18 @@ module VCAP::CloudController
       route_binding_operation
     end
 
+    def create_failed?
+      return true if last_operation&.type == 'create' && last_operation.state == 'failed'
+
+      false
+    end
+
+    def create_initial?
+      return true if last_operation&.type == 'create' && last_operation.state == 'initial'
+
+      false
+    end
+
     def save_with_attributes_and_new_operation(attributes, operation)
       save_with_new_operation(attributes, operation)
     end
