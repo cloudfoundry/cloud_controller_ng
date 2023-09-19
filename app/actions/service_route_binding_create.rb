@@ -15,7 +15,9 @@ module VCAP::CloudController
       PERMITTED_BINDING_ATTRIBUTES = [:route_service_url].freeze
 
       def precursor(service_instance, route, message:)
-        validate!(service_instance, route)
+        validate_service_instance!(service_instance, route)
+        binding = RouteBinding.first(service_instance: service_instance, route: route)
+        validate_binding!(binding, route, service_instance)
 
         binding_details = {
           service_instance: service_instance,
@@ -24,6 +26,7 @@ module VCAP::CloudController
 
         RouteBinding.new.tap do |b|
           RouteBinding.db.transaction do
+            binding.destroy if binding
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_INITIAL_OPERATION
@@ -42,16 +45,22 @@ module VCAP::CloudController
           Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
       end
 
-      def validate!(service_instance, route)
+      def validate_service_instance!(service_instance, route)
         not_supported! unless service_instance.route_service?
         not_bindable! unless service_instance.bindable?
         route_is_internal! if route.try(:internal?)
         space_mismatch! unless route.space == service_instance.space
-        already_exists! if route.service_instance == service_instance
-        already_bound! if route.service_instance
         if service_instance.managed_instance?
           service_instance_not_found! if service_instance.create_failed?
           operation_in_progress! if service_instance.operation_in_progress?
+        end
+      end
+
+      def validate_binding!(binding, route, service_instance)
+        if binding
+          already_exists! if route.service_instance == service_instance && (binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?)
+          already_bound! if route.service_instance && binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?
+          incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end
 
@@ -85,6 +94,10 @@ module VCAP::CloudController
 
       def already_exists!
         raise RouteBindingAlreadyExists.new('The route and service instance are already bound')
+      end
+
+      def incomplete_deletion!
+        raise UnprocessableCreate.new('The binding is getting deleted or its deletion failed')
       end
     end
   end

@@ -79,19 +79,90 @@ module VCAP::CloudController
           end
 
           context 'route binding already exists' do
-            it 'raises an error' do
-              RouteBinding.make(service_instance: service_instance, route: route)
+            let!(:binding) { RouteBinding.make(service_instance: service_instance, route: route) }
 
-              expect {
-                action.precursor(service_instance, route, message: message)
-              }.to raise_error(
-                ServiceRouteBindingCreate::RouteBindingAlreadyExists,
-                'The route and service instance are already bound',
-              )
+            context 'when no last service route binding operation exists' do
+              it 'raises an error' do
+                RouteBinding.make(service_instance: service_instance, route: route)
+
+                expect {
+                  action.precursor(service_instance, route, message: message)
+                }.to raise_error(
+                  ServiceRouteBindingCreate::RouteBindingAlreadyExists,
+                  'The route and service instance are already bound',
+                )
+              end
+            end
+
+            context "when the last service route binding operation is in 'create succeeded' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                                                                                            ServiceRouteBindingCreate::RouteBindingAlreadyExists,
+                                                                                            'The route and service instance are already bound',
+                                                                                            )
+              end
+            end
+
+            context "when the last service route binding operation is in 'create in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                                                                                               ServiceRouteBindingCreate::RouteBindingAlreadyExists,
+                                                                                               'The route and service instance are already bound'
+                                                                                             )
+              end
+            end
+
+            context "when the last service route binding operation is in 'create failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+              end
+              it 'updates and returns the existing binding' do
+                b = action.precursor(service_instance, route, message: message)
+
+                expect(b.guid).not_to eq(binding.guid)
+                expect(b.create_in_progress?).to be_truthy
+                expect { binding.reload }.to raise_error Sequel::NoExistingObject
+              end
+            end
+
+            context "when the last binding operation is in 'delete in progress' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                                                                                            ServiceRouteBindingCreate::UnprocessableCreate,
+                                                                                            'The binding is getting deleted or its deletion failed'
+                                                                                          )
+              end
+            end
+
+            context "when the last service route binding operation is in 'delete failed' state" do
+              before do
+                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
+              end
+
+              it 'raises an error' do
+                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                                                                                            ServiceRouteBindingCreate::UnprocessableCreate,
+                                                                                     'The binding is getting deleted or its deletion failed'
+                                                                                   )
+              end
             end
           end
 
           context 'route already bound to a different service instance' do
+            let!(:binding) { RouteBinding.make(service_instance: service_instance, route: route) }
+
             it 'raises an error' do
               other_instance = UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url)
               RouteBinding.make(service_instance: other_instance, route: route)
@@ -99,8 +170,8 @@ module VCAP::CloudController
               expect {
                 action.precursor(service_instance, route, message: message)
               }.to raise_error(
-                ServiceRouteBindingCreate::UnprocessableCreate,
-                'A route may only be bound to a single service instance',
+                ServiceRouteBindingCreate::RouteBindingAlreadyExists,
+                'The route and service instance are already bound',
               )
             end
           end
