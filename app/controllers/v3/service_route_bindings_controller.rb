@@ -108,6 +108,8 @@ class ServiceRouteBindingsController < ApplicationController
 
   def parameters
     route_binding_not_found! unless @route_binding && can_read_from_space?(@route_binding.route.space)
+    not_found_with_message!(@route_binding) unless @route_binding.create_succeeded?
+
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
     suspended! unless is_space_active?(@route_binding.route.space)
 
@@ -242,6 +244,12 @@ class ServiceRouteBindingsController < ApplicationController
 
   def route_binding_not_found!
     resource_not_found!(:service_route_binding)
+  end
+
+  def not_found_with_message!(service_route_binding)
+    operation = service_route_binding.last_operation.type == 'create' ? 'Creation' : 'Deletion'
+    state = service_route_binding.last_operation.state
+    resource_not_found_with_message!("#{operation} of route binding #{state}")
   end
 
   def service_instance_not_found!(guid)
