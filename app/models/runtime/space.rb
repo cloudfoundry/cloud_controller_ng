@@ -325,7 +325,7 @@ module VCAP::CloudController
     end
 
     def members
-      User.dataset.where(id: SpaceRole.where(space_id: id).distinct.select(:user_id))
+      User.dataset.where(id: Role.where(space_id: id).distinct.select(:user_id))
     end
 
     private
