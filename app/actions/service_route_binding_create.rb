@@ -50,6 +50,7 @@ module VCAP::CloudController
         not_bindable! unless service_instance.bindable?
         route_is_internal! if route.try(:internal?)
         space_mismatch! unless route.space == service_instance.space
+        already_bound! if route.service_instance && route.service_instance != service_instance
         if service_instance.managed_instance?
           service_instance_not_found! if service_instance.create_failed?
           operation_in_progress! if service_instance.operation_in_progress?
@@ -59,7 +60,6 @@ module VCAP::CloudController
       def validate_binding!(binding, route, service_instance)
         if binding
           already_exists! if route.service_instance == service_instance && (binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?)
-          already_bound! if route.service_instance && binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?
           incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end
