@@ -1651,11 +1651,11 @@ RSpec.describe 'v3 service route bindings' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(
-             include({
-               'detail' => 'Creation of binding route initial',
-               'title' => 'CF-ResourceNotFound',
-               'code' => 10010,
-             })
+            include({
+              'detail' => 'Creation of binding route initial',
+              'title' => 'CF-ResourceNotFound',
+              'code' => 10010,
+            })
           )
         end
       end

@@ -85,7 +85,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   def parameters
     route_binding_not_found! unless @route_binding && can_read_from_space?(@route_binding.route.space)
-    if @route_binding.create_initial? ||@route_binding.create_failed?
+    if @route_binding.create_initial? || @route_binding.create_failed?
       route_binding_not_found_with_message!(@route_binding)
     end
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
