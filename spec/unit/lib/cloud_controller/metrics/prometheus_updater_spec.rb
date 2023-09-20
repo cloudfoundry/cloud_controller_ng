@@ -207,7 +207,7 @@ module VCAP::CloudController::Metrics
         expect(metric.get).to eq 1
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu }
-        expect(metric.get).to eq 2.0
+        expect(metric).to eq nil
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_num_cores }
         expect(metric.get).to eq 4
