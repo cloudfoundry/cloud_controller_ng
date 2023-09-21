@@ -94,7 +94,7 @@ module VCAP::CloudController
 
       errors.add(:host, :presence) if host.nil?
 
-      validates_format(/\A([\w\-]+|\*)\z/, :host) if host && !host.empty?
+      validates_format(/\A([\w\-]+|\*)\z/, :host) if host && !host.empty? # rubocop:disable Rails/Present
 
       validate_uniqueness_on_host_and_domain if path.empty? && port.nil?
       validate_uniqueness_on_host_domain_and_port if path.empty?

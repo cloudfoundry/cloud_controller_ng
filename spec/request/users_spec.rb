@@ -379,7 +379,7 @@ RSpec.describe 'Users Request' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -398,8 +398,8 @@ RSpec.describe 'Users Request' do
           get "/v3/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid, resource_2.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid, resource_2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to_not include(resource_3.guid, resource_4.guid)
         end
       end
 
@@ -425,8 +425,8 @@ RSpec.describe 'Users Request' do
           get "/v3/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid, resource_2.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid, resource_2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to_not include(resource_3.guid, resource_4.guid)
         end
       end
     end

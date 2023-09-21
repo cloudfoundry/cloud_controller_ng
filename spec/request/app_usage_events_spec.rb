@@ -118,7 +118,7 @@ RSpec.describe 'App Usage Events' do
         get "/v3/app_usage_events?created_ats[lt]=#{event_3.created_at.iso8601}", nil, admin_header
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(event_1.guid, event_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(event_1.guid, event_2.guid)
       end
 
       it 'returns an error when trying to filter by updated_ats' do

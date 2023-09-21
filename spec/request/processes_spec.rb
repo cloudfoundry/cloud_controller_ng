@@ -234,7 +234,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([worker_process.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -276,7 +276,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([other_space_process.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -316,7 +316,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([other_space_process.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -351,7 +351,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([desired_process.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -374,7 +374,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([web_process.guid, worker_process.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -1306,7 +1306,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([process2.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
@@ -1329,7 +1329,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to match_array([process1.guid, process2.guid])
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end

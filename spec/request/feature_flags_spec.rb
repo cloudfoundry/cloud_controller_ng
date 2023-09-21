@@ -11,7 +11,7 @@ RSpec.describe 'Feature Flags Request' do
       get '/v3/feature_flags', nil, headers
 
       expect(last_response.status).to eq(200)
-      flag_names_in_response = parsed_response['resources'].map { |flag| flag['name'] }
+      flag_names_in_response = parsed_response['resources'].pluck('name')
       expect(flag_names_in_response).to eq(flag_names_sorted.map(&:to_s))
     end
 
@@ -35,7 +35,7 @@ RSpec.describe 'Feature Flags Request' do
         get '/v3/feature_flags?updated_ats[gt]=2020-05-26T18:47:02Z', nil, admin_headers
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('user_org_creation', 'unset_roles_by_username')
+        expect(parsed_response['resources'].pluck('name')).to contain_exactly('user_org_creation', 'unset_roles_by_username')
       end
     end
 

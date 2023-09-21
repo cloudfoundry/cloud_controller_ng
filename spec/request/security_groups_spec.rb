@@ -739,7 +739,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on names' do
@@ -748,7 +748,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on running_space_guids' do
@@ -757,7 +757,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on staging_space_guids' do
@@ -766,7 +766,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on globally_enabled_staging' do
@@ -775,7 +775,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_3.guid)
       end
 
       it 'filters on globally_enabled_running' do
@@ -784,7 +784,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_3.guid)
       end
     end
 

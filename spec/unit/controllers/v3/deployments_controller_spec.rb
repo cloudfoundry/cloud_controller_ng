@@ -502,7 +502,7 @@ RSpec.describe DeploymentsController, type: :controller do
                 expect(resources.size).to eq(0), "role #{role}: expected 0, got: #{resources.size}"
               else
                 expect(resources.size).to eq(2), "role #{role}: expected 2, got: #{resources.size}"
-                expect(resources.map { |r| r['guid'] }).to match_array([deployment.guid, another_deployment.guid])
+                expect(resources.pluck('guid')).to match_array([deployment.guid, another_deployment.guid])
               end
             end
           end
@@ -589,7 +589,7 @@ RSpec.describe DeploymentsController, type: :controller do
             get :index, params: params
 
             expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([deployed_deployment.guid, canceled_deployment.guid])
+            expect(parsed_body['resources'].pluck('guid')).to match_array([deployed_deployment.guid, canceled_deployment.guid])
           end
 
           it 'echo the params in the pagination links' do

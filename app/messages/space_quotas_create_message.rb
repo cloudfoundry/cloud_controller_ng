@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       def space_guids
         space_data = HashUtils.dig(spaces, :data)
-        space_data ? space_data.map { |space| space[:guid] } : []
+        space_data ? space_data.pluck(:guid) : []
       end
     end
   end

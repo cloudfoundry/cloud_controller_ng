@@ -120,7 +120,7 @@ module VCAP::CloudController
 
       def shared_organizations_guids
         shared_orgs = HashUtils.dig(shared_organizations, :data)
-        shared_orgs ? shared_orgs.map { |hsh| hsh[:guid] } : []
+        shared_orgs ? shared_orgs.pluck(:guid) : []
       end
 
       def valid_organization_if_shared_organizations

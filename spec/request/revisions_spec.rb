@@ -319,7 +319,7 @@ RSpec.describe 'Revisions' do
             expect(last_response.status).to eq(200)
 
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(revisionB.guid, revisionC.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(revisionB.guid, revisionC.guid)
           end
         end
         context 'filtering by guids' do
@@ -366,7 +366,7 @@ RSpec.describe 'Revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?guids=#{resource_1.guid},#{resource_2.guid}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
         end
 
@@ -423,14 +423,14 @@ RSpec.describe 'Revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
 
           it 'filters by the updated_at' do
             get "/v3/apps/#{app_model.guid}/revisions?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
         end
       end

@@ -324,7 +324,7 @@ RSpec.describe DropletsController, type: :controller do
 
         get :index, params: { app_guid: app.guid }
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
       end
@@ -366,7 +366,7 @@ RSpec.describe DropletsController, type: :controller do
         get :index, params: { package_guid: package.guid }
 
         expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([droplet_1].map(&:guid))
       end
 
@@ -462,7 +462,7 @@ RSpec.describe DropletsController, type: :controller do
           get :index
 
           expect(response.status).to eq(200)
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          response_guids = parsed_body['resources'].pluck('guid')
           expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
         end
       end

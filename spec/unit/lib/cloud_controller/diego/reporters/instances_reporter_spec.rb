@@ -60,14 +60,14 @@ module VCAP::CloudController
 
         it 'always sets uptime to 0 for crashed instances' do
           result  = instances_reporter.crashed_instances_for_app(process)
-          uptimes = result.map { |i| i['uptime'] }
+          uptimes = result.pluck('uptime')
 
           expect(uptimes.all? { |i| i == 0 }).to be_truthy
         end
 
         it 'reports since as seconds' do
           result = instances_reporter.crashed_instances_for_app(process)
-          sinces = result.map { |i| i['since'] }
+          sinces = result.pluck('since')
 
           expect(sinces.all? { |i| i == two_days_ago_since_epoch_seconds }).to be_truthy
         end
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
           it 'does not include the instances whose index is larger than the desired instances on the process' do
             result    = instances_reporter.crashed_instances_for_app(process)
-            instances = result.map { |i| i['instance'] }
+            instances = result.pluck('instance')
 
             expect(instances).to eq(['instance-b'])
           end

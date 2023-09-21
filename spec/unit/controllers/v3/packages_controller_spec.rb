@@ -775,7 +775,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'lists the packages visible to the user' do
       get :index
 
-      response_guids = parsed_body['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].pluck('guid')
       expect(response_guids).to match_array([user_package_1, user_package_2].map(&:guid))
     end
 
@@ -794,7 +794,7 @@ RSpec.describe PackagesController, type: :controller do
         get :index, params: { app_guid: app.guid }
 
         expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([package_1.guid, package_2.guid])
       end
 
@@ -817,7 +817,7 @@ RSpec.describe PackagesController, type: :controller do
         get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
 
         expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([package_1.guid, package_2.guid])
       end
 
@@ -857,7 +857,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'lists all the packages' do
         get :index
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
       end
     end
@@ -871,7 +871,7 @@ RSpec.describe PackagesController, type: :controller do
         get :index, params: params
 
         parsed_response = parsed_body
-        response_guids = parsed_response['resources'].map { |r| r['guid'] }
+        response_guids = parsed_response['resources'].pluck('guid')
         expect(parsed_response['pagination']['total_results']).to eq(2)
         expect(response_guids.length).to eq(per_page)
       end

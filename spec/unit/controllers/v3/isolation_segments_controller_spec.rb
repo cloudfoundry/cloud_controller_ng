@@ -24,7 +24,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 200
 
-          org_guids = parsed_body['data'].map { |r| r['guid'] }
+          org_guids = parsed_body['data'].pluck('guid')
 
           expect(org_guids).to be_empty
         end
@@ -56,7 +56,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 200
 
-          org_guids = parsed_body['data'].map { |r| r['guid'] }
+          org_guids = parsed_body['data'].pluck('guid')
           expect(org_guids).to include(org1.guid, org2.guid)
         end
       end
@@ -80,7 +80,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
             expect(response.status).to eq 200
 
-            org_guids = parsed_body['data'].map { |r| r['guid'] }
+            org_guids = parsed_body['data'].pluck('guid')
             expect(org_guids).to contain_exactly(org1.guid)
           end
         end
@@ -125,7 +125,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 200
 
-          guids = parsed_body['data'].map { |r| r['guid'] }
+          guids = parsed_body['data'].pluck('guid')
           expect(guids).to match_array([space1.guid, space2.guid, space3.guid])
         end
       end
@@ -140,7 +140,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
           expect(response.status).to eq 200
 
-          guids = parsed_body['data'].map { |r| r['guid'] }
+          guids = parsed_body['data'].pluck('guid')
           expect(guids).to match_array([space1.guid, space3.guid])
         end
       end
@@ -509,7 +509,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           get :index, params: { order_by: 'name' }, as: :json
 
           expect(response.status).to eq(200)
-          response_names = parsed_body['resources'].map { |r| r['name'] }
+          response_names = parsed_body['resources'].pluck('name')
           expect(response_names.length).to eq(3)
           expect(response_names).to eq(%w[a-segment b-segment shared])
         end

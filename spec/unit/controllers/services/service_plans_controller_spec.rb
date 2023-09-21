@@ -523,7 +523,7 @@ module VCAP::CloudController
 
         it 'does not allow the unauthed user to use inline-relations-depth' do
           get '/v2/service_plans?inline-relations-depth=1'
-          plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
+          plans = decoded_response.fetch('resources').pluck('entity')
           plans.each do |plan|
             expect(plan['service_instances']).to be_nil
           end
@@ -535,7 +535,7 @@ module VCAP::CloudController
 
           get "/v2/service_plans?q=service_guid:#{service_guid}"
 
-          plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
+          plans = decoded_response.fetch('resources').pluck('entity')
           expect(plans.size).to eq(1)
           expect(plans[0]['unique_id']).to eq(service_plan.unique_id)
         end

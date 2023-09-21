@@ -609,7 +609,7 @@ RSpec.describe 'Routes Request' do
             get '/v3/routes?ports=7777,8888', nil, admin_header
             expect(last_response).to have_status_code(200)
             expect(parsed_response['resources'].size).to eq(2)
-            expect(parsed_response['resources'].map { |resource| resource['port'] }).to contain_exactly(route_with_ports_0.port, route_with_ports_1.port)
+            expect(parsed_response['resources'].pluck('port')).to contain_exactly(route_with_ports_0.port, route_with_ports_1.port)
           end
         end
       end
@@ -636,7 +636,7 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?service_instance_guids=#{service_instance_one.guid},#{service_instance_two.guid}", nil, admin_header
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].size).to eq(2)
-          expect(parsed_response['resources'].map { |resource| resource['guid'] }).to contain_exactly('route-with-service-instance-one', 'route-with-service-instance-two')
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly('route-with-service-instance-one', 'route-with-service-instance-two')
         end
       end
     end
@@ -667,7 +667,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -686,7 +686,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -705,7 +705,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -724,7 +724,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -743,7 +743,7 @@ RSpec.describe 'Routes Request' do
             'previous' => nil
           }
 
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -763,7 +763,7 @@ RSpec.describe 'Routes Request' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -783,7 +783,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -802,7 +802,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -821,7 +821,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -840,7 +840,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -859,7 +859,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -878,7 +878,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -897,7 +897,7 @@ RSpec.describe 'Routes Request' do
         }
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(route1.guid, route_in_org.guid, route_in_other_org.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

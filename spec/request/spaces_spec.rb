@@ -376,7 +376,7 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceB.guid, spaceC.guid)
       end
 
       it 'returns the correct spaces when scoped to an org' do
@@ -384,7 +384,7 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceF.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceF.guid)
       end
     end
 
@@ -403,7 +403,7 @@ RSpec.describe 'Spaces' do
         expect(orgs.length).to eq 2
         org1 = space1.organization
 
-        expect(orgs.map { |org| org['guid'] }).to eq [org1.guid, org2.guid]
+        expect(orgs.pluck('guid')).to eq [org1.guid, org2.guid]
         expect(orgs[0]).to be_a_response_like({
                                                 'guid' => org1.guid,
                                                 'created_at' => iso8601,
@@ -1352,7 +1352,7 @@ RSpec.describe 'Spaces' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1388,7 +1388,7 @@ RSpec.describe 'Spaces' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1409,7 +1409,7 @@ RSpec.describe 'Spaces' do
             'next' => nil,
             'previous' => nil
           }
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1433,8 +1433,8 @@ RSpec.describe 'Spaces' do
           get "/v3/spaces/#{space1.guid}/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
 
@@ -1462,8 +1462,8 @@ RSpec.describe 'Spaces' do
           get "/v3/spaces/#{space1.guid}/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
     end

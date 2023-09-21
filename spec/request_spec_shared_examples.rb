@@ -52,7 +52,7 @@ def expect_filtered_resources(endpoint, filter, list)
   expect(last_response).to have_status_code(200)
   expect(parsed_response.fetch('resources').length).to eq(list.length)
 
-  returned_guids = parsed_response['resources'].map { |r| r['guid'] }
+  returned_guids = parsed_response['resources'].pluck('guid')
   resources_guids = list.map(&:guid)
   expect(returned_guids).to match_array(resources_guids)
 end
@@ -100,7 +100,7 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         end
 
         expected_response_guids = expected_codes_and_responses[role][:response_guids]
-        expect((parsed_response['resources'] || parsed_response['data']).map { |resource| resource['guid'] }).to match_array(expected_response_guids) if expected_response_guids
+        expect((parsed_response['resources'] || parsed_response['data']).pluck('guid')).to match_array(expected_response_guids) if expected_response_guids
       end
     end
   end
@@ -286,7 +286,7 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
     it 'filters on guid' do
       api_call.call(headers, 'guids=1,2,4')
       expect(last_response).to have_status_code(200)
-      expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly('1', '2')
+      expect(parsed_response['resources'].pluck('guid')).to contain_exactly('1', '2')
     end
   end
 
@@ -300,7 +300,7 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
       api_call.call(headers, "created_ats[lt]=#{resource_3.created_at.iso8601}")
 
       expect(last_response).to have_status_code(200)
-      expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+      expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
     end
   end
 
@@ -324,7 +324,7 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
       api_call.call(headers, "updated_ats[lt]=#{resource_3.updated_at.iso8601}")
 
       expect(last_response).to have_status_code(200)
-      expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+      expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
     end
   end
 end

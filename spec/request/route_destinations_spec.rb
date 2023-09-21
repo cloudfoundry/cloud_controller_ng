@@ -849,7 +849,7 @@ RSpec.describe 'Route Destinations Request' do
         it 'replaces all destinations on the route' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
           expect(last_response.status).to eq(200)
-          expect(parsed_response['destinations'].map { |d| d['protocol'] }).to contain_exactly('http1', 'http2')
+          expect(parsed_response['destinations'].pluck('protocol')).to contain_exactly('http1', 'http2')
         end
       end
 
@@ -1025,7 +1025,7 @@ RSpec.describe 'Route Destinations Request' do
       it 'creates route destinations with weights' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
         expect(last_response.status).to eq(200)
-        expect(parsed_response['destinations'].map { |r| r['weight'] }).to contain_exactly(80, 20)
+        expect(parsed_response['destinations'].pluck('weight')).to contain_exactly(80, 20)
         rm_hashes = route.reload.route_mappings.map do |rm|
           { process_type: rm.process_type, weight: rm.weight }
         end

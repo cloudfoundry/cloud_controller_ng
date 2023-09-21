@@ -679,14 +679,14 @@ RSpec.describe 'Apps' do
         get "/v3/apps?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_header
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
       end
 
       it 'filters ny the updated_at' do
         get "/v3/apps?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_header
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
       end
     end
 
@@ -712,7 +712,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name3])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -735,7 +735,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name2])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -758,7 +758,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name3])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -781,7 +781,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name3])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -816,7 +816,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name2])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -851,7 +851,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1'])
+        expect(parsed_response['resources'].pluck('name')).to eq(['name1'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -877,7 +877,7 @@ RSpec.describe 'Apps' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(%w[name1 name3])
+        expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
@@ -900,7 +900,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?order_by=name', nil, user_header
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        app_names = parsed_response['resources'].map { |i| i['name'] }
+        app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(ascending)
         expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}name")
 
@@ -908,7 +908,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?order_by=-name', nil, user_header
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        app_names = parsed_response['resources'].map { |i| i['name'] }
+        app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(descending)
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-name')
       end
@@ -925,7 +925,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?order_by=state', nil, user_header
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        app_states = parsed_response['resources'].map { |i| i['state'] }
+        app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(ascending)
         expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}state")
 
@@ -933,7 +933,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?order_by=-state', nil, user_header
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        app_states = parsed_response['resources'].map { |i| i['state'] }
+        app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(descending)
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-state')
       end
@@ -964,7 +964,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -983,7 +983,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1002,7 +1002,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1021,7 +1021,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1040,7 +1040,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1059,7 +1059,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1078,7 +1078,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1097,7 +1097,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
@@ -1130,7 +1130,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -1149,7 +1149,7 @@ RSpec.describe 'Apps' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

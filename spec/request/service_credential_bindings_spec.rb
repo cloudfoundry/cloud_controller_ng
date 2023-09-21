@@ -390,7 +390,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].length).to be(bindings.length)
 
-          returned_guids = parsed_response['resources'].map { |r| r['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expected_guids = bindings.map(&:guid)
           expect(returned_guids).to contain_exactly(*expected_guids)
         end
@@ -423,7 +423,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['apps']).to have(2).items
-          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          guids = parsed_response['included']['apps'].pluck('guid')
           expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
         end
 
@@ -432,7 +432,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['service_instances']).to have(2).items
-          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          guids = parsed_response['included']['service_instances'].pluck('guid')
           expect(guids).to contain_exactly(instance.guid, other_instance.guid)
         end
 
@@ -533,7 +533,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(200)
 
             expect(parsed_response['included']['service_instances']).to have(1).items
-            guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+            guids = parsed_response['included']['service_instances'].pluck('guid')
             expect(guids).to contain_exactly(instance.guid)
           end
         end
@@ -570,7 +570,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['apps']).to have(1).items
-          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          guids = parsed_response['included']['apps'].pluck('guid')
           expect(guids).to contain_exactly(app_to_bind_to.guid)
         end
 
@@ -579,7 +579,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['service_instances']).to have(1).items
-          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          guids = parsed_response['included']['service_instances'].pluck('guid')
           expect(guids).to contain_exactly(instance.guid)
         end
       end

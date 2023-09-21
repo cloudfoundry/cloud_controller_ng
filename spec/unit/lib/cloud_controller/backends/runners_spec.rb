@@ -176,7 +176,7 @@ module VCAP::CloudController
         unstaged_process.desired_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
-        app_ids = batch.map { |data| data[0] }
+        app_ids = batch.pluck(0)
 
         expect(app_ids).not_to include(unstaged_process.id)
       end
@@ -185,7 +185,7 @@ module VCAP::CloudController
         stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
         batch   = runners.diego_apps_cache_data(100, 0)
-        app_ids = batch.map { |data| data[0] }
+        app_ids = batch.pluck(0)
 
         expect(app_ids).not_to include(stopped_process.id)
       end
@@ -212,7 +212,7 @@ module VCAP::CloudController
 
           it 'returns docker apps' do
             batch   = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
+            app_ids = batch.pluck(0)
 
             expect(app_ids).to include(docker_process.id)
           end
@@ -225,7 +225,7 @@ module VCAP::CloudController
 
           it 'does not return docker apps' do
             batch   = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
+            app_ids = batch.pluck(0)
 
             expect(app_ids).not_to include(docker_process.id)
           end

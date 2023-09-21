@@ -174,7 +174,7 @@ module VCAP::CloudController
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
+              "-buildpackOrder=#{lifecycle_data[:buildpacks].pluck(:key).join(',')}",
               "-skipCertVerify=#{config.get(:skip_cert_verify)}",
               "-skipDetect=#{skip_detect?}",
               '-buildDir=/tmp/app',

@@ -359,7 +359,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(200)
           expect(
-            parsed_response['resources'].map { |space_quota| space_quota['guid'] }
+            parsed_response['resources'].pluck('guid')
           ).to eq([space_quota_alien.guid])
         end
 
@@ -368,7 +368,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(200)
           expect(
-            parsed_response['resources'].map { |space_quota| space_quota['guid'] }
+            parsed_response['resources'].pluck('guid')
           ).to eq([space_quota.guid, space_quota_2.guid])
         end
       end
