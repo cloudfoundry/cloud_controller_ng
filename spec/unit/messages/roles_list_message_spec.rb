@@ -14,7 +14,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
-          'include' => 'user,organization,space',
+          'include' => 'user,organization,space'
         }
       end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(message.user_guids).to eq(['my-user-guid'])
         expect(message.space_guids).to eq(['my-space-guid'])
         expect(message.organization_guids).to eq(['my-organization-guid'])
-        expect(message.include).to eq(%w(user organization space))
+        expect(message.include).to eq(%w[user organization space])
       end
 
       it 'converts requested keys to symbols' do
@@ -54,16 +54,16 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = RolesListMessage.from_params({
-          'page' => 1,
-          'per_page' => 5,
-          'order_by' => 'created_at',
-          'types' => 'space_auditor',
-          'guids' => 'my-role-guid',
-          'user_guids' => 'my-user-guid',
-          'space_guids' => 'my-space-guid',
-          'organization_guids' => 'my-organization-guid',
-          'include' => 'user,organization,space',
-        })
+                                                 'page' => 1,
+                                                 'per_page' => 5,
+                                                 'order_by' => 'created_at',
+                                                 'types' => 'space_auditor',
+                                                 'guids' => 'my-role-guid',
+                                                 'user_guids' => 'my-user-guid',
+                                                 'space_guids' => 'my-space-guid',
+                                                 'organization_guids' => 'my-organization-guid',
+                                                 'include' => 'user,organization,space'
+                                               })
         expect(message).to be_valid
       end
 
@@ -153,8 +153,8 @@ module VCAP::CloudController
 
       it 'reject an invalid order_by field' do
         message = RolesListMessage.from_params({
-          'order_by' => 'fail!',
-        })
+                                                 'order_by' => 'fail!'
+                                               })
         expect(message).not_to be_valid
       end
     end

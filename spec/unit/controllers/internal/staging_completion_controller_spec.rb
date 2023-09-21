@@ -22,27 +22,25 @@ module VCAP::CloudController
     let(:staging_response) do
       {
         result: {
-          lifecycle_type:     'buildpack',
+          lifecycle_type: 'buildpack',
           lifecycle_metadata: {
-            buildpack_key:      buildpack_key,
-            detected_buildpack: detected_buildpack,
+            buildpack_key: buildpack_key,
+            detected_buildpack: detected_buildpack
           },
           execution_metadata: execution_metadata,
-          process_types:      { web: 'start me' }
+          process_types: { web: 'start me' }
         }
       }
     end
     let(:statsd_updater) do
       instance_double(VCAP::CloudController::Metrics::StatsdUpdater,
-        report_staging_success_metrics: nil,
-        report_staging_failure_metrics:    nil,
-      )
+                      report_staging_success_metrics: nil,
+                      report_staging_failure_metrics: nil)
     end
     let(:prometheus_updater) do
       instance_double(VCAP::CloudController::Metrics::PrometheusUpdater,
-        report_staging_success_metrics: nil,
-        report_staging_failure_metrics:    nil,
-      )
+                      report_staging_success_metrics: nil,
+                      report_staging_failure_metrics: nil)
     end
     let(:one_hour) { 1.hour.to_i }
     let(:one_hour_in_nanoseconds) { (1.hour.to_i * 1e9).to_i }
@@ -96,19 +94,19 @@ module VCAP::CloudController
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(524)
-        expect(last_response.body).to match /JobTimeout/
+        expect(last_response.body).to match(/JobTimeout/)
       end
 
       context 'when receiving the callback directly from BBS' do
         let(:staging_result) do
           {
-            lifecycle_type:     'buildpack',
+            lifecycle_type: 'buildpack',
             lifecycle_metadata: {
-              buildpack_key:      buildpack_key,
-              detected_buildpack: detected_buildpack,
+              buildpack_key: buildpack_key,
+              detected_buildpack: detected_buildpack
             },
             execution_metadata: execution_metadata,
-            process_types:      { web: 'start me' }
+            process_types: { web: 'start me' }
           }
         end
         let(:failure_reason) { '' }
@@ -116,10 +114,10 @@ module VCAP::CloudController
         let(:staging_result_json) { MultiJson.dump(staging_result) }
         let(:staging_response) do
           {
-            failed:         failure_reason.present?,
+            failed: failure_reason.present?,
             failure_reason: failure_reason,
-            result:         staging_result_json,
-            created_at: (Time.now.utc.to_i - one_hour) * 1e9,
+            result: staging_result_json,
+            created_at: (Time.now.utc.to_i - one_hour) * 1e9
           }
         end
 
@@ -139,14 +137,14 @@ module VCAP::CloudController
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
-          expect(last_response.body).to match /JobTimeout/
+          expect(last_response.body).to match(/JobTimeout/)
         end
 
         it 'emits metrics for staging success' do
           one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
-          Timecop.freeze(Time.now) do
+          Timecop.freeze(Time.now.utc) do
             post url, MultiJson.dump(staging_response)
           end
         end
@@ -165,7 +163,7 @@ module VCAP::CloudController
             one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
-            Timecop.freeze(Time.now) do
+            Timecop.freeze(Time.now.utc) do
               post url, MultiJson.dump(staging_response)
             end
           end
@@ -178,7 +176,7 @@ module VCAP::CloudController
         it 'returns 404' do
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match /Droplet not found/
+          expect(last_response.body).to match(/Droplet not found/)
         end
       end
 
@@ -197,7 +195,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match /MessageParseError/
+            expect(last_response.body).to match(/MessageParseError/)
           end
         end
       end
@@ -211,18 +209,19 @@ module VCAP::CloudController
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
       let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs4', build: build) }
       let(:staging_guid) { build.guid }
-      let(:buildpacks) do [
-        {
-          name: buildpack_other_name,
-          version: buildpack_version,
-          key: buildpack.key,
-        },
-        {
-          name: buildpack2_other_name,
-          version: buildpack2_version,
-          key: buildpack2.key,
-        },
-      ]
+      let(:buildpacks) do
+        [
+          {
+            name: buildpack_other_name,
+            version: buildpack_version,
+            key: buildpack.key
+          },
+          {
+            name: buildpack2_other_name,
+            version: buildpack2_version,
+            key: buildpack2.key
+          }
+        ]
       end
 
       before do
@@ -241,20 +240,20 @@ module VCAP::CloudController
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(524)
-        expect(last_response.body).to match /JobTimeout/
+        expect(last_response.body).to match(/JobTimeout/)
       end
 
       context 'when receiving the callback directly from BBS' do
         let(:staging_result) do
           {
-            lifecycle_type:     'buildpack',
+            lifecycle_type: 'buildpack',
             lifecycle_metadata: {
-              buildpack_key:      buildpack_key,
+              buildpack_key: buildpack_key,
               detected_buildpack: detected_buildpack,
-              buildpacks: buildpacks,
+              buildpacks: buildpacks
             },
             execution_metadata: execution_metadata,
-            process_types:      { web: 'start me' }
+            process_types: { web: 'start me' }
           }
         end
         let(:failure_reason) { '' }
@@ -262,10 +261,10 @@ module VCAP::CloudController
         let(:staging_result_json) { MultiJson.dump(staging_result) }
         let(:staging_response) do
           {
-            failed:         failure_reason.present?,
+            failed: failure_reason.present?,
             failure_reason: failure_reason,
-            result:         staging_result_json,
-            created_at: (Time.now.utc.to_i - one_hour) * 1e9,
+            result: staging_result_json,
+            created_at: (Time.now.utc.to_i - one_hour) * 1e9
           }
         end
 
@@ -299,11 +298,11 @@ module VCAP::CloudController
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'build-completed' => {
                 'api-version' => 'internal',
-                'lifecycle' =>  'buildpack',
-                'buildpacks' =>  %w(the-pleasant-buildpack),
-                'stack' =>  'cflinuxfs4',
-                'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(staged_app.guid),
-                'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(build.guid),
+                'lifecycle' => 'buildpack',
+                'buildpacks' => %w[the-pleasant-buildpack],
+                'stack' => 'cflinuxfs4',
+                'app-id' => OpenSSL::Digest::SHA256.hexdigest(staged_app.guid),
+                'build-id' => OpenSSL::Digest::SHA256.hexdigest(build.guid)
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -319,7 +318,7 @@ module VCAP::CloudController
           one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
-          Timecop.freeze(Time.now) do
+          Timecop.freeze(Time.now.utc) do
             post url, MultiJson.dump(staging_response)
           end
         end
@@ -329,15 +328,15 @@ module VCAP::CloudController
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
-          expect(last_response.body).to match /JobTimeout/
+          expect(last_response.body).to match(/JobTimeout/)
         end
 
         it 'propagates other errors from staging_response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(StandardError)
 
-          expect {
+          expect do
             post url, MultiJson.dump(staging_response)
-          }.to raise_error(StandardError)
+          end.to raise_error(StandardError)
         end
 
         context 'when staging failed' do
@@ -355,7 +354,7 @@ module VCAP::CloudController
             one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
-            Timecop.freeze(Time.now) do
+            Timecop.freeze(Time.now.utc) do
               post url, MultiJson.dump(staging_response)
             end
           end
@@ -368,7 +367,7 @@ module VCAP::CloudController
         it 'returns 404' do
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match /Build not found/
+          expect(last_response.body).to match(/Build not found/)
         end
       end
 
@@ -387,7 +386,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match /MessageParseError/
+            expect(last_response.body).to match(/MessageParseError/)
           end
         end
       end

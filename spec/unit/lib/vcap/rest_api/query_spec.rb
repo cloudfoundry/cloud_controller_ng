@@ -28,7 +28,7 @@ module VCAP::RestAPI
         a = Author.create(num_val: i + 1,
                           str_val: "str #{i}",
                           published: (i == 0),
-                          published_at: (i == 0) ? nil : Time.at(0).utc + i + 0.5)
+                          published_at: i == 0 ? nil : Time.at(0).utc + i + 0.5)
         2.times do |j|
           a.add_book(Book.create(num_val: j + 1, str_val: "str #{i} #{j}"))
         end
@@ -36,7 +36,7 @@ module VCAP::RestAPI
 
       @owner_nil_num = Author.create(str_val: 'no num', published: false,
                                      published_at: Time.at(0).utc + @num_authors)
-      @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
+      @queryable_attributes = Set.new(%w[num_val str_val author_id book_id published published_at])
     end
 
     describe '#filtered_dataset_from_query_params' do
@@ -59,7 +59,7 @@ module VCAP::RestAPI
         it 'filters equality queries when there are no matches' do
           q = "num_val:#{@num_authors + 10}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
           expect(ds.count).to eq(0)
         end
 
@@ -73,7 +73,7 @@ module VCAP::RestAPI
         it 'filters greater-than comparisons' do
           q = "num_val>#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.num_val && a.num_val > @num_authors - 5
@@ -85,7 +85,7 @@ module VCAP::RestAPI
         it 'filters great-than-or-equal comparisons' do
           q = "num_val>=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.num_val && a.num_val >= @num_authors - 5
@@ -97,7 +97,7 @@ module VCAP::RestAPI
         it 'filters less-than comparisons' do
           q = "num_val<#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.num_val && a.num_val < @num_authors - 5
@@ -109,7 +109,7 @@ module VCAP::RestAPI
         it 'filters less-than-or-equal comparisons' do
           q = "num_val<=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.num_val && a.num_val <= @num_authors - 5
@@ -147,7 +147,7 @@ module VCAP::RestAPI
           it 'returns the correct record when when the timestamp is null' do
             q = 'published_at:'
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-              @queryable_attributes, q: q)
+                                                          @queryable_attributes, q: q)
             expect(ds.all).to eq([Author[num_val: 1]])
           end
 
@@ -155,7 +155,7 @@ module VCAP::RestAPI
             query_value = Author[num_val: 5].published_at
             q = "published_at:#{query_value}"
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-              @queryable_attributes, q: q)
+                                                          @queryable_attributes, q: q)
             expect(ds.all).to eq([Author[num_val: 5]])
           end
         end
@@ -164,21 +164,22 @@ module VCAP::RestAPI
           query_value = Author[num_val: 5].published_at
           q = "published_at>#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-          @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expect(ds.all).to match_array([
             Author[num_val: 6],
             Author[num_val: 7],
             Author[num_val: 8],
             Author[num_val: 9],
-            Author[str_val: 'no num']])
+            Author[str_val: 'no num']
+          ])
         end
 
         it 'returns correct results for a greater-than-or-equal-to comparison query' do
           query_value = Author[num_val: 5].published_at
           q = "published_at>=#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.published_at && a.published_at >= query_value
@@ -191,7 +192,7 @@ module VCAP::RestAPI
           query_value = Author[num_val: 5].published_at
           q = "published_at<#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.published_at && a.published_at < query_value
@@ -207,7 +208,7 @@ module VCAP::RestAPI
           query_value_2 = author5.published_at
           q = "published_at IN #{query_value_1},#{query_value_2}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = [author2, author5]
 
@@ -218,7 +219,7 @@ module VCAP::RestAPI
           query_value = Author[num_val: 5].published_at
           q = "published_at<=#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expected = Author.all.select do |a|
             a.published_at && a.published_at <= query_value
@@ -231,7 +232,7 @@ module VCAP::RestAPI
           query_value = Author.last.published_at + 1
           q = "published_at:#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
 
           expect(ds.count).to eq(0)
         end
@@ -239,40 +240,46 @@ module VCAP::RestAPI
         it 'raises argument error for an exact query on a malformed timestamp' do
           q = 'published_at:asdf'
 
-          expect { Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
-          }.to raise_error(ArgumentError)
+          expect do
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                     @queryable_attributes, q: q)
+          end.to raise_error(ArgumentError)
         end
       end
 
       describe 'boolean values on boolean column' do
         it 'returns correctly filtered results for t' do
           ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, q: 'published:t')
+            Author, Author.dataset, @queryable_attributes, q: 'published:t'
+          )
           expect(ds.all).to eq([Author.first])
         end
 
         it 'returns correctly filtered results for true' do
           ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, q: 'published:true')
+            Author, Author.dataset, @queryable_attributes, q: 'published:true'
+          )
           expect(ds.all).to eq([Author.first])
         end
 
         it 'returns correctly filtered results for f' do
           ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, q: 'published:f')
+            Author, Author.dataset, @queryable_attributes, q: 'published:f'
+          )
           expect(ds.all).to eq(Author.all - [Author.first])
         end
 
         it 'returns correctly filtered results for false' do
           ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, q: 'published:false')
+            Author, Author.dataset, @queryable_attributes, q: 'published:false'
+          )
           expect(ds.all).to eq(Author.all - [Author.first])
         end
 
         it 'returns resulted filtered as false for any other value' do
           ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, q: 'published:foobar')
+            Author, Author.dataset, @queryable_attributes, q: 'published:foobar'
+          )
           expect(ds.all).to eq(Author.all - [Author.first])
         end
       end
@@ -280,42 +287,42 @@ module VCAP::RestAPI
       describe 'errors' do
         it 'raises for nonexistent attributes' do
           q = 'bogus_val:1'
-          expect {
+          expect do
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          @queryable_attributes, q: q)
-          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                     @queryable_attributes, q: q)
+          end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonexistent foreign_keys' do
           q = 'fake_foreign_key_guid:1'
-          expect {
+          expect do
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          [*@queryable_attributes, 'fake_foreign_key_guid'], q: q)
-          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                     [*@queryable_attributes, 'fake_foreign_key_guid'], q: q)
+          end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonexistent attributes that do exist in queryable_attributes' do
           q = 'fake_attr:1'
-          expect {
+          expect do
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          [*@queryable_attributes, 'fake_attr'], q: q)
-          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                     [*@queryable_attributes, 'fake_attr'], q: q)
+          end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonallowed attributes' do
           q = 'protected:1'
-          expect {
+          expect do
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          @queryable_attributes, q: q)
-          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                     @queryable_attributes, q: q)
+          end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises when there is no key' do
           q = ':10'
-          expect {
+          expect do
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          @queryable_attributes, q: q)
-          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                     @queryable_attributes, q: q)
+          end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
       end
 
@@ -323,14 +330,14 @@ module VCAP::RestAPI
         it 'should return the correct record' do
           q = 'num_val:5;str_val:str 4'
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
           expect(ds.all).to eq([Author[num_val: 5, str_val: 'str 4']])
         end
 
         it "should support multiple 'q' parameters" do
           q = ['num_val:5', 'str_val:str 4']
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, q: q)
+                                                        @queryable_attributes, q: q)
           expect(ds.all).to eq([Author[num_val: 5, str_val: 'str 4']])
         end
       end
@@ -477,7 +484,7 @@ module VCAP::RestAPI
     describe 'semicolon escaping' do
       let!(:one_semi) { VCAP::CloudController::TestModel.make(unique_value: 'one_semi;', required_attr: true) }
       let!(:multiple_semi) { VCAP::CloudController::TestModel.make(unique_value: 'two;;semis and one;semi') }
-      let(:queryable_attributes) { Set.new(%w(unique_value required_attr)) }
+      let(:queryable_attributes) { Set.new(%w[unique_value required_attr]) }
 
       describe '#filtered_dataset_from_query_params' do
         it 'matches with a semicolon at the end' do

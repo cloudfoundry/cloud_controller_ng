@@ -13,16 +13,16 @@ module VCAP::CloudController
 
     let(:config) do
       Config.new({
-        packages: { max_valid_packages_stored: 5 },
-        droplets: { max_staged_droplets_stored: 5 }
-      })
+                   packages: { max_valid_packages_stored: 5 },
+                   droplets: { max_staged_droplets_stored: 5 }
+                 })
     end
 
     let(:changed_config) do
       Config.new({
-        packages: { max_valid_packages_stored: 10 },
-        droplets: { max_staged_droplets_stored: 10 }
-      })
+                   packages: { max_valid_packages_stored: 10 },
+                   droplets: { max_staged_droplets_stored: 10 }
+                 })
     end
 
     it 'is configurable' do
@@ -43,45 +43,45 @@ module VCAP::CloudController
 
     context 'with docker cf apps' do
       before do
-        t        = Time.now
+        t        = Time.now.utc
         @current = DropletModel.make(
-          app_guid:     app.guid,
-          created_at:   t,
+          app_guid: app.guid,
+          created_at: t,
           droplet_hash: nil,
-          docker_receipt_image: 'repo/test-app',
+          docker_receipt_image: 'repo/test-app'
         )
         app.update(droplet: @current)
 
         10.times do |i|
           DropletModel.make(
-            app_guid:     app.guid,
-            created_at:   t + i,
+            app_guid: app.guid,
+            created_at: t + i,
             droplet_hash: nil,
-            docker_receipt_image: 'repo/test-app',
+            docker_receipt_image: 'repo/test-app'
           )
         end
       end
 
       it 'does not enqueue a job to delete the blob' do
-        expect { BitsExpiration.new.expire_droplets!(app) }.not_to change { Delayed::Job.count }
+        expect { BitsExpiration.new.expire_droplets!(app) }.not_to(change { Delayed::Job.count })
       end
     end
 
     context 'with droplets' do
       before do
-        t        = Time.now
+        t        = Time.now.utc
         @current = DropletModel.make(
-          app_guid:     app.guid,
-          created_at:   t,
-          droplet_hash: 'current_droplet_hash',
+          app_guid: app.guid,
+          created_at: t,
+          droplet_hash: 'current_droplet_hash'
         )
         app.update(droplet: @current)
 
         10.times do |i|
           DropletModel.make(
-            app_guid:     app.guid,
-            created_at:   t + i,
-            droplet_hash: 'current_droplet_hash',
+            app_guid: app.guid,
+            created_at: t + i,
+            droplet_hash: 'current_droplet_hash'
           )
         end
       end
@@ -120,24 +120,24 @@ module VCAP::CloudController
 
     context 'with packages' do
       before do
-        t                = Time.now
+        t                = Time.now.utc
         @current_package = PackageModel.make(
           package_hash: 'current_package_hash',
-          state:        PackageModel::READY_STATE,
-          app_guid:     app.guid,
-          created_at:   t
+          state: PackageModel::READY_STATE,
+          app_guid: app.guid,
+          created_at: t
         )
         @current = DropletModel.make(
-          app_guid:     app.guid,
+          app_guid: app.guid,
           package_guid: @current_package.guid
         )
         app.update(droplet: @current)
 
         10.times do |i|
           PackageModel.make(package_hash: 'real hash!',
-                            state:                        PackageModel::READY_STATE,
-                            app_guid:                     app.guid,
-                            created_at:                   t + i)
+                            state: PackageModel::READY_STATE,
+                            app_guid: app.guid,
+                            created_at: t + i)
         end
       end
 

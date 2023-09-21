@@ -6,14 +6,14 @@ RSpec.describe Database::OldRecordCleanup do
     let!(:stale_event1) { VCAP::CloudController::Event.make(created_at: 1.day.ago - 1.minute) }
     let!(:stale_event2) { VCAP::CloudController::Event.make(created_at: 2.days.ago) }
 
-    let!(:fresh_event) { VCAP::CloudController::Event.make(created_at: 1.day.ago + 1.minutes) }
+    let!(:fresh_event) { VCAP::CloudController::Event.make(created_at: 1.day.ago + 1.minute) }
 
     it 'deletes records older than specified days' do
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)
 
-      expect {
+      expect do
         record_cleanup.delete
-      }.to change { VCAP::CloudController::Event.count }.by(-2)
+      end.to change { VCAP::CloudController::Event.count }.by(-2)
 
       expect(fresh_event.reload).to be_present
       expect { stale_event1.reload }.to raise_error(Sequel::NoExistingObject)
@@ -38,9 +38,9 @@ RSpec.describe Database::OldRecordCleanup do
     it 'keeps the last row when :keep_at_least_one_record is true even if it is older than the cutoff date' do
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 0, keep_at_least_one_record: true)
 
-      expect {
+      expect do
         record_cleanup.delete
-      }.to change { VCAP::CloudController::Event.count }.by(-2)
+      end.to change { VCAP::CloudController::Event.count }.by(-2)
 
       expect(fresh_event.reload).to be_present
       expect { stale_event1.reload }.to raise_error(Sequel::NoExistingObject)

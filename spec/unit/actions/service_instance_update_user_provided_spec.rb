@@ -15,19 +15,19 @@ module VCAP::CloudController
           name: 'my_service_instance',
           credentials: {
             used_in: 'bindings',
-            foo: 'bar',
+            foo: 'bar'
           },
           syslog_drain_url: 'https://foo2.com',
           route_service_url: 'https://bar2.com',
-          tags: %w(accounting couchbase nosql),
+          tags: %w[accounting couchbase nosql],
           metadata: {
             labels: {
               foo: 'bar',
-              'pre.fix/to_delete': nil,
+              'pre.fix/to_delete': nil
             },
             annotations: {
               alpha: 'beta',
-              'pre.fix/to_delete': nil,
+              'pre.fix/to_delete': nil
             }
           }
         }
@@ -42,7 +42,7 @@ module VCAP::CloudController
           },
           syslog_drain_url: 'https://foo.com',
           route_service_url: 'https://bar.com',
-          tags: %w(accounting mongodb)
+          tags: %w[accounting mongodb]
         )
         si.label_ids = [
           VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
@@ -68,7 +68,7 @@ module VCAP::CloudController
         expect(service_instance.credentials).to eq({ used_in: 'bindings', foo: 'bar' }.with_indifferent_access)
         expect(service_instance.syslog_drain_url).to eq('https://foo2.com')
         expect(service_instance.route_service_url).to eq('https://bar2.com')
-        expect(service_instance.tags).to eq(%w(accounting couchbase nosql))
+        expect(service_instance.tags).to eq(%w[accounting couchbase nosql])
 
         expect(service_instance.last_operation.state).to eq('succeeded')
         expect(service_instance.last_operation.type).to eq('update')
@@ -76,11 +76,11 @@ module VCAP::CloudController
 
         expect(service_instance).to have_labels(
           { prefix: nil, key_name: 'foo', value: 'bar' },
-          { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+          { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
         )
         expect(service_instance).to have_annotations(
           { prefix: nil, key_name: 'alpha', value: 'beta' },
-          { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+          { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
         )
       end
 
@@ -178,11 +178,11 @@ module VCAP::CloudController
             end
 
             it 'fails' do
-              expect {
+              expect do
                 action.update(service_instance, message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceInstanceUpdateUserProvided::UnprocessableUpdate,
-                'The service instance name is taken: already_taken.',
+                'The service instance name is taken: already_taken.'
               )
             end
           end

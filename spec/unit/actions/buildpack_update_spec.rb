@@ -39,7 +39,7 @@ module VCAP::CloudController
       context 'when enabled is changed' do
         it 'updates the buildpack enabled field' do
           message = BuildpackUpdateMessage.new(
-            enabled: false,
+            enabled: false
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
       context 'when name is changed' do
         it 'updates the buildpack name field' do
           message = BuildpackUpdateMessage.new(
-            name: 'new-name',
+            name: 'new-name'
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
 
@@ -74,12 +74,12 @@ module VCAP::CloudController
           message = BuildpackUpdateMessage.new(
             metadata: {
               labels: {
-                fruit: 'passionfruit',
+                fruit: 'passionfruit'
               },
               annotations: {
-                potato: 'adora',
-              },
-            },
+                potato: 'adora'
+              }
+            }
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
 
@@ -93,9 +93,9 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(stack: 'does-not-exist')
 
-            expect {
+            expect do
               BuildpackUpdate.new.update(buildpack1, message)
-            }.to raise_error(BuildpackUpdate::Error, "Stack 'does-not-exist' does not exist")
+            end.to raise_error(BuildpackUpdate::Error, "Stack 'does-not-exist' does not exist")
           end
         end
 
@@ -105,18 +105,18 @@ module VCAP::CloudController
 
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(name: buildpack1.name)
-            expect {
+            expect do
               BuildpackUpdate.new.update(buildpack2, message)
-            }.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and an unassigned stack already exists")
+            end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and an unassigned stack already exists")
           end
         end
 
         context 'when stack is being changed' do
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(stack: nil)
-            expect {
+            expect do
               BuildpackUpdate.new.update(buildpack1, message)
-            }.to raise_error(BuildpackUpdate::Error, 'Buildpack stack cannot be changed')
+            end.to raise_error(BuildpackUpdate::Error, 'Buildpack stack cannot be changed')
           end
         end
 
@@ -124,9 +124,9 @@ module VCAP::CloudController
           expect(buildpack1.stack).to eq buildpack2.stack
           message = BuildpackUpdateMessage.new(name: buildpack1.name)
 
-          expect {
+          expect do
             BuildpackUpdate.new.update(buildpack2, message)
-          }.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and stack '#{buildpack1.stack}' already exists")
+          end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and stack '#{buildpack1.stack}' already exists")
         end
 
         it 're-raises when there is an unknown error' do
@@ -134,9 +134,9 @@ module VCAP::CloudController
           buildpack1.errors.add(:foo, 'unknown error')
           allow(buildpack1).to receive(:save).and_raise(Sequel::ValidationFailed.new(buildpack1))
 
-          expect {
+          expect do
             BuildpackUpdate.new.update(buildpack1, message)
-          }.to raise_error(BuildpackUpdate::Error, /unknown error/)
+          end.to raise_error(BuildpackUpdate::Error, /unknown error/)
         end
       end
     end

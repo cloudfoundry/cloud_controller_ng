@@ -23,11 +23,11 @@ RSpec.describe 'Route Destinations Request' do
       [1,      nil,                   2222,                  8080,               2222,               [8080, 2222]],
       [2,      1111,                  nil,                   1111,               8080,               [1111, 8080]],
       [3,      1111,                  2222,                  1111,               2222,               [1111, 2222]],
-      [4,      nil,                   8080,                  8080,               8080,               [8080]],
+      [4,      nil,                   8080,                  8080,               8080,               [8080]]
     ].each do |sample, dst1_specified_port, dst2_specified_port, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
       it "case #{sample}" do
         params1 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params1[:port] = dst1_specified_port if dst1_specified_port
 
@@ -35,7 +35,7 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq(200)
 
         params2 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params2[:port] = dst2_specified_port if dst2_specified_port
 
@@ -78,11 +78,11 @@ RSpec.describe 'Route Destinations Request' do
       [5,      1111,                  nil,                   [3333],         1111,               3333,               [1111, 3333]],
       [6,      1111,                  2222,                  [],             1111,               2222,               [1111, 2222]],
       [7,      1111,                  2222,                  [3333],         1111,               2222,               [1111, 2222]],
-      [8,      nil,                   8080,                  [],             8080,               8080,               [8080]],
+      [8,      nil,                   8080,                  [],             8080,               8080,               [8080]]
     ].each do |sample, dst1_specified_port, dst2_specified_port, docker_ports, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
       it "case #{sample}" do
         params1 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params1[:port] = dst1_specified_port if dst1_specified_port
 
@@ -90,7 +90,7 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq(200)
 
         params2 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params2[:port] = dst2_specified_port if dst2_specified_port
 
@@ -103,7 +103,7 @@ RSpec.describe 'Route Destinations Request' do
           execution_metadata: {
             ports: docker_ports.map { |dp| { Port: dp, Protocol: 'tcp' } }
           }.to_json,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
         app_model.update(droplet: droplet)
 
@@ -131,7 +131,7 @@ RSpec.describe 'Route Destinations Request' do
     let(:route) { VCAP::CloudController::Route.make(space: space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let!(:destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'web') }
-    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
     let(:response_json) do
       {
         destinations: [
@@ -149,8 +149,8 @@ RSpec.describe 'Route Destinations Request' do
           }
         ],
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-          route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+          route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
         }
       }
     end
@@ -238,7 +238,7 @@ RSpec.describe 'Route Destinations Request' do
                 type: 'web'
               }
             },
-            protocol: 'http2',
+            protocol: 'http2'
           },
           {
             app: {
@@ -253,7 +253,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
 
       let(:response_json) do
         {
@@ -268,7 +268,7 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http1',
+              protocol: 'http1'
             },
             {
               guid: UUID_REGEX,
@@ -280,12 +280,12 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http2',
+              protocol: 'http2'
             }
           ],
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-            route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+            route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
           }
         }
       end
@@ -318,8 +318,8 @@ RSpec.describe 'Route Destinations Request' do
               destination_guid: new_destination['guid'],
               process_type: 'web',
               weight: nil,
-              protocol: 'http2',
-            }.to_json,
+              protocol: 'http2'
+            }.to_json
           }
         end
       end
@@ -652,12 +652,12 @@ RSpec.describe 'Route Destinations Request' do
       end
       context 'http1/http2' do
         [
-          ['http2', 'http1', 'http1'],
-          ['http2', 'http2', 'http2'],
-          ['http2', nil,     'http1'],
-          ['http1', 'http1', 'http1'],
-          ['http1', 'http2', 'http2'],
-          ['http1', nil,     'http1'],
+          %w[http2 http1 http1],
+          %w[http2 http2 http2],
+          ['http2', nil, 'http1'],
+          %w[http1 http1 http1],
+          %w[http1 http2 http2],
+          ['http1', nil,     'http1']
         ].each do |set_from, set_to, result|
           context "when existing destination is #{set_from}" do
             let(:existing_protocol) { set_from }
@@ -700,7 +700,7 @@ RSpec.describe 'Route Destinations Request' do
           app: app_model_1,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let!(:existing_destination_2) do
@@ -708,7 +708,7 @@ RSpec.describe 'Route Destinations Request' do
           app: app_model_2,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let(:params) do
@@ -740,7 +740,7 @@ RSpec.describe 'Route Destinations Request' do
           app: app_model,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let(:params) do
@@ -774,7 +774,7 @@ RSpec.describe 'Route Destinations Request' do
           ]
         }
       end
-      let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
       let(:response_json) do
         {
           destinations: [
@@ -792,8 +792,8 @@ RSpec.describe 'Route Destinations Request' do
             }
           ],
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-            route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+            route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
           }
         }
       end
@@ -1068,7 +1068,7 @@ RSpec.describe 'Route Destinations Request' do
                   process: {
                     type: 'worker'
                   }
-                },
+                }
               }
             ]
           }
@@ -1097,14 +1097,14 @@ RSpec.describe 'Route Destinations Request' do
           destinations: [
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 80,
               port: 8080
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 20,
               port: 9000
@@ -1143,25 +1143,25 @@ RSpec.describe 'Route Destinations Request' do
           destinations: [
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 1,
               port: 9000
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 1,
               port: 9000
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 98,
               port: 8080
-            },
+            }
           ]
         }
       end
@@ -1229,7 +1229,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, user_headers } }
 
       let(:db_check) do
         lambda do
@@ -1352,7 +1352,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, user_headers } }
 
       let(:db_check) do
         lambda do
@@ -1389,8 +1389,8 @@ RSpec.describe 'Route Destinations Request' do
               destination_guid: destination_to_delete.guid,
               process_type: destination_to_delete.process_type,
               weight: nil,
-              protocol: 'http1',
-            }.to_json,
+              protocol: 'http1'
+            }.to_json
           }
         end
       end

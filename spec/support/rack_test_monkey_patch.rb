@@ -8,7 +8,7 @@ module Rack
         params = env[:params]
         new_env = orig_env_for(uri, env)
 
-        if ['GET', 'DELETE'].include?(env[:method])
+        if %w[GET DELETE].include?(env[:method])
           # merge :params with the query string
           if params.present?
             params = parse_nested_query(params) if params.is_a?(String)

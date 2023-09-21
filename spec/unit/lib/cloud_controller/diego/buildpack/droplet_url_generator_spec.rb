@@ -13,9 +13,9 @@ module VCAP::CloudController
         subject(:generator) do
           DropletUrlGenerator.new(
             internal_service_hostname: hostname,
-            external_port:             external_port,
-            tls_port:                  tls_port,
-            mtls:                      mtls
+            external_port: external_port,
+            tls_port: tls_port,
+            mtls: mtls
           )
         end
 

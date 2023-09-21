@@ -70,9 +70,9 @@ module VCAP::CloudController
           end
 
           it 'calls the completion handler with the error' do
-            expect {
+            expect do
               stager.stage(staging_details)
-            }.to raise_error(CloudController::Errors::ApiError)
+            end.to raise_error(CloudController::Errors::ApiError)
             package.reload
             expect(buildpack_completion_handler).to have_received(:staging_complete).with(error, false)
           end

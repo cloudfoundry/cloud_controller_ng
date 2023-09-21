@@ -5,7 +5,7 @@ RSpec.describe 'Domains Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
-  let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+  let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
   let(:user_header) { headers_for(user, scopes: []) }
   let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
   let(:router_group) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'http') }
@@ -33,7 +33,7 @@ RSpec.describe 'Domains Request' do
           organization_guids: 'foo,bar',
           label_selector: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -54,18 +54,18 @@ RSpec.describe 'Domains Request' do
       # (visible_shared_private_domain) | (non_visible_org)  | (org)
       # (not_visible_private_domain)    | (non_visible_org)  | ()
       # (shared_domain)                 | ()                 | ()
-      let!(:visible_owned_private_domain) {
+      let!(:visible_owned_private_domain) do
         VCAP::CloudController::PrivateDomain.make(guid: 'domain1', name: 'domain1.com', owning_organization: org)
-      }
-      let!(:visible_shared_private_domain) {
+      end
+      let!(:visible_shared_private_domain) do
         VCAP::CloudController::PrivateDomain.make(guid: 'domain2', name: 'domain2.com', owning_organization: non_visible_org)
-      }
-      let!(:not_visible_private_domain) {
+      end
+      let!(:not_visible_private_domain) do
         VCAP::CloudController::PrivateDomain.make(guid: 'domain3', name: 'domain3.com', owning_organization: non_visible_org)
-      }
-      let!(:shared_domain) {
+      end
+      let!(:shared_domain) do
         VCAP::CloudController::SharedDomain.make(guid: 'domain4', name: 'domain4.com')
-      }
+      end
 
       let(:visible_owned_private_domain_json) do
         {
@@ -85,14 +85,14 @@ RSpec.describe 'Domains Request' do
               data: { guid: org.guid }
             },
             shared_organizations: {
-              data: contain_exactly(*shared_visible_orgs),
+              data: contain_exactly(*shared_visible_orgs)
             }
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{visible_owned_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{visible_owned_private_domain.guid}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{visible_owned_private_domain.guid}\/relationships\/shared_organizations) }
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{visible_owned_private_domain.guid}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{visible_owned_private_domain.guid}/relationships/shared_organizations} }
           }
         }
       end
@@ -120,9 +120,9 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{visible_shared_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{non_visible_org.guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{visible_shared_private_domain.guid}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{visible_shared_private_domain.guid}\/relationships\/shared_organizations) }
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{non_visible_org.guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{visible_shared_private_domain.guid}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{visible_shared_private_domain.guid}/relationships/shared_organizations} }
           }
         }
       end
@@ -150,9 +150,9 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{not_visible_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{non_visible_org.guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{not_visible_private_domain.guid}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{not_visible_private_domain.guid}\/relationships\/shared_organizations) }
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{non_visible_org.guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{not_visible_private_domain.guid}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{not_visible_private_domain.guid}/relationships/shared_organizations} }
           }
         }
       end
@@ -180,7 +180,7 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_domain.guid}/route_reservations) }
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_domain.guid}/route_reservations} }
           }
         }
       end
@@ -204,7 +204,7 @@ RSpec.describe 'Domains Request' do
         end
 
         context 'when the user has the required scopes' do
-          let(:api_call) { lambda { |user_headers| get '/v3/domains', nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
           let(:expected_codes_and_responses) do
             Hash.new(
               code: 200,
@@ -229,7 +229,7 @@ RSpec.describe 'Domains Request' do
 
           let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
 
-          let(:api_call) { lambda { |user_headers| get '/v3/domains', nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
@@ -237,7 +237,7 @@ RSpec.describe 'Domains Request' do
               response_objects: [
                 visible_owned_private_domain_json,
                 visible_shared_private_domain_json,
-                shared_domain_json,
+                shared_domain_json
               ]
             )
             h['org_billing_manager'] = {
@@ -265,7 +265,7 @@ RSpec.describe 'Domains Request' do
 
           let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
 
-          let(:api_call) { lambda { |user_headers| get '/v3/domains', nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
@@ -273,7 +273,7 @@ RSpec.describe 'Domains Request' do
               response_objects: [
                 visible_owned_private_domain_json,
                 visible_shared_private_domain_json,
-                shared_domain_json,
+                shared_domain_json
               ]
             )
             # because the user is a manager in the shared org, they have access to see the domain
@@ -301,13 +301,13 @@ RSpec.describe 'Domains Request' do
       describe 'when filtering by name' do
         let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
         let(:endpoint) { "/v3/domains?names=#{visible_shared_private_domain.name}" }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
             response_objects: [
-              visible_shared_private_domain_json,
+              visible_shared_private_domain_json
             ]
           )
           # because the user is a manager in the shared org, they have access to see the domain
@@ -346,13 +346,13 @@ RSpec.describe 'Domains Request' do
       describe 'when filtering by guid' do
         let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
         let(:endpoint) { "/v3/domains?guids=#{visible_shared_private_domain.guid}" }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
             response_objects: [
-              visible_shared_private_domain_json,
+              visible_shared_private_domain_json
             ]
           )
           # because the user is a manager in the shared org, they have access to see the domain
@@ -390,7 +390,7 @@ RSpec.describe 'Domains Request' do
 
       describe 'when filtering by owning organization guid' do
         let(:endpoint) { "/v3/domains?organization_guids=#{visible_shared_private_domain.owning_organization_guid}" }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         context 'when the user can read globally' do
           let(:expected_codes_and_responses) do
@@ -411,7 +411,7 @@ RSpec.describe 'Domains Request' do
             h = Hash.new(
               code: 200,
               response_objects: [
-                visible_shared_private_domain_json,
+                visible_shared_private_domain_json
               ]
             )
             # because the user is a manager in the shared org, they have access to see the domain
@@ -613,7 +613,7 @@ RSpec.describe 'Domains Request' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::PrivateDomain }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/domains?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/domains?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
@@ -621,14 +621,14 @@ RSpec.describe 'Domains Request' do
 
   describe 'GET /v3/domains/:domain_guid/route_reservations' do
     let!(:non_visible_org) { VCAP::CloudController::Organization.make(guid: 'non-visible') }
-    let!(:non_visible_domain) {
+    let!(:non_visible_domain) do
       VCAP::CloudController::PrivateDomain.make(guid: 'non-visible', name: 'non-visible-domain.com', owning_organization: non_visible_org)
-    }
-    let!(:domain) {
+    end
+    let!(:domain) do
       VCAP::CloudController::PrivateDomain.make(guid: 'visible', name: 'visibledomain.com', owning_organization: org)
-    }
+    end
     context 'no route matches' do
-      let(:api_call) { lambda { |user_headers| get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
 
       let(:matching_route_json) do
         {
@@ -642,10 +642,10 @@ RSpec.describe 'Domains Request' do
           response_object: matching_route_json
         )
         h['org_billing_manager'] = {
-          code: 404,
+          code: 404
         }
         h['no_role'] = {
-          code: 404,
+          code: 404
         }
         h
       end
@@ -656,7 +656,7 @@ RSpec.describe 'Domains Request' do
     context 'there are route matches' do
       context 'when querying with both host and path' do
         let!(:matching_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'my-host', path: '/somepath') }
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
 
         let(:matching_route_json) do
           {
@@ -670,10 +670,10 @@ RSpec.describe 'Domains Request' do
             response_object: matching_route_json
           )
           h['org_billing_manager'] = {
-            code: 404,
+            code: 404
           }
           h['no_role'] = {
-            code: 404,
+            code: 404
           }
           h
         end
@@ -683,7 +683,7 @@ RSpec.describe 'Domains Request' do
 
       context 'when querying with only host' do
         let!(:other_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'my-host', path: '/path/to/something') }
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{domain.guid}/route_reservations?host=my-host", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host", nil, user_headers } }
 
         let(:matching_route_json) do
           {
@@ -697,10 +697,10 @@ RSpec.describe 'Domains Request' do
             response_object: matching_route_json
           )
           h['org_billing_manager'] = {
-            code: 404,
+            code: 404
           }
           h['no_role'] = {
-            code: 404,
+            code: 404
           }
           h
         end
@@ -717,7 +717,7 @@ RSpec.describe 'Domains Request' do
           TestConfig.override(
             kubernetes: { host_url: nil },
             external_domain: 'api2.vcap.me',
-            external_protocol: 'https',
+            external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           allow(routing_api_client).to receive(:enabled?).and_return(true)
@@ -725,7 +725,7 @@ RSpec.describe 'Domains Request' do
         end
 
         let!(:other_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{domain.guid}/route_reservations?port=123", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?port=123", nil, user_headers } }
 
         let(:matching_route_json) do
           {
@@ -800,11 +800,11 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when creating a shared domain' do
-      let(:api_call) { lambda { |user_headers| post '/v3/domains', domain_params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/domains', domain_params.to_json, user_headers } }
 
       let(:domain_params) do
         {
-          router_group: { guid: 'some-router-guid' },
+          router_group: { guid: 'some-router-guid' }
         }.merge(params)
       end
 
@@ -830,16 +830,16 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations) },
-            router_group: { href: %r(#{Regexp.escape(link_prefix)}/routing/v1/router_groups/some-router-guid) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations} },
+            router_group: { href: %r{#{Regexp.escape(link_prefix)}/routing/v1/router_groups/some-router-guid} }
           }
         }
       end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
         h['admin'] = {
           code: 201,
@@ -927,10 +927,10 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}\/relationships\/shared_organizations) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/relationships/shared_organizations} }
           }
         }
       end
@@ -965,7 +965,7 @@ RSpec.describe 'Domains Request' do
       end
 
       describe 'valid private domains' do
-        let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post '/v3/domains', private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -1286,8 +1286,8 @@ RSpec.describe 'Domains Request' do
 
           expect(last_response.status).to eq(422)
 
-          expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{params[:name]}\""\
-" cannot be created because \"#{existing_private_domain.name}\" is already reserved by another domain"
+          expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{params[:name]}\" " \
+                                                               "cannot be created because \"#{existing_private_domain.name}\" is already reserved by another domain"
         end
       end
 
@@ -1319,7 +1319,7 @@ RSpec.describe 'Domains Request' do
 
           let(:params) do
             {
-              name: existing_domain.name,
+              name: existing_domain.name
             }
           end
 
@@ -1339,7 +1339,7 @@ RSpec.describe 'Domains Request' do
 
           let(:params) do
             {
-              name: domain_name,
+              name: domain_name
             }
           end
 
@@ -1360,7 +1360,7 @@ RSpec.describe 'Domains Request' do
 
           let(:params) do
             {
-              name: domain,
+              name: domain
             }
           end
 
@@ -1404,7 +1404,7 @@ RSpec.describe 'Domains Request' do
       let(:domain_params) do
         {
           name: 'my-domain.com',
-          router_group: { guid: 'some-other-router-guid' },
+          router_group: { guid: 'some-other-router-guid' }
         }
       end
 
@@ -1423,7 +1423,7 @@ RSpec.describe 'Domains Request' do
         {
           name: 'my-domain.com',
           internal: true,
-          router_group: { guid: 'some-router-guid' },
+          router_group: { guid: 'some-router-guid' }
         }
       end
 
@@ -1503,10 +1503,11 @@ RSpec.describe 'Domains Request' do
         }
       end
 
-      let(:private_domain_params) { {
-        data: [{ guid: shared_org1.guid }]
-      }
-      }
+      let(:private_domain_params) do
+        {
+          data: [{ guid: shared_org1.guid }]
+        }
+      end
 
       before do
         shared_org1.add_private_domain(private_domain)
@@ -1514,7 +1515,7 @@ RSpec.describe 'Domains Request' do
       end
 
       describe 'valid private domains' do
-        let(:api_call) { lambda { |user_headers| post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", private_domain_params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -1569,7 +1570,7 @@ RSpec.describe 'Domains Request' do
         org2.add_manager(user)
       end
 
-      let(:api_call) { lambda { |user_headers| post "/v3/domains/#{unreadable_domain.guid}/relationships/shared_organizations", unreadable_domain_params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post "/v3/domains/#{unreadable_domain.guid}/relationships/shared_organizations", unreadable_domain_params.to_json, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
@@ -1595,10 +1596,10 @@ RSpec.describe 'Domains Request' do
   describe 'DELETE /v3/domains/:guid' do
     describe 'when deleting a shared domain' do
       let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           get "/v3/domains/#{shared_domain.guid}", {}, admin_headers
@@ -1608,7 +1609,7 @@ RSpec.describe 'Domains Request' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
 
         h['admin'] = {
@@ -1632,11 +1633,11 @@ RSpec.describe 'Domains Request' do
 
     describe 'when deleting a private domain' do
       let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}", nil, user_headers } }
 
       let(:db_check) do
         lambda do
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           get "/v3/domains/#{private_domain.guid}", {}, admin_headers
@@ -1699,7 +1700,8 @@ RSpec.describe 'Domains Request' do
         delete "/v3/domains/#{private_domain.guid}", nil, user_header
         expect(last_response.status).to eq(422)
         expect(parsed_response['errors'][0]['detail']).to eq(
-          'This domain is shared with other organizations. Unshare before deleting.')
+          'This domain is shared with other organizations. Unshare before deleting.'
+        )
       end
     end
   end
@@ -1744,7 +1746,8 @@ RSpec.describe 'Domains Request' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
           expect(last_response.status).to eq(422)
           expect(parsed_response['errors'][0]['detail']).to eq(
-            "Unable to unshare domain from organization with name '#{org2.name}'. Ensure the domain is shared to this organization.")
+            "Unable to unshare domain from organization with name '#{org2.name}'. Ensure the domain is shared to this organization."
+          )
         end
       end
 
@@ -1753,7 +1756,8 @@ RSpec.describe 'Domains Request' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{private_domain.owning_organization_guid}", nil, user_header
           expect(last_response.status).to eq(422)
           expect(parsed_response['errors'][0]['detail']).to eq(
-            "Unable to unshare domain from organization with name '#{org.name}'. Ensure the domain is shared to this organization.")
+            "Unable to unshare domain from organization with name '#{org.name}'. Ensure the domain is shared to this organization."
+          )
         end
       end
     end
@@ -1781,7 +1785,8 @@ RSpec.describe 'Domains Request' do
           delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
           expect(last_response.status).to eq(422)
           expect(parsed_response['errors'][0]['detail']).to eq(
-            "Unable to unshare domain from organization with name '#{shared_org1.name}'. Ensure the domain is shared to this organization.")
+            "Unable to unshare domain from organization with name '#{shared_org1.name}'. Ensure the domain is shared to this organization."
+          )
         end
       end
     end
@@ -1815,7 +1820,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when the owning org is suspended' do
-      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -1836,7 +1841,7 @@ RSpec.describe 'Domains Request' do
     context 'when the shared org is suspended' do
       let(:owning_org) { VCAP::CloudController::Organization.make(guid: 'owning-org') }
       let(:shared_org1) { org } # permissions apply to shared org
-      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -1855,12 +1860,13 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when unsharing orgs for a private domain' do
-      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
-      let(:db_check) { lambda do
-        domain = VCAP::CloudController::Domain.find(guid: private_domain.guid)
-        expect(domain.shared_organizations).not_to include(shared_org1)
+      let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+      let(:db_check) do
+        lambda do
+          domain = VCAP::CloudController::Domain.find(guid: private_domain.guid)
+          expect(domain.shared_organizations).not_to include(shared_org1)
+        end
       end
-      }
 
       before do
         private_domain.add_shared_organization(shared_org1)
@@ -1873,7 +1879,7 @@ RSpec.describe 'Domains Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 204,
+            code: 204
           )
 
           h['admin_read_only'] = {
@@ -1954,12 +1960,12 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_domain.guid}/route_reservations) },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_domain.guid}/route_reservations} }
           }
         }
       end
 
-      let(:api_call) { lambda { |user_headers| get "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
@@ -1976,7 +1982,7 @@ RSpec.describe 'Domains Request' do
       context 'when the domain has not been shared' do
         let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
 
-        let(:private_domain_json) {
+        let(:private_domain_json) do
           {
             guid: private_domain.guid,
             created_at: iso8601,
@@ -2001,12 +2007,12 @@ RSpec.describe 'Domains Request' do
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{private_domain.guid}/route_reservations) },
-              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{private_domain.guid}\/relationships\/shared_organizations) }
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{private_domain.guid}/route_reservations} },
+              shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{private_domain.guid}/relationships/shared_organizations} }
             }
           }
-        }
+        end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -2014,15 +2020,15 @@ RSpec.describe 'Domains Request' do
             response_object: private_domain_json
           )
           h['org_billing_manager'] = {
-            code: 404,
+            code: 404
           }
           h['no_role'] = {
-            code: 404,
+            code: 404
           }
           h
         end
 
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
@@ -2037,7 +2043,7 @@ RSpec.describe 'Domains Request' do
           user_visible_org.add_private_domain(private_domain)
         end
 
-        let(:private_domain_json) {
+        let(:private_domain_json) do
           {
             guid: private_domain.guid,
             created_at: iso8601,
@@ -2057,19 +2063,19 @@ RSpec.describe 'Domains Request' do
                 }
               },
               shared_organizations: {
-                data: contain_exactly(*shared_organizations),
+                data: contain_exactly(*shared_organizations)
               }
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{private_domain.guid}/route_reservations) },
-              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{private_domain.guid}\/relationships\/shared_organizations) }
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{private_domain.guid}/route_reservations} },
+              shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{private_domain.guid}/relationships/shared_organizations} }
             }
           }
-        }
+        end
 
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
 
         context 'when the user can read in the shared organization' do
           let(:shared_organizations) { [{ guid: user_visible_org.guid }] }
@@ -2158,7 +2164,7 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain.guid}/route_reservations) },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/route_reservations} }
           }
         }
       end
@@ -2211,9 +2217,9 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain.guid}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}\/relationships\/shared_organizations) }
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/relationships/shared_organizations} }
           }
         }
       end
@@ -2283,9 +2289,9 @@ RSpec.describe 'Domains Request' do
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{domain.owning_organization_guid}) },
-            route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain.guid}/route_reservations) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}\/relationships\/shared_organizations) }
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{domain.owning_organization_guid}} },
+            route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/route_reservations} },
+            shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/relationships/shared_organizations} }
           }
         }
       end

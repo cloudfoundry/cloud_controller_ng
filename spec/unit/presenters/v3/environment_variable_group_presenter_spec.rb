@@ -3,9 +3,9 @@ require 'presenters/v3/environment_variable_group_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe EnvironmentVariableGroupPresenter do
-    before {
+    before do
       VCAP::CloudController::EnvironmentVariableGroup.find(name: 'running').update(environment_json: { 'foo' => 'burger_king' })
-    }
+    end
 
     let(:running_env_group) { VCAP::CloudController::EnvironmentVariableGroup.running }
 

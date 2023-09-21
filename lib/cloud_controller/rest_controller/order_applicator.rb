@@ -18,11 +18,12 @@ module VCAP::CloudController::RestController
     private
 
     def validate!
-      unless %w(asc desc).include?(@order_direction)
-        raise CloudController::Errors::ApiError.new_from_details(
-          'BadQueryParameter',
-          "order_direction must be 'asc' or 'desc' but was '#{@order_direction}'")
-      end
+      return if %w[asc desc].include?(@order_direction)
+
+      raise CloudController::Errors::ApiError.new_from_details(
+        'BadQueryParameter',
+        "order_direction must be 'asc' or 'desc' but was '#{@order_direction}'"
+      )
     end
 
     def descending?

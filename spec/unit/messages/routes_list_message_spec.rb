@@ -27,7 +27,7 @@ module VCAP::CloudController
           it 'accepts it' do
             message = RoutesListMessage.from_params({ 'hosts' => 'host1,host2' })
             expect(message).to be_valid
-            expect(message.hosts).to eq(['host1', 'host2'])
+            expect(message.hosts).to eq(%w[host1 host2])
           end
         end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
       it 'accepts a space_guids param' do
         message = RoutesListMessage.from_params({ 'space_guids' => 'guid1,guid2' })
         expect(message).to be_valid
-        expect(message.space_guids).to eq(['guid1', 'guid2'])
+        expect(message.space_guids).to eq(%w[guid1 guid2])
       end
 
       context 'when paths param is provided' do
@@ -67,19 +67,19 @@ module VCAP::CloudController
       it 'accepts an organization_guids param' do
         message = RoutesListMessage.from_params({ 'organization_guids' => 'guid1,guid2' })
         expect(message).to be_valid
-        expect(message.organization_guids).to eq(['guid1', 'guid2'])
+        expect(message.organization_guids).to eq(%w[guid1 guid2])
       end
 
       it 'accepts an domain_guids param' do
         message = RoutesListMessage.from_params({ 'domain_guids' => 'guid1,guid2' })
         expect(message).to be_valid
-        expect(message.domain_guids).to eq(['guid1', 'guid2'])
+        expect(message.domain_guids).to eq(%w[guid1 guid2])
       end
 
       it 'accepts a ports param' do
         message = RoutesListMessage.from_params({ 'ports' => '5900,6000,7000' })
         expect(message).to be_valid
-        expect(message.ports).to eq(['5900', '6000', '7000'])
+        expect(message.ports).to eq(%w[5900 6000 7000])
       end
 
       it 'does not accept any other params' do
@@ -111,7 +111,7 @@ module VCAP::CloudController
         it 'accepts it' do
           message = RoutesListMessage.from_params({ 'app_guids' => 'guid1,guid2' })
           expect(message).to be_valid
-          expect(message.app_guids).to eq(['guid1', 'guid2'])
+          expect(message.app_guids).to eq(%w[guid1 guid2])
         end
       end
     end

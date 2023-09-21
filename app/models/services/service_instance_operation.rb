@@ -12,8 +12,8 @@ module VCAP::CloudController
     end
 
     def update_attributes(attrs)
-      self.set attrs
-      self.save
+      set attrs
+      save
     end
   end
 end

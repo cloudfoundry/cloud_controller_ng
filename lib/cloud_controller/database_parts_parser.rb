@@ -9,7 +9,7 @@ module VCAP::CloudController
           port: uri.port,
           user: uri.user,
           password: uri.password && CGI.unescape(uri.password),
-          database: uri.path.sub(%r{^/}, ''),
+          database: uri.path.sub(%r{^/}, '')
         }
       end
 

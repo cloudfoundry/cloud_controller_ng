@@ -8,17 +8,17 @@ module VCAP::CloudController
       {
         name: 'sidecar-name',
         command: './start',
-        process_types: ['web', 'worker'],
+        process_types: %w[web worker],
         memory_in_mb: 321
       }
     end
     let(:message) { SidecarUpdateMessage.new(params) }
     let(:sidecar) do
       SidecarModel.make(
-        name:          'my_sidecar',
-        command:       'rackup',
-        app:           app,
-        memory:        123,
+        name: 'my_sidecar',
+        command: 'rackup',
+        app: app,
+        memory: 123
       )
     end
     let!(:process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
         expect(sidecar.name).to eq('sidecar-name')
         expect(sidecar.command).to eq('./start')
-        expect(sidecar.process_types).to eq(['web', 'worker'])
+        expect(sidecar.process_types).to eq(%w[web worker])
         expect(sidecar.memory).to eq(321)
       end
 
@@ -67,12 +67,12 @@ module VCAP::CloudController
 
       context 'when partially updating process_types' do
         let(:params) do
-          { process_types: ['web', 'worker'] }
+          { process_types: %w[web worker] }
         end
 
         it 'updates only process_types' do
           SidecarUpdate.update(sidecar, message)
-          expect(sidecar.process_types).to eq ['web', 'worker']
+          expect(sidecar.process_types).to eq %w[web worker]
 
           expect(sidecar.name).to eq 'my_sidecar'
           expect(sidecar.command).to eq 'rackup'
@@ -82,9 +82,9 @@ module VCAP::CloudController
           let!(:new_worker_process) { ProcessModel.make(app: app, memory: 100, type: 'worker') }
 
           it 'raises InvalidSidecar when the memory allocated for the sidecar exceeds the memory allocated for the associated process' do
-            expect {
+            expect do
               SidecarUpdate.update(sidecar, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarUpdate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "worker" process'
             )
@@ -101,9 +101,9 @@ module VCAP::CloudController
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarUpdate.update(sidecar, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarUpdate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "other_worker" process'
             )
@@ -118,9 +118,9 @@ module VCAP::CloudController
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarUpdate.update(sidecar, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarUpdate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "other_worker" process'
             )
@@ -137,9 +137,9 @@ module VCAP::CloudController
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarUpdate.update(sidecar, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarUpdate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "other_worker" process'
             )
@@ -150,15 +150,15 @@ module VCAP::CloudController
           let(:params) do
             {
               memory_in_mb: 600,
-              process_types: ['totes_new'],
+              process_types: ['totes_new']
             }
           end
           let!(:totes_new_process) { ProcessModel.make(app: app, memory: 500, type: 'totes_new') }
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarUpdate.update(sidecar, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarUpdate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "totes_new" process'
             )
@@ -168,16 +168,16 @@ module VCAP::CloudController
         context 'the memory allocated to the sidecar exceeds half the memory allocated for the newly associated process' do
           let(:sidecar) do
             SidecarModel.make(
-              name:          'my_sidecar',
-              command:       'rackup',
-              app:           app,
-              memory:        250,
+              name: 'my_sidecar',
+              command: 'rackup',
+              app: app,
+              memory: 250
             )
           end
 
           let(:params) do
             {
-              memory_in_mb: 251,
+              memory_in_mb: 251
             }
           end
 

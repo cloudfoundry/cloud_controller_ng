@@ -38,7 +38,7 @@ RSpec.describe 'ServiceKeys' do
                 'credentials' => { 'secret' => 'key' },
                 'name' => service_key1.name,
                 'service_instance_url' => "/v2/service_instances/#{service_key1.service_instance.guid}",
-                'service_key_parameters_url' => "/v2/service_keys/#{service_key1.guid}/parameters",
+                'service_key_parameters_url' => "/v2/service_keys/#{service_key1.guid}/parameters"
               }
             },
             {
@@ -53,7 +53,7 @@ RSpec.describe 'ServiceKeys' do
                 'credentials' => { 'secret' => 'key' },
                 'name' => service_key2.name,
                 'service_instance_url' => "/v2/service_instances/#{service_key2.service_instance.guid}",
-                'service_key_parameters_url' => "/v2/service_keys/#{service_key2.guid}/parameters",
+                'service_key_parameters_url' => "/v2/service_keys/#{service_key2.guid}/parameters"
               }
             }
           ]
@@ -103,9 +103,9 @@ RSpec.describe 'ServiceKeys' do
         fb.parameters = {
           parameters: {
             top_level_param: {
-              nested_param: true,
+              nested_param: true
             },
-            another_param: 'some-value',
+            another_param: 'some-value'
           },
           credentials:
           {
@@ -124,9 +124,9 @@ RSpec.describe 'ServiceKeys' do
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
-            'nested_param' => true,
+            'nested_param' => true
           },
-          'another_param' => 'some-value',
+          'another_param' => 'some-value'
         }
       )
     end

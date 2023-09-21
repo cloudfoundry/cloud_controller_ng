@@ -18,7 +18,7 @@ module VCAP::CloudController
     query_parameters :name, :space_guid
 
     def self.dependencies
-      [:service_manager, :services_event_repository]
+      %i[service_manager services_event_repository]
     end
 
     def inject_dependencies(dependencies)

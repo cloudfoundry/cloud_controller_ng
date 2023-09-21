@@ -31,13 +31,9 @@ module VCAP::CloudController
 
         if domain
           logger.info "reusing default serving domain: #{name}"
-          if domain.internal? != !!internal
-            logger.warn("Domain '#{name}' already exists. Skipping updates of internal status")
-          end
+          logger.warn("Domain '#{name}' already exists. Skipping updates of internal status") if domain.internal? != !!internal
 
-          if domain.router_group_guid != router_group_guid
-            logger.warn("Domain '#{name}' already exists. Skipping updates of router_group_guid")
-          end
+          logger.warn("Domain '#{name}' already exists. Skipping updates of router_group_guid") if domain.router_group_guid != router_group_guid
         else
           logger.info "creating shared serving domain: #{name}"
           domain = SharedDomain.create(name: name, router_group_guid: router_group_guid, internal: internal)
@@ -45,7 +41,7 @@ module VCAP::CloudController
       end
 
       domain
-    rescue => e
+    rescue StandardError => e
       err = e.class.new("Error for shared domain name #{name}: #{e.message}")
       err.set_backtrace(e.backtrace)
       raise err
@@ -62,7 +58,7 @@ module VCAP::CloudController
     end
 
     def protocols
-      return ['tcp'] if self.tcp?
+      return ['tcp'] if tcp?
 
       ['http']
     end
@@ -96,9 +92,9 @@ module VCAP::CloudController
     private
 
     def validate_internal_domain
-      if router_group_guid.present?
-        errors.add(:router_group_guid, 'cannot be specified for internal domains')
-      end
+      return unless router_group_guid.present?
+
+      errors.add(:router_group_guid, 'cannot be specified for internal domains')
     end
   end
 end

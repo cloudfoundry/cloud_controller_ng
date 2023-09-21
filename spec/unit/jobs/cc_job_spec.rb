@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe CCJob, job_context: :worker do
       describe '#reschedule_at' do
         it 'uses the default from Delayed::Job' do
-          time = Time.now
+          time = Time.now.utc
           attempts = 5
           job = CCJob.new
           expect(job.reschedule_at(time, attempts)).to eq(time + (attempts**4) + 5)

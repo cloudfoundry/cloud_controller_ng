@@ -29,9 +29,9 @@ module VCAP::CloudController
     end
 
     def create_process(app, type)
-      if app.processes_dataset.where(type: type).empty?
-        ProcessCreate.new(@user_audit_info).create(app, { type: type })
-      end
+      return unless app.processes_dataset.where(type: type).empty?
+
+      ProcessCreate.new(@user_audit_info).create(app, { type: type })
     end
   end
 end

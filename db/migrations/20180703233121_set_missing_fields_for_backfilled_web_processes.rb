@@ -16,7 +16,7 @@ Sequel.migration do
       fields_to_update[:disk_quota] = 1024 if process_record[:disk_quota].nil?
 
       # default to cc.instance_file_descriptor_limit
-      fields_to_update[:file_descriptors] = 16384 if process_record[:file_descriptors].nil?
+      fields_to_update[:file_descriptors] = 16_384 if process_record[:file_descriptors].nil?
 
       # processes.enable_ssh is no longer used, but we will set it to the database default of false to match other processes
       # apps.enable_ssh is the source of truth
@@ -26,6 +26,6 @@ Sequel.migration do
     end
   end
 
-  down do
+  down do # Rubocop:disable Lint/EmptyBlock
   end
 end

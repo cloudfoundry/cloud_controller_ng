@@ -119,9 +119,9 @@ module VCAP::CloudController
 
         context 'and it is not a recursive delete' do
           it 'raises an error and does not delete anything' do
-            expect {
+            expect do
               route_delete_action.delete_sync(route: route, recursive: recursive)
-            }.to raise_error(RouteDelete::ServiceInstanceAssociationError)
+            end.to raise_error(RouteDelete::ServiceInstanceAssociationError)
           end
         end
       end

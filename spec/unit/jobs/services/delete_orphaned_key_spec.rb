@@ -42,7 +42,7 @@ module VCAP::CloudController
 
       describe '#reschedule_at' do
         it 'uses exponential backoff' do
-          now = Time.now
+          now = Time.now.utc
 
           run_at = job.reschedule_at(now, 5)
           expect(run_at).to eq(now + (2**5).minutes)

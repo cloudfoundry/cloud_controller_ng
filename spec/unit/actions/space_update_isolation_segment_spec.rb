@@ -67,7 +67,8 @@ module VCAP::CloudController
 
           it 'raises an error' do
             expect { space_update.update(space, org, message) }.to raise_error(
-              SpaceUpdateIsolationSegment::Error, /something/)
+              SpaceUpdateIsolationSegment::Error, /something/
+            )
           end
         end
       end
@@ -75,7 +76,8 @@ module VCAP::CloudController
       context 'when the org is NOT entitled to the isolation segment' do
         it 'raises an error' do
           expect { space_update.update(space, org, message) }.to raise_error(
-            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/)
+            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/
+          )
         end
       end
 
@@ -86,7 +88,8 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect { space_update.update(space, org, message) }.to raise_error(
-            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/)
+            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/
+          )
         end
       end
     end

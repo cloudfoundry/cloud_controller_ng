@@ -25,7 +25,8 @@ module VCAP::CloudController
 
         service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
         expect(Repositories::ServiceInstanceShareEventRepository).to have_received(:record_unshare_event).with(
-          service_instance, target_space.guid, user_audit_info)
+          service_instance, target_space.guid, user_audit_info
+        )
       end
 
       context 'when the service plan is inactive' do
@@ -79,8 +80,8 @@ module VCAP::CloudController
           it 'fails to unshare' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.
               to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error) do |err|
-              expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name}" \
-                                             " in space #{target_space.name} is being deleted asynchronously.")
+              expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name} " \
+                                             "in space #{target_space.name} is being deleted asynchronously.")
             end
 
             expect(service_instance.shared_spaces).to include(target_space)
@@ -105,8 +106,8 @@ module VCAP::CloudController
           it 'returns only the error from delete action' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.to raise_error do |err|
               expect(err.message).to include('some-error')
-              expect(err.message).not_to include("The binding between an application and service instance #{service_instance.name}" \
-                                             " in space #{target_space.name} is being deleted asynchronously.")
+              expect(err.message).not_to include("The binding between an application and service instance #{service_instance.name} " \
+                                                 "in space #{target_space.name} is being deleted asynchronously.")
             end
           end
         end

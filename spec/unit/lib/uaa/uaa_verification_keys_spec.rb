@@ -108,9 +108,9 @@ module VCAP::CloudController
           end
 
           it 'returns an empty array' do
-            expect {
+            expect do
               subject.value
-            }.to raise_error(VCAP::CloudController::UaaUnavailable)
+            end.to raise_error(VCAP::CloudController::UaaUnavailable)
             expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
           end
         end

@@ -17,9 +17,9 @@ module VCAP::CloudController
       context 'when the buildpack and message are valid' do
         it 'enqueues and returns an upload job' do
           returned_job = nil
-          expect {
+          expect do
             returned_job = buildpack_upload.upload_async(message: message, buildpack: buildpack, config: config)
-          }.to change { Delayed::Job.count }.by(1)
+          end.to change { Delayed::Job.count }.by(1)
 
           job = Delayed::Job.last
           expect(returned_job.delayed_job_guid).to eq(job.guid)

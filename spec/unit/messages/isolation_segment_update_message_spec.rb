@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentUpdateMessage do
     describe 'validations' do
       context 'when unexpected keys are requested' do
-        let(:params) {
+        let(:params) do
           {
             name: 'some-name',
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = IsolationSegmentUpdateMessage.new(params)
@@ -22,7 +22,7 @@ module VCAP::CloudController
         context 'when the name is not a string' do
           let(:params) do
             {
-              name: 32.77,
+              name: 32.77
             }
           end
 

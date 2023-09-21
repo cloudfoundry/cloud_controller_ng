@@ -4,10 +4,11 @@ require 'presenters/v3/app_manifest_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppManifestPresenter do
     let(:environment_variables) { { 'one' => 'potato', 'two' => 'tomato' } }
-    let(:app) { VCAP::CloudController::AppModel.make(
-      environment_variables: environment_variables
-    )
-    }
+    let(:app) do
+      VCAP::CloudController::AppModel.make(
+        environment_variables: environment_variables
+      )
+    end
     let(:space) { app.space }
 
     describe '#to_hash' do
@@ -25,12 +26,12 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'for docker apps' do
-          let(:app) {
+          let(:app) do
             VCAP::CloudController::AppModel.make(
               :docker,
-            environment_variables: environment_variables
-          )
-          }
+              environment_variables: environment_variables
+            )
+          end
 
           it 'only returns application name' do
             result = AppManifestPresenter.new(app, service_bindings, route_mappings).to_hash
@@ -80,13 +81,13 @@ module VCAP::CloudController::Presenters::V3
             health_check_timeout: 5,
             log_rate_limit: 1_048_576,
             command: 'Do it now!',
-            type: 'aaaaa',
+            type: 'aaaaa'
           )
         end
         let!(:process2) do
           VCAP::CloudController::ProcessModel.make(
             app: app,
-            type: 'zzzzz',
+            type: 'zzzzz'
           )
         end
 
@@ -126,7 +127,7 @@ module VCAP::CloudController::Presenters::V3
               'health-check-type' => process1.health_check_type,
               'health-check-http-endpoint' => process1.health_check_http_endpoint,
               'readiness-health-check-type' => process1.readiness_health_check_type,
-              'timeout' => process1.health_check_timeout,
+              'timeout' => process1.health_check_timeout
             },
             {
               'type' => process2.type,
@@ -135,20 +136,20 @@ module VCAP::CloudController::Presenters::V3
               'memory' => "#{process2.memory}M",
               'disk_quota' => "#{process2.disk_quota}M",
               'health-check-type' => process2.health_check_type,
-              'readiness-health-check-type' => process2.readiness_health_check_type,
+              'readiness-health-check-type' => process2.readiness_health_check_type
             }
           ])
           expect(application[:sidecars]).to eq(
             [
               {
-                'name'          => 'authenticator',
-                'process_types' => ['web', 'worker'],
-                'command'       => './authenticator',
+                'name' => 'authenticator',
+                'process_types' => %w[web worker],
+                'command' => './authenticator'
               },
               {
-                'name'          => 'my_sidecar',
+                'name' => 'my_sidecar',
                 'process_types' => ['other_worker'],
-                'command'       => 'rackup',
+                'command' => 'rackup'
               }
             ]
           )
@@ -159,7 +160,7 @@ module VCAP::CloudController::Presenters::V3
             VCAP::CloudController::ProcessModel.make(
               app: app,
               health_check_timeout: nil,
-              health_check_http_endpoint: nil,
+              health_check_http_endpoint: nil
             )
           end
 
@@ -175,7 +176,7 @@ module VCAP::CloudController::Presenters::V3
                 'memory' => "#{process1.memory}M",
                 'disk_quota' => "#{process1.disk_quota}M",
                 'health-check-type' => process1.health_check_type,
-                'readiness-health-check-type' => process1.readiness_health_check_type,
+                'readiness-health-check-type' => process1.readiness_health_check_type
               },
               {
                 'type' => process2.type,
@@ -184,7 +185,7 @@ module VCAP::CloudController::Presenters::V3
                 'memory' => "#{process2.memory}M",
                 'disk_quota' => "#{process2.disk_quota}M",
                 'health-check-type' => process2.health_check_type,
-                'readiness-health-check-type' => process2.readiness_health_check_type,
+                'readiness-health-check-type' => process2.readiness_health_check_type
               }
             ])
           end
@@ -195,7 +196,7 @@ module VCAP::CloudController::Presenters::V3
             VCAP::CloudController::Buildpack.make(name: 'limabean')
             app.lifecycle_data.update(
               buildpacks: ['limabean', 'git://user:pass@github.com/repo'],
-              stack: 'the-happiest-stack',
+              stack: 'the-happiest-stack'
             )
           end
 
@@ -233,9 +234,9 @@ module VCAP::CloudController::Presenters::V3
               expect(application[:buildpacks]).to be_nil
               expect(application[:stack]).to be_nil
               expect(application[:docker]).to eq({
-                image: 'my-image:my-tag',
-                username: 'xXxMyL1ttlePwnyxXx'
-              })
+                                                   image: 'my-image:my-tag',
+                                                   username: 'xXxMyL1ttlePwnyxXx'
+                                                 })
             end
 
             context 'when there is no docker username' do
@@ -248,8 +249,8 @@ module VCAP::CloudController::Presenters::V3
                 expect(application[:buildpacks]).to be_nil
                 expect(application[:stack]).to be_nil
                 expect(application[:docker]).to eq({
-                  image: 'my-image:my-tag',
-                })
+                                                     image: 'my-image:my-tag'
+                                                   })
               end
             end
           end

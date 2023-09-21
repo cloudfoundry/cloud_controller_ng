@@ -46,7 +46,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
         'org_manager' => 201,
         'org_auditor' => 201,
         'org_billing_manager' => 201,
-        'unauthenticated' => 401,
+        'unauthenticated' => 401
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -138,11 +138,11 @@ RSpec.describe ResourceMatchesController, type: :controller do
           post :create, params: req_body, as: :json
           expect(response.status).to eq(201)
           expect(parsed_body['resources']).to eq([{
-            'checksum' => { 'value' => @descriptors.first['sha1'] },
-            'size_in_bytes' => @descriptors.first['size'],
-            'path' => 'path/to/file1',
-            'mode' => '644'
-          }])
+                                                   'checksum' => { 'value' => @descriptors.first['sha1'] },
+                                                   'size_in_bytes' => @descriptors.first['size'],
+                                                   'path' => 'path/to/file1',
+                                                   'mode' => '644'
+                                                 }])
         end
       end
 

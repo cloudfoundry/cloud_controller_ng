@@ -4,7 +4,7 @@ require 'openssl'
 
 module Logcache
   RSpec.describe Client do
-    let(:logcache_envelopes) { [:fake_envelope_1, :fake_envelope_2] }
+    let(:logcache_envelopes) { %i[fake_envelope_1 fake_envelope_2] }
     let(:logcache_service) { instance_double(Logcache::V1::Egress::Stub, read: logcache_envelopes) }
     let(:logcache_request) { instance_double(Logcache::V1::ReadRequest) }
 
@@ -23,9 +23,9 @@ module Logcache
         Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
                              client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
       end
-      let(:client_ca) { File.open(client_ca_path).read }
-      let(:client_key) { File.open(client_key_path).read }
-      let(:client_cert) { File.open(client_cert_path).read }
+      let(:client_ca) { File.read(client_ca_path) }
+      let(:client_key) { File.read(client_key_path) }
+      let(:client_cert) { File.read(client_cert_path) }
 
       describe '#container_metrics' do
         let(:instance_count) { 2 }
@@ -44,7 +44,7 @@ module Logcache
         it 'calls Logcache with the correct parameters and returns envelopes' do
           expect(
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          ).to eq([:fake_envelope_1, :fake_envelope_2])
+          ).to eq(%i[fake_envelope_1 fake_envelope_2])
 
           expect(Logcache::V1::ReadRequest).to have_received(:new).with(
             source_id: process.guid,
@@ -81,9 +81,9 @@ module Logcache
         end
 
         it 'retries the request three times and raises an exception' do
-          expect {
+          expect do
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          }.to raise_error(bad_status)
+          end.to raise_error(bad_status)
 
           expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
         end
@@ -112,9 +112,9 @@ module Logcache
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          }.to raise_error(CloudController::Errors::ApiError, /Connection to Log Cache timed out/)
+          end.to raise_error(CloudController::Errors::ApiError, /Connection to Log Cache timed out/)
 
           expect(logcache_service).to have_received(:read).with(logcache_request).exactly(1).times
         end
@@ -138,9 +138,9 @@ module Logcache
         end
 
         it 'raises the exception' do
-          expect {
+          expect do
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          }.to raise_error(bad_status)
+          end.to raise_error(bad_status)
         end
       end
     end
@@ -172,7 +172,7 @@ module Logcache
         it 'calls Logcache with the correct parameters and returns envelopes' do
           expect(
             client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
-          ).to eq([:fake_envelope_1, :fake_envelope_2])
+          ).to eq(%i[fake_envelope_1 fake_envelope_2])
 
           expect(Logcache::V1::ReadRequest).to have_received(:new).with(
             source_id: process.guid,

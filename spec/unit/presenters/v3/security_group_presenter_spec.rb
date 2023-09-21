@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
             protocol: 'tcp',
             destination: '10.10.10.0/24',
             ports: '443,80,8080'
-          },
+          }
         ]
       )
     end

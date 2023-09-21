@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'cgi'
 
-RSpec.resource 'Events', type: [:api, :legacy_api] do
-  DOCUMENTED_EVENT_TYPES = %w(
+RSpec.resource 'Events', type: %i[api legacy_api] do
+  DOCUMENTED_EVENT_TYPES = %w[
     app.crash
     audit.app.start
     audit.app.stop
@@ -55,9 +55,9 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     audit.app.package.download
     audit.space.role.add
     audit.space.role.remove
-  ).sort.freeze
+  ].sort.freeze
 
-  EXPERIMENTAL_EVENT_TYPES = %w(
+  EXPERIMENTAL_EVENT_TYPES = %w[
     audit.app.droplet.create
     audit.app.droplet.delete
     audit.app.process.crash
@@ -69,28 +69,28 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     audit.app.droplet.download
     audit.app.task.create
     audit.app.task.cancel
-  ).sort.freeze
-
-  ACTEE_TYPES = [
-    'app',
-    'route',
-    'service_plan_visibility',
-    'service_broker',
-    'service',
-    'service_plan',
-    'service_dashboard_client',
-    'service_instance',
-    'user_provided_service_instance',
-    'service_binding',
-    'service_key',
-    'space'
   ].sort.freeze
 
-  ACTOR_TYPES = %w(
+  ACTEE_TYPES = %w[
+    app
+    route
+    service_plan_visibility
+    service_broker
+    service
+    service_plan
+    service_dashboard_client
+    service_instance
+    user_provided_service_instance
+    service_binding
+    service_key
+    space
+  ].sort.freeze
+
+  ACTOR_TYPES = %w[
     user
     system
     service_broker
-  ).sort.freeze
+  ].sort.freeze
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
@@ -104,8 +104,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
   let(:guid) { VCAP::CloudController::Event.first.guid }
 
   response_field :guid, 'The guid of the event.', required: false
-  response_field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w(app.crash audit.app.update)
-  response_field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w(audit.app.process.crash)
+  response_field :type, 'The type of the event.', required: false, readonly: true, valid_values: DOCUMENTED_EVENT_TYPES, example_values: %w[app.crash audit.app.update]
+  response_field :type, 'The type of the event.', experimental: true, required: false, valid_values: EXPERIMENTAL_EVENT_TYPES, example_values: %w[audit.app.process.crash]
   response_field :actor, 'The GUID of the actor.', required: false, readonly: true
   response_field :actor_type, 'The actor type.', required: false, readonly: true, example_values: ACTOR_TYPES
   response_field :actor_name, 'The name of the actor.', required: false, readonly: true
@@ -141,11 +141,11 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
 
     let(:app_request) do
       {
-        'name'             => 'new',
-        'instances'        => 1,
-        'memory'           => 84,
-        'state'            => 'STOPPED',
-        'environment_json' => { 'super' => 'secret' },
+        'name' => 'new',
+        'instances' => 1,
+        'memory' => 84,
+        'state' => 'STOPPED',
+        'environment_json' => { 'super' => 'secret' }
       }
     end
     let(:space_request) do
@@ -155,18 +155,18 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
     let(:route_request) do
       {
-        'host'        => 'dora',
+        'host' => 'dora',
         'domain_guid' => 'some-domain-guid',
-        'space_guid'  => 'some-space-guid',
+        'space_guid' => 'some-space-guid'
       }
     end
     let(:droplet_exited_payload) do
       {
-        'instance'         => 0,
-        'index'            => 1,
-        'exit_status'      => '1',
+        'instance' => 0,
+        'index' => 1,
+        'exit_status' => '1',
         'exit_description' => 'out of memory',
-        'reason'           => 'crashed'
+        'reason' => 'crashed'
       }
     end
     let(:expected_app_request) do
@@ -208,12 +208,12 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
@@ -224,12 +224,12 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
@@ -240,12 +240,12 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
@@ -256,13 +256,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   { 'request' => expected_app_request }
+        metadata: { 'request' => expected_app_request }
       }
     end
 
@@ -273,13 +273,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_v3app.guid,
+        actee: test_v3app.guid,
         actee_name: test_v3app.name,
         space_guid: test_v3app.space.guid,
-        metadata:   {}
+        metadata: {}
       }
     end
 
@@ -290,13 +290,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_v3app.guid,
+        actee: test_v3app.guid,
         actee_name: test_v3app.name,
         space_guid: test_v3app.space.guid,
-        metadata:   {}
+        metadata: {}
       }
     end
 
@@ -307,13 +307,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'app',
-        actor:      test_app.guid,
+        actor: test_app.guid,
         actor_name: test_app.name,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   droplet_exited_payload
+        metadata: droplet_exited_payload
       }
     end
 
@@ -324,14 +324,14 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   {
-          'request' => expected_app_request,
+        metadata: {
+          'request' => expected_app_request
         }
       }
     end
@@ -343,13 +343,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   { 'request' => { 'recursive' => false } }
+        metadata: { 'request' => { 'recursive' => false } }
       }
     end
 
@@ -360,13 +360,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   { 'index' => 1 }
+        metadata: { 'index' => 1 }
       }
     end
 
@@ -377,13 +377,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   { 'index' => 1 }
+        metadata: { 'index' => 1 }
       }
     end
 
@@ -396,13 +396,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'app',
-        actee:      test_app.guid,
+        actee: test_app.guid,
         actee_name: test_app.name,
         space_guid: test_app.space.guid,
-        metadata:   { 'request' => expected_app_request }
+        metadata: { 'request' => expected_app_request }
       }
     end
 
@@ -417,13 +417,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'space',
-        actee:      test_space.guid,
+        actee: test_space.guid,
         actee_name: test_space.name,
         space_guid: test_space.guid,
-        metadata:   { 'request' => space_request }
+        metadata: { 'request' => space_request }
       }
     end
 
@@ -438,13 +438,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
-        actee:      test_space.guid,
+        actee: test_space.guid,
         actee_type: 'space',
         actee_name: test_space.name,
         space_guid: test_space.guid,
-        metadata:   { 'request' => space_request }
+        metadata: { 'request' => space_request }
       }
     end
 
@@ -459,13 +459,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'space',
-        actee:      test_space.guid,
+        actee: test_space.guid,
         actee_name: test_space.name,
         space_guid: test_space.guid,
-        metadata:   { 'request' => { 'recursive' => true } }
+        metadata: { 'request' => { 'recursive' => true } }
       }
     end
 
@@ -476,13 +476,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'user',
-        actee:      test_assignee.guid,
+        actee: test_assignee.guid,
         actee_name: '',
         space_guid: test_space.guid,
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
@@ -493,13 +493,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'user',
-        actee:      test_assignee.guid,
+        actee: test_assignee.guid,
         actee_name: '',
         space_guid: test_space.guid,
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
@@ -510,13 +510,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'route',
-        actee:      test_route.guid,
+        actee: test_route.guid,
         actee_name: test_route.host,
         space_guid: test_route.space.guid,
-        metadata:   { 'request' => route_request }
+        metadata: { 'request' => route_request }
       }
     end
 
@@ -527,13 +527,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
-        actee:      test_route.guid,
+        actee: test_route.guid,
         actee_type: 'route',
         actee_name: test_route.host,
         space_guid: test_route.space.guid,
-        metadata:   { 'request' => route_request }
+        metadata: { 'request' => route_request }
       }
     end
 
@@ -544,25 +544,25 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'route',
-        actee:      test_route.guid,
+        actee: test_route.guid,
         actee_name: test_route.host,
         space_guid: test_route.space.guid,
-        metadata:   { 'request' => { 'recursive' => true } }
+        metadata: { 'request' => { 'recursive' => true } }
       }
     end
 
     example 'List Service Dashboard Client Create Events' do
       client_attrs = {
-        'id'           => 'client_id',
-        'secret'       => 'secret',
+        'id' => 'client_id',
+        'secret' => 'secret',
         'redirect_uri' => 'example.com/redirect'
       }
 
       VCAP::CloudController::ServiceDashboardClient.new(
-        uaa_id:         client_attrs['id'],
+        uaa_id: client_attrs['id'],
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
@@ -572,14 +572,14 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service_dashboard_client',
-        actee:      client_attrs['id'],
+        actee: client_attrs['id'],
         actee_name: client_attrs['id'],
         space_guid: '',
-        metadata:   {
-          'secret'       => '[REDACTED]',
+        metadata: {
+          'secret' => '[REDACTED]',
           'redirect_uri' => client_attrs['redirect_uri']
         }
       }
@@ -591,7 +591,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       }
 
       VCAP::CloudController::ServiceDashboardClient.new(
-        uaa_id:         client_attrs['id'],
+        uaa_id: client_attrs['id'],
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
@@ -601,31 +601,31 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service_dashboard_client',
-        actee:      client_attrs['id'],
+        actee: client_attrs['id'],
         actee_name: client_attrs['id'],
         space_guid: '',
-        metadata:   {}
+        metadata: {}
       }
     end
 
     example 'List Service Plan Create Events' do
       new_plan = VCAP::CloudController::ServicePlan.new(
-        guid:                   'guid',
-        name:                   'plan-name',
-        service:                test_service,
-        description:            'A plan',
-        unique_id:              'guid',
-        free:                   true,
-        public:                 true,
-        active:                 true,
-        bindable:               true,
-        plan_updateable:        true,
+        guid: 'guid',
+        name: 'plan-name',
+        service: test_service,
+        description: 'A plan',
+        unique_id: 'guid',
+        free: true,
+        public: true,
+        active: true,
+        bindable: true,
+        plan_updateable: true,
         create_instance_schema: '{}',
         update_instance_schema: '{}',
-        create_binding_schema:  '{}',
+        create_binding_schema: '{}',
         maintenance_info: '{}'
       )
       service_event_repository.with_service_plan_event(new_plan) do
@@ -636,28 +636,28 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service_plan',
-        actee:      new_plan.guid,
+        actee: new_plan.guid,
         actee_name: new_plan.name,
         space_guid: '',
-        metadata:   {
-          'name'                       => new_plan.name,
-          'free'                       => new_plan.free,
-          'description'                => new_plan.description,
-          'service_guid'               => new_plan.service.guid,
-          'extra'                      => new_plan.extra,
-          'unique_id'                  => new_plan.unique_id,
-          'public'                     => new_plan.public,
-          'active'                     => new_plan.active,
-          'bindable'                   => new_plan.bindable,
-          'plan_updateable'            => new_plan.plan_updateable,
-          'maximum_polling_duration'   => new_plan.maximum_polling_duration,
-          'create_instance_schema'     => new_plan.create_instance_schema,
-          'update_instance_schema'     => new_plan.update_instance_schema,
-          'create_binding_schema'      => new_plan.create_binding_schema,
-          'maintenance_info'           => new_plan.maintenance_info,
+        metadata: {
+          'name' => new_plan.name,
+          'free' => new_plan.free,
+          'description' => new_plan.description,
+          'service_guid' => new_plan.service.guid,
+          'extra' => new_plan.extra,
+          'unique_id' => new_plan.unique_id,
+          'public' => new_plan.public,
+          'active' => new_plan.active,
+          'bindable' => new_plan.bindable,
+          'plan_updateable' => new_plan.plan_updateable,
+          'maximum_polling_duration' => new_plan.maximum_polling_duration,
+          'create_instance_schema' => new_plan.create_instance_schema,
+          'update_instance_schema' => new_plan.update_instance_schema,
+          'create_binding_schema' => new_plan.create_binding_schema,
+          'maintenance_info' => new_plan.maintenance_info
         }
       }
     end
@@ -672,13 +672,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service_plan',
-        actee:      test_plan.guid,
+        actee: test_plan.guid,
         actee_name: test_plan.name,
         space_guid: '',
-        metadata:   { 'name' => 'new name' }
+        metadata: { 'name' => 'new name' }
       }
     end
 
@@ -689,13 +689,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service_plan',
-        actee:      test_plan.guid,
+        actee: test_plan.guid,
         actee_name: test_plan.name,
         space_guid: '',
-        metadata:   {}
+        metadata: {}
       }
     end
 
@@ -709,15 +709,15 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       client.get '/v2/events?q=type:audit.service_plan_visibility.create', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
-        actor_type:        'user',
-        actor:             test_user.guid,
-        actor_name:        test_user_email,
-        actee_type:        'service_plan_visibility',
-        actee:             test_plan_visibility.guid,
-        actee_name:        '',
-        space_guid:        '',
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_plan_visibility',
+        actee: test_plan_visibility.guid,
+        actee_name: '',
+        space_guid: '',
         organization_guid: test_plan_visibility.organization_guid,
-        metadata:          {
+        metadata: {
           'request' => params
         }
       }
@@ -733,15 +733,15 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       client.get '/v2/events?q=type:audit.service_plan_visibility.update', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
-        actor_type:        'user',
-        actor:             test_user.guid,
-        actor_name:        test_user_email,
-        actee_type:        'service_plan_visibility',
-        actee:             test_plan_visibility.guid,
-        actee_name:        '',
-        space_guid:        '',
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_plan_visibility',
+        actee: test_plan_visibility.guid,
+        actee_name: '',
+        space_guid: '',
         organization_guid: test_plan_visibility.organization_guid,
-        metadata:          {
+        metadata: {
           'request' => params
         }
       }
@@ -753,30 +753,30 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       client.get '/v2/events?q=type:audit.service_plan_visibility.delete', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
-        actor_type:        'user',
-        actor:             test_user.guid,
-        actor_name:        test_user_email,
-        actee_type:        'service_plan_visibility',
-        actee:             test_plan_visibility.guid,
-        actee_name:        '',
-        space_guid:        '',
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_plan_visibility',
+        actee: test_plan_visibility.guid,
+        actee_name: '',
+        space_guid: '',
         organization_guid: test_plan_visibility.organization_guid,
-        metadata:          { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
     example 'List Service Create Events' do
       new_service = VCAP::CloudController::Service.new(
-        guid:            'guid',
-        label:           'label',
-        description:     'BOOOO',
-        bindable:        true,
-        service_broker:  test_broker,
+        guid: 'guid',
+        label: 'label',
+        description: 'BOOOO',
+        bindable: true,
+        service_broker: test_broker,
         plan_updateable: false,
         bindings_retrievable: true,
         instances_retrievable: true,
         allow_context_updates: true,
-        active:          true,
+        active: true
       )
       service_event_repository.with_service_event(new_service) do
         new_service.save
@@ -786,32 +786,32 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service',
-        actee:      new_service.guid,
+        actee: new_service.guid,
         actee_name: new_service.label,
         space_guid: '',
-        metadata:   {
+        metadata: {
           'service_broker_guid' => new_service.service_broker.guid,
-          'unique_id'           => new_service.broker_provided_id,
-          'provider'            => new_service.provider,
-          'url'                 => new_service.url,
-          'version'             => new_service.version,
-          'info_url'            => new_service.info_url,
-          'bindable'            => new_service.bindable,
-          'long_description'    => new_service.long_description,
-          'documentation_url'   => new_service.documentation_url,
-          'label'               => new_service.label,
-          'description'         => new_service.description,
-          'tags'                => new_service.tags,
-          'extra'               => new_service.extra,
-          'active'              => new_service.active,
-          'requires'            => new_service.requires,
-          'plan_updateable'     => new_service.plan_updateable,
-          'bindings_retrievable'   => new_service.bindings_retrievable,
-          'instances_retrievable'  => new_service.instances_retrievable,
-          'allow_context_updates'  => new_service.allow_context_updates,
+          'unique_id' => new_service.broker_provided_id,
+          'provider' => new_service.provider,
+          'url' => new_service.url,
+          'version' => new_service.version,
+          'info_url' => new_service.info_url,
+          'bindable' => new_service.bindable,
+          'long_description' => new_service.long_description,
+          'documentation_url' => new_service.documentation_url,
+          'label' => new_service.label,
+          'description' => new_service.description,
+          'tags' => new_service.tags,
+          'extra' => new_service.extra,
+          'active' => new_service.active,
+          'requires' => new_service.requires,
+          'plan_updateable' => new_service.plan_updateable,
+          'bindings_retrievable' => new_service.bindings_retrievable,
+          'instances_retrievable' => new_service.instances_retrievable,
+          'allow_context_updates' => new_service.allow_context_updates
         }
       }
     end
@@ -826,13 +826,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service',
-        actee:      test_service.guid,
+        actee: test_service.guid,
         actee_name: test_service.label,
         space_guid: '',
-        metadata:   { 'label' => 'new label' }
+        metadata: { 'label' => 'new label' }
       }
     end
 
@@ -843,20 +843,20 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'service_broker',
-        actor:      test_broker.guid,
+        actor: test_broker.guid,
         actor_name: test_broker.name,
         actee_type: 'service',
-        actee:      test_service.guid,
+        actee: test_service.guid,
         actee_name: test_service.label,
         space_guid: '',
-        metadata:   {}
+        metadata: {}
       }
     end
 
     example 'List Service Broker Create Events' do
       params = {
-        name:          'pancake broker',
-        broker_url:    'http://www.pancakes.com',
+        name: 'pancake broker',
+        broker_url: 'http://www.pancakes.com',
         auth_username: 'panda',
         auth_password: 'password'
       }
@@ -867,16 +867,16 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_broker',
-        actee:      broker.guid,
+        actee: broker.guid,
         actee_name: 'pancake broker',
         space_guid: '',
-        metadata:   {
+        metadata: {
           'request' => {
-            'name'          => 'pancake broker',
-            'broker_url'    => 'http://www.pancakes.com',
+            'name' => 'pancake broker',
+            'broker_url' => 'http://www.pancakes.com',
             'auth_username' => 'panda',
             'auth_password' => '[REDACTED]'
           }
@@ -886,7 +886,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
 
     example 'List Service Broker Update Events' do
       params = {
-        broker_url:    'http://www.pancakes.com',
+        broker_url: 'http://www.pancakes.com',
         auth_password: 'password'
       }
       broker = VCAP::CloudController::ServiceBroker.make
@@ -896,15 +896,15 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_broker',
-        actee:      broker.guid,
+        actee: broker.guid,
         actee_name: broker.name,
         space_guid: '',
-        metadata:   {
+        metadata: {
           'request' => {
-            'broker_url'    => 'http://www.pancakes.com',
+            'broker_url' => 'http://www.pancakes.com',
             'auth_password' => '[REDACTED]'
           }
         }
@@ -919,39 +919,39 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_broker',
-        actee:      broker.guid,
+        actee: broker.guid,
         actee_name: broker.name,
         space_guid: '',
-        metadata:   { 'request' => {} }
+        metadata: { 'request' => {} }
       }
     end
 
     example 'List Service Instance Create Events' do
       instance = VCAP::CloudController::ManagedServiceInstance.make
       service_event_repository.record_service_instance_event(:create, instance, {
-        'name'              => instance.name,
-        'service_plan_guid' => instance.service_plan.guid,
-        'space_guid'        => instance.space_guid,
-      })
+                                                               'name' => instance.name,
+                                                               'service_plan_guid' => instance.service_plan.guid,
+                                                               'space_guid' => instance.space_guid
+                                                             })
 
       client.get '/v2/events?q=type:audit.service_instance.create', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
-            'name'              => instance.name,
+            'name' => instance.name,
             'service_plan_guid' => instance.service_plan.guid,
-            'space_guid'        => instance.space_guid
+            'space_guid' => instance.space_guid
           }
         }
       }
@@ -960,20 +960,20 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Instance Update Events' do
       instance = VCAP::CloudController::ManagedServiceInstance.make
       service_event_repository.record_service_instance_event(:update, instance, {
-        'service_plan_guid' => instance.service_plan.guid,
-      })
+                                                               'service_plan_guid' => instance.service_plan.guid
+                                                             })
 
       client.get '/v2/events?q=type:audit.service_instance.update', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'service_plan_guid' => instance.service_plan.guid
           }
@@ -989,13 +989,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {}
         }
       }
@@ -1012,13 +1012,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'route_guid' => route.guid
           }
@@ -1037,13 +1037,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'route_guid' => route.guid
           }
@@ -1054,24 +1054,24 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List User Provided Service Instance Create Events' do
       instance = VCAP::CloudController::UserProvidedServiceInstance.make
       service_event_repository.record_user_provided_service_instance_event(:create, instance, {
-        'name'       => instance.name,
-        'space_guid' => instance.space_guid,
-      })
+                                                                             'name' => instance.name,
+                                                                             'space_guid' => instance.space_guid
+                                                                           })
 
       client.get '/v2/events?q=type:audit.user_provided_service_instance.create', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'user_provided_service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
-            'name'       => instance.name,
-            'space_guid' => instance.space_guid,
+            'name' => instance.name,
+            'space_guid' => instance.space_guid
           }
         }
       }
@@ -1080,20 +1080,20 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List User Provided Service Instance Update Events' do
       instance = VCAP::CloudController::UserProvidedServiceInstance.make
       service_event_repository.record_user_provided_service_instance_event(:update, instance, {
-        'credentials' => { 'username' => 'myUser' }
-      })
+                                                                             'credentials' => { 'username' => 'myUser' }
+                                                                           })
 
       client.get '/v2/events?q=type:audit.user_provided_service_instance.update', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'user_provided_service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'credentials' => '[REDACTED]'
           }
@@ -1109,13 +1109,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'user_provided_service_instance',
-        actee:      instance.guid,
+        actee: instance.guid,
         actee_name: instance.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {}
         }
       }
@@ -1133,15 +1133,15 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_binding',
-        actee:      service_binding.guid,
+        actee: service_binding.guid,
         actee_name: '',
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
-            'foo' => 'bar',
+            'foo' => 'bar'
           }
         }
       }
@@ -1159,16 +1159,16 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_binding',
-        actee:      service_binding.guid,
+        actee: service_binding.guid,
         actee_name: '',
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'service_instance_guid' => instance.guid,
-            'app_guid'              => process.guid,
+            'app_guid' => process.guid
           }
         }
       }
@@ -1185,16 +1185,16 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_key',
-        actee:      service_key.guid,
+        actee: service_key.guid,
         actee_name: service_key.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {
             'service_instance_guid' => instance.guid,
-            'name'                  => service_key.name,
+            'name' => service_key.name
           }
         }
       }
@@ -1211,13 +1211,13 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
-        actor:      test_user.guid,
+        actor: test_user.guid,
         actor_name: test_user_email,
         actee_type: 'service_key',
-        actee:      service_key.guid,
+        actee: service_key.guid,
         actee_name: service_key.name,
         space_guid: instance.space_guid,
-        metadata:   {
+        metadata: {
           'request' => {}
         }
       }

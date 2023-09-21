@@ -422,13 +422,13 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       it 'does not add a middle_guid accessor to bottom' do
         bottom = bottoms.first
 
-        expect {
+        expect do
           bottom.middle_guid
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
 
-        expect {
+        expect do
           bottom.middle_guid = 'hello'
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
       end
     end
 

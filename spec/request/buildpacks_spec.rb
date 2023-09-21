@@ -30,8 +30,8 @@ RSpec.describe 'buildpacks' do
           stacks: 'cf',
           label_selector: 'foo,bar',
           guids: 'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -39,7 +39,7 @@ RSpec.describe 'buildpacks' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::Buildpack }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/buildpacks?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/buildpacks?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
@@ -281,7 +281,7 @@ RSpec.describe 'buildpacks' do
     context 'permissions' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:api_call) { lambda { |user_headers| get '/v3/buildpacks', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/buildpacks', nil, user_headers } }
       let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
       before do
@@ -335,7 +335,7 @@ RSpec.describe 'buildpacks' do
               annotations: {
                 potato: 'idaho'
               }
-            },
+            }
           }
         end
 
@@ -368,7 +368,7 @@ RSpec.describe 'buildpacks' do
                 },
                 'annotations' => {
                   'potato' => 'idaho'
-                },
+                }
               },
               'links' => {
                 'self' => {
@@ -458,7 +458,7 @@ RSpec.describe 'buildpacks' do
       end
 
       context 'the buildpack does not exist' do
-        let(:api_call) { lambda { |user_headers| get '/v3/buildpacks/does-not-exist', nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get '/v3/buildpacks/does-not-exist', nil, user_headers } }
 
         let(:expected_codes_and_responses) { Hash.new(code: 404) }
 
@@ -466,7 +466,7 @@ RSpec.describe 'buildpacks' do
       end
 
       context 'the buildpack exists' do
-        let(:api_call) { lambda { |user_headers| get "/v3/buildpacks/#{buildpack.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/buildpacks/#{buildpack.guid}", nil, user_headers } }
         let(:buildpack_response) do
           {
             'name' => buildpack.name,
@@ -506,7 +506,7 @@ RSpec.describe 'buildpacks' do
       delete "/v3/buildpacks/#{buildpack.guid}", nil, admin_headers
 
       expect(last_response.status).to eq(202)
-      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+      expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/buildpacks/#{buildpack.guid}", {}, admin_headers
@@ -533,7 +533,7 @@ RSpec.describe 'buildpacks' do
     it 'enqueues a job to process the uploaded bits' do
       file_upload_params = {
         bits_name: 'buildpack.zip',
-        bits_path: 'tmpdir/buildpack.zip',
+        bits_path: 'tmpdir/buildpack.zip'
       }
 
       expect(Delayed::Job.count).to eq 0

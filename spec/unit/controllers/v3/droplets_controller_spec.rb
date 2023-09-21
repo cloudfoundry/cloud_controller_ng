@@ -7,8 +7,8 @@ RSpec.describe DropletsController, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE,
-        state: VCAP::CloudController::PackageModel::READY_STATE)
+                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                                               state: VCAP::CloudController::PackageModel::READY_STATE)
     end
     let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
@@ -44,9 +44,9 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     it 'returns a 201 OK response with the new droplet' do
-      expect {
+      expect do
         post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
-      }.to change { target_app.reload.droplets.count }.from(0).to(1)
+      end.to change { target_app.reload.droplets.count }.from(0).to(1)
       expect(response.status).to eq(201), response.body
       expect(target_app.droplets.first.guid).to eq(parsed_body['guid'])
     end
@@ -215,13 +215,13 @@ RSpec.describe DropletsController, type: :controller do
 
       expect(response.status).to eq(202)
       expect(response.body).to be_empty
-      expect(response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+      expect(response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
-      expect {
+      expect do
         delete :destroy, params: { guid: droplet.guid }
-      }.to change {
+      end.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
@@ -426,7 +426,7 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       context 'invalid pagination' do
-        let(:params) { { 'per_page' => 9999999999999999 } }
+        let(:params) { { 'per_page' => 9_999_999_999_999_999 } }
 
         it 'returns 400' do
           get :index, params: params
@@ -584,7 +584,7 @@ RSpec.describe DropletsController, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -607,7 +607,7 @@ RSpec.describe DropletsController, type: :controller do
               },
               annotations: {
                 this: 'is valid'
-              },
+              }
             }
           }
         end

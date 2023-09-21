@@ -49,11 +49,11 @@ module VCAP::CloudController
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
-            'memory' => AccountCapacity::ADMIN_MEM,
-            'app_uris' => AccountCapacity::ADMIN_URIS,
-            'services' => AccountCapacity::ADMIN_SERVICES,
-            'apps' => AccountCapacity::ADMIN_APPS
-          })
+                                         'memory' => AccountCapacity::ADMIN_MEM,
+                                         'app_uris' => AccountCapacity::ADMIN_URIS,
+                                         'services' => AccountCapacity::ADMIN_SERVICES,
+                                         'apps' => AccountCapacity::ADMIN_APPS
+                                       })
         end
       end
 
@@ -77,11 +77,11 @@ module VCAP::CloudController
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
-            'memory' => AccountCapacity::DEFAULT_MEM,
-            'app_uris' => AccountCapacity::DEFAULT_URIS,
-            'services' => AccountCapacity::DEFAULT_SERVICES,
-            'apps' => AccountCapacity::DEFAULT_APPS
-          })
+                                         'memory' => AccountCapacity::DEFAULT_MEM,
+                                         'app_uris' => AccountCapacity::DEFAULT_URIS,
+                                         'services' => AccountCapacity::DEFAULT_SERVICES,
+                                         'apps' => AccountCapacity::DEFAULT_APPS
+                                       })
         end
 
         context 'with no apps and services' do
@@ -92,10 +92,10 @@ module VCAP::CloudController
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({
-              'memory' => 0,
-              'apps' => 0,
-              'services' => 0
-            })
+                                          'memory' => 0,
+                                          'apps' => 0,
+                                          'services' => 0
+                                        })
           end
         end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
                 space: current_user.default_space,
                 state: 'STARTED',
                 instances: 2,
-                memory: 128,
+                memory: 128
               )
             end
 
@@ -131,10 +131,10 @@ module VCAP::CloudController
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({
-              'memory' => 128 * 4,
-              'apps' => 2,
-              'services' => 3
-            })
+                                          'memory' => 128 * 4,
+                                          'apps' => 2,
+                                          'services' => 3
+                                        })
           end
         end
       end

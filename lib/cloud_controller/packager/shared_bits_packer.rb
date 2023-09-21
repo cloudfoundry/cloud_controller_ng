@@ -12,9 +12,9 @@ module CloudController
       def validate_size!(app_packager)
         return unless max_package_size
 
-        if app_packager.size > max_package_size
-          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
-        end
+        return unless app_packager.size > max_package_size
+
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
       end
 
       def copy_uploaded_package(uploaded_package_zip, app_packager)

@@ -47,7 +47,7 @@ module VCAP::CloudController
         let(:routes_filter) { {} }
 
         it 'eager loads the specified resources for the routes' do
-          results = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(guid: [space1.guid]).select(:guid), eager_loaded_associations: [:labels, :domain]).all
+          results = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(guid: [space1.guid]).select(:guid), eager_loaded_associations: %i[labels domain]).all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:domain)).to be true
@@ -211,9 +211,9 @@ module VCAP::CloudController
           end
 
           context 'only the label_selector is present' do
-            let(:message) {
+            let(:message) do
               RoutesListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
-            }
+            end
             it 'returns only the route whose label matches' do
               expect(results.length).to eq(2)
               expect(results).to contain_exactly(route1, route3)
@@ -221,9 +221,9 @@ module VCAP::CloudController
           end
 
           context 'and other filters are present' do
-            let(:message) {
+            let(:message) do
               RoutesListMessage.from_params({ paths: '/path1', hosts: 'host3', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
-            }
+            end
 
             it 'returns the desired app' do
               expect(results.length).to eq(1)

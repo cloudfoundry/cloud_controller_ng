@@ -63,7 +63,7 @@ module VCAP::CloudController
           copilot_client.bulk_sync(
             routes: routes,
             route_mappings: route_mappings,
-            capi_diego_process_associations: capi_diego_process_associations,
+            capi_diego_process_associations: capi_diego_process_associations
           )
         rescue StandardError => e
           raise CopilotUnavailable.new(e.message)
@@ -78,9 +78,7 @@ module VCAP::CloudController
         def with_guardrails(route: nil)
           return unless copilot_enabled?
 
-          if route
-            return unless Config.config.get(:copilot, :temporary_istio_domains).include?(route.domain.name)
-          end
+          return if route && !Config.config.get(:copilot, :temporary_istio_domains).include?(route.domain.name)
 
           yield
         rescue StandardError => e

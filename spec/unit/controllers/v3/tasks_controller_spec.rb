@@ -14,14 +14,15 @@ RSpec.describe TasksController, type: :controller do
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
     end
 
     let(:request_body) do
       {
         name: 'mytask',
         command: 'rake db:migrate && true',
-        memory_in_mb: 2048,
+        memory_in_mb: 2048
       }
     end
 
@@ -62,7 +63,7 @@ RSpec.describe TasksController, type: :controller do
           name: 'mytask',
           command: 'rake db:migrate && true',
           memory_in_mb: nil,
-          disk_in_mb: nil,
+          disk_in_mb: nil
         }
       end
 
@@ -151,16 +152,17 @@ RSpec.describe TasksController, type: :controller do
 
     context 'metadata' do
       context 'when the label is invalid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                'cloudfoundry.org/release' => 'stable'
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  'cloudfoundry.org/release' => 'stable'
+                }
               }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -172,20 +174,21 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when the annotation is invalid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                'release' => 'stable'
-              },
-              annotations: {
-                "": 'mashed',
-                "/potato": '.value.'
-              },
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  'release' => 'stable'
+                },
+                annotations: {
+                  "": 'mashed',
+                  '/potato': '.value.'
+                }
+              }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -197,19 +200,20 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when the metadata is valid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                release: 'stable'
-              },
-              annotations: {
-                this: 'is valid'
-              },
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  release: 'stable'
+                },
+                annotations: {
+                  this: 'is valid'
+                }
+              }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'Returns a 202 and the app with metadata' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -224,17 +228,18 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when there are too many annotations' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              annotations: {
-                radish: 'daikon',
-                potato: 'idaho'
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                annotations: {
+                  radish: 'daikon',
+                  potato: 'idaho'
+                }
               }
             }
-          }
-        )
-        }
+          )
+        end
 
         before do
           VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
@@ -306,10 +311,10 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when a custom droplet guid is provided' do
-        let(:custom_droplet) {
+        let(:custom_droplet) do
           VCAP::CloudController::DropletModel.make(app_guid: app_model.guid,
                                                    state: VCAP::CloudController::DropletModel::STAGED_STATE)
-        }
+        end
 
         it 'successfully creates a task on the specifed droplet' do
           post :create, params: { app_guid: app_model.guid }.merge(
@@ -702,7 +707,7 @@ RSpec.describe TasksController, type: :controller do
             },
             annotations: {
               '' => 'uhoh'
-            },
+            }
           }
         }
       end
@@ -743,8 +748,8 @@ RSpec.describe TasksController, type: :controller do
                 style: 'casserole'
               },
               annotations: {
-                potato: 'russet',
-              },
+                potato: 'russet'
+              }
             }
           }
         end
@@ -756,11 +761,11 @@ RSpec.describe TasksController, type: :controller do
           expected_metadata_response = {
             'labels' => {
               'potato' => 'yam',
-              'style' => 'casserole',
+              'style' => 'casserole'
             },
             'annotations' => {
               'potato' => 'russet',
-              'style' => 'french',
+              'style' => 'french'
             }
           }
 
@@ -805,8 +810,8 @@ RSpec.describe TasksController, type: :controller do
                   style: nil
                 },
                 annotations: {
-                  potato: nil,
-                },
+                  potato: nil
+                }
               }
             }
           end
@@ -817,10 +822,10 @@ RSpec.describe TasksController, type: :controller do
             expect(response.status).to eq(200)
             expected_metadata_response = {
               'labels' => {
-                'potato' => 'yam',
+                'potato' => 'yam'
               },
               'annotations' => {
-                'style' => 'french',
+                'style' => 'french'
               }
             }
 

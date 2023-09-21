@@ -10,7 +10,7 @@ RSpec.describe 'V3 service instances' do
   let(:another_space) { VCAP::CloudController::Space.make }
 
   describe 'GET /v3/service_instances/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}", nil, user_headers } }
 
     context 'no such instance' do
       let(:guid) { 'no-such-guid' }
@@ -105,7 +105,7 @@ RSpec.describe 'V3 service instances' do
           service_plans: [
             {
               guid: instance.service_plan.guid,
-              name: instance.service_plan.name,
+              name: instance.service_plan.name
             }
           ]
         }
@@ -115,7 +115,7 @@ RSpec.describe 'V3 service instances' do
 
       it 'can include service offering and broker fields' do
         get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid,description,documentation_url&" \
-           'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
+            'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
         included = {
@@ -124,7 +124,7 @@ RSpec.describe 'V3 service instances' do
               name: instance.service_plan.service.name,
               guid: instance.service_plan.service.guid,
               description: instance.service_plan.service.description,
-              documentation_url: 'https://some.url.for.docs/',
+              documentation_url: 'https://some.url.for.docs/'
             }
           ],
           service_brokers: [
@@ -141,7 +141,7 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances' do
-    let(:api_call) { lambda { |user_headers| get '/v3/service_instances', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/service_instances', nil, user_headers } }
 
     it_behaves_like 'list query endpoint' do
       let(:user_header) { admin_headers }
@@ -150,20 +150,20 @@ RSpec.describe 'V3 service instances' do
 
       let(:params) do
         {
-          names: ['foo', 'bar'],
-          space_guids: ['foo', 'bar'],
-          organization_guids: ['org-1', 'org-2'],
+          names: %w[foo bar],
+          space_guids: %w[foo bar],
+          organization_guids: %w[org-1 org-2],
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo,bar',
           type: 'managed',
-          service_plan_guids: ['guid-1', 'guid-2'],
-          service_plan_names: ['plan-1', 'plan-2'],
+          service_plan_guids: %w[guid-1 guid-2],
+          service_plan_names: %w[plan-1 plan-2],
           fields: { 'space.organization' => 'name' },
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -208,7 +208,7 @@ RSpec.describe 'V3 service instances' do
               create_managed_json(msi_2),
               create_user_provided_json(upsi_1),
               create_user_provided_json(upsi_2),
-              create_managed_json(ssi),
+              create_managed_json(ssi)
             ]
           }
         end
@@ -219,7 +219,7 @@ RSpec.describe 'V3 service instances' do
             response_objects: [
               create_managed_json(msi_1),
               create_user_provided_json(upsi_1),
-              create_managed_json(ssi),
+              create_managed_json(ssi)
             ]
           }
         end
@@ -256,7 +256,7 @@ RSpec.describe 'V3 service instances' do
           check_filtered_instances(
             create_managed_json(msi_2),
             create_user_provided_json(upsi_2),
-            create_managed_json(ssi),
+            create_managed_json(ssi)
           )
         end
 
@@ -265,7 +265,7 @@ RSpec.describe 'V3 service instances' do
           check_filtered_instances(
             create_managed_json(msi_2),
             create_user_provided_json(upsi_2),
-            create_managed_json(ssi),
+            create_managed_json(ssi)
           )
         end
 
@@ -280,7 +280,7 @@ RSpec.describe 'V3 service instances' do
           check_filtered_instances(
             create_managed_json(msi_1, labels: { fruit: 'strawberry' }),
             create_user_provided_json(upsi_2, labels: { fruit: 'strawberry' }),
-            create_managed_json(ssi, labels: { fruit: 'strawberry' }),
+            create_managed_json(ssi, labels: { fruit: 'strawberry' })
           )
         end
 
@@ -289,7 +289,7 @@ RSpec.describe 'V3 service instances' do
           check_filtered_instances(
             create_managed_json(msi_1),
             create_managed_json(msi_2),
-            create_managed_json(ssi),
+            create_managed_json(ssi)
           )
         end
 
@@ -365,8 +365,8 @@ RSpec.describe 'V3 service instances' do
 
         it 'can include the service plan, offering and broker fields' do
           get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
-                'fields[service_plan.service_offering]=name,guid,description,documentation_url,relationships.service_broker&' \
-                'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
+              'fields[service_plan.service_offering]=name,guid,description,documentation_url,relationships.service_broker&' \
+              'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
 
           expect(last_response).to have_status_code(200)
 
@@ -473,7 +473,7 @@ RSpec.describe 'V3 service instances' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ServiceInstanceListFetcher).to receive(:fetch).with(
           an_instance_of(VCAP::CloudController::ServiceInstancesListMessage),
-          hash_including(eager_loaded_associations: [:labels, :annotations, :space, :service_instance_operation, :service_plan_sti_eager_load])
+          hash_including(eager_loaded_associations: %i[labels annotations space service_instance_operation service_plan_sti_eager_load])
         ).and_call_original
 
         get '/v3/service_instances', nil, admin_headers
@@ -484,7 +484,7 @@ RSpec.describe 'V3 service instances' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::ServiceInstance }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/service_instances?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/service_instances?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
@@ -492,7 +492,7 @@ RSpec.describe 'V3 service instances' do
 
   describe 'GET /v3/service_instances/:guid/credentials' do
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
       let(:credentials) { { 'fake-key' => 'fake-value' } }
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: credentials) }
       let(:guid) { instance.guid }
@@ -500,7 +500,7 @@ RSpec.describe 'V3 service instances' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 200,
-          response_object: credentials,
+          response_object: credentials
         )
 
         h['global_auditor'] = h['space_supporter'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
@@ -542,7 +542,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
       let(:parameters) { { 'some-key' => 'some-value' } }
       let(:body) { { 'parameters' => parameters }.to_json }
       let(:guid) { instance.guid }
@@ -550,7 +550,7 @@ RSpec.describe 'V3 service instances' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 200,
-          response_object: parameters,
+          response_object: parameters
         )
 
         h['org_auditor'] = { code: 404 }
@@ -561,14 +561,13 @@ RSpec.describe 'V3 service instances' do
     end
 
     it 'sends the correct request to the service broker' do
-      get "/v3/service_instances/#{instance.guid}/parameters", nil, headers_for(user, scopes: %w(cloud_controller.admin))
+      get "/v3/service_instances/#{instance.guid}/parameters", nil, headers_for(user, scopes: %w[cloud_controller.admin])
 
       encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
       expect(a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
         with(
-          headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
-        )
-      ).to have_been_made.once
+          headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
+        )).to have_been_made.once
     end
 
     context 'when the instance does not support retrievable instances' do
@@ -578,10 +577,10 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'This service does not support fetching service instance parameters.',
-          'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
-          'code' => 120004,
-        }))
+                                                               'detail' => 'This service does not support fetching service instance parameters.',
+                                                               'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
+                                                               'code' => 120_004
+                                                             }))
       end
     end
 
@@ -600,9 +599,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerResponseMalformed',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerResponseMalformed',
+                                                               'code' => 10_001
+                                                             }))
       end
     end
 
@@ -613,9 +612,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerResponseMalformed',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerResponseMalformed',
+                                                               'code' => 10_001
+                                                             }))
       end
     end
 
@@ -626,9 +625,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerBadResponse',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerBadResponse',
+                                                               'code' => 10_001
+                                                             }))
       end
     end
 
@@ -639,15 +638,15 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(502)
         expect(parsed_response['errors']).to include(include({
-          'title' => 'CF-ServiceBrokerBadResponse',
-          'code' => 10001,
-        }))
+                                                               'title' => 'CF-ServiceBrokerBadResponse',
+                                                               'code' => 10_001
+                                                             }))
       end
     end
 
     context 'when the instance is shared' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, service_plan: service_plan) }
         let(:parameters) { { 'some-key' => 'some-value' } }
         let(:body) { { 'parameters' => parameters }.to_json }
@@ -660,7 +659,7 @@ RSpec.describe 'V3 service instances' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
-            response_object: parameters,
+            response_object: parameters
           )
 
           h['space_supporter'] = h['space_developer'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
@@ -686,9 +685,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(409)
         expect(parsed_response['errors']).to include(include({
-           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
-           'code' => 60016,
-         }))
+                                                               'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+                                                               'code' => 60_016
+                                                             }))
       end
     end
 
@@ -712,9 +711,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(include({
-           'title' => 'CF-ResourceNotFound',
-           'code' => 10010,
-         }))
+                                                               'title' => 'CF-ResourceNotFound',
+                                                               'code' => 10_010
+                                                             }))
       end
     end
 
@@ -727,9 +726,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(409)
         expect(parsed_response['errors']).to include(include({
-           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
-           'code' => 60016,
-         }))
+                                                               'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+                                                               'code' => 60_016
+                                                             }))
       end
     end
 
@@ -764,9 +763,9 @@ RSpec.describe 'V3 service instances' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
         expect(last_response).to have_status_code(409)
         expect(parsed_response['errors']).to include(include({
-           'title' => 'CF-AsyncServiceInstanceOperationInProgress',
-           'code' => 60016,
-         }))
+                                                               'title' => 'CF-AsyncServiceInstanceOperationInProgress',
+                                                               'code' => 60_016
+                                                             }))
       end
     end
 
@@ -789,16 +788,16 @@ RSpec.describe 'V3 service instances' do
 
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'This service does not support fetching service instance parameters.',
-          'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
-          'code' => 120004,
-        }))
+                                                               'detail' => 'This service does not support fetching service instance parameters.',
+                                                               'title' => 'CF-ServiceFetchInstanceParametersNotSupported',
+                                                               'code' => 120_004
+                                                             }))
       end
     end
   end
 
   describe 'POST /v3/service_instances' do
-    let(:api_call) { lambda { |user_headers| post '/v3/service_instances', request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/service_instances', request_body.to_json, user_headers } }
     let(:space_guid) { space.guid }
 
     let(:name) { Sham.name }
@@ -842,10 +841,10 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(403)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Feature Disabled: service_instance_creation',
-            'title' => 'CF-FeatureDisabled',
-            'code' => 330002,
-          })
+                    'detail' => 'Feature Disabled: service_instance_creation',
+                    'title' => 'CF-FeatureDisabled',
+                    'code' => 330_002
+                  })
         )
       end
 
@@ -863,10 +862,10 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => "Relationships 'relationships' is not an object, Type must be one of 'managed', 'user-provided', Name must be a string, Name can't be blank",
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          })
+                    'detail' => "Relationships 'relationships' is not an object, Type must be one of 'managed', 'user-provided', Name must be a string, Name can't be blank",
+                    'title' => 'CF-UnprocessableEntity',
+                    'code' => 10_008
+                  })
         )
       end
     end
@@ -879,10 +878,10 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(422)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Invalid space. Ensure that the space exists and you have access to it.',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          })
+                    'detail' => 'Invalid space. Ensure that the space exists and you have access to it.',
+                    'title' => 'CF-UnprocessableEntity',
+                    'code' => 10_008
+                  })
         )
       end
     end
@@ -903,7 +902,7 @@ RSpec.describe 'V3 service instances' do
             foo: 'bar',
             baz: 'qux'
           },
-          tags: %w(foo bar baz),
+          tags: %w[foo bar baz],
           syslog_drain_url: 'https://syslog.com/drain',
           route_service_url: 'https://route.com/service',
           metadata: {
@@ -930,7 +929,7 @@ RSpec.describe 'V3 service instances' do
               state: 'succeeded',
               description: 'Operation succeeded',
               created_at: iso8601,
-              updated_at: iso8601,
+              updated_at: iso8601
             }
           )
         )
@@ -961,10 +960,10 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{name}.",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The service instance name is taken: #{name}.",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
 
@@ -983,10 +982,10 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Route service url must be https',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'Route service url must be https',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
@@ -1022,7 +1021,7 @@ RSpec.describe 'V3 service instances' do
             foo: 'bar',
             baz: 'qux'
           },
-          tags: %w(foo bar baz),
+          tags: %w[foo bar baz],
           metadata: {
             annotations: {
               foo: 'bar',
@@ -1071,10 +1070,10 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{name}.",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The service instance name is taken: #{name}.",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
 
@@ -1125,10 +1124,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1140,10 +1139,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => 'The service instance cannot be created because there is an operation in progress for the service broker.',
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1159,10 +1158,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -1175,10 +1174,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -1191,10 +1190,11 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              }))
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
+            )
           end
         end
 
@@ -1206,10 +1206,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -1224,10 +1224,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -1252,8 +1252,9 @@ RSpec.describe 'V3 service instances' do
               query: {
                 operation: 'task12',
                 service_id: service_plan.service.unique_id,
-                plan_id: service_plan.unique_id,
-              }).
+                plan_id: service_plan.unique_id
+              }
+            ).
             to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
         end
 
@@ -1286,9 +1287,8 @@ RSpec.describe 'V3 service instances' do
                 },
                 maintenance_info: maintenance_info
               },
-              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
-            )
-          ).to have_been_made.once
+              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
+            )).to have_been_made.once
         end
 
         context 'when the provision completes synchronously' do
@@ -1343,9 +1343,9 @@ RSpec.describe 'V3 service instances' do
                   query: {
                     operation: 'task12',
                     service_id: service_plan.service.unique_id,
-                    plan_id: service_plan.unique_id,
+                    plan_id: service_plan.unique_id
                   },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -1364,8 +1364,9 @@ RSpec.describe 'V3 service instances' do
                   query: {
                     operation: 'task12',
                     service_id: service_plan.service.unique_id,
-                    plan_id: service_plan.unique_id,
-                  }).
+                    plan_id: service_plan.unique_id
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
 
@@ -1375,7 +1376,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
@@ -1410,15 +1411,16 @@ RSpec.describe 'V3 service instances' do
                   query: {
                     operation: 'task12',
                     service_id: service_plan.service.unique_id,
-                    plan_id: service_plan.unique_id,
-                  }).
+                    plan_id: service_plan.unique_id
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
 
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
             end
@@ -1437,7 +1439,7 @@ RSpec.describe 'V3 service instances' do
 
         describe 'volume mount and route service checks' do
           context 'when volume mount required' do
-            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(volume_mount)) }
+            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[volume_mount]) }
             let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
 
             context 'volume mount disabled' do
@@ -1468,7 +1470,7 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when route forwarding required' do
-            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
             let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
 
             context 'route forwarding disabled' do
@@ -1515,10 +1517,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => "You have exceeded your space's services limit.",
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => "You have exceeded your space's services limit.",
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1535,10 +1537,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because paid service plans are not allowed for your space.',
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => 'The service instance cannot be created because paid service plans are not allowed for your space.',
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1557,10 +1559,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => "You have exceeded your organization's services limit.",
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => "You have exceeded your organization's services limit.",
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1577,10 +1579,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'The service instance cannot be created because paid service plans are not allowed.',
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => 'The service instance cannot be created because paid service plans are not allowed.',
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -1590,7 +1592,7 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'PATCH /v3/service_instances/:guid' do
-    let(:api_call) { lambda { |user_headers| patch "/v3/service_instances/#{guid}", request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/service_instances/#{guid}", request_body.to_json, user_headers } }
     let(:space_dev_headers) do
       org.add_user(user)
       space.add_developer(user)
@@ -1618,10 +1620,10 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Service instance not found',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          })
+                    'detail' => 'Service instance not found',
+                    'title' => 'CF-ResourceNotFound',
+                    'code' => 10_010
+                  })
         )
       end
     end
@@ -1630,7 +1632,7 @@ RSpec.describe 'V3 service instances' do
       describe 'updates that do not require broker communication' do
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w(foo bar),
+            tags: %w[foo bar],
             space: space
           )
           si.annotation_ids = [
@@ -1648,7 +1650,7 @@ RSpec.describe 'V3 service instances' do
 
         let(:request_body) do
           {
-            tags: %w(baz quz),
+            tags: %w[baz quz],
             metadata: {
               labels: {
                 potato: 'yam',
@@ -1688,7 +1690,7 @@ RSpec.describe 'V3 service instances' do
                 state: 'succeeded',
                 type: 'update'
               },
-              tags: %w(baz quz)
+              tags: %w[baz quz]
             )
           )
         end
@@ -1697,12 +1699,12 @@ RSpec.describe 'V3 service instances' do
           api_call.call(space_dev_headers)
 
           service_instance.reload
-          expect(service_instance.tags).to eq(%w(baz quz))
+          expect(service_instance.tags).to eq(%w[baz quz])
 
           expect(service_instance).to have_annotations(
             { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
             { prefix: nil, key_name: 'potato', value: 'idaho' },
-            { prefix: nil, key_name: 'style', value: 'mashed' },
+            { prefix: nil, key_name: 'style', value: 'mashed' }
           )
           expect(service_instance).to have_labels(
             { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
@@ -1728,7 +1730,7 @@ RSpec.describe 'V3 service instances' do
         let(:original_maintenance_info) { { version: '1.1.0' } }
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w(foo bar),
+            tags: %w[foo bar],
             space: space,
             service_plan: original_service_plan,
             maintenance_info: original_maintenance_info
@@ -1758,7 +1760,7 @@ RSpec.describe 'V3 service instances' do
               foo: 'bar',
               baz: 'qux'
             },
-            tags: %w(baz quz),
+            tags: %w[baz quz],
             metadata: {
               labels: {
                 potato: 'yam',
@@ -1798,11 +1800,11 @@ RSpec.describe 'V3 service instances' do
           api_call.call(space_dev_headers)
 
           service_instance.reload
-          expect(service_instance.reload.tags).to eq(%w(foo bar))
+          expect(service_instance.reload.tags).to eq(%w[foo bar])
 
           expect(service_instance).to have_annotations(
             { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
-            { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+            { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
           )
           expect(service_instance).to have_labels(
             { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
@@ -1850,14 +1852,14 @@ RSpec.describe 'V3 service instances' do
                       space_guid: space.guid,
                       space_name: space.name,
                       space_annotations: { 'pre.fix/baz': 'wow' },
-                      instance_name: 'new-name',
+                      instance_name: 'new-name'
                     },
                     parameters: {
                       foo: 'bar',
                       baz: 'qux'
-                    },
+                    }
                   },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -1903,7 +1905,7 @@ RSpec.describe 'V3 service instances' do
             let(:broker_response) { { operation: 'task12' } }
             let(:last_operation_status_code) { 200 }
             let(:last_operation_response) { { state: 'in progress' } }
-            let(:dashboard_url) {}
+            let(:dashboard_url) { nil }
 
             before do
               stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation").
@@ -1911,8 +1913,9 @@ RSpec.describe 'V3 service instances' do
                   query: {
                     operation: 'task12',
                     service_id: service_instance.service_plan.service.unique_id,
-                    plan_id: service_instance.service_plan.unique_id,
-                  }).
+                    plan_id: service_instance.service_plan.unique_id
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
 
               stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
@@ -1933,9 +1936,9 @@ RSpec.describe 'V3 service instances' do
                     query: {
                       operation: 'task12',
                       service_id: service_instance.service_plan.service.unique_id,
-                      plan_id: service_instance.service_plan.unique_id,
+                      plan_id: service_instance.service_plan.unique_id
                     },
-                    headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                    headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                   )
               ).to have_been_made.once
             end
@@ -1955,15 +1958,16 @@ RSpec.describe 'V3 service instances' do
                     query: {
                       operation: 'task12',
                       service_id: service_instance.service_plan.service.unique_id,
-                      plan_id: service_instance.service_plan.unique_id,
-                    }).
+                      plan_id: service_instance.service_plan.unique_id
+                    }
+                  ).
                   to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                   to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
 
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-                Timecop.freeze(Time.now + 1.hour) do
+                Timecop.freeze(Time.now.utc + 1.hour) do
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
               end
@@ -1996,15 +2000,16 @@ RSpec.describe 'V3 service instances' do
                     query: {
                       operation: 'task12',
                       service_id: service_instance.service_plan.service.unique_id,
-                      plan_id: service_instance.service_plan.unique_id,
-                    }).
+                      plan_id: service_instance.service_plan.unique_id
+                    }
+                  ).
                   to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                   to_return(status: 200, body: { state: 'failed' }.to_json, headers: {})
 
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-                Timecop.freeze(Time.now + 1.hour) do
+                Timecop.freeze(Time.now.utc + 1.hour) do
                   execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
                 end
               end
@@ -2027,15 +2032,16 @@ RSpec.describe 'V3 service instances' do
                     query: {
                       operation: 'task12',
                       service_id: service_instance.service_plan.service.unique_id,
-                      plan_id: service_instance.service_plan.unique_id,
-                    }).
+                      plan_id: service_instance.service_plan.unique_id
+                    }
+                  ).
                   to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                   to_return(status: 400, body: {}.to_json, headers: {})
 
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-                Timecop.freeze(Time.now + 1.hour) do
+                Timecop.freeze(Time.now.utc + 1.hour) do
                   execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
                 end
               end
@@ -2053,11 +2059,11 @@ RSpec.describe 'V3 service instances' do
               it 'does not update the instance' do
                 #  TODO maybe look in the client to add this test and make sure what it returns? so we can test at a unit level in the job as well
                 service_instance.reload
-                expect(service_instance.reload.tags).to eq(%w(foo bar))
+                expect(service_instance.reload.tags).to eq(%w[foo bar])
                 expect(service_instance.service_plan).to eq(original_service_plan)
                 expect(service_instance).to have_annotations(
                   { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
-                  { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+                  { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
                 )
                 expect(service_instance).to have_labels(
                   { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
@@ -2068,7 +2074,7 @@ RSpec.describe 'V3 service instances' do
               context 'when changing maintenance_info' do
                 let(:request_body) do
                   {
-                    maintenance_info: { version: '1.1.1' },
+                    maintenance_info: { version: '1.1.1' }
                   }
                 end
 
@@ -2086,7 +2092,7 @@ RSpec.describe 'V3 service instances' do
               {
                 name: 'new-name',
                 maintenance_info: new_maintenance_info,
-                tags: %w(baz quz),
+                tags: %w[baz quz]
               }
             end
 
@@ -2121,7 +2127,7 @@ RSpec.describe 'V3 service instances' do
       describe 'no changes requested' do
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w(foo bar),
+            tags: %w[foo bar],
             space: space
           )
           si
@@ -2143,7 +2149,7 @@ RSpec.describe 'V3 service instances' do
                 state: 'succeeded',
                 type: 'update'
               },
-              tags: %w(foo bar)
+              tags: %w[foo bar]
             )
           )
         end
@@ -2166,7 +2172,7 @@ RSpec.describe 'V3 service instances' do
           let(:request_body) do
             {
               maintenance_info: {
-                version: '3.1.0',
+                version: '3.1.0'
               }
             }
           end
@@ -2180,7 +2186,7 @@ RSpec.describe 'V3 service instances' do
                 {
                   'title' => 'CF-UnprocessableEntity',
                   'detail' => 'The service broker does not support upgrades for service instances created from this plan.',
-                  'code' => 10008,
+                  'code' => 10_008
                 }
               )
             )
@@ -2189,20 +2195,20 @@ RSpec.describe 'V3 service instances' do
 
         context 'maintenance_info conflict' do
           let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
-          let(:service_plan) {
+          let(:service_plan) do
             VCAP::CloudController::ServicePlan.make(
               public: true,
               active: true,
               service: service_offering,
               maintenance_info: { version: '2.1.0' }
             )
-          }
+          end
           let(:service_plan_guid) { service_plan.guid }
 
           let(:request_body) do
             {
               maintenance_info: {
-                version: '2.2.0',
+                version: '2.2.0'
               }
             }
           end
@@ -2216,7 +2222,7 @@ RSpec.describe 'V3 service instances' do
                 {
                   'title' => 'CF-UnprocessableEntity',
                   'detail' => include('maintenance_info.version requested is invalid'),
-                  'code' => 10008,
+                  'code' => 10_008
                 }
               )
             )
@@ -2225,30 +2231,30 @@ RSpec.describe 'V3 service instances' do
 
         context 'changing maintenance_info alongside plan' do
           let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
-          let(:service_plan) {
+          let(:service_plan) do
             VCAP::CloudController::ServicePlan.make(
               public: true,
               active: true,
               service: service_offering,
               maintenance_info: { version: '2.2.0' }
             )
-          }
+          end
 
-          let(:new_service_plan) {
+          let(:new_service_plan) do
             VCAP::CloudController::ServicePlan.make(
               public: true,
               active: true,
               service: service_offering,
               maintenance_info: { version: '2.1.0' }
             )
-          }
+          end
 
           let(:new_service_plan_guid) { new_service_plan.guid }
 
           let(:request_body) do
             {
               maintenance_info: {
-                version: '2.2.0',
+                version: '2.2.0'
               },
               relationships: {
                 service_plan: {
@@ -2256,7 +2262,7 @@ RSpec.describe 'V3 service instances' do
                     guid: new_service_plan_guid
                   }
                 }
-              },
+              }
             }
           end
 
@@ -2269,7 +2275,7 @@ RSpec.describe 'V3 service instances' do
                 {
                   'title' => 'CF-UnprocessableEntity',
                   'detail' => include('maintenance_info should not be changed when switching to different plan.'),
-                  'code' => 10008,
+                  'code' => 10_008
                 }
               )
             )
@@ -2280,7 +2286,7 @@ RSpec.describe 'V3 service instances' do
       describe 'service plan checks' do
         let!(:service_instance) do
           VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w(foo bar),
+            tags: %w[foo bar],
             space: space
           )
         end
@@ -2307,10 +2313,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2324,10 +2330,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2341,10 +2347,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2360,10 +2366,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2377,10 +2383,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(400)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'service plan relates to a different service offering',
-                'title' => 'CF-InvalidRelation',
-                'code' => 1002,
-              })
+                        'detail' => 'service plan relates to a different service offering',
+                        'title' => 'CF-InvalidRelation',
+                        'code' => 1002
+                      })
             )
           end
         end
@@ -2391,8 +2397,8 @@ RSpec.describe 'V3 service instances' do
           let(:guid) { service_instance.guid }
           let!(:service_instance) do
             VCAP::CloudController::ManagedServiceInstance.make(
-              tags: %w(foo bar),
-              space: space,
+              tags: %w[foo bar],
+              space: space
             )
           end
 
@@ -2406,10 +2412,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => "The service instance name is taken: #{name}",
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => "The service instance name is taken: #{name}",
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2418,7 +2424,7 @@ RSpec.describe 'V3 service instances' do
       describe 'invalid request' do
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w(foo bar),
+            tags: %w[foo bar],
             space: space
           )
           si
@@ -2443,10 +2449,10 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => include("Relationships Unknown field(s): 'space'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => include("Relationships Unknown field(s): 'space'"),
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
@@ -2454,16 +2460,17 @@ RSpec.describe 'V3 service instances' do
       describe 'when the SI plan is no longer active' do
         let(:version) { { version: '2.0.0' } }
         let(:service_offering) { VCAP::CloudController::Service.make }
-        let(:service_plan) {
+        let(:service_plan) do
           VCAP::CloudController::ServicePlan.make(
             public: true,
             active: false,
             maintenance_info: version,
-            service: service_offering)
-        }
-        let!(:service_instance) {
+            service: service_offering
+          )
+        end
+        let!(:service_instance) do
           VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan)
-        }
+        end
         let(:guid) { service_instance.guid }
 
         context 'and the request is updating parameters' do
@@ -2474,10 +2481,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Cannot update parameters of a service instance that belongs to inaccessible plan',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2490,10 +2497,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Cannot update maintenance_info of a service instance that belongs to inaccessible plan',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Cannot update maintenance_info of a service instance that belongs to inaccessible plan',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
           end
         end
@@ -2509,10 +2516,10 @@ RSpec.describe 'V3 service instances' do
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(
                 include({
-                  'detail' => 'Cannot update name of a service instance that belongs to inaccessible plan',
-                  'title' => 'CF-UnprocessableEntity',
-                  'code' => 10008,
-                })
+                          'detail' => 'Cannot update name of a service instance that belongs to inaccessible plan',
+                          'title' => 'CF-UnprocessableEntity',
+                          'code' => 10_008
+                        })
               )
             end
           end
@@ -2540,7 +2547,7 @@ RSpec.describe 'V3 service instances' do
           },
           syslog_drain_url: 'https://foo.com',
           route_service_url: 'https://bar.com',
-          tags: %w(accounting mongodb)
+          tags: %w[accounting mongodb]
         )
         si.annotation_ids = [
           VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
@@ -2561,19 +2568,19 @@ RSpec.describe 'V3 service instances' do
           name: new_name,
           credentials: {
             used_in: 'bindings',
-            foo: 'bar',
+            foo: 'bar'
           },
           syslog_drain_url: 'https://foo2.com',
           route_service_url: 'https://bar2.com',
-          tags: %w(accounting couchbase nosql),
+          tags: %w[accounting couchbase nosql],
           metadata: {
             labels: {
               foo: 'bar',
-              'pre.fix/to_delete': nil,
+              'pre.fix/to_delete': nil
             },
             annotations: {
               alpha: 'beta',
-              'pre.fix/to_delete': nil,
+              'pre.fix/to_delete': nil
             }
           }
         }
@@ -2599,7 +2606,7 @@ RSpec.describe 'V3 service instances' do
               state: 'succeeded',
               description: 'Operation succeeded',
               created_at: iso8601,
-              updated_at: iso8601,
+              updated_at: iso8601
             }
           )
         )
@@ -2633,10 +2640,10 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => include("Unknown field(s): 'guid'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => include("Unknown field(s): 'guid'"),
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
@@ -2655,31 +2662,31 @@ RSpec.describe 'V3 service instances' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance name is taken: #{new_name}.",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The service instance name is taken: #{new_name}.",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
     end
 
     context 'when an operation is in progress' do
-      let(:service_instance) {
+      let(:service_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
           space: space
         )
         si
-      }
+      end
       let(:guid) { service_instance.guid }
-      let(:request_body) {
+      let(:request_body) do
         {
           metadata: {
             labels: { unit: 'metre', distance: '1003' },
             annotations: { location: 'london' }
           }
         }
-      }
+      end
 
       context 'and it is a create operation' do
         before do
@@ -2698,10 +2705,10 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(200)
             expect(parsed_response['last_operation']).to include({
-               'type' => 'create',
-               'state' => 'in progress',
-               'description' => 'almost there, I promise'
-             })
+                                                                   'type' => 'create',
+                                                                   'state' => 'in progress',
+                                                                   'description' => 'almost there, I promise'
+                                                                 })
           end
         end
 
@@ -2734,10 +2741,10 @@ RSpec.describe 'V3 service instances' do
             api_call.call(admin_headers)
             expect(last_response).to have_status_code(200)
             expect(parsed_response['last_operation']).to include({
-              'type' => 'update',
-              'state' => 'in progress',
-              'description' => 'almost there, I promise'
-            })
+                                                                   'type' => 'update',
+                                                                   'state' => 'in progress',
+                                                                   'description' => 'almost there, I promise'
+                                                                 })
           end
         end
 
@@ -2784,15 +2791,15 @@ RSpec.describe 'V3 service instances' do
 
   describe 'DELETE /v3/service_instances/:guid' do
     let(:query_params) { '' }
-    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{instance.guid}?#{query_params}", '{}', user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/service_instances/#{instance.guid}?#{query_params}", '{}', user_headers } }
 
     context 'permissions' do
       let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
-      let(:db_check) {
+      let(:db_check) do
         lambda {
           expect(VCAP::CloudController::ServiceInstance.all).to be_empty
         }
-      }
+      end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
@@ -2863,15 +2870,15 @@ RSpec.describe 'V3 service instances' do
       let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
       let(:broker_status_code) { 200 }
       let(:broker_response) { {} }
-      let!(:stub_delete) {
+      let!(:stub_delete) do
         stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
           with(query: {
-            'accepts_incomplete' => true,
-            'service_id' => instance.service.broker_provided_id,
-            'plan_id' => instance.service_plan.broker_provided_id
-          }).
+                 'accepts_incomplete' => true,
+                 'service_id' => instance.service.broker_provided_id,
+                 'plan_id' => instance.service_plan.broker_provided_id
+               }).
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
-      }
+      end
 
       it 'responds with job resource' do
         api_call.call(admin_headers)
@@ -2888,7 +2895,7 @@ RSpec.describe 'V3 service instances' do
 
       describe 'the pollable job' do
         it 'sends a delete request with the right arguments to the service broker' do
-          api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+          api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -2901,7 +2908,7 @@ RSpec.describe 'V3 service instances' do
                   service_id: instance.service.broker_provided_id,
                   plan_id: instance.service_plan.broker_provided_id
                 },
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
         end
@@ -2961,7 +2968,8 @@ RSpec.describe 'V3 service instances' do
                   operation: 'some delete operation',
                   service_id: instance.service.broker_provided_id,
                   plan_id: instance.service_plan.broker_provided_id
-                }).
+                }
+              ).
               to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
           end
 
@@ -2973,7 +2981,7 @@ RSpec.describe 'V3 service instances' do
           end
 
           it 'calls last operation immediately' do
-            api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+            api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
             encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
@@ -2985,7 +2993,7 @@ RSpec.describe 'V3 service instances' do
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
                   },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -3016,7 +3024,8 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  }).
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
 
@@ -3025,7 +3034,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
@@ -3048,7 +3057,8 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  }).
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(3).then.
                 to_return(status: 200, body: { state: 'failed', description: 'oh no failed' }.to_json, headers: {})
 
@@ -3058,11 +3068,11 @@ RSpec.describe 'V3 service instances' do
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
               (1..2).each do |attempt|
-                Timecop.freeze(Time.now + attempt.hour) do
+                Timecop.freeze(Time.now.utc + attempt.hour) do
                   execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
                 end
               end
-              Timecop.freeze(Time.now + 3.hour) do
+              Timecop.freeze(Time.now.utc + 3.hours) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
             end
@@ -3087,7 +3097,8 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  }).
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 410, headers: {})
 
@@ -3096,7 +3107,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
@@ -3119,7 +3130,8 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  }).
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 400, headers: {})
 
@@ -3128,7 +3140,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
               end
             end
@@ -3152,7 +3164,8 @@ RSpec.describe 'V3 service instances' do
                     operation: 'some delete operation',
                     service_id: instance.service.broker_provided_id,
                     plan_id: instance.service_plan.broker_provided_id
-                  }).
+                  }
+                ).
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {}).times(1).then.
                 to_return(status: 404, headers: {})
 
@@ -3161,7 +3174,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::POLLING_STATE)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
@@ -3194,10 +3207,10 @@ RSpec.describe 'V3 service instances' do
             before do
               stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
                 with(query: {
-                  'accepts_incomplete' => true,
-                  'service_id' => instance.service.broker_provided_id,
-                  'plan_id' => instance.service_plan.broker_provided_id
-                }).
+                       'accepts_incomplete' => true,
+                       'service_id' => instance.service.broker_provided_id,
+                       'plan_id' => instance.service_plan.broker_provided_id
+                     }).
                 to_return(status: 202, body: '{}', headers: {})
             end
 
@@ -3213,17 +3226,17 @@ RSpec.describe 'V3 service instances' do
               expect(
                 stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
                   with(query: {
-                    'accepts_incomplete' => true,
-                    service_id: instance.service.broker_provided_id,
-                    plan_id: instance.service_plan.broker_provided_id
-                  })
+                         'accepts_incomplete' => true,
+                         service_id: instance.service.broker_provided_id,
+                         plan_id: instance.service_plan.broker_provided_id
+                       })
               ).to have_been_made.once
             end
           end
         end
 
         context 'when there are bindings' do
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
           let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
           let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
           let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
@@ -3235,10 +3248,10 @@ RSpec.describe 'V3 service instances' do
               [route_binding, service_binding, service_key].each do |binding|
                 stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
                   with(query: {
-                    'accepts_incomplete' => true,
-                    'service_id' => instance.service.broker_provided_id,
-                    'plan_id' => instance.service_plan.broker_provided_id
-                  }).
+                         'accepts_incomplete' => true,
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
                   to_return(status: 200, body: '{}', headers: {})
               end
             end
@@ -3256,10 +3269,10 @@ RSpec.describe 'V3 service instances' do
                 expect(
                   a_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
                     with(query: {
-                      accepts_incomplete: true,
-                      service_id: instance.service.broker_provided_id,
-                      plan_id: instance.service_plan.broker_provided_id
-                    })
+                           accepts_incomplete: true,
+                           service_id: instance.service.broker_provided_id,
+                           plan_id: instance.service_plan.broker_provided_id
+                         })
                 ).to have_been_made.once
               end
             end
@@ -3270,17 +3283,17 @@ RSpec.describe 'V3 service instances' do
               [route_binding, service_binding, service_key].each do |binding|
                 stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}").
                   with(query: {
-                    'accepts_incomplete' => true,
-                    'service_id' => instance.service.broker_provided_id,
-                    'plan_id' => instance.service_plan.broker_provided_id
-                  }).
+                         'accepts_incomplete' => true,
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
                   to_return(status: 202, body: '{}', headers: {})
 
                 stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
                   with(query: {
-                    'service_id' => instance.service.broker_provided_id,
-                    'plan_id' => instance.service_plan.broker_provided_id
-                  }).
+                         'service_id' => instance.service.broker_provided_id,
+                         'plan_id' => instance.service_plan.broker_provided_id
+                       }).
                   to_return(status: 200, body: '{"state":"succeeded"}', headers: {})
               end
             end
@@ -3315,9 +3328,9 @@ RSpec.describe 'V3 service instances' do
                 expect(
                   stub_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}/last_operation").
                     with(query: {
-                      service_id: instance.service.broker_provided_id,
-                      plan_id: instance.service_plan.broker_provided_id
-                    })
+                           service_id: instance.service.broker_provided_id,
+                           plan_id: instance.service_plan.broker_provided_id
+                         })
                 ).to have_been_made.once
               end
             end
@@ -3341,7 +3354,7 @@ RSpec.describe 'V3 service instances' do
 
         context 'when broker is space scoped' do
           let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding), service_broker: service_broker) }
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding], service_broker: service_broker) }
 
           context 'as developer' do
             let(:space_dev_headers) do
@@ -3369,7 +3382,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when broker is global' do
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w(route_forwarding)) }
+          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
 
           before do
             @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
@@ -3423,10 +3436,10 @@ RSpec.describe 'V3 service instances' do
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service instance.'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service instance.'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
 
@@ -3440,20 +3453,20 @@ RSpec.describe 'V3 service instances' do
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service instance.'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service instance.'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
 
       context 'when the creation is still in progress' do
         before do
           instance.save_with_new_operation({}, {
-            type: 'create',
-            state: 'in progress',
-            broker_provided_operation: 'some create operation'
-          })
+                                             type: 'create',
+                                             state: 'in progress',
+                                             broker_provided_operation: 'some create operation'
+                                           })
         end
 
         context 'and the broker confirms the deletion' do
@@ -3478,7 +3491,8 @@ RSpec.describe 'V3 service instances' do
                   operation: 'some delete operation',
                   service_id: instance.service.broker_provided_id,
                   plan_id: instance.service_plan.broker_provided_id
-                }).
+                }
+              ).
               to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
           end
 
@@ -3538,7 +3552,7 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
-    let(:api_call) { lambda { |user_headers| post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
     let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
     let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
@@ -3596,13 +3610,13 @@ RSpec.describe 'V3 service instances' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.service_instance.share',
-        actor: user.guid,
-        actee_type: 'service_instance',
-        actee_name: service_instance.name,
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.service_instance.share',
+                                        actor: user.guid,
+                                        actee_type: 'service_instance',
+                                        actee_name: service_instance.name,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['target_space_guids']).to include(target_space_1.guid, target_space_2.guid)
 
       service_instance.reload
@@ -3624,8 +3638,9 @@ RSpec.describe 'V3 service instances' do
             {
               'detail' => 'Feature Disabled: service_instance_sharing',
               'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
+              'code' => 330_002
+            }
+          )
         )
       end
     end
@@ -3639,7 +3654,8 @@ RSpec.describe 'V3 service instances' do
           {
             'detail' => 'Service instance not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
 
@@ -3660,7 +3676,8 @@ RSpec.describe 'V3 service instances' do
               {
                 'detail' => 'Data must be an array',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3684,7 +3701,8 @@ RSpec.describe 'V3 service instances' do
               {
                 'detail' => "Unknown field(s): 'fake-key'",
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3711,7 +3729,8 @@ RSpec.describe 'V3 service instances' do
                 'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{target_space_guid}']. " \
                             'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3734,10 +3753,11 @@ RSpec.describe 'V3 service instances' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. "\
+                'detail' => "Unable to share service instance #{service_instance.name} with spaces ['#{no_access_target_space.guid}']. " \
                             'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
 
           service_instance.reload
@@ -3763,10 +3783,11 @@ RSpec.describe 'V3 service instances' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share service instance '#{service_instance.name}' with space '#{space.guid}'. "\
+                'detail' => "Unable to share service instance '#{service_instance.name}' with space '#{space.guid}'. " \
                             'Service instances cannot be shared into the space where they were created.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
 
           service_instance.reload
@@ -3788,7 +3809,8 @@ RSpec.describe 'V3 service instances' do
               {
                 'detail' => 'User-provided services cannot be shared.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3796,7 +3818,7 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/service_instances/#{guid}/relationships/shared_spaces/#{space_guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/service_instances/#{guid}/relationships/shared_spaces/#{space_guid}", nil, user_headers } }
     let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:guid) { service_instance.guid }
@@ -3815,12 +3837,12 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'permissions' do
-      let(:db_check) {
+      let(:db_check) do
         lambda {
           si = VCAP::CloudController::ServiceInstance.first(guid: guid)
           expect(si.shared?).to be_falsey
         }
-      }
+      end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) { responses_for_space_restricted_delete_endpoint }
@@ -3836,13 +3858,13 @@ RSpec.describe 'V3 service instances' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.service_instance.unshare',
-        actor: user.guid,
-        actee_type: 'service_instance',
-        actee_name: service_instance.name,
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.service_instance.unshare',
+                                        actor: user.guid,
+                                        actee_type: 'service_instance',
+                                        actee_name: service_instance.name,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)
     end
 
@@ -3886,7 +3908,8 @@ RSpec.describe 'V3 service instances' do
                 'detail' => "Unshare of service instance failed: \n\nUnshare of service instance failed because one or more bindings could not be deleted.\n\n " \
                             "\tThe binding between an application and service instance #{service_instance.name} in space #{target_space.name} is being deleted asynchronously.",
                 'title' => 'CF-ServiceInstanceUnshareFailed'
-              })
+              }
+            )
           )
 
           expect(service_instance.shared?).to be_truthy
@@ -3896,8 +3919,8 @@ RSpec.describe 'V3 service instances' do
 
     it 'responds with 404 when the instance does not exist' do
       delete "/v3/service_instances/some-fake-guid/relationships/shared_spaces/#{space_guid}",
-        nil,
-        space_dev_headers
+             nil,
+             space_dev_headers
 
       expect(last_response).to have_status_code(404)
       expect(parsed_response['errors']).to include(
@@ -3905,7 +3928,8 @@ RSpec.describe 'V3 service instances' do
           {
             'detail' => 'Service instance not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
 
@@ -3921,9 +3945,10 @@ RSpec.describe 'V3 service instances' do
             include(
               {
                 'detail' => "Unable to unshare service instance from space #{space_guid}. " \
-                      'Ensure the space exists.',
+                            'Ensure the space exists.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3950,14 +3975,14 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'permissions in originating space' do
-      let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_headers } }
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_response) do
           {
             data: [{ guid: other_space.guid }],
             links: {
-              self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+              self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" }
             }
           }
         end
@@ -4044,7 +4069,7 @@ RSpec.describe 'V3 service instances' do
     let(:space_2) { VCAP::CloudController::Space.make }
     let(:space_3) { VCAP::CloudController::Space.make }
     let(:url) { "/v3/service_instances/#{guid}/relationships/shared_spaces/usage_summary" }
-    let(:api_call) { lambda { |user_headers| get url, nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get url, nil, user_headers } }
     let(:bindings_on_space_1) { 1 }
     let(:bindings_on_space_2) { 3 }
 
@@ -4067,7 +4092,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'permissions' do
-      let(:response_object) {
+      let(:response_object) do
         {
           usage_summary: [
             { space: { guid: space_1.guid }, bound_app_count: bindings_on_space_1 },
@@ -4080,7 +4105,7 @@ RSpec.describe 'V3 service instances' do
             service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
           }
         }
-      }
+      end
 
       let(:expected_codes_and_responses) do
         responses_for_space_restricted_single_endpoint(response_object)
@@ -4117,7 +4142,7 @@ RSpec.describe 'V3 service instances' do
     READ_ONLY = { code: 200, response_object: { manage: false, read: true } }.freeze
     NO_PERMISSIONS = { code: 200, response_object: { manage: false, read: false } }.freeze
 
-    let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}/permissions", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/permissions", nil, user_headers } }
 
     context 'when the service instance does not exist' do
       let(:guid) { 'no-such-guid' }
@@ -4213,7 +4238,7 @@ RSpec.describe 'V3 service instances' do
       tags: tags,
       metadata: {
         labels: labels,
-        annotations: annotations,
+        annotations: annotations
       },
       relationships: {
         space: {
@@ -4248,8 +4273,8 @@ RSpec.describe 'V3 service instances' do
         },
         shared_spaces: {
           href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces"
-        },
-      },
+        }
+      }
     }
   end
 
@@ -4266,7 +4291,7 @@ RSpec.describe 'V3 service instances' do
       tags: instance.tags,
       metadata: {
         labels: labels,
-        annotations: annotations,
+        annotations: annotations
       },
       relationships: {
         space: {
@@ -4291,7 +4316,7 @@ RSpec.describe 'V3 service instances' do
         service_route_bindings: {
           href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{instance.guid}"
         }
-      },
+      }
     }
   end
 

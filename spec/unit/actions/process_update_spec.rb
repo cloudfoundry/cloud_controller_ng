@@ -29,12 +29,12 @@ module VCAP::CloudController
         readiness_health_check: readiness_health_check,
         metadata: {
           labels: {
-            freaky: 'wednesday',
+            freaky: 'wednesday'
           },
           annotations: {
             tokyo: 'grapes'
-          },
-        },
+          }
+        }
       )
     end
     let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
@@ -42,14 +42,14 @@ module VCAP::CloudController
     let!(:process) do
       ProcessModel.make(
         :process,
-        type:                  'web',
-        command:               'initial command',
-        health_check_type:     'port',
-        health_check_timeout:  10,
+        type: 'web',
+        command: 'initial command',
+        health_check_type: 'port',
+        health_check_timeout: 10,
         health_check_interval: 5,
-        ports:                 [1574, 3389],
-        app:                   app,
-        state:                 'STARTED'
+        ports: [1574, 3389],
+        app: app,
+        state: 'STARTED'
       )
     end
 
@@ -103,17 +103,17 @@ module VCAP::CloudController
           let!(:process) do
             ProcessModel.make(
               :process,
-              command:              'initial command',
-              health_check_type:    'http',
+              command: 'initial command',
+              health_check_type: 'http',
               health_check_http_endpoint: '/healthcheck',
               health_check_timeout: 10,
-              ports:                [1574, 3389]
+              ports: [1574, 3389]
             )
           end
 
           let(:health_check) do
             {
-              type: 'port',
+              type: 'port'
             }
           end
 
@@ -130,14 +130,14 @@ module VCAP::CloudController
             let!(:process) do
               ProcessModel.make(
                 :process,
-                health_check_type:    'http',
-                health_check_http_endpoint: '/healthcheck',
+                health_check_type: 'http',
+                health_check_http_endpoint: '/healthcheck'
               )
             end
 
             let(:health_check) do
               {
-                type: 'port',
+                type: 'port'
               }
             end
 
@@ -244,18 +244,18 @@ module VCAP::CloudController
           let!(:process) do
             ProcessModel.make(
               :process,
-              command:              'initial command',
-              readiness_health_check_type:    'http',
+              command: 'initial command',
+              readiness_health_check_type: 'http',
               readiness_health_check_http_endpoint: '/ready',
               readiness_health_check_interval: 5,
               health_check_timeout: 10,
-              ports:                [1574, 3389]
+              ports: [1574, 3389]
             )
           end
 
           let(:readiness_health_check) do
             {
-              type: 'port',
+              type: 'port'
             }
           end
 
@@ -272,14 +272,14 @@ module VCAP::CloudController
             let!(:process) do
               ProcessModel.make(
                 :process,
-                readiness_health_check_type:    'http',
-                readiness_health_check_http_endpoint: '/ready',
+                readiness_health_check_type: 'http',
+                readiness_health_check_http_endpoint: '/ready'
               )
             end
 
             let(:readiness_health_check) do
               {
-                type: 'port',
+                type: 'port'
               }
             end
 
@@ -372,7 +372,7 @@ module VCAP::CloudController
             process,
             user_audit_info,
             {
-              'command'      => 'new',
+              'command' => 'new',
               'health_check' => {
                 'type' => 'process',
                 'data' => { 'timeout' => 20, 'interval' => 7 }
@@ -397,7 +397,7 @@ module VCAP::CloudController
               process,
               user_audit_info,
               {
-                'command'      => 'new',
+                'command' => 'new',
                 'health_check' => {
                   'type' => 'process',
                   'data' => { 'timeout' => 20, 'interval' => 7 }
@@ -422,9 +422,9 @@ module VCAP::CloudController
         end
 
         it 'raises an invalid error' do
-          expect {
+          expect do
             process_update.update(process, message, NonManifestStrategy)
-          }.to raise_error(ProcessUpdate::InvalidProcess, 'the message')
+          end.to raise_error(ProcessUpdate::InvalidProcess, 'the message')
         end
       end
 
@@ -482,9 +482,9 @@ module VCAP::CloudController
 
         context 'when the process type is web' do
           it 'raises an invalid error' do
-            expect {
+            expect do
               process_update.update(process, message, NonManifestStrategy)
-            }.to raise_error(ProcessUpdate::InvalidProcess, 'Cannot update this process while a deployment is in flight.')
+            end.to raise_error(ProcessUpdate::InvalidProcess, 'Cannot update this process while a deployment is in flight.')
           end
         end
 
@@ -493,10 +493,10 @@ module VCAP::CloudController
             ProcessModel.make(
               :process,
               type: 'gerg',
-              command:              'zrob',
-              health_check_type:    'port',
+              command: 'zrob',
+              health_check_type: 'port',
               health_check_timeout: 10,
-              ports:                [1574, 3389],
+              ports: [1574, 3389],
               app: app
             )
           end

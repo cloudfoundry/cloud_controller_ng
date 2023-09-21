@@ -31,13 +31,13 @@ module VCAP::CloudController
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
             isolation_segment: desired_lrp.PlacementTags.first,
             stats: {
-              name:       process.name,
-              uris:       process.uris,
-              host:       actual_lrp.actual_lrp_net_info.address,
-              port:       get_default_port(actual_lrp.actual_lrp_net_info),
-              net_info:   actual_lrp.actual_lrp_net_info.to_h,
-              uptime:     nanoseconds_to_seconds(current_time * 1e9 - actual_lrp.since),
-              fds_quota:  process.file_descriptors,
+              name: process.name,
+              uris: process.uris,
+              host: actual_lrp.actual_lrp_net_info.address,
+              port: get_default_port(actual_lrp.actual_lrp_net_info),
+              net_info: actual_lrp.actual_lrp_net_info.to_h,
+              uptime: nanoseconds_to_seconds((current_time * 1e9) - actual_lrp.since),
+              fds_quota: process.file_descriptors
             }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index))
           }
           info[:details]                          = actual_lrp.placement_error if actual_lrp.placement_error.present?
@@ -47,15 +47,13 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances(result, process)
 
         warnings = [log_cache_errors].compact
-        return result, warnings
+        [result, warnings]
       rescue CloudController::Errors::NoRunningInstances => e
         logger.info('stats_for_app.error', error: e.to_s)
-        return fill_unreported_instances_with_down_instances({}, process), []
+        [fill_unreported_instances_with_down_instances({}, process), []]
       rescue StandardError => e
         logger.error('stats_for_app.error', error: e.to_s)
-        if e.is_a?(CloudController::Errors::ApiError) && e.name == 'ServiceUnavailable'
-          raise e
-        end
+        raise e if e.is_a?(CloudController::Errors::ApiError) && e.name == 'ServiceUnavailable'
 
         exception = CloudController::Errors::InstancesUnavailable.new(e.message)
         exception.set_backtrace(e.backtrace)
@@ -69,10 +67,10 @@ module VCAP::CloudController
       def metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index)
         if log_cache_errors.blank?
           {
-            mem_quota:  quota_stats[index]&.memory_bytes_quota,
+            mem_quota: quota_stats[index]&.memory_bytes_quota,
             disk_quota: quota_stats[index]&.disk_bytes_quota,
             log_rate_limit: quota_stats[index]&.log_rate_limit,
-            usage:      stats[index] || missing_process_stats(formatted_current_time)
+            usage: stats[index] || missing_process_stats(formatted_current_time)
           }
         else
           {
@@ -87,31 +85,28 @@ module VCAP::CloudController
       def missing_process_stats(formatted_current_time)
         {
           time: formatted_current_time,
-          cpu:  0,
-          mem:  0,
+          cpu: 0,
+          mem: 0,
           disk: 0,
-          log_rate: 0,
+          log_rate: 0
         }
       end
 
       def formatted_process_stats(log_cache_data, formatted_current_time)
         log_cache_data.
-          map { |e|
+          map do |e|
             [
               e.instance_index,
-              converted_container_metrics(e, formatted_current_time),
+              converted_container_metrics(e, formatted_current_time)
             ]
-          }.to_h
+          end.to_h
       end
 
       def formatted_quota_stats(log_cache_data)
         log_cache_data.
-          map { |e|
-            [
-              e.instance_index,
-              e
-            ]
-          }.to_h
+          index_by do |e|
+            e.instance_index
+          end
       end
 
       def envelopes(desired_lrp, process)
@@ -123,14 +118,14 @@ module VCAP::CloudController
           source_guid = process.guid
         end
 
-        return @logstats_client.container_metrics(
+        [@logstats_client.container_metrics(
           source_guid: source_guid,
           auth_token: VCAP::CloudController::SecurityContext.auth_token,
           logcache_filter: filter
-        ), nil
+        ), nil]
       rescue GRPC::BadStatus, CloudController::Errors::ApiError => e
         logger.error('stats_for_app.error', error: e.message, backtrace: e.backtrace.join("\n"))
-        return [], 'Stats server temporarily unavailable.'
+        [[], 'Stats server temporarily unavailable.']
       end
 
       def logger
@@ -149,7 +144,7 @@ module VCAP::CloudController
           {
             time: formatted_current_time,
             cpu: cpu / 100,
-            mem:  mem,
+            mem: mem,
             disk: disk,
             log_rate: log_rate
           }

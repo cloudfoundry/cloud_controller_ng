@@ -23,9 +23,9 @@ module VCAP::CloudController
         context 'when creating a buildpack' do
           shared_examples_for :creating_a_buildpack do
             it 'creates a new buildpack with the requested stack' do
-              expect {
+              expect do
                 job.perform
-              }.to change { Buildpack.count }.from(0).to(1)
+              end.to change { Buildpack.count }.from(0).to(1)
 
               buildpack = Buildpack.first
               expect(buildpack).to_not be_nil
@@ -46,9 +46,9 @@ module VCAP::CloudController
             let(:stack_name) { 'mystack' }
 
             it 'raises an error' do
-              expect {
+              expect do
                 job.perform
-              }.to raise_error(Sequel::ValidationFailed)
+              end.to raise_error(Sequel::ValidationFailed)
             end
           end
 
@@ -85,19 +85,19 @@ module VCAP::CloudController
           end
 
           it 'does not create a buildpack and re-raises the error' do
-            expect {
-              expect {
+            expect do
+              expect do
                 job.perform
-              }.to raise_error(RuntimeError)
-            }.to_not change { Buildpack.count }
+              end.to raise_error(RuntimeError)
+            end.to_not(change { Buildpack.count })
           end
 
           it 'does not create a new stack and re-raises the error' do
-            expect {
-              expect {
+            expect do
+              expect do
                 job.perform
-              }.to raise_error(RuntimeError)
-            }.to_not change { Stack.count }
+              end.to raise_error(RuntimeError)
+            end.to_not(change { Stack.count })
           end
         end
       end

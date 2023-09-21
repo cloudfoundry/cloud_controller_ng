@@ -56,12 +56,12 @@ module VCAP::CloudController::Validators
       context 'when labels are valid' do
         let(:labels) do
           {
-              potato: 'mashed',
-              p_otato: 'mashed',
-              'p.otato': 'mashed',
-              'p-otato': 'mashed',
-              empty: '',
-              yams: nil
+            potato: 'mashed',
+            p_otato: 'mashed',
+            'p.otato': 'mashed',
+            'p-otato': 'mashed',
+            empty: '',
+            yams: nil
           }
         end
 
@@ -82,14 +82,14 @@ module VCAP::CloudController::Validators
       describe 'invalid keys' do
         context 'when the key contains one invalid character' do
           # for the 32nd-126th characters, excluding the ones inside of the %r()
-          (32.chr..126.chr).to_a.reject { |c| %r([\w\-\.\_\/\s]).match(c) }.each do |c|
+          (32.chr..126.chr).to_a.reject { |c| %r{[\w\-\.\_\/\s]}.match(c) }.each do |c|
             it "is invalid for character '#{c}'" do
               metadata = {
-                  labels: {
-                      'potato' + c => 'mashed',
-                      c => 'fried'
+                labels: {
+                  'potato' + c => 'mashed',
+                  c => 'fried'
 
-                  }
+                }
               }
               message = class_with_metadata.new(metadata: metadata)
               expect(message).not_to be_valid
@@ -103,11 +103,11 @@ module VCAP::CloudController::Validators
       context 'when the first or last letter of the key is not alphanumeric' do
         let(:labels) do
           {
-              '-a' => 'value1',
-              'a-' => 'value2',
-              '-' => 'value3',
-              '.a' => 'value5',
-              _a: 'value4',
+            '-a' => 'value1',
+            'a-' => 'value2',
+            '-' => 'value3',
+            '.a' => 'value5',
+            _a: 'value4'
           }
         end
         it 'is invalid' do
@@ -123,7 +123,7 @@ module VCAP::CloudController::Validators
       context 'when the label key is exactly 63 characters' do
         let(:labels) do
           {
-              'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE => 'value2',
+            'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE => 'value2'
           }
         end
         it 'is valid' do
@@ -134,7 +134,7 @@ module VCAP::CloudController::Validators
       context 'when the label key is greater than 63 characters' do
         let(:labels) do
           {
-              'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3',
+            'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3'
           }
         end
         it 'is invalid' do
@@ -147,8 +147,8 @@ module VCAP::CloudController::Validators
       context 'when the label key is an empty string' do
         let(:labels) do
           {
-              '' => 'value3',
-              'example.com/': 'empty'
+            '' => 'value3',
+            'example.com/': 'empty'
           }
         end
 
@@ -163,9 +163,9 @@ module VCAP::CloudController::Validators
           let(:key_with_long_domain) { (('a' * 61) + '.sub-part.' + ('b' * 61) + '.com/release').to_sym }
           let(:labels) do
             {
-                'example.com/potato': 'mashed',
-                key_with_long_domain => 'stable',
-                'capi.ci.cf-app.com/dashboard': 'green',
+              'example.com/potato': 'mashed',
+              key_with_long_domain => 'stable',
+              'capi.ci.cf-app.com/dashboard': 'green'
             }
           end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController::Validators
         context 'when the key has more than one prefix' do
           let(:labels) do
             {
-                'example.com/capi/tests': 'failing'
+              'example.com/capi/tests': 'failing'
             }
           end
 
@@ -194,10 +194,10 @@ module VCAP::CloudController::Validators
         context 'when the prefix is not a valid domain' do
           let(:labels) do
             {
-                '-a/key1' => 'value1',
-                'a%a.com/key2' => 'value2',
-                'a..com/key3' => 'value3',
-                'onlycom/key4' => 'value5',
+              '-a/key1' => 'value1',
+              'a%a.com/key2' => 'value2',
+              'a..com/key3' => 'value3',
+              'onlycom/key4' => 'value5'
             }
           end
 
@@ -213,8 +213,8 @@ module VCAP::CloudController::Validators
         context 'when the prefix includes some variation of cloudfoundry.org, a reserved domain' do
           let(:labels) do
             {
-                'cloudfoundry.org/key' => 'value',
-                'CloudFoundry.org/key' => 'value',
+              'cloudfoundry.org/key' => 'value',
+              'CloudFoundry.org/key' => 'value'
             }
           end
 
@@ -226,12 +226,12 @@ module VCAP::CloudController::Validators
 
         context 'when the prefix is too long' do
           let(:long_domain) do
-            ['a', 'b', 'c', 'd', 'e'].map { |c| c * 61 }.join('.')
+            %w[a b c d e].map { |c| c * 61 }.join('.')
           end
 
           let(:labels) do
             {
-                long_domain + '/key' => 'value1',
+              long_domain + '/key' => 'value1'
             }
           end
 
@@ -247,10 +247,10 @@ module VCAP::CloudController::Validators
           (32.chr..126.chr).to_a.reject { |c| /[\w\-\.\_]/.match(c) }.each do |c|
             it "is invalid for character '#{c}'" do
               metadata = {
-                  labels: {
-                      'potato' => 'mashed' + c,
-                      'release' => c
-                  }
+                labels: {
+                  'potato' => 'mashed' + c,
+                  'release' => c
+                }
               }
               message = class_with_metadata.new(metadata: metadata)
               expect(message).not_to be_valid
@@ -263,11 +263,11 @@ module VCAP::CloudController::Validators
         context 'when the first or last letter of the value is not alphanumeric' do
           let(:labels) do
             {
-                'key1' => '-a',
-                'key2' => 'a-',
-                'key3' => '-',
-                'key4' => '.a',
-                'key5' => '_a',
+              'key1' => '-a',
+              'key2' => 'a-',
+              'key3' => '-',
+              'key4' => '.a',
+              'key5' => '_a'
             }
           end
           it 'is invalid' do
@@ -283,7 +283,7 @@ module VCAP::CloudController::Validators
         context 'when the label value is exactly 63 characters' do
           let(:labels) do
             {
-                'key' => 'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE,
+              'key' => 'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE
             }
           end
           it 'is valid' do
@@ -294,7 +294,7 @@ module VCAP::CloudController::Validators
         context 'when the label value is greater than 63 characters' do
           let(:labels) do
             {
-                'key' => 'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1),
+              'key' => 'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1)
             }
           end
           it 'is labeldinvalivalue error: ' do
@@ -314,7 +314,7 @@ module VCAP::CloudController::Validators
         let(:annotations) do
           {
             contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-            "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)": 'contacts',
+            'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)': 'contacts',
             ('a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE) => ('b' * MetadataValidator::MAX_ANNOTATION_VALUE_SIZE)
           }
         end
@@ -336,7 +336,7 @@ module VCAP::CloudController::Validators
       context 'when the annotation key is invalid' do
         let(:annotations) do
           {
-            'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3',
+            'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3'
           }
         end
         it 'its invalid' do
@@ -348,7 +348,7 @@ module VCAP::CloudController::Validators
         context 'and it is going to be deleted' do
           let(:annotations) do
             {
-              'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => '',
+              'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => ''
             }
           end
 
@@ -374,7 +374,7 @@ module VCAP::CloudController::Validators
       context 'when the annotation value is greater than 5000 characters' do
         let(:annotations) do
           {
-            'key' => ('a' * (MetadataValidator::MAX_ANNOTATION_VALUE_SIZE + 1)),
+            'key' => ('a' * (MetadataValidator::MAX_ANNOTATION_VALUE_SIZE + 1))
           }
         end
         it 'is invalid' do

@@ -11,7 +11,7 @@ module VCAP::CloudController
         apps: apps,
         services: services,
         routes: routes,
-        relationships: relationships,
+        relationships: relationships
       }
     end
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
         total_memory_in_mb: 2048,
         per_process_memory_in_mb: 1024,
         total_instances: 2,
-        per_app_tasks: 4,
+        per_app_tasks: 4
       }
     end
 
@@ -28,14 +28,14 @@ module VCAP::CloudController
       {
         paid_services_allowed: true,
         total_service_instances: 17,
-        total_service_keys: 19,
+        total_service_keys: 19
       }
     end
 
     let(:routes) do
       {
         total_routes: 47,
-        total_reserved_ports: 28,
+        total_reserved_ports: 28
       }
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
           data: [
             { guid: 'some-space-guid' }
           ]
-        },
+        }
       }
     end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
 
         it 'is not valid' do
           expect(subject).not_to be_valid
@@ -140,13 +140,13 @@ module VCAP::CloudController
 
       describe 'apps' do
         context 'value for apps is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              apps: true,
+              apps: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -155,13 +155,13 @@ module VCAP::CloudController
         end
 
         context 'when apps is well-formed (a hash)' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              apps: {},
+              apps: {}
             }
-          }
+          end
 
           before do
             quota_app_message = instance_double(QuotasAppsMessage)
@@ -179,13 +179,13 @@ module VCAP::CloudController
 
       describe 'services' do
         context 'value for services is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              services: true,
+              services: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -194,13 +194,13 @@ module VCAP::CloudController
         end
 
         context 'when the services validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              services: {},
+              services: {}
             }
-          }
+          end
 
           before do
             quota_services_message = instance_double(QuotasServicesMessage)
@@ -218,13 +218,13 @@ module VCAP::CloudController
 
       describe 'routes' do
         context 'value for routes is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              routes: true,
+              routes: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -233,13 +233,13 @@ module VCAP::CloudController
         end
 
         context 'when the routes validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
               relationships: relationships,
-              routes: {},
+              routes: {}
             }
-          }
+          end
 
           before do
             quota_routes_message = instance_double(QuotasRoutesMessage)
@@ -259,7 +259,7 @@ module VCAP::CloudController
         context 'given no relationships' do
           let(:params) do
             {
-              name: 'kris',
+              name: 'kris'
             }
           end
 
@@ -274,9 +274,9 @@ module VCAP::CloudController
                 organization: {
                   data: [
                     { guid: 'KKW-beauty' },
-                    { guid: 'skims' },
+                    { guid: 'skims' }
                   ]
-                },
+                }
               }
             }
           end
@@ -291,8 +291,8 @@ module VCAP::CloudController
               relationships: {
                 organizations: {
                   data: {
-                    guid: 150000
-                  },
+                    guid: 150_000
+                  }
                 }
               }
             }
@@ -327,11 +327,11 @@ module VCAP::CloudController
                 organization: {
                   data: {
                     guid: 'socks'
-                  },
+                  }
                 },
                 spaces: {
                   data: [
-                    { guid: 150000 }
+                    { guid: 150_000 }
                   ]
                 }
               }

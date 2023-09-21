@@ -13,9 +13,7 @@ module VCAP::CloudController
 
         size = available_ports.size
 
-        if size == 0
-          return -1
-        end
+        return -1 if size == 0
 
         row_index = Random.new.rand(size)
 

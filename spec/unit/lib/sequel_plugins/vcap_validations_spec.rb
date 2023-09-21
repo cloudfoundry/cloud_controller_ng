@@ -4,8 +4,9 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
   before do
     @c = Class.new(Sequel::Model) do
       attr_accessor :val
-      def self.define_validations(&block)
-        define_method(:validate, &block)
+
+      def self.define_validations(&)
+        define_method(:validate, &)
       end
     end
     @c.plugin :vcap_validations

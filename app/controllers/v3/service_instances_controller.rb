@@ -41,13 +41,13 @@ class ServiceInstancesV3Controller < ApplicationController
                 ServiceInstanceListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  omniscient: true,
+                  omniscient: true
                 )
               else
                 ServiceInstanceListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServiceInstancePresenter.associated_resources,
-                  readable_spaces_dataset: permission_queryer.readable_space_guids_query,
+                  readable_spaces_dataset: permission_queryer.readable_space_guids_query
                 )
               end
 
@@ -145,7 +145,8 @@ class ServiceInstancesV3Controller < ApplicationController
     share.create(service_instance, target_spaces, user_audit_info)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
-      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false
+    )
   rescue VCAP::CloudController::ServiceInstanceShare::Error => e
     unprocessable!(e.message)
   end
@@ -160,9 +161,7 @@ class ServiceInstancesV3Controller < ApplicationController
     space_guid = hashed_params[:space_guid]
     target_space = Space.first(guid: space_guid)
 
-    unless target_space
-      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists.")
-    end
+    unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists.") unless target_space
 
     unshare = ServiceInstanceUnshare.new
     unshare.unshare(service_instance, target_space, user_audit_info)
@@ -223,7 +222,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     render status: :ok, json: {
       manage: is_space_active?(service_instance.space) ? can_write_to_active_space?(service_instance.space) : admin?,
-      read: can_read_service_instance?(service_instance),
+      read: can_read_service_instance?(service_instance)
     }
   end
 
@@ -278,8 +277,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance = ServiceInstanceUpdateUserProvided.new(service_event_repository).update(service_instance, message)
     render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
-  rescue ServiceInstanceUpdateUserProvided::UnprocessableUpdate => api_err
-    unprocessable!(api_err.message)
+  rescue ServiceInstanceUpdateUserProvided::UnprocessableUpdate => e
+    unprocessable!(e.message)
   end
 
   def update_managed(service_instance)
@@ -296,28 +295,28 @@ class ServiceInstancesV3Controller < ApplicationController
       service_instance = action.update_sync
       render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
     end
-  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => api_err
-    unprocessable!(api_err.message)
+  rescue V3::ServiceInstanceUpdateManaged::UnprocessableUpdate => e
+    unprocessable!(e.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
   end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
     unreadable_spaces = found_spaces.reject { |s| can_read_from_space?(s) }
-    unwriteable_spaces = found_spaces.reject { |s| can_write_to_active_space?(s) && is_space_active?(s) || unreadable_spaces.include?(s) }
+    unwriteable_spaces = found_spaces.reject { |s| (can_write_to_active_space?(s) && is_space_active?(s)) || unreadable_spaces.include?(s) }
 
     not_found_space_guids = request_guids - found_spaces.map(&:guid)
     unreadable_space_guids = not_found_space_guids + unreadable_spaces.map(&:guid)
     unwriteable_space_guids = unwriteable_spaces.map(&:guid)
 
-    if unreadable_space_guids.any? || unwriteable_space_guids.any?
-      unreadable_error = unreadable_error_message(service_instance.name, unreadable_space_guids)
-      unwriteable_error = unwriteable_error_message(service_instance.name, unwriteable_space_guids)
+    return unless unreadable_space_guids.any? || unwriteable_space_guids.any?
 
-      error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
+    unreadable_error = unreadable_error_message(service_instance.name, unreadable_space_guids)
+    unwriteable_error = unwriteable_error_message(service_instance.name, unwriteable_space_guids)
 
-      unprocessable!(error_msg)
-    end
+    error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
+
+    unprocessable!(error_msg)
   end
 
   def build_create_message(params)
@@ -350,20 +349,20 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unreadable_error_message(service_instance_name, unreadable_space_guids)
-    if unreadable_space_guids.any?
-      unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+    return unless unreadable_space_guids.any?
 
-      "Unable to share service instance #{service_instance_name} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
-    end
+    unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+
+    "Unable to share service instance #{service_instance_name} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
   end
 
   def unwriteable_error_message(service_instance_name, unwriteable_space_guids)
-    if unwriteable_space_guids.any?
-      unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+    return unless unwriteable_space_guids.any?
 
-      "Unable to share service instance #{service_instance_name} with spaces [#{unwriteable_guid_list}]. "\
+    unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+
+    "Unable to share service instance #{service_instance_name} with spaces [#{unwriteable_guid_list}]. " \
       'Write permission is required in order to share a service instance with a space.'
-    end
   end
 
   def can_read_service_instance?(service_instance)
@@ -397,11 +396,11 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def raise_if_invalid_service_plan!(service_instance, message)
-    if message.service_plan_guid
-      service_plan = ServicePlan.first(guid: message.service_plan_guid)
-      unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
-      invalid_service_plan_relation! unless service_plan.service == service_instance.service
-    end
+    return unless message.service_plan_guid
+
+    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+    invalid_service_plan_relation! unless service_plan.service == service_instance.service
   end
 
   def service_event_repository
@@ -429,6 +428,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def read_scope
-    %w(show_permissions).include?(action_name) && roles.cloud_controller_service_permissions_reader? ? true : super
+    %w[show_permissions].include?(action_name) && roles.cloud_controller_service_permissions_reader? ? true : super
   end
 end

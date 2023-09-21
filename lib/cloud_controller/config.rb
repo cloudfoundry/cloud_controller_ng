@@ -37,7 +37,7 @@ module VCAP::CloudController
         @instance
       end
 
-      def schema_class_for_context(context, config)
+      def schema_class_for_context(context, _config)
         module_name = 'Vms'
         const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
       end
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
       def ensure_config_has_database_parts(config)
         abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && config[:db][:database].nil?
-        config[:db][:db_connection_string] ||= ENV['DB_CONNECTION_STRING']
+        config[:db][:db_connection_string] ||= ENV.fetch('DB_CONNECTION_STRING', nil)
         config[:db][:database] ||= DatabasePartsParser.database_parts_from_connection(config[:db][:db_connection_string])
       end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       def escape_password(value)
-        escape_userinfo(value).gsub(/\"/, '%22')
+        escape_userinfo(value).gsub('\"', '%22')
       end
 
       def escape_userinfo(value)

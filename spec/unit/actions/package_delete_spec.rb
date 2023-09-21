@@ -13,9 +13,9 @@ module VCAP::CloudController
         let!(:package) { PackageModel.make }
 
         it 'deletes the package record' do
-          expect {
+          expect do
             package_delete.delete(package)
-          }.to change { PackageModel.count }.by(-1)
+          end.to change { PackageModel.count }.by(-1)
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
@@ -28,9 +28,9 @@ module VCAP::CloudController
             let!(:package) { PackageModel.make(type: PackageModel::DOCKER_TYPE) }
 
             it 'does not schedule a deletion job since there was no source code uploaded' do
-              expect {
+              expect do
                 package_delete.delete(package)
-              }.to change {
+              end.to change {
                 Delayed::Job.count
               }.by(0)
             end
@@ -39,9 +39,9 @@ module VCAP::CloudController
 
         context 'when not using a package registry' do
           it 'schedules a job to the delete the blobstore item' do
-            expect {
+            expect do
               package_delete.delete(package)
-            }.to change {
+            end.to change {
               Delayed::Job.count
             }.by(1)
 
@@ -69,18 +69,18 @@ module VCAP::CloudController
 
         it 'deletes associated labels' do
           label = PackageLabelModel.make(resource_guid: package.guid)
-          expect {
+          expect do
             package_delete.delete([package])
-          }.to change { PackageLabelModel.count }.by(-1)
+          end.to change { PackageLabelModel.count }.by(-1)
           expect(label.exists?).to be_falsey
           expect(package.exists?).to be_falsey
         end
 
         it 'deletes associated annotations' do
           annotation = PackageAnnotationModel.make(resource_guid: package.guid)
-          expect {
+          expect do
             package_delete.delete([package])
-          }.to change { PackageAnnotationModel.count }.by(-1)
+          end.to change { PackageAnnotationModel.count }.by(-1)
           expect(annotation.exists?).to be_falsey
           expect(package.exists?).to be_falsey
         end
@@ -90,9 +90,9 @@ module VCAP::CloudController
         let!(:packages) { [PackageModel.make, PackageModel.make] }
 
         it 'bulk deletes them' do
-          expect {
+          expect do
             package_delete.delete(packages)
-          }.to change {
+          end.to change {
             PackageModel.count
           }.by(-2)
         end

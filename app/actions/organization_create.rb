@@ -14,7 +14,7 @@ module VCAP::CloudController
       Organization.db.transaction do
         org = VCAP::CloudController::Organization.create(
           name: message.name,
-          status: message.suspended ? Organization::SUSPENDED : Organization::ACTIVE,
+          status: message.suspended ? Organization::SUSPENDED : Organization::ACTIVE
         )
 
         MetadataUpdate.update(org, message)
@@ -29,9 +29,7 @@ module VCAP::CloudController
     private
 
     def validation_error!(error, message)
-      if error.errors.on(:name)&.include?(:unique)
-        error!("Organization '#{message.name}' already exists.")
-      end
+      error!("Organization '#{message.name}' already exists.") if error.errors.on(:name)&.include?(:unique)
       error!(error.message)
     end
 

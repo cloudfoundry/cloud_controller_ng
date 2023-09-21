@@ -29,14 +29,14 @@ RSpec.describe Locket::LockRunner do
       port: port,
       client_ca_path: client_ca_path,
       client_key_path: client_key_path,
-      client_cert_path: client_cert_path,
+      client_cert_path: client_cert_path
     )
   end
 
   before do
-    client_ca = File.open(client_ca_path).read
-    client_key = File.open(client_key_path).read
-    client_cert = File.open(client_cert_path).read
+    client_ca = File.read(client_ca_path)
+    client_key = File.read(client_key_path)
+    client_cert = File.read(client_cert_path)
 
     allow(GRPC::Core::ChannelCredentials).to receive(:new).
       with(client_ca, client_key, client_cert).
@@ -66,9 +66,9 @@ RSpec.describe Locket::LockRunner do
 
       client.start
 
-      expect {
+      expect do
         client.start
-      }.to raise_error(Locket::LockRunner::Error, 'Cannot start more than once')
+      end.to raise_error(Locket::LockRunner::Error, 'Cannot start more than once')
     end
   end
 

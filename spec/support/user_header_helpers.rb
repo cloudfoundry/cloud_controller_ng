@@ -47,7 +47,7 @@ module UserHeaderHelpers
   def set_user_with_header_as_reader_and_writer(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.read cloud_controller.write) }
+    scopes = { scopes: %w[cloud_controller.read cloud_controller.write] }
     set_user_with_header(user, scopes.merge(opts))
   end
 
@@ -55,7 +55,7 @@ module UserHeaderHelpers
   def set_user_with_header_as_reader(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.read) }
+    scopes = { scopes: %w[cloud_controller.read] }
     set_user_with_header(user, scopes.merge(opts))
   end
 
@@ -63,7 +63,7 @@ module UserHeaderHelpers
   def set_user_with_header_as_writer(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.write) }
+    scopes = { scopes: %w[cloud_controller.write] }
     set_user_with_header(user, scopes.merge(opts))
   end
 
@@ -71,7 +71,7 @@ module UserHeaderHelpers
   def set_user_with_header_as_service_permissions_reader(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller_service_permissions.read) }
+    scopes = { scopes: %w[cloud_controller_service_permissions.read] }
     set_user_with_header(user, scopes.merge(opts))
   end
 
@@ -80,10 +80,8 @@ module UserHeaderHelpers
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
 
-    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader)
-    if org && !scope_roles.include?(role) && role.to_s != 'no_role'
-      org.add_user(current_user)
-    end
+    scope_roles = %w[admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader]
+    org.add_user(current_user) if org && !scope_roles.include?(role) && role.to_s != 'no_role'
 
     # rubocop:disable Lint/DuplicateBranch
     case role.to_s
@@ -129,7 +127,7 @@ module UserHeaderHelpers
     when 'no_role' # not a real role - added for testing
       set_user_with_header(user, user_name: user_name, email: email)
     else
-      fail("Unknown role '#{role}'")
+      raise("Unknown role '#{role}'")
     end
     # rubocop:enable Lint/DuplicateBranch
   end

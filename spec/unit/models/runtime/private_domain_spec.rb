@@ -70,16 +70,22 @@ module VCAP::CloudController
       it 'denies private bar.foo.com a when private baz.bar.foo.com has a different owner and shared foo.com exist' do
         PrivateDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
-          %{The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain}
+        expect do
+          PrivateDomain.make name: 'bar.foo.com'
+        end.to raise_error(
+          Sequel::ValidationFailed,
+          %(The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain)
         )
       end
 
       it 'denies private bar.foo.com a when shared baz.bar.foo.com and foo.com exist' do
         SharedDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
-          %{The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain}
+        expect do
+          PrivateDomain.make name: 'bar.foo.com'
+        end.to raise_error(
+          Sequel::ValidationFailed,
+          %(The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain)
         )
       end
 
@@ -162,7 +168,8 @@ module VCAP::CloudController
         expect(private_domain.as_summary_json).to eq(
           guid: private_domain.guid,
           name: 'test.example.com',
-          owning_organization_guid: private_domain.owning_organization.guid)
+          owning_organization_guid: private_domain.owning_organization.guid
+        )
       end
     end
 
@@ -202,15 +209,15 @@ module VCAP::CloudController
 
     describe 'addable_to_organization!' do
       it 'raises error when the domain belongs to a different org' do
-        expect {
+        expect do
           private_domain.addable_to_organization!(Organization.new)
-        }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
+        end.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
       end
 
       it 'does not raise error when the domain belongs to a different org' do
-        expect {
+        expect do
           private_domain.addable_to_organization!(private_domain.owning_organization)
-        }.to_not raise_error
+        end.to_not raise_error
       end
     end
 

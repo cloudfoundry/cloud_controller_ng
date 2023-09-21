@@ -19,9 +19,9 @@ module CloudController::Presenters::V2
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
       let(:service_binding) do
         VCAP::CloudController::ServiceBinding.make(
-          credentials:      { 'secret' => 'key' },
+          credentials: { 'secret' => 'key' },
           syslog_drain_url: 'syslog://drain.example.com',
-          volume_mounts:    volume_mount
+          volume_mounts: volume_mount
         )
       end
 
@@ -32,24 +32,24 @@ module CloudController::Presenters::V2
       it 'returns the service binding entity' do
         expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to eq(
           {
-            'app_guid'                       => service_binding.app.guid,
-            'service_instance_guid'          => service_binding.service_instance.guid,
-            'credentials'                    => { 'secret' => 'key' },
-            'binding_options'                => {},
-            'gateway_data'                   => nil,
-            'gateway_name'                   => '',
-            'syslog_drain_url'               => 'syslog://drain.example.com',
-            'volume_mounts'                  => [{ 'container_dir' => 'mount' }],
-            'relationship_url'               => 'http://relationship.example.com',
-            'name'                           => nil,
+            'app_guid' => service_binding.app.guid,
+            'service_instance_guid' => service_binding.service_instance.guid,
+            'credentials' => { 'secret' => 'key' },
+            'binding_options' => {},
+            'gateway_data' => nil,
+            'gateway_name' => '',
+            'syslog_drain_url' => 'syslog://drain.example.com',
+            'volume_mounts' => [{ 'container_dir' => 'mount' }],
+            'relationship_url' => 'http://relationship.example.com',
+            'name' => nil,
             'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters",
-            'last_operation'                 => {
-              'type'        => 'create',
-              'state'       => 'succeeded',
+            'last_operation' => {
+              'type' => 'create',
+              'state' => 'succeeded',
               'description' => '',
-              'updated_at'  => service_binding.updated_at,
-              'created_at'  => service_binding.created_at,
-            },
+              'updated_at' => service_binding.updated_at,
+              'created_at' => service_binding.created_at
+            }
           }
         )
       end
@@ -65,13 +65,12 @@ module CloudController::Presenters::V2
           it 'should return its attributes' do
             expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
               { 'last_operation' => {
-                'type'        => 'create',
-                'state'       => 'in progress',
+                'type' => 'create',
+                'state' => 'in progress',
                 'description' => '10% complete',
-                'updated_at'  => service_binding.last_operation.updated_at,
-                'created_at'  => service_binding.last_operation.created_at,
-              },
-              }
+                'updated_at' => service_binding.last_operation.updated_at,
+                'created_at' => service_binding.last_operation.created_at
+              } }
             )
           end
         end
@@ -85,13 +84,12 @@ module CloudController::Presenters::V2
           it 'should return its attributes' do
             expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
               { 'last_operation' => {
-                'type'        => 'delete',
-                'state'       => 'in progress',
+                'type' => 'delete',
+                'state' => 'in progress',
                 'description' => '10% complete',
-                'updated_at'  => service_binding.last_operation.updated_at,
-                'created_at'  => service_binding.last_operation.created_at,
-              },
-              }
+                'updated_at' => service_binding.last_operation.updated_at,
+                'created_at' => service_binding.last_operation.created_at
+              } }
             )
           end
         end
@@ -100,17 +98,17 @@ module CloudController::Presenters::V2
       context 'when a name is provided' do
         let(:service_binding) do
           VCAP::CloudController::ServiceBinding.make(
-            credentials:      { 'secret' => 'key' },
+            credentials: { 'secret' => 'key' },
             syslog_drain_url: 'syslog://drain.example.com',
-            volume_mounts:    volume_mount,
-            name:             'some-binding-name'
+            volume_mounts: volume_mount,
+            name: 'some-binding-name'
           )
         end
 
         it 'returns the service binding entity' do
           expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
             {
-              'name' => 'some-binding-name',
+              'name' => 'some-binding-name'
             }
           )
         end
@@ -122,12 +120,12 @@ module CloudController::Presenters::V2
             [
               {
                 'container_dir' => 'val1',
-                'mode'          => 'val2',
-                'device_type'   => 'val3',
+                'mode' => 'val2',
+                'device_type' => 'val3',
                 'hash1_private' => 'val1_private'
               },
               {
-                'hash2'         => 'val2',
+                'hash2' => 'val2',
                 'hash2_private' => 'val2_private'
               }
             ]

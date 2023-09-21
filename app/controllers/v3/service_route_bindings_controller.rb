@@ -62,6 +62,29 @@ class ServiceRouteBindingsController < ApplicationController
     already_exists!
   end
 
+  def update
+    route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
+    unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
+    suspended! unless is_space_active?(@route_binding.route.space)
+
+    unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
+
+    message = MetadataUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
+
+    Repositories::ServiceGenericBindingEventRepository.
+      new(Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).
+      record_update(
+        @route_binding,
+        user_audit_info,
+        message.audit_hash
+      )
+
+    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
+  end
+
   def destroy
     route_binding_not_found! unless @route_binding && can_read_from_space?(@route_binding.route.space)
     unauthorized! unless can_bind_in_active_space?(@route_binding.route.space)
@@ -99,29 +122,6 @@ class ServiceRouteBindingsController < ApplicationController
     unprocessable!('There is an operation in progress for the service route binding.')
   end
 
-  def update
-    route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
-    unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
-    suspended! unless is_space_active?(@route_binding.route.space)
-
-    unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
-
-    message = MetadataUpdateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
-
-    Repositories::ServiceGenericBindingEventRepository.
-      new(Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).
-      record_update(
-        @route_binding,
-        user_audit_info,
-        message.audit_hash
-      )
-
-    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
-  end
-
   private
 
   AVAILABLE_DECORATORS = [
@@ -153,7 +153,7 @@ class ServiceRouteBindingsController < ApplicationController
       binding_guid,
       user_audit_info: user_audit_info,
       audit_hash: message.audit_hash,
-      parameters: message.parameters,
+      parameters: message.parameters
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -163,7 +163,7 @@ class ServiceRouteBindingsController < ApplicationController
     bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
       :route,
       binding_guid,
-      user_audit_info: user_audit_info,
+      user_audit_info: user_audit_info
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -173,13 +173,13 @@ class ServiceRouteBindingsController < ApplicationController
     if permission_queryer.can_read_globally?
       RouteBindingListFetcher.fetch_all(
         message,
-        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources
       )
     else
       RouteBindingListFetcher.fetch_some(
         message,
         space_guids: space_guids,
-        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources
       )
     end
   end
@@ -196,9 +196,7 @@ class ServiceRouteBindingsController < ApplicationController
 
   def fetch_service_instance(guid)
     service_instance = VCAP::CloudController::ServiceInstance.first(guid: guid)
-    unless service_instance && can_read_from_space?(service_instance.space)
-      service_instance_not_found!(guid)
-    end
+    service_instance_not_found!(guid) unless service_instance && can_read_from_space?(service_instance.space)
 
     unauthorized! unless can_bind_in_active_space?(service_instance.space)
     suspended! unless is_space_active?(service_instance.space)
@@ -208,16 +206,14 @@ class ServiceRouteBindingsController < ApplicationController
 
   def fetch_route(guid)
     route = VCAP::CloudController::Route.first(guid: guid)
-    unless route && can_read_from_space?(route.space)
-      route_not_found!(guid)
-    end
+    route_not_found!(guid) unless route && can_read_from_space?(route.space)
 
     route
   end
 
   def check_parameters_support(service_instance, message)
     parameters_not_supported! if service_instance.is_a?(VCAP::CloudController::UserProvidedServiceInstance) &&
-      message.requested?(:parameters)
+                                 message.requested?(:parameters)
   end
 
   def service_event_repository

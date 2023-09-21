@@ -19,11 +19,11 @@ module VCAP::CloudController
     many_to_one :service_instance, key: :service_instance_guid, primary_key: :guid, without_guid_generation: true
 
     one_through_one :v2_app,
-      class: 'VCAP::CloudController::ProcessModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :app_guid, right_key: :guid,
-      conditions: { type: ProcessTypes::WEB }
+                    class: 'VCAP::CloudController::ProcessModel',
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :app_guid, right_key: :guid,
+                    conditions: { type: ProcessTypes::WEB }
 
     set_field_as_encrypted :credentials
     serializes_via_json :credentials
@@ -40,8 +40,8 @@ module VCAP::CloudController
       validates_presence :service_instance
       validates_presence :type
 
-      validates_unique [:app_guid, :service_instance_guid], message: Sequel.lit('The app is already bound to the service.')
-      validates_unique [:app_guid, :name], message: Sequel.lit("The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{name}'.")
+      validates_unique %i[app_guid service_instance_guid], message: Sequel.lit('The app is already bound to the service.')
+      validates_unique %i[app_guid name], message: Sequel.lit("The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{name}'.")
 
       validate_space_match
       validate_cannot_change_binding
@@ -50,7 +50,7 @@ module VCAP::CloudController
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
       validates_max_length 255, :name, allow_nil: true, message: Sequel.lit('The binding name is invalid. App binding names must be less than 256 characters.')
 
-      validates_format(/\A(\w|\-)+\z/, :name, message: Sequel.lit('The binding name is invalid. Valid characters are alphanumeric, underscore, and dash.')) if name.present?
+      validates_format(/\A(\w|-)+\z/, :name, message: Sequel.lit('The binding name is invalid. Valid characters are alphanumeric, underscore, and dash.')) if name.present?
 
       errors.add(:app, :invalid_relation) unless app.is_a?(AppModel)
     end
@@ -59,9 +59,9 @@ module VCAP::CloudController
       return unless service_instance && app
       return if service_instance.space == app.space
 
-      if service_instance.shared_spaces.exclude?(app.space)
-        errors.add(:service_instance, :space_mismatch)
-      end
+      return unless service_instance.shared_spaces.exclude?(app.space)
+
+      errors.add(:service_instance, :space_mismatch)
     end
 
     def validate_cannot_change_binding
@@ -78,17 +78,11 @@ module VCAP::CloudController
       { guid: guid }
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
-    def space
-      app.space
-    end
+    delegate :space, to: :app
 
-    def service_instance_name
-      service_instance.name
-    end
+    delegate :name, to: :service_instance, prefix: true
 
     def after_initialize
       super
@@ -106,9 +100,9 @@ module VCAP::CloudController
     end
 
     def encode_syslog_drain_url_commas
-      if syslog_drain_url
-        self.syslog_drain_url = syslog_drain_url.gsub(',', '%2c')
-      end
+      return unless syslog_drain_url
+
+      self.syslog_drain_url = syslog_drain_url.gsub(',', '%2c')
     end
 
     def self.user_visibility_filter(user)
@@ -126,19 +120,17 @@ module VCAP::CloudController
 
     def save_with_new_operation(last_operation, attributes: {})
       ServiceBinding.db.transaction do
-        self.lock!
+        lock!
         set(attributes.except(:parameters, :route_services_url, :endpoints))
         save_changes
 
-        if self.last_operation
-          self.last_operation.destroy
-        end
+        self.last_operation.destroy if self.last_operation
 
         # it is important to create the service binding operation with the service binding
         # instead of doing self.service_binding_operation = x
         # because mysql will deadlock when requests happen concurrently otherwise.
-        ServiceBindingOperation.create(last_operation.merge(service_binding_id: self.id))
-        self.service_binding_operation(reload: true)
+        ServiceBindingOperation.create(last_operation.merge(service_binding_id: id))
+        service_binding_operation(reload: true)
       end
     end
   end

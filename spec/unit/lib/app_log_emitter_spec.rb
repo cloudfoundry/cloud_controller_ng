@@ -61,9 +61,9 @@ module VCAP
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:app) { VCAP::CloudController::AppModel.make(space: space) }
       let(:emitter) { LoggregatorEmitter::Emitter.new('127.0.0.1:1234', 'cloud_controller', 'API', 1) }
-      before {
+      before do
         AppLogEmitter.emitter = emitter
-      }
+      end
 
       context 'when the app exists' do
         let(:expected_tags) do

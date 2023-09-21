@@ -18,9 +18,9 @@ module VCAP::CloudController
       let!(:domain) { Domain.make(owning_organization: org) }
 
       it 'deletes the domain record' do
-        expect {
+        expect do
           domain_delete.delete([domain])
-        }.to change { Domain.count }.by(-1)
+        end.to change { Domain.count }.by(-1)
         expect { domain.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -38,26 +38,26 @@ module VCAP::CloudController
         end
 
         it 'deletes associated route mappings' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { RouteMappingModel.count }.by(-1)
+          end.to change { RouteMappingModel.count }.by(-1)
           expect(route.exists?).to be_falsey
           expect(route_mapping.exists?).to be_falsey
           expect(domain.exists?).to be_falsey
         end
 
         it 'deletes associated route bindings' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { RouteBinding.count }.by(-1)
+          end.to change { RouteBinding.count }.by(-1)
           expect(route_binding.exists?).to be_falsey
           expect(domain.exists?).to be_falsey
         end
 
         it 'deletes routes' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { Route.count }.by(-1)
+          end.to change { Route.count }.by(-1)
           expect(route.exists?).to be_falsey
           expect(domain.exists?).to be_falsey
         end

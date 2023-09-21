@@ -10,7 +10,7 @@ module CloudFoundry
       let(:env) do
         {
           'HTTP_AUTHORIZATION' => 'auth-token',
-          'PATH_INFO' => path_info,
+          'PATH_INFO' => path_info
         }
       end
 
@@ -31,7 +31,7 @@ module CloudFoundry
         end
 
         it 'adds the X-USER-GUID header' do
-          _, header, _ = middleware.call(env)
+          _, header, = middleware.call(env)
           expect(header).to eq({ 'X-USER-GUID' => 'user-id-1' })
         end
 
@@ -78,7 +78,7 @@ module CloudFoundry
           end
 
           it 'does not set the X-USER-GUID header' do
-            _, header, _ = middleware.call({})
+            _, header, = middleware.call({})
             expect(header).not_to include('X-USER-GUID')
           end
         end
@@ -112,7 +112,7 @@ module CloudFoundry
               expect(json_body).to include(
                 'code' => 1000,
                 'description' => 'Invalid Auth Token',
-                'error_code' => 'CF-InvalidAuthToken',
+                'error_code' => 'CF-InvalidAuthToken'
               )
             end
           end
@@ -137,7 +137,7 @@ module CloudFoundry
           end
 
           it 'returns a 502' do
-            status, _, _ = middleware.call(env)
+            status, = middleware.call(env)
             expect(status).to eq(502)
           end
 
@@ -146,9 +146,9 @@ module CloudFoundry
               _, _, body = middleware.call(env)
               json_body = JSON.parse(body.first)
               expect(json_body).to include(
-                'code' => 20004,
+                'code' => 20_004,
                 'description' => 'The UAA service is currently unavailable',
-                'error_code' => 'CF-UaaUnavailable',
+                'error_code' => 'CF-UaaUnavailable'
               )
             end
           end
@@ -159,9 +159,9 @@ module CloudFoundry
               _, _, body = middleware.call(env)
               json_body = JSON.parse(body.first)
               expect(json_body['errors'].first).to include(
-                'code' => 20004,
+                'code' => 20_004,
                 'detail' => 'The UAA service is currently unavailable',
-                'title' => 'CF-UaaUnavailable',
+                'title' => 'CF-UaaUnavailable'
               )
             end
           end

@@ -15,11 +15,11 @@ module VCAP::CloudController
 
         let(:message) do
           DomainUpdateSharedOrgsMessage.new({
-                data: [
-                  { guid: shared_org1.guid },
-                  { guid: shared_org2.guid }
-                ]
-          })
+                                              data: [
+                                                { guid: shared_org1.guid },
+                                                { guid: shared_org2.guid }
+                                              ]
+                                            })
         end
 
         it 'updates shared orgs for private domain' do

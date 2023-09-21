@@ -15,17 +15,13 @@ class UploadHandler
   end
 
   def uploaded_file(params, resource_name)
-    if HashUtils.dig(params, VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM)
-      raise MissingFilePathError.new('File field missing path information')
-    end
+    raise MissingFilePathError.new('File field missing path information') if HashUtils.dig(params, VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM)
 
     file_path = nginx_uploaded_file(params, resource_name) || rack_temporary_file(params, resource_name)
     return unless file_path
 
     absolute_path = File.expand_path(file_path, tmpdir)
-    unless VCAP::CloudController::FilePathChecker.safe_path?(file_path, tmpdir)
-      raise InvalidFilePathError.new('Invalid file path')
-    end
+    raise InvalidFilePathError.new('Invalid file path') unless VCAP::CloudController::FilePathChecker.safe_path?(file_path, tmpdir)
 
     absolute_path
   end

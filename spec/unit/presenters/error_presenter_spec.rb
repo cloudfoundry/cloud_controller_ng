@@ -84,9 +84,9 @@ RSpec.describe ErrorPresenter do
         end
 
         it 'raises the error' do
-          expect {
+          expect do
             presenter.to_hash
-          }.to raise_error(ResponsiveStandardError)
+          end.to raise_error(ResponsiveStandardError)
         end
       end
 
@@ -95,9 +95,9 @@ RSpec.describe ErrorPresenter do
         let(:error) { CustomError.new }
 
         it 'raises the error' do
-          expect {
+          expect do
             presenter.to_hash
-          }.to raise_error(CustomError)
+          end.to raise_error(CustomError)
         end
       end
     end

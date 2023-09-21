@@ -10,20 +10,20 @@ module VCAP::CloudController
         let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
-            skip_cert_verify: false,
-            diego:            {
-              cc_uploader_url:   'http://cc-uploader.example.com',
-              file_server_url:   'http://file-server.example.com',
-              lifecycle_bundles: {
-                'buildpack/buildpack-stack': 'the-buildpack-bundle'
-              },
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-            },
-            staging:          {
-              minimum_staging_file_descriptor_limit: 4,
-              timeout_in_seconds:                    90,
-            },
-          })
+                       skip_cert_verify: false,
+                       diego: {
+                         cc_uploader_url: 'http://cc-uploader.example.com',
+                         file_server_url: 'http://file-server.example.com',
+                         lifecycle_bundles: {
+                           'buildpack/buildpack-stack': 'the-buildpack-bundle'
+                         },
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads
+                       },
+                       staging: {
+                         minimum_staging_file_descriptor_limit: 4,
+                         timeout_in_seconds: 90
+                       }
+                     })
         end
         let(:staging_details) do
           StagingDetails.new.tap do |details|
@@ -35,14 +35,14 @@ module VCAP::CloudController
         let(:stack) { 'buildpack-stack' }
         let(:lifecycle_data) do
           {
-            app_bits_download_uri:              'http://app_bits_download_uri.example.com/path/to/bits',
+            app_bits_download_uri: 'http://app_bits_download_uri.example.com/path/to/bits',
             build_artifacts_cache_download_uri: 'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
-            build_artifacts_cache_upload_uri:   'http://build_artifacts_cache_upload_uri.example.com/path/to/bits',
-            buildpacks:                         buildpacks,
-            droplet_upload_uri:                 'http://droplet_upload_uri.example.com/path/to/bits',
-            stack:                              stack,
-            buildpack_cache_checksum:           'bp-cache-checksum',
-            app_bits_checksum:                  { type: 'sha256', value: 'package-checksum' },
+            build_artifacts_cache_upload_uri: 'http://build_artifacts_cache_upload_uri.example.com/path/to/bits',
+            buildpacks: buildpacks,
+            droplet_upload_uri: 'http://droplet_upload_uri.example.com/path/to/bits',
+            stack: stack,
+            buildpack_cache_checksum: 'bp-cache-checksum',
+            app_bits_checksum: { type: 'sha256', value: 'package-checksum' }
           }
         end
         let(:buildpacks) { [] }
@@ -59,23 +59,23 @@ module VCAP::CloudController
         describe '#action' do
           let(:download_app_package_action) do
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact:           'app package',
-              from:               'http://app_bits_download_uri.example.com/path/to/bits',
-              to:                 '/tmp/app',
-              user:               'vcap',
+              artifact: 'app package',
+              from: 'http://app_bits_download_uri.example.com/path/to/bits',
+              to: '/tmp/app',
+              user: 'vcap',
               checksum_algorithm: 'sha256',
-              checksum_value:     'package-checksum',
+              checksum_value: 'package-checksum'
             )
           end
 
           let(:download_build_artifacts_cache_action) do
             ::Diego::Bbs::Models::DownloadAction.new(
-              artifact:           'build artifacts cache',
-              from:               'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
-              to:                 '/tmp/cache',
-              user:               'vcap',
+              artifact: 'build artifacts cache',
+              from: 'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
+              to: '/tmp/cache',
+              user: 'vcap',
               checksum_algorithm: 'sha256',
-              checksum_value:     'bp-cache-checksum'
+              checksum_value: 'bp-cache-checksum'
             )
           end
 
@@ -83,9 +83,9 @@ module VCAP::CloudController
           let(:upload_droplet_action) do
             ::Diego::Bbs::Models::UploadAction.new(
               artifact: 'droplet',
-              from:     '/tmp/droplet',
-              to:       "http://cc-uploader.example.com/v1/droplet/#{droplet.guid}?cc-droplet-upload-uri=#{droplet_upload_url}&timeout=90",
-              user:     'vcap'
+              from: '/tmp/droplet',
+              to: "http://cc-uploader.example.com/v1/droplet/#{droplet.guid}?cc-droplet-upload-uri=#{droplet_upload_url}&timeout=90",
+              user: 'vcap'
             )
           end
 
@@ -93,16 +93,16 @@ module VCAP::CloudController
           let(:upload_build_artifacts_cache_action) do
             ::Diego::Bbs::Models::UploadAction.new(
               artifact: 'build artifacts cache',
-              from:     '/tmp/output-cache',
-              to:       "http://cc-uploader.example.com/v1/build_artifacts/#{droplet.guid}?cc-build-artifacts-upload-uri=#{cache_upload_url}&timeout=90",
-              user:     'vcap'
+              from: '/tmp/output-cache',
+              to: "http://cc-uploader.example.com/v1/build_artifacts/#{droplet.guid}?cc-build-artifacts-upload-uri=#{cache_upload_url}&timeout=90",
+              user: 'vcap'
             )
           end
 
           let(:run_staging_action) do
             ::Diego::Bbs::Models::RunAction.new(
-              path:            '/tmp/lifecycle/builder',
-              args:            [
+              path: '/tmp/lifecycle/builder',
+              args: [
                 '-buildpackOrder=buildpack-1-key,buildpack-2-key',
                 '-skipCertVerify=false',
                 '-skipDetect=false',
@@ -111,18 +111,18 @@ module VCAP::CloudController
                 '-outputMetadata=/tmp/result.json',
                 '-outputBuildArtifactsCache=/tmp/output-cache',
                 '-buildpacksDir=/tmp/buildpacks',
-                '-buildArtifactsCacheDir=/tmp/cache',
+                '-buildArtifactsCacheDir=/tmp/cache'
               ],
-              user:            'vcap',
+              user: 'vcap',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 4),
-              env:             generated_environment,
+              env: generated_environment
             )
           end
 
           let(:buildpacks) do
             [
               { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
-              { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: false },
+              { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: false }
             ]
           end
 
@@ -244,12 +244,12 @@ module VCAP::CloudController
           end
 
           context 'when any specified buildpack has "skip_detect" set to true' do
-            let(:buildpacks) {
+            let(:buildpacks) do
               [
                 { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
-                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true },
+                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true }
               ]
-            }
+            end
 
             it 'sets skipDetect to true' do
               result = builder.action
@@ -299,9 +299,9 @@ module VCAP::CloudController
             result = builder.cached_dependencies
             expect(result).to include(
               ::Diego::Bbs::Models::CachedDependency.new(
-                from:      'generated-uri',
-                to:        '/tmp/lifecycle',
-                cache_key: 'buildpack-buildpack-stack-lifecycle',
+                from: 'generated-uri',
+                to: '/tmp/lifecycle',
+                cache_key: 'buildpack-buildpack-stack-lifecycle'
               )
             )
           end
@@ -318,26 +318,26 @@ module VCAP::CloudController
             let(:buildpacks) do
               [
                 { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' },
+                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' }
               ]
             end
 
             it 'includes buildpack dependencies' do
               buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:               'buildpack-1',
-                from:               'buildpack-1-url',
-                to:                 "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
-                cache_key:          'buildpack-1-key',
+                name: 'buildpack-1',
+                from: 'buildpack-1-url',
+                to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
+                cache_key: 'buildpack-1-key',
                 checksum_algorithm: 'sha256',
-                checksum_value:     'checksum',
+                checksum_value: 'checksum'
               )
               buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:               'buildpack-2',
-                from:               'buildpack-2-url',
-                to:                 "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
-                cache_key:          'buildpack-2-key',
+                name: 'buildpack-2',
+                from: 'buildpack-2-url',
+                to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
+                cache_key: 'buildpack-2-key',
                 checksum_algorithm: 'sha256',
-                checksum_value:     'checksum',
+                checksum_value: 'checksum'
               )
 
               result = builder.cached_dependencies
@@ -356,24 +356,24 @@ module VCAP::CloudController
               let(:buildpacks) do
                 [
                   { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil }
                 ]
               end
 
               it 'does not ask for checksum validation' do
                 buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
-                  name:               'buildpack-1',
-                  from:               'buildpack-1-url',
-                  to:                 "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
-                  cache_key:          'buildpack-1-key',
+                  name: 'buildpack-1',
+                  from: 'buildpack-1-url',
+                  to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
+                  cache_key: 'buildpack-1-key',
                   checksum_algorithm: 'sha256',
-                  checksum_value:     'checksum',
+                  checksum_value: 'checksum'
                 )
                 buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                  name:      'buildpack-2',
-                  from:      'buildpack-2-url',
-                  to:        "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
-                  cache_key: 'buildpack-2-key',
+                  name: 'buildpack-2',
+                  from: 'buildpack-2-url',
+                  to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
+                  cache_key: 'buildpack-2-key'
                 )
 
                 result = builder.cached_dependencies
@@ -394,24 +394,24 @@ module VCAP::CloudController
             let(:buildpacks) do
               [
                 { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                { name: 'custom', key: 'custom-key', url: 'custom-url' },
+                { name: 'custom', key: 'custom-key', url: 'custom-url' }
               ]
             end
 
             it 'does not include the custom buildpacks' do
               buildpack_entry_1 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:               'buildpack-1',
-                from:               'buildpack-1-url',
-                to:                 "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
-                cache_key:          'buildpack-1-key',
+                name: 'buildpack-1',
+                from: 'buildpack-1-url',
+                to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
+                cache_key: 'buildpack-1-key',
                 checksum_algorithm: 'sha256',
-                checksum_value:     'checksum',
+                checksum_value: 'checksum'
               )
               buildpack_entry_2 = ::Diego::Bbs::Models::CachedDependency.new(
-                name:      'custom',
-                from:      'custom-url',
-                to:        "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'custom-key')}",
-                cache_key: 'custom-key',
+                name: 'custom',
+                from: 'custom-url',
+                to: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'custom-key')}",
+                cache_key: 'custom-key'
               )
 
               result = builder.cached_dependencies
@@ -432,11 +432,11 @@ module VCAP::CloudController
             it 'returns the lifecycle as an image layer' do
               expect(builder.image_layers).to include(
                 ::Diego::Bbs::Models::ImageLayer.new(
-                  name:              'buildpack-buildpack-stack-lifecycle',
-                  url:               'generated-uri',
-                  destination_path:  '/tmp/lifecycle',
-                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  name: 'buildpack-buildpack-stack-lifecycle',
+                  url: 'generated-uri',
+                  destination_path: '/tmp/lifecycle',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                 )
               )
             end
@@ -444,13 +444,13 @@ module VCAP::CloudController
             it 'returns the app package as an image layer' do
               expect(builder.image_layers).to include(
                 ::Diego::Bbs::Models::ImageLayer.new(
-                  name:              'app package',
-                  url:               'http://app_bits_download_uri.example.com/path/to/bits',
-                  destination_path:  '/tmp/app',
-                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
-                  digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-                  digest_value:      'package-checksum',
+                  name: 'app package',
+                  url: 'http://app_bits_download_uri.example.com/path/to/bits',
+                  destination_path: '/tmp/app',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  digest_value: 'package-checksum'
                 )
               )
             end
@@ -469,13 +469,13 @@ module VCAP::CloudController
             it 'returns the buildpack cache as an image layer' do
               expect(builder.image_layers).to include(
                 ::Diego::Bbs::Models::ImageLayer.new(
-                  name:              'build artifacts cache',
-                  url:               'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
-                  destination_path:  '/tmp/cache',
-                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
-                  digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-                  digest_value:      'bp-cache-checksum',
+                  name: 'build artifacts cache',
+                  url: 'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
+                  destination_path: '/tmp/cache',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  digest_value: 'bp-cache-checksum'
                 )
               )
             end
@@ -504,31 +504,31 @@ module VCAP::CloudController
               let(:buildpacks) do
                 [
                   { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' }
                 ]
               end
 
               it 'returns the buildpacks as an image layer' do
                 expect(builder.image_layers).to include(
                   ::Diego::Bbs::Models::ImageLayer.new(
-                    name:              'buildpack-1',
-                    url:               'buildpack-1-url',
-                    destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
-                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-                    digest_value:      'checksum',
-                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                    name: 'buildpack-1',
+                    url: 'buildpack-1-url',
+                    destination_path: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-1-key')}",
+                    digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value: 'checksum',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
                   )
                 )
                 expect(builder.image_layers).to include(
                   ::Diego::Bbs::Models::ImageLayer.new(
-                    name:              'buildpack-2',
-                    url:               'buildpack-2-url',
-                    destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
-                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-                    digest_value:      'checksum',
-                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                    name: 'buildpack-2',
+                    url: 'buildpack-2-url',
+                    destination_path: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
+                    digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value: 'checksum',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
                   )
                 )
               end
@@ -537,18 +537,18 @@ module VCAP::CloudController
                 let(:buildpacks) do
                   [
                     { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                    { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil },
+                    { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil }
                   ]
                 end
 
                 it 'returns the buildpacks without checksum information' do
                   expect(builder.image_layers).to include(
                     ::Diego::Bbs::Models::ImageLayer.new(
-                      name:              'buildpack-2',
-                      url:               'buildpack-2-url',
-                      destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
-                      layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                      media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                      name: 'buildpack-2',
+                      url: 'buildpack-2-url',
+                      destination_path: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'buildpack-2-key')}",
+                      layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                      media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
                     )
                   )
                 end
@@ -559,18 +559,18 @@ module VCAP::CloudController
               let(:buildpacks) do
                 [
                   { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
-                  { name: 'custom', key: 'custom-key', url: 'custom-url' },
+                  { name: 'custom', key: 'custom-key', url: 'custom-url' }
                 ]
               end
 
               it 'does not returns the custom buildpack as an image layer' do
                 expect(builder.image_layers).not_to include(
                   ::Diego::Bbs::Models::ImageLayer.new(
-                    name:              'custom',
-                    url:               'custom-url',
-                    destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'custom-key')}",
-                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                    name: 'custom',
+                    url: 'custom-url',
+                    destination_path: "/tmp/buildpacks/#{OpenSSL::Digest.hexdigest('MD5', 'custom-key')}",
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
                   )
                 )
               end
@@ -591,9 +591,9 @@ module VCAP::CloudController
             let(:stack) { 'does-not-exist' }
 
             it 'raises an error' do
-              expect {
+              expect do
                 builder.stack
-              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+              end.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
             end
           end
 

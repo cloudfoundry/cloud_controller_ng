@@ -42,7 +42,8 @@ module VCAP::CloudController
           {
             health_check: { type: 'type', data: { timeout: 4, endpoint: 'something', invocation_timeout: 7, interval: 8 } },
             readiness_health_check: { type: 'http', data: { endpoint: '/meow', invocation_timeout: 8, interval: 9 } }
-          })
+          }
+        )
         expect(message.audit_hash).to eq(
           {
             'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something', 'invocation_timeout' => 7, 'interval' => 8 } },

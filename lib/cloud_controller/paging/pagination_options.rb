@@ -10,7 +10,7 @@ module VCAP::CloudController
     PER_PAGE_MAX      = 5000
     ORDER_DEFAULT     = 'id'.freeze
     DIRECTION_DEFAULT = 'asc'.freeze
-    VALID_DIRECTIONS  = %w(asc desc).freeze
+    VALID_DIRECTIONS  = %w[asc desc].freeze
 
     attr_writer :order_by, :order_direction, :default_order_by
     attr_accessor :page, :per_page
@@ -39,7 +39,7 @@ module VCAP::CloudController
     end
 
     def keys
-      [:page, :per_page, :order_by, :order_direction]
+      %i[page per_page order_by order_direction]
     end
 
     def ordering_configured?

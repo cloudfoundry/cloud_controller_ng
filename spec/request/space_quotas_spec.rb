@@ -7,10 +7,10 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid') }
     let!(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'space-quota-guid', organization: org) }
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org, space_quota_definition: space_quota) }
-    let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+    let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
     describe 'GET /v3/space_quotas/:guid' do
-      let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{space_quota.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/space_quotas/#{space_quota.guid}", nil, user_headers } }
 
       context 'when the space quota is applied to the space where the current user has a role' do
         let(:expected_codes_and_responses) do
@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       context 'when the space quota has no associated spaces' do
-        let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{unapplied_space_quota.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/space_quotas/#{unapplied_space_quota.guid}", nil, user_headers } }
         let(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
 
         let(:expected_codes_and_responses) do
@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       context 'when the space quota is owned by an org where the current user does not have a role' do
-        let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{other_space_quota.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/space_quotas/#{other_space_quota.guid}", nil, user_headers } }
         let(:other_org) { VCAP::CloudController::Organization.make }
         let(:other_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: other_org) }
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
           services: {
             paid_services_allowed: false,
             total_service_instances: 10,
-            total_service_keys: 20,
+            total_service_keys: 20
           },
           routes: {
             total_routes: 8,
@@ -127,21 +127,21 @@ module VCAP::CloudController
           },
           relationships: {
             organization: {
-              data: { guid: space_quota.organization.guid },
+              data: { guid: space_quota.organization.guid }
             },
             spaces: {
               data: [{ guid: space.guid }]
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{space_quota.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{space_quota.organization.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/space_quotas/#{space_quota.guid}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{space_quota.organization.guid}} }
           }
         }
       end
 
       context 'permissions' do
-        let(:api_call) { lambda { |user_headers| patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200, response_object: updated_space_quota_json }
@@ -185,7 +185,8 @@ module VCAP::CloudController
             guid: 'space_quota_to_update_guid',
             name: 'update-me',
             memory_limit: 8,
-            non_basic_services_allowed: true)
+            non_basic_services_allowed: true
+          )
         end
 
         let(:partial_params) do
@@ -193,12 +194,12 @@ module VCAP::CloudController
             name: 'don-quixote',
             apps: {
               per_app_tasks: 9,
-              total_memory_in_mb: nil,
+              total_memory_in_mb: nil
             },
             services: {
               total_service_instances: 14,
-              paid_services_allowed: false,
-            },
+              paid_services_allowed: false
+            }
           }
         end
 
@@ -234,7 +235,7 @@ module VCAP::CloudController
 
         let(:params) do
           {
-            name: space_quota.name,
+            name: space_quota.name
           }
         end
 
@@ -269,19 +270,20 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message(
-            "Current usage exceeds new quota values. This quota is applied to space '#{space.name}' which contains apps running with an unlimited log rate limit.")
+            "Current usage exceeds new quota values. This quota is applied to space '#{space.name}' which contains apps running with an unlimited log rate limit."
+          )
         end
       end
     end
 
     describe 'GET /v3/space_quotas' do
-      let(:api_call) { lambda { |user_headers| get '/v3/space_quotas', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/space_quotas', nil, user_headers } }
 
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::SpaceQuotaDefinition }
         let(:headers) { admin_headers }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/space_quotas?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/space_quotas?#{filters}", nil, headers }
         end
       end
 
@@ -383,7 +385,7 @@ module VCAP::CloudController
           VCAP::CloudController::Space.make(
             guid: 'other-space-guid',
             organization: org,
-            space_quota_definition: space_quota,
+            space_quota_definition: space_quota
           )
         end
         let(:expected_response) { make_space_quota_json(space_quota, [space]) }
@@ -399,7 +401,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v3/space_quotas' do
-      let(:api_call) { lambda { |user_headers| post '/v3/space_quotas', params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/space_quotas', params.to_json, user_headers } }
       let(:params) do
         {
           name: 'quota1',
@@ -436,15 +438,15 @@ module VCAP::CloudController
             },
             relationships: {
               organization: {
-                data: { guid: org.guid },
+                data: { guid: org.guid }
               },
               spaces: {
                 data: []
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{params[:guid]}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/space_quotas/#{params[:guid]}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
@@ -463,9 +465,9 @@ module VCAP::CloudController
         end
 
         it 'creates a space_quota' do
-          expect {
+          expect do
             api_call.call(admin_header)
-          }.to change {
+          end.to change {
             SpaceQuotaDefinition.count
           }.by 1
         end
@@ -526,22 +528,22 @@ module VCAP::CloudController
             },
             relationships: {
               organization: {
-                data: { guid: org.guid },
+                data: { guid: org.guid }
               },
               spaces: {
                 data: []
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{params[:guid]}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/space_quotas/#{params[:guid]}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 201,
@@ -555,9 +557,9 @@ module VCAP::CloudController
         end
 
         it 'creates a space_quota' do
-          expect {
+          expect do
             api_call.call(admin_header)
-          }.to change {
+          end.to change {
             SpaceQuotaDefinition.count
           }.by 1
         end
@@ -633,8 +635,8 @@ module VCAP::CloudController
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{params[:guid]}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/space_quotas/#{params[:guid]}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
@@ -704,7 +706,7 @@ module VCAP::CloudController
         context 'when provided invalid arguments' do
           let(:params) do
             {
-              name: 555,
+              name: 555
             }
           end
 
@@ -740,7 +742,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v3/space_quotas/:guid/relationships/spaces' do
-      let(:api_call) { lambda { |user_headers| post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, user_headers } }
       let(:other_space) { VCAP::CloudController::Space.make(organization: org, guid: 'other-space-guid') }
 
       let(:params) do
@@ -757,7 +759,7 @@ module VCAP::CloudController
               { guid: other_space.guid }
             ),
             links: {
-              self: { href: "#{link_prefix}/v3/space_quotas/#{space_quota.guid}/relationships/spaces" },
+              self: { href: "#{link_prefix}/v3/space_quotas/#{space_quota.guid}/relationships/spaces" }
             }
           }
         end
@@ -832,13 +834,14 @@ module VCAP::CloudController
           post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message(
-            'Current usage exceeds new quota values. The space(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+            'Current usage exceeds new quota values. The space(s) being assigned this quota contain apps running with an unlimited log rate limit.'
+          )
         end
       end
     end
 
     describe 'DELETE /v3/space_quotas/:guid/relationships/spaces' do
-      let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{space_quota.guid}/relationships/spaces/#{space.guid}", {}, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/space_quotas/#{space_quota.guid}/relationships/spaces/#{space.guid}", {}, user_headers } }
 
       context 'when removing a space quota from a space' do
         let(:expected_codes_and_responses) do
@@ -900,7 +903,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v3/space_quotas/:guid' do
       context 'when deleting a space quota that is not applied to any spaces' do
-        let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{unapplied_space_quota.guid}", {}, user_headers } }
+        let(:api_call) { ->(user_headers) { delete "/v3/space_quotas/#{unapplied_space_quota.guid}", {}, user_headers } }
         let!(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, guid: 'unapplied-space-quota') }
 
         let(:expected_codes_and_responses) do
@@ -914,13 +917,13 @@ module VCAP::CloudController
         let(:db_check) do
           lambda do
             last_job = VCAP::CloudController::PollableJobModel.last
-            expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+            expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{last_job.guid}})
             expect(last_job.resource_type).to eq('space_quota')
 
             get "/v3/jobs/#{last_job.guid}", nil, admin_header
             expect(last_response).to have_status_code(200)
             expect(parsed_response['operation']).to eq('space_quota.delete')
-            expect(parsed_response['links']['space_quota']['href']).to match(%r(/v3/space_quotas/#{unapplied_space_quota.guid}))
+            expect(parsed_response['links']['space_quota']['href']).to match(%r{/v3/space_quotas/#{unapplied_space_quota.guid}})
 
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -959,7 +962,7 @@ module VCAP::CloudController
 
       context 'when the space quota is still applied to a space' do
         let!(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota, organization: org) }
-        let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{space_quota.guid}", {}, user_headers } }
+        let(:api_call) { ->(user_headers) { delete "/v3/space_quotas/#{space_quota.guid}", {}, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403)
@@ -998,7 +1001,7 @@ module VCAP::CloudController
         updated_at: iso8601,
         name: space_quota.name,
         apps: {
-          total_memory_in_mb: 20480,
+          total_memory_in_mb: 20_480,
           per_process_memory_in_mb: nil,
           total_instances: nil,
           per_app_tasks: 5,
@@ -1015,15 +1018,15 @@ module VCAP::CloudController
         },
         relationships: {
           organization: {
-            data: { guid: space_quota.organization.guid },
+            data: { guid: space_quota.organization.guid }
           },
           spaces: {
             data: associated_spaces.map { |space| { guid: space.guid } }
           }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{space_quota.guid}) },
-          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{space_quota.organization.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/space_quotas/#{space_quota.guid}} },
+          organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{space_quota.organization.guid}} }
         }
       }
     end

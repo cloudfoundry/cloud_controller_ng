@@ -17,9 +17,7 @@ module VCAP::CloudController
     end
 
     def validation_error!(error)
-      if error.errors.on(:name)&.include?(:unique)
-        error!('Name must be unique')
-      end
+      error!('Name must be unique') if error.errors.on(:name)&.include?(:unique)
       error!(error.message)
     end
 

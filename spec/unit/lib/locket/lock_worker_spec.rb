@@ -14,7 +14,7 @@ RSpec.describe Locket::LockWorker do
     end
 
     it 'should start the LockRunner' do
-      lock_worker.acquire_lock_and_repeatedly_call {}
+      lock_worker.acquire_lock_and_repeatedly_call { nil }
 
       expect(lock_runner).to have_received(:start)
     end
@@ -29,7 +29,7 @@ RSpec.describe Locket::LockWorker do
       it 'sleeps before attempting to check the lock status again' do
         allow(lock_runner).to receive(:lock_acquired?).and_return(false)
 
-        lock_worker.acquire_lock_and_repeatedly_call {}
+        lock_worker.acquire_lock_and_repeatedly_call { nil }
         expect(lock_worker).to have_received(:sleep).with(1)
       end
     end

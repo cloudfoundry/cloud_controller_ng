@@ -14,13 +14,13 @@ module VCAP::CloudController
 
           begin
             buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))
-          rescue
+          rescue StandardError
             raise
           end
           buildpack.update(options.merge(stack: stack_name))
 
           logger.info "Buildpack #{name} updated"
-        rescue => e
+        rescue StandardError => e
           logger.error("Buildpack #{name} failed to update. Error: #{e.inspect}")
           raise
         end

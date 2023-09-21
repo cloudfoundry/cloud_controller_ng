@@ -18,28 +18,28 @@ def build_api_error_matcher(error_class, api_error_name, *api_error_args)
 
   match do |actual|
     actual.call
-  rescue error_class => actual_api_error
-    @actual_api_error = actual_api_error
+  rescue error_class => e
+    @actual_api_error = e
     expected_error = error_class.new_from_details(api_error_name, *api_error_args)
 
     if api_error_args.empty?
-      expected_error.name == actual_api_error.name
+      expected_error.name == e.name
     else
-      expected_error == actual_api_error
+      expected_error == e
     end
-  rescue => other_error
-    @other_error = other_error
+  rescue StandardError => e
+    @other_error = e
   end
 
   failure_message do
-    message = "expected block to raise a #{error_class} with:\n" \
-      "  name: #{api_error_name}\n" \
-      "  args: #{api_error_args}\nbut "
+    message = "expected block to raise a #{error_class} with:\n  " \
+              "name: #{api_error_name}\n  " \
+              "args: #{api_error_args}\nbut "
 
     message += if @actual_api_error
-                 "it raised a #{error_class} with:\n" \
-                   "  name: #{@actual_api_error.name}\n" \
-                   "  args: #{@actual_api_error.args}"
+                 "it raised a #{error_class} with:\n  " \
+                   "name: #{@actual_api_error.name}\n  " \
+                   "args: #{@actual_api_error.args}"
                elsif @other_error
                  "it raised #{@other_error}"
                else

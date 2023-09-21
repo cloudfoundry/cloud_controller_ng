@@ -16,47 +16,47 @@ module VCAP::CloudController
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
       it 'decorated the given hash with broker name from service instances' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['name', 'foo'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ 'service_plan.service_offering.service_broker': %w[name foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            service_brokers: [
-              {
-                name: offering1.service_broker.name,
-              },
-              {
-                name: offering2.service_broker.name,
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_brokers: [
+                                    {
+                                      name: offering1.service_broker.name
+                                    },
+                                    {
+                                      name: offering2.service_broker.name
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       it 'decorated the given hash with broker guids from service instances' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['guid', 'foo'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ 'service_plan.service_offering.service_broker': %w[guid foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            service_brokers: [
-              {
-                guid: offering1.service_broker.guid,
-              },
-              {
-                guid: offering2.service_broker.guid,
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_brokers: [
+                                    {
+                                      guid: offering1.service_broker.guid
+                                    },
+                                    {
+                                      guid: offering2.service_broker.guid
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       context 'when instances are from the same broker' do
@@ -85,7 +85,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it_behaves_like 'field decorator match?', 'service_plan.service_offering.service_broker', ['name', 'guid']
+      it_behaves_like 'field decorator match?', 'service_plan.service_offering.service_broker', %w[name guid]
     end
   end
 end

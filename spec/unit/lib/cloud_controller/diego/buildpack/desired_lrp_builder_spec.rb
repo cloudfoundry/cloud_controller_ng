@@ -20,20 +20,20 @@ module VCAP::CloudController
             ports: ports,
             checksum_algorithm: 'checksum-algorithm',
             checksum_value: 'checksum-value',
-            start_command: 'dd if=/dev/random of=/dev/null',
+            start_command: 'dd if=/dev/random of=/dev/null'
           }
         end
         let(:ports) { [1111, 2222, 3333] }
         let(:config) do
           Config.new({
-            diego: {
-              file_server_url: 'http://file-server.example.com',
-              lifecycle_bundles: lifecycle_bundles,
-              droplet_destinations: droplet_destinations,
-              use_privileged_containers_for_running: use_privileged_containers_for_running,
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-            }
-          })
+                       diego: {
+                         file_server_url: 'http://file-server.example.com',
+                         lifecycle_bundles: lifecycle_bundles,
+                         droplet_destinations: droplet_destinations,
+                         use_privileged_containers_for_running: use_privileged_containers_for_running,
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads
+                       }
+                     })
         end
         let(:lifecycle_bundles) do
           { "buildpack/#{stack}": '/path/to/lifecycle.tgz' }
@@ -67,9 +67,9 @@ module VCAP::CloudController
             let(:stack) { 'does-not-exist' }
 
             it 'raises an error' do
-              expect {
+              expect do
                 builder.root_fs
-              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+              end.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
             end
           end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
                 name: stack,
                 description: 'a stack with separate build and run rootfses',
                 run_rootfs_image: 'run-image',
-                build_rootfs_image: 'build-image',
+                build_rootfs_image: 'build-image'
               )
             end
 
@@ -101,7 +101,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::CachedDependency.new(
                 from: 'foo://bar.baz',
                 to: '/tmp/lifecycle',
-                cache_key: 'buildpack-potato-stack-lifecycle',
+                cache_key: 'buildpack-potato-stack-lifecycle'
               )
             ])
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('/path/to/lifecycle.tgz')
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
           context 'when searching for a nonexistant stack' do
             let(:lifecycle_bundles) do
-              { "hot-potato": '/path/to/lifecycle.tgz' }
+              { 'hot-potato': '/path/to/lifecycle.tgz' }
             end
             let(:stack) { 'stack-thats-not-in-config' }
 
@@ -141,10 +141,10 @@ module VCAP::CloudController
                         from: 'http://droplet-uri.com:1234?token=&@home--->',
                         cache_key: 'droplets-p-guid',
                         checksum_algorithm: 'checksum-algorithm',
-                        checksum_value: 'checksum-value',
+                        checksum_value: 'checksum-value'
                       )
                     )
-                  ],
+                  ]
                 )
               )
             )
@@ -170,10 +170,10 @@ module VCAP::CloudController
                             from: 'http://droplet-uri.com:1234?token=&@home--->',
                             cache_key: 'droplets-p-guid',
                             checksum_algorithm: 'sha1',
-                            checksum_value: 'checksum-value',
+                            checksum_value: 'checksum-value'
                           )
                         )
-                      ],
+                      ]
                     )
                   )
                 )
@@ -213,7 +213,7 @@ module VCAP::CloudController
                     url: 'foo://bar.baz',
                     destination_path: '/tmp/lifecycle',
                     layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                   )
                 ])
               end
@@ -229,7 +229,7 @@ module VCAP::CloudController
                     url: 'foo://bar.baz',
                     destination_path: '/tmp/lifecycle',
                     layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                   )
                 )
               end
@@ -243,14 +243,14 @@ module VCAP::CloudController
                     layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
                     media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
                     digest_value: 'checksum-value',
-                    digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
                   )
                 )
               end
 
               context "when searching for a lifecycle associated with a stack that is not configured in the Cloud Controller's lifecycle_bundles config" do
                 let(:lifecycle_bundles) do
-                  { "hot-potato": '/path/to/lifecycle.tgz' }
+                  { 'hot-potato': '/path/to/lifecycle.tgz' }
                 end
                 let(:stack) { 'stack-thats-not-in-config' }
 
@@ -261,7 +261,7 @@ module VCAP::CloudController
 
               context "when searching for a droplet destination associated with a stack that is not configured in the Cloud Controller's droplet_destinations config" do
                 let(:droplet_destinations) do
-                  { "hot-potato": '/value/from/config/based/on/stack' }
+                  { 'hot-potato': '/value/from/config/based/on/stack' }
                 end
                 let(:stack) { 'stack-thats-not-in-config' }
 
@@ -332,7 +332,7 @@ module VCAP::CloudController
             expect(builder.port_environment_variables).to match_array([
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
               ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11'),
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0'),
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0')
             ])
           end
         end

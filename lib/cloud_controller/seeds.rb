@@ -19,7 +19,7 @@ module VCAP::CloudController
         shared_isolation_segment_model = IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
         if shared_isolation_segment_model
-          if !shared_isolation_segment_model.name.eql?(config.get(:shared_isolation_segment_name))
+          unless shared_isolation_segment_model.name.eql?(config.get(:shared_isolation_segment_name))
             shared_isolation_segment_model.update(name: config.get(:shared_isolation_segment_name))
           end
         else
@@ -33,9 +33,7 @@ module VCAP::CloudController
 
           if quota
             quota.set(values)
-            if quota.modified?
-              Steno.logger('cc.seeds').warn('seeds.quota-collision', name: name, values: values)
-            end
+            Steno.logger('cc.seeds').warn('seeds.quota-collision', name: name, values: values) if quota.modified?
           else
             QuotaDefinition.create(values.merge(name: name.to_s))
           end
@@ -52,16 +50,12 @@ module VCAP::CloudController
         return unless config.get(:system_domain_organization)
 
         quota_definition = QuotaDefinition.default
-        unless quota_definition
-          raise ArgumentError.new('Missing default quota definition in config file')
-        end
+        raise ArgumentError.new('Missing default quota definition in config file') unless quota_definition
 
         org = Organization.find(name: config.get(:system_domain_organization))
         if org
           org.set(quota_definition: quota_definition)
-          if org.modified?
-            Steno.logger('cc.seeds').warn('seeds.system-domain-organization.collision', existing_quota_name: org.refresh.quota_definition.name)
-          end
+          Steno.logger('cc.seeds').warn('seeds.system-domain-organization.collision', existing_quota_name: org.refresh.quota_definition.name) if org.modified?
           org
         else
           Organization.create(name: config.get(:system_domain_organization), quota_definition: quota_definition)
@@ -75,7 +69,7 @@ module VCAP::CloudController
         rescue RoutingApi::RoutingApiUnavailable
           unless (tries -= 1).zero?
             # Final wait for 51.2 seconds for 9 tries
-            sleep(0.1 * 2**(base - tries - 1))
+            sleep(0.1 * (2**(base - tries - 1)))
             retry
           end
           raise
@@ -111,9 +105,7 @@ module VCAP::CloudController
             domain = Domain.find(name: system_domain)
 
             if domain
-              if domain.owning_organization != system_org
-                Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization)
-              end
+              Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization) if domain.owning_organization != system_org
             else
               PrivateDomain.create({ owning_organization: system_org, name: system_domain })
             end
@@ -122,13 +114,13 @@ module VCAP::CloudController
       end
 
       def find_routing_guid(domain)
-        if domain.key?('router_group_name')
-          router_group_name = domain['router_group_name']
-          router_group_guid = routing_api_client.router_group_guid(router_group_name)
-          raise "Unknown router_group_name specified: #{router_group_name}" if router_group_guid.nil?
+        return unless domain.key?('router_group_name')
 
-          router_group_guid
-        end
+        router_group_name = domain['router_group_name']
+        router_group_guid = routing_api_client.router_group_guid(router_group_name)
+        raise "Unknown router_group_name specified: #{router_group_name}" if router_group_guid.nil?
+
+        router_group_guid
       end
 
       def create_seed_security_groups(config)
@@ -137,13 +129,9 @@ module VCAP::CloudController
         config.get(:security_group_definitions).each do |security_group|
           seed_security_group = security_group.dup
 
-          if config.get(:default_staging_security_groups).include?(security_group['name'])
-            seed_security_group['staging_default'] = true
-          end
+          seed_security_group['staging_default'] = true if config.get(:default_staging_security_groups).include?(security_group['name'])
 
-          if config.get(:default_running_security_groups).include?(security_group['name'])
-            seed_security_group['running_default'] = true
-          end
+          seed_security_group['running_default'] = true if config.get(:default_running_security_groups).include?(security_group['name'])
 
           SecurityGroup.create(seed_security_group)
         end
@@ -194,7 +182,7 @@ module VCAP::CloudController
             encrypted_value: encrypted_value,
             encryption_key_label: label_string,
             salt: salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
         end
       end

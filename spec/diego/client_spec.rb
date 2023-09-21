@@ -26,7 +26,7 @@ module Diego
       it "should set ENV['PB_IGNORE_DEPRECATIONS'] to true" do
         # to supress warnings in stderr when BBS sends deprecated keys in responses
         ENV.delete('PB_IGNORE_DEPRECATIONS')
-        expect { subject }.to change { ENV['PB_IGNORE_DEPRECATIONS'] }.from(nil).to('true')
+        expect { subject }.to change { ENV.fetch('PB_IGNORE_DEPRECATIONS', nil) }.from(nil).to('true')
       end
     end
 
@@ -91,7 +91,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/domains/upsert").with(
                  body: Bbs::Models::UpsertDomainRequest.encode(expected_domain_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -147,7 +147,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/tasks/desire.r2").with(
                  body: Bbs::Models::DesireTaskRequest.encode(expected_task_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -155,9 +155,9 @@ module Diego
         let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect {
+          expect do
             client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
-          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
+          end.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -204,7 +204,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                  body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       describe 'filtering' do
@@ -217,7 +217,7 @@ module Diego
           expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-          )).to have_been_made.once
+                 )).to have_been_made.once
         end
 
         it 'filters by cell_id' do
@@ -229,7 +229,7 @@ module Diego
           expect(a_request(:post, "#{bbs_url}/v1/tasks/list.r2").with(
                    body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-          )).to have_been_made.once
+                 )).to have_been_made.once
         end
       end
 
@@ -285,7 +285,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/tasks/get_by_task_guid.r2").with(
                  body: Bbs::Models::TaskByGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -340,7 +340,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/tasks/cancel").with(
                  body: Bbs::Models::TaskGuidRequest.encode(expected_cancel_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -396,7 +396,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/desire.r2").with(
                  body: Bbs::Models::DesireLRPRequest.encode(expected_desire_lrp_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -455,7 +455,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrps/get_by_process_guid.r2").with(
                  body: Bbs::Models::DesiredLRPByProcessGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -463,9 +463,9 @@ module Diego
         let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect {
+          expect do
             client.desired_lrp_by_process_guid(process_guid)
-          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
+          end.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -513,7 +513,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/remove").with(
                  body: Bbs::Models::RemoveDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -569,7 +569,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/retire").with(
                  body: Bbs::Models::RetireActualLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -577,9 +577,9 @@ module Diego
         let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect {
+          expect do
             client.retire_actual_lrp(actual_lrp_key)
-          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
+          end.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -629,7 +629,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp/update").with(
                  body: Bbs::Models::UpdateDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -691,16 +691,16 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/list").with(
                  body: Bbs::Models::ActualLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
     end
 
     describe '#desired_lrps_scheduling_infos' do
       let(:scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
-      let(:response_body) {
+      let(:response_body) do
         response = Bbs::Models::DesiredLRPSchedulingInfosResponse.new(error: nil, desired_lrp_scheduling_infos: scheduling_infos)
         Bbs::Models::DesiredLRPSchedulingInfosResponse.encode(response).to_s
-      }
+      end
       let(:response_status) { 200 }
       let(:domain) { 'domain' }
 
@@ -718,7 +718,7 @@ module Diego
         expect(a_request(:post, "#{bbs_url}/v1/desired_lrp_scheduling_infos/list").with(
                  body: Bbs::Models::DesiredLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
 
       context 'when it does not return successfully' do
@@ -726,9 +726,9 @@ module Diego
         let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect {
+          expect do
             client.desired_lrp_scheduling_infos(domain)
-          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
+          end.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -771,9 +771,9 @@ module Diego
       end
 
       it 'raises an error after all retries fail' do
-        expect {
+        expect do
           client.with_request_error_handling { raise 'error' }
-        }.to raise_error(RequestError)
+        end.to raise_error(RequestError)
       end
     end
 
@@ -808,7 +808,7 @@ module Diego
         expect(response.error).to be_nil
         expect(a_request(:post, "#{bbs_url}/v1/domains/upsert").with(
                  headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => '' }
-        )).to have_been_made.once
+               )).to have_been_made.once
       end
     end
   end

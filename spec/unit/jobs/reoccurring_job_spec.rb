@@ -80,7 +80,7 @@ module VCAP
         Timecop.freeze do
           Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
-          enqueued_time = Time.now
+          enqueued_time = Time.now.utc
         end
 
         Timecop.freeze(94.seconds.after(enqueued_time)) do
@@ -111,7 +111,7 @@ module VCAP
             Timecop.freeze do
               Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
-              enqueued_time = Time.now
+              enqueued_time = Time.now.utc
             end
 
             [60, 180, 420, 900, 1860].each do |seconds|
@@ -133,7 +133,7 @@ module VCAP
             Timecop.freeze do
               Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
-              enqueued_time = Time.now
+              enqueued_time = Time.now.utc
             end
 
             [10, 23, 39.9, 61.8, 90.4].each do |seconds|
@@ -155,7 +155,7 @@ module VCAP
             Timecop.freeze do
               Jobs::Enqueuer.new(FakeJob.new(retry_after: [20, 30]), queue: Jobs::Queues.generic).enqueue_pollable
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
-              enqueued_time = Time.now
+              enqueued_time = Time.now.utc
             end
 
             # the job should run after 20s * 1.3^0 = 20 seconds
@@ -164,7 +164,7 @@ module VCAP
             end
 
             Timecop.freeze(21.seconds.after(enqueued_time)) do
-              enqueued_time = Time.now
+              enqueued_time = Time.now.utc
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
             end
 
@@ -191,7 +191,7 @@ module VCAP
 
           Timecop.freeze do
             Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
           end
 
           # The calculated backoff for the 11th retry would be 3384.321 seconds.
@@ -200,7 +200,7 @@ module VCAP
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end
@@ -216,7 +216,7 @@ module VCAP
           Timecop.freeze do
             Jobs::Enqueuer.new(FakeJob.new(retry_after: [20, 30]), queue: Jobs::Queues.generic).enqueue_pollable
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
           end
 
           Timecop.freeze(19.seconds.after(enqueued_time)) do
@@ -224,7 +224,7 @@ module VCAP
           end
 
           Timecop.freeze(22.seconds.after(enqueued_time)) do
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
           end
 
@@ -245,7 +245,7 @@ module VCAP
           Timecop.freeze do
             Jobs::Enqueuer.new(FakeJob.new(retry_after: [20]), queue: Jobs::Queues.generic).enqueue_pollable
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
           end
 
           Timecop.freeze(19.seconds.after(enqueued_time)) do
@@ -254,7 +254,7 @@ module VCAP
 
           Timecop.freeze(21.seconds.after(enqueued_time)) do
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 30
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
           end
 
@@ -275,7 +275,7 @@ module VCAP
           Timecop.freeze do
             Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
           end
 
           Timecop.freeze(9.seconds.after(enqueued_time)) do
@@ -284,7 +284,7 @@ module VCAP
 
           Timecop.freeze(11.seconds.after(enqueued_time)) do
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 30
-            enqueued_time = Time.now
+            enqueued_time = Time.now.utc
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
           end
 
@@ -322,7 +322,7 @@ module VCAP
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
           expect(PollableJobModel.first.state).to eq('FAILED')
 
-          Timecop.freeze(61.seconds.after(Time.now)) do
+          Timecop.freeze(61.seconds.after(Time.now.utc)) do
             execute_all_jobs(expected_successes: 0, expected_failures: 0)
           end
         end
@@ -332,12 +332,12 @@ module VCAP
         it 'marks the job failed with a timeout error' do
           Jobs::Enqueuer.new(FakeJob.new, queue: Jobs::Queues.generic).enqueue_pollable
 
-          Timecop.freeze(Time.now + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minute + 1) do
+          Timecop.freeze(Time.now.utc + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minute + 1) do
             execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end
@@ -352,7 +352,7 @@ module VCAP
 
           Jobs::Enqueuer.new(FakeTimeoutJob.new, queue: Jobs::Queues.generic).enqueue_pollable
 
-          Timecop.freeze(Time.now + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minute + 1) do
+          Timecop.freeze(Time.now.utc + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minute + 1) do
             execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
             expect(Delayed::Job.last.last_error).to include('handle_timeout was called')
           end
@@ -365,7 +365,7 @@ module VCAP
 
           Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic).enqueue_pollable
 
-          Timecop.freeze(61.seconds.after(Time.now)) do
+          Timecop.freeze(61.seconds.after(Time.now.utc)) do
             execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
             expect(PollableJobModel.first.state).to eq('FAILED')
           end

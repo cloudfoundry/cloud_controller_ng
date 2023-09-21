@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:body) do
       {
         'relationships' => {
-          'route'   => { 'guid' => 'some-route-guid' },
+          'route' => { 'guid' => 'some-route-guid' },
           'process' => { 'type' => 'web' }
         }
       }
@@ -29,10 +29,10 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:body) do
           {
-            unexpected:    'woah',
-            app_port:      '1234',
+            unexpected: 'woah',
+            app_port: '1234',
             relationships: {
-              route:   { guid: 'some-route-guid' },
+              route: { guid: 'some-route-guid' },
               process: { type: 'web' }
             }
           }
@@ -53,7 +53,7 @@ module VCAP::CloudController
             {
               'relationships' => {
                 'app' => { 'guid' => 'some-app-guid' },
-                'route'   => { 'guid' => 'some-route-guid' },
+                'route' => { 'guid' => 'some-route-guid' },
                 'process' => { 'type' => 'web' }
               }
             }
@@ -68,7 +68,7 @@ module VCAP::CloudController
             {
               'relationships' => {
                 'app' => { 'guid' => 'some-app-guid' },
-                'route'   => { 'guid' => 'some-route-guid' },
+                'route' => { 'guid' => 'some-route-guid' },
                 'process' => { 'type' => 'web' }
               },
               'weight' => weight
@@ -137,7 +137,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid when route_guid has an invalid guid' do
-          message = RouteMappingsCreateMessage.new(relationships: { route: { guid: 123 }, })
+          message = RouteMappingsCreateMessage.new(relationships: { route: { guid: 123 } })
           expect(message).not_to be_valid
           expect(message.errors_on(:route_guid)).not_to be_empty
         end

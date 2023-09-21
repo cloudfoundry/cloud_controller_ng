@@ -145,14 +145,12 @@ module VCAP::CloudController
           service = Service.make(service_broker: service_broker)
           service_plan = ServicePlan.make(service: service)
           ManagedServiceInstance.make(service_plan: service_plan)
-          expect {
-            begin
-              service_broker.destroy
-            rescue Sequel::ForeignKeyConstraintViolation
-            end
-          }.to_not change {
+          expect do
+            service_broker.destroy
+          rescue Sequel::ForeignKeyConstraintViolation
+          end.to_not(change do
             Service.where(id: service.id).count
-          }
+          end)
         end
       end
 

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::CANCELED_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::CANCELED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::CANCELING_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::CANCELING_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -74,13 +74,13 @@ module VCAP::CloudController
         it 'does not delete in-flight deployments over the limit' do
           total = 60
           (1..20).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
           (21..40).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now.utc - total + i)
           end
           (41..60).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -96,7 +96,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now.utc - total + i)
             DeploymentAnnotationModel.make(deployment: deployment, key_name: i, value: i)
             DeploymentLabelModel.make(deployment: deployment, key_name: i, value: i)
           end
@@ -119,9 +119,9 @@ module VCAP::CloudController
             DeploymentProcessModel.make(deployment: d)
           end
 
-          expect {
+          expect do
             job.perform
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'multiple apps' do
@@ -134,7 +134,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                DeploymentModel.make(id: i + 1000 * app_index, state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
+                DeploymentModel.make(id: i + (1000 * app_index), state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now.utc - total + i)
               end
             end
 

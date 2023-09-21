@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     class BbsStagerClient
       ACCEPTABLE_DIEGO_ERRORS = [
-        ::Diego::Bbs::ErrorTypes::ResourceNotFound,
+        ::Diego::Bbs::ErrorTypes::ResourceNotFound
       ].freeze
 
       def initialize(client, config)
@@ -26,9 +26,7 @@ module VCAP::CloudController
 
         logger.info('stage.response', staging_guid: staging_guid, error: response.error)
 
-        if response.error
-          raise CloudController::Errors::ApiError.new_from_details('StagerError', "bbs stager client staging failed: #{response.error.message}")
-        end
+        raise CloudController::Errors::ApiError.new_from_details('StagerError', "bbs stager client staging failed: #{response.error.message}") if response.error
 
         nil
       end

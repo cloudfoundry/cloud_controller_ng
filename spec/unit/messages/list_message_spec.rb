@@ -82,13 +82,13 @@ module VCAP::CloudController
       end
 
       it 'is invalid when page * default per_page exceeds DB limits' do
-        message = ListMessage.from_params({ page: 184467440737095517, per_page: nil }, [])
+        message = ListMessage.from_params({ page: 184_467_440_737_095_517, per_page: nil }, [])
         expect(message).to be_invalid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
       end
 
       it 'is invalid when page * per_page exceeds DB limits' do
-        message = ListMessage.from_params({ page: 9223372036854775807, per_page: 2 }, [])
+        message = ListMessage.from_params({ page: 9_223_372_036_854_775_807, per_page: 2 }, [])
         expect(message).to be_invalid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController
       end
 
       it 'is invalid when page * default per_page exceeds DB limits' do
-        message = ListMessage.from_params({ page: 10_0001, per_page: nil }, [])
+        message = ListMessage.from_params({ page: 100_001, per_page: nil }, [])
         expect(message).to be_invalid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 10000')
       end

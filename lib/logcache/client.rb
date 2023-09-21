@@ -27,7 +27,7 @@ module Logcache
       end
     end
 
-    def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT, start_time:, end_time:)
+    def container_metrics(source_guid:, start_time:, end_time:, envelope_limit: DEFAULT_LIMIT)
       with_request_error_handling(source_guid) do
         service.read(
           Logcache::V1::ReadRequest.new(
@@ -44,13 +44,11 @@ module Logcache
 
     private
 
-    def with_request_error_handling(source_guid, &blk)
+    def with_request_error_handling(_source_guid, &)
       tries ||= 3
       yield
-    rescue => e
-      if e.is_a?(GRPC::DeadlineExceeded)
-        raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out')
-      end
+    rescue StandardError => e
+      raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') if e.is_a?(GRPC::DeadlineExceeded)
 
       if (tries -= 1) > 0
         sleep 0.1
@@ -76,18 +74,18 @@ module Logcache
           metrics: {
             'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0),
             'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0),
-            'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0),
+            'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0)
           }
         ),
         instance_id: '0',
         tags: {
-            'source_id' => source_guid,
+          'source_id' => source_guid
         }
       )
     end
 
     def envelopes
-      Loggregator::V2::EnvelopeBatch.new(batch: [self.empty_envelope])
+      Loggregator::V2::EnvelopeBatch.new(batch: [empty_envelope])
     end
 
     attr_accessor :empty_envelope

@@ -7,12 +7,12 @@ module CloudController::Errors::V3
       double(Details,
              name: message,
              response_code: 400,
-             code: 12345,
+             code: 12_345,
              message_format: 'Before %s %s after.')
     end
 
     let(:messageServiceInvalid) { 'ServiceInvalid' }
-    let(:args) { ['foo', 'bar'] }
+    let(:args) { %w[foo bar] }
 
     let(:messageServiceInvalidDetails) { create_details(messageServiceInvalid) }
 
@@ -55,9 +55,9 @@ module CloudController::Errors::V3
         let(:api_error) { ApiError.new }
 
         it 'should not explode' do
-          expect {
+          expect do
             api_error.message
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -80,7 +80,7 @@ module CloudController::Errors::V3
       end
 
       it 'exposes the code' do
-        expect(api_error.code).to eq(12345)
+        expect(api_error.code).to eq(12_345)
       end
 
       it 'exposes the http code' do

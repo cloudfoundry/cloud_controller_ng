@@ -33,7 +33,7 @@ module VCAP::CloudController
         org_user: true,
         org_manager: true,
         org_auditor: true,
-        org_billing_manager: true,
+        org_billing_manager: true
       }
 
       read_table = {
@@ -52,7 +52,7 @@ module VCAP::CloudController
         org_user: false,
         org_manager: true,
         org_auditor: false,
-        org_billing_manager: false,
+        org_billing_manager: false
       }
 
       write_table = {
@@ -71,7 +71,7 @@ module VCAP::CloudController
         org_user: false,
         org_manager: false,
         org_auditor: false,
-        org_billing_manager: false,
+        org_billing_manager: false
       }
 
       it_behaves_like('an access control', :create, write_table)
@@ -87,7 +87,7 @@ module VCAP::CloudController
         describe "when the user's guid matches the related guid" do
           let(:related_guid) { user.guid }
 
-          [:auditors, :developers, :managers].each do |r|
+          %i[auditors developers managers].each do |r|
             describe "when the relation is '#{r}'" do
               let(:relation) { r }
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
                 org_user: true,
                 org_manager: true,
                 org_auditor: true,
-                org_billing_manager: true,
+                org_billing_manager: true
               }
 
               it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
@@ -131,7 +131,7 @@ module VCAP::CloudController
               org_user: false,
               org_manager: false,
               org_auditor: false,
-              org_billing_manager: false,
+              org_billing_manager: false
             }
 
             it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
@@ -141,7 +141,7 @@ module VCAP::CloudController
         describe "when the user's guid does not match the related guid" do
           let(:related_guid) { 'abc' }
 
-          [:auditors, :developers, :managers, :something_else].each do |r|
+          %i[auditors developers managers something_else].each do |r|
             describe "when the relation is '#{r}'" do
               let(:relation) { r }
 
@@ -160,7 +160,7 @@ module VCAP::CloudController
                 org_user: false,
                 org_manager: false,
                 org_auditor: false,
-                org_billing_manager: false,
+                org_billing_manager: false
               }
 
               it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
@@ -187,7 +187,7 @@ module VCAP::CloudController
         org_user: true,
         org_manager: true,
         org_auditor: true,
-        org_billing_manager: true,
+        org_billing_manager: true
       }
 
       read_table = {
@@ -206,7 +206,7 @@ module VCAP::CloudController
         org_user: false,
         org_manager: true,
         org_auditor: false,
-        org_billing_manager: false,
+        org_billing_manager: false
       }
 
       write_table = {
@@ -225,7 +225,7 @@ module VCAP::CloudController
         org_user: false,
         org_manager: true,
         org_auditor: false,
-        org_billing_manager: false,
+        org_billing_manager: false
       }
 
       update_table = {
@@ -244,7 +244,7 @@ module VCAP::CloudController
         org_user: false,
         org_manager: true,
         org_auditor: false,
-        org_billing_manager: false,
+        org_billing_manager: false
       }
 
       it_behaves_like('an access control', :create, write_table)
@@ -260,7 +260,7 @@ module VCAP::CloudController
         describe 'when the user is acting on themselves' do
           let(:related_guid) { user.guid }
 
-          [:auditors, :developers, :managers].each do |r|
+          %i[auditors developers managers].each do |r|
             describe "when the relation is '#{r}'" do
               let(:relation) { r }
 
@@ -279,7 +279,7 @@ module VCAP::CloudController
                 org_user: true,
                 org_manager: true,
                 org_auditor: true,
-                org_billing_manager: true,
+                org_billing_manager: true
               }
 
               it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
@@ -304,7 +304,7 @@ module VCAP::CloudController
               org_user: false,
               org_manager: true,
               org_auditor: false,
-              org_billing_manager: false,
+              org_billing_manager: false
             }
 
             it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
@@ -314,7 +314,7 @@ module VCAP::CloudController
         describe "when the user's guid does not match the related guid" do
           let(:related_guid) { 'abc' }
 
-          [:auditors, :developers, :managers, :something_else].each do |r|
+          %i[auditors developers managers something_else].each do |r|
             describe "when the relation is '#{r}'" do
               let(:relation) { r }
 
@@ -333,7 +333,7 @@ module VCAP::CloudController
                 org_user: false,
                 org_manager: true,
                 org_auditor: false,
-                org_billing_manager: false,
+                org_billing_manager: false
               }
 
               it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)

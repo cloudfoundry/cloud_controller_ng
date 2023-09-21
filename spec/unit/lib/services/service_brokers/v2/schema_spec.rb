@@ -6,18 +6,18 @@ module VCAP::Services::ServiceBrokers::V2
     let(:schema) { Schema.new(raw_schema) }
 
     describe '#to_json' do
-      let(:raw_schema) {
+      let(:raw_schema) do
         {
           '$schema' => 'http://json-schema.org/draft-04/schema#',
           :properties => { foo: { type: 'string' } },
           :required => ['foo']
         }
-      }
+      end
 
       it 'converts a hash into json' do
-        expect(schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#",'\
-          '"properties":{"foo":{"type":"string"}},'\
-          '"required":["foo"]}'
+        expect(schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#",' \
+                                     '"properties":{"foo":{"type":"string"}},' \
+                                     '"required":["foo"]}'
       end
     end
 
@@ -46,7 +46,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema has an internal reference' do
-        let(:raw_schema) {
+        let(:raw_schema) do
           {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             properties: {
@@ -54,7 +54,7 @@ module VCAP::Services::ServiceBrokers::V2
               bar: { '$ref': '#/properties/foo' }
             }
           }
-        }
+        end
 
         it 'should be valid' do
           expect(schema.validate).to be true
@@ -98,9 +98,9 @@ module VCAP::Services::ServiceBrokers::V2
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 2
             expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
-              'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
+                                                            'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
             expect(schema.errors.full_messages.last).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
-              'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
+                                                           'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
           end
         end
       end
@@ -231,7 +231,7 @@ module VCAP::Services::ServiceBrokers::V2
           {
             'well below the limit': 1,
             'just below the limit': 63,
-            'on the limit': 64,
+            'on the limit': 64
           }.each do |desc, size_in_kb|
             context "when the schema json is #{desc}" do
               let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
@@ -247,7 +247,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'that are invalid' do
           {
             'just above the limit': 65,
-            'well above the limit': 10 * 1024,
+            'well above the limit': 10 * 1024
           }.each do |desc, size_in_kb|
             context "when the schema json is #{desc}" do
               let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }

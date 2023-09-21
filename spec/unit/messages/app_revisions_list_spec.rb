@@ -9,8 +9,8 @@ module VCAP::CloudController
           'versions' => '808,810',
           'page' => 1,
           'per_page' => 5,
-          'order_by' => 'created_at',
-          }
+          'order_by' => 'created_at'
+        }
       end
 
       it 'returns the correct AppRevisionsListMessage' do
@@ -35,14 +35,14 @@ module VCAP::CloudController
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           AppRevisionsListMessage.from_params({
-            versions: [],
-            page: 1,
-            per_page: 5,
-            order_by: 'created_at',
-          })
-        }.not_to raise_error
+                                                versions: [],
+                                                page: 1,
+                                                per_page: 5,
+                                                order_by: 'created_at'
+                                              })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do

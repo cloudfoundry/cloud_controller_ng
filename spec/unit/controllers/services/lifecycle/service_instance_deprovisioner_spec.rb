@@ -69,12 +69,12 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to match_array([nil, %w[warning-1 warning-2]])
             end
           end
 
@@ -103,12 +103,12 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to match_array([nil, %w[warning-1 warning-2]])
             end
           end
 
@@ -158,12 +158,12 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to match_array([nil, %w[warning-1 warning-2]])
             end
           end
 

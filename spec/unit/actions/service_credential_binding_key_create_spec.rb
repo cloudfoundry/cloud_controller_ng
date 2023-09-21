@@ -12,11 +12,11 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
-      let(:binding_details) {}
+      let(:binding_details) { nil }
       let(:name) { 'test-key' }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
       let(:name) { 'some-binding-name' }
-      let(:message) {
+      let(:message) do
         VCAP::CloudController::ServiceCredentialKeyBindingCreateMessage.new(
           {
             name: name,
@@ -30,7 +30,7 @@ module VCAP::CloudController
             }
           }
         )
-      }
+      end
 
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_key').and_return(binding_event_repo)
@@ -114,7 +114,7 @@ module VCAP::CloudController
               it 'raises an error' do
                 expect { action.precursor(service_instance, message: message) }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-                  'The binding name is invalid. Key binding names must be unique. '\
+                  'The binding name is invalid. Key binding names must be unique. ' \
                   "The service instance already has a key binding with the name '#{binding.name}' that is getting deleted or its deletion failed."
                 )
               end
@@ -128,9 +128,9 @@ module VCAP::CloudController
               it 'raises an error' do
                 expect { action.precursor(service_instance, message: message) }.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
-                  'The binding name is invalid. Key binding names must be unique. '\
+                  'The binding name is invalid. Key binding names must be unique. ' \
                   "The service instance already has a key binding with the name '#{binding.name}' that is getting deleted or its deletion failed."
-                 )
+                )
               end
             end
           end
@@ -178,9 +178,9 @@ module VCAP::CloudController
               it 'raises an error' do
                 service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
 
-                expect {
+                expect do
                   action.precursor(service_instance, message: message)
-                }.to raise_error(
+                end.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   'There is an operation in progress for the service instance'
                 )
@@ -191,9 +191,9 @@ module VCAP::CloudController
               it 'raises an error' do
                 service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
 
-                expect {
+                expect do
                   action.precursor(service_instance, message: message)
-                }.to raise_error(
+                end.to raise_error(
                   ServiceCredentialBindingKeyCreate::UnprocessableCreate,
                   'Service instance not found'
                 )
@@ -256,11 +256,11 @@ module VCAP::CloudController
         let(:app) { nil }
         let(:precursor) { action.precursor(service_instance, message: message) }
         let(:specific_fields) { {} }
-        let(:details) {
+        let(:details) do
           {
             credentials: { 'password' => 'rennt', 'username' => 'lola' }
           }.merge(specific_fields)
-        }
+        end
         let(:bind_response) { { binding: details } }
 
         it_behaves_like 'service binding creation', ServiceKey

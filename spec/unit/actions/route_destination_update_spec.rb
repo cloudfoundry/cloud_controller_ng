@@ -10,8 +10,8 @@ module VCAP::CloudController
 
       let(:message) do
         VCAP::CloudController::RouteDestinationUpdateMessage.new({
-          protocol: 'http2'
-        })
+                                                                   protocol: 'http2'
+                                                                 })
       end
 
       it 'updates the destination record' do

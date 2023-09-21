@@ -13,20 +13,16 @@ module VCAP::CloudController
     end
 
     def validate_process(process)
-      if process.docker? && FeatureFlag.disabled?(:diego_docker)
-        raise CloudController::Errors::ApiError.new_from_details('DockerDisabled')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if process.docker? && FeatureFlag.disabled?(:diego_docker)
 
-      if process.package_hash.blank?
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty') if process.package_hash.blank?
 
-      if Buildpack.empty? && using_admin_buildpack?(process.app.lifecycle_data.buildpacks)
-        raise CloudController::Errors::ApiError.new_from_details('NoBuildpacksFound')
-      end
+      return unless Buildpack.empty? && using_admin_buildpack?(process.app.lifecycle_data.buildpacks)
+
+      raise CloudController::Errors::ApiError.new_from_details('NoBuildpacksFound')
     end
 
-    def stager_for_build(build)
+    def stager_for_build(_build)
       Diego::Stager.new(@config)
     end
 

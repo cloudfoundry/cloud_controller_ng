@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'when instances exceeds 2000000' do
-          let(:params) { { instances: 3000000 } }
+          let(:params) { { instances: 3_000_000 } }
 
           it 'is not valid' do
             message = ManifestProcessScaleMessage.new(params)

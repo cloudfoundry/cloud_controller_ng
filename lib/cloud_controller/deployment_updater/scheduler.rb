@@ -12,11 +12,12 @@ module VCAP::CloudController
             statsd_client = CloudController::DependencyLocator.instance.statsd_client
             prometheus_updater = CloudController::DependencyLocator.instance.prometheus_updater
 
-            update_step = proc { update(
-              update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
-              statsd_client: statsd_client,
-              prometheus_updater: prometheus_updater
-            )
+            update_step = proc {
+              update(
+                update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
+                statsd_client: statsd_client,
+                prometheus_updater: prometheus_updater
+              )
             }
 
             if config.get(:locket).nil?
@@ -31,7 +32,7 @@ module VCAP::CloudController
               port: config.get(:locket, :port),
               client_ca_path: config.get(:locket, :ca_file),
               client_key_path: config.get(:locket, :key_file),
-              client_cert_path: config.get(:locket, :cert_file),
+              client_cert_path: config.get(:locket, :cert_file)
             )
             lock_worker = Locket::LockWorker.new(lock_runner)
 
@@ -44,9 +45,9 @@ module VCAP::CloudController
         def update(update_frequency:, statsd_client:, prometheus_updater:)
           logger = Steno.logger('cc.deployment_updater.scheduler')
 
-          update_start_time = Time.now
+          update_start_time = Time.now.utc
           Dispatcher.dispatch
-          update_duration = Time.now - update_start_time
+          update_duration = Time.now.utc - update_start_time
           ## NOTE: We're taking time in seconds and multiplying by 1000 because we don't have
           ##       access to time in milliseconds. If you ever get access to reliable time in
           ##       milliseconds, then do know that the lack of precision here is not desired
@@ -68,14 +69,14 @@ module VCAP::CloudController
 
         def with_error_logging(error_message)
           yield
-        rescue => e
+        rescue StandardError => e
           logger = Steno.logger('cc.deployment_updater')
           error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
           logger.error(
             error_message,
             error: error_name,
             error_message: e.message,
-            backtrace: e.backtrace.join("\n"),
+            backtrace: e.backtrace.join("\n")
           )
         end
       end

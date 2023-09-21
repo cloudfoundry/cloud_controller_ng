@@ -14,8 +14,8 @@ module CloudController
         {
           blobstore_host: blobstore_host,
           blobstore_port: blobstore_port,
-          user:           username,
-          password:       password,
+          user: username,
+          password: password
         }
       end
 
@@ -32,10 +32,10 @@ module CloudController
 
       subject(:url_generator) do
         InternalUrlGenerator.new(connection_options,
-          package_blobstore,
-          buildpack_cache_blobstore,
-          admin_buildpack_blobstore,
-          droplet_blobstore)
+                                 package_blobstore,
+                                 buildpack_cache_blobstore,
+                                 admin_buildpack_blobstore,
+                                 droplet_blobstore)
       end
 
       describe '#admin_buildpack_download_url' do
@@ -52,9 +52,9 @@ module CloudController
           end
 
           it 'raises a StagingError' do
-            expect {
+            expect do
               url_generator.admin_buildpack_download_url(buildpack)
-            }.to raise_error(CloudController::Errors::ApiError, /Staging error:/)
+            end.to raise_error(CloudController::Errors::ApiError, /Staging error:/)
           end
         end
 
@@ -64,9 +64,9 @@ module CloudController
           end
 
           it 'bubbles up an ApiError' do
-            expect {
+            expect do
               url_generator.admin_buildpack_download_url(buildpack)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
+            end.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -95,9 +95,9 @@ module CloudController
           end
 
           it 'bubbles up an ApiError' do
-            expect {
+            expect do
               url_generator.droplet_download_url(droplet)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
+            end.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -127,9 +127,9 @@ module CloudController
           end
 
           it 'bubbles up an ApiError' do
-            expect {
+            expect do
               url_generator.buildpack_cache_download_url(app_model.guid, stack)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
+            end.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end
@@ -156,9 +156,9 @@ module CloudController
           end
 
           it 'bubbles up an ApiError' do
-            expect {
+            expect do
               url_generator.package_download_url(package)
-            }.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
+            end.to raise_error(CloudController::Errors::ApiError, /blobstore unavailability/)
           end
         end
       end

@@ -34,12 +34,12 @@ module VCAP::CloudController
     add_association_dependencies annotations: :destroy
 
     many_to_many :shared_spaces,
-          left_key:          :service_instance_guid,
-          left_primary_key:  :guid,
-          right_key:         :target_space_guid,
-          right_primary_key: :guid,
-          join_table:        :service_instance_shares,
-          class: VCAP::CloudController::Space
+                 left_key: :service_instance_guid,
+                 left_primary_key: :guid,
+                 right_key: :target_space_guid,
+                 right_primary_key: :guid,
+                 join_table: :service_instance_shares,
+                 class: VCAP::CloudController::Space
 
     many_to_many :routes, join_table: :route_bindings
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
     end
 
     def user_provided_instance?
-      self.type == UserProvidedServiceInstance.name.demodulize.underscore
+      type == UserProvidedServiceInstance.name.demodulize.underscore
     end
 
     def managed_instance?
@@ -137,17 +137,14 @@ module VCAP::CloudController
         'guid' => guid,
         'name' => name,
         'bound_app_count' => service_bindings_dataset.count,
-        'type' => type,
+        'type' => type
       }
     end
 
     def to_hash(opts={})
       access_context = VCAP::CloudController::Security::AccessContext.new
-      if access_context.cannot?(:read_env, self)
-        opts[:redact] = ['credentials']
-      end
-      hash = super(opts)
-      hash
+      opts[:redact] = ['credentials'] if access_context.cannot?(:read_env, self)
+      super(opts)
     end
 
     def credentials_with_serialization=(val)
@@ -182,9 +179,9 @@ module VCAP::CloudController
     def after_update
       super
       update_service_bindings
-      if @columns_updated.key?(:service_plan_id) || @columns_updated.key?(:name)
-        service_instance_usage_event_repository.updated_event_from_service_instance(self)
-      end
+      return unless @columns_updated.key?(:service_plan_id) || @columns_updated.key?(:name)
+
+      service_instance_usage_event_repository.updated_event_from_service_instance(self)
     end
 
     def operation_in_progress?
@@ -229,37 +226,35 @@ module VCAP::CloudController
 
     def save_with_new_operation(instance_attributes, last_operation)
       ServiceInstance.db.transaction do
-        self.lock!
+        lock!
         update_attributes(instance_attributes)
 
-        if self.last_operation
-          self.last_operation.destroy
-        end
+        self.last_operation.destroy if self.last_operation
 
         # it is important to create the service instance operation with the service instance
         # instead of doing self.service_instance_operation = x
         # because mysql will deadlock when requests happen concurrently otherwise.
-        ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
-        self.service_instance_operation(reload: true)
+        ServiceInstanceOperation.create(last_operation.merge(service_instance_id: id))
+        service_instance_operation(reload: true)
       end
     end
 
     private
 
     def validate_service_binding(service_binding)
-      if service_binding && service_binding.app.space != space
-        raise InvalidServiceBinding.new(service_binding.id)
-      end
+      return unless service_binding && service_binding.app.space != space
+
+      raise InvalidServiceBinding.new(service_binding.id)
     end
 
-    def validate_space(space)
+    def validate_space(_space)
       service_bindings.each { |binding| validate_service_binding(binding) }
     end
 
     def validate_tags_length
-      if tags.join.length > 2048
-        @errors[:tags] = [:too_long]
-      end
+      return unless tags.join.length > 2048
+
+      @errors[:tags] = [:too_long]
     end
 
     def service_instance_usage_event_repository
@@ -267,9 +262,9 @@ module VCAP::CloudController
     end
 
     def update_service_bindings
-      if columns_updated.key?(:syslog_drain_url)
-        service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
-      end
+      return unless columns_updated.key?(:syslog_drain_url)
+
+      service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
     end
 
     def update_attributes(instance_attrs)

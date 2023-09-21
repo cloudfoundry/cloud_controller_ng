@@ -4,14 +4,14 @@ module VCAP::CloudController
   class ToManyRelationshipMessage < BaseMessage
     class DataParamGUIDValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:data)
-          values = record.data
-          if values.is_a? Array
-            values.each_with_index do |value, index|
-              guid = value[:guid]
-              record.errors.add(:base, "Invalid data type: Data[#{index}] guid should be a string.") if !guid.is_a? String
-            end
-          end
+        return unless record.requested?(:data)
+
+        values = record.data
+        return unless values.is_a? Array
+
+        values.each_with_index do |value, index|
+          guid = value[:guid]
+          record.errors.add(:base, "Invalid data type: Data[#{index}] guid should be a string.") unless guid.is_a? String
         end
       end
     end

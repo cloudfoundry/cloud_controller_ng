@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
     let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
     let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::ServiceEventRepository) }
-    let(:basic_auth) { ['cc', 'auth1234'] }
+    let(:basic_auth) { %w[cc auth1234] }
 
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -21,10 +21,10 @@ module VCAP::Services::ServiceBrokers
     describe '#create' do
       let(:broker) do
         VCAP::CloudController::ServiceBroker.new(
-          name:          'Cool Broker',
-          broker_url:    'http://broker.example.com',
+          name: 'Cool Broker',
+          broker_url: 'http://broker.example.com',
           auth_username: 'cc',
-          auth_password: 'auth1234',
+          auth_password: 'auth1234'
         )
       end
 
@@ -43,9 +43,9 @@ module VCAP::Services::ServiceBrokers
       end
 
       it 'creates a service broker' do
-        expect {
+        expect do
           registration.create
-        }.to change(VCAP::CloudController::ServiceBroker, :count).from(0).to(1)
+        end.to change(VCAP::CloudController::ServiceBroker, :count).from(0).to(1)
 
         expect(broker).to eq(VCAP::CloudController::ServiceBroker.last)
 
@@ -95,9 +95,9 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'does not create a new service broker' do
-            expect {
+            expect do
               registration.create
-            }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            end.to_not change(VCAP::CloudController::ServiceBroker, :count)
           end
 
           it 'does not fetch the catalog' do
@@ -164,15 +164,17 @@ module VCAP::Services::ServiceBrokers
           end
 
           it "raises an error, even though we'd rather it not" do
-            expect {
+            expect do
               registration.create
-            }.to raise_error V2::Errors::ServiceBrokerBadResponse
+            end.to raise_error V2::Errors::ServiceBrokerBadResponse
           end
 
           it 'does not create a new service broker' do
-            expect {
-              registration.create rescue nil
-            }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            expect do
+              registration.create
+            rescue StandardError
+              nil
+            end.to_not change(VCAP::CloudController::ServiceBroker, :count)
           end
 
           it 'does not synchronize uaa clients' do
@@ -230,22 +232,18 @@ module VCAP::Services::ServiceBrokers
 
         it 'does not save new broker' do
           expect(VCAP::CloudController::ServiceBroker.count).to eq(0)
-          expect {
-            begin
-              registration.create
-            rescue CloudController::Errors::ApiError
-            end
-          }.to change { VCAP::CloudController::ServiceBroker.count }.by(0)
+          expect do
+            registration.create
+          rescue CloudController::Errors::ApiError
+          end.to change { VCAP::CloudController::ServiceBroker.count }.by(0)
         end
 
         it 'nullifies the service_broker_id field of the created dashboard clients' do
           expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
-          expect {
-            begin
-              registration.create
-            rescue CloudController::Errors::ApiError
-            end
-          }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by(1)
+          expect do
+            registration.create
+          rescue CloudController::Errors::ApiError
+          end.to change { VCAP::CloudController::ServiceDashboardClient.count }.by(1)
 
           expect(VCAP::CloudController::ServiceDashboardClient.last.service_broker_id).to be_nil
         end
@@ -258,13 +256,19 @@ module VCAP::Services::ServiceBrokers
         end
 
         it 'raises the error and does not create a new service broker' do
-          expect {
-            registration.create rescue nil
-          }.to_not change(VCAP::CloudController::ServiceBroker, :count)
+          expect do
+            registration.create
+          rescue StandardError
+            nil
+          end.to_not change(VCAP::CloudController::ServiceBroker, :count)
         end
 
         it 'does not synchronize the catalog' do
-          registration.create rescue nil
+          begin
+            registration.create
+          rescue StandardError
+            nil
+          end
 
           expect(service_manager).not_to have_received(:sync_services_and_plans)
         end
@@ -272,27 +276,27 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the client manager has warnings' do
         before do
-          allow(client_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(client_manager).to receive(:warnings).and_return(%w[warning1 warning2])
           allow(client_manager).to receive(:has_warnings?).and_return(true)
         end
 
         it 'adds the warnings' do
           registration.create
 
-          expect(registration.warnings).to eq(['warning1', 'warning2'])
+          expect(registration.warnings).to eq(%w[warning1 warning2])
         end
       end
 
       context 'when the service manager has warnings' do
         before do
-          allow(service_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(service_manager).to receive(:warnings).and_return(%w[warning1 warning2])
           allow(service_manager).to receive(:has_warnings?).and_return(true)
         end
 
         it 'adds the warnings' do
           registration.create
 
-          expect(registration.warnings).to eq(['warning1', 'warning2'])
+          expect(registration.warnings).to eq(%w[warning1 warning2])
         end
       end
 
@@ -306,8 +310,8 @@ module VCAP::Services::ServiceBrokers
         it 'adds a warning' do
           registration.create
 
-          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
-                       ' Users will be prevented from binding instances of this service with apps.'
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled. ' \
+                             'Users will be prevented from binding instances of this service with apps.'
 
           expect(registration.warnings).to include(expected_warning)
         end
@@ -318,10 +322,10 @@ module VCAP::Services::ServiceBrokers
       let(:old_broker_host) { 'broker.example.com' }
       let!(:broker) do
         VCAP::CloudController::ServiceBroker.make(
-          name:          'Cool Broker',
-          broker_url:    "http://#{old_broker_host}",
+          name: 'Cool Broker',
+          broker_url: "http://#{old_broker_host}",
           auth_username: 'cc',
-          auth_password: 'auth1234',
+          auth_password: 'auth1234'
         )
       end
 
@@ -348,9 +352,9 @@ module VCAP::Services::ServiceBrokers
       end
 
       it 'does not create a new service broker' do
-        expect {
+        expect do
           registration.update
-        }.not_to change(VCAP::CloudController::ServiceBroker, :count)
+        end.not_to change(VCAP::CloudController::ServiceBroker, :count)
       end
 
       it 'updates a service broker' do
@@ -423,9 +427,9 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'does not update the service broker' do
-            expect {
+            expect do
               registration.update
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not fetch the catalog' do
@@ -492,15 +496,17 @@ module VCAP::Services::ServiceBrokers
           let(:body) { '{"description":"error message"}' }
 
           it "raises an error, even though we'd rather it not" do
-            expect {
+            expect do
               registration.update
-            }.to raise_error V2::Errors::ServiceBrokerBadResponse
+            end.to raise_error V2::Errors::ServiceBrokerBadResponse
           end
 
           it 'not update the service broker' do
-            expect {
-              registration.update rescue nil
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            expect do
+              registration.update
+            rescue StandardError
+              nil
+            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not synchronize uaa clients' do
@@ -537,9 +543,11 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'not update the service broker' do
-            expect {
-              registration.update rescue nil
-            }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
+            expect do
+              registration.update
+            rescue StandardError
+              nil
+            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not synchronize the catalog' do
@@ -561,12 +569,10 @@ module VCAP::Services::ServiceBrokers
 
         it 'does not update the broker' do
           broker.name = 'something-else'
-          expect {
-            begin
-              registration.update
-            rescue CloudController::Errors::ApiError
-            end
-          }.not_to change { VCAP::CloudController::ServiceBroker[broker.id].name }
+          expect do
+            registration.update
+          rescue CloudController::Errors::ApiError
+          end.not_to(change { VCAP::CloudController::ServiceBroker[broker.id].name })
         end
       end
 
@@ -582,13 +588,19 @@ module VCAP::Services::ServiceBrokers
 
         it 'does not update the broker' do
           broker.name = 'something-else'
-          expect {
-            registration.update rescue nil
-          }.not_to change { VCAP::CloudController::ServiceBroker[broker.id].name }
+          expect do
+            registration.update
+          rescue StandardError
+            nil
+          end.not_to(change { VCAP::CloudController::ServiceBroker[broker.id].name })
         end
 
         it 'does not synchronize the catalog' do
-          registration.update rescue nil
+          begin
+            registration.update
+          rescue StandardError
+            nil
+          end
 
           expect(service_manager).not_to have_received(:sync_services_and_plans)
         end
@@ -596,27 +608,27 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the client manager has warnings' do
         before do
-          allow(client_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(client_manager).to receive(:warnings).and_return(%w[warning1 warning2])
           allow(client_manager).to receive(:has_warnings?).and_return(true)
         end
 
         it 'adds the warnings' do
           registration.update
 
-          expect(registration.warnings).to eq(['warning1', 'warning2'])
+          expect(registration.warnings).to eq(%w[warning1 warning2])
         end
       end
 
       context 'when the service manager has warnings' do
         before do
-          allow(service_manager).to receive(:warnings).and_return(['warning1', 'warning2'])
+          allow(service_manager).to receive(:warnings).and_return(%w[warning1 warning2])
           allow(service_manager).to receive(:has_warnings?).and_return(true)
         end
 
         it 'adds the warnings' do
           registration.update
 
-          expect(registration.warnings).to eq(['warning1', 'warning2'])
+          expect(registration.warnings).to eq(%w[warning1 warning2])
         end
       end
 
@@ -630,8 +642,8 @@ module VCAP::Services::ServiceBrokers
         it 'adds a warning' do
           registration.update
 
-          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
-                       ' Users will be prevented from binding instances of this service with apps.'
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled. ' \
+                             'Users will be prevented from binding instances of this service with apps.'
 
           expect(registration.warnings).to include(expected_warning)
         end

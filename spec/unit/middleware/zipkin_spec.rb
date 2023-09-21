@@ -25,7 +25,7 @@ module CloudFoundry
         let(:request_headers) do
           {
             'HTTP_X_B3_TRACEID' => trace_id,
-            'HTTP_X_B3_SPANID'  => span_id
+            'HTTP_X_B3_SPANID' => span_id
           }
         end
 
@@ -68,12 +68,12 @@ module CloudFoundry
           let(:request_headers) do
             {
               'HTTP_X_B3_TRACEID' => trace_id,
-              'HTTP_X_B3_SPANID'  => span_id
+              'HTTP_X_B3_SPANID' => span_id
             }
           end
 
           it 'is returned in the response' do
-            _, headers, _ = middleware.call(request_headers)
+            _, headers, = middleware.call(request_headers)
 
             expect(headers['X-B3-TraceId']).to eq trace_id
             expect(headers['X-B3-SpanId']).to eq span_id
@@ -82,7 +82,7 @@ module CloudFoundry
 
         context 'when the Zipkin (B3) headers are NOT passed in' do
           it 'does not return any Zipkin (B3) headers' do
-            _, headers, _ = middleware.call({})
+            _, headers, = middleware.call({})
 
             expect(headers['X-B3-TraceId']).to be_nil
             expect(headers['X-B3-SpanId']).to be_nil

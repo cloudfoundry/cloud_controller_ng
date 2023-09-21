@@ -5,12 +5,12 @@ module VCAP::CloudController
     class NormalEnvHashToDiegoEnvArrayPhilosopher
       def self.muse(hash)
         hash.map do |k, v|
-          case v
-          when Array, Hash
-            v = MultiJson.dump(v)
-          else
-            v = v.to_s
-          end
+          v = case v
+              when Array, Hash
+                MultiJson.dump(v)
+              else
+                v.to_s
+              end
 
           { 'name' => k.to_s, 'value' => v }
         end

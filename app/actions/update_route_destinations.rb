@@ -18,9 +18,7 @@ module VCAP::CloudController
         validate_max_destinations!(existing_route_mappings, new_route_mappings)
         validate_unique!(new_route_mappings)
 
-        if existing_route_mappings.any? { |rm| rm[:weight] }
-          raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.')
-        end
+        raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.') if existing_route_mappings.any? { |rm| rm[:weight] }
 
         to_add = compare_destination_hashes(new_route_mappings, existing_route_mappings)
 
@@ -43,9 +41,7 @@ module VCAP::CloudController
       end
 
       def delete(destination, route, user_audit_info)
-        if destination.weight
-          raise Error.new('Weighted destinations cannot be deleted individually.')
-        end
+        raise Error.new('Weighted destinations cannot be deleted individually.') if destination.weight
 
         to_delete = [destination_to_mapping_hash(route, destination)]
 
@@ -112,9 +108,7 @@ module VCAP::CloudController
 
           updated_ports = ((process.ports || []) - ports_to_delete + ports_to_add).uniq
           if updated_ports.empty?
-            updated_ports = if process.app.buildpack?
-                              ProcessModel::DEFAULT_PORTS
-                            end
+            updated_ports = (ProcessModel::DEFAULT_PORTS if process.app.buildpack?)
           end
 
           process.skip_process_version_update = true
@@ -150,19 +144,17 @@ module VCAP::CloudController
 
       def update_port(destinations, apps_hash)
         destinations.each do |dst|
-          if dst[:app_port].nil?
-            app = apps_hash[dst[:app_guid]]
+          next unless dst[:app_port].nil?
 
-            dst[:app_port] = default_port(app)
-          end
+          app = apps_hash[dst[:app_guid]]
+
+          dst[:app_port] = default_port(app)
         end
       end
 
       def update_protocol(destinations, route)
         destinations.each do |dst|
-          if dst[:protocol].nil?
-            dst[:protocol] = RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[route.protocol]
-          end
+          dst[:protocol] = RouteMappingModel::DEFAULT_PROTOCOL_MAPPING[route.protocol] if dst[:protocol].nil?
         end
       end
 
@@ -218,9 +210,9 @@ module VCAP::CloudController
       def validate_max_destinations!(existing_route_mappings, new_route_mappings)
         total_route_mapping_count = existing_route_mappings.count + new_route_mappings.count
 
-        if total_route_mapping_count > MAX_DESTINATIONS_FOR_ROUTE
-          raise Error.new('Routes can be mapped to at most 100 destinations.')
-        end
+        return unless total_route_mapping_count > MAX_DESTINATIONS_FOR_ROUTE
+
+        raise Error.new('Routes can be mapped to at most 100 destinations.')
       end
     end
   end

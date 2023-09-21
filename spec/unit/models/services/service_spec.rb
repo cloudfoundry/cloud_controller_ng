@@ -26,21 +26,23 @@ module VCAP::CloudController
       context 'when the tags are longer than 2048 characters' do
         it 'raises an error on save' do
           super_long_tag = 'a' * 2049
-          expect {
+          expect do
             Service.make(label: 'super-long-service', tags: [super_long_tag])
-          }.to raise_error('Service tags for service super-long-service must be 2048 characters or less.')
+          end.to raise_error('Service tags for service super-long-service must be 2048 characters or less.')
         end
       end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
-                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
-                                    :instances_retrievable, :allow_context_updates
+      it {
+        is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
+                                         :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
+                                         :instances_retrievable, :allow_context_updates
       }
-      it { is_expected.to import_attributes :label, :description, :long_description, :info_url,
-                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
-                                    :instances_retrievable, :allow_context_updates
+      it {
+        is_expected.to import_attributes :label, :description, :long_description, :info_url,
+                                         :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
+                                         :instances_retrievable, :allow_context_updates
       }
     end
 
@@ -89,7 +91,7 @@ module VCAP::CloudController
       it 'returns private services if a user can see a plan inside them' do
         ServicePlanVisibility.create(
           organization: nonadmin_org,
-          service_plan: private_plan,
+          service_plan: private_plan
         )
         expect(records(nonadmin_user)).to include(private_service, public_service)
       end
@@ -164,8 +166,8 @@ module VCAP::CloudController
 
     describe '#tags' do
       it 'returns the provided service tags' do
-        service = Service.make(tags: %w(a b c))
-        expect(service.tags).to match_array(%w(a b c))
+        service = Service.make(tags: %w[a b c])
+        expect(service.tags).to match_array(%w[a b c])
       end
 
       context 'null tags in the database' do
@@ -277,9 +279,9 @@ module VCAP::CloudController
         end
 
         it 'raises the same error' do
-          expect {
+          expect do
             service.purge(event_repository)
-          }.to raise_error(RuntimeError, /Boom/)
+          end.to raise_error(RuntimeError, /Boom/)
         end
       end
 
@@ -291,7 +293,11 @@ module VCAP::CloudController
         end
 
         it 'rolls back the transaction and does not destroy any records' do
-          service.purge(event_repository) rescue nil
+          begin
+            service.purge(event_repository)
+          rescue StandardError
+            nil
+          end
 
           expect(Service.find(guid: service.guid)).to be
           expect(ServicePlan.first(guid: service_plan.guid)).to be
@@ -305,7 +311,11 @@ module VCAP::CloudController
         end
 
         it "does not leave the service in 'purging' state" do
-          service.purge(event_repository) rescue nil
+          begin
+            service.purge(event_repository)
+          rescue StandardError
+            nil
+          end
           expect(service.reload.purging).to be false
         end
       end

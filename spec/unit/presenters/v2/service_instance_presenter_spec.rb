@@ -29,15 +29,15 @@ module CloudController::Presenters::V2
         it 'returns the service instance entity' do
           expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)).to eq(
             {
-              'name'              => service_instance.name,
-              'maintenance_info'  => {},
+              'name' => service_instance.name,
+              'maintenance_info' => {},
               'service_plan_guid' => service_plan.guid,
-              'service_guid'      => service_plan.service.guid,
-              'relationship_url'  => 'http://relationship.example.com',
-              'service_url'       => "/v2/services/#{service_plan.service.guid}",
-              'shared_from_url'   => "/v2/service_instances/#{service_instance.guid}/shared_from",
-              'shared_to_url'     => "/v2/service_instances/#{service_instance.guid}/shared_to",
-              'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+              'service_guid' => service_plan.service.guid,
+              'relationship_url' => 'http://relationship.example.com',
+              'service_url' => "/v2/services/#{service_plan.service.guid}",
+              'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+              'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+              'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
             }
           )
         end
@@ -48,7 +48,7 @@ module CloudController::Presenters::V2
           it 'includes `maintenance_info` in the entity' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq(
               {
-                'version' => '2.0',
+                'version' => '2.0'
               }
             )
           end
@@ -60,7 +60,7 @@ module CloudController::Presenters::V2
           it 'includes `maintenance_info` in the entity' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq(
               {
-                'version' => '3.0',
+                'version' => '3.0'
               }
             )
           end
@@ -83,8 +83,8 @@ module CloudController::Presenters::V2
         it 'returns the service instance entity' do
           expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)).to eq(
             {
-              'name'              => service_instance.name,
-              'relationship_url'  => 'http://relationship.example.com',
+              'name' => service_instance.name,
+              'relationship_url' => 'http://relationship.example.com'
             }
           )
         end

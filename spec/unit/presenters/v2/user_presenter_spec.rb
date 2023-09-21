@@ -31,8 +31,9 @@ module CloudController::Presenters::V2
             'active' => true,
             'admin' => false,
             'default_space_guid' => space.guid,
-            'relationship_key' => 'relationship_value',
-          })
+            'relationship_key' => 'relationship_value'
+          }
+        )
         expect(relations_presenter).to have_received(:to_hash).with(controller, user, opts, depth, parents, orphans)
       end
     end

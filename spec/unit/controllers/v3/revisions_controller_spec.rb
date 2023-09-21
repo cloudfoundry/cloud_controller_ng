@@ -48,14 +48,14 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'environment_variables' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-            },
+            }
           },
           'metadata' => {
             'labels' => {},
             'annotations' => {}
           },
           'processes' => { 'web' => { 'command' => nil } },
-          'sidecars' => [],
+          'sidecars' => []
         }
       )
     end
@@ -94,14 +94,14 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'environment_variables' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-            },
+            }
           },
           'metadata' => {
             'labels' => {},
             'annotations' => {}
           },
           'processes' => { 'web' => { 'command' => nil } },
-          'sidecars' => [],
+          'sidecars' => []
         }
       )
     end
@@ -158,7 +158,7 @@ RSpec.describe RevisionsController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
@@ -216,14 +216,14 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => {
               'labels' => { 'fruit' => 'passionfruit', 'truck' => 'hino' },
               'annotations' => { 'potato' => 'adora', 'beet' => 'formanova' }
             },
             'processes' => { 'web' => { 'command' => nil } },
-            'sidecars' => [],
+            'sidecars' => []
           }
         )
       end
@@ -274,14 +274,14 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => {
               'labels' => { 'truck' => 'hino' },
               'annotations' => { 'beet' => 'formanova' }
             },
             'processes' => { 'web' => { 'command' => nil } },
-            'sidecars' => [],
+            'sidecars' => []
           }
         )
       end
@@ -317,7 +317,7 @@ RSpec.describe RevisionsController, type: :controller do
           metadata: {
             annotations: {
               "": 'mashed',
-              "/potato": '.value.'
+              '/potato': '.value.'
             }
           }
         }
@@ -336,13 +336,14 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(
-      app: app_model,
-      version: 808,
-      droplet_guid: droplet.guid,
-      environment_variables: { 'key' => 'value' },
-    )
-    }
+    let(:revision) do
+      VCAP::CloudController::RevisionModel.make(
+        app: app_model,
+        version: 808,
+        droplet_guid: droplet.guid,
+        environment_variables: { 'key' => 'value' }
+      )
+    end
 
     before do
       set_current_user(user, email: 'mona@example.com')
@@ -358,9 +359,9 @@ RSpec.describe RevisionsController, type: :controller do
     end
 
     it 'records an audit event' do
-      expect {
+      expect do
         get :show_environment_variables, params: { revision_guid: revision.guid }
-      }.to change { VCAP::CloudController::Event.count }.by(1)
+      end.to change { VCAP::CloudController::Event.count }.by(1)
 
       event = VCAP::CloudController::Event.find(type: 'audit.app.revision.environment_variables.show')
       expect(event).not_to be_nil
@@ -374,9 +375,9 @@ RSpec.describe RevisionsController, type: :controller do
       expect(event.space_guid).to eq(app_model.space_guid)
       expect(event.organization_guid).to eq(app_model.space.organization.guid)
       expect(event.metadata).to eq({
-        'revision_guid' => revision.guid,
-        'revision_version' => revision.version,
-      })
+                                     'revision_guid' => revision.guid,
+                                     'revision_version' => revision.version
+                                   })
     end
 
     context 'when retrieving env variables for revision that do not exist' do

@@ -16,20 +16,20 @@ module VCAP::CloudController
     end
 
     it 'does not overwrite other included fields' do
-      undecorated_hash = { foo: 'bar', included: { favorite_fruits: ['tomato', 'cucumber'] } }
+      undecorated_hash = { foo: 'bar', included: { favorite_fruits: %w[tomato cucumber] } }
       hash = subject.decorate(undecorated_hash, routes)
       expect(hash[:foo]).to eq('bar')
       expect(hash[:included][:domains]).to match_array([Presenters::V3::DomainPresenter.new(domain1).to_hash, Presenters::V3::DomainPresenter.new(domain2).to_hash])
-      expect(hash[:included][:favorite_fruits]).to match_array(['tomato', 'cucumber'])
+      expect(hash[:included][:favorite_fruits]).to match_array(%w[tomato cucumber])
     end
 
     describe '.match?' do
       it 'matches include arrays containing "domain"' do
-        expect(decorator.match?(['potato', 'domain', 'turnip'])).to be true
+        expect(decorator.match?(%w[potato domain turnip])).to be true
       end
 
       it 'does not match other include arrays' do
-        expect(decorator.match?(['vegetal', 'turnip'])).to be false
+        expect(decorator.match?(%w[vegetal turnip])).to be false
       end
     end
   end

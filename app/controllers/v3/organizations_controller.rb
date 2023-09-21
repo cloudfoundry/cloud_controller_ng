@@ -20,13 +20,6 @@ require 'presenters/v3/to_one_relationship_presenter'
 class OrganizationsV3Controller < ApplicationController
   include SubResource
 
-  def show
-    org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
-
-    render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
-  end
-
   def index
     message = OrgsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -45,6 +38,13 @@ class OrganizationsV3Controller < ApplicationController
     )
   end
 
+  def show
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
+
+    render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally? || user_org_creation_enabled?
 
@@ -55,10 +55,10 @@ class OrganizationsV3Controller < ApplicationController
     Organization.db.transaction do
       org = OrganizationCreate.new(user_audit_info: user_audit_info).create(message)
 
-      if !roles.admin?
+      unless roles.admin?
         [
           RoleTypes::ORGANIZATION_USER,
-          RoleTypes::ORGANIZATION_MANAGER,
+          RoleTypes::ORGANIZATION_MANAGER
         ].each do |role|
           RoleCreate.new(message, user_audit_info).create_organization_role(type: role,
                                                                             user: current_user,
@@ -183,7 +183,7 @@ class OrganizationsV3Controller < ApplicationController
       paginated_result: paginated_result,
       path: "/v3/organizations/#{org.guid}/users",
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')

@@ -15,7 +15,7 @@ module VCAP::CloudController
             set_current_user(user, scopes: ['cloud_controller.write'])
             get "/v2/jobs/#{job_request_id}"
             expect(last_response.status).to eq(403)
-            expect(last_response.body).to match /InsufficientScope/
+            expect(last_response.body).to match(/InsufficientScope/)
           end
         end
 

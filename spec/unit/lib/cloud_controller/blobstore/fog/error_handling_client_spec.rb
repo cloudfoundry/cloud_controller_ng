@@ -26,9 +26,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.delete_all
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -39,9 +39,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.delete_all_in_path('sallow\\dossy\\path')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -52,9 +52,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.exists?('off')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -65,9 +65,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.blob('a minor')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -78,9 +78,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.delete_blob('herbie')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -91,9 +91,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.cp_file_between_keys('source_key', 'destination_key')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -104,9 +104,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.cp_r_to_blobstore('dont/forget/a/source_dir')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -117,9 +117,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.download_from_blobstore('some source_key', 'some:destination_path')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -130,9 +130,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.delete('a key')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -143,9 +143,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.cp_to_blobstore('source_path', 'destination_key')
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
@@ -157,9 +157,9 @@ module CloudController
         end
 
         it 'handles errors and delegates to wrapped client' do
-          expect {
+          expect do
             client.files_for(args)
-          }.to raise_error(BlobstoreError, 'error message')
+          end.to raise_error(BlobstoreError, 'error message')
           expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end

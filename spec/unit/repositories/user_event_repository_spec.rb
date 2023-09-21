@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:assigner_audit_info) { UserAuditInfo.new(user_email: assigner_email, user_name: assigner_username, user_guid: assigner.guid) }
 
       describe 'space role events' do
-        let(:roles) { [:manager, :developer, :auditor] }
+        let(:roles) { %i[manager developer auditor] }
 
         describe '#record_space_role_add' do
           it 'records the event correctly' do
@@ -56,7 +56,7 @@ module VCAP::CloudController
       end
 
       describe 'organization role events' do
-        let(:roles) { [:user, :manager, :billing_manager, :auditor] }
+        let(:roles) { %i[user manager billing_manager auditor] }
 
         describe '#record_organization_role_add' do
           it 'records the event correctly' do

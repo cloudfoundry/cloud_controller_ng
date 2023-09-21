@@ -126,9 +126,9 @@ module VCAP::CloudController
     context('and the docker image url has scheme') do
       let(:image_url) { 'https://docker.io/repo' }
       it('errors') do
-        expect {
+        expect do
           converter.convert image_url
-        }.to raise_error(DockerURIConverter::InvalidDockerURI, 'Docker URI [https://docker.io/repo] should not contain scheme')
+        end.to raise_error(DockerURIConverter::InvalidDockerURI, 'Docker URI [https://docker.io/repo] should not contain scheme')
       end
     end
   end

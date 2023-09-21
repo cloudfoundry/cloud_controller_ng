@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class InternalPackageUpdateMessage < BaseMessage
-    register_allowed_keys [:state, :checksums, :error]
+    register_allowed_keys %i[state checksums error]
 
     validates_with NoAdditionalKeysValidator
 
@@ -23,9 +23,9 @@ module VCAP::CloudController
     private
 
     def requested_state
-      unless [PackageModel::PENDING_STATE, PackageModel::READY_STATE, PackageModel::FAILED_STATE].include?(state)
-        errors.add(:state, 'must be one of PROCESSING_UPLOAD, READY, FAILED')
-      end
+      return if [PackageModel::PENDING_STATE, PackageModel::READY_STATE, PackageModel::FAILED_STATE].include?(state)
+
+      errors.add(:state, 'must be one of PROCESSING_UPLOAD, READY, FAILED')
     end
 
     def requested_ready?
@@ -37,9 +37,7 @@ module VCAP::CloudController
     end
 
     def checksums_data
-      unless checksums.is_a?(Array) && checksums.each { |checksum| checksum.is_a?(Hash) }
-        errors.add(:checksums, message: 'has invalid structure')
-      end
+      errors.add(:checksums, message: 'has invalid structure') unless checksums.is_a?(Array) && checksums.each { |checksum| checksum.is_a?(Hash) }
 
       if errors[:checksums].empty?
         checksum_messages = checksums.map { |checksum| Checksum.new(checksum.deep_symbolize_keys) }
@@ -49,14 +47,14 @@ module VCAP::CloudController
         end
       end
 
-      unless checksums.length == 2 && sha1 && sha256
-        errors.add(:checksums, 'both sha1 and sha256 checksums must be provided')
-      end
+      return if checksums.length == 2 && sha1 && sha256
+
+      errors.add(:checksums, 'both sha1 and sha256 checksums must be provided')
     end
   end
 
   class Checksum < ::VCAP::CloudController::BaseMessage
-    register_allowed_keys [:type, :value]
+    register_allowed_keys %i[type value]
     SHA1         = 'sha1'.freeze
     SHA256       = 'sha256'.freeze
 

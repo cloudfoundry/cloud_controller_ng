@@ -9,12 +9,12 @@ module VCAP::CloudController
     let(:config) { double(Config, get: nil) }
     let(:dependencies) do
       {
-        statsd_client: double(Statsd),
+        statsd_client: double(Statsd)
       }
     end
 
     class TestController < RestController::BaseController
-      allow_unauthenticated_access only: [:test_unauthenticated, :test_basic_auth]
+      allow_unauthenticated_access only: %i[test_unauthenticated test_basic_auth]
 
       def test_endpoint
         'test_response'
@@ -75,7 +75,7 @@ module VCAP::CloudController
       end
       define_route :get, '/test_arguments/:arg', :test_arguments
 
-      def self.translate_validation_exception(error, attrs)
+      def self.translate_validation_exception(_error, _attrs)
         RuntimeError.new('validation failed')
       end
     end
@@ -114,19 +114,19 @@ module VCAP::CloudController
 
         it 'processes BlobstoreError using translate_validation_exception' do
           get '/test_blobstore_error'
-          expect(decoded_response['code']).to eq(150007)
+          expect(decoded_response['code']).to eq(150_007)
           expect(decoded_response['description']).to match(/three retries/)
         end
 
         it 'returns InvalidRequest when Sequel HookFailed error occurs' do
           get '/test_sql_hook_failed'
-          expect(decoded_response['code']).to eq(10004)
+          expect(decoded_response['code']).to eq(10_004)
         end
 
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
           get '/test_database_error'
-          expect(decoded_response['code']).to eq(10011)
+          expect(decoded_response['code']).to eq(10_011)
         end
 
         it 'logs an error when a JSON error occurs' do
@@ -142,7 +142,7 @@ module VCAP::CloudController
 
         it 'returns InvalidRequest when arguments have invalid encoding' do
           get '/test_arguments/%a5'
-          expect(decoded_response['code']).to eq(10004)
+          expect(decoded_response['code']).to eq(10_004)
         end
       end
 
@@ -189,7 +189,7 @@ module VCAP::CloudController
             it 'returns an invalid token error to the user' do
               get '/test_endpoint'
               expect(last_response.status).to eq 401
-              expect(last_response.body).to match /InvalidAuthToken/
+              expect(last_response.body).to match(/InvalidAuthToken/)
             end
           end
         end
@@ -205,7 +205,7 @@ module VCAP::CloudController
           it 'returns NotAuthenticated if username and password are not provided' do
             get '/test_basic_auth'
             expect(last_response.status).to eq 401
-            expect(decoded_response['code']).to eq 10002
+            expect(decoded_response['code']).to eq 10_002
           end
 
           it 'returns NotAuthenticated if username and password are wrong' do
@@ -213,7 +213,7 @@ module VCAP::CloudController
 
             get '/test_basic_auth'
             expect(last_response.status).to eq 401
-            expect(decoded_response['code']).to eq 10002
+            expect(decoded_response['code']).to eq 10_002
           end
 
           context 'when diego returns percent-decoded staging credentials' do
@@ -297,9 +297,9 @@ module VCAP::CloudController
 
       context 'when flag is not a bool' do
         it 'raises a 400 error' do
-          expect {
+          expect do
             base_controller.convert_flag_to_bool('foo')
-          }.to raise_error(CloudController::Errors::ApiError, 'The request is invalid')
+          end.to raise_error(CloudController::Errors::ApiError, 'The request is invalid')
         end
       end
     end
@@ -333,9 +333,9 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_read_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -345,9 +345,9 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_read_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -357,9 +357,9 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_read_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -369,17 +369,17 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_read_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
       context 'when user does not have read scope' do
         it 'raises an unauthorized API error' do
-          expect {
+          expect do
             base_controller.check_read_permissions!
-          }.to raise_error CloudController::Errors::ApiError
+          end.to raise_error CloudController::Errors::ApiError
         end
       end
     end
@@ -400,9 +400,9 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_write_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -412,17 +412,17 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_controller.check_write_permissions!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
       context 'when user does not have write scope' do
         it 'raises an unauthorized API error' do
-          expect {
+          expect do
             base_controller.check_write_permissions!
-          }.to raise_error CloudController::Errors::ApiError
+          end.to raise_error CloudController::Errors::ApiError
         end
       end
     end

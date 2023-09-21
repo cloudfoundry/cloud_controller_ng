@@ -120,19 +120,19 @@ module CloudFoundry
 
       private
 
-      def apply_rate_limiting?(env)
+      def apply_rate_limiting?(_env)
         raise 'method should be implemented in concrete class'
       end
 
-      def global_request_limit(env)
+      def global_request_limit(_env)
         raise 'method should be implemented in concrete class'
       end
 
-      def rate_limit_error(env)
+      def rate_limit_error(_env)
         raise 'method should be implemented in concrete class'
       end
 
-      def per_process_request_limit(env)
+      def per_process_request_limit(_env)
         raise 'method should be implemented in concrete class'
       end
 

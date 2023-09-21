@@ -15,7 +15,7 @@ module VCAP::CloudController
           let(:order_by) { '+name' }
 
           it 'returns the modifed order_by and order_direction "asc"' do
-            expect(OrderByMapper.from_param(order_by)).to eq(['name', 'asc'])
+            expect(OrderByMapper.from_param(order_by)).to eq(%w[name asc])
           end
         end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
           let(:order_by) { '-name' }
 
           it 'returns the modifed order_by and order_direction "desc"' do
-            expect(OrderByMapper.from_param(order_by)).to eq(['name', 'desc'])
+            expect(OrderByMapper.from_param(order_by)).to eq(%w[name desc])
           end
         end
       end

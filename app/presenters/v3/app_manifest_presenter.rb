@@ -19,7 +19,7 @@ module VCAP::CloudController
           AppManifestPresenters::RoutePropertiesPresenter.new,
           AppManifestPresenters::MetadataPresenter.new,
           AppManifestPresenters::ProcessPropertiesPresenter.new,
-          AppManifestPresenters::SidecarPropertiesPresenter.new,
+          AppManifestPresenters::SidecarPropertiesPresenter.new
         ].freeze
 
         def initialize(app, service_bindings, route_mappings)

@@ -12,13 +12,13 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys [:name, :apps, :services, :routes, :domains]
+    register_allowed_keys %i[name apps services routes domains]
     validates_with NoAdditionalKeysValidator
 
     validates :name,
-      string: true,
-      length: { minimum: 1, maximum: MAX_ORGANIZATION_QUOTA_NAME_LENGTH },
-      if: key_requested?(:name)
+              string: true,
+              length: { minimum: 1, maximum: MAX_ORGANIZATION_QUOTA_NAME_LENGTH },
+              if: key_requested?(:name)
 
     validate :apps_validator, if: key_requested?(:apps)
     validate :services_validator, if: key_requested?(:services)
@@ -104,7 +104,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     validates :total_domains,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-      allow_nil: true
+              numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+              allow_nil: true
   end
 end

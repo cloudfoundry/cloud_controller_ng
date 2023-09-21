@@ -72,10 +72,10 @@ module VCAP::CloudController
     describe 'GET /v2/config/feature_flags' do
       before do
         stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-          flag1: false,
-          flag2: true,
-          flag3: false,
-        })
+                     flag1: false,
+                     flag2: true,
+                     flag3: false
+                   })
       end
 
       context 'when there are no overrides' do
@@ -86,25 +86,28 @@ module VCAP::CloudController
           expect(decoded_response.length).to eq(3)
           expect(decoded_response).to include(
             {
-              'name'          => 'flag1',
-              'enabled'       => false,
+              'name' => 'flag1',
+              'enabled' => false,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag1'
-            })
+              'url' => '/v2/config/feature_flags/flag1'
+            }
+          )
           expect(decoded_response).to include(
             {
-              'name'          => 'flag2',
-              'enabled'       => true,
+              'name' => 'flag2',
+              'enabled' => true,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag2'
-            })
+              'url' => '/v2/config/feature_flags/flag2'
+            }
+          )
           expect(decoded_response).to include(
             {
-              'name'          => 'flag3',
-              'enabled'       => false,
+              'name' => 'flag3',
+              'enabled' => false,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag3'
-            })
+              'url' => '/v2/config/feature_flags/flag3'
+            }
+          )
         end
       end
 
@@ -118,25 +121,28 @@ module VCAP::CloudController
           expect(decoded_response.length).to eq(3)
           expect(decoded_response).to include(
             {
-              'name'          => 'flag1',
-              'enabled'       => true,
+              'name' => 'flag1',
+              'enabled' => true,
               'error_message' => 'custom_error_message',
-              'url'           => '/v2/config/feature_flags/flag1'
-            })
+              'url' => '/v2/config/feature_flags/flag1'
+            }
+          )
           expect(decoded_response).to include(
             {
-              'name'          => 'flag2',
-              'enabled'       => true,
+              'name' => 'flag2',
+              'enabled' => true,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag2'
-            })
+              'url' => '/v2/config/feature_flags/flag2'
+            }
+          )
           expect(decoded_response).to include(
             {
-              'name'          => 'flag3',
-              'enabled'       => false,
+              'name' => 'flag3',
+              'enabled' => false,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag3'
-            })
+              'url' => '/v2/config/feature_flags/flag3'
+            }
+          )
         end
       end
     end
@@ -144,8 +150,8 @@ module VCAP::CloudController
     describe 'GET /v2/config/feature_flags/:name' do
       before do
         stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-          flag1: false,
-        })
+                     flag1: false
+                   })
       end
 
       context 'when there are no overrides' do
@@ -155,11 +161,12 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response).to eq(
             {
-              'name'          => 'flag1',
-              'enabled'       => false,
+              'name' => 'flag1',
+              'enabled' => false,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag1'
-            })
+              'url' => '/v2/config/feature_flags/flag1'
+            }
+          )
         end
       end
 
@@ -172,11 +179,12 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response).to eq(
             {
-              'name'          => 'flag1',
-              'enabled'       => true,
+              'name' => 'flag1',
+              'enabled' => true,
               'error_message' => nil,
-              'url'           => '/v2/config/feature_flags/flag1'
-            })
+              'url' => '/v2/config/feature_flags/flag1'
+            }
+          )
         end
       end
 

@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
         target: target,
         data: event.data || {},
         space: space,
-        organization: org,
+        organization: org
       }
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController::Presenters::V3
       return nil unless event.space_guid.present?
 
       {
-        guid: event.space_guid,
+        guid: event.space_guid
       }
     end
 
@@ -58,7 +58,7 @@ module VCAP::CloudController::Presenters::V3
       return nil unless event.organization_guid.present?
 
       {
-        guid: event.organization_guid,
+        guid: event.organization_guid
       }
     end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController::Presenters::V3
       {
         self: {
           href: url_builder.build_url(path: "/v3/audit_events/#{event.guid}")
-        },
+        }
       }
     end
   end

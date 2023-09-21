@@ -69,7 +69,7 @@ module VCAP::Services::SSO
         unclaimable_ids << existing_client_in_ccdb.uaa_id unless client_claimable_by_broker?(existing_client_in_ccdb)
       end
 
-      if !unclaimable_ids.empty?
+      unless unclaimable_ids.empty?
         populate_uniqueness_errors(catalog, unclaimable_ids)
         return false
       end
@@ -83,7 +83,7 @@ module VCAP::Services::SSO
         unclaimable_ids << id if existing_client_in_ccdb.nil?
       end
 
-      if !unclaimable_ids.empty?
+      unless unclaimable_ids.empty?
         populate_uniqueness_errors(catalog, unclaimable_ids)
         return false
       end
@@ -119,19 +119,19 @@ module VCAP::Services::SSO
         case uaa_cmd.uaa_command[:action]
         when 'add'
           @services_event_repository.record_service_dashboard_client_event(
-            :create, uaa_cmd.client_attrs, broker)
+            :create, uaa_cmd.client_attrs, broker
+          )
         when 'delete'
           @services_event_repository.record_service_dashboard_client_event(
-            :delete, uaa_cmd.client_attrs, broker)
+            :delete, uaa_cmd.client_attrs, broker
+          )
         end
       end
     end
 
     def populate_uniqueness_errors(catalog, non_unique_ids)
       catalog.services.each do |service|
-        if service.dashboard_client && non_unique_ids.include?(service.dashboard_client['id'])
-          errors.add_nested(service).add('Service dashboard client id must be unique')
-        end
+        errors.add_nested(service).add('Service dashboard client id must be unique') if service.dashboard_client && non_unique_ids.include?(service.dashboard_client['id'])
       end
     end
 

@@ -79,19 +79,19 @@ module VCAP::Services
         logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{redact_credentials(response)}, HEADERS: #{response.headers.inspect}"
 
         HttpResponse.from_http_client_response(response)
-      rescue SocketError, Errno::ECONNREFUSED => error
-        raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
-      rescue HTTPClient::TimeoutError => error
-        raise Errors::HttpClientTimeout.new(uri.to_s, method, error)
-      rescue => error
-        raise HttpRequestError.new(error.message, uri.to_s, method, error)
+      rescue SocketError, Errno::ECONNREFUSED => e
+        raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, e)
+      rescue HTTPClient::TimeoutError => e
+        raise Errors::HttpClientTimeout.new(uri.to_s, method, e)
+      rescue StandardError => e
+        raise HttpRequestError.new(e.message, uri.to_s, method, e)
       end
 
       def redact_credentials(response)
         body = MultiJson.load(response.body)
         body['credentials'] = VCAP::CloudController::Presenters::Censorship::REDACTED if body['credentials']
         body.inspect
-      rescue
+      rescue StandardError
         'Error parsing body'
       end
 

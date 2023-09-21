@@ -7,10 +7,10 @@ module VCAP::CloudController
 
     let(:config) do
       Config.new({
-        staging: {
-          timeout_in_seconds: 90
-        }
-      })
+                   staging: {
+                     timeout_in_seconds: 90
+                   }
+                 })
     end
     let(:package_hash) { 'fake-package-hash' }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
@@ -137,10 +137,10 @@ module VCAP::CloudController
           process = ProcessModel.where(diego: true).order(:id).first
           process_guid = Diego::ProcessGuid.from_process(process)
 
-          expect {
+          expect do
             process.set_new_version
             process.save
-          }.to change {
+          end.to change {
             runners.processes_from_diego_process_guids(process_guid)
           }.from([process]).to([])
         end
@@ -191,9 +191,9 @@ module VCAP::CloudController
       end
 
       it 'acquires the data in one select' do
-        expect {
+        expect do
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT.*FROM.*processes.*/, 1)
+        end.to have_queried_db_times(/SELECT.*FROM.*processes.*/, 1)
       end
 
       context 'with Docker app' do
@@ -238,7 +238,7 @@ module VCAP::CloudController
         let(:input) do
           [{
             app_guid: 'app_guid_1',
-            id: 1,
+            id: 1
           }]
         end
 
@@ -252,12 +252,12 @@ module VCAP::CloudController
             [
               {
                 app_guid: 'app_guid_1',
-                id: 1,
+                id: 1
               },
               {
                 app_guid: 'app_guid_2',
-                id: 2,
-              },
+                id: 2
+              }
             ]
           end
 
@@ -272,19 +272,19 @@ module VCAP::CloudController
 
         context 'when multiple items have the same app_guid key' do
           context 'when the created_at times are the same' do
-            let(:time) { Time.now }
+            let(:time) { Time.now.utc }
 
             let(:input) do
               [
                 {
                   app_guid: 'app_guid_1',
                   id: 1,
-                  created_at: time,
+                  created_at: time
                 },
                 {
                   app_guid: 'app_guid_1',
                   id: 2,
-                  created_at: time,
+                  created_at: time
                 }
               ]
             end

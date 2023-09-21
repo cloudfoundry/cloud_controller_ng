@@ -35,11 +35,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
       end
 
       it 'fails with an appropriate error and stores the message in the binding' do
-        expect {
+        expect do
           action.delete(binding)
-        }.to raise_error(
+        end.to raise_error(
           described_class::UnprocessableDelete,
-          "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
+          "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing"
         )
 
         binding.reload
@@ -79,11 +79,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
         end
 
         it 'fails with an appropriate error and does not alter the binding' do
-          expect {
+          expect do
             action.delete(binding)
-          }.to raise_error(
+          end.to raise_error(
             described_class::ConcurrencyError,
-            'The service broker rejected the request due to an operation being in progress for the service binding.',
+            'The service broker rejected the request due to an operation being in progress for the service binding.'
           )
 
           binding.reload
@@ -103,11 +103,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
       end
 
       it 'fails with an appropriate error and does not alter the binding' do
-        expect {
+        expect do
           action.delete(binding)
-        }.to raise_error(
+        end.to raise_error(
           described_class::ConcurrencyError,
-          'The delete request was rejected due to an operation being in progress for the service binding.',
+          'The delete request was rejected due to an operation being in progress for the service binding.'
         )
 
         binding.reload
@@ -167,8 +167,8 @@ RSpec.shared_examples 'polling service binding deletion' do
       {
         last_operation: {
           state: state,
-          description: description,
-        },
+          description: description
+        }
       }
     end
 
@@ -178,7 +178,7 @@ RSpec.shared_examples 'polling service binding deletion' do
       instance_double(
         VCAP::Services::ServiceBrokers::V2::Client,
         {
-          unbind: unbind_response,
+          unbind: unbind_response
         }
       )
     end
@@ -236,9 +236,9 @@ RSpec.shared_examples 'polling service binding deletion' do
             {
               last_operation: {
                 state: state,
-                description: description,
+                description: description
               },
-              retry_after: 10,
+              retry_after: 10
             }
           end
 

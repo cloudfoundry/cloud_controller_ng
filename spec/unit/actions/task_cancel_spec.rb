@@ -46,18 +46,18 @@ module VCAP::CloudController
           task.state = TaskModel::FAILED_STATE
           task.save
 
-          expect {
+          expect do
             task_cancel.cancel(task: task, user_audit_info: user_audit_info)
-          }.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::FAILED_STATE} and therefore cannot be canceled")
+          end.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::FAILED_STATE} and therefore cannot be canceled")
         end
 
         it 'raises InvalidCancel for SUCCEEDED' do
           task.state = TaskModel::SUCCEEDED_STATE
           task.save
 
-          expect {
+          expect do
             task_cancel.cancel(task: task, user_audit_info: user_audit_info)
-          }.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::SUCCEEDED_STATE} and therefore cannot be canceled")
+          end.to raise_error(TaskCancel::InvalidCancel, "Task state is #{TaskModel::SUCCEEDED_STATE} and therefore cannot be canceled")
         end
       end
     end

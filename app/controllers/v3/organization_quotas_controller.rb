@@ -10,6 +10,34 @@ require 'presenters/v3/organization_quota_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 
 class OrganizationQuotasController < ApplicationController
+  def index
+    message = OrganizationQuotasListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = if permission_queryer.can_read_globally?
+                OrganizationQuotaListFetcher.fetch_all(message: message)
+              else
+                OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids_query: permission_queryer.readable_org_guids_query)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::OrganizationQuotaPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/organization_quotas',
+      message: message,
+      extra_presenter_args: presenter_args
+    )
+  end
+
+  def show
+    organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
+    resource_not_found!(:organization_quota) unless organization_quota
+
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
+  rescue OrganizationQuotasCreate::Error => e
+    unprocessable!(e.message)
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -37,34 +65,6 @@ class OrganizationQuotasController < ApplicationController
     render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
   rescue OrganizationQuotasUpdate::Error => e
     unprocessable!(e.message)
-  end
-
-  def show
-    organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
-    resource_not_found!(:organization_quota) unless organization_quota
-
-    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
-  rescue OrganizationQuotasCreate::Error => e
-    unprocessable!(e.message)
-  end
-
-  def index
-    message = OrganizationQuotasListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    if permission_queryer.can_read_globally?
-      dataset = OrganizationQuotaListFetcher.fetch_all(message: message)
-    else
-      dataset = OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids_query: permission_queryer.readable_org_guids_query)
-    end
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::OrganizationQuotaPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: '/v3/organization_quotas',
-      message: message,
-      extra_presenter_args: presenter_args,
-    )
   end
 
   def destroy

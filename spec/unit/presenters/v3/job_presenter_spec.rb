@@ -73,12 +73,12 @@ module VCAP::CloudController::Presenters::V3
         context 'when the job has an error' do
           let(:api_error) do
             YAML.dump({
-              'errors' => [{
-                'title' => 'CF-BlobstoreError',
-                'code' => 150007,
-                'description' => 'Failed to perform blobstore operation after three retries.'
-              }]
-            })
+                        'errors' => [{
+                          'title' => 'CF-BlobstoreError',
+                          'code' => 150_007,
+                          'description' => 'Failed to perform blobstore operation after three retries.'
+                        }]
+                      })
           end
 
           context 'when the job later completes' do
@@ -98,10 +98,10 @@ module VCAP::CloudController::Presenters::V3
 
             it 'presents the list of errors' do
               expect(result[:errors]).to eq([{
-                title: 'CF-BlobstoreError',
-                code: 150007,
-                description: 'Failed to perform blobstore operation after three retries.'
-              }])
+                                              title: 'CF-BlobstoreError',
+                                              code: 150_007,
+                                              description: 'Failed to perform blobstore operation after three retries.'
+                                            }])
             end
           end
         end

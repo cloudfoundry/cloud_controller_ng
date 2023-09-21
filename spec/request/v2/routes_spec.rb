@@ -26,27 +26,27 @@ RSpec.describe 'Routes' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [{
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [{
             'metadata' => {
-              'guid'       => route.guid,
-              'url'        => "/v2/routes/#{route.guid}",
+              'guid' => route.guid,
+              'url' => "/v2/routes/#{route.guid}",
               'created_at' => iso8601,
               'updated_at' => iso8601
             },
             'entity' => {
-              'host'                  => route.host,
-              'path'                  => '',
-              'domain_guid'           => domain.guid,
-              'space_guid'            => space.guid,
+              'host' => route.host,
+              'path' => '',
+              'domain_guid' => domain.guid,
+              'space_guid' => space.guid,
               'service_instance_guid' => nil,
-              'port'                  => nil,
-              'domain_url'            => "/v2/shared_domains/#{domain.guid}",
-              'space_url'             => "/v2/spaces/#{space.guid}",
-              'apps_url'              => "/v2/routes/#{route.guid}/apps",
-              'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+              'port' => nil,
+              'domain_url' => "/v2/shared_domains/#{domain.guid}",
+              'space_url' => "/v2/spaces/#{space.guid}",
+              'apps_url' => "/v2/routes/#{route.guid}/apps",
+              'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
             }
           }]
         }
@@ -66,28 +66,28 @@ RSpec.describe 'Routes' do
         expect(parsed_response).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'prev_url'      => nil,
-            'next_url'      => nil,
-            'resources'     => [{
+            'total_pages' => 1,
+            'prev_url' => nil,
+            'next_url' => nil,
+            'resources' => [{
               'metadata' => {
-                'guid'       => route.guid,
-                'url'        => "/v2/routes/#{route.guid}",
+                'guid' => route.guid,
+                'url' => "/v2/routes/#{route.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'host'                  => route.host,
-                'path'                  => '',
-                'domain_guid'           => domain.guid,
-                'space_guid'            => space.guid,
+                'host' => route.host,
+                'path' => '',
+                'domain_guid' => domain.guid,
+                'space_guid' => space.guid,
                 'service_instance_guid' => nil,
-                'port'                  => nil,
-                'domain_url'            => "/v2/shared_domains/#{domain.guid}",
-                'domain'                => {
+                'port' => nil,
+                'domain_url' => "/v2/shared_domains/#{domain.guid}",
+                'domain' => {
                   'metadata' => {
-                    'guid'       => domain.guid,
-                    'url'        => "/v2/shared_domains/#{domain.guid}",
+                    'guid' => domain.guid,
+                    'url' => "/v2/shared_domains/#{domain.guid}",
                     'created_at' => iso8601,
                     'updated_at' => iso8601
                   },
@@ -98,84 +98,84 @@ RSpec.describe 'Routes' do
                     'router_group_type' => nil
                   }
                 },
-                'space_url'             => "/v2/spaces/#{space.guid}",
-                'space'                 => {
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'space' => {
                   'metadata' => {
-                    'guid'       => space.guid,
-                    'url'        => "/v2/spaces/#{space.guid}",
+                    'guid' => space.guid,
+                    'url' => "/v2/spaces/#{space.guid}",
                     'created_at' => iso8601,
                     'updated_at' => iso8601
                   },
                   'entity' => {
-                    'name'                         => space.name,
-                    'organization_guid'            => space.organization.guid.to_s,
-                    'space_quota_definition_guid'  => nil,
-                    'isolation_segment_guid'       => nil,
-                    'allow_ssh'                    => true,
-                    'organization_url'             => "/v2/organizations/#{space.organization.guid}",
-                    'developers_url'               => "/v2/spaces/#{space.guid}/developers",
-                    'managers_url'                 => "/v2/spaces/#{space.guid}/managers",
-                    'auditors_url'                 => "/v2/spaces/#{space.guid}/auditors",
-                    'apps_url'                     => "/v2/spaces/#{space.guid}/apps",
-                    'routes_url'                   => "/v2/spaces/#{space.guid}/routes",
-                    'domains_url'                  => "/v2/spaces/#{space.guid}/domains",
-                    'service_instances_url'        => "/v2/spaces/#{space.guid}/service_instances",
-                    'app_events_url'               => "/v2/spaces/#{space.guid}/app_events",
-                    'events_url'                   => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url'          => "/v2/spaces/#{space.guid}/security_groups",
-                    'staging_security_groups_url'  => "/v2/spaces/#{space.guid}/staging_security_groups"
+                    'name' => space.name,
+                    'organization_guid' => space.organization.guid.to_s,
+                    'space_quota_definition_guid' => nil,
+                    'isolation_segment_guid' => nil,
+                    'allow_ssh' => true,
+                    'organization_url' => "/v2/organizations/#{space.organization.guid}",
+                    'developers_url' => "/v2/spaces/#{space.guid}/developers",
+                    'managers_url' => "/v2/spaces/#{space.guid}/managers",
+                    'auditors_url' => "/v2/spaces/#{space.guid}/auditors",
+                    'apps_url' => "/v2/spaces/#{space.guid}/apps",
+                    'routes_url' => "/v2/spaces/#{space.guid}/routes",
+                    'domains_url' => "/v2/spaces/#{space.guid}/domains",
+                    'service_instances_url' => "/v2/spaces/#{space.guid}/service_instances",
+                    'app_events_url' => "/v2/spaces/#{space.guid}/app_events",
+                    'events_url' => "/v2/spaces/#{space.guid}/events",
+                    'security_groups_url' => "/v2/spaces/#{space.guid}/security_groups",
+                    'staging_security_groups_url' => "/v2/spaces/#{space.guid}/staging_security_groups"
                   }
                 },
-                'apps_url'              => "/v2/routes/#{route.guid}/apps",
-                'apps'                  => [
+                'apps_url' => "/v2/routes/#{route.guid}/apps",
+                'apps' => [
                   {
                     'metadata' => {
-                      'guid'       => process.guid,
-                      'url'        => "/v2/apps/#{process.guid}",
+                      'guid' => process.guid,
+                      'url' => "/v2/apps/#{process.guid}",
                       'created_at' => iso8601,
-                      'updated_at' => iso8601,
+                      'updated_at' => iso8601
                     },
                     'entity' => {
-                      'name'                       => process.name,
-                      'production'                 => false,
-                      'space_guid'                 => space.guid,
-                      'stack_guid'                 => process.stack.guid,
-                      'buildpack'                  => nil,
-                      'detected_buildpack'         => nil,
-                      'detected_buildpack_guid'    => nil,
-                      'environment_json'           => nil,
-                      'memory'                     => 1024,
-                      'instances'                  => 1,
-                      'disk_quota'                 => 1024,
-                      'log_rate_limit' => 1048576,
-                      'state'                      => 'STOPPED',
-                      'version'                    => process.version,
-                      'command'                    => nil,
-                      'console'                    => false,
-                      'debug'                      => nil,
-                      'staging_task_id'            => process.latest_build.guid,
-                      'package_state'              => 'STAGED',
-                      'health_check_type'          => 'port',
-                      'health_check_timeout'       => nil,
+                      'name' => process.name,
+                      'production' => false,
+                      'space_guid' => space.guid,
+                      'stack_guid' => process.stack.guid,
+                      'buildpack' => nil,
+                      'detected_buildpack' => nil,
+                      'detected_buildpack_guid' => nil,
+                      'environment_json' => nil,
+                      'memory' => 1024,
+                      'instances' => 1,
+                      'disk_quota' => 1024,
+                      'log_rate_limit' => 1_048_576,
+                      'state' => 'STOPPED',
+                      'version' => process.version,
+                      'command' => nil,
+                      'console' => false,
+                      'debug' => nil,
+                      'staging_task_id' => process.latest_build.guid,
+                      'package_state' => 'STAGED',
+                      'health_check_type' => 'port',
+                      'health_check_timeout' => nil,
                       'health_check_http_endpoint' => nil,
-                      'staging_failed_reason'      => nil,
+                      'staging_failed_reason' => nil,
                       'staging_failed_description' => nil,
-                      'diego'                      => true,
-                      'docker_image'               => nil,
-                      'docker_credentials'         => {
+                      'diego' => true,
+                      'docker_image' => nil,
+                      'docker_credentials' => {
                         'username' => nil,
                         'password' => nil
                       },
-                      'package_updated_at'         => iso8601,
-                      'detected_start_command'     => '$HOME/boot.sh',
-                      'enable_ssh'                 => true,
-                      'ports'                      => [8080],
-                      'space_url'                  => "/v2/spaces/#{space.guid}",
-                      'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-                      'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-                      'events_url'                 => "/v2/apps/#{process.guid}/events",
-                      'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-                      'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+                      'package_updated_at' => iso8601,
+                      'detected_start_command' => '$HOME/boot.sh',
+                      'enable_ssh' => true,
+                      'ports' => [8080],
+                      'space_url' => "/v2/spaces/#{space.guid}",
+                      'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                      'routes_url' => "/v2/apps/#{process.guid}/routes",
+                      'events_url' => "/v2/apps/#{process.guid}/events",
+                      'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+                      'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
                     }
                   }
                 ],
@@ -202,22 +202,22 @@ RSpec.describe 'Routes' do
         expect(parsed_response).to be_a_response_like(
           {
             'metadata' => {
-              'guid'       => route.guid,
-              'url'        => "/v2/routes/#{route.guid}",
+              'guid' => route.guid,
+              'url' => "/v2/routes/#{route.guid}",
               'created_at' => iso8601,
               'updated_at' => iso8601
             },
             'entity' => {
-              'host'                  => route.host,
-              'path'                  => '',
-              'domain_guid'           => domain.guid,
-              'space_guid'            => space.guid,
+              'host' => route.host,
+              'path' => '',
+              'domain_guid' => domain.guid,
+              'space_guid' => space.guid,
               'service_instance_guid' => nil,
-              'port'                  => nil,
-              'domain_url'            => "/v2/shared_domains/#{domain.guid}",
-              'space_url'             => "/v2/spaces/#{space.guid}",
-              'apps_url'              => "/v2/routes/#{route.guid}/apps",
-              'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+              'port' => nil,
+              'domain_url' => "/v2/shared_domains/#{domain.guid}",
+              'space_url' => "/v2/spaces/#{space.guid}",
+              'apps_url' => "/v2/routes/#{route.guid}/apps",
+              'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
             }
           }
         )
@@ -241,11 +241,11 @@ RSpec.describe 'Routes' do
     it 'creates a route' do
       domain = VCAP::CloudController::Domain.make
       post_params = MultiJson.dump({
-        domain_guid: domain.guid,
-        space_guid: space.guid,
-        host: 'some-host',
-        path: '/some-path'
-      })
+                                     domain_guid: domain.guid,
+                                     space_guid: space.guid,
+                                     host: 'some-host',
+                                     path: '/some-path'
+                                   })
 
       post '/v2/routes', post_params, headers_for(user)
 
@@ -254,22 +254,22 @@ RSpec.describe 'Routes' do
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => route.guid,
-            'url'        => "/v2/routes/#{route.guid}",
+            'guid' => route.guid,
+            'url' => "/v2/routes/#{route.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
           'entity' => {
-            'host'                  => 'some-host',
-            'path'                  => '/some-path',
-            'domain_guid'           => domain.guid,
-            'space_guid'            => space.guid,
+            'host' => 'some-host',
+            'path' => '/some-path',
+            'domain_guid' => domain.guid,
+            'space_guid' => space.guid,
             'service_instance_guid' => nil,
-            'port'                  => nil,
-            'domain_url'            => "/v2/shared_domains/#{domain.guid}",
-            'space_url'             => "/v2/spaces/#{space.guid}",
-            'apps_url'              => "/v2/routes/#{route.guid}/apps",
-            'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+            'port' => nil,
+            'domain_url' => "/v2/shared_domains/#{domain.guid}",
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'apps_url' => "/v2/routes/#{route.guid}/apps",
+            'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
           }
         }
       )
@@ -289,23 +289,23 @@ RSpec.describe 'Routes' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => route_mapping.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping.guid}",
+                'guid' => route_mapping.guid,
+                'url' => "/v2/route_mappings/#{route_mapping.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process.guid,
+                'app_port' => nil,
+                'app_guid' => process.guid,
                 'route_guid' => route.guid,
-                'app_url'    => "/v2/apps/#{process.guid}",
-                'route_url'  => "/v2/routes/#{route.guid}"
+                'app_url' => "/v2/apps/#{process.guid}",
+                'route_url' => "/v2/routes/#{route.guid}"
               }
             }
           ]
@@ -327,58 +327,58 @@ RSpec.describe 'Routes' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => process.guid,
-                'url'        => "/v2/apps/#{process.guid}",
+                'guid' => process.guid,
+                'url' => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'                       => process.name,
-                'production'                 => false,
-                'space_guid'                 => space.guid,
-                'stack_guid'                 => process.stack.guid,
-                'buildpack'                  => nil,
-                'detected_buildpack'         => nil,
-                'detected_buildpack_guid'    => nil,
-                'environment_json'           => nil,
-                'memory'                     => 1024,
-                'instances'                  => 1,
-                'disk_quota'                 => 1024,
-                'log_rate_limit' => 1048576,
-                'state'                      => 'STOPPED',
-                'version'                    => process.version,
-                'command'                    => nil,
-                'console'                    => false,
-                'debug'                      => nil,
-                'staging_task_id'            => process.latest_build.guid,
-                'package_state'              => 'STAGED',
-                'health_check_type'          => 'port',
-                'health_check_timeout'       => nil,
+                'name' => process.name,
+                'production' => false,
+                'space_guid' => space.guid,
+                'stack_guid' => process.stack.guid,
+                'buildpack' => nil,
+                'detected_buildpack' => nil,
+                'detected_buildpack_guid' => nil,
+                'environment_json' => nil,
+                'memory' => 1024,
+                'instances' => 1,
+                'disk_quota' => 1024,
+                'log_rate_limit' => 1_048_576,
+                'state' => 'STOPPED',
+                'version' => process.version,
+                'command' => nil,
+                'console' => false,
+                'debug' => nil,
+                'staging_task_id' => process.latest_build.guid,
+                'package_state' => 'STAGED',
+                'health_check_type' => 'port',
+                'health_check_timeout' => nil,
                 'health_check_http_endpoint' => nil,
-                'staging_failed_reason'      => nil,
+                'staging_failed_reason' => nil,
                 'staging_failed_description' => nil,
-                'diego'                      => true,
-                'docker_image'               => nil,
-                'docker_credentials'         => {
+                'diego' => true,
+                'docker_image' => nil,
+                'docker_credentials' => {
                   'username' => nil,
                   'password' => nil
                 },
-                'package_updated_at'         => iso8601,
-                'detected_start_command'     => '$HOME/boot.sh',
-                'enable_ssh'                 => true,
-                'ports'                      => [8080],
-                'space_url'                  => "/v2/spaces/#{space.guid}",
-                'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-                'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-                'events_url'                 => "/v2/apps/#{process.guid}/events",
-                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-                'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+                'package_updated_at' => iso8601,
+                'detected_start_command' => '$HOME/boot.sh',
+                'enable_ssh' => true,
+                'ports' => [8080],
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                'routes_url' => "/v2/apps/#{process.guid}/routes",
+                'events_url' => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+                'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
               }
             }
           ]

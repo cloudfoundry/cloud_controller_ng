@@ -60,7 +60,7 @@ class SpacesV3Controller < ApplicationController
 
     space = SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
 
-    render status: 201, json: Presenters::V3::SpacePresenter.new(space)
+    render status: :created, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e
     unprocessable!(e.message)
   end
@@ -110,7 +110,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/spaces/#{space.guid}/running_security_groups",
       message: message,
-      extra_presenter_args: { visible_space_guids: space.guid },
+      extra_presenter_args: { visible_space_guids: space.guid }
     )
   end
 
@@ -129,7 +129,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/spaces/#{space.guid}/staging_security_groups",
       message: message,
-      extra_presenter_args: { visible_space_guids: space.guid },
+      extra_presenter_args: { visible_space_guids: space.guid }
     )
   end
 
@@ -205,7 +205,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: paginated_result,
       path: "/v3/spaces/#{space.guid}/users",
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')

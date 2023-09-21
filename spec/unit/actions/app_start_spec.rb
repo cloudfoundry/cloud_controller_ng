@@ -14,7 +14,7 @@ module VCAP::CloudController
         let(:app) do
           AppModel.make(
             :docker,
-            desired_state:         'STOPPED',
+            desired_state: 'STOPPED',
             environment_variables: environment_variables
           )
         end
@@ -44,8 +44,8 @@ module VCAP::CloudController
       context 'when the app has a buildpack lifecycle' do
         let(:app) do
           AppModel.make(:buildpack,
-            desired_state:         'STOPPED',
-            environment_variables: environment_variables)
+                        desired_state: 'STOPPED',
+                        environment_variables: environment_variables)
         end
         let!(:droplet) { DropletModel.make(app: app) }
         let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
@@ -63,7 +63,7 @@ module VCAP::CloudController
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_start).with(
             app,
-            user_audit_info,
+            user_audit_info
           )
 
           AppStart.start(app: app, user_audit_info: user_audit_info)
@@ -75,18 +75,18 @@ module VCAP::CloudController
           end
 
           it 'raises a InvalidApp exception' do
-            expect {
+            expect do
               AppStart.start(app: app, user_audit_info: user_audit_info)
-            }.to raise_error(AppStart::InvalidApp, 'some message')
+            end.to raise_error(AppStart::InvalidApp, 'some message')
           end
         end
 
         context 'and the droplet has a package' do
           let!(:droplet) do
             DropletModel.make(
-              app:     app,
+              app: app,
               package: package,
-              state:   DropletModel::STAGED_STATE,
+              state: DropletModel::STAGED_STATE
             )
           end
           let(:package) do
@@ -124,8 +124,8 @@ module VCAP::CloudController
             state: DropletModel::STAGED_STATE,
             process_types: {
               'web' => 'webby',
-              'worker' => 'workworkwork',
-            },
+              'worker' => 'workworkwork'
+            }
           )
         end
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
@@ -149,7 +149,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start(app: app, user_audit_info: user_audit_info)
-          end.not_to change { RevisionModel.count }
+          end.not_to(change { RevisionModel.count })
         end
 
         it 'does not create a new revision if the droplet did not change' do

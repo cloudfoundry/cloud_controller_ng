@@ -109,11 +109,11 @@ module VCAP
         describe 'with last operation' do
           let(:service_instance) { ManagedServiceInstance.make }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [service_instance.space].map(&:id)) }
-          let!(:app_binding) {
+          let!(:app_binding) do
             binding = ServiceBinding.make(service_instance: service_instance)
             binding.save_with_new_operation({ state: 'succeeded', type: 'create', description: 'radical avocado' })
             binding
-          }
+          end
 
           it 'fetches the last operation' do
             credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)

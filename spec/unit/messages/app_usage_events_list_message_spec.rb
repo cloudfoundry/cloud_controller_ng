@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'after_guid' => 'guid1',
-          'guids' => 'guid5,guid6',
+          'guids' => 'guid5,guid6'
         }
       end
 

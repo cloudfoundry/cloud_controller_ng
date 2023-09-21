@@ -95,7 +95,7 @@ module VCAP::CloudController::Jobs
 
             api_error = YAML.safe_load(job_model.cf_api_error)['errors'].first
             expect(api_error['title']).to eql('CF-BlobstoreError')
-            expect(api_error['code']).to eql(150007)
+            expect(api_error['code']).to eql(150_007)
             expect(api_error['detail']).to eql('Failed to perform blobstore operation after three retries.')
           end
         end
@@ -111,14 +111,14 @@ module VCAP::CloudController::Jobs
     end
 
     describe 'warnings' do
-      let(:broker) {
+      let(:broker) do
         VCAP::CloudController::ServiceBroker.create(
           name: 'test-broker',
           broker_url: 'http://example.org/broker-url',
           auth_username: 'username',
           auth_password: 'password'
         )
-      }
+      end
 
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo, { user_guid: Sham.guid }) }
       let(:job) { VCAP::CloudController::V3::SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: user_audit_info) }
@@ -173,7 +173,7 @@ module VCAP::CloudController::Jobs
       context 'with a big backtrace' do
         it 'culls it down' do
           exception = BigException.new
-          exception.set_backtrace(['1000 character backtrace: ' + 'x' * 974] * 32)
+          exception.set_backtrace(['1000 character backtrace: ' + ('x' * 974)] * 32)
           pollable_job.error(job, exception)
           expect(actual_pollable_job.reload.cf_api_error).to_not be_empty
           block = YAML.safe_load(actual_pollable_job.cf_api_error)
@@ -190,17 +190,17 @@ module VCAP::CloudController::Jobs
         # mysql complains with 15,828, so test for failure at that point
 
         it 'squeezes just right one in' do
-          expect {
+          expect do
             pollable_job.error(job, BigException.new(message: 'x' * 15_825))
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'gives up' do
           pg_error = /value too long for type character varying/
           mysql_error = /Data too long for column 'cf_api_error'/
-          expect {
+          expect do
             pollable_job.error(job, BigException.new(message: 'x' * 15_828))
-          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
+          end.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end
     end
@@ -219,7 +219,7 @@ module VCAP::CloudController::Jobs
       end
 
       it 'defers to the inner job' do
-        time = Time.now
+        time = Time.now.utc
         attempts = 5
         expect(pollable_job.reschedule_at(time, attempts)).to eq(job.reschedule_at(time, attempts))
       end

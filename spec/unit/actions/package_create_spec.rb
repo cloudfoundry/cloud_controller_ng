@@ -6,21 +6,21 @@ module VCAP::CloudController
     let(:app) { AppModel.make }
     let(:type) { 'docker' }
     let(:relationships) { { app: { data: { guid: app.guid } } } }
-    let(:message) {
+    let(:message) do
       PackageCreateMessage.new({
-        type: type,
-        relationships: relationships,
-        metadata: {
-          labels: {
-            release: 'stable',
-            'seriouseats.com/potato' => 'mashed'
-          },
-          annotations: {
-            anno: 'tations'
-          }
-        }
-      })
-    }
+                                 type: type,
+                                 relationships: relationships,
+                                 metadata: {
+                                   labels: {
+                                     release: 'stable',
+                                     'seriouseats.com/potato' => 'mashed'
+                                   },
+                                   annotations: {
+                                     anno: 'tations'
+                                   }
+                                 }
+                               })
+    end
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_email: user_email) }
 
     describe '#create' do
@@ -51,7 +51,7 @@ module VCAP::CloudController
               'annotations' => {
                 'anno' => 'tations'
               }
-            },
+            }
           }
         )
 
@@ -133,9 +133,9 @@ module VCAP::CloudController
         end
 
         it 'raises an InvalidPackage error' do
-          expect {
+          expect do
             described_class.create(message: message, user_audit_info: user_audit_info)
-          }.to raise_error(PackageCreate::InvalidPackage, 'the message')
+          end.to raise_error(PackageCreate::InvalidPackage, 'the message')
         end
       end
     end

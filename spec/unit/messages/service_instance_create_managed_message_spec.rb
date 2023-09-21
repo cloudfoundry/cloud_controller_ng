@@ -8,7 +8,7 @@ module VCAP::CloudController
         type: 'managed',
         name: 'my-service-instance',
         parameters: { foo: 'bar' },
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         relationships: {
           space: {
             data: { guid: 'space-guid' }
@@ -108,7 +108,7 @@ module VCAP::CloudController
           expect(message).to_not be_valid
           expect(message.errors[:relationships]).to include(
             "Space can't be blank",
-            /Space must be structured like this.*/,
+            /Space must be structured like this.*/
           )
           expect(message.errors[:relationships].count).to eq(2)
         end

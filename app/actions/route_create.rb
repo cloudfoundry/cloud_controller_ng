@@ -15,7 +15,7 @@ module VCAP::CloudController
         path: message.path || '',
         port: port(message, domain),
         space: space,
-        domain: domain,
+        domain: domain
       )
 
       Route.db.transaction do
@@ -28,7 +28,7 @@ module VCAP::CloudController
         route,
         @user_audit_info,
         message.audit_hash,
-        manifest_triggered: manifest_triggered,
+        manifest_triggered: manifest_triggered
       )
 
       route
@@ -41,10 +41,10 @@ module VCAP::CloudController
 
     private
 
-    def validate_tcp_route!(domain, message)
-      if domain.router_group_guid.present? && router_group(domain).nil?
-        error!('Route could not be created because the specified domain does not have a valid router group.')
-      end
+    def validate_tcp_route!(domain, _message)
+      return unless domain.router_group_guid.present? && router_group(domain).nil?
+
+      error!('Route could not be created because the specified domain does not have a valid router group.')
     end
 
     def port(message, domain)
@@ -67,25 +67,15 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, host, path, port, space, domain)
-      if error.errors.on(:domain)&.include?(:invalid_relation)
-        error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.")
-      end
+      error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.") if error.errors.on(:domain)&.include?(:invalid_relation)
 
-      if error.errors.on(:space)&.include?(:total_routes_exceeded)
-        error!("Routes quota exceeded for space '#{space.name}'.")
-      end
+      error!("Routes quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_routes_exceeded)
 
-      if error.errors.on(:space)&.include?(:total_reserved_route_ports_exceeded)
-        error!("Reserved route ports quota exceeded for space '#{space.name}'.")
-      end
+      error!("Reserved route ports quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_reserved_route_ports_exceeded)
 
-      if error.errors.on(:organization)&.include?(:total_routes_exceeded)
-        error!("Routes quota exceeded for organization '#{space.organization.name}'.")
-      end
+      error!("Routes quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_routes_exceeded)
 
-      if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
-        error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.")
-      end
+      error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
 
       validation_error_routing_api!(error)
       validation_error_host!(error, host, domain)
@@ -96,46 +86,32 @@ module VCAP::CloudController
     end
 
     def validation_error_routing_api!(error)
-      if error.errors.on(:routing_api)&.include?(:uaa_unavailable)
-        raise RoutingApi::UaaUnavailable
-      end
+      raise RoutingApi::UaaUnavailable if error.errors.on(:routing_api)&.include?(:uaa_unavailable)
 
-      if error.errors.on(:routing_api)&.include?(:routing_api_unavailable)
-        raise RoutingApi::RoutingApiUnavailable
-      end
+      raise RoutingApi::RoutingApiUnavailable if error.errors.on(:routing_api)&.include?(:routing_api_unavailable)
 
-      if error.errors.on(:routing_api)&.include?(:routing_api_disabled)
-        raise RoutingApi::RoutingApiDisabled
-      end
+      return unless error.errors.on(:routing_api)&.include?(:routing_api_disabled)
+
+      raise RoutingApi::RoutingApiDisabled
     end
 
     # rubocop:todo Metrics/CyclomaticComplexity
     def validation_error_host!(error, host, domain)
-      if error.errors.on(:host)&.include?(:domain_conflict)
-        error!("Route conflicts with domain '#{host}.#{domain.name}'.")
-      end
+      error!("Route conflicts with domain '#{host}.#{domain.name}'.") if error.errors.on(:host)&.include?(:domain_conflict)
 
-      if error.errors.on(:host)&.include?(:system_hostname_conflict)
-        error!('Route conflicts with a reserved system route.')
-      end
+      error!('Route conflicts with a reserved system route.') if error.errors.on(:host)&.include?(:system_hostname_conflict)
 
-      if error.errors.on(:host)&.include?(:format)
-        error!('Host format is invalid.')
-      end
+      error!('Host format is invalid.') if error.errors.on(:host)&.include?(:format)
 
-      if error.errors.on(:host)&.include?(:wildcard_host_not_supported_for_internal_domain)
-        error!('Wildcard hosts are not supported for internal domains.')
-      end
+      error!('Wildcard hosts are not supported for internal domains.') if error.errors.on(:host)&.include?(:wildcard_host_not_supported_for_internal_domain)
 
-      if error.errors.on(:host)&.include?('is required for shared-domains')
-        error!('Missing host. Routes in shared domains must have a host defined.')
-      end
+      error!('Missing host. Routes in shared domains must have a host defined.') if error.errors.on(:host)&.include?('is required for shared-domains')
 
       if error.errors.on(:host)&.include?('combined with domain name must be no more than 253 characters')
         error!('Host combined with domain name must be no more than 253 characters.')
       end
 
-      if error.errors.on([:host, :domain_id])&.include?(:unique)
+      if error.errors.on(%i[host domain_id])&.include?(:unique)
         if host.empty?
           error!("Route already exists for domain '#{domain.name}'.")
         else
@@ -143,71 +119,49 @@ module VCAP::CloudController
         end
       end
 
-      if error.errors.on(:host)&.include?(:host_and_path_domain_tcp)
-        error!('Hosts are not supported for TCP routes.')
-      end
+      error!('Hosts are not supported for TCP routes.') if error.errors.on(:host)&.include?(:host_and_path_domain_tcp)
 
-      if error.errors.on(:path)&.include?(:host_and_path_domain_tcp)
-        error!('Paths are not supported for TCP routes.')
-      end
+      return unless error.errors.on(:path)&.include?(:host_and_path_domain_tcp)
+
+      error!('Paths are not supported for TCP routes.')
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
     # rubocop:todo Metrics/CyclomaticComplexity
     def validation_error_path!(error, host, path, domain)
-      if error.errors.on(:path)&.include?(:path_not_supported_for_internal_domain)
-        error!('Paths are not supported for internal domains.')
-      end
+      error!('Paths are not supported for internal domains.') if error.errors.on(:path)&.include?(:path_not_supported_for_internal_domain)
 
-      if error.errors.on(:path)&.include?(:invalid_path)
-        error!('Path is invalid.')
-      end
+      error!('Path is invalid.') if error.errors.on(:path)&.include?(:invalid_path)
 
-      if error.errors.on(:path)&.include?(:path_exceeds_valid_length)
-        error!('Path exceeds 128 characters.')
-      end
+      error!('Path exceeds 128 characters.') if error.errors.on(:path)&.include?(:path_exceeds_valid_length)
 
-      if error.errors.on(:path)&.include?(:single_slash)
-        error!("Path cannot be a single '/'.")
-      end
+      error!("Path cannot be a single '/'.") if error.errors.on(:path)&.include?(:single_slash)
 
-      if error.errors.on(:path)&.include?(:missing_beginning_slash)
-        error!("Path is missing the beginning '/'.")
-      end
+      error!("Path is missing the beginning '/'.") if error.errors.on(:path)&.include?(:missing_beginning_slash)
 
-      if error.errors.on(:path)&.include?(:path_contains_question)
-        error!("Path cannot contain '?'.")
-      end
-      if error.errors.on([:host, :domain_id, :path])&.include?(:unique)
-        if host.empty?
-          error!("Route already exists with path '#{path}' for domain '#{domain.name}'.")
-        else
-          error!("Route already exists with host '#{host}' and path '#{path}' for domain '#{domain.name}'.")
-        end
+      error!("Path cannot contain '?'.") if error.errors.on(:path)&.include?(:path_contains_question)
+      return unless error.errors.on(%i[host domain_id path])&.include?(:unique)
+
+      if host.empty?
+        error!("Route already exists with path '#{path}' for domain '#{domain.name}'.")
+      else
+        error!("Route already exists with host '#{host}' and path '#{path}' for domain '#{domain.name}'.")
       end
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
-    def validation_error_port!(error, host, port, domain)
-      if error.errors.on(:port)&.include?(:port_required)
-        error!("Routes with protocol 'tcp' must specify a port.")
-      end
+    def validation_error_port!(error, _host, port, domain)
+      error!("Routes with protocol 'tcp' must specify a port.") if error.errors.on(:port)&.include?(:port_required)
 
-      if error.errors.on(:port)&.include?(:port_unavailable)
-        error!("Port '#{port}' is not available. Try a different port or use a different domain.")
-      end
+      error!("Port '#{port}' is not available. Try a different port or use a different domain.") if error.errors.on(:port)&.include?(:port_unavailable)
 
-      if error.errors.on([:host, :domain_id, :port])&.include?(:unique)
-        error!("Route already exists with port '#{port}' for domain '#{domain.name}'.")
-      end
+      error!("Route already exists with port '#{port}' for domain '#{domain.name}'.") if error.errors.on(%i[host domain_id port])&.include?(:unique)
 
-      if error.errors.on(:port)&.include?(:port_taken)
-        error!("Port '#{port}' is not available. Try a different port or use a different domain.")
-      end
+      error!("Port '#{port}' is not available. Try a different port or use a different domain.") if error.errors.on(:port)&.include?(:port_taken)
 
-      if error.errors.on(:port)&.include?(:port_unsupported)
-        error!("Routes with protocol 'http' do not support ports.")
-      end
+      return unless error.errors.on(:port)&.include?(:port_unsupported)
+
+      error!("Routes with protocol 'http' do not support ports.")
     end
 
     def error!(message)

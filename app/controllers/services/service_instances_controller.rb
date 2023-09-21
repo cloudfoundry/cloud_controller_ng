@@ -22,9 +22,9 @@ module VCAP::CloudController
       attribute :maintenance_info, Hash, default: nil, exclude_in: [:create]
       to_one :space
       to_one :service_plan
-      to_many :service_bindings, route_for: [:get], exclude_in: [:create, :update]
+      to_many :service_bindings, route_for: [:get], exclude_in: %i[create update]
       to_many :service_keys
-      to_many :routes, route_for: [:get, :put, :delete], exclude_in: [:create, :update]
+      to_many :routes, route_for: %i[get put delete], exclude_in: %i[create update]
     end
 
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name, :organization_guid, :service_key_guid
@@ -109,8 +109,7 @@ module VCAP::CloudController
 
       [status_from_operation_state(service_instance),
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
-       object_renderer.render_json(self.class, service_instance, @opts)
-      ]
+       object_renderer.render_json(self.class, service_instance, @opts)]
     end
 
     def update(guid)
@@ -118,10 +117,8 @@ module VCAP::CloudController
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       service_instance, related_objects = ServiceInstanceFetcher.new.fetch(guid)
-      not_found!(guid) if !service_instance
-      if service_instance.is_a?(UserProvidedServiceInstance)
-        raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded')
-      end
+      not_found!(guid) unless service_instance
+      raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded') if service_instance.is_a?(UserProvidedServiceInstance)
 
       validate_shared_space_updateable(service_instance)
       validate_access(:read_for_update, service_instance)
@@ -139,9 +136,7 @@ module VCAP::CloudController
       update.update_service_instance(service_instance, request_attrs)
 
       status_code = status_from_operation_state(service_instance)
-      if status_code == HTTP::ACCEPTED
-        headers = { 'Location' => "#{self.class.path}/#{service_instance.guid}" }
-      end
+      headers = { 'Location' => "#{self.class.path}/#{service_instance.guid}" } if status_code == HTTP::ACCEPTED
 
       [
         status_code,
@@ -177,8 +172,8 @@ module VCAP::CloudController
         service_is_shared!(service_instance.name) if has_shares?(service_instance)
 
         has_associations = has_routes?(service_instance) ||
-          has_bindings?(service_instance) ||
-          has_keys?(service_instance)
+                           has_bindings?(service_instance) ||
+                           has_keys?(service_instance)
 
         association_not_empty! if has_associations
       end
@@ -216,18 +211,16 @@ module VCAP::CloudController
       read_permissions = @access_context.can?(:read_permissions, service_instance)
 
       [HTTP::OK, JSON.generate({
-        manage: manage_permissions,
-        read: read_permissions
-      })]
+                                 manage: manage_permissions,
+                                 read: read_permissions
+                               })]
     rescue CloudController::Errors::ApiError => e
-      if e.name == 'NotAuthorized'
-        [HTTP::OK, JSON.generate({
-          manage: false,
-          read: false,
-        })]
-      else
-        raise e
-      end
+      raise e unless e.name == 'NotAuthorized'
+
+      [HTTP::OK, JSON.generate({
+                                 manage: false,
+                                 read: false
+                               })]
     end
 
     get '/v2/service_instances/:guid/shared_from', :shared_from_information
@@ -258,7 +251,7 @@ module VCAP::CloudController
         service_instance.shared_spaces_dataset,
         associated_path,
         @opts,
-        {},
+        {}
       )
     end
 
@@ -419,7 +412,7 @@ module VCAP::CloudController
         @service_instance = service_instance
       end
 
-      def serialize(controller, space, opts, orphans=nil)
+      def serialize(_controller, space, _opts, _orphans=nil)
         bound_app_count = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(@service_instance.guid, space.guid).count
         CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space, bound_app_count)
       end
@@ -451,7 +444,8 @@ module VCAP::CloudController
           default_results_per_page: config.get(:renderer, :default_results_per_page),
           max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
           max_total_results: config.get(:renderer, :max_total_results)
-        })
+        }
+      )
     end
 
     def route_services_enabled?
@@ -463,15 +457,15 @@ module VCAP::CloudController
     end
 
     def route_service_warning(service_instance)
-      if service_instance.route_service?
-        add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
-      end
+      return unless service_instance.route_service?
+
+      add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
     end
 
     def volume_service_warning(service_instance)
-      if service_instance.volume_service?
-        add_warning(ServiceInstance::VOLUME_SERVICE_WARNING)
-      end
+      return unless service_instance.volume_service?
+
+      add_warning(ServiceInstance::VOLUME_SERVICE_WARNING)
     end
 
     def validate_create_request
@@ -489,15 +483,15 @@ module VCAP::CloudController
     end
 
     def validate_shared_space_updateable(service_instance)
-      if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
-        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdatableInTargetSpace')
-      end
+      return unless @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
+
+      raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdatableInTargetSpace')
     end
 
     def validate_shared_space_deleteable(service_instance)
-      if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
-        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotDeletableInTargetSpace')
-      end
+      return unless @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
+
+      raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotDeletableInTargetSpace')
     end
 
     def invalid_service_instance!(service_instance)

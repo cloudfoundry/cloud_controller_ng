@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'when names filter is given' do
-        let(:message) { SpacesListMessage.from_params({ names: ['Lamb', 'Buffalo'] }) }
+        let(:message) { SpacesListMessage.from_params({ names: %w[Lamb Buffalo] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
@@ -95,8 +95,10 @@ module VCAP::CloudController
       end
 
       context 'when organization_guids  and a label_selector are provided' do
-        let(:message) do SpacesListMessage.from_params(
-          { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' })
+        let(:message) do
+          SpacesListMessage.from_params(
+            { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' }
+          )
         end
         let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
         let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
@@ -108,7 +110,8 @@ module VCAP::CloudController
       end
 
       context 'when a label_selector is provided' do
-        let(:message) do SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
+        let(:message) do
+          SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
         end
         let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
         let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }

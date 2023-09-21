@@ -7,18 +7,18 @@ module VCAP::CloudController
     include ActiveModel::Model
     include Validators
 
-    MAX_DB_INT = 2**31 - 1
-    MAX_DB_BIGINT = 2**63 - 1
+    MAX_DB_INT = (2**31) - 1
+    MAX_DB_BIGINT = (2**63) - 1
 
     attr_accessor :requested_keys, :extra_keys
 
     def self.allowed_keys
-      const_defined?(:ALLOWED_KEYS) ? self.const_get(:ALLOWED_KEYS) : []
+      const_defined?(:ALLOWED_KEYS) ? const_get(:ALLOWED_KEYS) : []
     end
 
     def self.register_allowed_keys(allowed_keys)
       keys = self.allowed_keys + allowed_keys
-      self.const_set(:ALLOWED_KEYS, keys.freeze)
+      const_set(:ALLOWED_KEYS, keys.freeze)
       attr_accessor(*allowed_keys)
     end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
       request = {}
 
       requested_keys.each_with_object(request) do |key, memo|
-        memo[key] = self.try(key) unless exclude.include?(key)
+        memo[key] = try(key) unless exclude.include?(key)
       end
 
       request.deep_stringify_keys
@@ -47,7 +47,7 @@ module VCAP::CloudController
     def to_param_hash(exclude: [], fields: [])
       params = {}
       (requested_keys - exclude).each do |key|
-        val = self.try(key)
+        val = try(key)
 
         if fields.include?(key)
           val.each do |resource, selectors|
@@ -68,15 +68,14 @@ module VCAP::CloudController
       end
 
       fields.each do |key|
-        if opts[key].is_a?(Hash)
-          opts[key].each_key do |attribute|
-            to_array! opts[key], attribute
-          end
+        next unless opts[key].is_a?(Hash)
+
+        opts[key].each_key do |attribute|
+          to_array! opts[key], attribute
         end
       end
 
-      message = new(opts.symbolize_keys)
-      message
+      new(opts.symbolize_keys)
     end
 
     def self.to_array!(params, key)
@@ -94,49 +93,47 @@ module VCAP::CloudController
 
     class NoAdditionalKeysValidator < ActiveModel::Validator
       def validate(record)
-        if record.extra_keys.any?
-          record.errors.add(:base, message: "Unknown field(s): '#{record.extra_keys.join("', '")}'")
-        end
+        return unless record.extra_keys.any?
+
+        record.errors.add(:base, message: "Unknown field(s): '#{record.extra_keys.join("', '")}'")
       end
     end
 
     class NoAdditionalParamsValidator < ActiveModel::Validator
       def validate(record)
-        if record.extra_keys.any?
-          record.errors.add(:base, message: "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'. Valid parameters are: '#{record.class.allowed_keys.join("', '")}'")
-        end
+        return unless record.extra_keys.any?
+
+        record.errors.add(:base, message: "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'. Valid parameters are: '#{record.class.allowed_keys.join("', '")}'")
       end
     end
 
     class DisallowUpdatedAtsParamValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:updated_ats)
-          record.errors.add(:base, message: "Filtering by 'updated_ats' is not allowed on this resource.")
-        end
+        return unless record.requested?(:updated_ats)
+
+        record.errors.add(:base, message: "Filtering by 'updated_ats' is not allowed on this resource.")
       end
     end
 
     class DisallowCreatedAtsParamValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:created_ats)
-          record.errors.add(:base, message: "Filtering by 'created_ats' is not allowed on this resource.")
-        end
+        return unless record.requested?(:created_ats)
+
+        record.errors.add(:base, message: "Filtering by 'created_ats' is not allowed on this resource.")
       end
     end
 
     class IncludeParamValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:include)
-          key_counts = Hash.new(0)
-          record.include.each do |include_candidate|
-            if options[:valid_values].member?(include_candidate)
-              key_counts[include_candidate] += 1
-              if key_counts[include_candidate] == 2
-                record.errors.add(:base, message: "Duplicate included resource: '#{include_candidate}'")
-              end
-            else
-              record.errors.add(:base, message: "Invalid included resource: '#{include_candidate}'. Valid included resources are: '#{options[:valid_values].join("', '")}'")
-            end
+        return unless record.requested?(:include)
+
+        key_counts = Hash.new(0)
+        record.include.each do |include_candidate|
+          if options[:valid_values].member?(include_candidate)
+            key_counts[include_candidate] += 1
+            record.errors.add(:base, message: "Duplicate included resource: '#{include_candidate}'") if key_counts[include_candidate] == 2
+          else
+            record.errors.add(:base, message: "Invalid included resource: '#{include_candidate}'. Valid included resources are: '#{options[:valid_values].join("', '")}'")
           end
         end
       end
@@ -144,12 +141,12 @@ module VCAP::CloudController
 
     class LifecycleTypeParamValidator < ActiveModel::Validator
       def validate(record)
-        if record.requested?(:lifecycle_type)
-          valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE]
-          unless valid_lifecycle_types.include?(record.lifecycle_type)
-            record.errors.add(:base, message: "Invalid lifecycle_type: '#{record.lifecycle_type}'")
-          end
-        end
+        return unless record.requested?(:lifecycle_type)
+
+        valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE]
+        return if valid_lifecycle_types.include?(record.lifecycle_type)
+
+        record.errors.add(:base, message: "Invalid lifecycle_type: '#{record.lifecycle_type}'")
       end
     end
 

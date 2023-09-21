@@ -85,11 +85,11 @@ module VCAP::CloudController
       it 'returns 403 as a non-admin' do
         set_current_user(User.make)
 
-        expect {
+        expect do
           post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
-        }.to_not change {
+        end.to_not(change do
           AppUsageEvent.count
-        }
+        end)
         expect(last_response.status).to eq(403)
       end
     end

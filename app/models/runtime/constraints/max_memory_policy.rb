@@ -11,9 +11,9 @@ class BaseMaxMemoryPolicy
     return unless policy_target
     return unless additional_checks
 
-    unless policy_target.has_remaining_memory(requested_memory)
-      resource.errors.add(field, error_name)
-    end
+    return if policy_target.has_remaining_memory(requested_memory)
+
+    resource.errors.add(field, error_name)
   end
 
   private
@@ -50,7 +50,7 @@ class TaskMaxMemoryPolicy < BaseMaxMemoryPolicy
   IGNORED_STATES = [
     VCAP::CloudController::TaskModel::CANCELING_STATE,
     VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
-    VCAP::CloudController::TaskModel::FAILED_STATE,
+    VCAP::CloudController::TaskModel::FAILED_STATE
   ].freeze
 
   private

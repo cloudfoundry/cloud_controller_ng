@@ -43,9 +43,9 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = VCAP::CloudController::StackCreateMessage.new(name: 'foobar')
-          expect {
+          expect do
             StackCreate.new.create(message)
-          }.to raise_error(StackCreate::Error, 'blork is busted')
+          end.to raise_error(StackCreate::Error, 'blork is busted')
         end
       end
 
@@ -58,9 +58,9 @@ module VCAP::CloudController
 
         it 'raises a human-friendly error' do
           message = VCAP::CloudController::StackCreateMessage.new(name: name)
-          expect {
+          expect do
             StackCreate.new.create(message)
-          }.to raise_error(StackCreate::Error, 'Name must be unique')
+          end.to raise_error(StackCreate::Error, 'Name must be unique')
         end
       end
     end

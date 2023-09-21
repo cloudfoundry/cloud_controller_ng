@@ -30,9 +30,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises' do
-          expect {
+          expect do
             client.lrp_instances(process)
-          }.to raise_error(CloudController::Errors::NoRunningInstances)
+          end.to raise_error(CloudController::Errors::NoRunningInstances)
         end
       end
 
@@ -42,9 +42,9 @@ module VCAP::CloudController::Diego
         end
 
         it 're-raises with a CC Error' do
-          expect {
+          expect do
             client.lrp_instances(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
+          end.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
         end
       end
 
@@ -54,9 +54,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises' do
-          expect {
+          expect do
             client.lrp_instances(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
+          end.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
         end
       end
     end
@@ -90,9 +90,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises' do
-          expect {
+          expect do
             client.desired_lrp_instance(process)
-          }.to raise_error(CloudController::Errors::NoRunningInstances)
+          end.to raise_error(CloudController::Errors::NoRunningInstances)
         end
       end
 
@@ -102,9 +102,9 @@ module VCAP::CloudController::Diego
         end
 
         it 're-raises with a CC Error' do
-          expect {
+          expect do
             client.desired_lrp_instance(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
+          end.to raise_error(CloudController::Errors::InstancesUnavailable, 'boom')
         end
       end
 
@@ -114,9 +114,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises' do
-          expect {
+          expect do
             client.desired_lrp_instance(process)
-          }.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
+          end.to raise_error(CloudController::Errors::InstancesUnavailable, 'error-message')
         end
       end
     end

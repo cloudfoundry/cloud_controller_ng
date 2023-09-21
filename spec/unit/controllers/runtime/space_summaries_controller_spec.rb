@@ -125,10 +125,10 @@ module VCAP::CloudController
         it 'includes sharing information' do
           expect(services_response.first).to have_key('shared_from')
           expect(services_response.first['shared_from']).to eq({
-            'space_guid' => originating_space.guid,
-            'space_name' => originating_space.name,
-            'organization_name' => originating_space.organization.name
-          })
+                                                                 'space_guid' => originating_space.guid,
+                                                                 'space_name' => originating_space.name,
+                                                                 'organization_name' => originating_space.organization.name
+                                                               })
         end
 
         it 'does not contain shared to information' do
@@ -151,10 +151,10 @@ module VCAP::CloudController
         it 'includes shared to information' do
           expect(services_response.first).to have_key('shared_to')
           expect(services_response.first['shared_to'].first).to eq({
-            'space_guid' => foreign_space.guid,
-            'space_name' => foreign_space.name,
-            'organization_name' => foreign_space.organization.name
-          })
+                                                                     'space_guid' => foreign_space.guid,
+                                                                     'space_name' => foreign_space.name,
+                                                                     'organization_name' => foreign_space.organization.name
+                                                                   })
         end
       end
 

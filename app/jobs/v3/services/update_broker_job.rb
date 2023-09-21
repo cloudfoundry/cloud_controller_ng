@@ -65,12 +65,10 @@ module VCAP::CloudController
           end
 
           @warnings
-        rescue => e
+        rescue StandardError => e
           ServiceBroker.where(id: update_request.service_broker_id).update(state: previous_broker_state)
 
-          if e.is_a?(Sequel::ValidationFailed)
-            raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message)
-          end
+          raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message) if e.is_a?(Sequel::ValidationFailed)
 
           raise e
         ensure

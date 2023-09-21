@@ -9,9 +9,7 @@ module VCAP::CloudController
     def self.update(quota, message)
       if log_rate_limit(message) != QuotaDefinition::UNLIMITED
         spaces = spaces_with_unlimited_processes(quota)
-        if spaces.any?
-          unlimited_processes_exist_error!(spaces)
-        end
+        unlimited_processes_exist_error!(spaces) if spaces.any?
       end
 
       quota.db.transaction do
@@ -37,16 +35,14 @@ module VCAP::CloudController
 
       quota
     rescue Sequel::ValidationFailed => e
-      if e.errors.on([:organization_id, :name])&.include?(:unique)
-        raise Error.new("Space Quota '#{message.name}' already exists.")
-      end
+      raise Error.new("Space Quota '#{message.name}' already exists.") if e.errors.on(%i[organization_id name])&.include?(:unique)
 
       raise Error.new(e.message)
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
     def self.default_if_nil(message_value, default)
-      return message_value.nil? ? default : message_value
+      message_value.nil? ? default : message_value
     end
 
     def self.memory_limit(message)
@@ -103,14 +99,14 @@ module VCAP::CloudController
     def self.unlimited_processes_exist_error!(spaces)
       named_spaces = spaces.take(MAX_SPACES_TO_LIST_ON_FAILURE).map(&:name).join("', '")
       message = 'This quota is applied to ' +
-        if spaces.size == 1
-          "space '#{named_spaces}' which contains"
-        elsif spaces.size > MAX_SPACES_TO_LIST_ON_FAILURE
-          "spaces '#{named_spaces}' and #{spaces.drop(MAX_SPACES_TO_LIST_ON_FAILURE).size}" \
-          ' other spaces which contain'
-        else
-          "spaces '#{named_spaces}' which contain"
-        end + ' apps running with an unlimited log rate limit.'
+                if spaces.size == 1
+                  "space '#{named_spaces}' which contains"
+                elsif spaces.size > MAX_SPACES_TO_LIST_ON_FAILURE
+                  "spaces '#{named_spaces}' and #{spaces.drop(MAX_SPACES_TO_LIST_ON_FAILURE).size} " \
+                    'other spaces which contain'
+                else
+                  "spaces '#{named_spaces}' which contain"
+                end + ' apps running with an unlimited log rate limit.'
 
       raise Error.new("Current usage exceeds new quota values. #{message}")
     end

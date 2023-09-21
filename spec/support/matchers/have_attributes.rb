@@ -24,6 +24,7 @@ end
 
 class AttributeValidator
   attr_reader :attributes, :fields, :matcher_type
+
   def initialize(message_class, attributes, matcher_type)
     @fields = message_class.fields
     @message_class = message_class
@@ -62,12 +63,8 @@ class AttributeValidator
 
   def failure_message(actual)
     error_string = "expected that #{actual} to have #{matcher_type} attributes specified by #{attributes}\nErrors:"
-    if @missing_attributes.present?
-      error_string << "\nAttributes expected, but not found on the Controller: #{@missing_attributes}"
-    end
-    if @unexpected_attributes.present?
-      error_string << "\nUnexpected attributes found on the Controller: #{@unexpected_attributes}"
-    end
+    error_string << "\nAttributes expected, but not found on the Controller: #{@missing_attributes}" if @missing_attributes.present?
+    error_string << "\nUnexpected attributes found on the Controller: #{@unexpected_attributes}" if @unexpected_attributes.present?
     @attributes_with_bad_default.each do |attribute_name, expected_default, controller_default|
       error_string << "\nExpected #{attribute_name} to have default value #{expected_default.inspect}, but has default #{controller_default.inspect}"
     end

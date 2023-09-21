@@ -22,10 +22,10 @@ module CloudController::Presenters::V2
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
       let(:route) do
         VCAP::CloudController::Route.make(
-          host:   'host',
-          path:   '/some-path',
+          host: 'host',
+          path: '/some-path',
           domain: domain,
-          space:  space,
+          space: space
         )
       end
       let!(:route_binding) { VCAP::CloudController::RouteBinding.make(route: route, service_instance: service_instance) }
@@ -33,12 +33,12 @@ module CloudController::Presenters::V2
       it 'returns the route entity and associated urls' do
         expect(subject.entity_hash(controller, route, opts, depth, parents, orphans)).to eq(
           {
-            'host'                  => 'host',
-            'path'                  => '/some-path',
-            'domain_guid'           => domain.guid,
-            'space_guid'            => space.guid,
+            'host' => 'host',
+            'path' => '/some-path',
+            'domain_guid' => domain.guid,
+            'space_guid' => space.guid,
             'service_instance_guid' => service_instance.guid,
-            'port'                  => nil,
+            'port' => nil,
             'relationship_key' => 'relationship_value',
             'domain_url' => "/v2/shared_domains/#{domain.guid}"
           }

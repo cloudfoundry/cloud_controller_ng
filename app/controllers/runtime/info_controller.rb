@@ -19,20 +19,14 @@ module VCAP::CloudController
         app_ssh_oauth_client: @config.get(:info, :app_ssh_oauth_client),
         doppler_logging_endpoint: @config.get(:doppler, :url),
         api_version: VCAP::CloudController::Constants::API_VERSION,
-        osbapi_version: VCAP::CloudController::Constants::OSBAPI_VERSION,
+        osbapi_version: VCAP::CloudController::Constants::OSBAPI_VERSION
       }
 
-      if @config.get(:routing_api) && @config.get(:routing_api, :url)
-        info[:routing_endpoint] = @config.get(:routing_api, :url)
-      end
+      info[:routing_endpoint] = @config.get(:routing_api, :url) if @config.get(:routing_api) && @config.get(:routing_api, :url)
 
-      if @config.get(:info, :custom)
-        info[:custom] = @config.get(:info, :custom)
-      end
+      info[:custom] = @config.get(:info, :custom) if @config.get(:info, :custom)
 
-      if user
-        info[:user] = user.guid
-      end
+      info[:user] = user.guid if user
 
       MultiJson.dump(info)
     end

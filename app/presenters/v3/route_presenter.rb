@@ -10,7 +10,7 @@ module VCAP::CloudController::Presenters::V3
     class << self
       # :labels and :annotations come from MetadataPresentationHelpers
       def associated_resources
-        [:domain, :space, :route_mappings].concat(super)
+        %i[domain space route_mappings].concat(super)
       end
     end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController::Presenters::V3
         destinations: RouteDestinationsPresenter.new(route.route_mappings, route: route).presented_destinations,
         metadata: {
           labels: hashified_labels(route.labels),
-          annotations: hashified_annotations(route.annotations),
+          annotations: hashified_annotations(route.annotations)
         },
         relationships: {
           space: {
@@ -62,7 +62,7 @@ module VCAP::CloudController::Presenters::V3
       links = {
         self: {
           href: url_builder.build_url(path: "/v3/routes/#{route.guid}")
-        },
+        }
       }
 
       links[:space] = {
@@ -81,13 +81,9 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def build_url
-      if route.port && route.port > 0
-        return "#{route.domain.name}:#{route.port}"
-      end
+      return "#{route.domain.name}:#{route.port}" if route.port && route.port > 0
 
-      if route.host.empty?
-        return "#{route.domain.name}#{route.path}"
-      end
+      return "#{route.domain.name}#{route.path}" if route.host.empty?
 
       "#{route.host}.#{route.domain.name}#{route.path}"
     end

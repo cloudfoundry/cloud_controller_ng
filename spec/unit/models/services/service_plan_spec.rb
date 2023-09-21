@@ -34,9 +34,9 @@ module VCAP::CloudController
           private_broker = ServiceBroker.make space: space
           service = Service.make service_broker: private_broker
 
-          expect {
+          expect do
             ServicePlan.make service: service, public: true
-          }.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
+          end.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
         end
       end
     end
@@ -136,15 +136,17 @@ module VCAP::CloudController
           before { plan.unique_id = nil }
 
           it 'does not generate a unique_id' do
-            expect {
-              plan.save rescue nil
-            }.to_not change(plan, :unique_id)
+            expect do
+              plan.save
+            rescue StandardError
+              nil
+            end.to_not change(plan, :unique_id)
           end
 
           it 'raises a validation error' do
-            expect {
+            expect do
               plan.save
-            }.to raise_error(Sequel::ValidationFailed)
+            end.to raise_error(Sequel::ValidationFailed)
           end
         end
       end
@@ -168,9 +170,9 @@ module VCAP::CloudController
       it 'cannot be destroyed if associated service_instances exist' do
         service_plan = ServicePlan.make
         ManagedServiceInstance.make(service_plan: service_plan)
-        expect {
+        expect do
           service_plan.destroy
-        }.to raise_error Sequel::DatabaseError, /foreign key/
+        end.to raise_error Sequel::DatabaseError, /foreign key/
       end
     end
 

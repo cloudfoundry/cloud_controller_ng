@@ -14,15 +14,15 @@ class FakeServiceBrokerV2Client
   def catalog(user_guid: nil)
     {
       'services' => [{
-        'id'          => 'service_id',
-        'name'        => service_name,
+        'id' => 'service_id',
+        'name' => service_name,
         'description' => 'some description',
-        'bindable'    => true,
-        'plans'       => [{
-          'id'          => 'fake_plan_id',
-          'name'        => plan_name,
+        'bindable' => true,
+        'plans' => [{
+          'id' => 'fake_plan_id',
+          'name' => plan_name,
           'description' => 'fake_plan_description',
-          'schemas'     => plan_schemas
+          'schemas' => plan_schemas
         }]
       }]
     }
@@ -31,13 +31,13 @@ class FakeServiceBrokerV2Client
   def provision(_instance, arbitrary_parameters: {}, accepts_incomplete: false, maintenance_info: {})
     {
       instance: {
-        credentials:   {},
+        credentials: {},
         dashboard_url: nil
       },
       last_operation: {
-        type:        'create',
+        type: 'create',
         description: '',
-        state:       'succeeded'
+        state: 'succeeded'
       }
     }
   end
@@ -45,9 +45,9 @@ class FakeServiceBrokerV2Client
   def deprovision(_instance, arbitrary_parameters: {}, accepts_incomplete: false)
     {
       last_operation: {
-        type:        'delete',
+        type: 'delete',
         description: '',
-        state:       'succeeded'
+        state: 'succeeded'
       }
     }
   end
@@ -55,10 +55,10 @@ class FakeServiceBrokerV2Client
   def update(_instance, _plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil)
     [{
       last_operation: {
-        type:        'update',
+        type: 'update',
         description: '',
-        state:       'succeeded'
-      },
+        state: 'succeeded'
+      }
     }, nil]
   end
 
@@ -68,7 +68,7 @@ class FakeServiceBrokerV2Client
       binding: {
         credentials: credentials,
         syslog_drain_url: syslog_drain_url,
-        volume_mounts: volume_mounts,
+        volume_mounts: volume_mounts
       }
     }
   end
@@ -97,15 +97,15 @@ class FakeServiceBrokerV2Client
     def catalog(user_guid: nil)
       {
         'services' => [{
-          'id'          => 'service_id',
-          'name'        => service_name,
+          'id' => 'service_id',
+          'name' => service_name,
           'description' => 'some description',
-          'bindable'    => true,
-          'plans'       => [{
-            'id'          => 'fake_plan_id',
-            'name'        => plan_name,
+          'bindable' => true,
+          'plans' => [{
+            'id' => 'fake_plan_id',
+            'name' => plan_name,
             'description' => 'fake_plan_description',
-            'schemas'     => plan_schemas
+            'schemas' => plan_schemas
           }],
           'dashboard_client' => {
             'id' => 'some-uaa-id',

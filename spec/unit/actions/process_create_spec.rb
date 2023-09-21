@@ -10,7 +10,7 @@ module VCAP::CloudController
     describe '#create' do
       let(:message) do
         {
-          type:    'web',
+          type: 'web',
           command: 'rackup'
         }
       end
@@ -29,7 +29,7 @@ module VCAP::CloudController
       context 'if the command is nil' do
         let(:message) do
           {
-            type:    'web',
+            type: 'web',
             command: nil
           }
         end
@@ -71,18 +71,18 @@ module VCAP::CloudController
           )
         end
 
-        expect {
+        expect do
           process_create.create(app, message)
-        }.to raise_error ProcessCreate::InvalidProcess, 'Process must have at most 10 exposed ports.'
+        end.to raise_error ProcessCreate::InvalidProcess, 'Process must have at most 10 exposed ports.'
       end
 
       it 'validates sidecar memory usage' do
         sidecar = SidecarModel.make(app: app, name: 'my_sidecar', command: 'athenz', memory: 2000)
         SidecarProcessTypeModel.make(sidecar: sidecar, type: message[:type])
 
-        expect {
+        expect do
           process_create.create(app, message)
-        }.to raise_error(
+        end.to raise_error(
           ProcessCreate::SidecarMemoryLessThanProcessMemory,
           /The sidecar memory allocation defined is too large to run with the dependent "web" process/
         )
@@ -114,7 +114,7 @@ module VCAP::CloudController
       describe 'default values for web processes' do
         let(:message) do
           {
-            type:    'web',
+            type: 'web',
             command: 'rackup'
           }
         end
@@ -137,7 +137,7 @@ module VCAP::CloudController
       describe 'default values for non-web processes' do
         let(:message) do
           {
-            type:    'other',
+            type: 'other',
             command: 'gogogadget'
           }
         end

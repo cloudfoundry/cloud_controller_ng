@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
           per_process_memory_in_mb: convert_unlimited_to_nil(organization_quota.instance_memory_limit),
           total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
           per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
-          log_rate_limit_in_bytes_per_second: convert_unlimited_to_nil(organization_quota.log_rate_limit),
+          log_rate_limit_in_bytes_per_second: convert_unlimited_to_nil(organization_quota.log_rate_limit)
         },
         services: {
           paid_services_allowed: organization_quota.non_basic_services_allowed,
@@ -45,7 +45,7 @@ module VCAP::CloudController::Presenters::V3
             data: filtered_visible_orgs
           }
         },
-        links: build_links,
+        links: build_links
       }
     end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController::Presenters::V3
 
     def build_links
       {
-        self: { href: url_builder.build_url(path: "/v3/organization_quotas/#{organization_quota.guid}") },
+        self: { href: url_builder.build_url(path: "/v3/organization_quotas/#{organization_quota.guid}") }
       }
     end
   end

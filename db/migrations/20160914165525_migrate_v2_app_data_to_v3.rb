@@ -14,7 +14,6 @@ Sequel.migration do
     ##  App usage events - Insert STOP events for v3 created processes that will be removed
     ####
 
-    # rubocop:disable Style/FormatStringToken
     transaction do
       generate_stop_events_query = <<-SQL
         INSERT INTO app_usage_events
@@ -35,8 +34,6 @@ Sequel.migration do
         run generate_stop_events_query % 'get_uuid()'
       end
     end
-    # rubocop:enable Style/FormatStringToken
-
     ###
     ##  remove V3 data
     ###
@@ -49,7 +46,7 @@ Sequel.migration do
       drop_index :app_guid
       drop_foreign_key [:space_id]
       drop_foreign_key [:stack_id], name: :fk_apps_stack_id
-      drop_index [:name, :space_id], name: :apps_space_id_name_nd_idx
+      drop_index %i[name space_id], name: :apps_space_id_name_nd_idx
     end
     drop_table(:v3_service_bindings)
     drop_table(:tasks)
@@ -455,7 +452,7 @@ Sequel.migration do
       add_foreign_key [:app_guid], :apps, key: :guid, name: :fk_route_mappings_app_guid
       add_foreign_key [:route_guid], :routes, key: :guid, name: :fk_route_mappings_route_guid
 
-      add_unique_constraint [:app_guid, :route_guid, :process_type, :app_port], name: :route_mappings_app_guid_route_guid_process_type_app_port_key
+      add_unique_constraint %i[app_guid route_guid process_type app_port], name: :route_mappings_app_guid_route_guid_process_type_app_port_key
     end
 
     rename_table :apps_routes, :route_mappings

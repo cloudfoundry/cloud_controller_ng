@@ -4,9 +4,9 @@ module Sequel::Plugins::VcapValidations
     #
     # @param [Symbol] The attribute to validate
     def validates_url(attr, opts={})
-      if send(attr)
-        validates_format(URI::DEFAULT_PARSER.make_regexp(%w(http https)), attr, message: opts.fetch(:message, :url))
-      end
+      return unless send(attr)
+
+      validates_format(URI::DEFAULT_PARSER.make_regexp(%w[http https]), attr, message: opts.fetch(:message, :url))
     end
 
     # Validates that an attribute is a valid email address

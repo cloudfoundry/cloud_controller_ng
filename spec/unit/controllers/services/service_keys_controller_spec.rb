@@ -53,7 +53,7 @@ module VCAP::CloudController
         {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
-          statsd_client: double(Statsd),
+          statsd_client: double(Statsd)
         }
       end
       let(:config) { double(Config, get: nil) }
@@ -239,7 +239,7 @@ module VCAP::CloudController
                 'name' => req[:name]
               }
             }
-                                    )
+          )
         end
 
         context 'when attempting to create service key for an unbindable service' do
@@ -249,7 +249,8 @@ module VCAP::CloudController
 
             req = {
               name: name,
-              service_instance_guid: instance.guid }.to_json
+              service_instance_guid: instance.guid
+            }.to_json
 
             post '/v2/service_keys', req
           end
@@ -641,9 +642,9 @@ module VCAP::CloudController
       end
 
       it 'deletes the service key' do
-        expect {
+        expect do
           delete "/v2/service_keys/#{service_key.guid}"
-        }.to change(ServiceKey, :count).by(-1)
+        end.to change(ServiceKey, :count).by(-1)
         expect(last_response).to have_status_code 204
         expect(last_response.body).to be_empty
         expect { service_key.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -803,7 +804,7 @@ module VCAP::CloudController
               'org_manager' => 404,
               'org_auditor' => 404,
               'org_billing_manager' => 404,
-              'org_user' => 404,
+              'org_user' => 404
             }.each do |role, expected_status|
               context "as a(n) #{role} in the binding space" do
                 before do

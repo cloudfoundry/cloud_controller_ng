@@ -11,7 +11,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'reader' => 200,
-        'unauthenticated' => 401,
+        'unauthenticated' => 401
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -63,7 +63,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
       end
 
       describe 'pagination' do
-        let(:feature_flag_names_sorted) {}
+        let(:feature_flag_names_sorted) { nil }
         it 'supports pagination' do
           get :index, params: { per_page: 1, page: 2 }
 
@@ -86,8 +86,8 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-        flag1: false,
-      })
+                   flag1: false
+                 })
       set_current_user(user)
     end
 
@@ -129,8 +129,8 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-        flag1: false,
-      })
+                   flag1: false
+                 })
       set_current_user(user)
     end
 
@@ -201,7 +201,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
         it 'works with an empty request body' do
           patch :update, params: {
-            name: feature_flag_name,
+            name: feature_flag_name
           }, as: :json
 
           expect(response.status).to eq 200

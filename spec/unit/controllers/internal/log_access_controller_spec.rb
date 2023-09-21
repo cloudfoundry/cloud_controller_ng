@@ -20,8 +20,8 @@ module VCAP::CloudController
         {},
         nil,
         {
-          statsd_client: double(Statsd),
-        },
+          statsd_client: double(Statsd)
+        }
       )
     end
 
@@ -35,9 +35,9 @@ module VCAP::CloudController
         it 'returns 403' do
           expect(log_access_controller).to receive(:check_read_permissions!).
             and_raise(CloudController::Errors::ApiError.new_from_details('NotAuthorized'))
-          expect {
+          expect do
             log_access_controller.lookup(app_model.guid)
-          }.to raise_error do |error|
+          end.to raise_error do |error|
             expect(error.name).to eq 'NotAuthorized'
             expect(error.response_code).to eq 403
           end

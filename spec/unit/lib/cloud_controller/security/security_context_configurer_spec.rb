@@ -21,9 +21,9 @@ module VCAP::CloudController
 
           # Fail early in the #configure so that we do not set new values on the token
           allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise('BOGUS_TEST_ERROR')
-          expect {
+          expect do
             configurer.configure(auth_token)
-          }.to raise_error('BOGUS_TEST_ERROR')
+          end.to raise_error('BOGUS_TEST_ERROR')
 
           expect(SecurityContext.current_user).to be_nil
           expect(SecurityContext.token).to be_nil
@@ -64,9 +64,9 @@ module VCAP::CloudController
 
           context 'when the specified user does not exist' do
             it 'creates an active user with that id' do
-              expect {
+              expect do
                 configurer.configure(auth_token)
-              }.to change { User.count }.by(1)
+              end.to change { User.count }.by(1)
               expect(SecurityContext.current_user.guid).to eq(user_id)
               expect(SecurityContext.current_user).to be_active
               expect(SecurityContext.current_user.is_oauth_client?).to be_falsey

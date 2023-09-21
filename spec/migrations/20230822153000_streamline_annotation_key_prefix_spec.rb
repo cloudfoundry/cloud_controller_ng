@@ -40,11 +40,12 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
       db[:isolation_segments].insert(name: 'bommel', guid: '123')
       db[:isolation_segment_annotations].insert(
         guid: 'bommel',
-        created_at: Time.now - 60,
-        updated_at: Time.now - 60,
+        created_at: Time.now.utc - 60,
+        updated_at: Time.now.utc - 60,
         resource_guid: '123',
         key: 'mylegacyprefix/mykey',
-        value: 'some_value')
+        value: 'some_value'
+      )
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect { Sequel::Migrator.run(db, tmp_up_migrations_dir, allow_missing_migration_files: true) }.not_to raise_error
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')

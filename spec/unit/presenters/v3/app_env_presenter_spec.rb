@@ -5,10 +5,10 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe AppEnvPresenter do
     let(:app) do
       VCAP::CloudController::AppModel.make(
-        created_at: Time.at(1),
-        updated_at: Time.at(2),
+        created_at: Time.at(1).utc,
+        updated_at: Time.at(2).utc,
         environment_variables: { 'some' => 'stuff' },
-        desired_state: 'STOPPED',
+        desired_state: 'STOPPED'
       )
     end
     let(:buildpack_name) { 'the-happiest-buildpack' }
@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the app environment variables as json' do
         expect(result[:environment_variables]).to eq(app.environment_variables)
         expect(result[:application_env_json][:VCAP_APPLICATION][:name]).to eq(app.name)
-        expect(result[:application_env_json][:VCAP_APPLICATION][:limits][:fds]).to eq(16384)
+        expect(result[:application_env_json][:VCAP_APPLICATION][:limits][:fds]).to eq(16_384)
         expect(result[:system_env_json]).to have_key(:VCAP_SERVICES)
         expect(result[:staging_env_json]).to eq({})
         expect(result[:running_env_json]).to eq({})

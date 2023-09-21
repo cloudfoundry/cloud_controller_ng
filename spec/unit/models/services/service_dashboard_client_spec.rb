@@ -35,16 +35,16 @@ module VCAP::CloudController
       it 'returns all clients claimed by the broker' do
         results = ServiceDashboardClient.find_claimed_client(service_broker)
         expect(results).to have(2).entries
-        expect(results.map(&:uaa_id)).to match_array ['client-1', 'client-3']
+        expect(results.map(&:uaa_id)).to match_array %w[client-1 client-3]
       end
     end
 
     describe '.claim_client_for_broker' do
       context 'when the client is unclaimed' do
         it 'claims the client for the broker' do
-          expect {
+          expect do
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
-          }.to change {
+          end.to change {
             client_claimed? uaa_id, service_broker
           }.to(true)
         end
@@ -56,9 +56,9 @@ module VCAP::CloudController
         end
 
         it 'claims the client for the broker' do
-          expect {
+          expect do
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
-          }.to change {
+          end.to change {
             client_claimed? uaa_id, service_broker
           }.to(true)
         end
@@ -70,9 +70,9 @@ module VCAP::CloudController
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
-          }.to raise_exception(Sequel::ValidationFailed)
+          end.to raise_exception(Sequel::ValidationFailed)
         end
       end
 
@@ -82,11 +82,11 @@ module VCAP::CloudController
         end
 
         it 'does not change the fact that the client is claimed by the broker' do
-          expect {
+          expect do
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
-          }.not_to change {
+          end.not_to(change do
             client_claimed? uaa_id, service_broker
-          }
+          end)
         end
       end
     end
@@ -97,9 +97,9 @@ module VCAP::CloudController
       end
 
       it 'removes the claim' do
-        expect {
+        expect do
           ServiceDashboardClient.release_client(uaa_id)
-        }.to change { client_claimed? uaa_id, service_broker }.to(false)
+        end.to change { client_claimed? uaa_id, service_broker }.to(false)
       end
     end
 
@@ -111,9 +111,9 @@ module VCAP::CloudController
       end
 
       context 'when one client exists with the specified uaa_id' do
-        let!(:client) {
+        let!(:client) do
           ServiceDashboardClient.make(uaa_id: 'some-uaa-id', service_broker: nil)
-        }
+        end
 
         it 'returns the client' do
           expect(ServiceDashboardClient.find_client_by_uaa_id('some-uaa-id')).to eq(client)

@@ -3,7 +3,7 @@ module VCAP::CloudController
     attr_reader :routing_api_client
 
     def self.dependencies
-      [:routing_api_client, :router_group_type_populating_collection_renderer]
+      %i[routing_api_client router_group_type_populating_collection_renderer]
     end
 
     define_attributes do
@@ -34,18 +34,17 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
       end
 
-      unless @router_group
-        raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "router group guid '#{router_group_guid}' not found")
-      end
+      return if @router_group
+
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "router group guid '#{router_group_guid}' not found")
     end
 
     def after_create(domain)
       super(domain)
-      unless domain.nil?
-        unless domain.router_group_guid.nil?
-          domain.router_group_type = @router_group.type unless @router_group.nil?
-        end
-      end
+      return if domain.nil?
+      return if domain.router_group_guid.nil?
+
+      domain.router_group_type = @router_group.type unless @router_group.nil?
     end
 
     def delete(guid)
@@ -59,10 +58,10 @@ module VCAP::CloudController
       begin
         @router_group_type_populating_collection_renderer.render_json(
           self.class,
-            get_filtered_dataset_for_enumeration(model, SharedDomain.dataset, self.class.query_parameters, @opts),
-            self.class.path,
-            @opts,
-            {},
+          get_filtered_dataset_for_enumeration(model, SharedDomain.dataset, self.class.query_parameters, @opts),
+          self.class.path,
+          @opts,
+          {}
         )
       rescue RoutingApi::RoutingApiUnavailable
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')

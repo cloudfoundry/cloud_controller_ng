@@ -27,7 +27,7 @@ RSpec.describe DeploymentsController, type: :controller do
               guid: app_guid
             }
           }
-        },
+        }
       }
     end
 
@@ -49,29 +49,29 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
           post :create, params: request_body, as: :json
         end
 
         context 'the app does not have a current droplet' do
-          let(:app_without_droplet) {
+          let(:app_without_droplet) do
             VCAP::CloudController::AppModel.make(
               desired_state: VCAP::CloudController::ProcessModel::STARTED,
               space: space
             )
-          }
+          end
 
           let(:request_body) do
             {
-             relationships: {
+              relationships: {
                 app: {
                   data: {
                     guid: app_without_droplet.guid
                   }
                 }
-              },
+              }
             }
           end
 
@@ -98,7 +98,7 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
@@ -113,12 +113,12 @@ RSpec.describe DeploymentsController, type: :controller do
               with(
                 app: app,
                 user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-                ).and_call_original
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+              ).and_call_original
 
-            expect {
+            expect do
               post :create, params: request_body, as: :json
-            }.not_to change { VCAP::CloudController::RevisionModel.count }
+            end.not_to(change { VCAP::CloudController::RevisionModel.count })
           end
         end
 
@@ -128,12 +128,12 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
-          expect {
+          expect do
             post :create, params: request_body, as: :json
-          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
         end
 
         it 'sets the app droplet to the provided droplet' do
@@ -155,7 +155,7 @@ RSpec.describe DeploymentsController, type: :controller do
                     guid: app_guid
                   }
                 }
-              },
+              }
             }
           end
 
@@ -180,7 +180,7 @@ RSpec.describe DeploymentsController, type: :controller do
                     guid: app_guid
                   }
                 }
-              },
+              }
             }
           end
 
@@ -224,7 +224,7 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
@@ -234,32 +234,31 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
-          expect {
+          expect do
             post :create, params: request_body, as: :json
-          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
           expect(VCAP::CloudController::RevisionModel.last.droplet_guid).to eq(droplet.guid)
         end
 
         context 'when the provided revision specifies start commands' do
           let!(:earlier_revision) do
             VCAP::CloudController::RevisionModel.make(:custom_web_command,
-              app: app,
-              droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
-              created_at: 5.days.ago,
-              version: 2,
-              description: 'reassigned earlier_revision',
-            )
+                                                      app: app,
+                                                      droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
+                                                      created_at: 5.days.ago,
+                                                      version: 2,
+                                                      description: 'reassigned earlier_revision')
           end
 
           it 'uses the process commands from the revision to create a new revision' do
             expect(VCAP::CloudController::DeploymentCreate).
               to receive(:create).and_call_original
-            expect {
+            expect do
               post :create, params: request_body, as: :json
-            }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+            end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
             expect(VCAP::CloudController::RevisionModel.last.commands_by_process_type).to eq({ 'web' => 'custom_web_command' })
           end
         end
@@ -307,7 +306,7 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
@@ -319,16 +318,16 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when metadata is provided' do
-        let(:metadata) {
+        let(:metadata) do
           {
             'labels' => {
-              'seriouseats.com/potato' => 'mashed',
+              'seriouseats.com/potato' => 'mashed'
             },
             'annotations' => {
-              'potato' => 'idaho',
-            },
+              'potato' => 'idaho'
+            }
           }
-        }
+        end
 
         let(:request_body) do
           {
@@ -339,7 +338,7 @@ RSpec.describe DeploymentsController, type: :controller do
                 }
               }
             },
-            metadata: metadata,
+            metadata: metadata
           }
         end
 
@@ -363,15 +362,15 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 422,
           'org_manager' => 422,
           'org_auditor' => 422,
-          'org_billing_manager' => 422,
+          'org_billing_manager' => 422
         }
       end
-      let(:api_call) { lambda { post :create, params: request_body, as: :json } }
+      let(:api_call) { -> { post :create, params: request_body, as: :json } }
     end
 
     context 'when the user does not have permission' do
       before do
-        set_current_user(user, scopes: %w(cloud_controller.write))
+        set_current_user(user, scopes: %w[cloud_controller.write])
       end
 
       it 'returns 422 with an error message' do
@@ -456,10 +455,10 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 200,
           'org_manager' => 200,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { get :show, params: { guid: deployment.guid }, as: :json } }
+      let(:api_call) { -> { get :show, params: { guid: deployment.guid }, as: :json } }
     end
 
     it 'returns 401 for Unauthenticated requests' do
@@ -483,12 +482,12 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 200,
           'org_manager' => 200,
           'org_auditor' => 200,
-          'org_billing_manager' => 200,
+          'org_billing_manager' => 200
         }.freeze
 
         has_no_space_access = {
           'org_auditor' => true,
-          'org_billing_manager' => true,
+          'org_billing_manager' => true
         }
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -556,7 +555,7 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         context 'invalid pagination' do
-          let(:params) { { 'per_page' => 9999999999999999 } }
+          let(:params) { { 'per_page' => 9_999_999_999_999_999 } }
 
           it 'returns 400' do
             get :index, params: params
@@ -640,7 +639,7 @@ RSpec.describe DeploymentsController, type: :controller do
         post :cancel, params: { guid: deployment.guid }
 
         expect(response.status).to eq(422)
-        expect(response.body).to match /awry/
+        expect(response.body).to match(/awry/)
       end
     end
 
@@ -655,10 +654,10 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 404,
           'org_manager' => 404,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { post :cancel, params: { guid: deployment.guid } } }
+      let(:api_call) { -> { post :cancel, params: { guid: deployment.guid } } }
     end
   end
 
@@ -763,7 +762,7 @@ RSpec.describe DeploymentsController, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -786,7 +785,7 @@ RSpec.describe DeploymentsController, type: :controller do
               },
               annotations: {
                 this: 'is valid'
-              },
+              }
             }
           }
         end

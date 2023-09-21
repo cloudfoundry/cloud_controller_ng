@@ -21,9 +21,9 @@ module VCAP::CloudController
         expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
 
         returned_job = nil
-        expect {
+        expect do
           returned_job = package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
-        }.to change { Delayed::Job.count }.by(1)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)
@@ -53,9 +53,9 @@ module VCAP::CloudController
         end
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
-          }.to raise_error(PackageUpload::InvalidPackage)
+          end.to raise_error(PackageUpload::InvalidPackage)
         end
       end
     end
@@ -69,9 +69,9 @@ module VCAP::CloudController
         expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
 
         returned_job = nil
-        expect {
+        expect do
           returned_job = package_upload.upload_async_without_event(message: message, package: package, config: config)
-        }.to change { Delayed::Job.count }.by(1)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)
@@ -106,9 +106,9 @@ module VCAP::CloudController
         end
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_upload.upload_sync_without_event(message, package)
-          }.to raise_error(PackageUpload::InvalidPackage)
+          end.to raise_error(PackageUpload::InvalidPackage)
         end
       end
     end

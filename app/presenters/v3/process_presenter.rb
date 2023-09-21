@@ -22,15 +22,15 @@ module VCAP::CloudController
           readiness_health_check_data = { invocation_timeout: process.readiness_health_check_invocation_timeout, interval: process.readiness_health_check_interval }
           readiness_health_check_data[:endpoint] = process.readiness_health_check_http_endpoint if process.readiness_health_check_type == HealthCheckTypes::HTTP
           {
-            guid:             process.guid,
-            created_at:       process.created_at,
-            updated_at:       process.updated_at,
-            version:          process.version,
-            type:             process.type,
-            command:          redact(process.specified_or_detected_command),
-            instances:        process.instances,
-            memory_in_mb:     process.memory,
-            disk_in_mb:       process.disk_quota,
+            guid: process.guid,
+            created_at: process.created_at,
+            updated_at: process.updated_at,
+            version: process.version,
+            type: process.type,
+            command: redact(process.specified_or_detected_command),
+            instances: process.instances,
+            memory_in_mb: process.memory,
+            disk_in_mb: process.disk_quota,
             log_rate_limit_in_bytes_per_second: process.log_rate_limit,
             health_check: {
               type: process.health_check_type,
@@ -42,13 +42,13 @@ module VCAP::CloudController
             },
             relationships: {
               app: { data: { guid: process.app_guid } },
-              revision:     revision,
+              revision: revision
             },
             metadata: {
               labels: hashified_labels(process.labels),
-              annotations: hashified_annotations(process.annotations),
+              annotations: hashified_annotations(process.annotations)
             },
-            links:        build_links,
+            links: build_links
           }
         end
 
@@ -68,9 +68,9 @@ module VCAP::CloudController
 
         def build_links
           {
-            self:  { href: url_builder.build_url(path: "/v3/processes/#{process.guid}") },
-            scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/actions/scale"), method: 'POST', },
-            app:   { href: url_builder.build_url(path: "/v3/apps/#{process.app_guid}") },
+            self: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}") },
+            scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/actions/scale"), method: 'POST' },
+            app: { href: url_builder.build_url(path: "/v3/apps/#{process.app_guid}") },
             space: { href: url_builder.build_url(path: "/v3/spaces/#{process.space_guid}") },
             stats: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/stats") }
           }

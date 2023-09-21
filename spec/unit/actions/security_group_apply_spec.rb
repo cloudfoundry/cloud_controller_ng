@@ -21,9 +21,9 @@ module VCAP::CloudController
 
       context 'when applying security group to a space' do
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_running(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to change { security_group.spaces.count }.by 1
+          end.to change { security_group.spaces.count }.by 1
 
           expect(security_group.spaces.count).to eq(1)
           expect(security_group.spaces[0].guid).to eq(space.guid)
@@ -41,9 +41,9 @@ module VCAP::CloudController
           errors.add(:blork, 'is busted')
           expect(security_group).to receive(:add_space).and_raise(Sequel::ValidationFailed.new(errors))
 
-          expect {
+          expect do
             subject.apply_running(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, 'blork is busted')
+          end.to raise_error(SecurityGroupApply::Error, 'blork is busted')
         end
       end
 
@@ -57,9 +57,9 @@ module VCAP::CloudController
         end
 
         it 'raises a human-friendly error' do
-          expect {
+          expect do
             subject.apply_running(security_group, message_with_invalid_space_guid, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
+          end.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
         end
       end
 
@@ -67,9 +67,9 @@ module VCAP::CloudController
         let(:visible_space_guids) { [] }
 
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_running(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
+          end.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
 
           expect(security_group.spaces.count).to eq(0)
         end
@@ -79,9 +79,9 @@ module VCAP::CloudController
         let(:all_spaces_visible) { true }
 
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_running(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to change { security_group.spaces.count }.by 1
+          end.to change { security_group.spaces.count }.by 1
 
           expect(security_group.spaces.count).to eq(1)
           expect(security_group.spaces[0].guid).to eq(space.guid)
@@ -103,9 +103,9 @@ module VCAP::CloudController
 
       context 'when applying security group to a space' do
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_staging(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to change { security_group.staging_spaces.count }.by 1
+          end.to change { security_group.staging_spaces.count }.by 1
 
           expect(security_group.staging_spaces.count).to eq(1)
           expect(security_group.staging_spaces[0].guid).to eq(space.guid)
@@ -123,9 +123,9 @@ module VCAP::CloudController
           errors.add(:blork, 'is busted')
           expect(security_group).to receive(:add_staging_space).and_raise(Sequel::ValidationFailed.new(errors))
 
-          expect {
+          expect do
             subject.apply_staging(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, 'blork is busted')
+          end.to raise_error(SecurityGroupApply::Error, 'blork is busted')
         end
       end
 
@@ -139,9 +139,9 @@ module VCAP::CloudController
         end
 
         it 'raises a human-friendly error' do
-          expect {
+          expect do
             subject.apply_staging(security_group, message_with_invalid_space_guid, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
+          end.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
         end
       end
 
@@ -149,9 +149,9 @@ module VCAP::CloudController
         let(:visible_space_guids) { [] }
 
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_staging(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
+          end.to raise_error(SecurityGroupApply::Error, "Spaces with guids [\"#{space.guid}\"] do not exist, or you do not have access to them.")
 
           expect(security_group.staging_spaces.count).to eq(0)
         end
@@ -161,9 +161,9 @@ module VCAP::CloudController
         let(:all_spaces_visible) { true }
 
         it 'associates given space with the security group' do
-          expect {
+          expect do
             subject.apply_staging(security_group, message, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible)
-          }.to change { security_group.staging_spaces.count }.by 1
+          end.to change { security_group.staging_spaces.count }.by 1
 
           expect(security_group.staging_spaces.count).to eq(1)
           expect(security_group.staging_spaces[0].guid).to eq(space.guid)

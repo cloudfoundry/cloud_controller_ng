@@ -10,7 +10,7 @@ module VCAP::CloudController
     define_attributes do
       to_one :app, association_controller: :AppsController, association_name: :v2_app
       to_one :service_instance
-      attribute :binding_options, Hash, exclude_in: [:create, :update]
+      attribute :binding_options, Hash, exclude_in: %i[create update]
       attribute :parameters, Hash, default: nil
       attribute :name, String, default: nil
     end
@@ -37,20 +37,20 @@ module VCAP::CloudController
       raise InvalidRequest unless request_attrs
 
       message = ServiceBindingCreateMessage.new({
-        type: 'app',
-        name: request_attrs['name'],
-        relationships: {
-          app: {
-            data: { guid: request_attrs['app_guid'] }
-          },
-          service_instance: {
-            data: { guid: request_attrs['service_instance_guid'] }
-          },
-        },
-        data: {
-          parameters: request_attrs['parameters']
-        }
-      })
+                                                  type: 'app',
+                                                  name: request_attrs['name'],
+                                                  relationships: {
+                                                    app: {
+                                                      data: { guid: request_attrs['app_guid'] }
+                                                    },
+                                                    service_instance: {
+                                                      data: { guid: request_attrs['service_instance_guid'] }
+                                                    }
+                                                  },
+                                                  data: {
+                                                    parameters: request_attrs['parameters']
+                                                  }
+                                                })
 
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
@@ -108,8 +108,7 @@ module VCAP::CloudController
         if accepts_incomplete && service_binding.exists?
           [HTTP::ACCEPTED,
            { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
-           object_renderer.render_json(self.class, service_binding, @opts)
-          ]
+           object_renderer.render_json(self.class, service_binding, @opts)]
         else
           [HTTP::NO_CONTENT, nil]
         end
@@ -149,9 +148,9 @@ module VCAP::CloudController
     end
 
     def warn_if_user_provided_service_has_parameters!(service_instance)
-      if service_instance.user_provided_instance? && @request_attrs['parameters'] && @request_attrs['parameters'].any?
-        add_warning('Configuration parameters are ignored for bindings to user-provided service instances.')
-      end
+      return unless service_instance.user_provided_instance? && @request_attrs['parameters'] && @request_attrs['parameters'].any?
+
+      add_warning('Configuration parameters are ignored for bindings to user-provided service instances.')
     end
 
     def add_warnings_from_binding_delete!(warnings)

@@ -27,9 +27,9 @@ module Credhub
       before do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{credhub_reference}&current=true").
           with(headers: {
-            'Authorization' => uaa_token_auth_header,
-            'Content-Type'  => 'application/json'
-          }).to_return(status: status, body: credhub_response)
+                 'Authorization' => uaa_token_auth_header,
+                 'Content-Type' => 'application/json'
+               }).to_return(status: status, body: credhub_response)
       end
 
       context 'when the client can access the credential' do

@@ -23,28 +23,28 @@ module VCAP::CloudController
     describe '#create_space_role' do
       let(:message) do
         RoleCreateMessage.new({
-          type: type,
-          relationships: {
-            user: { data: { guid: user.guid } },
-            space: { data: { guid: space.guid } }
-          }
-        })
+                                type: type,
+                                relationships: {
+                                  user: { data: { guid: user.guid } },
+                                  space: { data: { guid: space.guid } }
+                                }
+                              })
       end
 
       shared_examples 'space role creation' do |opts|
         it 'creates the role' do
           created_role = nil
-          expect {
+          expect do
             created_role = subject.create_space_role(type: type, user: user, space: space)
-          }.to change { opts[:model].count }.by(1)
+          end.to change { opts[:model].count }.by(1)
 
           expect(created_role.guid).to be_a_guid
         end
 
         it 'records an audit event' do
-          expect {
+          expect do
             subject.create_space_role(type: type, user: user, space: space)
-          }.to change { Event.count }.by(1)
+          end.to change { Event.count }.by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])
@@ -59,9 +59,9 @@ module VCAP::CloudController
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
             expect(opts[:model]).to receive(:create).and_raise(Sequel::ValidationFailed.new(errors))
-            expect {
+            expect do
               subject.create_space_role(type: type, user: user, space: space)
-            }.to raise_error(RoleCreate::Error, 'blork is busted')
+            end.to raise_error(RoleCreate::Error, 'blork is busted')
           end
 
           context 'when it is a uniqueness error' do
@@ -70,9 +70,9 @@ module VCAP::CloudController
             end
 
             it 'raises a human-friendly error' do
-              expect {
+              expect do
                 subject.create_space_role(type: type, user: user, space: space)
-              }.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
+              end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
             end
           end
         end
@@ -124,9 +124,9 @@ module VCAP::CloudController
         let(:type) { RoleTypes::SPACE_MANAGER }
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.create_space_role(type: type, user: user, space: space)
-          }.to raise_error(RoleCreate::Error, "Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
+          end.to raise_error(RoleCreate::Error, "Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
         end
       end
     end
@@ -134,28 +134,28 @@ module VCAP::CloudController
     context '#create_organization_role' do
       let(:message) do
         RoleCreateMessage.new({
-          type: type,
-          relationships: {
-            user: { data: { guid: user.guid } },
-            organization: { data: { guid: org.guid } }
-          }
-        })
+                                type: type,
+                                relationships: {
+                                  user: { data: { guid: user.guid } },
+                                  organization: { data: { guid: org.guid } }
+                                }
+                              })
       end
 
       shared_examples 'org role creation' do |opts|
         it 'creates the role' do
           created_role = nil
-          expect {
+          expect do
             created_role = subject.create_organization_role(type: type, user: user, organization: org)
-          }.to change { opts[:model].count }.by(1)
+          end.to change { opts[:model].count }.by(1)
 
           expect(created_role.guid).to be_a_guid
         end
 
         it 'records an audit event' do
-          expect {
+          expect do
             subject.create_organization_role(type: type, user: user, organization: org)
-          }.to change { Event.count }.by(1)
+          end.to change { Event.count }.by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])
@@ -169,9 +169,9 @@ module VCAP::CloudController
             errors = Sequel::Model::Errors.new
             errors.add(:blork, 'is busted')
             expect(opts[:model]).to receive(:create).and_raise(Sequel::ValidationFailed.new(errors))
-            expect {
+            expect do
               subject.create_organization_role(type: type, user: user, organization: org)
-            }.to raise_error(RoleCreate::Error, 'blork is busted')
+            end.to raise_error(RoleCreate::Error, 'blork is busted')
           end
 
           context 'when it is a uniqueness error' do
@@ -180,9 +180,9 @@ module VCAP::CloudController
             end
 
             it 'raises a human-friendly error' do
-              expect {
+              expect do
                 subject.create_organization_role(type: type, user: user, organization: org)
-              }.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in organization '#{org.name}'.")
+              end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in organization '#{org.name}'.")
             end
           end
         end

@@ -11,6 +11,31 @@ require 'messages/space_quota_apply_message'
 require 'presenters/v3/space_quota_presenter'
 
 class SpaceQuotasController < ApplicationController
+  def index
+    message = VCAP::CloudController::SpaceQuotasListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    dataset = SpaceQuotaListFetcher.fetch(message: message, readable_space_quota_guids: readable_space_quota_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SpaceQuotaPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/space_quotas',
+      message: message,
+      extra_presenter_args: presenter_args
+    )
+  end
+
+  def show
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+    resource_not_found!(:space_quota) unless space_quota && readable_space_quota_guids.include?(space_quota.guid)
+
+    render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
+      space_quota,
+      **presenter_args
+    )
+  end
+
   def create
     message = VCAP::CloudController::SpaceQuotasCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -31,39 +56,14 @@ class SpaceQuotasController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def show
-    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
-    resource_not_found!(:space_quota) unless space_quota && readable_space_quota_guids.include?(space_quota.guid)
-
-    render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
-      space_quota,
-      **presenter_args
-    )
-  end
-
-  def index
-    message = VCAP::CloudController::SpaceQuotasListMessage.from_params(query_params)
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    dataset = SpaceQuotaListFetcher.fetch(message: message, readable_space_quota_guids: readable_space_quota_guids)
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SpaceQuotaPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: '/v3/space_quotas',
-      message: message,
-      extra_presenter_args: presenter_args,
-    )
-  end
-
   def update
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
 
     resource_not_found!(:space_quota) unless space_quota &&
-      readable_space_quota_guids.include?(space_quota.guid)
+                                             readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+                         (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
@@ -83,10 +83,10 @@ class SpaceQuotasController < ApplicationController
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
 
     resource_not_found!(:space_quota) unless space_quota &&
-      readable_space_quota_guids.include?(space_quota.guid)
+                                             readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+                         (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
@@ -108,10 +108,10 @@ class SpaceQuotasController < ApplicationController
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
 
     resource_not_found!(:space_quota) unless space_quota &&
-      readable_space_quota_guids.include?(space_quota.guid)
+                                             readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+                         (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     space_guid = hashed_params[:space_guid]
@@ -130,10 +130,10 @@ class SpaceQuotasController < ApplicationController
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
 
     resource_not_found!(:space_quota) unless space_quota &&
-      readable_space_quota_guids.include?(space_quota.guid)
+                                             readable_space_quota_guids.include?(space_quota.guid)
 
     unauthorized! unless permission_queryer.can_write_globally? ||
-      (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+                         (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces_dataset.empty?

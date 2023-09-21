@@ -44,7 +44,7 @@ module VCAP::CloudController
         it 'gets org3' do
           domains = DomainFetcher.fetch_all_for_orgs([org3.guid])
           expect(domains.map(&:guid)).to contain_exactly('shared_domain1',
-            'shared_domain2', 'private_domain1', 'private_domain3')
+                                                         'shared_domain2', 'private_domain1', 'private_domain3')
         end
 
         it 'returns readable domains for multiple orgs' do
@@ -72,9 +72,9 @@ module VCAP::CloudController
       end
 
       context 'when fetching a single domain by guid' do
-        let(:message) {
+        let(:message) do
           DomainShowMessage.new({ guid: domain_guid_filter })
-        }
+        end
 
         context 'when the domain is shared' do
           let!(:org1) { Organization.make(guid: 'org1') }
@@ -136,9 +136,9 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by name' do
-        let(:message) {
+        let(:message) do
           DomainsListMessage.from_params({ names: domain_name_filter })
-        }
+        end
 
         context 'when the matching domain is shared' do
           let!(:org1) { Organization.make(guid: 'org1') }
@@ -164,9 +164,9 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by guid' do
-        let(:message) {
+        let(:message) do
           DomainsListMessage.from_params({ guids: domain_guid_filter })
-        }
+        end
 
         context 'when the matching domain is shared' do
           let!(:org1) { Organization.make(guid: 'org1') }
@@ -192,9 +192,9 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by org_guids' do
-        let(:message) {
+        let(:message) do
           DomainsListMessage.from_params({ organization_guids: organization_guid_filter })
-        }
+        end
 
         context 'when the matching domain is shared' do
           let!(:org1) { Organization.make(guid: 'org1') }
@@ -235,9 +235,9 @@ module VCAP::CloudController
         let(:results) { DomainFetcher.fetch(message, [org1.guid]).all }
 
         context 'only the label_selector is present' do
-          let(:message) {
+          let(:message) do
             DomainsListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
-          }
+          end
           it 'returns only the domain whose label matches' do
             expect(results.length).to eq(1)
             expect(results[0]).to eq(shared_domain1)
@@ -245,9 +245,9 @@ module VCAP::CloudController
         end
 
         context 'and other filters are present' do
-          let(:message) {
+          let(:message) do
             DomainsListMessage.from_params({ 'names' => 'dom.com', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
-          }
+          end
 
           let!(:happiest_domain) { SharedDomain.make(name: 'dom.com') }
           let!(:happiest_domain_label) do

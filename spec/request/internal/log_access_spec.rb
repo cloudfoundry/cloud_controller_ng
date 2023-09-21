@@ -9,7 +9,7 @@ RSpec.describe 'Internal Log Access Endpoint' do
 
   describe 'GET /internal/v4/log_access/:app_guid' do
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| get "/internal/v4/log_access/#{app_model.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/internal/v4/log_access/#{app_model.guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }

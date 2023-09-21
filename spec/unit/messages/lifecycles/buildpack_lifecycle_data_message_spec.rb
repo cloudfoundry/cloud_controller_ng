@@ -76,7 +76,7 @@ module VCAP::CloudController
         end
 
         context 'when more than one buildpack is requested' do
-          let(:params) { { buildpacks: ['foo-buildpack', 'bar'] } }
+          let(:params) { { buildpacks: %w[foo-buildpack bar] } }
 
           it 'is valid' do
             message = BuildpackLifecycleDataMessage.new(params)

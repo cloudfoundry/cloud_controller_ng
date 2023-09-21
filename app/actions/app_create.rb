@@ -18,9 +18,9 @@ module VCAP::CloudController
       app = nil
       AppModel.db.transaction do
         app = AppModel.create(
-          name:                  message.name,
-          space_guid:            message.space_guid,
-          environment_variables: message.environment_variables,
+          name: message.name,
+          space_guid: message.space_guid,
+          environment_variables: message.environment_variables
         )
 
         lifecycle.create_lifecycle_data_model(app)
@@ -31,9 +31,9 @@ module VCAP::CloudController
         api_error!(:CustomBuildpacksDisabled) if using_disabled_custom_buildpack?(app)
 
         ProcessCreate.new(@user_audit_info).create(app, {
-          guid: app.guid,
-          type: ProcessTypes::WEB,
-        })
+                                                     guid: app.guid,
+                                                     type: ProcessTypes::WEB
+                                                   })
 
         Repositories::AppEventRepository.new.record_app_create(
           app,
@@ -45,9 +45,7 @@ module VCAP::CloudController
 
       app
     rescue Sequel::ValidationFailed => e
-      if e.errors.on([:space_guid, :name])
-        v3_api_error!(:UniquenessError, e.message)
-      end
+      v3_api_error!(:UniquenessError, e.message) if e.errors.on(%i[space_guid name])
 
       raise InvalidApp.new(e.message)
     end
@@ -66,13 +64,13 @@ module VCAP::CloudController
       return unless app.buildpack_lifecycle_data
 
       app.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.each do |blb|
-        unless blb.custom?
-          buildpack = Buildpack.find(name: blb.admin_buildpack_name)
+        next if blb.custom?
 
-          if buildpack && buildpack.state != Buildpack::READY_STATE
-            raise InvalidApp.new("#{buildpack.name.inspect} must be in ready state")
-            # errors.add(:buildpack, "#{buildpack.name.inspect} must be in ready state")
-          end
+        buildpack = Buildpack.find(name: blb.admin_buildpack_name)
+
+        if buildpack && buildpack.state != Buildpack::READY_STATE
+          raise InvalidApp.new("#{buildpack.name.inspect} must be in ready state")
+          # errors.add(:buildpack, "#{buildpack.name.inspect} must be in ready state")
         end
       end
     end

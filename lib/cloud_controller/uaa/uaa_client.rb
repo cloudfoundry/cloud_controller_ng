@@ -53,7 +53,7 @@ module VCAP::CloudController
 
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
-      filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
+      filter_string = %(origin eq "#{origin}" and #{filter_string}) if origin.present?
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
@@ -70,11 +70,11 @@ module VCAP::CloudController
 
       filter_string = construct_filter_string(username_filter_string, origin_filter_string)
 
-      if precise_username_match
-        results = query(:user_id, includeInactive: true, filter: filter_string)
-      else
-        results = query(:user, filter: filter_string, attributes: 'id')
-      end
+      results = if precise_username_match
+                  query(:user_id, includeInactive: true, filter: filter_string)
+                else
+                  query(:user, filter: filter_string, attributes: 'id')
+                end
 
       results['resources'].map { |r| r['id'] }
     rescue CF::UAA::UAAError => e
@@ -106,8 +106,8 @@ module VCAP::CloudController
 
     private
 
-    def query(type, **opts)
-      with_cache_retry { scim.query(type, **opts) }
+    def query(type, **)
+      with_cache_retry { scim.query(type, **) }
     end
 
     def get(type, id)

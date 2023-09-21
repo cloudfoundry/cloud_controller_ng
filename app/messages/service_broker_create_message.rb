@@ -9,7 +9,7 @@ require 'utils/hash_utils'
 module VCAP::CloudController
   class ServiceBrokerCreateMessage < MetadataBaseMessage
     include AuthenticationMessageMixin
-    register_allowed_keys [:name, :url, :authentication, :relationships]
+    register_allowed_keys %i[name url authentication relationships]
 
     def self.relationships_requested?
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
@@ -32,9 +32,9 @@ module VCAP::CloudController
     end
 
     def validate_name
-      if name == ''
-        errors.add(:name, 'must not be empty string')
-      end
+      return unless name == ''
+
+      errors.add(:name, 'must not be empty string')
     end
 
     delegate :space_guid, to: :relationships_message

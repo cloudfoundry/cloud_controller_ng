@@ -1,6 +1,6 @@
 Sequel.migration do
   up do
-    add_index :delayed_jobs, [:queue, :locked_at, :locked_by, :failed_at, :run_at], name: :delayed_jobs_reserve_where
+    add_index :delayed_jobs, %i[queue locked_at locked_by failed_at run_at], name: :delayed_jobs_reserve_where
   end
 
   down do

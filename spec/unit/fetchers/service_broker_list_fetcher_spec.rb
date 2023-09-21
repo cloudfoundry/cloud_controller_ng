@@ -78,9 +78,10 @@ module VCAP::CloudController
       end
 
       context 'when filtering by space guid and names' do
-        let(:filters) { {  space_guids: [space_1.guid, space_2.guid],
-                           names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
-        }
+        let(:filters) do
+          { space_guids: [space_1.guid, space_2.guid],
+            names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
+        end
 
         it 'includes the relevant brokers' do
           brokers = fetcher.fetch(message: message).all
@@ -90,9 +91,10 @@ module VCAP::CloudController
       end
 
       context 'when filtering by space guid and invalid name' do
-        let(:filters) { {  space_guids: [space_1.guid, space_2.guid],
-                           names: ['invalid-name'] }
-        }
+        let(:filters) do
+          { space_guids: [space_1.guid, space_2.guid],
+            names: ['invalid-name'] }
+        end
 
         it 'includes the relevant brokers' do
           brokers = fetcher.fetch(message: message).all
@@ -102,9 +104,10 @@ module VCAP::CloudController
       end
 
       context 'when filtering by invalid space guid and names' do
-        let(:filters) { {  space_guids: ['invalid-space-1'],
-                           names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
-        }
+        let(:filters) do
+          { space_guids: ['invalid-space-1'],
+            names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
+        end
 
         it 'includes the relevant brokers' do
           brokers = fetcher.fetch(message: message).all
@@ -158,7 +161,7 @@ module VCAP::CloudController
             {
               space_guids: [space_2.guid],
               label_selector: 'dog in (poodle,scooby-doo)',
-              names: [space_scoped_broker_1.name],
+              names: [space_scoped_broker_1.name]
             }
           end
 
@@ -187,7 +190,7 @@ module VCAP::CloudController
             {
               space_guids: [space_1.guid, space_2.guid],
               label_selector: 'dog in (poodle,scooby-doo)',
-              names: [space_scoped_broker_1.name],
+              names: [space_scoped_broker_1.name]
             }
           end
 

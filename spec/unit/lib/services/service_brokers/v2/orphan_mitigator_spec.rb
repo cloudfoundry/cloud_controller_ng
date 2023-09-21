@@ -30,7 +30,7 @@ module VCAP::Services
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
-          now = Time.now
+          now = Time.now.utc
 
           OrphanMitigator.new.cleanup_failed_provision(service_instance)
           job = Delayed::Job.first.payload_object
@@ -76,7 +76,7 @@ module VCAP::Services
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
-          now = Time.now
+          now = Time.now.utc
 
           OrphanMitigator.new.cleanup_failed_bind(service_binding)
           job = Delayed::Job.first.payload_object
@@ -108,7 +108,7 @@ module VCAP::Services
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
-          now = Time.now
+          now = Time.now.utc
 
           OrphanMitigator.new.cleanup_failed_key(service_key)
           job = Delayed::Job.first.payload_object

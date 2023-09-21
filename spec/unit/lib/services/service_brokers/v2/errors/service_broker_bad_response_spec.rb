@@ -21,16 +21,16 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'Service broker error: Some error text',
-                'backtrace' => ['/foo:1', '/bar:2'],
-                'http' => {
-                  'status' => 500,
-                  'method' => 'PUT'
-                },
-                'source' => {
-                  'description' => 'Some error text'
-                }
-              })
+                                             'description' => 'Service broker error: Some error text',
+                                             'backtrace' => ['/foo:1', '/bar:2'],
+                                             'http' => {
+                                               'status' => 500,
+                                               'method' => 'PUT'
+                                             },
+                                             'source' => {
+                                               'description' => 'Some error text'
+                                             }
+                                           })
             end
 
             it 'renders the correct status code to the user' do
@@ -62,15 +62,15 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'The service broker returned an invalid response. ' \
-                                 "Status Code: 500 Internal Server Error, Body: #{response_body}",
-                'backtrace' => ['/foo:1', '/bar:2'],
-                'http' => {
-                  'status' => 500,
-                  'method' => 'PUT'
-                },
-                'source' => { 'foo' => 'bar' }
-              })
+                                             'description' => 'The service broker returned an invalid response. ' \
+                                                              "Status Code: 500 Internal Server Error, Body: #{response_body}",
+                                             'backtrace' => ['/foo:1', '/bar:2'],
+                                             'http' => {
+                                               'status' => 500,
+                                               'method' => 'PUT'
+                                             },
+                                             'source' => { 'foo' => 'bar' }
+                                           })
             end
 
             it 'renders the correct status code to the user' do

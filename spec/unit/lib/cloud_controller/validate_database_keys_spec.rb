@@ -27,33 +27,34 @@ module VCAP::CloudController
       let(:env_vars) { { 'environment' => 'vars' } }
 
       let(:config) { Config.new({}) }
-      let(:initial_db_encryption_part) do { db_encryption_key: 'something' } end
-      let(:next_db_encryption_part) do {
-        database_encryption: { keys:
-          {
-            label1.to_sym => 'secret_key1',
-            label2.to_sym => 'secret_key_2',
-            label3.to_sym => 'secret_key_3',
-          },
-                               current_key_label: label2,
+      let(:initial_db_encryption_part) { { db_encryption_key: 'something' } }
+      let(:next_db_encryption_part) do
+        {
+          database_encryption: { keys:
+            {
+              label1.to_sym => 'secret_key1',
+              label2.to_sym => 'secret_key_2',
+              label3.to_sym => 'secret_key_3'
+            },
+                                 current_key_label: label2 }
         }
-      }
       end
 
       before do
         allow(Encryptor).to receive(:encrypted_classes).and_return([
           'VCAP::CloudController::ServiceBinding',
           'VCAP::CloudController::AppModel',
-          'VCAP::CloudController::ServiceInstance',])
+          'VCAP::CloudController::ServiceInstance'
+        ])
       end
 
       context 'when no encryption keys are specified' do
         let(:config) { Config.new({}) }
 
         it 'raises an error' do
-          expect {
+          expect do
             ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-          }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError, /No database encryption keys are specified/)
+          end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError, /No database encryption keys are specified/)
         end
       end
 
@@ -70,9 +71,9 @@ module VCAP::CloudController
         context 'when both the db_encryption_key and custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
           it 'can decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
 
@@ -80,9 +81,9 @@ module VCAP::CloudController
           let(:config) { Config.new(initial_db_encryption_part) }
 
           it 'can decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
 
@@ -90,10 +91,10 @@ module VCAP::CloudController
           let(:config) { Config.new(next_db_encryption_part) }
 
           it 'cannot decrypt some of the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
-              /Encryption key from 'cc.db_encryption_key'/)
+            end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
+                               /Encryption key from 'cc.db_encryption_key'/)
           end
         end
       end
@@ -111,9 +112,9 @@ module VCAP::CloudController
         context 'when both the db_encryption_key and custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
           it 'can decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
 
@@ -121,19 +122,19 @@ module VCAP::CloudController
           let(:config) { Config.new(initial_db_encryption_part) }
 
           it 'cannot decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
-              /Encryption key\(s\) '#{label1}', '#{label2}', '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/)
+            end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
+                               /Encryption key\(s\) '#{label1}', '#{label2}', '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/)
           end
         end
 
         context 'when only the database_encryption part is present' do
           let(:config) { Config.new(next_db_encryption_part) }
           it 'can decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end
@@ -151,9 +152,9 @@ module VCAP::CloudController
         context 'when both the db_encryption_key and all custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
           it 'can decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
 
@@ -161,10 +162,10 @@ module VCAP::CloudController
           let(:config) { Config.new(initial_db_encryption_part) }
 
           it 'cannot decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
-              /Encryption key\(s\) '#{label1}', '#{label2}', '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/)
+            end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
+                               /Encryption key\(s\) '#{label1}', '#{label2}', '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/)
           end
         end
 
@@ -172,31 +173,31 @@ module VCAP::CloudController
           let(:config) { Config.new(next_db_encryption_part) }
 
           it 'cannot decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
-              /Encryption key from 'cc.db_encryption_key'/)
+            end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
+                               /Encryption key from 'cc.db_encryption_key'/)
           end
         end
 
         context 'when only some of the database_encryption labels are present' do
-          let(:next_db_encryption_part) do {
-            database_encryption: { keys:
-              {
-                label1.to_sym => 'secret_key1',
-                label2.to_sym => 'secret_key_2',
-              },
-                                   current_key_label: label2,
+          let(:next_db_encryption_part) do
+            {
+              database_encryption: { keys:
+                {
+                  label1.to_sym => 'secret_key1',
+                  label2.to_sym => 'secret_key_2'
+                },
+                                     current_key_label: label2 }
             }
-          }
           end
           let(:config) { Config.new(next_db_encryption_part) }
 
           it 'cannot decrypt all the rows' do
-            expect {
+            expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
-            }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
-              /Encryption key from 'cc.db_encryption_key'.*Encryption key\(s\) '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/m)
+            end.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
+                               /Encryption key from 'cc.db_encryption_key'.*Encryption key\(s\) '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/m)
           end
         end
       end
@@ -218,16 +219,16 @@ module VCAP::CloudController
       let(:label3_encrypted_value) { Encryptor.encrypt_raw(label3_sentinel, label3_secret_key, morton_salt) }
 
       let(:config) { Config.new(database_encryption_keys_config) }
-      let(:database_encryption_keys_config) do {
-        database_encryption: { keys:
-          {
-            label1.to_sym => label1_secret_key,
-            label2.to_sym => label2_secret_key,
-            label3.to_sym => label3_secret_key,
-          },
-                               current_key_label: label2,
+      let(:database_encryption_keys_config) do
+        {
+          database_encryption: { keys:
+            {
+              label1.to_sym => label1_secret_key,
+              label2.to_sym => label2_secret_key,
+              label3.to_sym => label3_secret_key
+            },
+                                 current_key_label: label2 }
         }
-      }
       end
 
       context 'when every key in the config can decrypt a sentinel value' do
@@ -237,28 +238,28 @@ module VCAP::CloudController
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label2_sentinel,
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -271,9 +272,9 @@ module VCAP::CloudController
               keys: {
                 label1.to_sym => changed_encryption_key,
                 label2.to_sym => changed_encryption_key2,
-                label3.to_sym => label3_secret_key,
+                label3.to_sym => label3_secret_key
               },
-              current_key_label: label2,
+              current_key_label: label2
             }
           }
         end
@@ -284,21 +285,21 @@ module VCAP::CloudController
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label2_sentinel,
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
         end
 
@@ -312,19 +313,18 @@ module VCAP::CloudController
               iterations: Encryptor::ENCRYPTION_ITERATIONS
             ).and_return('gibberish')
             allow(Encryptor).to receive(:decrypt_raw).with(label2_encrypted_value,
-              changed_encryption_key2,
-              morton_salt,
-              iterations: Encryptor::ENCRYPTION_ITERATIONS
-            ).and_return('gibberish2')
+                                                           changed_encryption_key2,
+                                                           morton_salt,
+                                                           iterations: Encryptor::ENCRYPTION_ITERATIONS).and_return('gibberish2')
           end
 
           it 'raises an EncryptionKeySentinelDecryptionMismatchError' do
             expected_message = "Encryption key(s) '#{label1}', '#{label2}' have had their values changed. " \
                                'Label and value pairs should not change, rather a new label and value pair should be added. ' \
                                'See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information.'
-            expect {
+            expect do
               ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
-            }.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
+            end.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
           end
         end
 
@@ -333,25 +333,25 @@ module VCAP::CloudController
 
           it 'raises an EncryptionKeySentinelDecryptionMismatchError' do
             expected_message = "Encryption key(s) '#{label1}', '#{label2}' have had their values changed. " \
-                             'Label and value pairs should not change, rather a new label and value pair should be added. ' \
-                             'See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information.'
-            expect {
+                               'Label and value pairs should not change, rather a new label and value pair should be added. ' \
+                               'See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information.'
+            expect do
               ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
-            }.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
+            end.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
           end
         end
       end
 
       context 'pruning deleted keys' do
-        let(:database_encryption_keys_config) do {
+        let(:database_encryption_keys_config) do
+          {
             database_encryption: { keys:
                                        {
-                                           label2.to_sym => label2_secret_key,
-                                           label3.to_sym => label3_secret_key,
+                                         label2.to_sym => label2_secret_key,
+                                         label3.to_sym => label3_secret_key
                                        },
-                                   current_key_label: label2,
-            }
-        }
+                                   current_key_label: label2 }
+          }
         end
 
         before do
@@ -363,14 +363,14 @@ module VCAP::CloudController
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label1_sentinel,
             encrypted_value: label1_encrypted_value,
             encryption_key_label: 'another-extra-label',
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
 
           EncryptionKeySentinelModel.create(
@@ -378,14 +378,14 @@ module VCAP::CloudController
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
             salt: morton_salt,
-            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS
           )
         end
 

@@ -165,7 +165,7 @@ module VCAP::CloudController
           expect(last_response.status).to eql 422
 
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(390011)
+          expect(json['code']).to eq(390_011)
           expect(json['description']).to eql 'Uploaded buildpack stack (stack-from-manifest) does not match not-from-manifest'
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
@@ -176,7 +176,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: 'abc' }
           expect(last_response.status).to eql 400
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a filename must be specified/)
         end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: 'abc.zip' }
           expect(last_response.status).to eq(400)
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a file must be provided/)
         end
 
@@ -196,7 +196,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_tar_gz }
           expect(last_response.status).to eql 400
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/only zip files allowed/)
         end
 
@@ -296,7 +296,7 @@ module VCAP::CloudController
         let(:staging_config) do
           {
             staging: { timeout_in_seconds: 240, auth: { user: staging_user, password: staging_password } },
-            directories: { tmpdir: File.dirname(valid_zip.path) },
+            directories: { tmpdir: File.dirname(valid_zip.path) }
           }
         end
 

@@ -8,9 +8,9 @@ RSpec.describe 'App Manifests' do
   let(:org) { space.organization }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
-  let(:second_route) {
+  let(:second_route) do
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
-  }
+  end
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
@@ -41,7 +41,7 @@ RSpec.describe 'App Manifests' do
         readiness_health_check_type: 'http',
         readiness_health_check_http_endpoint: '/foobaz',
         health_check_timeout: 5,
-        log_rate_limit: 1_048_576,
+        log_rate_limit: 1_048_576
       )
     end
 
@@ -56,7 +56,7 @@ RSpec.describe 'App Manifests' do
     let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app_model.guid) }
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403)
         h['no_role'] = { code: 404 }
@@ -125,19 +125,19 @@ RSpec.describe 'App Manifests' do
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
                   'readiness-health-check-type' => worker_process.readiness_health_check_type,
                   'readiness-health-check-http-endpoint' => worker_process.readiness_health_check_http_endpoint,
-                  'timeout' => worker_process.health_check_timeout,
-                },
+                  'timeout' => worker_process.health_check_timeout
+                }
               ],
               'sidecars' => [
                 {
-                  'name'          => 'authenticator',
-                  'process_types' => ['web', 'worker'],
-                  'command'       => './authenticator',
+                  'name' => 'authenticator',
+                  'process_types' => %w[web worker],
+                  'command' => './authenticator'
                 },
                 {
-                  'name'          => 'my_sidecar',
+                  'name' => 'my_sidecar',
                   'process_types' => ['other_worker'],
-                  'command'       => 'rackup',
+                  'command' => 'rackup'
                 }
               ]
             }
@@ -165,7 +165,8 @@ RSpec.describe 'App Manifests' do
         VCAP::CloudController::PackageModel.make(
           :docker,
           app: app_model,
-          docker_username: 'xXxMyL1ttlePwnyxXx')
+          docker_username: 'xXxMyL1ttlePwnyxXx'
+        )
       end
 
       let(:droplet) do
@@ -227,19 +228,19 @@ RSpec.describe 'App Manifests' do
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
                   'readiness-health-check-type' => worker_process.readiness_health_check_type,
                   'readiness-health-check-http-endpoint' => worker_process.readiness_health_check_http_endpoint,
-                  'timeout' => worker_process.health_check_timeout,
-                },
+                  'timeout' => worker_process.health_check_timeout
+                }
               ],
               'sidecars' => [
                 {
-                  'name'          => 'authenticator',
-                  'process_types' => ['web', 'worker'],
-                  'command'       => './authenticator',
+                  'name' => 'authenticator',
+                  'process_types' => %w[web worker],
+                  'command' => './authenticator'
                 },
                 {
-                  'name'          => 'my_sidecar',
+                  'name' => 'my_sidecar',
                   'process_types' => ['other_worker'],
-                  'command'       => 'rackup',
+                  'command' => 'rackup'
                 }
               ]
             }

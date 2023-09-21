@@ -8,10 +8,11 @@ module VCAP::CloudController
 
         original_space = route.space
         Route.db.transaction do
-          Route.db.after_commit {
+          Route.db.after_commit do
             Repositories::RouteEventRepository.new.record_route_transfer_owner(
-              route, user_audit_info, original_space, target_space.guid)
-          }
+              route, user_audit_info, original_space, target_space.guid
+            )
+          end
           route.space = target_space
           route.remove_shared_space(target_space)
           route.add_shared_space(original_space)

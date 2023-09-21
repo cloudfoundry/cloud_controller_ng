@@ -36,7 +36,7 @@ RSpec.shared_examples 'a successful broker delete' do
             client_id: uaa_client_id,
             client_secret: nil,
             redirect_uri: nil,
-            scope: %w(openid cloud_controller_service_permissions.read),
+            scope: %w[openid cloud_controller_service_permissions.read],
             authorities: ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
             action: 'delete'
@@ -56,7 +56,7 @@ RSpec.shared_examples 'a successful broker delete' do
       { type: 'audit.service_broker.delete', actor: email },
       { type: 'audit.service_dashboard_client.delete', actor: actor },
       { type: 'audit.service_plan.delete', actor: actor },
-      { type: 'audit.service_plan.delete', actor: actor },
+      { type: 'audit.service_plan.delete', actor: actor }
     ]
   end
 end

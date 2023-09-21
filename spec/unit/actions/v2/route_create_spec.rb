@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
         Space.make(space_quota_definition: space_quota_definition,
-          organization: space_quota_definition.organization)
+                   organization: space_quota_definition.organization)
       end
       let(:domain) { SharedDomain.make }
       let(:path) { '/some-path' }
@@ -34,12 +34,10 @@ module VCAP::CloudController
           end
 
           it 'should not create a route in the db' do
-            expect {
-              begin
-                route_create.create_route(route_hash: route_hash)
-              rescue
-              end
-            }.not_to change { Route.count }
+            expect do
+              route_create.create_route(route_hash: route_hash)
+            rescue StandardError
+            end.not_to(change { Route.count })
           end
 
           it 'should bubble up the exception' do

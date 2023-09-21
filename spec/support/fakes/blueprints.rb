@@ -25,18 +25,18 @@ Sham.define do
   extra               { |index| "extra-#{index}" }
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
-  status              { |_| %w(active suspended canceled).sample(1).first }
+  status              { |_| %w[active suspended canceled].sample(1).first }
   error_message       { |index| "error-message-#{index}" }
   sequence_id         { |index| index }
   stack               { |index| "cflinuxfs-#{index}" }
 end
 
 module VCAP::CloudController
-  %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
+  %w[App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
      Process Revision Route RouteBinding ServiceBinding ServiceKey ServiceInstance ServiceOffering ServiceBroker Space Stack
-     ServicePlan Task User/.each do |root|
-    "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
-    "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
+     ServicePlan Task User].each do |root|
+    "VCAP::CloudController::#{root}LabelModel".constantize.blueprint { nil }
+    "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint { nil }
   end
 
   IsolationSegmentModel.blueprint do
@@ -184,9 +184,9 @@ module VCAP::CloudController
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
-    disk_in_mb {}
+    disk_in_mb { nil }
     sequence_id { Sham.sequence_id }
-    failure_reason {}
+    failure_reason { nil }
   end
 
   TaskModel.blueprint(:running) do
@@ -371,14 +371,14 @@ module VCAP::CloudController
     space                      { Space.make }
     service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
-    maintenance_info           {}
+    maintenance_info           { nil }
   end
 
   ManagedServiceInstance.blueprint(:all_fields) do
     gateway_data               { 'some data' }
     dashboard_url              { Sham.url }
     syslog_drain_url           { Sham.url }
-    tags                       { ['a-tag', 'another-tag'] }
+    tags                       { %w[a-tag another-tag] }
     route_service_url          { Sham.url }
     maintenance_info           { 'maintenance info' }
   end
@@ -538,8 +538,8 @@ module VCAP::CloudController
     name { Sham.name }
     broker_url { Sham.url }
     authentication { '{"credentials":{"username":"new-admin","password":"welcome"}}' }
-    service_broker_id {}
-    fk_service_brokers_id {}
+    service_broker_id { nil }
+    fk_service_brokers_id { nil }
   end
 
   ServiceDashboardClient.blueprint do
@@ -554,7 +554,7 @@ module VCAP::CloudController
     service           { Service.make }
     unique_id         { SecureRandom.uuid }
     active            { true }
-    maintenance_info  {}
+    maintenance_info  { nil }
   end
 
   ServicePlan.blueprint(:routing) do
@@ -687,7 +687,7 @@ module VCAP::CloudController
         {
           'protocol' => 'udp',
           'ports' => '8080',
-          'destination' => '198.41.191.47/1',
+          'destination' => '198.41.191.47/1'
         }
       ]
     end
@@ -710,7 +710,7 @@ module VCAP::CloudController
     environment_json do
       {
         'MOTD' => 'Because of your smile, you make life more beautiful.',
-        'COROPRATE_PROXY_SERVER' => 'abc:8080',
+        'COROPRATE_PROXY_SERVER' => 'abc:8080'
       }
     end
   end
@@ -787,6 +787,7 @@ module VCAP::CloudController
   end
 
   OrphanedBlob.blueprint do
+    nil
   end
 
   TestModel.blueprint do
@@ -794,14 +795,18 @@ module VCAP::CloudController
   end
 
   TestModelManyToOne.blueprint do
+    nil
   end
 
   TestModelManyToMany.blueprint do
+    nil
   end
 
   TestModelSecondLevel.blueprint do
+    nil
   end
 
   TestModelRedact.blueprint do
+    nil
   end
 end

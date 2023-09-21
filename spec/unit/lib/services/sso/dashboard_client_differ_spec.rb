@@ -73,7 +73,7 @@ module VCAP::Services::SSO
             new_client,
             existing_client,
             new_client_2,
-            existing_client_2,
+            existing_client_2
           ]
         end
 
@@ -119,8 +119,7 @@ module VCAP::Services::SSO
           [
             double(:client,
                    service_id_on_broker: service_broker.id,
-                   uaa_id:               dashboard_client['id']
-            )
+                   uaa_id: dashboard_client['id'])
           ]
         end
 
@@ -137,9 +136,8 @@ module VCAP::Services::SSO
         let(:existing_db_clients) do
           [
             double(:client,
-                     service_id_on_broker: service_broker.id,
-                     uaa_id: dashboard_client['id']
-              )
+                   service_id_on_broker: service_broker.id,
+                   uaa_id: dashboard_client['id'])
           ]
         end
 
@@ -175,7 +173,7 @@ module VCAP::Services::SSO
             new_client,
             existing_client,
             new_client_2,
-            existing_client_2,
+            existing_client_2
           ]
         end
 
@@ -183,20 +181,16 @@ module VCAP::Services::SSO
           [
             double(:client,
                    service_id_on_broker: service_broker.id,
-                   uaa_id: existing_client['id']
-            ),
+                   uaa_id: existing_client['id']),
             double(:client,
                    service_id_on_broker: service_broker.id,
-                   uaa_id: 'will-be-deleted'
-            ),
+                   uaa_id: 'will-be-deleted'),
             double(:client,
                    service_id_on_broker: service_broker.id,
-                   uaa_id: existing_client_2['id']
-            ),
+                   uaa_id: existing_client_2['id']),
             double(:client,
                    service_id_on_broker: service_broker.id,
-                   uaa_id: 'will-be-deleted-2'
-            )
+                   uaa_id: 'will-be-deleted-2')
           ]
         end
 

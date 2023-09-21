@@ -9,27 +9,27 @@ module VCAP::CloudController
       let(:offering2) { Service.make }
 
       it 'decorated the given hash with broker name and guid' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ service_broker: ['name', 'guid'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ service_broker: %w[name guid] })
 
         hash = decorator.decorate(undecorated_hash, [offering1, offering2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            service_brokers: [
-              {
-                guid: offering1.service_broker.guid,
-                name: offering1.service_broker.name
-              },
-              {
-                guid: offering2.service_broker.guid,
-                name: offering2.service_broker.name
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_brokers: [
+                                    {
+                                      guid: offering1.service_broker.guid,
+                                      name: offering1.service_broker.name
+                                    },
+                                    {
+                                      guid: offering2.service_broker.guid,
+                                      name: offering2.service_broker.name
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       context 'when offerings are from the same broker' do
@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it_behaves_like 'field decorator match?', 'service_broker', ['name', 'guid']
+      it_behaves_like 'field decorator match?', 'service_broker', %w[name guid]
     end
   end
 end

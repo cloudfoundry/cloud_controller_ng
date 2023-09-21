@@ -13,8 +13,8 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
         let(:broker_polling_interval) { default_polling_interval * 2 }
 
         it 'the polling interval should be the one broker returned' do
-          Timecop.freeze(Time.now)
-          first_run_time = Time.now
+          Timecop.freeze(Time.now.utc)
+          first_run_time = Time.now.utc
 
           VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -36,8 +36,8 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
         let(:broker_polling_interval) { default_polling_interval / 2 }
 
         it 'the polling interval should be the default specified in the configuration' do
-          Timecop.freeze(Time.now)
-          first_run_time = Time.now
+          Timecop.freeze(Time.now.utc)
+          first_run_time = Time.now.utc
 
           VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -51,11 +51,11 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
       end
 
       context 'when the interval is greater than the max value (24 hours)' do
-        let(:broker_polling_interval) { 24.hours.seconds + 1.minutes }
+        let(:broker_polling_interval) { 24.hours.seconds + 1.minute }
 
         it 'the polling interval should not exceed the max' do
-          Timecop.freeze(Time.now)
-          first_run_time = Time.now
+          Timecop.freeze(Time.now.utc)
+          first_run_time = Time.now.utc
 
           VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)

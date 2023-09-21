@@ -10,11 +10,11 @@ module VCAP::CloudController::RoutingApi
       raise RoutingApiDisabled
     end
 
-    def router_group(guid)
+    def router_group(_guid)
       raise RoutingApiDisabled
     end
 
-    def router_group_guid(name)
+    def router_group_guid(_name)
       raise RoutingApiDisabled
     end
   end

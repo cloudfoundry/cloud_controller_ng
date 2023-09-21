@@ -28,9 +28,9 @@ module VCAP::CloudController
           let(:message) { UserCreateMessage.new({ guid: existing_user.guid, metadata: metadata }) }
 
           it 'returns an informative error message' do
-            expect {
+            expect do
               subject.create(message: message)
-            }.to raise_error(UserCreate::Error, %{User with guid '#{existing_user.guid}' already exists.})
+            end.to raise_error(UserCreate::Error, %(User with guid '#{existing_user.guid}' already exists.))
           end
         end
       end
@@ -43,15 +43,15 @@ module VCAP::CloudController
 
           it 'creates a user' do
             created_user = nil
-            expect {
+            expect do
               created_user = subject.create(message: message)
-            }.to change { User.count }.by(1)
+            end.to change { User.count }.by(1)
 
             expect(created_user.guid).to eq guid
             expect(created_user).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
-                              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-              )
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+            )
             expect(created_user).to have_annotations({ key_name: 'anno', value: 'tations' })
           end
         end
@@ -65,9 +65,9 @@ module VCAP::CloudController
 
           it 'creates a user' do
             created_user = nil
-            expect {
+            expect do
               created_user = subject.create(message: message)
-            }.to change { User.count }.by(1)
+            end.to change { User.count }.by(1)
 
             expect(created_user.guid).to eq client_id
           end

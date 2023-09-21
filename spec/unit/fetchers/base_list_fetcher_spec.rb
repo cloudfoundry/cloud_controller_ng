@@ -23,7 +23,7 @@ module VCAP::CloudController
         let!(:event_2) { Event.make(guid: '2') }
 
         let(:filters) do
-          { guids: ['1', '3'] }
+          { guids: %w[1 3] }
         end
 
         it 'returns records with matching guids' do

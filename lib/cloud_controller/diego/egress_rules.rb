@@ -22,13 +22,13 @@ module VCAP::CloudController
 
       def as_protobuf_rule(rule)
         ::Diego::Bbs::Models::SecurityGroupRule.new({
-          protocol:     rule['protocol'],
+          protocol: rule['protocol'],
           destinations: rule['destinations'],
-          ports:        rule['ports'],
-          port_range:   rule['port_range'],
-          icmp_info:    rule['icmp_info'],
-          log:          rule['log'],
-          annotations:  rule['annotations'],
+          ports: rule['ports'],
+          port_range: rule['port_range'],
+          icmp_info: rule['icmp_info'],
+          log: rule['log'],
+          annotations: rule['annotations']
         }.compact)
       end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
         template = {
           'protocol' => protocol,
           'destinations' => [rule['destination']],
-          'annotations' => security_group_guids.sort.map { |guid| "security_group_id:#{guid}" },
+          'annotations' => security_group_guids.sort.map { |guid| "security_group_id:#{guid}" }
         }
 
         case protocol

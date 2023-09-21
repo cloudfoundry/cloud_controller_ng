@@ -37,7 +37,7 @@ module VCAP::CloudController::Validators
       let(:authentication) do
         {
           type: 'basic',
-          credentials: {},
+          credentials: {}
         }
       end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController::Validators
       let(:authentication) do
         {
           extra: 'value',
-          type: 'basic',
+          type: 'basic'
         }
       end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController::Validators
         {
           credentials: {
             password: 'password'
-          },
+          }
         }
       end
 
@@ -108,7 +108,7 @@ module VCAP::CloudController::Validators
         {
           credentials: {
             username: 'user'
-          },
+          }
         }
       end
 
@@ -124,7 +124,7 @@ module VCAP::CloudController::Validators
           credentials: {
             username: '',
             password: 'pass'
-          },
+          }
         }
       end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController::Validators
           credentials: {
             username: 'user',
             password: ''
-          },
+          }
         }
       end
 

@@ -15,7 +15,7 @@ module VCAP::CloudController
       end
 
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors[:name]).to include("can't be blank")
@@ -44,7 +44,7 @@ module VCAP::CloudController
         context 'when a valid long multi-subdomain name is given' do
           let(:params) do
             {
-              name: (['a'] * 126).join('.'),
+              name: (['a'] * 126).join('.')
             }
           end
 
@@ -91,7 +91,7 @@ module VCAP::CloudController
         end
 
         context 'when the subdomain is too long' do
-          let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
+          let(:params) { { name: ('B' * (MAX_SUBDOMAIN_LENGTH + 1)) + '.example.com' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         context 'when it does not conform to RFC 1035' do
-          let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
+          let(:params) { { name: ('B' * (MAX_SUBDOMAIN_LENGTH + 1)) + '.example.com' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -143,7 +143,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              router_group: {},
+              router_group: {}
             }
           end
 
@@ -157,7 +157,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              router_group: { guid: 32 },
+              router_group: { guid: 32 }
             }
           end
 
@@ -173,8 +173,8 @@ module VCAP::CloudController
               name: 'name.com',
               router_group: {
                 guid: 'guid',
-                notguid: 'not-guid',
-              },
+                notguid: 'not-guid'
+              }
             }
           end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
               internal: true,
               router_group: {
                 guid: 'guid'
-              },
+              }
             }
           end
 
@@ -265,7 +265,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              relationships: { organization: { data: { guid: 32 } } },
+              relationships: { organization: { data: { guid: 32 } } }
             }
           end
 
@@ -429,7 +429,7 @@ module VCAP::CloudController
       context 'shared_organizations_guids' do
         it 'makes the guid accessible' do
           expect(subject).to be_valid
-          expect(subject.shared_organizations_guids).to eq(%w(guid1 guid2))
+          expect(subject.shared_organizations_guids).to eq(%w[guid1 guid2])
         end
       end
 

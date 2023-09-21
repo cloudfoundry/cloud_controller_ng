@@ -109,9 +109,9 @@ module VCAP::CloudController
               expect(err_code).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
               expect(err_msg).to match "^Deletion of service instance #{service_instance.name} failed because one or more associated resources could not be deleted.$"
               expect(err_msg).to match "^\tAn unbind operation for the service binding between app #{target_app.name} and service instance #{service_instance.name} failed: " \
-                'This service plan requires client support for asynchronous service operations.$'
+                                       'This service plan requires client support for asynchronous service operations.$'
               expect(err_msg).to match "^\tAn unbind operation for the service binding between app #{source_app.name} and service instance #{service_instance.name} failed: " \
-                'This service plan requires client support for asynchronous service operations.$'
+                                       'This service plan requires client support for asynchronous service operations.$'
 
               expect(err_msg.split("\t")).to have(3).items
             end
@@ -245,7 +245,8 @@ module VCAP::CloudController
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AsyncServiceBindingOperationInProgress')
             expect(parsed_response['description']).to(
-              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./)
+            )
           end
         end
 
@@ -261,7 +262,8 @@ module VCAP::CloudController
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AsyncServiceBindingOperationInProgress')
             expect(parsed_response['description']).to(
-              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./)
+            )
           end
         end
       end
@@ -283,7 +285,8 @@ module VCAP::CloudController
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-ServiceInstanceRecursiveDeleteFailed')
             expect(parsed_response['description']).to(
-              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./)
+            )
           end
         end
 
@@ -327,15 +330,13 @@ module VCAP::CloudController
 
         service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
         expect(a_request(:get,
-                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
-                        )).to have_been_made
+                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
 
-        Timecop.travel(Time.now + 1.minute)
+        Timecop.travel(Time.now.utc + 1.minute)
         Delayed::Worker.new.work_off
 
         expect(a_request(:get,
-                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
-                        )).to have_been_made.twice
+                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made.twice
       end
     end
   end

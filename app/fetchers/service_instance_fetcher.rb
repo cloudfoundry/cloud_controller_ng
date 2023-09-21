@@ -3,9 +3,7 @@ module VCAP::CloudController
     def fetch(guid)
       instance = ServiceInstance.first(guid: guid)
 
-      if !instance
-        return [nil, nil]
-      end
+      return [nil, nil] unless instance
 
       if instance.managed_instance?
         plan = instance.service_plan
@@ -13,9 +11,9 @@ module VCAP::CloudController
       end
 
       [instance, {
-          space: instance.space,
-          plan: plan,
-          service: service
+        space: instance.space,
+        plan: plan,
+        service: service
       }]
     end
   end

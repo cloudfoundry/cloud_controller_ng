@@ -32,7 +32,7 @@ module VCAP::CloudController
       {
         guid: guid,
         name: name,
-        owning_organization_guid: owning_organization.guid,
+        owning_organization_guid: owning_organization.guid
       }
     end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
       validates_presence :owning_organization
       if (offending_domain = domains_exist_in_other_orgs?)
-        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain}))
+        errors.add(:name, Sequel.lit(%(The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain)))
       end
       validate_system_domain_overlap
       validate_total_private_domains
@@ -53,9 +53,9 @@ module VCAP::CloudController
     end
 
     def addable_to_organization!(org)
-      unless owned_by?(org)
-        raise UnauthorizedAccessToPrivateDomain
-      end
+      return if owned_by?(org)
+
+      raise UnauthorizedAccessToPrivateDomain
     end
 
     def addable_to_organization?(org)
@@ -107,9 +107,9 @@ module VCAP::CloudController
       return unless new? && owning_organization
 
       private_domains_policy = MaxPrivateDomainsPolicy.new(owning_organization.quota_definition, owning_organization.owned_private_domains)
-      unless private_domains_policy.allow_more_private_domains?(1)
-        errors.add(:organization, :total_private_domains_exceeded)
-      end
+      return if private_domains_policy.allow_more_private_domains?(1)
+
+      errors.add(:organization, :total_private_domains_exceeded)
     end
 
     def reserved?
@@ -120,12 +120,12 @@ module VCAP::CloudController
     def validate_system_domain_overlap
       system_domain = VCAP::CloudController::Config.config.get(:system_domain)
       reserved_system_domains = VCAP::CloudController::Config.config.get(:system_hostnames).map { |host| host + '.' + system_domain }
-      if reserved_system_domains.include?(name)
-        errors.add(
-          :name,
-          Sequel.lit(%{The domain name "#{name}" cannot be created because "#{name}" is already reserved by the system})
-        )
-      end
+      return unless reserved_system_domains.include?(name)
+
+      errors.add(
+        :name,
+        Sequel.lit(%(The domain name "#{name}" cannot be created because "#{name}" is already reserved by the system))
+      )
     end
   end
 end

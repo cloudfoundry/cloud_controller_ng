@@ -19,7 +19,7 @@ module VCAP::CloudController
       TestConfig.override(
         kubernetes: { host_url: nil },
         external_domain: 'api2.vcap.me',
-        external_protocol: 'https',
+        external_protocol: 'https'
       )
       allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).
         and_return(routing_api_client)

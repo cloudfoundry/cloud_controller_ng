@@ -26,9 +26,7 @@ module VCAP::CloudController
         value1 <=> value2
       end
 
-      if order_direction != VCAP::CloudController::PaginationOptions::DIRECTION_DEFAULT
-        sorted_list.reverse!
-      end
+      sorted_list.reverse! if order_direction != VCAP::CloudController::PaginationOptions::DIRECTION_DEFAULT
 
       sorted_list
     end

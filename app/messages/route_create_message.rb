@@ -5,52 +5,52 @@ module VCAP::CloudController
     MAXIMUM_DOMAIN_LABEL_LENGTH = 63
     MAXIMUM_PATH_LENGTH = 128
 
-    register_allowed_keys [
-      :host,
-      :path,
-      :port,
-      :relationships
+    register_allowed_keys %i[
+      host
+      path
+      port
+      relationships
     ]
 
     validates :host,
-      allow_nil: true,
-      string: true,
-      length: {
-        maximum: MAXIMUM_DOMAIN_LABEL_LENGTH
-      },
-      format: {
-        with: /\A([\w\-]+|\*)?\z/,
-        message: 'must be either "*" or contain only alphanumeric characters, "_", or "-"',
-      }
+              allow_nil: true,
+              string: true,
+              length: {
+                maximum: MAXIMUM_DOMAIN_LABEL_LENGTH
+              },
+              format: {
+                with: /\A([\w\-]+|\*)?\z/,
+                message: 'must be either "*" or contain only alphanumeric characters, "_", or "-"'
+              }
 
     validates :path,
-      allow_nil: true,
-      string: true,
-      length: {
-        maximum: MAXIMUM_PATH_LENGTH
-      },
-      format: {
-        with: %r{\A(/.*|)\z},
-        message: 'must begin with /',
-      }
+              allow_nil: true,
+              string: true,
+              length: {
+                maximum: MAXIMUM_PATH_LENGTH
+              },
+              format: {
+                with: %r{\A(/.*|)\z},
+                message: 'must begin with /'
+              }
 
     validates :path,
-      allow_nil: true,
-      format: {
-        without: /\?/,
-        message: 'cannot contain ?',
-      }
+              allow_nil: true,
+              format: {
+                without: /\?/,
+                message: 'cannot contain ?'
+              }
 
     validates :path,
-      allow_nil: true,
-      format: {
-        without: %r{\A/\z},
-        message: 'cannot be exactly /',
-      }
+              allow_nil: true,
+              format: {
+                without: %r{\A/\z},
+                message: 'cannot be exactly /'
+              }
 
     validates :port,
-      allow_nil: true,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 65535 }
+              allow_nil: true,
+              numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 65_535 }
 
     validates :relationships, presence: true
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      register_allowed_keys [:space, :domain]
+      register_allowed_keys %i[space domain]
 
       validates_with NoAdditionalKeysValidator
       validates :space, presence: true, to_one_relationship: true

@@ -30,24 +30,18 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:guid)
-          dataset = dataset.where(guid: message.guid)
-        end
+        dataset = dataset.where(guid: message.guid) if message.requested?(:guid)
 
-        if message.requested?(:names)
-          dataset = dataset.where(name: message.names)
-        end
+        dataset = dataset.where(name: message.names) if message.requested?(:names)
 
-        if message.requested?(:organization_guids)
-          dataset = dataset.where(owning_organization_id: Organization.where(guid: message.organization_guids).select(:id))
-        end
+        dataset = dataset.where(owning_organization_id: Organization.where(guid: message.organization_guids).select(:id)) if message.requested?(:organization_guids)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: DomainLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: Domain,
+            resource_klass: Domain
           )
         end
 

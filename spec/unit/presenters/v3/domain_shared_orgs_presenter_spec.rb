@@ -38,12 +38,12 @@ module VCAP::CloudController::Presenters::V3
           end
 
           context 'when user is a regular user' do
-            let(:visible_org_guids) { ['org2', 'org3'] }
+            let(:visible_org_guids) { %w[org2 org3] }
 
             it 'presents the shared orgs that are visible to a user' do
               expect(subject[:data]).to contain_exactly(
                 { guid: 'org2' },
-                    { guid: 'org3' }
+                { guid: 'org3' }
               )
             end
           end
@@ -76,8 +76,8 @@ module VCAP::CloudController::Presenters::V3
 
           it 'presents an empty shared orgs array' do
             expect(subject).to eq({
-              data: []
-            })
+                                    data: []
+                                  })
           end
         end
       end

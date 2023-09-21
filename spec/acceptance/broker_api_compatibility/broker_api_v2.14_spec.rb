@@ -40,8 +40,8 @@ RSpec.describe 'Service Broker API integration' do
 
           it 'should be retrievable' do
             get("/v2/service_bindings/#{@binding_guid}/parameters",
-              {}.to_json,
-              json_headers(admin_headers))
+                {}.to_json,
+                json_headers(admin_headers))
             parsed_body = MultiJson.load(last_response.body)
             expect(parsed_body['foo']).to eq 'bar'
           end
@@ -50,12 +50,12 @@ RSpec.describe 'Service Broker API integration' do
             user = VCAP::CloudController::User.make
 
             get("/v2/service_bindings/#{@binding_guid}/parameters",
-              {}.to_json,
-              headers_for(user, scopes: %w(cloud_controller.admin)))
+                {}.to_json,
+                headers_for(user, scopes: %w[cloud_controller.admin]))
 
             expect(
               a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
-                m = req.headers['X-Broker-Api-Originating-Identity'].match /(?<platform>\S+) (?<value>\S+)/
+                m = req.headers['X-Broker-Api-Originating-Identity'].match(/(?<platform>\S+) (?<value>\S+)/)
                 value = MultiJson.load(Base64.strict_decode64(m[:value]))
                 m[:platform] == 'cloudfoundry' && value['user_id'] == user.guid
               end
@@ -168,8 +168,8 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
 
             expect(a_request(:get,
-                             "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-                            )).to have_been_made
+                             "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}" \
+                             '&plan_id=plan1-guid-here&service_id=service-guid-here')).to have_been_made
           end
 
           context 'when the last operation is successful' do
@@ -262,7 +262,8 @@ RSpec.describe 'Service Broker API integration' do
           stub_async_last_operation
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
@@ -279,7 +280,8 @@ RSpec.describe 'Service Broker API integration' do
           update_service_instance(200, { dashboard_url: 'http://instance-dashboard.com' })
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker))
+          ).to have_been_made
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
@@ -308,8 +310,8 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
 
           expect(a_request(:get,
-                           "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-                          )).to have_been_made
+                           "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}" \
+                           '&plan_id=plan1-guid-here&service_id=service-guid-here')).to have_been_made
         end
 
         context 'when the last operation state is successful' do

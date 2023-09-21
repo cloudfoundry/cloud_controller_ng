@@ -55,7 +55,7 @@ RSpec.describe 'ServiceBindings' do
                   'state' => 'succeeded',
                   'description' => '',
                   'updated_at' => iso8601,
-                  'created_at' => iso8601,
+                  'created_at' => iso8601
                 },
                 'app_url' => "/v2/apps/#{process1.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -84,7 +84,7 @@ RSpec.describe 'ServiceBindings' do
                   'state' => 'succeeded',
                   'description' => '',
                   'updated_at' => iso8601,
-                  'created_at' => iso8601,
+                  'created_at' => iso8601
                 },
                 'app_url' => "/v2/apps/#{process2.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -144,7 +144,7 @@ RSpec.describe 'ServiceBindings' do
                     'state' => 'succeeded',
                     'description' => '',
                     'updated_at' => iso8601,
-                    'created_at' => iso8601,
+                    'created_at' => iso8601
                   },
                   'app_url' => "/v2/apps/#{process1.guid}",
                   'app' => {
@@ -166,7 +166,7 @@ RSpec.describe 'ServiceBindings' do
                       'memory' => 1024,
                       'instances' => 1,
                       'disk_quota' => 1024,
-                      'log_rate_limit' => 1048576,
+                      'log_rate_limit' => 1_048_576,
                       'state' => 'STOPPED',
                       'version' => process1.version,
                       'command' => nil,
@@ -183,7 +183,7 @@ RSpec.describe 'ServiceBindings' do
                       'docker_image' => nil,
                       'docker_credentials' => {
                         'username' => nil,
-                        'password' => nil,
+                        'password' => nil
                       },
                       'package_updated_at' => iso8601,
                       'detected_start_command' => '$HOME/boot.sh',
@@ -226,7 +226,7 @@ RSpec.describe 'ServiceBindings' do
                       'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
                       'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
                       'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
-                      'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                      'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
                     }
                   }
                 }
@@ -294,7 +294,7 @@ RSpec.describe 'ServiceBindings' do
               'state' => 'succeeded',
               'description' => '',
               'updated_at' => iso8601,
-              'created_at' => iso8601,
+              'created_at' => iso8601
             },
             'app_url' => "/v2/apps/#{process1.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -363,7 +363,7 @@ RSpec.describe 'ServiceBindings' do
               'state' => 'succeeded',
               'description' => '',
               'updated_at' => iso8601,
-              'created_at' => iso8601,
+              'created_at' => iso8601
             },
             'app_url' => "/v2/apps/#{process.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -377,20 +377,20 @@ RSpec.describe 'ServiceBindings' do
       expect(event.actee).to eq(service_binding.guid)
       expect(event.actee_type).to eq('service_binding')
       expect(event.metadata).to match({
-        'request' => {
-          'type' => 'app',
-          'relationships' => {
-            'app' => {
-              'data' => { 'guid' => process.guid }
-            },
-            'service_instance' => {
-              'data' => { 'guid' => service_instance.guid }
-            },
-          },
-          'name' => nil,
-          'data' => '[PRIVATE DATA HIDDEN]'
-        }
-      })
+                                        'request' => {
+                                          'type' => 'app',
+                                          'relationships' => {
+                                            'app' => {
+                                              'data' => { 'guid' => process.guid }
+                                            },
+                                            'service_instance' => {
+                                              'data' => { 'guid' => service_instance.guid }
+                                            }
+                                          },
+                                          'name' => nil,
+                                          'data' => '[PRIVATE DATA HIDDEN]'
+                                        }
+                                      })
     end
   end
 
@@ -417,7 +417,7 @@ RSpec.describe 'ServiceBindings' do
         {
           'request' => {
             'app_guid' => service_binding.app_guid,
-            'service_instance_guid' => service_binding.service_instance_guid,
+            'service_instance_guid' => service_binding.service_instance_guid
           }
         }
       )
@@ -439,9 +439,9 @@ RSpec.describe 'ServiceBindings' do
         fb.parameters = {
           parameters: {
             top_level_param: {
-              nested_param: true,
+              nested_param: true
             },
-            another_param: 'some-value',
+            another_param: 'some-value'
           }
         }
         fb
@@ -456,9 +456,9 @@ RSpec.describe 'ServiceBindings' do
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
-            'nested_param' => true,
+            'nested_param' => true
           },
-          'another_param' => 'some-value',
+          'another_param' => 'some-value'
         }
       )
     end

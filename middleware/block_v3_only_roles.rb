@@ -13,7 +13,7 @@ module CloudFoundry
           [
             403,
             { 'Content-Type' => 'text/html' },
-            'You are not authorized to perform the requested action. See section \'Space Supporter Role in V2\' https://docs.cloudfoundry.org/concepts/roles.html',
+            'You are not authorized to perform the requested action. See section \'Space Supporter Role in V2\' https://docs.cloudfoundry.org/concepts/roles.html'
           ]
         else
           @app.call(env)

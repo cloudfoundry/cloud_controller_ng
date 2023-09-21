@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:request_id) { 'abc123' }
       let(:background_logger) { instance_double(Steno::Logger).as_null_object }
       let(:job) { double('Job', guid: 'gregid').as_null_object }
-      let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
+      let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now.utc) }
 
       before do
         allow(Steno).to receive(:logger).and_return(background_logger)
@@ -63,9 +63,9 @@ module VCAP::CloudController
           it 'wraps the error in an ApiError' do
             allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
 
-            expect {
+            expect do
               logging_context_job.perform
-            }.to raise_error(CloudController::Errors::ApiError, /three retries/)
+            end.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
         end
       end
@@ -199,8 +199,8 @@ module VCAP::CloudController
 
           it 'renders the exception in V3 error format' do
             expect(YAML).to receive(:dump).with(hash_including({
-              'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
-            }))
+                                                                 'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
+                                                               }))
             logging_context_job.error(job, error)
           end
         end
@@ -249,7 +249,7 @@ module VCAP::CloudController
 
       describe '#reschedule_at' do
         it 'delegates to the handler' do
-          time     = Time.now
+          time     = Time.now.utc
           attempts = 5
           expect(logging_context_job.reschedule_at(time, attempts)).to eq(handler.reschedule_at(time, attempts))
         end

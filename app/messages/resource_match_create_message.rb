@@ -25,12 +25,12 @@ module VCAP::CloudController
     MODE_REGEX = /^[0-7]+$/
 
     def each_resource
-      if resources.is_a?(Array)
-        resources.each do |r|
-          checksum_validator(r[:checksum])
-          size_validator(r[:size_in_bytes])
-          mode_validator(r[:mode])
-        end
+      return unless resources.is_a?(Array)
+
+      resources.each do |r|
+        checksum_validator(r[:checksum])
+        size_validator(r[:size_in_bytes])
+        mode_validator(r[:mode])
       end
     end
 
@@ -51,11 +51,11 @@ module VCAP::CloudController
         return
       end
 
-      unless valid_sha1?(checksum[:value])
-        errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} a non-SHA1 checksum value") unless errors.added?(
-          :resources, "#{RESOURCE_ERROR_PREAMBLE} a non-SHA1 checksum value"
-        )
-      end
+      return if valid_sha1?(checksum[:value])
+
+      errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} a non-SHA1 checksum value") unless errors.added?(
+        :resources, "#{RESOURCE_ERROR_PREAMBLE} a non-SHA1 checksum value"
+      )
     end
 
     def size_validator(size)
@@ -66,11 +66,11 @@ module VCAP::CloudController
         return
       end
 
-      unless size >= 0
-        errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} a negative size_in_bytes") unless errors.added?(
-          :resources, "#{RESOURCE_ERROR_PREAMBLE} a negative size_in_bytes"
-        )
-      end
+      return if size >= 0
+
+      errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} a negative size_in_bytes") unless errors.added?(
+        :resources, "#{RESOURCE_ERROR_PREAMBLE} a negative size_in_bytes"
+      )
     end
 
     def mode_validator(mode)
@@ -83,11 +83,11 @@ module VCAP::CloudController
         return
       end
 
-      unless MODE_REGEX.match?(mode)
-        errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} an incorrect mode") unless errors.added?(
-          :resources, "#{RESOURCE_ERROR_PREAMBLE} an incorrect mode"
-        )
-      end
+      return if MODE_REGEX.match?(mode)
+
+      errors.add(:resources, "#{RESOURCE_ERROR_PREAMBLE} an incorrect mode") unless errors.added?(
+        :resources, "#{RESOURCE_ERROR_PREAMBLE} an incorrect mode"
+      )
     end
 
     def valid_sha1?(value)

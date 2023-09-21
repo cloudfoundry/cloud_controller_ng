@@ -10,9 +10,9 @@ module VCAP::CloudController
         name: 'security-group-name',
         globally_enabled: {
           running: true,
-          staging: false,
+          staging: false
         },
-        rules: rules,
+        rules: rules
       }
     end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
           type: 8,
           code: 0,
           description: 'Allow ping requests to private services'
-        },
+        }
       ]
     end
 
@@ -69,9 +69,9 @@ module VCAP::CloudController
           {
             globally_enabled: {
               running: true,
-              staging: false,
+              staging: false
             },
-            rules: rules,
+            rules: rules
           }
         end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
         let(:params) do
           {
             name: 'security-group-name',
-            rules: rules,
+            rules: rules
           }
         end
 
@@ -99,8 +99,8 @@ module VCAP::CloudController
             name: 'security-group-name',
             globally_enabled: {
               running: true,
-              staging: false,
-            },
+              staging: false
+            }
           }
         end
 
@@ -142,8 +142,8 @@ module VCAP::CloudController
       let(:rules) do
         [
           {
-            protocol: 'blah',
-          },
+            protocol: 'blah'
+          }
         ]
       end
 
@@ -157,8 +157,8 @@ module VCAP::CloudController
         {
           globally_enabled: {
             bad: 'invalid',
-            alsobad: 'also-invalid',
-          },
+            alsobad: 'also-invalid'
+          }
         }
       end
 

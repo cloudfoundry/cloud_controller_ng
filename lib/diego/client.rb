@@ -15,7 +15,8 @@ module Diego
         client_key_file,
         connect_timeout,
         send_timeout,
-        receive_timeout)
+        receive_timeout
+      )
     end
 
     def ping
@@ -159,10 +160,10 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::ActualLRPsResponse)
     end
 
-    def with_request_error_handling(&blk)
+    def with_request_error_handling(&)
       tries ||= 3
       yield
-    rescue => e
+    rescue StandardError => e
       retry unless (tries -= 1).zero?
       raise RequestError.new(e.message)
     end
@@ -175,7 +176,7 @@ module Diego
       # See below link to understand proto3 message encoding
       # https://developers.google.com/protocol-buffers/docs/reference/ruby-generated#message
       protobuf_message_class.encode(protobuf_message_class.new(hash))
-    rescue => e
+    rescue StandardError => e
       raise EncodeError.new(e.message)
     end
 
@@ -185,7 +186,7 @@ module Diego
 
     def protobuf_decode!(message, protobuf_decoder)
       protobuf_decoder.decode(message)
-    rescue => e
+    rescue StandardError => e
       raise DecodeError.new(e.message)
     end
 

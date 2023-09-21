@@ -19,9 +19,9 @@ module VCAP
         process_name = File.basename(pid_path)
         send_signal(pid, 'QUIT', 'Nginx') # request nginx graceful shutdown
         wait_for_pid(pid, process_name, nginx_timeout, nginx_interval) # wait until nginx is shut down
-        if alive?(pid, process_name)
-          send_signal(pid, 'TERM', 'Nginx') # nginx force shutdown
-        end
+        return unless alive?(pid, process_name)
+
+        send_signal(pid, 'TERM', 'Nginx') # nginx force shutdown
       end
 
       def shutdown_cc(pid_path)

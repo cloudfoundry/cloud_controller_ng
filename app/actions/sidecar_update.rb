@@ -4,9 +4,7 @@ module VCAP::CloudController
 
     class << self
       def update(sidecar, message)
-        if message.requested?(:memory_in_mb) || message.requested?(:process_types)
-          validate_memory_allocation!(message, sidecar)
-        end
+        validate_memory_allocation!(message, sidecar) if message.requested?(:memory_in_mb) || message.requested?(:process_types)
 
         sidecar.name    = message.name    if message.requested?(:name)
         sidecar.command = message.command if message.requested?(:command)
@@ -47,11 +45,11 @@ module VCAP::CloudController
 
         processes = ProcessModel.where(
           app_guid: sidecar.app_guid,
-          type: process_types,
+          type: process_types
         )
         policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, memory, sidecar)
 
-        raise InvalidSidecar.new(policy.message) if !policy.valid?
+        raise InvalidSidecar.new(policy.message) unless policy.valid?
       end
     end
   end

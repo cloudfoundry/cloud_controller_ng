@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       it 'decorates the given hash with spaces and orgs from service plans' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         hash = described_class.decorate(undecorated_hash, [space_scoped_plan_1, space_scoped_plan_2])
 
         expect(hash[:foo]).to eq('bar')
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       it 'does not match other arrays' do
-        expect(described_class.match?(['potato', 'turnip'])).to be_falsey
+        expect(described_class.match?(%w[potato turnip])).to be_falsey
       end
     end
   end

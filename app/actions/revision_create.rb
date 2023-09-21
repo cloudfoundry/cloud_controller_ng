@@ -16,7 +16,7 @@ module VCAP::CloudController
             version: next_version,
             droplet_guid: droplet_guid,
             environment_variables: environment_variables,
-            description: description,
+            description: description
           )
 
           commands_by_process_type.

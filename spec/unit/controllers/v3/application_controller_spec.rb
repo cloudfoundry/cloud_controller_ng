@@ -12,11 +12,11 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def show
-      head 204
+      head :no_content
     end
 
     def create
-      head 201
+      head :created
     end
 
     def api_explode
@@ -26,7 +26,7 @@ RSpec.describe ApplicationController, type: :controller do
     def compound_error
       raise CloudController::Errors::CompoundError.new [
         CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error1'),
-        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2'),
+        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2')
       ]
     end
 
@@ -48,17 +48,17 @@ RSpec.describe ApplicationController, type: :controller do
 
     def warnings_is_nil
       add_warning_headers(nil)
-      render status: 200, json: {}
+      render status: :ok, json: {}
     end
 
     def multiple_warnings
       add_warning_headers(['warning,a', 'wa,rning b', '!@#$%^&*(),:|{}+=-<>'])
-      render status: 200, json: {}
+      render status: :ok, json: {}
     end
 
     def warnings_incorrect_type
       add_warning_headers('value of incorrect type')
-      render status: 200, json: {}
+      render status: :ok, json: {}
     end
   end
 
@@ -345,7 +345,7 @@ RSpec.describe ApplicationController, type: :controller do
       expect(warnings).to eq([
         'warning,a',
         'wa,rning b',
-        '!@#$%^&*(),:|{}+=-<>',
+        '!@#$%^&*(),:|{}+=-<>'
       ])
     end
   end

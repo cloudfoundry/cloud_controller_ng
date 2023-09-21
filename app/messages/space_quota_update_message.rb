@@ -9,14 +9,14 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys [:name, :apps, :services, :routes]
+    register_allowed_keys %i[name apps services routes]
     validates_with NoAdditionalKeysValidator
 
     validates :name,
-      string: true,
-      presence: true,
-      length: { minimum: 1, maximum: MAX_SPACE_QUOTA_NAME_LENGTH },
-      if: key_requested?(:name)
+              string: true,
+              presence: true,
+              length: { minimum: 1, maximum: MAX_SPACE_QUOTA_NAME_LENGTH },
+              if: key_requested?(:name)
 
     validate :apps_validator, if: key_requested?(:apps)
     validate :services_validator, if: key_requested?(:services)

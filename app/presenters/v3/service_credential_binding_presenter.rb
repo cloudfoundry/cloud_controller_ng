@@ -12,11 +12,11 @@ module VCAP
 
           class << self
             def associated_resources
-              [
-                :service_instance_sti_eager_load,
-                :labels_sti_eager_load,
-                :annotations_sti_eager_load,
-                :operation_sti_eager_load
+              %i[
+                service_instance_sti_eager_load
+                labels_sti_eager_load
+                annotations_sti_eager_load
+                operation_sti_eager_load
               ]
             end
           end
@@ -41,7 +41,7 @@ module VCAP
               last_operation: last_operation(binding),
               metadata: {
                 labels: hashified_labels(binding.labels),
-                annotations: hashified_annotations(binding.annotations),
+                annotations: hashified_annotations(binding.annotations)
               }
             }
           end

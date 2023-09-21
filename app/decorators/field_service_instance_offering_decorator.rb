@@ -1,11 +1,11 @@
 module VCAP::CloudController
   class FieldServiceInstanceOfferingDecorator
     def self.allowed
-      Set.new(%w(name guid description documentation_url tags relationships.service_broker))
+      Set.new(%w[name guid description documentation_url tags relationships.service_broker])
     end
 
     def self.match?(fields)
-      fields.is_a?(Hash) && fields[:'service_plan.service_offering']&.to_set&.intersect?(self.allowed)
+      fields.is_a?(Hash) && fields[:'service_plan.service_offering']&.to_set&.intersect?(allowed)
     end
 
     def initialize(fields)

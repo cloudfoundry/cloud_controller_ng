@@ -22,16 +22,16 @@ module VCAP
 
         def filter(message, bindings)
           filters = {
-            service_instance_guids: ->(dataset, requested) do
+            service_instance_guids: lambda do |dataset, requested|
               dataset.where { Sequel[:service_instances][:guid] =~ requested.service_instance_guids }
             end,
-            service_instance_names: ->(dataset, requested) do
+            service_instance_names: lambda do |dataset, requested|
               dataset.where { Sequel[:service_instances][:name] =~ requested.service_instance_names }
             end,
-            route_guids: ->(dataset, requested) do
+            route_guids: lambda do |dataset, requested|
               dataset.where { Sequel[:routes][:guid] =~ requested.route_guids }
             end,
-            label_selector: ->(dataset, requested) do
+            label_selector: lambda do |dataset, requested|
               LabelSelectorQueryGenerator.add_selector_queries(
                 label_klass: RouteBindingLabelModel,
                 resource_dataset: dataset,

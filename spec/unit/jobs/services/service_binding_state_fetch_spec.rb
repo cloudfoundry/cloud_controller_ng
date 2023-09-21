@@ -9,7 +9,7 @@ module VCAP::CloudController
       RSpec.describe ServiceBindingStateFetch, job_context: :worker do
         let(:operation_type) { 'create' }
         let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type) }
-        let(:maximum_polling_duration_for_plan) {}
+        let(:maximum_polling_duration_for_plan) { nil }
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_binding) do
           service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan: service_plan))
@@ -18,7 +18,7 @@ module VCAP::CloudController
         end
         let(:last_operation) { service_binding.reload.last_operation }
 
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:default_polling_interval) { 60 }
         let(:user) { User.make }
         let(:user_email) { 'fake@mail.foo' }
@@ -32,7 +32,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(
             broker_client_default_async_poll_interval_seconds: default_polling_interval,
-            broker_client_max_async_poll_duration_minutes: max_duration,
+            broker_client_max_async_poll_duration_minutes: max_duration
           )
         end
 
@@ -42,24 +42,24 @@ module VCAP::CloudController
         end
 
         describe '#initialize' do
-          let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+          let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
 
           context 'when the service plan has maximum_polling_duration' do
             context "when the config value is smaller than plan's maximum_polling_duration" do
               let(:max_duration) { 10 } # in minutes
               it 'should set end_timestamp to config value' do
-                Timecop.freeze(Time.now)
-                expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+                Timecop.freeze(Time.now.utc)
+                expect(job.end_timestamp).to eq(Time.now.utc + max_duration.minutes)
               end
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
+              let(:max_duration) { 1_068_367_346 } # in minutes
 
               it "should set end_timestamp to the plan's maximum_polling_duration value" do
-                Timecop.freeze(Time.now)
-                expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
+                Timecop.freeze(Time.now.utc)
+                expect(job.end_timestamp).to eq(Time.now.utc + maximum_polling_duration_for_plan.seconds)
               end
             end
           end
@@ -69,8 +69,8 @@ module VCAP::CloudController
               allow(ManagedServiceInstance).to receive(:first) do |e|
                 raise Sequel::Error.new(e)
               end
-              Timecop.freeze(Time.now)
-              expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+              Timecop.freeze(Time.now.utc)
+              expect(job.end_timestamp).to eq(Time.now.utc + max_duration.minutes)
             end
           end
         end
@@ -171,27 +171,27 @@ module VCAP::CloudController
                 it 'should update the service binding' do
                   service_binding.reload
                   expect(service_binding.volume_mounts).to eq([{
-                    'driver' => 'cephdriver',
-                    'container_dir' => '/data/images',
-                    'mode' => 'r',
-                    'device_type' => 'shared',
-                    'device' => {
-                      'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-                      'mount_config' => {
-                        'key' => 'value'
-                      }
-                    }
-                  }])
+                                                                'driver' => 'cephdriver',
+                                                                'container_dir' => '/data/images',
+                                                                'mode' => 'r',
+                                                                'device_type' => 'shared',
+                                                                'device' => {
+                                                                  'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                                                                  'mount_config' => {
+                                                                    'key' => 'value'
+                                                                  }
+                                                                }
+                                                              }])
                 end
               end
 
               context 'and the broker returns invalid credentials' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '200',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: 'invalid' } }
                 let(:response_malformed_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(nil, nil, broker_response, nil) }
 
@@ -242,12 +242,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker returns with invalid status code' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
 
@@ -283,12 +283,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker response timeout' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new(nil, nil, broker_response) }
 
@@ -416,7 +416,7 @@ module VCAP::CloudController
                 end
 
                 it 'is able to run the job again' do
-                  Timecop.travel(Time.now + polling_interval.seconds) do
+                  Timecop.travel(Time.now.utc + polling_interval.seconds) do
                     execute_all_jobs(expected_successes: 1, expected_failures: 0)
                   end
                 end
@@ -447,7 +447,7 @@ module VCAP::CloudController
             context 'when enqueing the job reaches the max poll duration' do
               before do
                 run_job(job)
-                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                   # executes job but does not enqueue another job
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
@@ -569,7 +569,7 @@ module VCAP::CloudController
             context 'when enqueing the job reaches the max poll duration' do
               before do
                 run_job(job)
-                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                   # executes job but does not enqueue another job
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
@@ -603,7 +603,7 @@ module VCAP::CloudController
 
             context 'when enqueing the job reaches the max poll duration' do
               before do
-                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                   # executes job but does not enqueue another job
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
@@ -653,7 +653,7 @@ module VCAP::CloudController
 
             context 'and the max poll duration has been reached' do
               before do
-                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                   # executes job but does not enqueue another job
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
@@ -684,7 +684,7 @@ module VCAP::CloudController
 
             context 'and the max poll duration has been reached' do
               before do
-                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                   # executes job but does not enqueue another job
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
@@ -765,8 +765,8 @@ module VCAP::CloudController
             let(:new_polling_interval) { default_polling_interval * 2 }
 
             it 'updates the poll interval after the next run' do
-              Timecop.freeze(Time.now)
-              first_run_time = Time.now
+              Timecop.freeze(Time.now.utc)
+              first_run_time = Time.now.utc
 
               # Force job to be initialized now, before we modify the test config
               job

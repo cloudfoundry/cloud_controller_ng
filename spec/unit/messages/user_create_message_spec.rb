@@ -7,14 +7,15 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when valid params are given' do
-        let(:params) { {
-          guid: 'some-user-guid',
-          'metadata' => {
-            'labels' => { 'key' => 'value' },
-            'annotations' => { 'key' => 'value' }
+        let(:params) do
+          {
+            guid: 'some-user-guid',
+            'metadata' => {
+              'labels' => { 'key' => 'value' },
+              'annotations' => { 'key' => 'value' }
+            }
           }
-        }
-        }
+        end
 
         it 'is valid' do
           expect(subject).to be_valid
@@ -22,7 +23,7 @@ module VCAP::CloudController
       end
 
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors[:guid]).to include('must be between 1 and 200 characters')

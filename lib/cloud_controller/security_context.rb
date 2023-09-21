@@ -61,7 +61,7 @@ module VCAP::CloudController
     end
 
     def self.scopes
-      valid_token? && token['scope'] || []
+      (valid_token? && token['scope']) || []
     end
 
     def self.current_user_email

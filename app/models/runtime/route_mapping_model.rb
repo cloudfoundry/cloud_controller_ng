@@ -3,7 +3,7 @@ require 'cloud_controller/copilot/adapter'
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
     DEFAULT_PROTOCOL_MAPPING = { 'tcp' => 'tcp', 'http' => 'http1' }.freeze
-    VALID_PROTOCOLS = ['http1', 'http2', 'tcp'].freeze
+    VALID_PROTOCOLS = %w[http1 http2 tcp].freeze
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid,
                       primary_key: :guid, without_guid_generation: true
@@ -13,12 +13,12 @@ module VCAP::CloudController
                             left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
     many_to_one :process, class: 'VCAP::CloudController::ProcessModel',
-      key: [:app_guid, :process_type], primary_key: [:app_guid, :type] do |dataset|
-        dataset.order(Sequel.desc(:created_at), Sequel.desc(:id))
-      end
+                          key: %i[app_guid process_type], primary_key: %i[app_guid type] do |dataset|
+      dataset.order(Sequel.desc(:created_at), Sequel.desc(:id))
+    end
 
     one_to_many :processes, class: 'VCAP::CloudController::ProcessModel',
-      primary_key: [:app_guid, :process_type], key: [:app_guid, :type]
+                            primary_key: %i[app_guid process_type], key: %i[app_guid type]
 
     def protocol_with_defaults=(new_protocol)
       self.protocol_without_defaults = (new_protocol == 'http2' ? new_protocol : nil)
@@ -28,7 +28,7 @@ module VCAP::CloudController
     alias_method :protocol=, :protocol_with_defaults=
 
     def protocol_with_defaults
-      self.protocol_without_defaults == 'http2' ? 'http2' : DEFAULT_PROTOCOL_MAPPING[self.route&.protocol]
+      protocol_without_defaults == 'http2' ? 'http2' : DEFAULT_PROTOCOL_MAPPING[route&.protocol]
     end
 
     alias_method :protocol_without_defaults, :protocol
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     def validate
       validates_presence [:app_port]
-      validates_unique [:app_guid, :route_guid, :process_type, :app_port]
+      validates_unique %i[app_guid route_guid process_type app_port]
 
       validate_weight
     end
@@ -54,18 +54,14 @@ module VCAP::CloudController
     end
 
     def adapted_weight
-      self.weight || 1
+      weight || 1
     end
 
     def presented_port
-      if has_app_port_specified?
-        return app_port
-      end
+      return app_port if has_app_port_specified?
 
       app_droplet = app.droplet
-      if app_droplet && app_droplet.docker_ports.any?
-        return app_droplet.docker_ports.first
-      end
+      return app_droplet.docker_ports.first if app_droplet && app_droplet.docker_ports.any?
 
       ProcessModel::DEFAULT_HTTP_PORT
     end

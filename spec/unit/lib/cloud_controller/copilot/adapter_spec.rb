@@ -178,7 +178,7 @@ module VCAP::CloudController
             guid: route.guid,
             host: route.fqdn,
             path: '',
-            internal: false,
+            internal: false
           )
         end
       end
@@ -270,7 +270,7 @@ module VCAP::CloudController
             guid: route.guid,
             host: route.fqdn,
             path: '',
-            internal: false,
+            internal: false
           )
         end
       end
@@ -376,13 +376,12 @@ module VCAP::CloudController
       it 'calls copilot_client.bulk_sync' do
         adapter.bulk_sync(routes: 'some-route',
                           route_mappings: 'some-route-mapping',
-                          capi_diego_process_associations: 'kiwi',
-                         )
+                          capi_diego_process_associations: 'kiwi')
 
         expect(copilot_client).to have_received(:bulk_sync).with(
           routes: 'some-route',
           route_mappings: 'some-route-mapping',
-          capi_diego_process_associations: 'kiwi',
+          capi_diego_process_associations: 'kiwi'
         )
       end
 
@@ -392,10 +391,11 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { adapter.bulk_sync(routes: 'some-route',
-                                     route_mappings: 'some-route-mapping',
-                                     capi_diego_process_associations: 'kiwi')
-          }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+          expect do
+            adapter.bulk_sync(routes: 'some-route',
+                              route_mappings: 'some-route-mapping',
+                              capi_diego_process_associations: 'kiwi')
+          end.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
         end
       end
     end

@@ -8,7 +8,7 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
         set_current_user_as_role(role: role, org: o, space: s, user: user)
 
         if respond_to?(:queryer)
-          can_read_globally = [:admin, :admin_read_only, :global_auditor].include?(role)
+          can_read_globally = %i[admin admin_read_only global_auditor].include?(role)
           can_write_globally = role == :admin
 
           can_write_to_active_org = can_write_globally
@@ -21,12 +21,12 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
 
           if o
             can_read_from_org ||= o.users.include?(user) || o.managers.include?(user) ||
-              o.auditors.include?(user) || o.billing_managers.include?(user)
+                                  o.auditors.include?(user) || o.billing_managers.include?(user)
             can_read_from_space ||= o.managers.include?(user)
 
             can_write_to_active_org ||= o.managers.include?(user)
             can_read_route ||= o.managers.include?(user) ||
-              o.auditors.include?(user)
+                               o.auditors.include?(user)
           end
 
           if s
@@ -67,7 +67,7 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
         actual = actual_with_token && actual_without_token && saved_error.blank?
 
         expect(actual).to eq(expected_return_value),
-          "role #{role}: expected #{expected_return_value}, got: #{actual}"
+                          "role #{role}: expected #{expected_return_value}, got: #{actual}"
       end
     end
   end

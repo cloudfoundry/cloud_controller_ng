@@ -4,31 +4,31 @@ require 'vcap/json_message'
 
 RSpec.describe JsonMessage::Field do
   it 'should raise an error when a required field is defined with a default' do
-    expect {
+    expect do
       JsonMessage::Field.new('key', schema: String, required: true, default: 'default')
-    }.to raise_error { |error|
+    end.to(raise_error do |error|
       expect(error).to be_an_instance_of(JsonMessage::DefinitionError)
       expect(error.message.size).to be > 0
-    }
+    end)
   end
 
   expected = 'should raise a schema validation error when schema validation'
   expected << ' fails for the default value of an optional field'
   it expected do
-    expect {
+    expect do
       JsonMessage::Field.new('optional', schema: Hash, required: false, default: 'default')
-    }.to raise_error { |error|
+    end.to(raise_error do |error|
       expect(error).to be_an_instance_of(JsonMessage::ValidationError)
       expect(error.message.size).to be > 0
-    }
+    end)
   end
 
   expected = 'should not raise a schema validation error when default value'
   expected << ' is absent for an optional field'
   it expected do
-    expect {
+    expect do
       JsonMessage::Field.new('optional', schema: String, required: false)
-    }.to_not raise_error
+    end.to_not raise_error
   end
 
   it 'can use a block to define the schema' do
@@ -61,12 +61,12 @@ RSpec.describe JsonMessage do
       @klass.required :required, String
       msg = @klass.new
 
-      expect {
+      expect do
         msg.encode
-      }.to raise_error { |error|
+      end.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ValidationError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
     it 'should assume wildcard when schema is not defined' do
@@ -120,9 +120,9 @@ RSpec.describe JsonMessage do
     end
 
     it 'does not raise an exception when an unknown field is given' do
-      expect {
+      expect do
         @klass.new({ 'unknown' => 'unknown' })
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it 'does not add unknown fields to the result' do
@@ -180,11 +180,11 @@ RSpec.describe JsonMessage do
       @klass.required :required_two, String
       msg = @klass.new
 
-      expect { msg.encode }.to raise_error { |error|
+      expect { msg.encode }.to(raise_error do |error|
         expect(error).to be_a(JsonMessage::ValidationError)
         expect(error.message).to be_an_instance_of(String)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
     it 'should encode fields' do
@@ -197,10 +197,10 @@ RSpec.describe JsonMessage do
       msg.no_default = 'defined'
 
       expected = {
-                  'required' => 'required',
-                  'with_default' => 'default',
-                  'no_default' => 'defined'
-                 }
+        'required' => 'required',
+        'with_default' => 'default',
+        'no_default' => 'defined'
+      }
       received = Yajl::Parser.parse(msg.encode)
       expect(received).to eq(expected)
     end
@@ -212,29 +212,29 @@ RSpec.describe JsonMessage do
     end
 
     it 'should raise a parse error when malformed json is passed' do
-      expect { @klass.decode('blah') }.to raise_error { |error|
+      expect { @klass.decode('blah') }.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ParseError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
     it 'should raise a parse error when json passed is nil' do
-      expect { @klass.decode(nil) }.to raise_error { |error|
+      expect { @klass.decode(nil) }.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ParseError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
     it 'should raise validation errors when required fields are missing' do
       @klass.required :required_one, String
       @klass.required :required_two, String
 
-      expect {
+      expect do
         @klass.decode(Yajl::Encoder.encode({}))
-      }.to raise_error { |error|
+      end.to(raise_error do |error|
         expect(error).to be_a(JsonMessage::ValidationError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
     it 'should decode json' do

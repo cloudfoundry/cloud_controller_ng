@@ -16,7 +16,7 @@ module VCAP::CloudController
         'type' => 'managed',
         'service_plan_names' => 'plan1, plan2',
         'service_plan_guids' => 'guid1, guid2',
-        'fields' => { 'space.organization' => 'name' },
+        'fields' => { 'space.organization' => 'name' }
       }.with_indifferent_access
     end
 
@@ -29,12 +29,12 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('name')
-        expect(message.names).to match_array(['mysql', 'rabbitmq', 'redis'])
-        expect(message.space_guids).to match_array(['space-1', 'space-2', 'space-3'])
+        expect(message.names).to match_array(%w[mysql rabbitmq redis])
+        expect(message.space_guids).to match_array(%w[space-1 space-2 space-3])
         expect(message.label_selector).to eq('key=value')
         expect(message.type).to eq('managed')
-        expect(message.service_plan_guids).to match_array(['guid1', 'guid2'])
-        expect(message.service_plan_names).to match_array(['plan1', 'plan2'])
+        expect(message.service_plan_guids).to match_array(%w[guid1 guid2])
+        expect(message.service_plan_names).to match_array(%w[plan1 plan2])
         expect(message.fields).to match({ 'space.organization': ['name'] })
       end
 

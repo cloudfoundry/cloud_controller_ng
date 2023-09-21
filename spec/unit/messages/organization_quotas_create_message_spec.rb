@@ -8,13 +8,13 @@ module VCAP::CloudController
       {
         organizations: {
           data: []
-        },
+        }
       }
     end
 
     describe 'validations' do
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
 
         it 'is not valid' do
           expect(subject).not_to be_valid
@@ -77,12 +77,12 @@ module VCAP::CloudController
 
       describe 'apps' do
         context 'value for apps is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: true,
+              apps: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -91,12 +91,12 @@ module VCAP::CloudController
         end
 
         context 'invalid keys are passed in' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: { bad_key: 'bob' },
+              apps: { bad_key: 'bob' }
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -106,13 +106,13 @@ module VCAP::CloudController
 
         describe 'total_memory_in_mb' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -120,13 +120,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -134,13 +134,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -149,24 +149,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -174,13 +174,13 @@ module VCAP::CloudController
 
         describe 'per_process_memory_in_mb' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -188,13 +188,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -202,13 +202,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -217,24 +217,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -242,13 +242,13 @@ module VCAP::CloudController
 
         describe 'log_rate_limit_in_bytes_per_second' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { log_rate_limit_in_bytes_per_second: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -256,13 +256,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { log_rate_limit_in_bytes_per_second: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -270,13 +270,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { log_rate_limit_in_bytes_per_second: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -285,24 +285,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { log_rate_limit_in_bytes_per_second: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { log_rate_limit_in_bytes_per_second: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -310,13 +310,13 @@ module VCAP::CloudController
 
         describe 'total_instances' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_instances: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -324,13 +324,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_instances: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -338,13 +338,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_instances: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -353,24 +353,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_instances: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 apps: { total_instances: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -378,12 +378,12 @@ module VCAP::CloudController
 
         describe 'per_app_tasks' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                apps: { per_app_tasks: 'bob' },
+                apps: { per_app_tasks: 'bob' }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -391,12 +391,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                apps: { per_app_tasks: 1.1 },
+                apps: { per_app_tasks: 1.1 }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -404,12 +404,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                apps: { per_app_tasks: -1 },
+                apps: { per_app_tasks: -1 }
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -418,22 +418,22 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                apps: { per_app_tasks: 0 },
+                apps: { per_app_tasks: 0 }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                apps: { per_app_tasks: nil },
+                apps: { per_app_tasks: nil }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -442,12 +442,12 @@ module VCAP::CloudController
 
       describe 'services' do
         context 'value for services is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: true,
+              services: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -455,12 +455,12 @@ module VCAP::CloudController
           end
         end
         context 'invalid keys are passed in' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: { bad_key: 'billy' },
+              services: { bad_key: 'billy' }
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -470,13 +470,13 @@ module VCAP::CloudController
 
         describe 'total_service_instances' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_instances: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -484,13 +484,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_instances: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -498,13 +498,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_instances: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -513,24 +513,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_instances: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_instances: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -538,13 +538,13 @@ module VCAP::CloudController
 
         describe 'total_service_keys' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_keys: 'bob' },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -552,13 +552,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_keys: 1.1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -566,13 +566,13 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_keys: -1 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -581,24 +581,24 @@ module VCAP::CloudController
           end
 
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_keys: 0 },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
                 services: { total_service_keys: nil },
-                relationships: relationships,
+                relationships: relationships
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -606,21 +606,23 @@ module VCAP::CloudController
 
         describe 'paid_services_allowed' do
           context 'when it is a boolean' do
-            let(:params) { {
-              name: 'thë-name',
-              services: { paid_services_allowed: false },
-            }
-            }
+            let(:params) do
+              {
+                name: 'thë-name',
+                services: { paid_services_allowed: false }
+              }
+            end
 
             it { is_expected.to be_valid }
           end
 
           context 'when it is not a boolean' do
-            let(:params) { {
-              name: 'thë-name',
-              services: { paid_services_allowed: 'b' },
-            }
-            }
+            let(:params) do
+              {
+                name: 'thë-name',
+                services: { paid_services_allowed: 'b' }
+              }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -632,12 +634,12 @@ module VCAP::CloudController
 
       describe 'routes' do
         context 'value for routes is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: true,
+              routes: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -645,12 +647,12 @@ module VCAP::CloudController
           end
         end
         context 'invalid keys are passed in' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: { bad_key: 'billy' },
+              routes: { bad_key: 'billy' }
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -660,12 +662,12 @@ module VCAP::CloudController
 
         describe 'total_routes' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_routes: 'bob' },
+                routes: { total_routes: 'bob' }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -673,12 +675,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_routes: 1.1 },
+                routes: { total_routes: 1.1 }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -686,12 +688,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_routes: -1 },
+                routes: { total_routes: -1 }
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -699,22 +701,22 @@ module VCAP::CloudController
             end
           end
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_routes: 0 },
+                routes: { total_routes: 0 }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_routes: nil },
+                routes: { total_routes: nil }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -722,12 +724,12 @@ module VCAP::CloudController
 
         describe 'total_reserved_ports' do
           context 'when the type is a string' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_reserved_ports: 'bob' },
+                routes: { total_reserved_ports: 'bob' }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -735,12 +737,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is decimal' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_reserved_ports: 1.1 },
+                routes: { total_reserved_ports: 1.1 }
               }
-            }
+            end
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -748,12 +750,12 @@ module VCAP::CloudController
             end
           end
           context 'when the type is a negative integer' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_reserved_ports: -1 },
+                routes: { total_reserved_ports: -1 }
               }
-            }
+            end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -761,22 +763,22 @@ module VCAP::CloudController
             end
           end
           context 'when the type is zero' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_reserved_ports: 0 },
+                routes: { total_reserved_ports: 0 }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
           context 'when the type is nil (unlimited)' do
-            let(:params) {
+            let(:params) do
               {
                 name: 'my-name',
-                routes: { total_reserved_ports: nil },
+                routes: { total_reserved_ports: nil }
               }
-            }
+            end
 
             it { is_expected.to be_valid }
           end
@@ -785,12 +787,12 @@ module VCAP::CloudController
 
       describe 'domains' do
         context 'value for domains is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              domains: true,
+              domains: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -798,12 +800,12 @@ module VCAP::CloudController
           end
         end
         context 'invalid keys are passed in' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              domains: { bad_key: 'billy' },
+              domains: { bad_key: 'billy' }
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -812,12 +814,12 @@ module VCAP::CloudController
 
           describe 'total_domains' do
             context 'when the type is a string' do
-              let(:params) {
+              let(:params) do
                 {
                   name: 'my-name',
-                  domains: { total_domains: 'bob' },
+                  domains: { total_domains: 'bob' }
                 }
-              }
+              end
 
               it 'is not valid' do
                 expect(subject).to be_invalid
@@ -825,12 +827,12 @@ module VCAP::CloudController
               end
             end
             context 'when the type is decimal' do
-              let(:params) {
+              let(:params) do
                 {
                   name: 'my-name',
-                  domains: { total_domains: 1.1 },
+                  domains: { total_domains: 1.1 }
                 }
-              }
+              end
 
               it 'is not valid' do
                 expect(subject).to be_invalid
@@ -838,12 +840,12 @@ module VCAP::CloudController
               end
             end
             context 'when the type is a negative integer' do
-              let(:params) {
+              let(:params) do
                 {
                   name: 'my-name',
-                  domains: { total_domains: -1 },
+                  domains: { total_domains: -1 }
                 }
-              }
+              end
 
               it 'is not valid because "unlimited" is set with null, not -1, in V3' do
                 expect(subject).to be_invalid
@@ -851,22 +853,22 @@ module VCAP::CloudController
               end
             end
             context 'when the type is zero' do
-              let(:params) {
+              let(:params) do
                 {
                   name: 'my-name',
-                  domains: { total_domains: 0 },
+                  domains: { total_domains: 0 }
                 }
-              }
+              end
 
               it { is_expected.to be_valid }
             end
             context 'when the type is nil (unlimited)' do
-              let(:params) {
+              let(:params) do
                 {
                   name: 'my-name',
-                  domains: { total_domains: nil },
+                  domains: { total_domains: nil }
                 }
-              }
+              end
 
               it { is_expected.to be_valid }
             end
@@ -878,7 +880,7 @@ module VCAP::CloudController
         context 'given no organization guids' do
           let(:params) do
             {
-              name: 'kris',
+              name: 'kris'
             }
           end
 
@@ -893,9 +895,9 @@ module VCAP::CloudController
                 organizations: {
                   data: [
                     { guid: 'KKW-beauty' },
-                    { guid: 'skims' },
+                    { guid: 'skims' }
                   ]
-                },
+                }
               }
             }
           end
@@ -908,7 +910,7 @@ module VCAP::CloudController
             {
               name: 'kourtney',
               relationships: {
-                organizations: { guid: 'poosh' },
+                organizations: { guid: 'poosh' }
               }
             }
           end
@@ -923,7 +925,7 @@ module VCAP::CloudController
               relationships: {
                 organizations: {
                   data: [
-                    { guid: 150000 },
+                    { guid: 150_000 }
                   ]
                 }
               }

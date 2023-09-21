@@ -19,9 +19,9 @@ module VCAP::Services::ServiceBrokers
     end
 
     describe '#delete' do
-      let(:brokers) {
+      let(:brokers) do
         [broker]
-      }
+      end
 
       before do
         brokers.each { |b| allow(b).to receive(:destroy) }
@@ -97,7 +97,11 @@ module VCAP::Services::ServiceBrokers
         it 'does not delete the broker' do
           allow(broker).to receive(:destroy)
 
-          remover.remove(broker) rescue nil
+          begin
+            remover.remove(broker)
+          rescue StandardError
+            nil
+          end
 
           expect(broker).not_to have_received(:destroy)
         end

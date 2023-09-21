@@ -26,7 +26,7 @@ RSpec.describe DeserializationRetry do
       expect(job.attempts).to eq(1)
       expect(background_logger).to have_received(:info).with("Deserialization for job '#{job.guid}' failed, rescheduling it (1 attempts)")
 
-      Timecop.travel(Time.now + 6.minutes)
+      Timecop.travel(Time.now.utc + 6.minutes)
       Delayed::Worker.new.work_off
       job.reload
 

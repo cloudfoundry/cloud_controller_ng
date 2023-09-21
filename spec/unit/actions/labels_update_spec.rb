@@ -13,8 +13,8 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:labels) do
         {
-            release: 'stable',
-            'joyofcooking.com/potato': 'mashed'
+          release: 'stable',
+          'joyofcooking.com/potato': 'mashed'
         }
       end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
               expect do
                 subject
               end.to raise_error(CloudController::Errors::ApiError, /Failed to add 4 labels because it would exceed maximum of 2/)
-            end.not_to change { AppLabelModel.count }
+            end.not_to(change { AppLabelModel.count })
           end
         end
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
             let(:labels) do
               {
-                release: 'stable',
+                release: 'stable'
               }
             end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
                 expect do
                   subject
                 end.to raise_error(CloudController::Errors::ApiError, 'Failed to add 1 labels because it would exceed maximum of 2')
-              end.not_to change { AppLabelModel.count }
+              end.not_to(change { AppLabelModel.count })
             end
           end
         end
@@ -82,7 +82,7 @@ module VCAP::CloudController
           context 'deleting old label' do
             let(:labels) do
               {
-                release1: nil,
+                release1: nil
               }
             end
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
           context 'editing old label' do
             let(:labels) do
               {
-                release: 'stable',
+                release: 'stable'
               }
             end
 
@@ -117,15 +117,15 @@ module VCAP::CloudController
         it 'does not change any labels' do
           expect do
             subject
-          end.not_to change { AppLabelModel.count }
+          end.not_to(change { AppLabelModel.count })
         end
       end
 
       context 'when existing labels are being modified' do
         let(:labels) do
           {
-              release: 'stable',
-              'joyofcooking.com/potato': 'mashed'
+            release: 'stable',
+            'joyofcooking.com/potato': 'mashed'
           }
         end
 
@@ -146,10 +146,10 @@ module VCAP::CloudController
       context 'deleting labels' do
         let(:labels) do
           {
-              release: nil,
-              'pre.fix/release': nil,
-              nonexistent: nil,
-              'joyofcooking.com/potato': 'mashed'
+            release: nil,
+            'pre.fix/release': nil,
+            nonexistent: nil,
+            'joyofcooking.com/potato': 'mashed'
           }
         end
 
@@ -187,8 +187,8 @@ module VCAP::CloudController
       let(:org) { Organization.make }
       let(:labels) do
         {
-            release: 'stable',
-            'joyofcooking.com/potato': 'mashed'
+          release: 'stable',
+          'joyofcooking.com/potato': 'mashed'
         }
       end
 
@@ -204,15 +204,15 @@ module VCAP::CloudController
         it 'does not change any labels' do
           expect do
             subject
-          end.not_to change { OrganizationLabelModel.count }
+          end.not_to(change { OrganizationLabelModel.count })
         end
       end
 
       context 'when existing labels are being modified' do
         let(:labels) do
           {
-              release: 'stable',
-              'joyofcooking.com/potato': 'mashed'
+            release: 'stable',
+            'joyofcooking.com/potato': 'mashed'
           }
         end
 
@@ -233,9 +233,9 @@ module VCAP::CloudController
       context 'deleting labels' do
         let(:labels) do
           {
-              release: nil,
-              nonexistent: nil,
-              'joyofcooking.com/potato': 'mashed'
+            release: nil,
+            nonexistent: nil,
+            'joyofcooking.com/potato': 'mashed'
           }
         end
 

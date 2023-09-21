@@ -12,61 +12,61 @@ module VCAP::CloudController
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
       it 'decorated the given hash with plan guid and name from service instances' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ service_plan: ['guid', 'name', 'foo'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ service_plan: %w[guid name foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            service_plans: [
-              {
-                guid: plan1.guid,
-                name: plan1.name,
-              },
-              {
-                guid: plan2.guid,
-                name: plan2.name,
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_plans: [
+                                    {
+                                      guid: plan1.guid,
+                                      name: plan1.name
+                                    },
+                                    {
+                                      guid: plan2.guid,
+                                      name: plan2.name
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       it 'decorated the given hash with plan relationships to offering' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         decorator = described_class.new({ service_plan: ['relationships.service_offering'] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            service_plans: [
-              {
-                relationships: {
-                  service_offering: {
-                    data: {
-                      guid: service_instance_1.service_plan.service.guid
-                    }
-                  }
-                }
-              },
-              {
-                relationships: {
-                  service_offering: {
-                    data: {
-                      guid: service_instance_2.service_plan.service.guid
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_plans: [
+                                    {
+                                      relationships: {
+                                        service_offering: {
+                                          data: {
+                                            guid: service_instance_1.service_plan.service.guid
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      relationships: {
+                                        service_offering: {
+                                          data: {
+                                            guid: service_instance_2.service_plan.service.guid
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       context 'when instances are from the same plan' do

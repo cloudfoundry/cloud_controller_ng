@@ -25,10 +25,10 @@ module VCAP::CloudController
               {
                 result: {
                   execution_metadata: '"{\"cmd\":[\"start\"]}"',
-                  process_types:      { web: 'start' },
-                  lifecycle_type:     'docker',
+                  process_types: { web: 'start' },
+                  lifecycle_type: 'docker',
                   lifecycle_metadata: {
-                    docker_image: docker_image_name,
+                    docker_image: docker_image_name
                   }
                 }
               }
@@ -36,9 +36,9 @@ module VCAP::CloudController
             let(:docker_image_name) { '' }
 
             it 'marks the build as staged' do
-              expect {
+              expect do
                 handler.staging_complete(payload)
-              }.to change {
+              end.to change {
                 build.reload.staged?
               }.from(false).to(true)
             end
@@ -51,8 +51,8 @@ module VCAP::CloudController
             context 'when staging result is returned' do
               before do
                 payload[:result][:process_types] = {
-                  web:      'start me',
-                  worker:   'hello',
+                  web: 'start me',
+                  worker: 'hello',
                   anything: 'hi hi hi'
                 }
 
@@ -64,8 +64,8 @@ module VCAP::CloudController
 
                 droplet = build.reload.droplet
                 data    = {
-                  'web'      => 'start me',
-                  'worker'   => 'hello',
+                  'web' => 'start me',
+                  'worker' => 'hello',
                   'anything' => 'hi hi hi'
                 }
 
@@ -97,9 +97,9 @@ module VCAP::CloudController
                 end
 
                 it 'does not update the build' do
-                  expect {
+                  expect do
                     subject.staging_complete(payload)
-                  }.to raise_error(CloudController::Errors::ApiError)
+                  end.to raise_error(CloudController::Errors::ApiError)
 
                   expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
                 end
@@ -121,8 +121,8 @@ module VCAP::CloudController
                   'diego.staging.docker.saving-staging-result-failed',
                   hash_including(
                     staging_guid: build.guid,
-                    response:     payload,
-                    error:        'save-error',
+                    response: payload,
+                    error: 'save-error'
                   )
                 )
               end
@@ -150,20 +150,20 @@ module VCAP::CloudController
 
               it 'records a buildpack set event for all processes' do
                 ProcessModel.make(app: app, type: 'other')
-                expect {
+                expect do
                   subject.staging_complete(payload, true)
-                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
+                end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
               end
 
               context 'when this is not the most recent staging result' do
                 before do
-                  DropletModel.make(app: app, package: package, created_at: Time.now + 1.year)
+                  DropletModel.make(app: app, package: package, created_at: Time.now.utc + 1.year)
                 end
 
                 it 'does not assign the current droplet' do
-                  expect {
+                  expect do
                     handler.staging_complete(payload, true)
-                  }.not_to change { app.reload.droplet }.from(nil)
+                  end.not_to change { app.reload.droplet }.from(nil)
                 end
 
                 it 'does not start the app' do
@@ -185,8 +185,8 @@ module VCAP::CloudController
                   expect(logger).to have_received(:error).with(
                     'diego.staging.docker.starting-process-failed',
                     staging_guid: build.guid,
-                    response:     payload,
-                    error:        'start-error',
+                    response: payload,
+                    error: 'start-error'
                   )
                 end
               end
@@ -238,8 +238,8 @@ module VCAP::CloudController
               let(:payload) do
                 {
                   result: {
-                    process_types:      { web: 'start' },
-                    lifecycle_type:     'docker',
+                    process_types: { web: 'start' },
+                    lifecycle_type: 'docker',
                     lifecycle_metadata: {
                       docker_image: 'docker_image_name'
                     }
@@ -248,17 +248,17 @@ module VCAP::CloudController
               end
 
               before do
-                expect {
+                expect do
                   handler.staging_complete(payload)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
               end
 
               it 'logs an error for the CF operator' do
                 expect(logger).to have_received(:error).with(
                   'diego.staging.docker.success.invalid-message',
                   staging_guid: build.guid,
-                  payload:      payload,
-                  error:        '{ result => { execution_metadata => Missing key } }'
+                  payload: payload,
+                  error: '{ result => { execution_metadata => Missing key } }'
                 )
               end
 
@@ -279,32 +279,32 @@ module VCAP::CloudController
               end
 
               it 'should mark the build as failed' do
-                expect {
+                expect do
                   handler.staging_complete(payload)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
                 expect(build.error_id).to match(/StagingError/)
               end
 
               it 'logs an error for the CF user' do
-                expect {
+                expect do
                   handler.staging_complete(payload)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do
-                expect {
+                expect do
                   handler.staging_complete(payload)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.docker.failure.invalid-message',
                   staging_guid: build.guid,
-                  payload:      payload,
-                  error:        '{ error => { message => Missing key } }'
+                  payload: payload,
+                  error: '{ error => { message => Missing key } }'
                 )
               end
             end
@@ -328,8 +328,8 @@ module VCAP::CloudController
                   'diego.staging.docker.saving-staging-result-failed',
                   hash_including(
                     staging_guid: build.guid,
-                    response:     payload,
-                    error:        'save-error',
+                    response: payload,
+                    error: 'save-error'
                   )
                 )
               end
@@ -339,9 +339,9 @@ module VCAP::CloudController
               let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
-                expect {
+                expect do
                   subject.staging_complete(payload, true)
-                }.to change { web_process.reload.state }.to('STOPPED')
+                end.to change { web_process.reload.state }.to('STOPPED')
               end
 
               context 'when there is no web process for the app' do

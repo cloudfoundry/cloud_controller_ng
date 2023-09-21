@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Spaces', type: [:api, :legacy_api] do
+RSpec.resource 'Spaces', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:space) { VCAP::CloudController::Space.make }
   let(:guid) { space.guid }
@@ -14,7 +14,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
   describe 'Standard endpoints' do
     shared_context 'createable_fields' do |opts|
-      field :name, 'The name of the space', required: opts[:required], example_values: %w(development demo production)
+      field :name, 'The name of the space', required: opts[:required], example_values: %w[development demo production]
       field :organization_guid, 'The guid of the associated organization', required: opts[:required], example_values: [Sham.guid]
       field :developer_guids, 'The list of the associated developers'
       field :manager_guids, 'The list of the associated managers'
@@ -26,8 +26,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
-    shared_context 'updatable_fields' do |opts|
-      field :name, 'The name of the space', example_values: %w(development demo production)
+    shared_context 'updatable_fields' do |_opts|
+      field :name, 'The name of the space', example_values: %w[development demo production]
       field :organization_guid, 'The guid of the associated organization', example_values: [Sham.guid]
       field :developer_guids, 'The list of the associated developers'
       field :manager_guids, 'The list of the associated managers'
@@ -39,7 +39,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     standard_model_list :space, VCAP::CloudController::SpacesController do
-      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: %w[name id]
     end
     standard_model_get :space, nested_associations: [:organization]
     standard_model_delete :space do
@@ -73,8 +73,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
       example 'Update a Space' do
         client.put "/v2/spaces/#{guid}",
-          MultiJson.dump({ name: new_name }, pretty: true),
-          headers
+                   MultiJson.dump({ name: new_name }, pretty: true),
+                   headers
 
         expect(status).to eq 201
         standard_entity_response parsed_response, :space, expected_values: { name: new_name }

@@ -24,6 +24,6 @@ Sequel.migration do
     end
   end
 
-  down do
+  down do # Rubocop:disable Lint/EmptyBlock
   end
 end

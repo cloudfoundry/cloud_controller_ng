@@ -19,9 +19,9 @@ module VCAP::Services::Api
         req = {
           head: {
             VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token,
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'application/json'
           },
-          body: msg.encode,
+          body: msg.encode
         }
         if timeout
           EM::HttpRequest.new(url, inactivity_timeout: timeout).send(verb.to_sym, req)
@@ -46,10 +46,10 @@ module VCAP::Services::Api
   end
 
   module SynchronousHttpRequest
-    def self.request(url, token, verb, timeout, msg=VCAP::Services::Api::EMPTY_REQUEST)
+    def self.request(url, token, verb, _timeout, msg=VCAP::Services::Api::EMPTY_REQUEST)
       header = {
         VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token,
-        'Content-Type' => 'application/json',
+        'Content-Type' => 'application/json'
       }
       body = msg.encode
       client = HTTPClient.new

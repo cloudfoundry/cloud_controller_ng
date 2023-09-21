@@ -3,17 +3,17 @@ require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   class ServiceInstanceCreateUserProvidedMessage < ServiceInstanceCreateMessage
-    register_allowed_keys [
-      :credentials,
-      :syslog_drain_url,
-      :route_service_url,
+    register_allowed_keys %i[
+      credentials
+      syslog_drain_url
+      route_service_url
     ]
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
     validates :type, allow_blank: false, inclusion: {
-      in: %w(user-provided),
+      in: %w[user-provided],
       message: "must be 'user-provided'"
     }
     validates :credentials, hash: true, allow_blank: true
@@ -28,9 +28,9 @@ module VCAP::CloudController
     private
 
     def route_service_url_must_be_https
-      if route_service_url.present? && route_service_url.is_a?(String) && !route_service_url.starts_with?('https:')
-        errors.add(:route_service_url, 'must be https')
-      end
+      return unless route_service_url.present? && route_service_url.is_a?(String) && !route_service_url.starts_with?('https:')
+
+      errors.add(:route_service_url, 'must be https')
     end
 
     class Relationships < ServiceInstanceCreateMessage::Relationships

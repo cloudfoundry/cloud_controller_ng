@@ -6,7 +6,7 @@ RSpec.shared_examples 'when exponential backoff is not set to default' do
 
       Timecop.freeze do
         run_job(job)
-        enqueued_time = Time.now
+        enqueued_time = Time.now.utc
       end
 
       [60, 180, 420, 900, 1860].each do |seconds|
@@ -27,7 +27,7 @@ RSpec.shared_examples 'when exponential backoff is not set to default' do
 
       Timecop.freeze do
         run_job(job)
-        enqueued_time = Time.now
+        enqueued_time = Time.now.utc
       end
 
       [10, 30, 70, 150, 310].each do |seconds|
@@ -46,7 +46,7 @@ RSpec.shared_examples 'when exponential backoff is not set to default' do
       TestConfig.config[:broker_client_max_async_poll_duration_minutes] = 60
 
       job.retry_number = 10
-      Timecop.freeze(Time.now + 3384.321.ceil.seconds) do
+      Timecop.freeze(Time.now.utc + 3384.321.ceil.seconds) do
         run_job(job)
 
         expect(last_operation.state).to eq('failed')

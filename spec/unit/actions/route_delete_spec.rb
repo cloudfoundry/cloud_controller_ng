@@ -18,9 +18,9 @@ module VCAP::CloudController
       end
 
       it 'deletes the route record' do
-        expect {
+        expect do
           route_delete.delete([route])
-        }.to change { Route.count }.by(-1)
+        end.to change { Route.count }.by(-1)
         expect { route.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -58,34 +58,34 @@ module VCAP::CloudController
         end
 
         it 'deletes associated route mappings' do
-          expect {
+          expect do
             route_delete.delete([route])
-          }.to change { RouteMappingModel.count }.by(-1)
+          end.to change { RouteMappingModel.count }.by(-1)
           expect(route.exists?).to be_falsey
           expect(route_mapping.exists?).to be_falsey
           expect(route.exists?).to be_falsey
         end
 
         it 'deletes associated route bindings' do
-          expect {
+          expect do
             route_delete.delete([route])
-          }.to change { RouteBinding.count }.by(-1)
+          end.to change { RouteBinding.count }.by(-1)
           expect(route_binding.exists?).to be_falsey
           expect(route.exists?).to be_falsey
         end
 
         it 'deletes associated metadata labels' do
-          expect {
+          expect do
             route_delete.delete([route])
-          }.to change { RouteLabelModel.count }.by(-1)
+          end.to change { RouteLabelModel.count }.by(-1)
           expect(RouteLabelModel.count).to eq 0
           expect(route.exists?).to be_falsey
         end
 
         it 'deletes associated metadata labels' do
-          expect {
+          expect do
             route_delete.delete([route])
-          }.to change { RouteAnnotationModel.count }.by(-1)
+          end.to change { RouteAnnotationModel.count }.by(-1)
           expect(RouteAnnotationModel.count).to eq 0
           expect(route.exists?).to be_falsey
         end

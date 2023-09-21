@@ -8,9 +8,9 @@ module VCAP::CloudController
     describe '#delete' do
       let!(:quota) { QuotaDefinition.make }
       it 'deletes the organization quota' do
-        expect {
+        expect do
           org_quota_delete.delete([quota])
-        }.to change { QuotaDefinition.count }.by(-1)
+        end.to change { QuotaDefinition.count }.by(-1)
 
         expect { quota.refresh }.to raise_error Sequel::Error, 'Record not found'
       end

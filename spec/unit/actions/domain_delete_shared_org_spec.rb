@@ -12,9 +12,9 @@ module VCAP::CloudController
         let(:shared_org1) { Organization.make }
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(
+          end.to raise_error(
             DomainDeleteSharedOrg::OrgError
           )
         end
@@ -25,9 +25,9 @@ module VCAP::CloudController
         let(:domain) { PrivateDomain.make(owning_organization: shared_org1) }
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(
+          end.to raise_error(
             DomainDeleteSharedOrg::OrgError
           )
         end
@@ -38,9 +38,9 @@ module VCAP::CloudController
         let(:shared_org1) { Organization.make }
 
         it 'deletes shared orgs for private domain' do
-          expect {
+          expect do
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(
+          end.to raise_error(
             DomainDeleteSharedOrg::OrgError
           )
         end
@@ -71,9 +71,9 @@ module VCAP::CloudController
         end
 
         it 'deletes shared orgs for private domain' do
-          expect {
+          expect do
             subject.delete(domain: domain, shared_organization: route.space.organization)
-          }.to raise_error(DomainDeleteSharedOrg::RouteError)
+          end.to raise_error(DomainDeleteSharedOrg::RouteError)
         end
       end
     end

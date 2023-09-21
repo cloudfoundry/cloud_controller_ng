@@ -37,7 +37,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect { subject }.to raise_error /After guid filter must be a valid app usage event guid./
+            expect { subject }.to raise_error(/After guid filter must be a valid app usage event guid./)
           end
         end
       end

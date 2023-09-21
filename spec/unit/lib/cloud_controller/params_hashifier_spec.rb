@@ -38,11 +38,10 @@ module VCAP::CloudController
     end
 
     context 'when the params are nested' do
-      let(:params) do ActionController::Parameters.new({ array1: ['abc', :def],
-                                                         hash1: { abc: 1, def: 2, 'ghi' => 3 },
-                                                         cdstrings: 'string1,string2,string3'
-
-                                        })
+      let(:params) do
+        ActionController::Parameters.new({ array1: ['abc', :def],
+                                           hash1: { abc: 1, def: 2, 'ghi' => 3 },
+                                           cdstrings: 'string1,string2,string3' })
       end
 
       it 'processes the rails5 parameters' do

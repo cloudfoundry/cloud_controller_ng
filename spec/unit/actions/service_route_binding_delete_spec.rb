@@ -17,7 +17,7 @@ module VCAP::CloudController
 
         expect(binding_event_repo).to have_received(:record_delete).with(
           binding,
-          user_audit_info,
+          user_audit_info
         )
       end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
 
               expect(binding_event_repo).to have_received(:record_start_delete).with(
                 binding,
-                user_audit_info,
+                user_audit_info
               )
             end
           end
@@ -140,8 +140,8 @@ module VCAP::CloudController
           {
             last_operation: {
               state: state,
-              description: description,
-            },
+              description: description
+            }
           }
         end
         let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }

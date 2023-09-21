@@ -24,15 +24,15 @@ module VCAP::CloudController
 
       describe '#perform' do
         it 'deletes events created before the pruning threshold' do
-          expect {
+          expect do
             job.perform
-          }.to change { event_before_threshold.exists? }.to(false)
+          end.to change { event_before_threshold.exists? }.to(false)
         end
 
         it 'keeps events created after the pruning threshold' do
-          expect {
+          expect do
             job.perform
-          }.not_to change { event_after_threshold.exists? }.from(true)
+          end.not_to change { event_after_threshold.exists? }.from(true)
         end
 
         it 'knows its job name' do

@@ -14,8 +14,8 @@ RSpec.describe Sequel::QueryLengthLogging do
 
     it 'add the query length parameter' do
       query = 'SELECT * FROM some_table WHERE condition > 1'
-      db.log_connection_yield(query, nil) {}
-      expect(logs.string).to match /.*\(query_length=44\) SELECT \* FROM some_table WHERE condition > 1/
+      db.log_connection_yield(query, nil) { nil }
+      expect(logs.string).to match(/.*\(query_length=44\) SELECT \* FROM some_table WHERE condition > 1/)
     end
   end
 end

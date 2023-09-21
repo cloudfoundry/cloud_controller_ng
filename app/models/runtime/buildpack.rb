@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     PACKAGE_STATES = [
       CREATED_STATE = 'AWAITING_UPLOAD'.freeze,
-      READY_STATE = 'READY'.freeze,
+      READY_STATE = 'READY'.freeze
     ].map(&:freeze).freeze
 
     one_to_many :labels, class: 'VCAP::CloudController::BuildpackLabelModel', key: :resource_guid, primary_key: :guid
@@ -31,13 +31,13 @@ module VCAP::CloudController
       where(position: max(:position)).first
     end
 
-    def self.user_visibility_filter(user)
+    def self.user_visibility_filter(_user)
       full_dataset_filter
     end
 
     def validate
-      validates_unique [:name, :stack]
-      validates_format(/\A(\w|\-)+\z/, :name, message: 'can only contain alphanumeric characters')
+      validates_unique %i[name stack]
+      validates_format(/\A(\w|-)+\z/, :name, message: 'can only contain alphanumeric characters')
 
       validate_stack_existence
       validate_stack_change
@@ -53,7 +53,7 @@ module VCAP::CloudController
     end
 
     def staging_message
-      { buildpack_key: self.key }
+      { buildpack_key: key }
     end
 
     # This is used in the serialization of apps to JSON. The buildpack object is left in the hash for the app, then the

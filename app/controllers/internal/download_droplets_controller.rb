@@ -4,7 +4,7 @@ require 'cloud_controller/blobstore/client'
 module VCAP::CloudController
   class DownloadDropletsController < RestController::BaseController
     def self.dependencies
-      [:droplet_blobstore, :blobstore_url_generator, :missing_blob_handler, :blob_sender, :droplet_url_generator]
+      %i[droplet_blobstore blobstore_url_generator missing_blob_handler blob_sender droplet_url_generator]
     end
 
     include CloudController::Errors

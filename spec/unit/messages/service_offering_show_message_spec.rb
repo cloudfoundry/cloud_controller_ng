@@ -7,7 +7,7 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'fields' => { 'service_broker' => 'guid,name' },
+          'fields' => { 'service_broker' => 'guid,name' }
         }.with_indifferent_access
       end
 
@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         expect(message).to be_valid
         expect(message).to be_a(described_class)
-        expect(message.fields).to match({ service_broker: ['guid', 'name'] })
+        expect(message.fields).to match({ service_broker: %w[guid name] })
       end
 
       it 'converts requested keys to symbols' do

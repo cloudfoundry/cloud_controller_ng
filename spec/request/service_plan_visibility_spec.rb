@@ -9,7 +9,7 @@ RSpec.describe 'V3 service plan visibility' do
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
   describe 'GET /v3/service_plans/:guid/visibility' do
-    let(:api_call) { lambda { |user_headers| get "/v3/service_plans/#{guid}/visibility", {}, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_plans/#{guid}/visibility", {}, user_headers } }
     let(:guid) { service_plan.guid }
 
     context 'when the plan does not exist' do
@@ -24,31 +24,31 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'for public plans' do
       let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
-      let(:expected_codes_and_responses) {
+      let(:expected_codes_and_responses) do
         Hash.new(
           code: 200,
           response_object: { 'type' => 'public' }
         )
-      }
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'for admin-only plans' do
       let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
-      let(:admin_only_response) {
+      let(:admin_only_response) do
         {
           code: 200,
           response_object: { 'type' => 'admin' }
         }
-      }
-      let(:expected_codes_and_responses) {
+      end
+      let(:expected_codes_and_responses) do
         Hash.new(code: 404).tap do |h|
           h['admin'] = admin_only_response
           h['admin_read_only'] = admin_only_response
           h['global_auditor'] = admin_only_response
         end
-      }
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -80,7 +80,7 @@ RSpec.describe 'V3 service plan visibility' do
       let(:expected_codes_and_responses) do
         responses_for_space_restricted_single_endpoint(
           response_object,
-          permitted_roles: %w(
+          permitted_roles: %w[
             admin
             admin_read_only
             global_auditor
@@ -88,7 +88,7 @@ RSpec.describe 'V3 service plan visibility' do
             space_manager
             space_auditor
             space_supporter
-          )
+          ]
         )
       end
 
@@ -105,7 +105,7 @@ RSpec.describe 'V3 service plan visibility' do
         plan
       end
 
-      let(:admin_org_response) {
+      let(:admin_org_response) do
         {
           code: 200,
           response_object: {
@@ -119,9 +119,9 @@ RSpec.describe 'V3 service plan visibility' do
             }]
           }
         }
-      }
+      end
 
-      let(:org_member_response) {
+      let(:org_member_response) do
         {
           code: 200,
           response_object: {
@@ -132,16 +132,16 @@ RSpec.describe 'V3 service plan visibility' do
             }]
           }
         }
-      }
+      end
 
-      let(:expected_codes_and_responses) {
+      let(:expected_codes_and_responses) do
         Hash.new(org_member_response).tap do |h|
           h['admin'] = admin_org_response
           h['admin_read_only'] = admin_org_response
           h['global_auditor'] = admin_org_response
           h['no_role'] = { code: 404 }
         end
-      }
+      end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
@@ -150,7 +150,7 @@ RSpec.describe 'V3 service plan visibility' do
   describe 'PATCH /v3/service_plans/:guid/visibility' do
     let(:method) { :patch }
     let(:api_url) { "/v3/service_plans/#{guid}/visibility" }
-    let(:api_call) { lambda { |user_headers| send(method.to_sym, api_url, req_body.to_json, user_headers) } }
+    let(:api_call) { ->(user_headers) { send(method.to_sym, api_url, req_body.to_json, user_headers) } }
     let(:guid) { service_plan.guid }
     let(:req_body) { { type: 'public' } }
 
@@ -387,7 +387,7 @@ RSpec.describe 'V3 service plan visibility' do
     let(:third_org) { VCAP::CloudController::Organization.make }
     let(:yet_another_org) { VCAP::CloudController::Organization.make }
     let(:api_url) { "/v3/service_plans/#{guid}/visibility" }
-    let(:api_call) { lambda { |user_headers| post api_url, req_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post api_url, req_body.to_json, user_headers } }
     let(:guid) { service_plan.guid }
     let(:service_plan) do
       plan = VCAP::CloudController::ServicePlan.make(public: false)
@@ -419,8 +419,8 @@ RSpec.describe 'V3 service plan visibility' do
         expect(event).to be
         expect(event.actee).to eq(service_plan.guid)
         expect(event.data).to include({
-          'request' => body.with_indifferent_access
-        })
+                                        'request' => body.with_indifferent_access
+                                      })
       end
 
       it 'ignores organizations that already have visibility' do
@@ -467,8 +467,8 @@ RSpec.describe 'V3 service plan visibility' do
           expect(event).to be
           expect(event.actee).to eq(service_plan.guid)
           expect(event.data).to include({
-            'request' => body.with_indifferent_access
-          })
+                                          'request' => body.with_indifferent_access
+                                        })
         end
       end
 
@@ -535,8 +535,8 @@ RSpec.describe 'V3 service plan visibility' do
         expect(event).to be
         expect(event.actee).to eq(service_plan.guid)
         expect(event.data).to include({
-          'request' => body.with_indifferent_access
-        })
+                                        'request' => body.with_indifferent_access
+                                      })
       end
     end
 
@@ -566,7 +566,7 @@ RSpec.describe 'V3 service plan visibility' do
 
   describe 'DELETE /v3/service_plans/:guid/visibility/:org_guid' do
     let(:api_url) { "/v3/service_plans/#{guid}/visibility/#{org_guid}" }
-    let(:api_call) { lambda { |user_headers| delete api_url, {}, user_headers } }
+    let(:api_call) { ->(user_headers) { delete api_url, {}, user_headers } }
     let(:guid) { service_plan.guid }
     let(:org_guid) { org.guid }
 

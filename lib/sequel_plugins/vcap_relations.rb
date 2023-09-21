@@ -38,9 +38,7 @@ module Sequel::Plugins::VcapRelations
     # See the default many_to_one implementation for a description of the args
     # and return values.
     def many_to_one(name, opts={})
-      unless opts.fetch(:without_guid_generation, false)
-        define_guid_accessors(name)
-      end
+      define_guid_accessors(name) unless opts.fetch(:without_guid_generation, false)
 
       opts[:reciprocal] ||= self.name.split('::').last.underscore.pluralize.to_sym
       super

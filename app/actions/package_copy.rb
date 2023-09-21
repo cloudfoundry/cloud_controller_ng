@@ -45,7 +45,8 @@ module VCAP::CloudController
       Repositories::PackageEventRepository.record_app_package_copy(
         package,
         user_audit_info,
-        source_package.guid)
+        source_package.guid
+      )
     end
 
     def logger

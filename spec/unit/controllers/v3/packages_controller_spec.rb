@@ -35,7 +35,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'with unsupported options' do
         let(:new_options) do
           {
-            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }])
           }
         end
 
@@ -51,7 +51,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'with invalid json resources' do
         let(:new_options) do
           {
-            resources: '[abcddf]',
+            resources: '[abcddf]'
           }
         end
 
@@ -86,7 +86,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v2 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }]),
+              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }])
             }
           end
 
@@ -96,7 +96,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v3 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }]),
+              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }])
             }
           end
 
@@ -422,7 +422,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let!(:update_message) do
@@ -613,10 +613,10 @@ RSpec.describe PackagesController, type: :controller do
             'space_supporter' => 403,
             'org_manager' => 403,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: package.guid }.merge(update_message), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: package.guid }.merge(update_message), as: :json } }
       end
 
       context 'permissions' do
@@ -727,14 +727,14 @@ RSpec.describe PackagesController, type: :controller do
       expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
         VCAP::CloudController::PackageModel,
         package.guid,
-        package_delete_stub,
+        package_delete_stub
       )
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
-      expect {
+      expect do
         delete :destroy, params: { guid: package.guid }
-      }.to change {
+      end.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
@@ -802,10 +802,10 @@ RSpec.describe PackagesController, type: :controller do
         app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
 
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
-          space_guids: user_spaces.map(&:guid).join(',') }
+                              space_guids: user_spaces.map(&:guid).join(',') }
 
         expect(response.status).to eq(400)
-        expect(response.body).to include("Unknown query parameter(s): \'space_guids\'")
+        expect(response.body).to include("Unknown query parameter(s): 'space_guids'")
       end
 
       it 'uses the app and pagination as query parameters' do
@@ -814,7 +814,7 @@ RSpec.describe PackagesController, type: :controller do
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
         VCAP::CloudController::PackageModel.make
 
-        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
+        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -888,12 +888,12 @@ RSpec.describe PackagesController, type: :controller do
           expect(response.body).to include('BadQueryParameter')
           m = /Unknown query parameter\(s\): '(\w+)', '(\w+)'/.match(response.body)
           expect(m).not_to be_nil
-          expect([m[1], m[2]]).to match_array(%w/bad invalid/)
+          expect([m[1], m[2]]).to match_array(%w[bad invalid])
         end
       end
 
       context 'because there are invalid values in parameters' do
-        let(:params) { { 'per_page' => 9999999999 } }
+        let(:params) { { 'per_page' => 9_999_999_999 } }
 
         it 'returns an 400 Bad Request' do
           get :index, params: params

@@ -14,9 +14,7 @@ Sequel.migration do
       process_metadata_command = process_metadata && process_metadata['command']
 
       fields_to_update = { metadata: process_metadata.except('command').to_json }
-      if process_metadata_command && process_record[:command].blank?
-        fields_to_update[:command] = process_metadata_command
-      end
+      fields_to_update[:command] = process_metadata_command if process_metadata_command && process_record[:command].blank?
 
       self[:processes].where(guid: process_record[:guid]).update(fields_to_update)
     end
@@ -39,12 +37,10 @@ Sequel.migration do
       end
       droplet_command = droplet_commands_by_type && droplet_commands_by_type[process_record[:type]]
 
-      if droplet_command == process_record[:command]
-        self[:processes].where(guid: process_record[:guid]).update(command: nil)
-      end
+      self[:processes].where(guid: process_record[:guid]).update(command: nil) if droplet_command == process_record[:command]
     end
   end
 
-  down do
+  down do # Rubocop:disable Lint/EmptyBlock
   end
 end

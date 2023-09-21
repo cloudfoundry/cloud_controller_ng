@@ -5,7 +5,7 @@ module VCAP::CloudController
     include FindProcessThroughApp
 
     def self.dependencies
-      [:package_blobstore, :missing_blob_handler]
+      %i[package_blobstore missing_blob_handler]
     end
 
     path_base 'apps'

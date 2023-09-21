@@ -39,7 +39,7 @@ module VCAP::RestAPI
     end
 
     def raise_if_column_is_missing(query_key, column)
-      return if [:stack_guid, :name].include?(query_key)
+      return if %i[stack_guid name].include?(query_key)
 
       raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', query_key) unless column
     end

@@ -25,8 +25,8 @@ RSpec.describe 'Service Broker API integration' do
 
         expect(a_request(
                  :get,
-          "#{service_instance_url(service_instance)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-        )).to have_been_made
+                 "#{service_instance_url(service_instance)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+               )).to have_been_made
       end
     end
 
@@ -37,14 +37,12 @@ RSpec.describe 'Service Broker API integration' do
       let(:operation_data) { nil }
       let(:basic_auth) { [stubbed_broker_username, stubbed_broker_password] }
 
-      let(:expected_request) {
+      let(:expected_request) do
         url = "http://#{stubbed_broker_host}" \
-        "/v2/service_instances/#{service_instance.guid}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
-        if !operation_data.nil?
-          url += "&operation=#{operation_data}"
-        end
+              "/v2/service_instances/#{service_instance.guid}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
+        url += "&operation=#{operation_data}" unless operation_data.nil?
         url
-      }
+      end
 
       before do
         @service_instance_guid = service_instance.guid
@@ -56,7 +54,8 @@ RSpec.describe 'Service Broker API integration' do
           stub_async_last_operation
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
 
           Delayed::Worker.new.work_off
 

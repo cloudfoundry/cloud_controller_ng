@@ -12,20 +12,20 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(ServiceBindingsController).to have_creatable_attributes({
-          app_guid: { type: 'string', required: true },
-          service_instance_guid: { type: 'string', required: true },
-          parameters: { type: 'hash', required: false },
-          name: { type: 'string', required: false },
-        })
+                                                                         app_guid: { type: 'string', required: true },
+                                                                         service_instance_guid: { type: 'string', required: true },
+                                                                         parameters: { type: 'hash', required: false },
+                                                                         name: { type: 'string', required: false }
+                                                                       })
       end
 
       it do
         expect(ServiceBindingsController).to have_updatable_attributes({
-          app_guid: { type: 'string' },
-          service_instance_guid: { type: 'string' },
-          parameters: { type: 'hash', required: false },
-          name: { type: 'string', required: false },
-        })
+                                                                         app_guid: { type: 'string' },
+                                                                         service_instance_guid: { type: 'string' },
+                                                                         parameters: { type: 'hash', required: false },
+                                                                         name: { type: 'string', required: false }
+                                                                       })
       end
     end
 
@@ -62,9 +62,7 @@ module VCAP::CloudController
       service_instance = opts[:service_instance] || service_binding.try(:service_instance)
       service_instance_guid = service_instance.try(:guid) || guid_pattern
       broker = opts[:service_broker] || service_instance.service_plan.service.service_broker
-      if opts[:accepts_incomplete]
-        query_params = '?accepts_incomplete=true'
-      end
+      query_params = '?accepts_incomplete=true' if opts[:accepts_incomplete]
       %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}#{query_params}}
     end
 
@@ -96,9 +94,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 1
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'OrgUser' do
@@ -106,9 +104,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 0
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
 
         describe 'BillingManager' do
@@ -116,9 +114,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 0
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
 
         describe 'Auditor' do
@@ -126,9 +124,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples 'permission enumeration', 'Auditor',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 0
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
       end
 
@@ -138,9 +136,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 1
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'Developer' do
@@ -148,9 +146,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 1
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
@@ -158,9 +156,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 1
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'Developer in service instance space' do
@@ -168,9 +166,9 @@ module VCAP::CloudController
           let(:member_b) { make_developer_for_space(@service_instance_b.space) }
 
           include_examples 'permission enumeration', 'Developer in service instance space',
-            name: 'service binding',
-            path: '/v2/service_bindings',
-            enumerate: 0
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
       end
     end
@@ -226,20 +224,20 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(space.organization.guid)
 
           expect(event.metadata).to include({
-            'request' => {
-              'type'          => 'app',
-              'name'          => nil,
-              'relationships' => {
-                'app' => {
-                  'data' => { 'guid' => req[:app_guid] }
-                },
-                'service_instance' => {
-                  'data' => { 'guid' => req[:service_instance_guid] }
-                },
-              },
-              'data' => '[PRIVATE DATA HIDDEN]'
-            }
-          })
+                                              'request' => {
+                                                'type' => 'app',
+                                                'name' => nil,
+                                                'relationships' => {
+                                                  'app' => {
+                                                    'data' => { 'guid' => req[:app_guid] }
+                                                  },
+                                                  'service_instance' => {
+                                                    'data' => { 'guid' => req[:service_instance_guid] }
+                                                  }
+                                                },
+                                                'data' => '[PRIVATE DATA HIDDEN]'
+                                              }
+                                            })
         end
 
         context 'when the app does not exist' do
@@ -267,7 +265,7 @@ module VCAP::CloudController
         context 'when the service instance does not exist' do
           let(:req) do
             {
-              app_guid:              process.guid,
+              app_guid: process.guid,
               service_instance_guid: 'THISISWRONG'
             }.to_json
           end
@@ -284,7 +282,7 @@ module VCAP::CloudController
         context 'when the user is not a SpaceDeveloper' do
           let(:req) do
             {
-              app_guid:              process.guid,
+              app_guid: process.guid,
               service_instance_guid: service_instance.guid
             }.to_json
           end
@@ -316,9 +314,9 @@ module VCAP::CloudController
         let(:service_instance) { UserProvidedServiceInstance.make(space: space, credentials: credentials) }
         let(:req) do
           {
-            app_guid:              process.guid,
+            app_guid: process.guid,
             service_instance_guid: service_instance.guid,
-            parameters:            params
+            parameters: params
           }
         end
         let(:params) { nil }
@@ -388,9 +386,9 @@ module VCAP::CloudController
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
-                space_guid:        service_instance.space.guid,
+                space_guid: service_instance.space.guid,
                 organization_name: service_instance.organization.name,
-                space_name:        service_instance.space.name,
+                space_name: service_instance.space.name,
                 organization_annotations: {},
                 space_annotations: {}
               }
@@ -553,9 +551,9 @@ module VCAP::CloudController
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
-                space_guid:        service_instance.space.guid,
+                space_guid: service_instance.space.guid,
                 organization_name: service_instance.organization.name,
-                space_name:        service_instance.space.name,
+                space_name: service_instance.space.name,
                 organization_annotations: {},
                 space_annotations: {}
               }
@@ -720,7 +718,7 @@ module VCAP::CloudController
           context 'when attempting to bind and the service binding already exists' do
             let(:req) do
               {
-                app_guid:              process.guid,
+                app_guid: process.guid,
                 service_instance_guid: service_instance.guid
               }.to_json
             end
@@ -757,7 +755,7 @@ module VCAP::CloudController
             it 'passes through the error message' do
               make_request
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
+              expect(decoded_response['description']).to match(/ERROR MESSAGE HERE/)
               expect(service_instance.refresh.last_operation).to be_nil
             end
 
@@ -864,7 +862,7 @@ module VCAP::CloudController
             service_binding_deleter = instance_double(ServiceBindingDelete)
 
             allow(ServiceBindingDelete).to receive(:new).and_return(service_binding_deleter)
-            allow(service_binding_deleter).to receive(:foreground_delete_request).and_return(['warning-1', 'warning-2'])
+            allow(service_binding_deleter).to receive(:foreground_delete_request).and_return(%w[warning-1 warning-2])
           end
 
           it 'includes the warnings in the X-Cf-Warnings header' do
@@ -914,7 +912,7 @@ module VCAP::CloudController
         let(:service_instance) { UserProvidedServiceInstance.make(space: space, credentials: credentials) }
         let(:req) do
           {
-            app_guid:              process.guid,
+            app_guid: process.guid,
             service_instance_guid: service_instance.guid
           }
         end
@@ -1147,9 +1145,9 @@ module VCAP::CloudController
           it "passes the invoking user's identity to the service broker client" do
             delete "/v2/service_bindings/#{service_binding.guid}?async=true"
             execute_all_jobs(expected_successes: 1, expected_failures: 0)
-            expect(a_request(:delete, bind_url_regex(service_binding: service_binding)).with { |request|
+            expect(a_request(:delete, bind_url_regex(service_binding: service_binding)).with do |request|
               request.headers['X-Broker-Api-Originating-Identity'].match(/^cloudfoundry [a-zA-Z0-9]+={0,3}$/)
-            }).to have_been_made
+            end).to have_been_made
           end
         end
 
@@ -1177,7 +1175,8 @@ module VCAP::CloudController
             delete "/v2/service_bindings/#{service_binding.guid}"
 
             expect(decoded_response['description']).to(
-              include("An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed"))
+              include("An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed")
+            )
           end
         end
       end
@@ -1205,7 +1204,7 @@ module VCAP::CloudController
         end
         expect(service_instance_guids).to match_array([
           managed_service_instance.guid,
-          user_provided_service_instance.guid,
+          user_provided_service_instance.guid
         ])
 
         service_instance_names = service_bindings.map do |res|
@@ -1213,7 +1212,7 @@ module VCAP::CloudController
         end
         expect(service_instance_names).to match_array([
           nil,
-          'service-binding-name',
+          'service-binding-name'
         ])
       end
 
@@ -1245,7 +1244,7 @@ module VCAP::CloudController
           expect(service_bindings.size).to eq(2)
           expect(service_bindings.map { |x| x['entity']['app_guid'] }).to match_array([process1.app.guid, process3.app.guid])
           expect(service_bindings.map { |x| x['entity']['service_instance_guid'] }).to match_array([managed_service_instance.guid, managed_service_instance.guid])
-          expect(service_bindings.map { |x| x['entity']['name'] }).to match_array(['potato', 'potato'])
+          expect(service_bindings.map { |x| x['entity']['name'] }).to match_array(%w[potato potato])
         end
 
         context 'when there are many service-bindings per service-instance' do
@@ -1337,9 +1336,9 @@ module VCAP::CloudController
 
           it 'raises a SpaceMismatch error' do
             req = {
-              app_guid:              process1.guid,
+              app_guid: process1.guid,
               service_instance_guid: si2.guid,
-              name: '3-ring',
+              name: '3-ring'
             }
             post '/v2/service_bindings', req.to_json
             expect(last_response.status).to eq(400)
@@ -1575,24 +1574,24 @@ module VCAP::CloudController
             let(:body) { {}.to_json }
 
             {
-              'admin'               => 200,
-              'space_developer'     => 200,
-              'admin_read_only'     => 200,
-              'global_auditor'      => 200,
-              'space_manager'       => 200,
-              'space_auditor'       => 200,
-              'org_manager'         => 200,
-              'org_auditor'         => 403,
+              'admin' => 200,
+              'space_developer' => 200,
+              'admin_read_only' => 200,
+              'global_auditor' => 200,
+              'space_manager' => 200,
+              'space_auditor' => 200,
+              'org_manager' => 200,
+              'org_auditor' => 403,
               'org_billing_manager' => 403,
-              'org_user'            => 403,
+              'org_user' => 403
             }.each do |role, expected_status|
               context "as a(n) #{role} in the binding space" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    space.organization,
-                    space:  space,
-                    user:   user
+                    role: role,
+                    org: space.organization,
+                    space: space,
+                    user: user
                   )
                 end
 

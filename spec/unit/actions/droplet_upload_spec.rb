@@ -15,9 +15,9 @@ module VCAP::CloudController
 
       it 'enqueues and returns an upload job' do
         returned_job = nil
-        expect {
+        expect do
           returned_job = droplet_upload.upload_async(message: message, droplet: droplet, config: config, user_audit_info: user_audit_info)
-        }.to change { Delayed::Job.count }.by(1)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job.delayed_job_guid).to eq(job.guid)

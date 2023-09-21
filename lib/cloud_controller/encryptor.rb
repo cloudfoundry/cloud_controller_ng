@@ -36,14 +36,14 @@ module VCAP::CloudController
       def encrypt_raw(input, key, salt)
         Base64.strict_encode64(run_cipher(
                                  make_cipher.encrypt,
-          input,
-          salt,
-          key,
-          iterations: pbkdf2_hmac_iterations
-        ))
+                                 input,
+                                 salt,
+                                 key,
+                                 iterations: pbkdf2_hmac_iterations
+                               ))
       end
 
-      def decrypt(encrypted_input, salt, label: nil, iterations:)
+      def decrypt(encrypted_input, salt, iterations:, label: nil)
         return unless encrypted_input
 
         key = key_to_use(label)
@@ -140,8 +140,8 @@ module VCAP::CloudController
 
       module ClassMethods
         def all_encrypted_fields
-          if self.superclass.respond_to? :all_encrypted_fields
-            encrypted_fields + self.superclass.all_encrypted_fields
+          if superclass.respond_to? :all_encrypted_fields
+            encrypted_fields + superclass.all_encrypted_fields
           else
             encrypted_fields
           end
@@ -165,7 +165,7 @@ module VCAP::CloudController
           fields.merge!({ storage_column: storage_column }) if storage_column
           encrypted_fields << fields
 
-          Encryptor.encrypted_classes << self.name
+          Encryptor.encrypted_classes << name
 
           define_method "generate_#{salt_name}" do
             return if send(salt_name).present?

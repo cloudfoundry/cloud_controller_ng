@@ -89,7 +89,7 @@ module VCAP::CloudController
               },
               syslog_drain_url: 'https://foo.com',
               route_service_url: 'https://bar.com',
-              tags: %w(accounting mongodb)
+              tags: %w[accounting mongodb]
             )
             si.label_ids = [
               VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
@@ -105,14 +105,14 @@ module VCAP::CloudController
           let(:deprovision_response) do
             {
               last_operation: {
-                state: 'succeeded',
+                state: 'succeeded'
               }
             }
           end
           let(:client) do
             instance_double(VCAP::Services::ServiceBrokers::UserProvided::Client, {
-              deprovision: deprovision_response,
-            })
+                              deprovision: deprovision_response
+                            })
           end
 
           it 'sends a deprovision to the client' do
@@ -214,9 +214,9 @@ module VCAP::CloudController
               end
 
               it 'attempts to remove the other bindings' do
-                expect {
+                expect do
                   action.delete
-                }.to raise_error(StandardError, 'boom-route')
+                end.to raise_error(StandardError, 'boom-route')
 
                 expect(ServiceInstance.all).to contain_exactly(service_instance)
                 expect(RouteBinding.all).to contain_exactly(route_binding_2)
@@ -233,14 +233,14 @@ module VCAP::CloudController
             {
               last_operation: {
                 type: 'delete',
-                state: 'succeeded',
+                state: 'succeeded'
               }
             }
           end
           let(:client) do
             instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-              deprovision: deprovision_response,
-            })
+                              deprovision: deprovision_response
+                            })
           end
 
           it 'sends a deprovision to the client' do
@@ -283,7 +283,7 @@ module VCAP::CloudController
                 last_operation: {
                   type: 'delete',
                   state: 'in progress',
-                  broker_provided_operation: operation,
+                  broker_provided_operation: operation
                 }
               }
             end
@@ -318,9 +318,9 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect {
+              expect do
                 action.delete
-              }.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
+              end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
             end
           end
 
@@ -341,13 +341,14 @@ module VCAP::CloudController
             context 'broker rejects delete request' do
               before do
                 allow(client).to receive(:deprovision).and_raise(
-                  CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name))
+                  CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+                )
               end
 
               it 'should leave create in progress' do
-                expect {
+                expect do
                   action.delete
-                }.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
+                end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
 
                 expect(ServiceInstance.first.last_operation.type).to eq('create')
                 expect(ServiceInstance.first.last_operation.state).to eq('in progress')
@@ -362,9 +363,9 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect {
+              expect do
                 action.delete
-              }.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
+              end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
             end
           end
 
@@ -374,9 +375,9 @@ module VCAP::CloudController
             end
 
             it 'saves the failure in last operation' do
-              expect {
+              expect do
                 action.delete
-              }.to raise_error(StandardError, 'bang')
+              end.to raise_error(StandardError, 'bang')
 
               expect(ServiceInstance.first.last_operation.type).to eq('delete')
               expect(ServiceInstance.first.last_operation.state).to eq('failed')
@@ -476,9 +477,9 @@ module VCAP::CloudController
                 end
 
                 it 'attempts to remove the other bindings and shares' do
-                  expect {
+                  expect do
                     action.delete
-                  }.to raise_error(StandardError, 'boom-credential')
+                  end.to raise_error(StandardError, 'boom-credential')
 
                   expect(ServiceInstance.all).to contain_exactly(service_instance)
                   expect(ServiceBinding.all).to contain_exactly(service_binding_2)
@@ -490,7 +491,7 @@ module VCAP::CloudController
 
             context 'async broker response' do
               context 'route binding' do
-                let!(:service_offering) { Service.make(requires: %w(route_forwarding)) }
+                let!(:service_offering) { Service.make(requires: %w[route_forwarding]) }
                 let!(:service_plan) { ServicePlan.make(service: service_offering) }
                 let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
                 let!(:route_binding) { RouteBinding.make(service_instance: service_instance) }
@@ -505,11 +506,11 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect {
+                  expect do
                     action.delete
-                  }.to raise_error(
+                  end.to raise_error(
                     ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress.",
+                    "An operation for a service binding of service instance #{service_instance.name} is in progress."
                   )
 
                   expect(Delayed::Job.all).to have(1).job
@@ -529,11 +530,11 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect {
+                  expect do
                     action.delete
-                  }.to raise_error(
+                  end.to raise_error(
                     ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_instance.name} is in progress.",
+                    "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_instance.name} is in progress."
                   )
 
                   expect(Delayed::Job.all).to have(1).job
@@ -553,11 +554,11 @@ module VCAP::CloudController
                 end
 
                 it 'fails and schedules a polling job' do
-                  expect {
+                  expect do
                     action.delete
-                  }.to raise_error(
+                  end.to raise_error(
                     ServiceInstanceDelete::UnbindingOperatationInProgress,
-                    "An operation for a service binding of service instance #{service_instance.name} is in progress.",
+                    "An operation for a service binding of service instance #{service_instance.name} is in progress."
                   )
 
                   expect(Delayed::Job.all).to have(1).job
@@ -592,8 +593,8 @@ module VCAP::CloudController
         end
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-            fetch_service_instance_last_operation: poll_response,
-          })
+                            fetch_service_instance_last_operation: poll_response
+                          })
         end
 
         before do
@@ -646,7 +647,7 @@ module VCAP::CloudController
               last_operation: {
                 state: 'succeeded',
                 description: description
-              },
+              }
             }
           end
 
@@ -679,14 +680,14 @@ module VCAP::CloudController
               last_operation: {
                 state: 'failed',
                 description: description
-              },
+              }
             }
           end
 
           it 'raises and updates the last operation description' do
-            expect {
+            expect do
               action.poll
-            }.to raise_error(CloudController::Errors::ApiError, "delete could not be completed: #{description}")
+            end.to raise_error(CloudController::Errors::ApiError, "delete could not be completed: #{description}")
 
             expect(ServiceInstance.first.last_operation.type).to eq('delete')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')
@@ -716,11 +717,11 @@ module VCAP::CloudController
         let!(:service_instance) do
           ManagedServiceInstance.make.tap do |i|
             i.save_with_new_operation({}, {
-              type: 'delete',
-              state: 'in progress',
-              description: 'doing ok',
-              broker_provided_operation: Sham.guid
-            })
+                                        type: 'delete',
+                                        state: 'in progress',
+                                        description: 'doing ok',
+                                        broker_provided_operation: Sham.guid
+                                      })
           end
         end
 

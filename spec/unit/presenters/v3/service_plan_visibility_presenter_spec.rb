@@ -13,8 +13,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
       it 'should return type public' do
         expect(result).to eq({
-          type: 'public'
-        })
+                               type: 'public'
+                             })
       end
     end
 
@@ -31,12 +31,12 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
       it 'should return type space' do
         expect(result).to eq({
-          type: 'space',
-          space: {
-            guid: space.guid,
-            name: space.name
-          }
-        })
+                               type: 'space',
+                               space: {
+                                 guid: space.guid,
+                                 name: space.name
+                               }
+                             })
       end
     end
 
@@ -47,8 +47,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
       it 'should return type admin' do
         expect(result).to eq({
-          type: 'admin'
-        })
+                               type: 'admin'
+                             })
       end
     end
 
@@ -66,18 +66,18 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
       it 'should return type organization' do
         expect(result).to eq({
-          type: 'organization',
-          organizations: [
-            {
-              guid: org_1.guid,
-              name: org_1.name
-            },
-            {
-              guid: org_2.guid,
-              name: org_2.name
-            }
-          ]
-        })
+                               type: 'organization',
+                               organizations: [
+                                 {
+                                   guid: org_1.guid,
+                                   name: org_1.name
+                                 },
+                                 {
+                                   guid: org_2.guid,
+                                   name: org_2.name
+                                 }
+                               ]
+                             })
       end
 
       context 'when the list of orgs is empty' do
@@ -85,9 +85,9 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
         it 'should return an empty list' do
           expect(result).to eq({
-            type: 'organization',
-            organizations: []
-          })
+                                 type: 'organization',
+                                 organizations: []
+                               })
         end
       end
 
@@ -96,8 +96,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
         it 'should return the type and omit the list' do
           expect(result).to eq({
-            type: 'organization'
-          })
+                                 type: 'organization'
+                               })
         end
       end
     end

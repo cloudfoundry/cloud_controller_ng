@@ -3,7 +3,7 @@ NUM_ORGS = 10
 NUM_SPACES = 10
 NUM_SERVICES = 10
 NUM_SERVICE_PLANS = 5
-NUM_SERVICE_INSTANCES = 50000
+NUM_SERVICE_INSTANCES = 50_000
 
 NUM_ORGS.times do |i|
   Organization.create(name: "perf-org-#{i}")

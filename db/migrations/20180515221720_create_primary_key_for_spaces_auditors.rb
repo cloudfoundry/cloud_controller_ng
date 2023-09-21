@@ -1,4 +1,4 @@
-require File.expand_path('../../helpers/change_primary_key', __FILE__)
+require File.expand_path('../helpers/change_primary_key', __dir__)
 
 Sequel.migration do
   up do

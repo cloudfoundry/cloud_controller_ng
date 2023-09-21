@@ -19,7 +19,7 @@ module VCAP::CloudController
             command: 'old command!',
             instances: 3,
             type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 24.hours
+            created_at: Time.now.utc - 24.hours
           )
         end
         let!(:newer_web_process) do
@@ -28,7 +28,7 @@ module VCAP::CloudController
             command: 'new command!',
             instances: 4,
             type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 23.hours
+            created_at: Time.now.utc - 23.hours
           )
         end
 
@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       context 'when there are multiple web processes' do
-        let(:created_at_for_new_processes) { Time.now - 23.hours }
+        let(:created_at_for_new_processes) { Time.now.utc - 23.hours }
 
         let!(:web_process) do
           VCAP::CloudController::ProcessModel.make(
@@ -54,7 +54,7 @@ module VCAP::CloudController
             command: 'old command!',
             instances: 3,
             type: VCAP::CloudController::ProcessTypes::WEB,
-            created_at: Time.now - 24.hours
+            created_at: Time.now.utc - 24.hours
           )
         end
         let!(:newer_web_process) do
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
     describe '#latest_revision' do
       let!(:revision1) { RevisionModel.make(app: app_model, created_at: 10.minutes.ago) }
-      let!(:revision2) { RevisionModel.make(app: app_model, created_at: Time.now) }
+      let!(:revision2) { RevisionModel.make(app: app_model, created_at: Time.now.utc) }
       let!(:revision3) { RevisionModel.make(app: app_model, created_at: 5.minutes.ago) }
 
       context 'when revisions are enabled' do
@@ -151,9 +151,9 @@ module VCAP::CloudController
 
         it 'destroys the buildpack_lifecycle_data and associated buildpack_lifecycle_buildpacks' do
           app_model.update(buildpack_lifecycle_data: lifecycle_data)
-          expect {
+          expect do
             app_model.destroy
-          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
+          end.to change { BuildpackLifecycleDataModel.count }.by(-1).
             and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
         end
       end
@@ -169,44 +169,44 @@ module VCAP::CloudController
         it 'uniqueness is case insensitive' do
           AppModel.make(name: 'lowercase', space_guid: space_guid)
 
-          expect {
+          expect do
             AppModel.make(name: 'lowerCase', space_guid: space_guid)
-          }.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
+          end.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
         end
 
         it 'should allow standard ascii characters' do
-          app.name = "A -_- word 2!?()\'\"&+."
-          expect {
+          app.name = "A -_- word 2!?()'\"&+."
+          expect do
             app.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           app.name = 'a \\ word'
-          expect {
+          expect do
             app.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           app.name = '防御力¡'
-          expect {
+          expect do
             app.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           app.name = "a \n word"
-          expect {
+          expect do
             app.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           app.name = "a \e word"
-          expect {
+          expect do
             app.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -218,9 +218,9 @@ module VCAP::CloudController
           space2 = Space.make
 
           AppModel.make(name: name, space_guid: space1.guid)
-          expect {
+          expect do
             AppModel.make(name: name, space_guid: space2.guid)
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it 'name is unique in the same space' do
@@ -230,17 +230,17 @@ module VCAP::CloudController
 
           AppModel.make(name: name, space_guid: space.guid)
 
-          expect {
+          expect do
             AppModel.make(name: name, space_guid: space.guid)
-          }.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
+          end.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
         end
       end
 
       describe 'environment_variables' do
         it 'validates them' do
-          expect {
+          expect do
             AppModel.make(environment_variables: '')
-          }.to raise_error(Sequel::ValidationFailed, /must be an object/)
+          end.to raise_error(Sequel::ValidationFailed, /must be an object/)
         end
       end
 
@@ -251,10 +251,10 @@ module VCAP::CloudController
           states = DropletModel::DROPLET_STATES - [DropletModel::STAGED_STATE]
           states.each do |state|
             droplet.state = state
-            expect {
+            expect do
               app_model.droplet = droplet
               app_model.save
-            }.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
+            end.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
           end
         end
 

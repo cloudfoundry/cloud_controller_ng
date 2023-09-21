@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 # rubocop:disable Layout/LineLength
-RSpec.resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make space: space }
@@ -28,7 +28,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     field :space_guid, 'The guid of the associated space.'
 
     field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.'
-    field :state, 'The current state of the app. One of STOPPED or STARTED.', default: 'STOPPED', valid_values: %w(STOPPED STARTED) # nice to validate this eventually..
+    field :state, 'The current state of the app. One of STOPPED or STARTED.', default: 'STOPPED', valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
     field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
     field :buildpack, 'Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.'
     field :health_check_timeout, 'Timeout for health checking of an staged app when starting up'
@@ -39,7 +39,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]
     field :console, 'Open the console port for the app (at $CONSOLE_PORT).', deprecated: true, default: false, valid_values: [true, false]
     field :debug, 'Open the debug port for the app (at $DEBUG_PORT).', deprecated: true, default: false, valid_values: [true, false]
-    field :package_state, 'The current state of the package. One of PENDING, STAGED or FAILED.', valid_values: %w(PENDING STAGED FAILED)
+    field :package_state, 'The current state of the package. One of PENDING, STAGED or FAILED.', valid_values: %w[PENDING STAGED FAILED]
     field :package_updated_at, 'Time when the package was last updated'
 
     field :system_env_json, 'environment_json for system variables, contains vcap_services by default, a hash containing key/value pairs of the names and information of the services associated with your app.'
@@ -68,7 +68,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 end
 
-RSpec.resource 'Spaces', type: [:api, :legacy_api] do
+RSpec.resource 'Spaces', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make(diego: false, space: space) }
@@ -110,7 +110,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   end
 end
 
-RSpec.resource 'Organizations', type: [:api, :legacy_api] do
+RSpec.resource 'Organizations', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
@@ -134,7 +134,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
   end
 end
 
-RSpec.resource 'Users', type: [:api, :legacy_api] do
+RSpec.resource 'Users', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:user) { VCAP::CloudController::User.make }
 

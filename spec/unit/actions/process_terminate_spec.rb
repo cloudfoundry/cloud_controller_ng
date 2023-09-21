@@ -35,9 +35,9 @@ module VCAP::CloudController
         let(:index) { 6 }
 
         it 'raises InstanceNotFound' do
-          expect {
+          expect do
             process_terminate.terminate
-          }.to raise_error(ProcessTerminate::InstanceNotFound)
+          end.to raise_error(ProcessTerminate::InstanceNotFound)
         end
       end
     end

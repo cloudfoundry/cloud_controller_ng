@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
   let!(:processes) { 3.times { VCAP::CloudController::ProcessModelFactory.make } }
@@ -37,7 +37,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       { name: :disk_quota, description: 'The maximum amount of disk available to an instance of an app. In megabytes.', custom_params: { example_values: [1_204, 2_048] } },
       { name: :space_guid, description: 'The guid of the associated space.', custom_params: { required: required, example_values: [Sham.guid] } },
       { name: :stack_guid, description: 'The guid of the associated stack.', custom_params: { default: 'Uses the default system stack.', example_values: [Sham.guid] } },
-      { name: :state, description: 'The current desired state of the app. One of STOPPED or STARTED.', custom_params: { default: 'STOPPED', valid_values: %w(STOPPED STARTED) } },
+      { name: :state, description: 'The current desired state of the app. One of STOPPED or STARTED.', custom_params: { default: 'STOPPED', valid_values: %w[STOPPED STARTED] } },
       { name: :command, description: "The command to start an app after it is staged, maximum length: 4096 (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')." },
 
       {
@@ -49,7 +49,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       {
         name: :health_check_type,
         description: "Type of health check to perform. 'none' is deprecated and an alias to 'process'.",
-        custom_params: { default: 'port', valid_values: ['port', 'process', 'none'] }
+        custom_params: { default: 'port', valid_values: %w[port process none] }
       },
 
       { name: :health_check_timeout, description: 'Timeout for health checking of an staged app when starting up' },
@@ -91,7 +91,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       {
         name: :staging_failed_reason,
         description: 'Reason for application staging failures',
-        custom_params: { default: nil, example_values: ['StagingError', 'StagingTimeExpired'] }
+        custom_params: { default: nil, example_values: %w[StagingError StagingTimeExpired] }
       },
 
       {
@@ -104,7 +104,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         name: :ports,
         description: 'Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.',
         custom_params: { experimental: true, example_values: [[5222, 8080], [1056]] }
-      },
+      }
     ]
   end
   # rubocop:enable Metrics/MethodLength
@@ -128,7 +128,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
     standard_model_delete_without_async :app
     standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: :app, response_fields: true
-    standard_model_get 'ProcessModel', path: :app, nested_associations: [:stack, :space], response_fields: true
+    standard_model_get 'ProcessModel', path: :app, nested_associations: %i[stack space], response_fields: true
 
     def after_standard_model_delete(guid)
       event = VCAP::CloudController::Event.find(type: 'audit.app.delete-request', actee: guid, actee_type: 'app')
@@ -199,15 +199,16 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         broker_auth    = [service_broker.auth_username, service_broker.auth_password]
         stub_request(
           :delete,
-          %r{https://#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}).
+          %r{https://#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}
+        ).
           with(basic_auth: broker_auth).
           to_return(status: 200, body: '{}')
       end
 
       standard_model_list :service_binding,
-        VCAP::CloudController::ServiceBindingsController,
-        outer_model:       :app,
-        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+                          VCAP::CloudController::ServiceBindingsController,
+                          outer_model: :app,
+                          export_attributes: %i[app_guid service_instance_guid credentials binding_options gateway_data gateway_name syslog_drain_url volume_mounts]
 
       context 'has service binding guid param' do
         parameter :service_binding_guid, 'The guid of the service binding'
@@ -293,23 +294,23 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
       instances = {
         0 => {
-          state:        'RUNNING',
-          since:        1403140717.984577,
-          uptime:       2405
+          state: 'RUNNING',
+          since: 1_403_140_717.984577,
+          uptime: 2405
         },
         1 => {
-          state:        'STARTING',
-          since:        3625363939.984577,
-          uptime:       1394
+          state: 'STARTING',
+          since: 3_625_363_939.984577,
+          uptime: 1394
         },
         2 => {
-          state:        'CRASHED',
-          since:        2514251828.984577,
-          uptime:       283
+          state: 'CRASHED',
+          since: 2_514_251_828.984577,
+          uptime: 283
         },
         3 => {
-          state:        'DOWN',
-          uptime:       9172
+          state: 'DOWN',
+          uptime: 9172
         }
       }
 
@@ -350,21 +351,21 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
           state: 'RUNNING',
           stats: {
             usage: {
-              disk: 66392064,
-              mem:  29880320,
-              cpu:  0.13511219703079957,
+              disk: 66_392_064,
+              mem: 29_880_320,
+              cpu: 0.13511219703079957,
               time: '2014-06-19 22:37:58 +0000'
             },
-            name:       'app_name',
-            uris:       [
+            name: 'app_name',
+            uris: [
               'app_name.example.com'
             ],
-            host:       '10.0.0.1',
-            port:       61035,
-            uptime:     65007,
-            mem_quota:  536870912,
-            disk_quota: 1073741824,
-            fds_quota:  16384
+            host: '10.0.0.1',
+            port: 61_035,
+            uptime: 65_007,
+            mem_quota: 536_870_912,
+            disk_quota: 1_073_741_824,
+            fds_quota: 16_384
           }
         }
       }

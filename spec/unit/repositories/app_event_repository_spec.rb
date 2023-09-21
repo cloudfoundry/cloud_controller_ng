@@ -34,7 +34,7 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => '[PRIVATE DATA HIDDEN]',
-            'docker_credentials' => '[PRIVATE DATA HIDDEN]',
+            'docker_credentials' => '[PRIVATE DATA HIDDEN]'
           }
 
           expect(VCAP::AppLogEmitter).to receive(:emit).with(process.guid, "Updated app with guid #{process.guid} (#{expected_request_field})")
@@ -103,7 +103,7 @@ module VCAP::CloudController
             'state' => 'STOPPED',
             'environment_json' => '[PRIVATE DATA HIDDEN]',
             'docker_image' => 'image',
-            'docker_credentials' => '[PRIVATE DATA HIDDEN]',
+            'docker_credentials' => '[PRIVATE DATA HIDDEN]'
           )
         end
 
@@ -188,7 +188,7 @@ module VCAP::CloudController
       describe '#create_app_crash_event' do
         let(:exiting_process) { ProcessModelFactory.make }
         let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
-        let(:droplet_exited_payload) {
+        let(:droplet_exited_payload) do
           {
             'instance' => 'abc',
             'index' => '2',
@@ -198,7 +198,7 @@ module VCAP::CloudController
             'reason' => 'evacuation',
             'unknown_key' => 'something'
           }
-        }
+        end
 
         it 'creates a new app exit event' do
           event = app_event_repository.create_app_crash_event(exiting_process, droplet_exited_payload)
@@ -531,8 +531,8 @@ module VCAP::CloudController
           let(:app) { AppModel.make(:buildpack) }
           let(:request_attrs) do
             {
-              'name'             => 'new',
-              'space_guid'       => 'space-guid',
+              'name' => 'new',
+              'space_guid' => 'space-guid',
               'environment_variables' => { 'super' => 'secret ' }
             }
           end
@@ -547,7 +547,7 @@ module VCAP::CloudController
             expect(request).to eq(
               'name' => 'new',
               'space_guid' => 'space-guid',
-              'environment_variables' => '[PRIVATE DATA HIDDEN]',
+              'environment_variables' => '[PRIVATE DATA HIDDEN]'
             )
           end
         end

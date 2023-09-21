@@ -37,54 +37,54 @@ module VCAP::Services::ServiceBrokers
     end
     let(:plan_schemas_hash) do
       {
-          'schemas' => {
-              'service_instance' => {
-                  'create' => {
-                      'parameters' => {
-                          '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
-                      }
-                  },
-                  'update' => {
-                      'parameters' => {
-                        '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
-                      }
-                  }
-              },
-              'service_binding' => {
-                'create' => {
-                  'parameters' => {
-                    '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
-                  }
-                }
+        'schemas' => {
+          'service_instance' => {
+            'create' => {
+              'parameters' => {
+                '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
               }
+            },
+            'update' => {
+              'parameters' => {
+                '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
+              }
+            }
+          },
+          'service_binding' => {
+            'create' => {
+              'parameters' => {
+                '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
+              }
+            }
           }
+        }
       }
     end
     let(:catalog_hash) do
       {
         'services' => [
           {
-            'id'          => service_id,
-            'name'        => service_name,
+            'id' => service_id,
+            'name' => service_name,
             'description' => service_description,
-            'bindable'    => true,
+            'bindable' => true,
             'dashboard_client' => dashboard_client_attrs,
-            'tags'        => ['mysql', 'relational'],
-            'requires'    => ['ultimate', 'power'],
+            'tags' => %w[mysql relational],
+            'requires' => %w[ultimate power],
             'plan_updateable' => true,
             'bindings_retrievable' => true,
             'instances_retrievable' => true,
             'allow_context_updates' => true,
             'plans' => [
               {
-                'id'          => plan_id,
-                'name'        => plan_name,
+                'id' => plan_id,
+                'name' => plan_name,
                 'description' => plan_description,
                 'plan_updateable' => true,
-                'free'        => false,
-                'bindable'    => true,
+                'free' => false,
+                'bindable' => true,
                 'maximum_polling_duration' => 3600,
-                'maintenance_info' => plan_maintenance_info,
+                'maintenance_info' => plan_maintenance_info
               }.merge(plan_metadata_hash).merge(plan_schemas_hash)
             ]
           }.merge(service_metadata_hash)
@@ -98,7 +98,7 @@ module VCAP::Services::ServiceBrokers
     let(:token) do
       {
         'scope' => ['cloud_controller.read', 'cloud_controller.write'],
-        'email' => user_email,
+        'email' => user_email
       }
     end
     let(:user) { VCAP::CloudController::User.make }
@@ -119,18 +119,18 @@ module VCAP::Services::ServiceBrokers
 
     describe '#sync_services_and_plans' do
       it 'creates services from the catalog' do
-        expect {
+        expect do
           service_manager.sync_services_and_plans(catalog)
-        }.to change(VCAP::CloudController::Service, :count).by(1)
+        end.to change(VCAP::CloudController::Service, :count).by(1)
 
         service = VCAP::CloudController::Service.last
         expect(service.service_broker).to eq(broker)
         expect(service.label).to eq(service_name)
         expect(service.description).to eq(service_description)
         expect(service.bindable).to be true
-        expect(service.tags).to match_array(['mysql', 'relational'])
+        expect(service.tags).to match_array(%w[mysql relational])
         expect(JSON.parse(service.extra)).to eq({ 'foo' => 'bar' })
-        expect(service.requires).to eq(['ultimate', 'power'])
+        expect(service.requires).to eq(%w[ultimate power])
         expect(service.plan_updateable).to eq true
         expect(service.bindings_retrievable).to eq true
         expect(service.instances_retrievable).to eq true
@@ -153,26 +153,26 @@ module VCAP::Services::ServiceBrokers
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to eq({
-          'service_broker_guid' => service.service_broker.guid,
-          'unique_id' => service_id,
-          'provider' => service.provider,
-          'url' => service.url,
-          'version' => service.version,
-          'info_url' => service.info_url,
-          'bindable' => service.bindable,
-          'long_description' => service.long_description,
-          'documentation_url' => service.documentation_url,
-          'label' => service_name,
-          'description' => service.description,
-          'tags' => service.tags,
-          'extra' => service.extra,
-          'active' => service.active,
-          'requires' => service.requires,
-          'plan_updateable' => service.plan_updateable,
-          'bindings_retrievable' => service.bindings_retrievable,
-          'instances_retrievable' => service.instances_retrievable,
-          'allow_context_updates' => service.allow_context_updates,
-        })
+                                       'service_broker_guid' => service.service_broker.guid,
+                                       'unique_id' => service_id,
+                                       'provider' => service.provider,
+                                       'url' => service.url,
+                                       'version' => service.version,
+                                       'info_url' => service.info_url,
+                                       'bindable' => service.bindable,
+                                       'long_description' => service.long_description,
+                                       'documentation_url' => service.documentation_url,
+                                       'label' => service_name,
+                                       'description' => service.description,
+                                       'tags' => service.tags,
+                                       'extra' => service.extra,
+                                       'active' => service.active,
+                                       'requires' => service.requires,
+                                       'plan_updateable' => service.plan_updateable,
+                                       'bindings_retrievable' => service.bindings_retrievable,
+                                       'instances_retrievable' => service.instances_retrievable,
+                                       'allow_context_updates' => service.allow_context_updates
+                                     })
 
         event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')
         service_plan = VCAP::CloudController::ServicePlan.last
@@ -187,22 +187,22 @@ module VCAP::Services::ServiceBrokers
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to eq({
-          'name' => service_plan.name,
-          'free' => service_plan.free,
-          'description' => service_plan.description,
-          'plan_updateable' => service_plan.plan_updateable,
-          'maximum_polling_duration' => service_plan.maximum_polling_duration,
-          'maintenance_info' => service_plan.maintenance_info,
-          'service_guid' => service_plan.service.guid,
-          'extra' => '{"cost":"0.0"}',
-          'unique_id' => service_plan.unique_id,
-          'public' => service_plan.public,
-          'bindable' => true,
-          'active' => service_plan.active,
-          'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-          'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-          'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
-        })
+                                       'name' => service_plan.name,
+                                       'free' => service_plan.free,
+                                       'description' => service_plan.description,
+                                       'plan_updateable' => service_plan.plan_updateable,
+                                       'maximum_polling_duration' => service_plan.maximum_polling_duration,
+                                       'maintenance_info' => service_plan.maintenance_info,
+                                       'service_guid' => service_plan.service.guid,
+                                       'extra' => '{"cost":"0.0"}',
+                                       'unique_id' => service_plan.unique_id,
+                                       'public' => service_plan.public,
+                                       'bindable' => true,
+                                       'active' => service_plan.active,
+                                       'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
+                                       'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
+                                       'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
+                                     })
       end
 
       context 'when catalog service metadata is nil' do
@@ -227,9 +227,9 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the plan does not exist in the database' do
         it 'creates plans from the catalog' do
-          expect {
+          expect do
             service_manager.sync_services_and_plans(catalog)
-          }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+          end.to change(VCAP::CloudController::ServicePlan, :count).by(1)
 
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.service).to eq(VCAP::CloudController::Service.last)
@@ -454,9 +454,9 @@ module VCAP::Services::ServiceBrokers
           expect(service.label).to_not eq(service_name)
           expect(service.description).to_not eq(service_description)
 
-          expect {
+          expect do
             service_manager.sync_services_and_plans(catalog)
-          }.to_not change(VCAP::CloudController::Service, :count)
+          end.to_not change(VCAP::CloudController::Service, :count)
 
           service.reload
           expect(service.label).to eq(service_name)
@@ -475,9 +475,9 @@ module VCAP::Services::ServiceBrokers
             end
 
             it 'creates the new plan' do
-              expect {
+              expect do
                 service_manager.sync_services_and_plans(catalog)
-              }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+              end.to change(VCAP::CloudController::ServicePlan, :count).by(1)
 
               plan = VCAP::CloudController::ServicePlan.last
               expect(plan.service).to eq(VCAP::CloudController::Service.last)
@@ -498,9 +498,9 @@ module VCAP::Services::ServiceBrokers
             end
 
             it 'updates the service for the correct broker' do
-              expect {
+              expect do
                 service_manager.sync_services_and_plans(catalog)
-              }.to_not change(VCAP::CloudController::Service, :count)
+              end.to_not change(VCAP::CloudController::Service, :count)
 
               [service, service_2].map(&:reload)
 
@@ -513,9 +513,9 @@ module VCAP::Services::ServiceBrokers
         end
 
         it 'creates the new plan' do
-          expect {
+          expect do
             service_manager.sync_services_and_plans(catalog)
-          }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+          end.to change(VCAP::CloudController::ServicePlan, :count).by(1)
 
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.service).to eq(VCAP::CloudController::Service.last)
@@ -539,35 +539,35 @@ module VCAP::Services::ServiceBrokers
             {
               'services' => [
                 {
-                  'id'          => 'new-service-id',
-                  'name'        => service_name,
+                  'id' => 'new-service-id',
+                  'name' => service_name,
                   'description' => service_description,
-                  'bindable'    => true,
+                  'bindable' => true,
                   'plans' => [
                     {
-                      'id'          => 'new-plan-id-1',
-                      'name'        => plan_name,
+                      'id' => 'new-plan-id-1',
+                      'name' => plan_name,
                       'description' => plan_description,
-                      'free'        => false,
-                      'bindable'    => true,
-                    },
+                      'free' => false,
+                      'bindable' => true
+                    }
                   ]
                 },
                 {
-                  'id'          => service_id,
-                  'name'        => 'new-name',
+                  'id' => service_id,
+                  'name' => 'new-name',
                   'description' => service_description,
-                  'bindable'    => true,
+                  'bindable' => true,
                   'plans' => [
                     {
-                      'id'          => 'new-plan-id-2',
-                      'name'        => plan_name,
+                      'id' => 'new-plan-id-2',
+                      'name' => plan_name,
                       'description' => plan_description,
-                      'free'        => false,
-                      'bindable'    => true,
-                    },
+                      'free' => false,
+                      'bindable' => true
+                    }
                   ]
-                },
+                }
               ]
             }
           end
@@ -609,9 +609,9 @@ module VCAP::Services::ServiceBrokers
             expect(plan.update_instance_schema).to be_nil
             expect(plan.create_binding_schema).to be_nil
 
-            expect {
+            expect do
               service_manager.sync_services_and_plans(catalog)
-            }.to_not change(VCAP::CloudController::ServicePlan, :count)
+            end.to_not change(VCAP::CloudController::ServicePlan, :count)
 
             plan.reload
             expect(plan.name).to eq(plan_name)
@@ -643,15 +643,15 @@ module VCAP::Services::ServiceBrokers
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
-              'name' => service_plan.name,
-              'description' => service_plan.description,
-              'extra' => '{"cost":"0.0"}',
-              'bindable' => true,
-              'free' => false,
-              'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-              'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-              'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
-            })
+                                                'name' => service_plan.name,
+                                                'description' => service_plan.description,
+                                                'extra' => '{"cost":"0.0"}',
+                                                'bindable' => true,
+                                                'free' => false,
+                                                'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
+                                                'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
+                                                'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
+                                              })
           end
 
           context 'when the plan belongs to a different service' do
@@ -666,9 +666,9 @@ module VCAP::Services::ServiceBrokers
               end
 
               it 'creates a new plan associated with the service and keeps the old unchanged ' do
-                expect {
+                expect do
                   service_manager.sync_services_and_plans(catalog)
-                }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+                end.to change(VCAP::CloudController::ServicePlan, :count).by(1)
 
                 new_plan = VCAP::CloudController::ServicePlan.last
                 service.reload
@@ -693,9 +693,9 @@ module VCAP::Services::ServiceBrokers
               end
 
               it 'updates the plan that belongs to the corresponding service and keeps the other unchanged' do
-                expect {
+                expect do
                   service_manager.sync_services_and_plans(catalog)
-                }.not_to change(VCAP::CloudController::ServicePlan, :count)
+                end.not_to change(VCAP::CloudController::ServicePlan, :count)
 
                 [plan, plan_2].map(&:reload)
                 expect(plan.name).to eq(plan_name)
@@ -724,31 +724,31 @@ module VCAP::Services::ServiceBrokers
               {
                 'services' => [
                   {
-                    'id'          => service_id,
-                    'name'        => service_name,
+                    'id' => service_id,
+                    'name' => service_name,
                     'description' => service_description,
-                    'bindable'    => true,
+                    'bindable' => true,
                     'dashboard_client' => dashboard_client_attrs,
-                    'tags'        => ['mysql', 'relational'],
-                    'requires'    => ['ultimate', 'power'],
+                    'tags' => %w[mysql relational],
+                    'requires' => %w[ultimate power],
                     'plan_updateable' => true,
                     'bindings_retrievable' => true,
                     'instances_retrievable' => true,
                     'allow_context_updates' => true,
                     'plans' => [
                       {
-                        'id'          => 'new-plan-id',
-                        'name'        => plan_name,
+                        'id' => 'new-plan-id',
+                        'name' => plan_name,
                         'description' => plan_description,
-                        'free'        => false,
-                        'bindable'    => true,
+                        'free' => false,
+                        'bindable' => true
                       }.merge(plan_metadata_hash).merge(plan_schemas_hash),
                       {
-                        'id'          => plan_id,
-                        'name'        => plan_name + '-legacy',
+                        'id' => plan_id,
+                        'name' => plan_name + '-legacy',
                         'description' => plan_description,
-                        'free'        => false,
-                        'bindable'    => true,
+                        'free' => false,
+                        'bindable' => true
                       }.merge(plan_metadata_hash).merge(plan_schemas_hash)
                     ]
                   }.merge(service_metadata_hash)
@@ -807,7 +807,7 @@ module VCAP::Services::ServiceBrokers
             VCAP::CloudController::ServicePlan.make(
               service: service,
               unique_id: 'nolongerexists',
-              name: missing_plan_name,
+              name: missing_plan_name
             )
           end
 
@@ -899,7 +899,7 @@ module VCAP::Services::ServiceBrokers
           VCAP::CloudController::Service.make(
             service_broker: broker,
             unique_id: 'nolongerexists',
-            label: 'was-an-awesome-service',
+            label: 'was-an-awesome-service'
           )
         end
 
@@ -978,9 +978,9 @@ module VCAP::Services::ServiceBrokers
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: plan_name, unique_id: Sham.guid) }
 
         it 'should throw a sync error' do
-          expect {
+          expect do
             service_manager.sync_services_and_plans(catalog)
-          }.to raise_error(ServiceManager::ServiceBrokerSyncError)
+          end.to raise_error(ServiceManager::ServiceBrokerSyncError)
         end
 
         after do

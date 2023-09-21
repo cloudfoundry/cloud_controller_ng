@@ -31,16 +31,16 @@ module VCAP::CloudController
 
         let(:message) do
           VCAP::CloudController::DropletUpdateMessage.new({
-            metadata: {
-              labels: {
-                freaky: 'wednesday',
-                'indiana.edu/state' => nil,
-              },
-              annotations: {
-                reason: 'add some more annotations',
-              },
-            },
-          })
+                                                            metadata: {
+                                                              labels: {
+                                                                freaky: 'wednesday',
+                                                                'indiana.edu/state' => nil
+                                                              },
+                                                              annotations: {
+                                                                reason: 'add some more annotations'
+                                                              }
+                                                            }
+                                                          })
         end
 
         it 'update the droplet record' do
@@ -61,14 +61,15 @@ module VCAP::CloudController
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
-              image: 'new-image-reference'
-            })
+                                                              image: 'new-image-reference'
+                                                            })
           end
 
           it 'returns an error saying that a droplet update cannot occur during staging' do
             expect(message).to be_valid
-            expect { droplet_update.update(droplet, message)
-            }.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image can only be updated on staged droplets')
+            expect do
+              droplet_update.update(droplet, message)
+            end.to raise_error(DropletUpdate::InvalidDroplet, 'Droplet image can only be updated on staged droplets')
           end
         end
 
@@ -77,23 +78,24 @@ module VCAP::CloudController
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
-              image: 'some-image-reference',
-              metadata: {
-                labels: {
-                  freaky: 'wednesday',
-                  'indiana.edu/state' => nil,
-                },
-                annotations: {
-                  reason: 'add some more annotations',
-                },
-              },
-            })
+                                                              image: 'some-image-reference',
+                                                              metadata: {
+                                                                labels: {
+                                                                  freaky: 'wednesday',
+                                                                  'indiana.edu/state' => nil
+                                                                },
+                                                                annotations: {
+                                                                  reason: 'add some more annotations'
+                                                                }
+                                                              }
+                                                            })
           end
 
           it 'returns an error saying that a buildpack droplet image cannot be updated' do
             expect(message).to be_valid
-            expect { droplet_update.update(droplet, message)
-            }.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for docker droplets')
+            expect do
+              droplet_update.update(droplet, message)
+            end.to raise_error(DropletUpdate::InvalidDroplet, 'Images can only be updated for docker droplets')
           end
         end
 
@@ -104,8 +106,8 @@ module VCAP::CloudController
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
-              image: 'new-image-reference'
-            })
+                                                              image: 'new-image-reference'
+                                                            })
           end
 
           context 'the image of a staged docker droplet is requested to be updated' do

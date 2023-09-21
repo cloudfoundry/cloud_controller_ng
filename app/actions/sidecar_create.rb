@@ -11,10 +11,10 @@ module VCAP::CloudController
 
         sidecar = SidecarModel.new(
           app_guid: app_guid,
-          name:     message.name,
-          command:  message.command,
-          memory:  message.memory_in_mb,
-          origin: origin,
+          name: message.name,
+          command: message.command,
+          memory: message.memory_in_mb,
+          origin: origin
         )
 
         SidecarModel.db.transaction do
@@ -37,11 +37,11 @@ module VCAP::CloudController
       def validate_memory_allocation!(app_guid, message)
         processes = ProcessModel.where(
           app_guid: app_guid,
-          type: message.process_types,
+          type: message.process_types
         )
         policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, message.memory_in_mb)
 
-        raise InvalidSidecar.new(policy.message) if !policy.valid?
+        raise InvalidSidecar.new(policy.message) unless policy.valid?
       end
     end
   end

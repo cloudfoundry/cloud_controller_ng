@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors[:base]).to include('Data must have the structure "data": [{"guid": shared_org_guid_1}, {"guid": shared_org_guid_2}]')
@@ -28,7 +28,7 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:params) do
           {
-            unexpected: 'meow',
+            unexpected: 'meow'
           }
         end
 

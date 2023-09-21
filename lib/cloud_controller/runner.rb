@@ -37,11 +37,11 @@ module VCAP::CloudController
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, request_logs)
 
-      if @config.get(:webserver) == 'puma'
-        @server = VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
-      else
-        @server = VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)
-      end
+      @server = if @config.get(:webserver) == 'puma'
+                  VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
+                else
+                  VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)
+                end
     end
 
     def logger
@@ -67,7 +67,7 @@ module VCAP::CloudController
     def parse_options!
       options_parser.parse!(@argv)
       raise 'Missing config' unless @config_file.present?
-    rescue
+    rescue StandardError
       raise options_parser.to_s
     end
 
@@ -75,15 +75,15 @@ module VCAP::CloudController
       return {} unless secrets_file
 
       SecretsFetcher.fetch_secrets_from_file(secrets_file)
-    rescue => e
+    rescue StandardError => e
       raise "ERROR: Failed loading secrets from file '#{secrets_file}': #{e}"
     end
 
     def parse_config(secrets_hash)
       @config = Config.load_from_file(config_file, context: :api, secrets_hash: secrets_hash)
-    rescue Membrane::SchemaValidationError => ve
-      raise "ERROR: There was a problem validating the supplied config: #{ve}"
-    rescue => e
+    rescue Membrane::SchemaValidationError => e
+      raise "ERROR: There was a problem validating the supplied config: #{e}"
+    rescue StandardError => e
       raise "ERROR: Failed loading config from file '#{config_file}': #{e}"
     end
 
@@ -108,7 +108,7 @@ module VCAP::CloudController
     def create_pidfile
       pid_file = VCAP::PidFile.new(@config.get(:pid_filename))
       pid_file.unlink_at_exit
-    rescue
+    rescue StandardError
       raise "ERROR: Can't create pid file #{@config.get(:pid_filename)}"
     end
 
@@ -155,9 +155,8 @@ module VCAP::CloudController
 
     def fluent_emitter
       VCAP::FluentEmitter.new(Fluent::Logger::FluentLogger.new(nil,
-        host: @config.get(:fluent, :host) || 'localhost',
-                port: @config.get(:fluent, :port) || 24224,
-      ))
+                                                               host: @config.get(:fluent, :host) || 'localhost',
+                                                               port: @config.get(:fluent, :port) || 24_224))
     end
 
     def periodic_updater
@@ -167,7 +166,8 @@ module VCAP::CloudController
         Steno.logger('cc.api'),
         [
           VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
-        ])
+        ]
+      )
     end
 
     def statsd_client

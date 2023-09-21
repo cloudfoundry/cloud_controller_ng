@@ -76,8 +76,7 @@ module CloudController
         logger.info(log_entry,
                     destination_key: destination_key,
                     duration_seconds: duration,
-                    size: size,
-                   )
+                    size: size)
       end
 
       def cp_file_between_keys(source_key, destination_key)
@@ -173,9 +172,9 @@ module CloudController
           end
         end
 
-        if !batch.empty?
-          yield(batch)
-        end
+        return if batch.empty?
+
+        yield(batch)
       end
 
       def file(key)

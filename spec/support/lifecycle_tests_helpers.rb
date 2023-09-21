@@ -34,7 +34,7 @@ module LifecycleSpecHelper
         type: 'basic',
         credentials: {
           username: 'admin',
-          password: 'password',
+          password: 'password'
         }
       },
       metadata: {
@@ -70,7 +70,7 @@ module LifecycleSpecHelper
         {
           'id' => 'catalog2',
           'name' => 'route_volume_service_name-2',
-          'requires' => ['volume_mount', 'route_forwarding'],
+          'requires' => %w[volume_mount route_forwarding],
           'description' => 'some description 2',
           'bindable' => true,
           'bindings_retrievable' => true,
@@ -82,7 +82,7 @@ module LifecycleSpecHelper
               'schemas' => nil
             }
           ]
-        },
+        }
       ]
     }.to_json
   end

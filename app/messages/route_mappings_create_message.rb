@@ -3,7 +3,7 @@ require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
-    register_allowed_keys [:relationships, :weight]
+    register_allowed_keys %i[relationships weight]
 
     validates_with NoAdditionalKeysValidator
     validates :app, hash: true

@@ -76,7 +76,7 @@ RSpec.describe 'Environment group variables' do
     context 'when the user is logged in' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:api_call) { lambda { |user_headers| get '/v3/environment_variable_groups/running', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/environment_variable_groups/running', nil, user_headers } }
       let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
       before do
@@ -110,7 +110,7 @@ RSpec.describe 'Environment group variables' do
             'name' => 'running',
             'var' => {
               'foo' => 'in-n-out',
-              'boo' => 'mcdonalds',
+              'boo' => 'mcdonalds'
             },
             'links' => {
               'self' => {
@@ -172,7 +172,7 @@ RSpec.describe 'Environment group variables' do
     context 'when the user is logged in' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
-      let(:api_call) { lambda { |user_headers| patch '/v3/environment_variable_groups/staging', params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch '/v3/environment_variable_groups/staging', params.to_json, user_headers } }
 
       let(:env_group_json) do
         {
@@ -231,7 +231,7 @@ RSpec.describe 'Environment group variables' do
         let(:big_params) do
           {
             var: {
-              too_big: (0...(1024 * 64 + 1)).map { Array('A'..'Z').sample }.join
+              too_big: (0...((1024 * 64) + 1)).map { Array('A'..'Z').sample }.join
             }
           }
         end
@@ -241,7 +241,8 @@ RSpec.describe 'Environment group variables' do
           expect(last_response.status).to eq(422)
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['errors'][0]['detail']).to include(
-            'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.')
+            'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.'
+          )
         end
       end
     end

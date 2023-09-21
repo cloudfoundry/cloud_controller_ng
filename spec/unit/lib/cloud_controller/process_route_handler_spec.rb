@@ -15,15 +15,15 @@ module VCAP::CloudController
     describe '#update_route_information' do
       let!(:process) do
         ProcessModelFactory.make(diego: true, ports: [1024, 2024]).tap do |p|
-          p.this.update(updated_at: Time.now - 1.day)
+          p.this.update(updated_at: Time.now.utc - 1.day)
           p.reload
         end
       end
 
       it 'updates the version and ports' do
-        expect {
+        expect do
           handler.update_route_information(perform_validation: false, updated_ports: [3024])
-        }.to change {
+        end.to change {
           process.reload.updated_at
         }.and change {
           process.reload.ports
@@ -111,9 +111,9 @@ module VCAP::CloudController
         end
 
         it 'raises a validation error' do
-          expect {
+          expect do
             handler.update_route_information(perform_validation: false, updated_ports: [-3024])
-          }.to raise_error(Sequel::ValidationFailed, /Ports must be in the 1024-65535./)
+          end.to raise_error(Sequel::ValidationFailed, /Ports must be in the 1024-65535./)
         end
       end
 

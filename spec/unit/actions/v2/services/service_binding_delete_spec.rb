@@ -49,9 +49,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -72,9 +72,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -86,10 +86,11 @@ module VCAP::CloudController
         end
 
         it 'decorates the error with app name and service instance name' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(
-            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey")
+          end.to raise_error(
+            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey"
+          )
         end
       end
     end
@@ -136,7 +137,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker responds asynchronously' do
-          let(:service_binding_operation) {}
+          let(:service_binding_operation) { nil }
 
           before do
             allow(client).to receive(:unbind).and_return({ async: true, operation: '123' })
@@ -224,7 +225,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker unexpectedly responds asynchronously' do
-          let(:service_binding_operation) {}
+          let(:service_binding_operation) { nil }
           let(:expected_warning) do
             ['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
              'The service binding may not have been successfully deleted on the service broker.'].join(' ')

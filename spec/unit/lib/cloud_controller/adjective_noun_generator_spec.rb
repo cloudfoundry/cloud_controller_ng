@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'set'
 require 'cloud_controller/adjective_noun_generator'
 
 module VCAP::CloudController

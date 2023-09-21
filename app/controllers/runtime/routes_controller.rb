@@ -9,15 +9,15 @@ module VCAP::CloudController
       attribute :port, Integer, default: nil
       to_one :domain
       to_one :space
-      to_one :service_instance, exclude_in: [:create, :update]
-      to_many :apps, route_for: :get, exclude_in: [:create, :update]
-      to_many :route_mappings, link_only: true, exclude_in: [:create, :update], route_for: [:get], association_controller: :RouteMappingsController
+      to_one :service_instance, exclude_in: %i[create update]
+      to_many :apps, route_for: :get, exclude_in: %i[create update]
+      to_many :route_mappings, link_only: true, exclude_in: %i[create update], route_for: [:get], association_controller: :RouteMappingsController
     end
 
     query_parameters :host, :domain_guid, :organization_guid, :path, :port
 
     def self.dependencies
-      [:app_event_repository, :routing_api_client, :route_event_repository]
+      %i[app_event_repository routing_api_client route_event_repository]
     end
 
     def inject_dependencies(dependencies)
@@ -28,31 +28,22 @@ module VCAP::CloudController
     end
 
     # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/MethodLength
     def self.translate_validation_exception(e, attributes)
-      if e.errors.on(:routing_api) == [:routing_api_disabled]
-        return CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-      end
+      return CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled') if e.errors.on(:routing_api) == [:routing_api_disabled]
 
-      if e.errors.on(:routing_api) == [:uaa_unavailable]
-        return CloudController::Errors::ApiError.new_from_details('UaaUnavailable', 'The UAA service is currently unavailable')
-      end
+      return CloudController::Errors::ApiError.new_from_details('UaaUnavailable', 'The UAA service is currently unavailable') if e.errors.on(:routing_api) == [:uaa_unavailable]
 
-      if e.errors.on(:routing_api) == [:routing_api_unavailable]
-        return CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable')
-      end
+      return CloudController::Errors::ApiError.new_from_details('RoutingApiUnavailable') if e.errors.on(:routing_api) == [:routing_api_unavailable]
 
       if e.errors.on(:port) == [:port_taken]
         port_taken_error_message = "Port #{attributes['port']} is not available on this domain's router group. " \
-          'Try a different port, request an random port, or ' \
-          'use a domain of a different router group.'
+                                   'Try a different port, request an random port, or ' \
+                                   'use a domain of a different router group.'
 
         return CloudController::Errors::ApiError.new_from_details('RoutePortTaken', port_taken_error_message)
       end
 
-      if e.errors.on(:router_group)
-        return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group))
-      end
+      return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group)) if e.errors.on(:router_group)
 
       if e.errors.on(:port) == [:port_unsupported]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
@@ -64,51 +55,42 @@ module VCAP::CloudController
 
       if e.errors.on(:port) == [:port_unavailable]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
-          'The requested port is not available for reservation. ' \
-          'Try a different port or request a random one be generated for you.'
-        )
+                                                                  'The requested port is not available for reservation. ' \
+                                                                  'Try a different port or request a random one be generated for you.')
       end
       if e.errors.on(:host) == [:host_and_path_domain_tcp] || e.errors.on(:path) == [:host_and_path_domain_tcp]
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Host and path are not supported, as domain belongs to a TCP router group.')
       end
 
-      name_errors = e.errors.on([:host, :domain_id])
-      if name_errors && name_errors.include?(:unique)
-        return CloudController::Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
-      end
+      name_errors = e.errors.on(%i[host domain_id])
+      return CloudController::Errors::ApiError.new_from_details('RouteHostTaken', attributes['host']) if name_errors && name_errors.include?(:unique)
 
       if e.errors.on(:host) == [:system_hostname_conflict]
         return CloudController::Errors::ApiError.new_from_details('RouteHostTaken',
-          "#{attributes['host']} is a system domain")
+                                                                  "#{attributes['host']} is a system domain")
       end
 
-      path_errors = e.errors.on([:host, :domain_id, :path])
-      if path_errors && path_errors.include?(:unique)
-        return CloudController::Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
-      end
+      path_errors = e.errors.on(%i[host domain_id path])
+      return CloudController::Errors::ApiError.new_from_details('RoutePathTaken', attributes['path']) if path_errors && path_errors.include?(:unique)
 
       space_errors = e.errors.on(:space)
-      if space_errors && space_errors.include?(:total_routes_exceeded)
-        return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded')
-      end
+      return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded') if space_errors && space_errors.include?(:total_routes_exceeded)
 
       if space_errors && space_errors.include?(:total_reserved_route_ports_exceeded)
         return CloudController::Errors::ApiError.new_from_details('SpaceQuotaTotalReservedRoutePortsExceeded')
       end
 
       org_errors = e.errors.on(:organization)
-      if org_errors && org_errors.include?(:total_routes_exceeded)
-        return CloudController::Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
-      end
+      return CloudController::Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded') if org_errors && org_errors.include?(:total_routes_exceeded)
 
       if org_errors && org_errors.include?(:total_reserved_route_ports_exceeded)
         return CloudController::Errors::ApiError.new_from_details('OrgQuotaTotalReservedRoutePortsExceeded')
       end
 
-      host_and_domain_taken_error = e.errors.on([:domain_id, :host])
+      host_and_domain_taken_error = e.errors.on(%i[domain_id host])
       if host_and_domain_taken_error
         return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
-          'Routes for this host and domain have been reserved for another space.')
+                                                                  'Routes for this host and domain have been reserved for another space.')
       end
 
       if e.errors.on(:path) == [:path_not_supported_for_internal_domain]
@@ -120,9 +102,7 @@ module VCAP::CloudController
       end
 
       path_error = e.errors.on(:path)
-      if path_error
-        return path_errors(path_error, attributes)
-      end
+      return path_errors(path_error, attributes) if path_error
 
       service_instance_errors = e.errors.on(:service_instance)
       if service_instance_errors && service_instance_errors.include?(:route_binding_not_allowed)
@@ -131,7 +111,6 @@ module VCAP::CloudController
 
       CloudController::Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
-    # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/CyclomaticComplexity
 
     def create
@@ -172,9 +151,10 @@ module VCAP::CloudController
       route = find_guid_and_validate_access(:delete, guid)
 
       route_delete_action = RouteDelete.new(
-        app_event_repository:   app_event_repository,
+        app_event_repository: app_event_repository,
         route_event_repository: route_event_repository,
-        user_audit_info:        UserAuditInfo.from_context(SecurityContext))
+        user_audit_info: UserAuditInfo.from_context(SecurityContext)
+      )
 
       if async?
         job = route_delete_action.delete_async(route: route, recursive: recursive_delete?)
@@ -296,9 +276,7 @@ module VCAP::CloudController
     end
 
     def visible_relationship_dataset(name, obj)
-      if name != :apps
-        return super
-      end
+      return super if name != :apps
 
       dataset = obj.user_visible_relationship_dataset(name, @access_context.user, @access_context.admin_override)
       AppsController.filter_dataset(dataset)
@@ -348,9 +326,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
       end
 
-      unless domain.shared? && domain.tcp?
-        raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') unless domain.shared? && domain.tcp?
 
       domain
     end

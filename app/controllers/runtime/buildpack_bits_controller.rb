@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class BuildpackBitsController < RestController::ModelController
     def self.dependencies
-      [:buildpack_blobstore, :upload_handler]
+      %i[buildpack_blobstore upload_handler]
     end
 
     path_base 'buildpacks'

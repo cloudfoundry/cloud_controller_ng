@@ -19,9 +19,7 @@ module VCAP::CloudController::Validators
 
       invalid_keys = record.metadata.except(:labels, :annotations).keys
       unexpected_keys = invalid_keys.map { |val| "'" << val.to_s << "'" }.join(' ')
-      unless invalid_keys.empty?
-        record.errors.add(:metadata, "has unexpected field(s): #{unexpected_keys}")
-      end
+      record.errors.add(:metadata, "has unexpected field(s): #{unexpected_keys}") unless invalid_keys.empty?
 
       self.labels = record.labels
       self.annotations = record.annotations
@@ -38,9 +36,7 @@ module VCAP::CloudController::Validators
       annotations.each do |annotation_key, annotation_value|
         helper = MetadataValidatorHelper.new(key: annotation_key, value: annotation_value)
         key_result = helper.key_error
-        if annotation_value.present? && !key_result.is_valid?
-          record.errors.add(:metadata, "annotation key error: #{key_result.message}")
-        end
+        record.errors.add(:metadata, "annotation key error: #{key_result.message}") if annotation_value.present? && !key_result.is_valid?
         validate_annotation_value(annotation_value, record)
       end
     end
@@ -59,9 +55,9 @@ module VCAP::CloudController::Validators
     end
 
     def validate_annotation_value(annotation_value, record)
-      if !annotation_value.nil? && annotation_value.size > MAX_ANNOTATION_VALUE_SIZE
-        record.errors.add(:metadata, "annotation value error: '#{annotation_value[0...8]}...' is greater than 5000 characters")
-      end
+      return unless !annotation_value.nil? && annotation_value.size > MAX_ANNOTATION_VALUE_SIZE
+
+      record.errors.add(:metadata, "annotation value error: '#{annotation_value[0...8]}...' is greater than 5000 characters")
     end
   end
 end

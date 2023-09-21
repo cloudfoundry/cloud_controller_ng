@@ -9,39 +9,39 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#present_stats_hash' do
       let(:process_usage) { process.type.usage }
-      let(:net_info_1) {
+      let(:net_info_1) do
         {
           address: '1.2.3.4',
           ports: [
             {
               host_port: 8080,
               container_port: 1234,
-              host_tls_proxy_port: 61002,
-              container_tls_proxy_port: 61003
+              host_tls_proxy_port: 61_002,
+              container_tls_proxy_port: 61_003
             }, {
               host_port: 3000,
               container_port: 4000,
               host_tls_proxy_port: 0,
               container_tls_proxy_port: 0
-          }
+            }
           ]
         }
-      }
+      end
 
-      let(:net_info_2) {
+      let(:net_info_2) do
         {
           address: '',
           ports: nil
         }
-      }
+      end
 
-      let(:instance_ports_1) {
+      let(:instance_ports_1) do
         [
           {
             external: 8080,
             internal: 1234,
-            external_tls_proxy_port: 61002,
-            internal_tls_proxy_port: 61003
+            external_tls_proxy_port: 61_002,
+            internal_tls_proxy_port: 61_003
           }, {
             external: 3000,
             internal: 4000,
@@ -49,7 +49,7 @@ module VCAP::CloudController::Presenters::V3
             internal_tls_proxy_port: nil
           }
         ]
-      }
+      end
 
       let(:instance_ports_2) { [] }
 
@@ -63,17 +63,17 @@ module VCAP::CloudController::Presenters::V3
               uris: process.uris,
               host: 'myhost',
               net_info: net_info_1,
-              uptime: 12345,
-              mem_quota:  process[:memory] * 1024 * 1024,
+              uptime: 12_345,
+              mem_quota: process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
               log_rate_limit: process[:log_rate_limit],
               fds_quota: process.file_descriptors,
               usage: {
                 time: '2015-12-08 16:54:48 -0800',
-                cpu:  80,
-                mem:  128,
+                cpu: 80,
+                mem: 128,
                 disk: 1024,
-                log_rate: 2048,
+                log_rate: 2048
               }
             }
           },
@@ -86,16 +86,16 @@ module VCAP::CloudController::Presenters::V3
               host: 'toast',
               net_info: net_info_2,
               uptime: 42,
-              mem_quota:  process[:memory] * 1024 * 1024,
+              mem_quota: process[:memory] * 1024 * 1024,
               disk_quota: process[:disk_quota] * 1024 * 1024,
               log_rate_limit: process[:log_rate_limit],
               fds_quota: process.file_descriptors,
               usage: {
                 time: '2015-03-13 16:54:48 -0800',
-                cpu:  70,
-                mem:  128,
+                cpu: 70,
+                mem: 128,
                 disk: 1024,
-                log_rate: 7168,
+                log_rate: 7168
               }
             }
           },
@@ -117,7 +117,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:isolation_segment]).to eq('hecka-compliant')
         expect(result[0][:host]).to eq('myhost')
         expect(result[0][:instance_ports]).to eq(instance_ports_1)
-        expect(result[0][:uptime]).to eq(12345)
+        expect(result[0][:uptime]).to eq(12_345)
         expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
         expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
         expect(result[0][:log_rate_limit]).to eq(process[:log_rate_limit])
@@ -143,7 +143,7 @@ module VCAP::CloudController::Presenters::V3
                                           log_rate: 7168 })
 
         expect(result[2]).to eq(
-          type:  process.type,
+          type: process.type,
           index: 2,
           state: 'DOWN',
           uptime: 0,
@@ -153,22 +153,22 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'the process is running on opi and not diego, so *_tls_proxy_ports are not included in the port struct' do
-        let(:net_info_1) {
+        let(:net_info_1) do
           {
             address: '1.2.3.4',
             ports: [
               {
                 host_port: 8080,
-                container_port: 1234,
+                container_port: 1234
               }, {
-              host_port: 3000,
-              container_port: 4000,
-            }
+                host_port: 3000,
+                container_port: 4000
+              }
             ]
           }
-        }
+        end
 
-        let(:instance_ports_1) {
+        let(:instance_ports_1) do
           [
             {
               external: 8080,
@@ -176,13 +176,13 @@ module VCAP::CloudController::Presenters::V3
               external_tls_proxy_port: nil,
               internal_tls_proxy_port: nil
             }, {
-            external: 3000,
-            internal: 4000,
-            external_tls_proxy_port: nil,
-            internal_tls_proxy_port: nil
-          }
+              external: 3000,
+              internal: 4000,
+              external_tls_proxy_port: nil,
+              internal_tls_proxy_port: nil
+            }
           ]
-        }
+        end
 
         it 'does not error and sets the *_tls_proxy_port values to nil' do
           result = presenter.present_stats_hash
@@ -194,16 +194,16 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
           expect(result[0][:instance_ports]).to eq(instance_ports_1)
-          expect(result[0][:uptime]).to eq(12345)
+          expect(result[0][:uptime]).to eq(12_345)
           expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
           expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
           expect(result[0][:log_rate_limit]).to eq(process[:log_rate_limit])
           expect(result[0][:fds_quota]).to eq(process.file_descriptors)
           expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
-            cpu: 80,
-            mem: 128,
-            disk: 1024,
-            log_rate: 2048 })
+                                            cpu: 80,
+                                            mem: 128,
+                                            disk: 1024,
+                                            log_rate: 2048 })
         end
       end
 
@@ -218,7 +218,7 @@ module VCAP::CloudController::Presenters::V3
                 uris: process.uris,
                 host: 'myhost',
                 net_info: net_info_1,
-                uptime: 12345,
+                uptime: 12_345,
                 fds_quota: process.file_descriptors,
                 usage: {}
               }
@@ -236,7 +236,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
           expect(result[0][:instance_ports]).to eq(instance_ports_1)
-          expect(result[0][:uptime]).to eq(12345)
+          expect(result[0][:uptime]).to eq(12_345)
           expect(result[0][:mem_quota]).to be_nil
           expect(result[0][:disk_quota]).to be_nil
           expect(result[0][:log_rate_limit]).to be_nil

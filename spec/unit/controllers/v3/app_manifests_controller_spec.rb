@@ -15,7 +15,7 @@ RSpec.describe AppManifestsController, type: :controller do
         'applications' => [
           {
             'name' => app_model.name,
-            'stack' => app_model.lifecycle_data.stack,
+            'stack' => app_model.lifecycle_data.stack
           }
         ]
       }.to_yaml
@@ -49,10 +49,10 @@ RSpec.describe AppManifestsController, type: :controller do
             'space_supporter' => 403,
             'org_manager' => 403,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { get :show, params: { guid: app_model.guid } } }
+        let(:api_call) { -> { get :show, params: { guid: app_model.guid } } }
       end
     end
   end

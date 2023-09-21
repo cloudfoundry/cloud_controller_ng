@@ -9,9 +9,9 @@ module VCAP::CloudController
       let!(:buildpack) { Buildpack.make }
 
       it 'deletes the buildpack record' do
-        expect {
+        expect do
           buildpack_delete.delete([buildpack])
-        }.to change { Buildpack.count }.by(-1)
+        end.to change { Buildpack.count }.by(-1)
         expect { buildpack.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -21,9 +21,9 @@ module VCAP::CloudController
         end
 
         it 'schedules a job to the delete the blobstore item' do
-          expect {
+          expect do
             buildpack_delete.delete([buildpack])
-          }.to change {
+          end.to change {
             Delayed::Job.count
           }.by(1)
 
@@ -51,17 +51,17 @@ module VCAP::CloudController
         let!(:annotation) { BuildpackAnnotationModel.make(resource_guid: buildpack.guid) }
 
         it 'deletes associated labels' do
-          expect {
+          expect do
             buildpack_delete.delete([buildpack])
-          }.to change { BuildpackLabelModel.count }.by(-1)
+          end.to change { BuildpackLabelModel.count }.by(-1)
           expect(label.exists?).to be_falsey
           expect(buildpack.exists?).to be_falsey
         end
 
         it 'deletes associated annotations' do
-          expect {
+          expect do
             buildpack_delete.delete([buildpack])
-          }.to change { BuildpackAnnotationModel.count }.by(-1)
+          end.to change { BuildpackAnnotationModel.count }.by(-1)
           expect(annotation.exists?).to be_falsey
           expect(buildpack.exists?).to be_falsey
         end
@@ -73,11 +73,11 @@ module VCAP::CloudController
         end
 
         it 'does not schedule a blobstore delete job' do
-          expect {
+          expect do
             buildpack_delete.delete([buildpack])
-          }.not_to change {
+          end.not_to(change do
             Delayed::Job.count
-          }
+          end)
         end
       end
     end

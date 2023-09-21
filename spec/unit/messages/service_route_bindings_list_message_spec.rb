@@ -6,8 +6,8 @@ module VCAP
     RSpec.describe ServiceRouteBindingsListMessage do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
+          'page' => 1,
+          'per_page' => 5,
           'service_instance_guids' => 'guid-1,guid-2,guid-3',
           'service_instance_names' => 'name-1,name-2,name-3',
           'route_guids' => 'guid-4,guid-5,guid-6',

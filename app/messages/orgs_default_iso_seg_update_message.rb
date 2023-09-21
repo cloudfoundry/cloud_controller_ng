@@ -21,9 +21,9 @@ module VCAP::CloudController
 
       errors.add(:data, 'can only accept one key') unless data.keys.length == 1
       errors.add(:data, "can only accept key 'guid'") unless data.key?(:guid)
-      if default_isolation_segment_guid && !default_isolation_segment_guid.is_a?(String)
-        errors.add(:data, "#{default_isolation_segment_guid} must be a string")
-      end
+      return unless default_isolation_segment_guid && !default_isolation_segment_guid.is_a?(String)
+
+      errors.add(:data, "#{default_isolation_segment_guid} must be a string")
     end
   end
 end

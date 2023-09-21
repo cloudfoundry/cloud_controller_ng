@@ -34,22 +34,22 @@ module VCAP::CloudController::Presenters::V3
 
     it 'presents the usage summary' do
       expect(result).to eq({
-        usage_summary: [{
-          space: { guid: space_1.guid },
-          bound_app_count: 3
-        }, {
-          space: { guid: space_2.guid },
-          bound_app_count: 1
-        }, {
-          space: { guid: space_3.guid },
-          bound_app_count: 0
-        }],
-        links: {
-          self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces/usage_summary" },
-          shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
-          service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
-        }
-      })
+                             usage_summary: [{
+                               space: { guid: space_1.guid },
+                               bound_app_count: 3
+                             }, {
+                               space: { guid: space_2.guid },
+                               bound_app_count: 1
+                             }, {
+                               space: { guid: space_3.guid },
+                               bound_app_count: 0
+                             }],
+                             links: {
+                               self: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces/usage_summary" },
+                               shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}/relationships/shared_spaces" },
+                               service_instance: { href: "#{link_prefix}/v3/service_instances/#{instance.guid}" }
+                             }
+                           })
     end
 
     context 'when there are no shared spaces' do
@@ -58,13 +58,13 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents an empty usage summary' do
         expect(result).to eq({
-          usage_summary: [],
-          links: {
-            self: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}/relationships/shared_spaces/usage_summary" },
-            shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}/relationships/shared_spaces" },
-            service_instance: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}" }
-          }
-        })
+                               usage_summary: [],
+                               links: {
+                                 self: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}/relationships/shared_spaces/usage_summary" },
+                                 shared_spaces: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}/relationships/shared_spaces" },
+                                 service_instance: { href: "#{link_prefix}/v3/service_instances/#{another_instance.guid}" }
+                               }
+                             })
       end
     end
   end

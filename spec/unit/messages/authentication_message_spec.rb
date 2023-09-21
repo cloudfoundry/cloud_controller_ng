@@ -13,7 +13,7 @@ module VCAP::CloudController
           type: 'basic',
           credentials: {
             username: 'user',
-            password: 'pass',
+            password: 'pass'
           }
         }
       end
@@ -23,8 +23,8 @@ module VCAP::CloudController
       context 'when type is invalid' do
         let(:request_body) do
           valid_body.merge({
-            type: 'oopsie'
-          })
+                             type: 'oopsie'
+                           })
         end
 
         it 'is not valid' do
@@ -48,9 +48,9 @@ module VCAP::CloudController
       context 'when authentication has extra fields' do
         let(:request_body) do
           valid_body.merge({
-            extra: 'value',
-            type: 'basic',
-          })
+                             extra: 'value',
+                             type: 'basic'
+                           })
         end
 
         it 'is not valid' do

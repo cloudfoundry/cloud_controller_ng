@@ -2,12 +2,12 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class SecurityGroupListMessage < ListMessage
-    register_allowed_keys [
-      :names,
-      :running_space_guids,
-      :staging_space_guids,
-      :globally_enabled_running,
-      :globally_enabled_staging
+    register_allowed_keys %i[
+      names
+      running_space_guids
+      staging_space_guids
+      globally_enabled_running
+      globally_enabled_staging
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -19,7 +19,7 @@ module VCAP::CloudController
     validates :globally_enabled_staging, boolean_string: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(names running_space_guids staging_space_guids))
+      super(params, %w[names running_space_guids staging_space_guids])
     end
   end
 end

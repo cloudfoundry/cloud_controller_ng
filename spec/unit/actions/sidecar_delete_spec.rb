@@ -19,9 +19,9 @@ module VCAP::CloudController
       it 'deletes associated sidecar_process_commands' do
         process_type = SidecarProcessTypeModel.make(sidecar: sidecar)
 
-        expect {
+        expect do
           sidecar_delete.delete(sidecar)
-        }.to change { SidecarProcessTypeModel.count }.by(-1)
+        end.to change { SidecarProcessTypeModel.count }.by(-1)
 
         expect(process_type.exists?).to be_falsey
         expect(sidecar.exists?).to be_falsey

@@ -60,13 +60,13 @@ module VCAP::CloudController
     end
 
     def self.add_connection_expiration_extension(db, opts)
-      if opts[:connection_expiration_timeout]
-        db.extension(:connection_expiration)
-        db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout]
-        db.pool.connection_expiration_random_delay = opts[:connection_expiration_random_delay] if opts[:connection_expiration_random_delay]
-        # So that there are no existing connections without an expiration timestamp
-        db.disconnect
-      end
+      return unless opts[:connection_expiration_timeout]
+
+      db.extension(:connection_expiration)
+      db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout]
+      db.pool.connection_expiration_random_delay = opts[:connection_expiration_random_delay] if opts[:connection_expiration_random_delay]
+      # So that there are no existing connections without an expiration timestamp
+      db.disconnect
     end
 
     def self.load_models(db_config, logger)
@@ -121,21 +121,21 @@ end
 
 class Sequel::Dataset
   def post_load(all_records)
-    return unless self.db.opts[:log_db_queries] && self.db.opts[:query_size_log_threshold]
+    return unless db.opts[:log_db_queries] && db.opts[:query_size_log_threshold]
 
     num_records = all_records.length
-    return unless num_records >= self.db.opts[:query_size_log_threshold]
+    return unless num_records >= db.opts[:query_size_log_threshold]
 
-    self.db.loggers.each do |l|
+    db.loggers.each do |l|
       l.public_send(
-        self.db.sql_log_level,
-        "Loaded #{num_records} records for query #{self.sql.truncate 1000}"
+        db.sql_log_level,
+        "Loaded #{num_records} records for query #{sql.truncate 1000}"
       )
     end
   end
 
   def empty_from_sql
-    ' FROM DUAL' if self.db.database_type == :mysql
+    ' FROM DUAL' if db.database_type == :mysql
   end
 end
 
@@ -177,7 +177,7 @@ module VCAP
 
       migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: "fk_#{table_key}_resource_guid".to_sym
       migration.index [:resource_guid], name: "fk_#{table_key}_resource_guid_index".to_sym
-      migration.index [:key_prefix, :key_name, :value], name: "#{table_key}_compound_index".to_sym
+      migration.index %i[key_prefix key_name value], name: "#{table_key}_compound_index".to_sym
     end
 
     def self.annotations_common(migration, table_key, foreign_resource_table_key)

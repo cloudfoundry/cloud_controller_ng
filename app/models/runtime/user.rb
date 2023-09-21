@@ -7,48 +7,48 @@ module VCAP::CloudController
     no_auto_guid
 
     many_to_many :organizations,
-      before_remove: :validate_organization_roles
+                 before_remove: :validate_organization_roles
 
     many_to_one :default_space, key: :default_space_id, class: 'VCAP::CloudController::Space'
 
     many_to_many :managed_organizations,
-      class: 'VCAP::CloudController::Organization',
-      join_table: 'organizations_managers',
-      right_key: :organization_id, reciprocal: :managers,
-      before_add: :validate_organization
+                 class: 'VCAP::CloudController::Organization',
+                 join_table: 'organizations_managers',
+                 right_key: :organization_id, reciprocal: :managers,
+                 before_add: :validate_organization
 
     many_to_many :billing_managed_organizations,
-      class: 'VCAP::CloudController::Organization',
-      join_table: 'organizations_billing_managers',
-      right_key: :organization_id,
-      reciprocal: :billing_managers,
-      before_add: :validate_organization
+                 class: 'VCAP::CloudController::Organization',
+                 join_table: 'organizations_billing_managers',
+                 right_key: :organization_id,
+                 reciprocal: :billing_managers,
+                 before_add: :validate_organization
 
     many_to_many :audited_organizations,
-      class: 'VCAP::CloudController::Organization',
-      join_table: 'organizations_auditors',
-      right_key: :organization_id, reciprocal: :auditors,
-      before_add: :validate_organization
+                 class: 'VCAP::CloudController::Organization',
+                 join_table: 'organizations_auditors',
+                 right_key: :organization_id, reciprocal: :auditors,
+                 before_add: :validate_organization
 
     many_to_many :spaces,
-      class: 'VCAP::CloudController::Space',
-      join_table: 'spaces_developers',
-      right_key: :space_id, reciprocal: :developers
+                 class: 'VCAP::CloudController::Space',
+                 join_table: 'spaces_developers',
+                 right_key: :space_id, reciprocal: :developers
 
     many_to_many :managed_spaces,
-      class: 'VCAP::CloudController::Space',
-      join_table: 'spaces_managers',
-      right_key: :space_id, reciprocal: :managers
+                 class: 'VCAP::CloudController::Space',
+                 join_table: 'spaces_managers',
+                 right_key: :space_id, reciprocal: :managers
 
     many_to_many :audited_spaces,
-      class: 'VCAP::CloudController::Space',
-      join_table: 'spaces_auditors',
-      right_key: :space_id, reciprocal: :auditors
+                 class: 'VCAP::CloudController::Space',
+                 join_table: 'spaces_auditors',
+                 right_key: :space_id, reciprocal: :auditors
 
     many_to_many :supported_spaces,
-      class: 'VCAP::CloudController::Space',
-      join_table: 'spaces_supporters',
-      right_key: :space_id, reciprocal: :supporters
+                 class: 'VCAP::CloudController::Space',
+                 join_table: 'spaces_supporters',
+                 right_key: :space_id, reciprocal: :supporters
 
     one_to_many :labels, class: 'VCAP::CloudController::UserLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::UserAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -67,14 +67,14 @@ module VCAP::CloudController
     export_attributes :admin, :active, :default_space_guid
 
     import_attributes :guid, :admin, :active,
-      :organization_guids,
-      :managed_organization_guids,
-      :billing_managed_organization_guids,
-      :audited_organization_guids,
-      :space_guids,
-      :managed_space_guids,
-      :audited_space_guids,
-      :default_space_guid
+                      :organization_guids,
+                      :managed_organization_guids,
+                      :billing_managed_organization_guids,
+                      :audited_organization_guids,
+                      :space_guids,
+                      :managed_space_guids,
+                      :audited_space_guids,
+                      :default_space_guid
 
     def validate
       validates_presence :guid
@@ -82,15 +82,15 @@ module VCAP::CloudController
     end
 
     def validate_organization(org)
-      unless org && organizations.include?(org)
-        raise InvalidOrganizationRelation.new("Cannot add role, user does not belong to Organization with guid #{org.guid}")
-      end
+      return if org && organizations.include?(org)
+
+      raise InvalidOrganizationRelation.new("Cannot add role, user does not belong to Organization with guid #{org.guid}")
     end
 
     def validate_organization_roles(org)
-      if org && (managed_organizations.include?(org) || billing_managed_organizations.include?(org) || audited_organizations.include?(org))
-        raise InvalidOrganizationRelation.new("Cannot remove user from Organization with guid #{org.guid} if the user has the OrgManager, BillingManager, or Auditor role")
-      end
+      return unless org && (managed_organizations.include?(org) || billing_managed_organizations.include?(org) || audited_organizations.include?(org))
+
+      raise InvalidOrganizationRelation.new("Cannot remove user from Organization with guid #{org.guid} if the user has the OrgManager, BillingManager, or Auditor role")
     end
 
     def export_attrs
@@ -121,39 +121,39 @@ module VCAP::CloudController
     def add_managed_organization(org)
       validate_organization(org)
       OrganizationManager.find_or_create(user_id: id, organization_id: org.id)
-      self.reload
+      reload
     end
 
     def add_billing_managed_organization(org)
       validate_organization(org)
       OrganizationBillingManager.find_or_create(user_id: id, organization_id: org.id)
-      self.reload
+      reload
     end
 
     def add_audited_organization(org)
       validate_organization(org)
       OrganizationAuditor.find_or_create(user_id: id, organization_id: org.id)
-      self.reload
+      reload
     end
 
     def add_organization(org)
       OrganizationUser.find_or_create(user_id: id, organization_id: org.id)
-      self.reload
+      reload
     end
 
     def add_managed_space(space)
       SpaceManager.find_or_create(user_id: id, space_id: space.id)
-      self.reload
+      reload
     end
 
     def add_audited_space(space)
       SpaceAuditor.find_or_create(user_id: id, space_id: space.id)
-      self.reload
+      reload
     end
 
     def add_space(space)
       SpaceDeveloper.find_or_create(user_id: id, space_id: space.id)
-      self.reload
+      reload
     end
 
     def remove_spaces(space)

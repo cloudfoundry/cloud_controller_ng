@@ -15,13 +15,9 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset, klass)
-        if message.requested?(:available)
-          dataset = dataset.where { Sequel[:service_plans][:active] =~ message.available? }
-        end
+        dataset = dataset.where { Sequel[:service_plans][:active] =~ message.available? } if message.requested?(:available)
 
-        if message.requested?(:names)
-          dataset = dataset.where { Sequel[:service_plans][:name] =~ message.names }
-        end
+        dataset = dataset.where { Sequel[:service_plans][:name] =~ message.names } if message.requested?(:names)
 
         if message.requested?(:service_offering_guids)
           dataset = join_services(dataset)
@@ -38,16 +34,14 @@ module VCAP::CloudController
           dataset = dataset.where { Sequel[:service_instances][:guid] =~ message.service_instance_guids }
         end
 
-        if message.requested?(:broker_catalog_ids)
-          dataset = dataset.where { Sequel[:service_plans][:unique_id] =~ message.broker_catalog_ids }
-        end
+        dataset = dataset.where { Sequel[:service_plans][:unique_id] =~ message.broker_catalog_ids } if message.requested?(:broker_catalog_ids)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ServicePlanLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: ServicePlan,
+            resource_klass: ServicePlan
           )
         end
 

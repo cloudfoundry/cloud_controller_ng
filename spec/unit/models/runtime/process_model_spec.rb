@@ -63,8 +63,8 @@ module VCAP::CloudController
       end
 
       it 'has a default memory' do
-        TestConfig.override(default_app_memory: 873565)
-        expect(process.memory).to eq(873565)
+        TestConfig.override(default_app_memory: 873_565)
+        expect(process.memory).to eq(873_565)
       end
 
       context 'has custom ports' do
@@ -76,8 +76,8 @@ module VCAP::CloudController
       end
 
       it 'has a default log_rate_limit' do
-        TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 873565)
-        expect(process.log_rate_limit).to eq(873565)
+        TestConfig.override(default_app_log_rate_limit_in_bytes_per_second: 873_565)
+        expect(process.log_rate_limit).to eq(873_565)
       end
     end
 
@@ -235,43 +235,43 @@ module VCAP::CloudController
 
         it 'allows nil value' do
           process.app.lifecycle_data.update(buildpacks: nil)
-          expect {
+          expect do
             process.save
-          }.to_not raise_error
+          end.to_not raise_error
           expect(process.buildpack).to eq(AutoDetectionBuildpack.new)
         end
 
         it 'allows a public url' do
           process.app.lifecycle_data.update(buildpacks: ['git://user@github.com/repo.git'])
-          expect {
+          expect do
             process.save
-          }.to_not raise_error
+          end.to_not raise_error
           expect(process.buildpack).to eq(CustomBuildpack.new('git://user@github.com/repo.git'))
         end
 
         it 'allows a public http url' do
           process.app.lifecycle_data.update(buildpacks: ['http://example.com/foo'])
-          expect {
+          expect do
             process.save
-          }.to_not raise_error
+          end.to_not raise_error
           expect(process.buildpack).to eq(CustomBuildpack.new('http://example.com/foo'))
         end
 
         it 'allows a buildpack name' do
           admin_buildpack = Buildpack.make
           process.app.lifecycle_data.update(buildpacks: [admin_buildpack.name])
-          expect {
+          expect do
             process.save
-          }.to_not raise_error
+          end.to_not raise_error
 
           expect(process.buildpack).to eql(admin_buildpack)
         end
 
         it 'does not allow a non-url string' do
           process.app.lifecycle_data.buildpacks = ['Hello, world!']
-          expect {
+          expect do
             process.save
-          }.to raise_error(Sequel::ValidationFailed, /Specified unknown buildpack name: "Hello, world!"/)
+          end.to raise_error(Sequel::ValidationFailed, /Specified unknown buildpack name: "Hello, world!"/)
         end
       end
 
@@ -610,9 +610,9 @@ module VCAP::CloudController
       context 'when the app has a droplet' do
         let(:droplet) do
           DropletModel.make(
-            app:                parent_app,
+            app: parent_app,
             execution_metadata: 'some-other-metadata',
-            state:              VCAP::CloudController::DropletModel::STAGED_STATE
+            state: VCAP::CloudController::DropletModel::STAGED_STATE
           )
         end
 
@@ -768,7 +768,7 @@ module VCAP::CloudController
     describe 'metadata' do
       it 'deserializes the serialized value' do
         process = ProcessModelFactory.make(
-          metadata: { 'jesse' => 'super awesome' },
+          metadata: { 'jesse' => 'super awesome' }
         )
         expect(process.metadata).to eq('jesse' => 'super awesome')
       end
@@ -1117,10 +1117,10 @@ module VCAP::CloudController
             it 'does not update the version' do
               process.instances = 3
 
-              expect {
+              expect do
                 process.save
                 process.reload
-              }.not_to change { process.version }
+              end.not_to(change { process.version })
             end
           end
 
@@ -1128,10 +1128,10 @@ module VCAP::CloudController
             it 'updates the version' do
               process.memory = 17
 
-              expect {
+              expect do
                 process.save
                 process.reload
-              }.to change { process.version }
+              end.to(change { process.version })
             end
           end
 
@@ -1139,10 +1139,10 @@ module VCAP::CloudController
             it 'updates the version' do
               process.ports = [1753]
 
-              expect {
+              expect do
                 process.save
                 process.reload
-              }.to change { process.version }
+              end.to(change { process.version })
             end
           end
         end
@@ -1208,9 +1208,9 @@ module VCAP::CloudController
 
         it 'should update the version when changing health_check_http_endpoint' do
           process.update(health_check_type: 'http', health_check_http_endpoint: '/oldpath')
-          expect {
+          expect do
             process.update(health_check_http_endpoint: '/newpath')
-          }.to change { process.version }
+          end.to(change { process.version })
         end
 
         it 'should update the version when changing :readiness_health_check_type' do
@@ -1220,9 +1220,9 @@ module VCAP::CloudController
 
         it 'should update the version when changing readiness_health_check_http_endpoint' do
           process.update(readiness_health_check_type: 'http', readiness_health_check_http_endpoint: '/oldpath')
-          expect {
+          expect do
             process.update(readiness_health_check_http_endpoint: '/newpath')
-          }.to change { process.version }
+          end.to(change { process.version })
         end
       end
     end
@@ -1270,9 +1270,9 @@ module VCAP::CloudController
         routes.each { |route| RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
 
         uris = nil
-        expect {
+        expect do
           uris = process.uris
-        }.to have_queried_db_times(/select \* from .domains. where/i, 1)
+        end.to have_queried_db_times(/select \* from .domains. where/i, 1)
 
         expect(uris.length).to eq(4)
       end
@@ -1280,9 +1280,9 @@ module VCAP::CloudController
 
     describe 'creation' do
       it 'does not create an AppUsageEvent' do
-        expect {
+        expect do
           ProcessModel.make
-        }.not_to change { AppUsageEvent.count }
+        end.not_to(change { AppUsageEvent.count })
       end
 
       describe 'default_app_memory' do
@@ -1373,9 +1373,9 @@ module VCAP::CloudController
       context 'when app state changes from STOPPED to STARTED' do
         it 'creates an AppUsageEvent' do
           process = ProcessModelFactory.make
-          expect {
+          expect do
             process.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(process)
         end
@@ -1384,9 +1384,9 @@ module VCAP::CloudController
       context 'when app state changes from STARTED to STOPPED' do
         it 'creates an AppUsageEvent' do
           process = ProcessModelFactory.make(state: 'STARTED')
-          expect {
+          expect do
             process.update(state: 'STOPPED')
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(process)
         end
@@ -1395,36 +1395,36 @@ module VCAP::CloudController
       context 'when app instances changes' do
         it 'creates an AppUsageEvent when the app is STARTED' do
           process = ProcessModelFactory.make(state: 'STARTED')
-          expect {
+          expect do
             process.update(instances: 2)
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(process)
         end
 
         it 'does not create an AppUsageEvent when the app is STOPPED' do
           process = ProcessModelFactory.make(state: 'STOPPED')
-          expect {
+          expect do
             process.update(instances: 2)
-          }.not_to change { AppUsageEvent.count }
+          end.not_to(change { AppUsageEvent.count })
         end
       end
 
       context 'when app memory changes' do
         it 'creates an AppUsageEvent when the app is STARTED' do
           process = ProcessModelFactory.make(state: 'STARTED')
-          expect {
+          expect do
             process.update(memory: 2)
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event).to match_app(process)
         end
 
         it 'does not create an AppUsageEvent when the app is STOPPED' do
           process = ProcessModelFactory.make(state: 'STOPPED')
-          expect {
+          expect do
             process.update(memory: 2)
-          }.not_to change { AppUsageEvent.count }
+          end.not_to(change { AppUsageEvent.count })
         end
       end
 
@@ -1432,9 +1432,9 @@ module VCAP::CloudController
         it 'creates an AppUsageEvent that contains the custom buildpack url' do
           process = ProcessModelFactory.make(state: 'STOPPED')
           process.app.lifecycle_data.update(buildpacks: ['https://example.com/repo.git'])
-          expect {
+          expect do
             process.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event.buildpack_name).to eq('https://example.com/repo.git')
           expect(event).to match_app(process)
@@ -1449,9 +1449,9 @@ module VCAP::CloudController
             buildpack_receipt_buildpack: 'Admin buildpack detect string',
             buildpack_receipt_buildpack_guid: buildpack.guid
           )
-          expect {
+          expect do
             process.update(state: 'STARTED')
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change { AppUsageEvent.count }.by(1)
           event = AppUsageEvent.last
           expect(event.buildpack_guid).to eq(buildpack.guid)
           expect(event).to match_app(process)
@@ -1470,26 +1470,26 @@ module VCAP::CloudController
       it 'should destroy all dependent crash events' do
         app_event = AppEvent.make(app: process)
 
-        expect {
+        expect do
           process.destroy
-        }.to change {
+        end.to change {
           AppEvent.where(id: app_event.id).count
         }.from(1).to(0)
       end
 
       it 'creates an AppUsageEvent when the app state is STARTED' do
         process = ProcessModelFactory.make(state: 'STARTED')
-        expect {
+        expect do
           process.destroy
-        }.to change { AppUsageEvent.count }.by(1)
+        end.to change { AppUsageEvent.count }.by(1)
         expect(AppUsageEvent.last).to match_app(process)
       end
 
       it 'does not create an AppUsageEvent when the app state is STOPPED' do
         process = ProcessModelFactory.make(state: 'STOPPED')
-        expect {
+        expect do
           process.destroy
-        }.not_to change { AppUsageEvent.count }
+        end.not_to(change { AppUsageEvent.count })
       end
 
       it 'locks the record when destroying' do
@@ -1509,9 +1509,9 @@ module VCAP::CloudController
       it 'does not allow a docker package for a buildpack app' do
         process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
         PackageModel.make(:docker, app: process.app)
-        expect {
+        expect do
           process.save
-        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
+        end.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
 
       it 'retrieves the docker image from the package' do
@@ -1560,11 +1560,11 @@ module VCAP::CloudController
         end
 
         it 'updates the app version' do
-          expect {
+          expect do
             process.ports  = [1111, 2222]
             process.memory = 2048
             process.save
-          }.to change(process, :version)
+          end.to change(process, :version)
         end
       end
     end
@@ -1590,13 +1590,13 @@ module VCAP::CloudController
       end
 
       context 'when tcp ports are saved in the droplet metadata' do
-        subject(:process) {
+        subject(:process) do
           process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image')
           process.desired_droplet.update(
-            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+            execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}'
           )
           process.reload
-        }
+        end
 
         it 'returns an array of the tcp ports' do
           expect(process.docker_ports).to eq([1024, 1025])
@@ -1618,13 +1618,13 @@ module VCAP::CloudController
       context 'docker app' do
         context 'when app is staged' do
           context 'when some tcp ports are exposed' do
-            subject(:process) {
+            subject(:process) do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               process.desired_droplet.update(
-                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}'
               )
               process.reload
-            }
+            end
 
             it 'does not change ports' do
               expect(process.ports).to be nil
@@ -1655,7 +1655,7 @@ module VCAP::CloudController
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
 
               process.desired_droplet.update(
-                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}'
               )
               process.reload
 
@@ -1667,7 +1667,7 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
               process.desired_droplet.update(
-                execution_metadata: 'some-invalid-json',
+                execution_metadata: 'some-invalid-json'
               )
               process.reload
 
@@ -1679,7 +1679,7 @@ module VCAP::CloudController
             it 'returns the default port' do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               process.desired_droplet.update(
-                execution_metadata: '{"cmd":"run.sh"}',
+                execution_metadata: '{"cmd":"run.sh"}'
               )
               process.reload
 
@@ -1709,7 +1709,7 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
               process.desired_droplet.update(
-                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
+                execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}'
               )
               process.reload
 

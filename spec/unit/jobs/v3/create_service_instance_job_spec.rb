@@ -30,23 +30,23 @@ module VCAP::CloudController
       let(:user_info) { instance_double(UserAuditInfo, { user_guid: user_guid }) }
       let(:audit_hash) { { request: 'some_value' } }
 
-      let(:job) {
+      let(:job) do
         described_class.new(
           service_instance.guid,
           arbitrary_parameters: params,
           user_audit_info: user_info,
           audit_hash: audit_hash
         )
-      }
+      end
 
       describe '#perform' do
-        let(:provision_response) {}
+        let(:provision_response) { nil }
         let(:poll_response) { { finished: false } }
         let(:action) do
           double(VCAP::CloudController::V3::ServiceInstanceCreateManaged, {
-            provision: provision_response,
-            poll: poll_response
-          })
+                   provision: provision_response,
+                   poll: poll_response
+                 })
         end
 
         before do
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
           expect { job.perform }.to raise_error(
             CloudController::Errors::ApiError,
-            /The service instance could not be found: #{service_instance.guid}./,
+            /The service instance could not be found: #{service_instance.guid}./
           )
         end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
         context 'first time' do
           context 'runs compatibility checks' do
             context 'volume mount' do
-              let(:service_offering) { Service.make(requires: %w(volume_mount)) }
+              let(:service_offering) { Service.make(requires: %w[volume_mount]) }
               let(:plan) { ServicePlan.make(service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
@@ -109,7 +109,7 @@ module VCAP::CloudController
             end
 
             context 'route forwarding' do
-              let(:service_offering) { Service.make(requires: %w(route_forwarding)) }
+              let(:service_offering) { Service.make(requires: %w[route_forwarding]) }
               let(:plan) { ServicePlan.make(service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
@@ -129,13 +129,13 @@ module VCAP::CloudController
           context 'computes the maximum duration' do
             before do
               TestConfig.override(
-                broker_client_max_async_poll_duration_minutes: 90009
+                broker_client_max_async_poll_duration_minutes: 90_009
               )
               job.perform
             end
 
             it 'sets to the default value' do
-              expect(job.maximum_duration_seconds).to eq(90009.minutes)
+              expect(job.maximum_duration_seconds).to eq(90_009.minutes)
             end
 
             context 'when the plan defines a duration' do
@@ -159,7 +159,7 @@ module VCAP::CloudController
               expect(action).to have_received(:provision).with(
                 service_instance,
                 parameters: params,
-                accepts_incomplete: true,
+                accepts_incomplete: true
               )
 
               expect(job.finished).to be_truthy
@@ -179,7 +179,7 @@ module VCAP::CloudController
               expect(action).to have_received(:provision).with(
                 service_instance,
                 parameters: params,
-                accepts_incomplete: true,
+                accepts_incomplete: true
               )
 
               expect(action).to have_received(:poll).with(service_instance)
@@ -194,7 +194,7 @@ module VCAP::CloudController
 
               expect { job.perform }.to raise_error(
                 CloudController::Errors::ApiError,
-                'provision could not be completed: StandardError',
+                'provision could not be completed: StandardError'
               )
 
               service_instance.reload
@@ -208,10 +208,10 @@ module VCAP::CloudController
         context 'subsequent times' do
           before do
             service_instance.save_with_new_operation({}, {
-              type: 'create',
-              state: 'in progress',
-              broker_provided_operation: Sham.guid,
-            })
+                                                       type: 'create',
+                                                       state: 'in progress',
+                                                       broker_provided_operation: Sham.guid
+                                                     })
             job.perform
           end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController
 
           context 'the maximum duration' do
             it 'recomputes the value' do
-              job.maximum_duration_seconds = 90009
+              job.maximum_duration_seconds = 90_009
               TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
 
               job.perform
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
             context 'when the plan value changes between calls' do
               before do
-                job.maximum_duration_seconds = 90009
+                job.maximum_duration_seconds = 90_009
                 plan.update(maximum_polling_duration: 5000)
 
                 job.perform
@@ -281,7 +281,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState,
-              'Something went wrong',
+              'Something went wrong'
             )
           end
 
@@ -292,7 +292,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              "An operation for service instance #{service_instance.name} is in progress.",
+              "An operation for service instance #{service_instance.name} is in progress."
             )
           end
 
@@ -301,7 +301,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              'provision could not be completed: bad thing',
+              'provision could not be completed: bad thing'
             )
           end
         end

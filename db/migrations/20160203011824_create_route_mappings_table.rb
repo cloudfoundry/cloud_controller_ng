@@ -16,7 +16,7 @@ Sequel.migration do
       String :process_type
       index :process_type
 
-      unique [:app_guid, :route_guid, :process_type]
+      unique %i[app_guid route_guid process_type]
     end
   end
 end

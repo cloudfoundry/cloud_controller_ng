@@ -45,18 +45,18 @@ module VCAP::CloudController
           let(:type) { PackageModel::DOCKER_TYPE }
 
           it 'raises an error' do
-            expect {
+            expect do
               package.bits_image_reference
-            }.to raise_error('Package type must be bits')
+            end.to raise_error('Package type must be bits')
           end
         end
       end
 
       context 'when not using a package registry' do
         it 'raises an error' do
-          expect {
+          expect do
             package.bits_image_reference
-          }.to raise_error('Package Registry is not configured')
+          end.to raise_error('Package Registry is not configured')
         end
       end
     end
@@ -107,9 +107,9 @@ module VCAP::CloudController
       context 'when the package has been deleted before finishing upload' do
         it 'does not error' do
           PackageModel.find(guid: package.guid).destroy
-          expect {
+          expect do
             package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
-          }.to_not raise_error
+          end.to_not raise_error
         end
       end
     end

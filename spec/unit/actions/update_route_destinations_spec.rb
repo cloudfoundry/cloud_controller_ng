@@ -14,7 +14,7 @@ module VCAP::CloudController
         app: app_model,
         route: route,
         process_type: 'existing',
-        app_port: 3001,
+        app_port: 3001
       )
     end
     let!(:process1) { ProcessModel.make(:process, guid: 'process1-guid', app: app_model, type: 'web', health_check_type: 'none') }
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     before do
       TestConfig.override(
-        kubernetes: {},
+        kubernetes: {}
       )
     end
 
@@ -49,14 +49,14 @@ module VCAP::CloudController
               process_type: 'web',
               app_port: 7000,
               weight: nil,
-              protocol: 'http2',
+              protocol: 'http2'
             },
             {
               app_guid: app_model2.guid,
               process_type: 'worker',
               app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-              weight: nil,
-            },
+              weight: nil
+            }
           ]
         end
 
@@ -66,9 +66,9 @@ module VCAP::CloudController
         end
 
         it 'adds all the destinations and updates the routing' do
-          expect {
+          expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(2)
+          end.to change { RouteMappingModel.count }.by(2)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port, protocol: rm.protocol }
@@ -76,7 +76,7 @@ module VCAP::CloudController
           expect(mappings).to contain_exactly(
             { app_guid: app_model.guid, process_type: 'web', app_port: 7000, protocol: 'http2' },
             { app_guid: app_model.guid, process_type: 'existing', app_port: 3001, protocol: 'http1' },
-            { app_guid: app_model2.guid, process_type: 'worker', app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http1' },
+            { app_guid: app_model2.guid, process_type: 'worker', app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http1' }
           )
         end
 
@@ -100,9 +100,9 @@ module VCAP::CloudController
           end
 
           it 'rejects any inserts' do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to raise_error(
+            end.to raise_error(
               UpdateRouteDestinations::Error,
               'Destinations cannot be inserted when there are weighted destinations already configured.'
             ).and change { RouteMappingModel.count }.by(0)
@@ -147,12 +147,12 @@ module VCAP::CloudController
           end
 
           it 'delegates to the copilot handler to notify copilot' do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).not_to have_received(:map_route).with(have_attributes(process_type: 'existing'))
-            }.to change { RouteMappingModel.count }.by(2)
+            end.to change { RouteMappingModel.count }.by(2)
           end
         end
       end
@@ -173,15 +173,15 @@ module VCAP::CloudController
               {
                 app_guid: app_model.guid,
                 process_type: 'web',
-                app_port: nil,
-              },
+                app_port: nil
+              }
             ]
           end
 
           it "doesn't add the new destination" do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(0)
+            end.to change { RouteMappingModel.count }.by(0)
           end
 
           describe 'audit events' do
@@ -212,15 +212,15 @@ module VCAP::CloudController
               {
                 app_guid: docker_app.guid,
                 process_type: 'web',
-                app_port: nil,
-              },
+                app_port: nil
+              }
             ]
           end
 
           it "doesn't add the new destination" do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(0)
+            end.to change { RouteMappingModel.count }.by(0)
           end
 
           describe 'audit events' do
@@ -243,22 +243,22 @@ module VCAP::CloudController
             {
               app_guid: docker_app.guid,
               process_type: docker_process.type,
-              app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-            },
+              app_port: ProcessModel::NO_APP_PORT_SPECIFIED
+            }
           ]
         end
 
         it 'adds all the destinations and updates the routing' do
-          expect {
+          expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(1)
+          end.to change { RouteMappingModel.count }.by(1)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port }
           end
           expect(mappings).to contain_exactly(
             { app_guid: app_model.guid, process_type: 'existing', app_port: 3001 },
-            { app_guid: docker_app.guid, process_type: 'web', app_port: -1 },
+            { app_guid: docker_app.guid, process_type: 'web', app_port: -1 }
           )
         end
 
@@ -276,15 +276,15 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: -2000000,
-            },
+              app_port: -2_000_000
+            }
           ]
         end
 
         it "doesn't add the new destination" do
-          expect {
+          expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          }.to raise_error(UpdateRouteDestinations::Error, /Ports must be in the 1024-65535/)
+          end.to raise_error(UpdateRouteDestinations::Error, /Ports must be in the 1024-65535/)
         end
       end
 
@@ -294,19 +294,19 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: 8080,
+              app_port: 8080
             },
             {
               app_guid: app_model.guid,
-              process_type: 'web',
-            },
+              process_type: 'web'
+            }
           ]
         end
 
         it 'raises a duplicate destination error' do
-          expect {
+          expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
+          end.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
         end
       end
 
@@ -316,13 +316,13 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: 7000,
+              app_port: 7000
             },
             {
               app_guid: app_model2.guid,
               process_type: 'worker',
-              app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-            },
+              app_port: ProcessModel::NO_APP_PORT_SPECIFIED
+            }
           ]
         end
         before do
@@ -331,15 +331,15 @@ module VCAP::CloudController
               app: app_model,
               route: route,
               process_type: 'existing',
-              app_port: 4001 + i,
+              app_port: 4001 + i
             )
           end
         end
 
         it 'rejects any inserts' do
-          expect {
+          expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          }.to raise_error(
+          end.to raise_error(
             UpdateRouteDestinations::Error,
             'Routes can be mapped to at most 100 destinations.'
           ).and change { RouteMappingModel.count }.by(0)
@@ -356,12 +356,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'http2',
+                protocol: 'http2'
               }
             ]
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
             route.reload
             query = RouteMappingModel.where(route: route,
                                             process_type: process_type,
@@ -378,12 +378,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'http1',
+                protocol: 'http1'
               }
             ]
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
             route.reload
             query = RouteMappingModel.where(route: route,
                                             process_type: process_type,
@@ -400,12 +400,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'tcp',
+                protocol: 'tcp'
               }
             ]
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+            end.to raise_error { UpdateRouteDestinations::Error }.with_message(
               "Cannot use 'tcp' protocol for http routes; valid options are: [http1, http2]."
             )
           end
@@ -428,12 +428,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'tcp',
+                protocol: 'tcp'
               }
             ]
-            expect {
+            expect do
               subject.add(params, tcp_route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
             route.reload
             query = RouteMappingModel.where(route: tcp_route,
                                             process_type: process_type,
@@ -449,12 +449,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'http1',
+                protocol: 'http1'
               }
             ]
-            expect {
+            expect do
               subject.add(params, tcp_route, apps_hash, user_audit_info)
-            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+            end.to raise_error { UpdateRouteDestinations::Error }.with_message(
               "Cannot use 'http1' protocol for tcp routes; valid options are: [tcp]."
             )
           end
@@ -466,12 +466,12 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: process_type,
                 app_port: 7000,
-                protocol: 'http2',
+                protocol: 'http2'
               }
             ]
-            expect {
+            expect do
               subject.add(params, tcp_route, apps_hash, user_audit_info)
-            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
+            end.to raise_error { UpdateRouteDestinations::Error }.with_message(
               "Cannot use 'http2' protocol for tcp routes; valid options are: [tcp]."
             )
           end
@@ -497,16 +497,16 @@ module VCAP::CloudController
                 process_type: 'web',
                 app_port: 8080,
                 protocol: 'http2'
-              },
+              }
             ]
           end
 
           it 'raise an error' do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
-              'Cannot add destination with protocol: http2. Destination already exists for' \
-              " route: #{route.uri}, app: some-guid, process: web, and protocol: http1."
+            end.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              'Cannot add destination with protocol: http2. Destination already exists for ' \
+              "route: #{route.uri}, app: some-guid, process: web, and protocol: http1."
             )
           end
         end
@@ -528,16 +528,16 @@ module VCAP::CloudController
                 app_guid: app_model.guid,
                 process_type: 'web',
                 app_port: 8080
-              },
+              }
             ]
           end
 
           it 'raise an error' do
-            expect {
+            expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            }.to raise_error { UpdateRouteDestinations::Error }.with_message(
-              'Cannot add destination with protocol: http1. Destination already exists for' \
-              " route: #{route.uri}, app: some-guid, process: web, and protocol: http2."
+            end.to raise_error { UpdateRouteDestinations::Error }.with_message(
+              'Cannot add destination with protocol: http1. Destination already exists for ' \
+              "route: #{route.uri}, app: some-guid, process: web, and protocol: http2."
             )
           end
         end
@@ -551,13 +551,13 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: 7000,
+              app_port: 7000
             },
             {
               app_guid: app_model2.guid,
               process_type: 'worker',
-              app_port: 8081,
-            },
+              app_port: 8081
+            }
           ]
         end
 
@@ -568,16 +568,16 @@ module VCAP::CloudController
         end
 
         it 'replaces all the route_mappings' do
-          expect {
+          expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(1)
+          end.to change { RouteMappingModel.count }.by(1)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port }
           end
           expect(mappings).to contain_exactly(
             { app_guid: app_model.guid, process_type: 'web', app_port: 7000 },
-            { app_guid: app_model2.guid, process_type: 'worker', app_port: 8081 },
+            { app_guid: app_model2.guid, process_type: 'worker', app_port: 8081 }
           )
         end
 
@@ -645,12 +645,12 @@ module VCAP::CloudController
           end
 
           it 'delegates to the copilot handler to notify copilot' do
-            expect {
+            expect do
               subject.replace(params, route, apps_hash, user_audit_info)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
           end
         end
 
@@ -658,9 +658,9 @@ module VCAP::CloudController
           let(:params) { [] }
 
           it 'removes the mapping port from the process' do
-            expect {
+            expect do
               subject.replace(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(-1)
+            end.to change { RouteMappingModel.count }.by(-1)
 
             expect(process3_route_handler).to have_received(:update_route_information).with(
               perform_validation: false,
@@ -687,15 +687,15 @@ module VCAP::CloudController
               process_type: 'web',
               app_port: ProcessModel::DEFAULT_HTTP_PORT,
               weight: nil,
-              protocol: nil,
-            },
+              protocol: nil
+            }
           ]
         end
 
         it 'removes the non-matching destination and preserves the matching destination' do
-          expect {
+          expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(-1)
+          end.to change { RouteMappingModel.count }.by(-1)
         end
 
         describe 'audit events' do
@@ -719,19 +719,19 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: 8080,
+              app_port: 8080
             },
             {
               app_guid: app_model.guid,
-              process_type: 'web',
-            },
+              process_type: 'web'
+            }
           ]
         end
 
         it 'raises a duplicate destination error' do
-          expect {
+          expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
+          end.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
         end
       end
 
@@ -741,7 +741,7 @@ module VCAP::CloudController
             app: app_model,
             route: route,
             process_type: 'existing',
-            app_port: 4001,
+            app_port: 4001
           )
         end
 
@@ -750,13 +750,13 @@ module VCAP::CloudController
             {
               app_guid: app_model.guid,
               process_type: 'web',
-              app_port: 7000 + i,
+              app_port: 7000 + i
             }
           end
 
-          expect {
+          expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          }.to raise_error(
+          end.to raise_error(
             UpdateRouteDestinations::Error,
             'Routes can be mapped to at most 100 destinations.'
           ).and change { RouteMappingModel.count }.by(0)
@@ -766,9 +766,9 @@ module VCAP::CloudController
 
     describe '#delete' do
       it 'deletes the route mapping record' do
-        expect {
+        expect do
           subject.delete(existing_destination, route, user_audit_info)
-        }.to change { RouteMappingModel.count }.by(-1)
+        end.to change { RouteMappingModel.count }.by(-1)
         expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -778,9 +778,9 @@ module VCAP::CloudController
         end
 
         it 'rejects the delete' do
-          expect {
+          expect do
             subject.delete(existing_destination, route, user_audit_info)
-          }.to raise_error(
+          end.to raise_error(
             UpdateRouteDestinations::Error,
             'Weighted destinations cannot be deleted individually.'
           ).and change { RouteMappingModel.count }.by(0)
@@ -795,7 +795,7 @@ module VCAP::CloudController
             app: app_model,
             route: other_route,
             process_type: 'existing',
-            app_port: 3001,
+            app_port: 3001
           )
         end
 
@@ -860,16 +860,16 @@ module VCAP::CloudController
             VCAP::CloudController::RouteMappingModel.make(
               app: app_model,
               route: route,
-              process_type: 'existing-' + i.to_s,
+              process_type: 'existing-' + i.to_s
             )
           end
         end
 
         it 'still permits deletions' do
           expect(RouteMappingModel.count).to eq(103)
-          expect {
+          expect do
             subject.delete(RouteMappingModel.last, route, user_audit_info)
-          }.not_to raise_error
+          end.not_to raise_error
           expect(RouteMappingModel.count).to eq(102)
         end
       end

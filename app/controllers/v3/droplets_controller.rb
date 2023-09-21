@@ -17,14 +17,6 @@ require 'controllers/v3/mixins/app_sub_resource'
 class DropletsController < ApplicationController
   include AppSubResource
 
-  def create
-    droplet = hashed_params[:source_guid] ? create_copy : create_fresh
-
-    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
-  rescue DropletCopy::InvalidCopyError, DropletCreate::Error => e
-    unprocessable!(e.message)
-  end
-
   def index
     message = DropletsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -59,18 +51,12 @@ class DropletsController < ApplicationController
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
   end
 
-  def destroy
-    droplet, space = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+  def create
+    droplet = hashed_params[:source_guid] ? create_copy : create_fresh
 
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
-
-    delete_action = DropletDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
+  rescue DropletCopy::InvalidCopyError, DropletCreate::Error => e
+    unprocessable!(e.message)
   end
 
   def update
@@ -88,6 +74,20 @@ class DropletsController < ApplicationController
     droplet = VCAP::CloudController::DropletUpdate.new.update(droplet, message)
 
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
+  def destroy
+    droplet, space = DropletFetcher.new.fetch(hashed_params[:guid])
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
+
+    delete_action = DropletDelete.new(user_audit_info)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def create_copy
@@ -131,9 +131,7 @@ class DropletsController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(droplet.space.id)
     suspended! unless permission_queryer.is_space_active?(droplet.space.id)
 
-    unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
-      unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.')
-    end
+    unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.') unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
 
     pollable_job = DropletUpload.new.upload_async(
       message: message,
@@ -154,20 +152,16 @@ class DropletsController < ApplicationController
 
     unauthorized! unless permission_queryer.can_download_droplet?(droplet.space.id, droplet.space.organization_id)
 
-    unless droplet.buildpack?
-      unprocessable!("Cannot download droplets with 'docker' lifecycle.")
-    end
+    unprocessable!("Cannot download droplets with 'docker' lifecycle.") unless droplet.buildpack?
 
-    unless droplet.staged?
-      unprocessable!('Only staged droplets can be downloaded.')
-    end
+    unprocessable!('Only staged droplets can be downloaded.') unless droplet.staged?
 
     VCAP::CloudController::Repositories::DropletEventRepository.record_download(
       droplet,
       user_audit_info,
       droplet.app.name,
       droplet.space.guid,
-      droplet.space.organization.guid,
+      droplet.space.organization.guid
     )
 
     send_droplet_blob(droplet)
@@ -180,9 +174,7 @@ class DropletsController < ApplicationController
   end
 
   def send_droplet_blob(droplet)
-    if droplet.blobstore_key.nil?
-      resource_not_found_with_message!('Blobstore key not present on droplet. This may be due to a failed build.')
-    end
+    resource_not_found_with_message!('Blobstore key not present on droplet. This may be due to a failed build.') if droplet.blobstore_key.nil?
 
     droplet_blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
     BlobDispatcher.new(blobstore: droplet_blobstore, controller: self).send_or_redirect(guid: droplet.blobstore_key)

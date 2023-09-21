@@ -16,7 +16,7 @@ RSpec.describe 'ServiceBrokers' do
 
       it 'returns a descriptive error' do
         req_body = {
-          broker_url: 'https://broker.example.com',
+          broker_url: 'https://broker.example.com'
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
@@ -40,7 +40,7 @@ RSpec.describe 'ServiceBrokers' do
 
       it 'returns a descriptive error' do
         req_body = {
-          broker_url: 'https://broker.example.com',
+          broker_url: 'https://broker.example.com'
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
@@ -145,9 +145,9 @@ RSpec.describe 'ServiceBrokers' do
         big_string = 'x' * 65 * 1024
 
         schemas = {
-        'service_instance' => {
-          'create' =>  {
-            'parameters' => {
+          'service_instance' => {
+            'create' => {
+              'parameters' => {
                 'type' => 'object',
                 'foo' => big_string
               }

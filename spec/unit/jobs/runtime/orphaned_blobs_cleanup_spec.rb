@@ -274,7 +274,7 @@ module VCAP::CloudController
             let(:droplet_files) do
               [
                 double(:blob, key: "#{CloudController::DependencyLocator::BUILDPACK_CACHE_DIR}/so/me/blobstore-file"),
-                double(:blob, key: "#{CloudController::DependencyLocator::RESOURCE_POOL_DIR}/so/me/blobstore-file"),
+                double(:blob, key: "#{CloudController::DependencyLocator::RESOURCE_POOL_DIR}/so/me/blobstore-file")
               ]
             end
 
@@ -290,7 +290,7 @@ module VCAP::CloudController
           let(:some_files) do
             [
               double(:blob, key: 'so/me/blobstore-file'),
-              double(:blob, key: 'so/me/blobstore-file2'),
+              double(:blob, key: 'so/me/blobstore-file2')
             ]
           end
           let(:droplet_files) { some_files }
@@ -434,9 +434,9 @@ module VCAP::CloudController
             end
 
             it 'stops after marking NUMBER_OF_BLOBS_TO_MARK of blobs as dirty' do
-              expect {
+              expect do
                 job.perform
-              }.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK)
+              end.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK)
             end
           end
         end
@@ -538,9 +538,9 @@ module VCAP::CloudController
 
             it 'deletes the orphaned blob entry and does NOT enqueue a BlobstoreDelete job' do
               orphaned_blob = OrphanedBlob.find(blob_key: 're/al/real-package-blob', blobstore_type: 'package_blobstore')
-              expect {
+              expect do
                 job.perform
-              }.to change {
+              end.to change {
                 orphaned_blob.exists?
               }.from(true).to(false)
               expect(BlobstoreDelete).not_to have_received(:new).with('real-package-blob', :package_blobstore)

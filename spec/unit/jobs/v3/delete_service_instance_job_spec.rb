@@ -23,9 +23,9 @@ module VCAP::CloudController
         let(:poll_response) { { finished: false } }
         let(:action) do
           double(VCAP::CloudController::V3::ServiceInstanceDelete, {
-            delete: delete_response,
-            poll: poll_response
-          })
+                   delete: delete_response,
+                   poll: poll_response
+                 })
         end
 
         before do
@@ -65,13 +65,13 @@ module VCAP::CloudController
             context 'computes the maximum duration' do
               before do
                 TestConfig.override(
-                  broker_client_max_async_poll_duration_minutes: 90009
+                  broker_client_max_async_poll_duration_minutes: 90_009
                 )
                 job.perform
               end
 
               it 'sets to the default value' do
-                expect(job.maximum_duration_seconds).to eq(90009.minutes)
+                expect(job.maximum_duration_seconds).to eq(90_009.minutes)
               end
 
               context 'when the plan defines a duration' do
@@ -97,10 +97,10 @@ module VCAP::CloudController
         context 'subsequent times' do
           before do
             service_instance.save_with_new_operation({}, {
-              type: 'delete',
-              state: 'in progress',
-              broker_provided_operation: Sham.guid,
-            })
+                                                       type: 'delete',
+                                                       state: 'in progress',
+                                                       broker_provided_operation: Sham.guid
+                                                     })
           end
 
           it 'only calls poll' do
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
           context 'the maximum duration' do
             it 'recomputes the value' do
-              job.maximum_duration_seconds = 90009
+              job.maximum_duration_seconds = 90_009
               TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
               job.perform
               expect(job.maximum_duration_seconds).to eq(8088.minutes)
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
             context 'when the plan value changes between calls' do
               before do
-                job.maximum_duration_seconds = 90009
+                job.maximum_duration_seconds = 90_009
                 service_plan.update(maximum_polling_duration: 5000)
                 job.perform
               end
@@ -173,11 +173,12 @@ module VCAP::CloudController
         context 'delete fails' do
           it 're-raises API errors' do
             allow(action).to receive(:delete).and_raise(
-              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name))
+              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+            )
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              "An operation for service instance #{service_instance.name} is in progress.",
+              "An operation for service instance #{service_instance.name} is in progress."
             )
           end
 
@@ -186,7 +187,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              'delete could not be completed: bad thing',
+              'delete could not be completed: bad thing'
             )
           end
         end
@@ -194,11 +195,12 @@ module VCAP::CloudController
         context 'poll fails' do
           it 're-raises API errors' do
             allow(action).to receive(:poll).and_raise(
-              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name))
+              CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+            )
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              "An operation for service instance #{service_instance.name} is in progress.",
+              "An operation for service instance #{service_instance.name} is in progress."
             )
           end
 
@@ -207,7 +209,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              'delete could not be completed: bad thing',
+              'delete could not be completed: bad thing'
             )
           end
         end
@@ -216,8 +218,8 @@ module VCAP::CloudController
       describe 'handle timeout' do
         let(:action) do
           double(VCAP::CloudController::V3::ServiceInstanceDelete, {
-            update_last_operation_with_failure: nil,
-          })
+                   update_last_operation_with_failure: nil
+                 })
         end
 
         before do

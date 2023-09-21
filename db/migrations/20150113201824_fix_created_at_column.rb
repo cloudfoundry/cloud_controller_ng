@@ -1,5 +1,5 @@
 Sequel.migration do
-  TABLE_NAMES = %w(
+  TABLE_NAMES = %w[
     app_events
     app_usage_events
     apps
@@ -29,7 +29,7 @@ Sequel.migration do
     spaces
     stacks
     users
-  ).freeze
+  ].freeze
 
   up do
     if self.class.name.match?(/mysql/i)

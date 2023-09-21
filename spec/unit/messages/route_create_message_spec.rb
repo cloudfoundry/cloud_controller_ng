@@ -14,7 +14,7 @@ module VCAP::CloudController
             path: '/some-path',
             relationships: {
               space: { data: { guid: 'space-guid' } },
-              domain: { data: { guid: 'domain-guid' } },
+              domain: { data: { guid: 'domain-guid' } }
             },
             metadata: {
               labels: { potato: 'yam' },
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
 
         it 'is not valid' do
           expect(subject).not_to be_valid
@@ -42,9 +42,9 @@ module VCAP::CloudController
           {
             relationships: {
               space: { data: { guid: 'space-guid' } },
-              domain: { data: { guid: 'domain-guid' } },
+              domain: { data: { guid: 'domain-guid' } }
             },
-            unexpected: 'meow',
+            unexpected: 'meow'
           }
         end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
             {
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -87,7 +87,7 @@ module VCAP::CloudController
               host: '',
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -121,7 +121,7 @@ module VCAP::CloudController
               host: '*',
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -139,7 +139,7 @@ module VCAP::CloudController
               host: 'some-host',
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
         context 'when it is too large' do
           let(:params) do
-            { port: 65536 }
+            { port: 65_536 }
           end
 
           it 'is not valid' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
             {
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -216,7 +216,7 @@ module VCAP::CloudController
               path: '',
               relationships: {
                 space: { data: { guid: 'space-guid' } },
-                domain: { data: { guid: 'domain-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
               }
             }
           end
@@ -289,7 +289,7 @@ module VCAP::CloudController
         context 'when space has an invalid guid' do
           let(:params) do
             {
-              relationships: { space: { data: { guid: 32 } } },
+              relationships: { space: { data: { guid: 32 } } }
             }
           end
 
@@ -315,7 +315,7 @@ module VCAP::CloudController
         context 'when domain has an invalid guid' do
           let(:params) do
             {
-              relationships: { domain: { data: { guid: 32 } } },
+              relationships: { domain: { data: { guid: 32 } } }
             }
           end
 
@@ -361,7 +361,7 @@ module VCAP::CloudController
         {
           relationships: {
             space: { data: { guid: 'space-guid' } },
-            domain: { data: { guid: 'domain-guid' } },
+            domain: { data: { guid: 'domain-guid' } }
           }
         }
       end

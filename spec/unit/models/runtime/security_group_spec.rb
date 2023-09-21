@@ -15,7 +15,7 @@ module VCAP::CloudController
         'protocol' => 'icmp',
         'type' => 0,
         'code' => 0,
-        'destination' => '0.0.0.0/0',
+        'destination' => '0.0.0.0/0'
       }.merge(attrs)
     end
 
@@ -396,38 +396,38 @@ module VCAP::CloudController
         subject(:sec_group) { SecurityGroup.make }
 
         it 'should allow standard ascii characters' do
-          sec_group.name = "A -_- word 2!?()\'\"&+."
-          expect {
+          sec_group.name = "A -_- word 2!?()'\"&+."
+          expect do
             sec_group.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should allow backslash characters' do
           sec_group.name = 'a\\word'
-          expect {
+          expect do
             sec_group.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           sec_group.name = 'Ω∂∂ƒƒß√˜˙∆ß'
-          expect {
+          expect do
             sec_group.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should not allow newline characters' do
           sec_group.name = "one\ntwo"
-          expect {
+          expect do
             sec_group.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape characters' do
           sec_group.name = "a\e word"
-          expect {
+          expect do
             sec_group.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -870,7 +870,7 @@ module VCAP::CloudController
 
         context 'when rules is not an array of hashes' do
           before do
-            subject.rules = ['valid', 'json']
+            subject.rules = %w[valid json]
           end
 
           it 'is not valid' do

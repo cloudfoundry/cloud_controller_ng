@@ -21,7 +21,7 @@ module CloudController::Errors
       end
 
       it 'returns the wrapped error code' do
-        expect(error.code).to eq(12345)
+        expect(error.code).to eq(12_345)
       end
     end
 
@@ -29,7 +29,7 @@ module CloudController::Errors
       double(Details,
              name: message,
              response_code: 222,
-             code: 12345,
+             code: 12_345,
              message_format: 'Before %s %s after.')
     end
   end

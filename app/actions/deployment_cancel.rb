@@ -41,7 +41,7 @@ module VCAP::CloudController
           user_audit_info,
           app.name,
           app.space_guid,
-          app.space.organization_guid,
+          app.space.organization_guid
         )
       end
     end

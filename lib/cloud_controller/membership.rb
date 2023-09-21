@@ -9,8 +9,8 @@ module VCAP::CloudController
     ORG_AUDITOR = 'organization_auditor'.freeze
     ORG_BILLING_MANAGER = 'organization_billing_manager'.freeze
 
-    SPACE_ROLES = %w(space_developer space_manager space_auditor space_supporter).freeze
-    ORG_ROLES = %w(organization_manager organization_billing_manager organization_auditor organization_user).freeze
+    SPACE_ROLES = %w[space_developer space_manager space_auditor space_supporter].freeze
+    ORG_ROLES = %w[organization_manager organization_billing_manager organization_auditor organization_user].freeze
 
     def initialize(user)
       @user = user

@@ -10,12 +10,12 @@ module VCAP::CloudController
     describe 'droplet' do
       context 'revision provided' do
         let(:revision) { RevisionModel.make(droplet: droplet) }
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            revision: { guid: revision.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        revision: { guid: revision.guid }
+                                      })
+        end
 
         context 'the revision exists' do
           it 'returns the droplet associated with the given revision' do
@@ -28,9 +28,9 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect {
+              expect do
                 subject.droplet
-              }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists/)
+              end.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists/)
             end
           end
 
@@ -40,9 +40,9 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect {
+              expect do
                 subject.droplet
-              }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists/)
+              end.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists/)
             end
           end
         end
@@ -53,20 +53,20 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               subject.droplet
-            }.to raise_error(DeploymentCreate::Error, /The revision does not exist/)
+            end.to raise_error(DeploymentCreate::Error, /The revision does not exist/)
           end
         end
       end
 
       context 'droplet provided' do
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            droplet: { guid: droplet.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        droplet: { guid: droplet.guid }
+                                      })
+        end
 
         it 'returns the droplet' do
           expect(subject.droplet).to eq(droplet)
@@ -74,11 +74,11 @@ module VCAP::CloudController
       end
 
       context 'neither droplet or revision provided' do
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } }
+                                      })
+        end
 
         context 'the app has a droplet set' do
           before do
@@ -96,9 +96,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               subject.droplet
-            }.to raise_error(DeploymentCreate::Error, /Invalid droplet. Please specify a droplet in the request or set a current droplet for the app./)
+            end.to raise_error(DeploymentCreate::Error, /Invalid droplet. Please specify a droplet in the request or set a current droplet for the app./)
           end
         end
       end
@@ -109,12 +109,12 @@ module VCAP::CloudController
         let(:revision) do
           RevisionModel.make(droplet: droplet, environment_variables: { 'baz' => 'qux' })
         end
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            revision: { guid: revision.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        revision: { guid: revision.guid }
+                                      })
+        end
 
         it 'returns the revision env vars' do
           expect(subject.environment_variables).to eq(revision.environment_variables)
@@ -122,12 +122,12 @@ module VCAP::CloudController
       end
 
       context 'a revision is NOT provided' do
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            droplet: { guid: droplet.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        droplet: { guid: droplet.guid }
+                                      })
+        end
 
         it 'returns the app env vars' do
           expect(subject.environment_variables).to eq(app.environment_variables)
@@ -138,12 +138,12 @@ module VCAP::CloudController
     describe 'rollback_target_revision' do
       context 'a revision is provided' do
         let(:revision) { RevisionModel.make(droplet: droplet) }
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            revision: { guid: revision.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        revision: { guid: revision.guid }
+                                      })
+        end
 
         it 'returns the given revision' do
           expect(subject.rollback_target_revision).to eq(revision)
@@ -151,12 +151,12 @@ module VCAP::CloudController
       end
 
       context 'a revision is not provided' do
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            droplet: { guid: droplet.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        droplet: { guid: droplet.guid }
+                                      })
+        end
 
         it 'returns nil' do
           expect(subject.rollback_target_revision).to be_nil
@@ -166,12 +166,12 @@ module VCAP::CloudController
 
     describe '#apply_to_app' do
       let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
-      let(:message) {
+      let(:message) do
         DeploymentCreateMessage.new({
-          relationships: { app: { data: { guid: app.guid } } },
-          droplet: { guid: droplet.guid },
-        })
-      }
+                                      relationships: { app: { data: { guid: app.guid } } },
+                                      droplet: { guid: droplet.guid }
+                                    })
+      end
 
       context 'assigning the droplet succeeds' do
         it 'assigns the droplet to the app' do
@@ -190,19 +190,19 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.apply_to_app(app, user_audit_info)
-          }.to raise_error(DeploymentCreate::Error, /foo/)
+          end.to raise_error(DeploymentCreate::Error, /foo/)
         end
       end
 
       context 'when rolling back to a revision' do
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            revision: { guid: revision.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        revision: { guid: revision.guid }
+                                      })
+        end
         let(:revision) { RevisionModel.make(droplet: droplet, app: app) }
 
         context 'assigning environment variables' do
@@ -223,7 +223,7 @@ module VCAP::CloudController
               revision: revision,
               name: 'sidecar-name',
               command: 'sidecar-command',
-              memory: 12,
+              memory: 12
             )
           end
 

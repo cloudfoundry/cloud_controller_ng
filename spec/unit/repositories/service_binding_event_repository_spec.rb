@@ -38,7 +38,7 @@ module VCAP::CloudController
 
           expect(event.metadata[:request]).to eq(
             {
-              'big'  => 'data',
+              'big' => 'data',
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
           expect(event.metadata[:request]).to eq(
             {
-              'big'  => 'data',
+              'big' => 'data',
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
@@ -135,8 +135,8 @@ module VCAP::CloudController
           expect(event.metadata).to eq(
             request: {
               app_guid: service_binding.app_guid,
-              service_instance_guid: service_binding.service_instance_guid,
-            },
+              service_instance_guid: service_binding.service_instance_guid
+            }
           )
         end
 
@@ -167,8 +167,8 @@ module VCAP::CloudController
           expect(event.metadata).to eq(
             request: {
               app_guid: service_binding.app_guid,
-              service_instance_guid: service_binding.service_instance_guid,
-            },
+              service_instance_guid: service_binding.service_instance_guid
+            }
           )
         end
 

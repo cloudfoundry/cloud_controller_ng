@@ -8,6 +8,6 @@ Sequel.migration do
     # run this migration AND environments that have not run this migration
   end
 
-  down do
+  down do # Rubocop:disable Lint/EmptyBlock
   end
 end

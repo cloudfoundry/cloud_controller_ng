@@ -46,12 +46,12 @@ module VCAP::CloudController
       context 'interval' do
         context 'when the interval for job has not elapsed' do
           before do
-            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {}
+            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) { nil }
           end
 
           it 'does NOT execute the block' do
             executed = false
-            DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes do
+            DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes do
               executed = true
             end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
         context 'when the interval for the job has elapsed' do
           before do
-            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {}
+            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) { nil }
             Timecop.travel(Time.now.utc + 1.minute)
           end
 
@@ -93,9 +93,9 @@ module VCAP::CloudController
 
           context 'and the job is in progress' do
             before do
-              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {
-                Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
-              }
+              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) do
+                Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now.utc)
+              end
             end
 
             it 'does not execute the block' do
@@ -115,7 +115,7 @@ module VCAP::CloudController
               counter = 0
 
               DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
+                Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now.utc)
                 counter += 1
                 Timecop.travel(Time.now.utc + 1.minute + 2.seconds)
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
           context 'when the job has run before' do
             context 'when the job is "diego_sync"' do
               before do
-                DistributedExecutor.new.execute_job(name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
+                DistributedExecutor.new.execute_job(name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes) { nil }
                 Timecop.travel(Time.now.utc + 1.minute + 1.second)
               end
 
@@ -153,7 +153,7 @@ module VCAP::CloudController
 
             context 'when the job is not "diego_sync"' do
               before do
-                DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
+                DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) { nil }
                 Timecop.travel(Time.now.utc + 1.minute + 1.second)
               end
 
@@ -161,7 +161,7 @@ module VCAP::CloudController
                 counter = 0
 
                 DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                  Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
+                  Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now.utc)
                   Timecop.travel(Time.now.utc + 1.minute + 1.second)
                   counter += 1
 
@@ -180,7 +180,7 @@ module VCAP::CloudController
       context 'when the job errors' do
         before do
           DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-            Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
+            Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now.utc)
           end
         end
 

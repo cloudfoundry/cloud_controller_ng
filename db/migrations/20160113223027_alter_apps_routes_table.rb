@@ -5,7 +5,7 @@ Sequel.migration do
       drop_foreign_key [:app_id], name: :fk_apps_routes_app_id
       drop_foreign_key [:route_id], name: :fk_apps_routes_route_id
 
-      drop_index [:app_id, :route_id], name: :ar_app_id_route_id_index
+      drop_index %i[app_id route_id], name: :ar_app_id_route_id_index
 
       add_foreign_key [:app_id], :apps, name: :fk_apps_routes_app_id
       add_foreign_key [:route_id], :routes, name: :fk_apps_routes_route_id
@@ -53,10 +53,8 @@ Sequel.migration do
       drop_column :created_at
       drop_column :id
 
-      add_index [:app_id, :route_id], unique: true, name: :ar_app_id_route_id_index
+      add_index %i[app_id route_id], unique: true, name: :ar_app_id_route_id_index
     end
-    if self.class.name.match?(/postgres/i)
-      run 'drop function if exists get_uuid();'
-    end
+    run 'drop function if exists get_uuid();' if self.class.name.match?(/postgres/i)
   end
 end

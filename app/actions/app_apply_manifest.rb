@@ -77,9 +77,9 @@ module VCAP::CloudController
 
     def create_process(app, manifest_process_update_msg, process_type)
       ProcessCreate.new(@user_audit_info, manifest_triggered: true).create(app, {
-        type: process_type,
-        command: manifest_process_update_msg.command
-      })
+                                                                             type: process_type,
+                                                                             command: manifest_process_update_msg.command
+                                                                           })
     end
 
     def find_sidecar(app, sidecar_name)
@@ -110,15 +110,15 @@ module VCAP::CloudController
         ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
       end
 
-      if update_message.default_route && existing_routes.empty?
-        validate_name_dns_compliant!(app.name)
-        domain_name = get_default_domain_name(app)
+      return unless update_message.default_route && existing_routes.empty?
 
-        route = "#{app.name}.#{domain_name}"
+      validate_name_dns_compliant!(app.name)
+      domain_name = get_default_domain_name(app)
 
-        random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
-        ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
-      end
+      route = "#{app.name}.#{domain_name}"
+
+      random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
+      ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
     end
 
     def get_default_domain_name(app)
@@ -131,13 +131,11 @@ module VCAP::CloudController
     def validate_name_dns_compliant!(name)
       prefix = 'Failed to create default route from app name:'
 
-      if name.present? && name.length > 63
-        error!(prefix + ' Host cannot exceed 63 characters')
-      end
+      error!(prefix + ' Host cannot exceed 63 characters') if name.present? && name.length > 63
 
-      unless name&.match(/\A[\w\-]+\z/)
-        error!(prefix + ' Host must be either "*" or contain only alphanumeric characters, "_", or "-"')
-      end
+      return if name&.match(/\A[\w\-]+\z/)
+
+      error!(prefix + ' Host must be either "*" or contain only alphanumeric characters, "_", or "-"')
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
@@ -159,45 +157,44 @@ module VCAP::CloudController
             service_instance,
             app: app,
             volume_mount_services_enabled: volume_services_enabled?,
-            message: binding_message)
+            message: binding_message
+          )
 
           begin
             binding = action.bind(binding, parameters: binding_message.parameters, accepts_incomplete: false)
-            if binding[:async]
-              raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously when a synchronous bind was requested.')
-            end
+            raise ServiceBrokerRespondedAsyncWhenNotAllowed.new('The service broker responded asynchronously when a synchronous bind was requested.') if binding[:async]
           rescue VCAP::Services::ServiceBrokers::V2::Errors::AsyncRequired
             binding = action.bind(binding, parameters: binding_message.parameters, accepts_incomplete: true)
             poll_async_binding(action, binding)
           end
-        rescue => e
+        rescue StandardError => e
           raise_binding_error!(service_instance, e.message)
         end
       end
     end
 
     def poll_async_binding(action, binding)
-      start = Time.now
+      start = Time.now.utc
       poll_result = action.poll(binding)
 
-      while !poll_result[:finished] && Time.now < (start + max_polling_duration)
+      while !poll_result[:finished] && Time.now.utc < (start + max_polling_duration)
         retry_after = poll_result[:retry_after] || DEFAULT_POLLING_INTERVAL
         sleep [retry_after, MAX_POLLING_INTERVAL].min
         poll_result = action.poll(binding)
       end
 
-      if !poll_result[:finished]
-        binding.save_with_attributes_and_new_operation(
-          {},
-          {
-            type: 'create',
-            state: 'failed',
-            description: 'Polling exceed the maximum polling duration',
-          }
-        )
-        VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding)
-        raise MaximumPollingDurationExceeded.new("Polling exceeded the maximum duration of #{max_polling_duration}")
-      end
+      return if poll_result[:finished]
+
+      binding.save_with_attributes_and_new_operation(
+        {},
+        {
+          type: 'create',
+          state: 'failed',
+          description: 'Polling exceed the maximum polling duration'
+        }
+      )
+      VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding)
+      raise MaximumPollingDurationExceeded.new("Polling exceeded the maximum duration of #{max_polling_duration}")
     end
 
     def create_binding_message(service_instance_guid, app_guid, manifest_service_binding)

@@ -10,7 +10,7 @@ RSpec.describe 'V3 service offerings' do
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
   describe 'GET /v3/service_offerings/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/service_offerings/#{service_offering.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_offerings/#{service_offering.guid}", nil, user_headers } }
 
     let(:successful_response) do
       {
@@ -20,7 +20,7 @@ RSpec.describe 'V3 service offerings' do
     end
 
     context 'when the service offering does not exist' do
-      let(:api_call) { lambda { |user_headers| get '/v3/service_offerings/does-not-exist-guid', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/service_offerings/does-not-exist-guid', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         Hash.new(code: 404)
@@ -106,7 +106,7 @@ RSpec.describe 'V3 service offerings' do
         let(:expected_codes_and_responses) do
           responses_for_space_restricted_single_endpoint(
             create_offering_json(service_offering),
-            permitted_roles: %w(
+            permitted_roles: %w[
               admin
               admin_read_only
               global_auditor
@@ -114,7 +114,7 @@ RSpec.describe 'V3 service offerings' do
               space_supporter
               space_manager
               space_auditor
-            )
+            ]
           )
         end
 
@@ -172,17 +172,17 @@ RSpec.describe 'V3 service offerings' do
         get "/v3/service_offerings/#{guid}", nil, admin_headers
 
         expect(parsed_response.deep_symbolize_keys).to include({
-          metadata: {
-            labels: {
-              one: 'foo',
-              two: 'bar',
-            },
-            annotations: {
-              alpha: 'A1',
-              beta: 'B2',
-            }
-          }
-        })
+                                                                 metadata: {
+                                                                   labels: {
+                                                                     one: 'foo',
+                                                                     two: 'bar'
+                                                                   },
+                                                                   annotations: {
+                                                                     alpha: 'A1',
+                                                                     beta: 'B2'
+                                                                   }
+                                                                 }
+                                                               })
       end
     end
 
@@ -201,7 +201,7 @@ RSpec.describe 'V3 service offerings' do
   end
 
   describe 'GET /v3/service_offerings' do
-    let(:api_call) { lambda { |user_headers| get '/v3/service_offerings', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/service_offerings', nil, user_headers } }
 
     it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/service_offerings' }
@@ -210,11 +210,11 @@ RSpec.describe 'V3 service offerings' do
       let(:params) do
         {
           available: true,
-          service_broker_guids: %w(foo bar),
-          service_broker_names: %w(baz qux),
-          names: %w(quux quuz),
-          space_guids: %w(hoge piyo),
-          organization_guids: %w(fuga hogera),
+          service_broker_guids: %w[foo bar],
+          service_broker_names: %w[baz qux],
+          names: %w[quux quuz],
+          space_guids: %w[hoge piyo],
+          organization_guids: %w[fuga hogera],
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
@@ -222,7 +222,7 @@ RSpec.describe 'V3 service offerings' do
           fields: { 'service_broker' => 'name' },
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -255,7 +255,7 @@ RSpec.describe 'V3 service offerings' do
             create_offering_json(public_service_offering),
             create_offering_json(private_service_offering),
             create_offering_json(space_scoped_service_offering),
-            create_offering_json(org_restricted_service_offering),
+            create_offering_json(org_restricted_service_offering)
           ]
         }
       end
@@ -265,7 +265,7 @@ RSpec.describe 'V3 service offerings' do
           code: 200,
           response_objects: [
             create_offering_json(public_service_offering),
-            create_offering_json(org_restricted_service_offering),
+            create_offering_json(org_restricted_service_offering)
           ]
         }
       end
@@ -276,7 +276,7 @@ RSpec.describe 'V3 service offerings' do
           response_objects: [
             create_offering_json(public_service_offering),
             create_offering_json(space_scoped_service_offering),
-            create_offering_json(org_restricted_service_offering),
+            create_offering_json(org_restricted_service_offering)
           ]
         }
       end
@@ -285,7 +285,7 @@ RSpec.describe 'V3 service offerings' do
         Hash.new(
           code: 200,
           response_objects: [
-            create_offering_json(public_service_offering),
+            create_offering_json(public_service_offering)
           ]
         ).tap do |h|
           h['admin'] = all_offerings_response
@@ -331,24 +331,24 @@ RSpec.describe 'V3 service offerings' do
         get '/v3/service_offerings', nil, admin_headers
 
         expect(parsed_response['resources'][0].deep_symbolize_keys).to include({
-          metadata: {
-            labels: { one: 'foo' },
-            annotations: { alpha: 'A1' }
-          }
-        })
+                                                                                 metadata: {
+                                                                                   labels: { one: 'foo' },
+                                                                                   annotations: { alpha: 'A1' }
+                                                                                 }
+                                                                               })
 
         expect(parsed_response['resources'][1].deep_symbolize_keys).to include({
-          metadata: {
-            labels: { two: 'bar' },
-            annotations: { beta: 'B2' }
-          }
-        })
+                                                                                 metadata: {
+                                                                                   labels: { two: 'bar' },
+                                                                                   annotations: { beta: 'B2' }
+                                                                                 }
+                                                                               })
       end
     end
 
     describe 'filters' do
       describe 'available' do
-        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?available=#{available}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/service_offerings?available=#{available}", nil, user_headers } }
 
         let!(:service_offering_available) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
         let!(:service_offering_unavailable) do
@@ -360,14 +360,14 @@ RSpec.describe 'V3 service offerings' do
         it 'filters for available offerings' do
           expect_filtered_service_offerings(
             'available=true',
-            [service_offering_available],
+            [service_offering_available]
           )
         end
 
         it 'filters for unavailable offerings' do
           expect_filtered_service_offerings(
             'available=false',
-            [service_offering_unavailable],
+            [service_offering_unavailable]
           )
         end
       end
@@ -485,8 +485,8 @@ RSpec.describe 'V3 service offerings' do
             [
               service_offering_1,
               service_offering_2,
-              service_offering_3,
-            ],
+              service_offering_3
+            ]
           )
         end
       end
@@ -513,8 +513,8 @@ RSpec.describe 'V3 service offerings' do
             [
               service_offering_1,
               service_offering_2,
-              service_offering_4,
-            ],
+              service_offering_4
+            ]
           )
         end
       end
@@ -531,8 +531,8 @@ RSpec.describe 'V3 service offerings' do
             "names=#{service_offering_names.join(',')}",
             [
               service_offering_1,
-              service_offering_4,
-            ],
+              service_offering_4
+            ]
           )
         end
       end
@@ -553,8 +553,8 @@ RSpec.describe 'V3 service offerings' do
             'label_selector=flavor=orange',
             [
               service_offering_1,
-              service_offering_2,
-            ],
+              service_offering_2
+            ]
           )
         end
       end
@@ -619,7 +619,7 @@ RSpec.describe 'V3 service offerings' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ServiceOfferingListFetcher).to receive(:fetch).with(
           an_instance_of(VCAP::CloudController::ServiceOfferingsListMessage),
-          hash_including(eager_loaded_associations: [:labels, :annotations, :service_broker])
+          hash_including(eager_loaded_associations: %i[labels annotations service_broker])
         ).and_call_original
 
         get '/v3/service_offerings', nil, admin_headers
@@ -630,20 +630,20 @@ RSpec.describe 'V3 service offerings' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::Service }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/service_offerings?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/service_offerings?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
   end
 
   describe 'DELETE /v3/service_offerings/:guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/service_offerings/#{guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/service_offerings/#{guid}", nil, user_headers } }
 
-    let(:db_check) {
+    let(:db_check) do
       lambda do
         expect(VCAP::CloudController::Service.all).to be_empty
       end
-    }
+    end
 
     context 'when the service offering does not exist' do
       let(:guid) { 'non-existing-guid' }
@@ -756,7 +756,7 @@ RSpec.describe 'V3 service offerings' do
         delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers
 
         expect([
-          { type: 'audit.service.delete', actor: email },
+          { type: 'audit.service.delete', actor: email }
         ]).to be_reported_as_events
       end
     end
@@ -819,7 +819,7 @@ RSpec.describe 'V3 service offerings' do
             { type: 'audit.service.delete', actor: email },
             { type: 'audit.service_instance.purge', actor: email },
             { type: 'audit.service_binding.delete', actor: email },
-            { type: 'audit.service_key.delete', actor: email },
+            { type: 'audit.service_key.delete', actor: email }
           ]).to be_reported_as_events
         end
       end
@@ -829,14 +829,14 @@ RSpec.describe 'V3 service offerings' do
   describe 'PATCH /v3/service_offerings/:guid' do
     let(:labels) { { potato: 'sweet' } }
     let(:annotations) { { style: 'mashed', amount: 'all' } }
-    let(:update_request_body) {
+    let(:update_request_body) do
       {
         metadata: {
           labels: labels,
           annotations: annotations
         }
       }
-    }
+    end
 
     it 'can update labels and annotations' do
       service_offering = VCAP::CloudController::ServicePlan.make(public: true, active: true).service
@@ -880,7 +880,7 @@ RSpec.describe 'V3 service offerings' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/service_offerings/#{guid}", update_request_body.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/service_offerings/#{guid}", update_request_body.to_json, user_headers } }
       let(:guid) { service_offering.guid }
 
       context 'when the service offering exists and has no plans' do
@@ -995,18 +995,18 @@ RSpec.describe 'V3 service offerings' do
           'bindable' => true,
           'instances_retrievable' => false,
           'bindings_retrievable' => false,
-          'allow_context_updates' => false,
+          'allow_context_updates' => false
         }
       },
       'links' => {
         'self' => {
-          'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\/#{service_offering.guid})
+          'href' => %r{#{Regexp.escape(link_prefix)}/v3/service_offerings/#{service_offering.guid}}
         },
         'service_plans' => {
-          'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_plans\?service_offering_guids=#{service_offering.guid})
+          'href' => %r{#{Regexp.escape(link_prefix)}/v3/service_plans\?service_offering_guids=#{service_offering.guid}}
         },
         'service_broker' => {
-          'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{service_offering.service_broker.guid})
+          'href' => %r{#{Regexp.escape(link_prefix)}/v3/service_brokers/#{service_offering.service_broker.guid}}
         }
       },
       'relationships' => {

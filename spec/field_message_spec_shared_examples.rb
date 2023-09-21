@@ -37,7 +37,7 @@ RSpec.shared_examples 'field query parameter' do |resource, keys|
     expect(message).not_to be_valid
     expect(message.errors[:fields]).to include(include(
                                                  '[space.foo] valid resources are:'
-    ))
+                                               ))
   end
 end
 
@@ -53,7 +53,7 @@ RSpec.shared_examples 'fields query hash' do
     expect(message).not_to be_valid
     expect(message.errors[:fields]).to include(include(
                                                  '[space.foo] valid resources are:'
-    ))
+                                               ))
   end
 end
 

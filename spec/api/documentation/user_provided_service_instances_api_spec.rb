@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
+RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
   let(:guid) { service_instance.guid }
@@ -62,9 +62,9 @@ RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
       field :guid, 'The guid of the Service Instance.', required: true
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController,
-        outer_model: :user_provided_service_instance,
-        exclude_parameters: ['service_instance_guid'],
-        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+                          outer_model: :user_provided_service_instance,
+                          exclude_parameters: ['service_instance_guid'],
+                          export_attributes: %i[app_guid service_instance_guid credentials binding_options gateway_data gateway_name syslog_drain_url volume_mounts]
     end
 
     describe 'Routes' do

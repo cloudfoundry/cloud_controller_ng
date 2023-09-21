@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppFeatureUpdateMessage do
     let(:body) do
       {
-        'enabled' => true,
+        'enabled' => true
       }
     end
 

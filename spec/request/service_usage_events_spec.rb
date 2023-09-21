@@ -8,7 +8,7 @@ RSpec.describe 'Service Usage Events' do
   let(:org) { space.organization }
 
   describe 'GET /v3/service_usage_events/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/service_usage_events/#{usage_event.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/service_usage_events/#{usage_event.guid}", nil, user_headers } }
 
     let(:usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
 
@@ -53,11 +53,11 @@ RSpec.describe 'Service Usage Events' do
   end
 
   describe 'GET /v3/service_usage_events' do
-    let(:api_call) { lambda { |user_headers| get '/v3/service_usage_events', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/service_usage_events', nil, user_headers } }
 
     let!(:service_usage_event) do
       VCAP::CloudController::ServiceUsageEvent.make(
-        created_at: Time.now,
+        created_at: Time.now.utc,
         service_instance_type: 'managed_service_instance',
         service_guid: 'offering-guid'
       )
@@ -65,7 +65,7 @@ RSpec.describe 'Service Usage Events' do
 
     let!(:service_usage_event_2) do
       VCAP::CloudController::ServiceUsageEvent.make(
-        created_at: Time.now,
+        created_at: Time.now.utc,
         service_instance_type: 'user_provided_service_instance',
         service_guid: 'offering-guid-2'
       )
@@ -170,7 +170,7 @@ RSpec.describe 'Service Usage Events' do
   end
 
   describe 'POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed', isolation: :truncation do
-    let(:api_call) { lambda { |user_headers| post '/v3/service_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/service_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
 
     let!(:service_instance) do
       VCAP::CloudController::ServiceInstance.make
@@ -209,30 +209,30 @@ RSpec.describe 'Service Usage Events' do
       'state' => service_usage_event.state,
       'space' => {
         'guid' => service_usage_event.space_guid,
-        'name' => service_usage_event.space_name,
+        'name' => service_usage_event.space_name
       },
       'organization' => {
-        'guid' => service_usage_event.org_guid,
+        'guid' => service_usage_event.org_guid
       },
       'service_instance' => {
         'guid' => service_usage_event.service_instance_guid,
         'name' => service_usage_event.service_instance_name,
-        'type' => service_usage_event.service_instance_type,
+        'type' => service_usage_event.service_instance_type
       },
       'service_plan' => {
         'guid' => service_usage_event.service_plan_guid,
-        'name' => service_usage_event.service_plan_name,
+        'name' => service_usage_event.service_plan_name
       },
       'service_offering' => {
         'guid' => service_usage_event.service_guid,
-        'name' => service_usage_event.service_label,
+        'name' => service_usage_event.service_label
       },
       'service_broker' => {
         'guid' => service_usage_event.service_broker_guid,
-        'name' => service_usage_event.service_broker_name,
+        'name' => service_usage_event.service_broker_name
       },
       'links' => {
-        'self' => { 'href' => "#{link_prefix}/v3/service_usage_events/#{service_usage_event.guid}" },
+        'self' => { 'href' => "#{link_prefix}/v3/service_usage_events/#{service_usage_event.guid}" }
       }
     }
   end

@@ -24,9 +24,7 @@ module VCAP::CloudController
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
-          unless lifecycle_bundle
-            raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'")
-          end
+          raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
           [
             ::Diego::Bbs::Models::CachedDependency.new(
@@ -55,7 +53,7 @@ module VCAP::CloudController
               cache_key: "droplets-#{@process_guid}",
               user: action_user,
               checksum_algorithm: @checksum_algorithm,
-              checksum_value: @checksum_value,
+              checksum_value: @checksum_value
             }.compact)
           ])
         end
@@ -76,7 +74,7 @@ module VCAP::CloudController
               url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               destination_path: '/tmp/lifecycle',
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
             )
           ]
 
@@ -88,7 +86,7 @@ module VCAP::CloudController
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
               digest_value: @checksum_value,
-              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
             }.compact)
           end
 
@@ -100,7 +98,7 @@ module VCAP::CloudController
         end
 
         def ports
-          return @ports if @ports && !@ports.empty?
+          return @ports if @ports.present?
 
           [DEFAULT_APP_PORT]
         end
@@ -109,7 +107,7 @@ module VCAP::CloudController
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: ports.first.to_s),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0')
           ]
         end
 

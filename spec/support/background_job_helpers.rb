@@ -12,9 +12,7 @@ module BackgroundJobHelpers
     successes, failures = Delayed::Worker.new.work_off(jobs_to_execute)
     failure_message = "Expected #{expected_successes} successful and #{expected_failures} failed jobs, got #{successes} successful and #{failures} failed jobs."
     fail_summaries = Delayed::Job.exclude(failed_at: nil).map { |j| "Handler: #{j.handler}, LastError: #{j.last_error}" }
-    if fail_summaries.count > 0
-      failure_message += " Failures: \n#{fail_summaries.join("\n")}"
-    end
+    failure_message += " Failures: \n#{fail_summaries.join("\n")}" if fail_summaries.count > 0
     expect([successes, failures]).to eq([expected_successes, expected_failures]), failure_message
 
     VCAP::CloudController::SecurityContext.set(saved_user, saved_token, saved_auth_token)

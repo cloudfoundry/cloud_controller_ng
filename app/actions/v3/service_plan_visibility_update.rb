@@ -46,9 +46,7 @@ module VCAP::CloudController
 
       def append_service_plan_visibilities(service_plan, requested_org_guids)
         requested_org_guids.each do |org_guid|
-          unless already_has_visibility?(service_plan, org_guid)
-            service_plan.add_service_plan_visibility(organization_guid: org_guid)
-          end
+          service_plan.add_service_plan_visibility(organization_guid: org_guid) unless already_has_visibility?(service_plan, org_guid)
         end
       end
 

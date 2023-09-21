@@ -6,9 +6,7 @@ module CloudController
       errs = super
       return errs unless errs.empty?
 
-      unless validate_port(rule['ports'])
-        errs << 'contains invalid ports'
-      end
+      errs << 'contains invalid ports' unless validate_port(rule['ports'])
 
       errs
     end
@@ -28,7 +26,7 @@ module CloudController
       end
 
       port_list = port.split(',')
-      if !port_list.empty?
+      unless port_list.empty?
         return false unless port_list.all? { |p| /\A\s*\d+\s*\z/.match(p) }
         return false unless port_list.all? { |p| port_in_valid_range?(p.to_i) }
 
@@ -39,7 +37,7 @@ module CloudController
     end
 
     def self.port_in_valid_range?(port)
-      port > 0 && port < 65536
+      port > 0 && port < 65_536
     end
   end
 end

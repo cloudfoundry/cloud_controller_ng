@@ -6,10 +6,10 @@ RSpec.shared_examples 'create binding orphan mitigation' do
   before do
     stub_request(:delete, bind_url).
       with(query: {
-        accepts_incomplete: true,
-        plan_id: plan_id,
-        service_id: offering_id,
-      }).to_return(status: 200, body: {}.to_json)
+             accepts_incomplete: true,
+             plan_id: plan_id,
+             service_id: offering_id
+           }).to_return(status: 200, body: {}.to_json)
 
     stub_request(:put, bind_url).
       with(query: { accepts_incomplete: true }).to_return(status: broker_bind_status_code, body: bind_response_body)
@@ -246,8 +246,8 @@ RSpec.shared_examples 'create binding orphan mitigation' do
       before do
         stub_request(:put, bind_url).
           with(query: {
-            accepts_incomplete: true,
-          }).to_timeout
+                 accepts_incomplete: true
+               }).to_timeout
       end
 
       it 'does orphan mitigation and fails the job' do
@@ -288,7 +288,7 @@ def delete_request(plan_id, offering_id)
       query: {
         accepts_incomplete: true,
         plan_id: plan_id,
-        service_id: offering_id,
+        service_id: offering_id
       }
     )
 end

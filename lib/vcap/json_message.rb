@@ -35,16 +35,14 @@ class JsonMessage
     attr_reader :name, :schema, :required, :default
 
     def initialize(name, options={}, &blk)
-      blk ||= lambda { |*_| options[:schema] || any }
+      blk ||= ->(*_) { options[:schema] || any }
 
       @name = name
       @schema = Membrane::SchemaParser.parse(&blk)
       @required = options[:required] || false
       @default = options[:default]
 
-      if @required && @default
-        raise DefinitionError.new("Cannot define a default value for required field #{name}")
-      end
+      raise DefinitionError.new("Cannot define a default value for required field #{name}") if @required && @default
 
       validate(@default) if @default
     end
@@ -64,7 +62,7 @@ class JsonMessage
     def decode(json)
       begin
         dec_json = Yajl::Parser.parse(json)
-      rescue => e
+      rescue StandardError => e
         raise ParseError.new(e.to_s)
       end
 
@@ -78,7 +76,7 @@ class JsonMessage
 
       # Treat null values as if the keys aren't present. This isn't as strict
       # as one would like, but conforms to typical use cases.
-      dec_json.delete_if { |k, v| v.nil? }
+      dec_json.delete_if { |_k, v| v.nil? }
 
       # Collect errors by field
       fields.each do |name, field|
@@ -101,20 +99,20 @@ class JsonMessage
       new(dec_json)
     end
 
-    def required(name, schema=nil, &blk)
-      define_field(name, schema: schema, required: true, &blk)
+    def required(name, schema=nil, &)
+      define_field(name, schema: schema, required: true, &)
     end
 
-    def optional(name, schema=nil, default=nil, &blk)
-      define_field(name, schema: schema, default: default, &blk)
+    def optional(name, schema=nil, default=nil, &)
+      define_field(name, schema: schema, default: default, &)
     end
 
     protected
 
-    def define_field(name, options={}, &blk)
+    def define_field(name, options={}, &)
       name = name.to_sym
 
-      fields[name] = Field.new(name, options, &blk)
+      fields[name] = Field.new(name, options, &)
 
       define_method(name) do
         set_default(name)
@@ -139,9 +137,7 @@ class JsonMessage
     missing_fields = {}
 
     self.class.fields.each do |name, field|
-      if field.required && !@msg.key?(name)
-        missing_fields[name] = "Missing field #{name}"
-      end
+      missing_fields[name] = "Missing field #{name}" if field.required && !@msg.key?(name)
     end
 
     raise ValidationError.new(missing_fields) unless missing_fields.empty?
@@ -175,12 +171,12 @@ class JsonMessage
 
   # rubocop:disable Naming/AccessorMethodName
   def set_default(name)
-    unless @msg.key?(name)
-      field = self.class.fields[name]
-      if field
-        @msg[name] = field.default unless field.default.nil?
-      end
-    end
+    return if @msg.key?(name)
+
+    field = self.class.fields[name]
+    return unless field
+
+    @msg[name] = field.default unless field.default.nil?
   end
   # rubocop:enable Naming/AccessorMethodName
 end

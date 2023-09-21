@@ -5,10 +5,10 @@ module VCAP::CloudController
     register_allowed_keys [:include]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: %w(user organization space)
+    validates_with IncludeParamValidator, valid_values: %w[user organization space]
 
     def self.from_params(params)
-      super(params, %w(include))
+      super(params, %w[include])
     end
   end
 end

@@ -27,11 +27,11 @@ module VCAP::CloudController
         let(:route) { Route.make(space: space) }
 
         it 'maps the route' do
-          expect {
+          expect do
             route_mapping = route_mapping_create.add
             expect(route_mapping.route.guid).to eq(route.guid)
             expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
-          }.to change { RouteMappingModel.count }.by(1)
+          end.to change { RouteMappingModel.count }.by(1)
         end
 
         it 'delegates to the route handler to update route information' do
@@ -128,9 +128,9 @@ module VCAP::CloudController
           context 'requesting unavailable' do
             let(:requested_port) { 8888 }
             it 'raises' do
-              expect {
+              expect do
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
+              end.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
             end
           end
 
@@ -152,9 +152,9 @@ module VCAP::CloudController
             let(:requested_port) { nil }
 
             it 'raises' do
-              expect {
+              expect do
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /must be specified/)
+              end.to raise_error(RouteMappingCreate::InvalidRouteMapping, /must be specified/)
             end
           end
 
@@ -164,18 +164,18 @@ module VCAP::CloudController
             context 'when the process has an empty array of ports' do
               let(:ports) { [] }
               it 'raises' do
-                expect {
+                expect do
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
+                end.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
               end
             end
 
             context 'when the process has nil ports' do
               let(:ports) { nil }
               it 'raises' do
-                expect {
+                expect do
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
+                end.to raise_error(RouteMappingCreate::UnavailableAppPort, /8080 is not available/)
               end
             end
           end
@@ -186,18 +186,18 @@ module VCAP::CloudController
             context 'when the process has an empty array of ports' do
               let(:ports) { [] }
               it 'raises' do
-                expect {
+                expect do
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
+                end.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
               end
             end
 
             context 'when the process has nil ports' do
               let(:ports) { nil }
               it 'raises' do
-                expect {
+                expect do
                   route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
+                end.to raise_error(RouteMappingCreate::UnavailableAppPort, /1234 is not available/)
               end
             end
           end
@@ -210,9 +210,9 @@ module VCAP::CloudController
 
           context 'for the same process type' do
             it 'does not allow for duplicate route association' do
-              expect {
+              expect do
                 route_mapping_create.add
-              }.to raise_error(RouteMappingCreate::DuplicateRouteMapping, /Duplicate Route Mapping/)
+              end.to raise_error(RouteMappingCreate::DuplicateRouteMapping, /Duplicate Route Mapping/)
               expect(app.reload.routes).to eq([route])
             end
           end
@@ -233,9 +233,9 @@ module VCAP::CloudController
           end
 
           it 'raises an InvalidRouteMapping error' do
-            expect {
+            expect do
               route_mapping_create.add
-            }.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'shizzle')
+            end.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'shizzle')
           end
         end
 
@@ -243,9 +243,9 @@ module VCAP::CloudController
           let(:route) { Route.make(space: Space.make) }
 
           it 'raises InvalidRouteMapping' do
-            expect {
+            expect do
               route_mapping_create.add
-            }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /the app and route must belong to the same space/)
+            end.to raise_error(RouteMappingCreate::InvalidRouteMapping, /the app and route must belong to the same space/)
             expect(app.reload.routes).to be_empty
           end
         end
@@ -257,12 +257,12 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: ports) }
 
           it 'maps the route' do
-            expect {
+            expect do
               route_mapping = route_mapping_create.add
               expect(route_mapping.route.guid).to eq(route.guid)
               expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid)
               expect(route_mapping.app_port).to eq(8888)
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
           end
         end
 
@@ -280,11 +280,11 @@ module VCAP::CloudController
           end
 
           it 'maps the route' do
-            expect {
+            expect do
               route_mapping = route_mapping_create.add
               expect(route_mapping.route.guid).to eq(route.guid)
               expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
-            }.to change { RouteMappingModel.count }.by(1)
+            end.to change { RouteMappingModel.count }.by(1)
           end
 
           context 'when the routing api is disabled' do

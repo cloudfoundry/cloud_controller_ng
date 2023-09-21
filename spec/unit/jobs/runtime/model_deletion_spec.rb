@@ -23,9 +23,9 @@ module VCAP::CloudController
           subject(:job) { ModelDeletion.new(ProcessModel, process.guid) }
 
           it 'can delete an app' do
-            expect {
+            expect do
               job.perform
-            }.to change {
+            end.to change {
               ProcessModel.count
             }.by(-1)
           end
@@ -36,9 +36,9 @@ module VCAP::CloudController
             subject(:job) { ModelDeletion.new(Space, 'not_a_guid_at_all') }
 
             it 'just returns' do
-              expect {
+              expect do
                 job.perform
-              }.not_to change { Space.count }
+              end.not_to(change { Space.count })
             end
           end
 
@@ -52,9 +52,9 @@ module VCAP::CloudController
             end
 
             it 'just returns' do
-              expect {
+              expect do
                 job.perform
-              }.to change { Space.count }.by 0
+              end.to change { Space.count }.by 0
             end
           end
         end

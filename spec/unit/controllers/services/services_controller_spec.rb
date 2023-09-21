@@ -23,20 +23,20 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(ServicesController).to have_creatable_attributes({
-          service_plan_guids: { type: '[string]' }
-        })
+                                                                  service_plan_guids: { type: '[string]' }
+                                                                })
       end
 
       it do
         expect(ServicesController).to have_updatable_attributes({
-          service_plan_guids: { type: '[string]' }
-        })
+                                                                  service_plan_guids: { type: '[string]' }
+                                                                })
       end
     end
 
     describe 'Associations' do
       it do
-        expect(ServicesController).to have_nested_routes({ service_plans: [:get, :put, :delete] })
+        expect(ServicesController).to have_nested_routes({ service_plans: %i[get put delete] })
       end
     end
 
@@ -345,7 +345,7 @@ module VCAP::CloudController
           delete "/v2/services/#{service.guid}", '{}', admin_headers
 
           expect(last_response).to have_status_code 400
-          expect(last_response.body).to match /AssociationNotEmpty/
+          expect(last_response.body).to match(/AssociationNotEmpty/)
         end
       end
 
@@ -370,10 +370,10 @@ module VCAP::CloudController
           expect(event.space_guid).to be_empty
           expect(event.organization_guid).to be_empty
           expect(event.metadata).to include({
-            'request' => {
-              'purge' => true,
-            }
-          })
+                                              'request' => {
+                                                'purge' => true
+                                              }
+                                            })
         end
 
         it 'requires admin headers' do

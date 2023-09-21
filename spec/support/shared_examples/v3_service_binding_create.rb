@@ -43,9 +43,9 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
         end
 
         it 'marks the binding as failed' do
-          expect {
+          expect do
             action.bind(precursor)
-          }.to raise_error(BadError)
+          end.to raise_error(BadError)
 
           binding = precursor.reload
           expect(binding.last_operation.type).to eq('create')
@@ -93,9 +93,9 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
         let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
 
         it 'it raises a BindingNotRetrievable error' do
-          expect {
+          expect do
             action.bind(precursor, accepts_incomplete: true)
-          }.to raise_error(VCAP::CloudController::V3::ServiceBindingCreate::BindingNotRetrievable)
+          end.to raise_error(VCAP::CloudController::V3::ServiceBindingCreate::BindingNotRetrievable)
         end
       end
     end
@@ -115,8 +115,8 @@ RSpec.shared_examples 'polling service binding creation' do
       {
         last_operation: {
           state: state,
-          description: description,
-        },
+          description: description
+        }
       }
     end
     let(:broker_client) do
@@ -242,9 +242,9 @@ RSpec.shared_examples 'polling service binding creation' do
           {
             last_operation: {
               state: state,
-              description: description,
+              description: description
             },
-            retry_after: 10,
+            retry_after: 10
           }
         end
 
@@ -277,8 +277,8 @@ RSpec.shared_examples 'polling service credential binding creation' do
         {
           last_operation: {
             state: state,
-            description: description,
-          },
+            description: description
+          }
         }
       end
       let(:broker_client) do
@@ -287,7 +287,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
           {
             bind: bind_response,
             fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
-            fetch_service_binding: fetch_binding_response,
+            fetch_service_binding: fetch_binding_response
           }
         )
       end

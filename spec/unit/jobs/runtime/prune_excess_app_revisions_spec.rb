@@ -20,7 +20,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+            RevisionModel.make(version: i, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            revision = RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+            revision = RevisionModel.make(version: i, app: app, created_at: Time.now.utc - total + i)
             RevisionAnnotationModel.make(revision: revision, key_name: i, value: i)
             RevisionLabelModel.make(revision: revision, key_name: i, value: i)
           end
@@ -55,15 +55,15 @@ module VCAP::CloudController
           expect(RevisionModel.count).to eq(0)
 
           process_commands = []
-          50.times do |i|
+          50.times do |_i|
             revision = RevisionModel.make(app: app)
             process_commands << revision.process_commands
           end
           process_commands.flatten!
 
-          expect {
+          expect do
             job.perform
-          }.to change { RevisionProcessCommandModel.count }.by(-35)
+          end.to change { RevisionProcessCommandModel.count }.by(-35)
 
           expect(process_commands[0...35].none?(&:exists?))
           expect(process_commands[35...50].all?(&:exists?))
@@ -79,7 +79,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                RevisionModel.make(version: i + 1000 * app_index, app: current_app, created_at: Time.now - total + i)
+                RevisionModel.make(version: i + (1000 * app_index), app: current_app, created_at: Time.now.utc - total + i)
               end
             end
 

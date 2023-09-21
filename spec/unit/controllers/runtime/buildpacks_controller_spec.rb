@@ -21,22 +21,22 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::BuildpacksController).to have_creatable_attributes({
-          name:     { type: 'string', required: true },
-          stack:    { type: 'string' },
-          position: { type: 'integer', default: 0 },
-          enabled:  { type: 'bool', default: true },
-          locked:   { type: 'bool', default: false }
-        })
+                                                                                           name: { type: 'string', required: true },
+                                                                                           stack: { type: 'string' },
+                                                                                           position: { type: 'integer', default: 0 },
+                                                                                           enabled: { type: 'bool', default: true },
+                                                                                           locked: { type: 'bool', default: false }
+                                                                                         })
       end
 
       it do
         expect(VCAP::CloudController::BuildpacksController).to have_updatable_attributes({
-          name:     { type: 'string' },
-          stack:    { type: 'string' },
-          position: { type: 'integer' },
-          enabled:  { type: 'bool' },
-          locked:   { type: 'bool' }
-        })
+                                                                                           name: { type: 'string' },
+                                                                                           stack: { type: 'string' },
+                                                                                           position: { type: 'integer' },
+                                                                                           enabled: { type: 'bool' },
+                                                                                           locked: { type: 'bool' }
+                                                                                         })
       end
     end
 
@@ -86,9 +86,9 @@ module VCAP::CloudController
         Buildpack.create(name: 'pre-existing-buildpack', stack: stack.name, position: 1)
         Buildpack.create(name: 'pre-existing-buildpack-2', stack: stack.name, position: 2)
 
-        expect {
+        expect do
           post '/v2/buildpacks', MultiJson.dump({ name: 'new-buildpack', stack: stack.name, position: 2 })
-        }.to change { ordered_buildpacks }.from(
+        end.to change { ordered_buildpacks }.from(
           [['pre-existing-buildpack', 1], ['pre-existing-buildpack-2', 2]]
         ).to(
           [['pre-existing-buildpack', 1], ['new-buildpack', 2], ['pre-existing-buildpack-2', 3]]
@@ -99,14 +99,14 @@ module VCAP::CloudController
         Buildpack.make(name: 'dynamic_test_buildpack', stack: stack.name)
         post '/v2/buildpacks', req_body
         expect(last_response.status).to eq(422)
-        expect(decoded_response['code']).to eq(290000)
+        expect(decoded_response['code']).to eq(290_000)
         expect(Buildpack.count).to eq(1)
       end
 
       it 'returns buildpack invalid message correctly' do
         post '/v2/buildpacks', MultiJson.dump({ name: 'invalid_name!', stack: stack.name })
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(290003)
+        expect(decoded_response['code']).to eq(290_003)
         expect(Buildpack.count).to eq(0)
       end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
         expect(buildpack2.reload.position).to eq(1)
         expect(ordered_buildpacks).to eq([
           ['second_buildpack', 1],
-          ['first_buildpack', 2],
+          ['first_buildpack', 2]
         ])
       end
 

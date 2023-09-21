@@ -19,7 +19,8 @@ module CloudController
         password: nil,
         root_dir: nil,
         min_size: nil,
-        max_size: nil)
+        max_size: nil
+      )
 
         @directory_key = directory_key
         @min_size      = min_size || 0
@@ -31,7 +32,7 @@ module CloudController
 
         if user && password
           @headers['Authorization'] = 'Basic ' +
-            Base64.strict_encode64("#{user}:#{password}").strip
+                                      Base64.strict_encode64("#{user}:#{password}").strip
         end
 
         @signer = signer
@@ -40,14 +41,14 @@ module CloudController
       def self.build(options, directory_key, root_dir=nil, min_size=nil, max_size=nil)
         new(
           directory_key: directory_key,
-          httpclient:    HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path], connect_timeout: options[:blobstore_timeout], receive_timeout: 120),
-          signer:        NginxSecureLinkSigner.build(options: options, directory_key: directory_key),
-          endpoint:      options[:private_endpoint],
-          user:          options[:username],
-          password:      options[:password],
-          root_dir:      root_dir,
-          min_size:      min_size,
-          max_size:      max_size
+          httpclient: HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path], connect_timeout: options[:blobstore_timeout], receive_timeout: 120),
+          signer: NginxSecureLinkSigner.build(options: options, directory_key: directory_key),
+          endpoint: options[:private_endpoint],
+          user: options[:username],
+          password: options[:password],
+          root_dir: root_dir,
+          min_size: min_size,
+          max_size: max_size
         )
       end
 
@@ -97,19 +98,16 @@ module CloudController
 
           response = with_error_handling { @client.put(url(destination_key), file, @headers) }
 
-          if response.status != 201 && response.status != 204
-            raise_blobstore_error("Could not create object, #{response.status}/#{response.content}")
-          end
+          raise_blobstore_error("Could not create object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
 
           log_entry = 'cp-finish'
         end
 
         duration = Time.now.utc - start
         logger.info(log_entry,
-          destination_key:  destination_key,
-          duration_seconds: duration,
-          size:             size,
-        )
+                    destination_key: destination_key,
+                    duration_seconds: duration,
+                    size: size)
       end
 
       def cp_file_between_keys(source_key, destination_key)
@@ -238,7 +236,7 @@ module CloudController
       rescue OpenSSL::SSL::SSLError => e
         logger.error("SSL verification failed: #{e.message}")
         raise BlobstoreError.new('SSL verification failed')
-      rescue => e
+      rescue StandardError => e
         raise_blobstore_error(e.message)
       end
     end

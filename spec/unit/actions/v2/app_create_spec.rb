@@ -10,14 +10,14 @@ module VCAP::CloudController
     describe 'create' do
       let(:request_attrs) do
         {
-          'name'              => 'maria',
-          'space_guid'        => space.guid,
-          'environment_json'  => { 'KEY' => 'val' },
-          'buildpack'         => 'http://example.com/buildpack',
-          'state'             => 'STOPPED',
+          'name' => 'maria',
+          'space_guid' => space.guid,
+          'environment_json' => { 'KEY' => 'val' },
+          'buildpack' => 'http://example.com/buildpack',
+          'state' => 'STOPPED',
           'health_check_type' => 'port',
           'enable_ssh' => 'false',
-          'stack_guid' => stack.guid,
+          'stack_guid' => stack.guid
         }
       end
 
@@ -48,14 +48,14 @@ module VCAP::CloudController
       context 'when the health_check_type is http' do
         let(:request_attrs) do
           {
-            'name'                       => 'maria',
-            'space_guid'                 => space.guid,
-            'environment_json'           => { 'KEY' => 'val' },
-            'buildpack'                  => 'http://example.com/buildpack',
-            'state'                      => 'STOPPED',
-            'health_check_type'          => 'http',
+            'name' => 'maria',
+            'space_guid' => space.guid,
+            'environment_json' => { 'KEY' => 'val' },
+            'buildpack' => 'http://example.com/buildpack',
+            'state' => 'STOPPED',
+            'health_check_type' => 'http',
             'health_check_http_endpoint' => '/healthz',
-            'stack_guid'                 => stack.guid
+            'stack_guid' => stack.guid
           }
         end
 
@@ -72,9 +72,9 @@ module VCAP::CloudController
 
         let(:request_attrs) do
           {
-            'name'              => 'maria',
-            'space_guid'        => space.guid,
-            'state'             => 'STOPPED',
+            'name' => 'maria',
+            'space_guid' => space.guid,
+            'state' => 'STOPPED',
             'health_check_type' => 'port'
           }
         end
@@ -109,11 +109,11 @@ module VCAP::CloudController
       context 'when the app is based on a docker image' do
         let(:request_attrs) do
           {
-            'name'              => 'maria',
-            'space_guid'        => space.guid,
-            'state'             => 'STOPPED',
+            'name' => 'maria',
+            'space_guid' => space.guid,
+            'state' => 'STOPPED',
             'health_check_type' => 'port',
-            'docker_image'      => 'some-image:latest',
+            'docker_image' => 'some-image:latest'
           }
         end
 
@@ -131,10 +131,10 @@ module VCAP::CloudController
       context 'when docker credentials are specified' do
         let(:request_attrs) do
           {
-            'name'               => 'maria',
-            'space_guid'         => space.guid,
-            'state'              => 'STOPPED',
-            'health_check_type'  => 'port',
+            'name' => 'maria',
+            'space_guid' => space.guid,
+            'state' => 'STOPPED',
+            'health_check_type' => 'port',
             'docker_credentials' => {
               'username' => 'username',
               'password' => 'password'
@@ -163,7 +163,7 @@ module VCAP::CloudController
         context 'when no docker image is specified' do
           it 'returns an error' do
             expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError,
-              /Docker credentials can only be supplied for apps with a 'docker_image'/)
+                                                                       /Docker credentials can only be supplied for apps with a 'docker_image'/)
           end
         end
       end
@@ -171,10 +171,10 @@ module VCAP::CloudController
       context 'when starting an app without a package' do
         let(:request_attrs) do
           {
-            'name'              => 'maria',
-            'space_guid'        => space.guid,
-            'state'             => 'STARTED',
-            'health_check_type' => 'port',
+            'name' => 'maria',
+            'space_guid' => space.guid,
+            'state' => 'STARTED',
+            'health_check_type' => 'port'
           }
         end
 
@@ -186,11 +186,11 @@ module VCAP::CloudController
       context 'when the nil buildpack is specified' do
         let(:request_attrs) do
           {
-            'name'       => 'maria',
+            'name' => 'maria',
             'space_guid' => space.guid,
-            'buildpack'  => nil,
-            'state'      => 'STOPPED',
-            'health_check_type' => 'port',
+            'buildpack' => nil,
+            'state' => 'STOPPED',
+            'health_check_type' => 'port'
           }
         end
 
@@ -203,11 +203,11 @@ module VCAP::CloudController
       context 'when the blank buildpack is specified' do
         let(:request_attrs) do
           {
-            'name'       => 'maria',
+            'name' => 'maria',
             'space_guid' => space.guid,
-            'buildpack'  => '',
-            'state'      => 'STOPPED',
-            'health_check_type' => 'port',
+            'buildpack' => '',
+            'state' => 'STOPPED',
+            'health_check_type' => 'port'
           }
         end
 

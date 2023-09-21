@@ -1,4 +1,4 @@
-require File.expand_path('../../../lib/cloud_controller/encryptor', __FILE__)
+require File.expand_path('../../lib/cloud_controller/encryptor', __dir__)
 
 Sequel.migration do
   up do

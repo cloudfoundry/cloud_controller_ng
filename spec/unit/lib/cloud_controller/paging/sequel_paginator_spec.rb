@@ -65,9 +65,9 @@ module VCAP::CloudController
         new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid".to_sym => "#{AppModel.table_name}__guid".to_sym)
 
         paginated_result = nil
-        expect {
+        expect do
           paginated_result = paginator.get_page(new_dataset, pagination_options)
-        }.not_to raise_error
+        end.not_to raise_error
 
         expect(paginated_result.total).to be > 0
       end
@@ -77,9 +77,9 @@ module VCAP::CloudController
         pagination_options = PaginationOptions.new(options)
         eager_dataset = AppModel.dataset.eager(:space)
         paginated_result = nil
-        expect {
+        expect do
           paginated_result = paginator.get_page(eager_dataset, pagination_options)
-        }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 2 : 3)
+        end.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 2 : 3)
         expect(paginated_result.total).to eq(4)
         expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
       end
@@ -89,9 +89,9 @@ module VCAP::CloudController
         pagination_options = PaginationOptions.new(options)
         eager_graph_dataset = AppModel.dataset.eager_graph(:space)
         paginated_result = nil
-        expect {
+        expect do
           paginated_result = paginator.get_page(eager_graph_dataset, pagination_options)
-        }.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+        end.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
         expect(paginated_result.total).to eq(4)
         expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
       end
@@ -113,9 +113,9 @@ module VCAP::CloudController
         orphaned_blob_dataset = OrphanedBlob.dataset
         OrphanedBlob.make.save
         paginated_result = nil
-        expect {
+        expect do
           paginated_result = paginator.get_page(orphaned_blob_dataset, pagination_options)
-        }.not_to raise_error
+        end.not_to raise_error
         expect(paginated_result.total).to be 1
       end
 
@@ -123,12 +123,12 @@ module VCAP::CloudController
         options = { page: page, per_page: 2, order_by: 'id', order_direction: 'asc' }
 
         pagination_options = PaginationOptions.new(options)
-        expect {
+        expect do
           paginator.get_page(dataset, pagination_options)
-        }.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC LIMIT/i, 1)
-        expect {
+        end.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC LIMIT/i, 1)
+        expect do
           paginator.get_page(dataset, pagination_options)
-        }.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
+        end.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
       end
 
       it 'produces a descending order which is exactly the reverse order of the ascending ordering' do
@@ -160,9 +160,9 @@ module VCAP::CloudController
         pagination_options = PaginationOptions.new(options)
 
         paginated_result = nil
-        expect {
+        expect do
           paginated_result = paginator.get_page(dataset, pagination_options)
-        }.to have_queried_db_times(/select/i, 1)
+        end.to have_queried_db_times(/select/i, 1)
         expect(paginated_result.total).to be > 1
       end
 
@@ -178,9 +178,9 @@ module VCAP::CloudController
           pagination_options = PaginationOptions.new(options)
 
           paginated_result = nil
-          expect {
+          expect do
             paginated_result = paginator.get_page(dataset, pagination_options)
-          }.to have_queried_db_times(/select/i, 2)
+          end.to have_queried_db_times(/select/i, 2)
           expect(paginated_result.total).to be > 1
         end
       end
@@ -198,9 +198,9 @@ module VCAP::CloudController
           pagination_options = PaginationOptions.new(options)
 
           paginated_result = nil
-          expect {
+          expect do
             paginated_result = paginator.get_page(AppUsageEvent.dataset, pagination_options)
-          }.to have_queried_db_times(/over/i, 0)
+          end.to have_queried_db_times(/over/i, 0)
           expect(paginated_result.total).to be > 1
         end
       end

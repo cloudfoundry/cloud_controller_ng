@@ -17,12 +17,12 @@ module VCAP
             guid: guid,
             service_instance: service_instance,
             route: route,
-            route_service_url: route_service_url,
+            route_service_url: route_service_url
           },
           {
             type: 'fake type',
             state: 'fake state',
-            description: 'fake description',
+            description: 'fake description'
           }
         )
       end
@@ -49,7 +49,7 @@ module VCAP
             },
             metadata: {
               labels: {
-                ruby: 'lang',
+                ruby: 'lang'
               },
               annotations: {
                 'prefix/key' => 'bar'
@@ -76,7 +76,7 @@ module VCAP
               },
               service_instance: {
                 href: %r{.*/v3/service_instances/#{service_instance.guid}}
-              },
+              }
 
             }
           }
@@ -89,7 +89,7 @@ module VCAP
             guid: guid,
             service_instance: service_instance,
             route: route,
-            route_service_url: route_service_url,
+            route_service_url: route_service_url
           )
         end
 
@@ -133,8 +133,8 @@ module VCAP
         it 'include parameters for managed service instance bindings' do
           presenter = described_class.new(binding)
           expect(presenter.to_hash.dig(:links, :parameters)).to match({
-            href: %r{.*/v3/service_route_bindings/#{guid}/parameters}
-          })
+                                                                        href: %r{.*/v3/service_route_bindings/#{guid}/parameters}
+                                                                      })
         end
       end
     end

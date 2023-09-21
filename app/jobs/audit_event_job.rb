@@ -16,9 +16,9 @@ module VCAP::CloudController
       def perform
         model_instance = model_class.first(guid: model_guid)
         job.perform
-        if model_instance
-          event_repository.send(event_creation_method, event_type, model_instance, params)
-        end
+        return unless model_instance
+
+        event_repository.send(event_creation_method, event_type, model_instance, params)
       end
 
       def job_name_in_configuration
@@ -29,9 +29,7 @@ module VCAP::CloudController
         1
       end
 
-      def reschedule_at(time, attempts)
-        job.reschedule_at(time, attempts)
-      end
+      delegate :reschedule_at, to: :job
     end
   end
 end

@@ -45,51 +45,51 @@ module VCAP::CloudController
     end
 
     def validate_host_not_included
-      unless route.host.blank?
-        route.errors.add(:host, :host_and_path_domain_tcp)
-      end
+      return unless route.host.present?
+
+      route.errors.add(:host, :host_and_path_domain_tcp)
     end
 
     def validate_path_not_included
-      unless route.path.blank?
-        route.errors.add(:path, :host_and_path_domain_tcp)
-      end
+      return unless route.path.present?
+
+      route.errors.add(:path, :host_and_path_domain_tcp)
     end
 
     def validate_path_not_included_for_internal_domain
-      if !route.domain.nil? && route.domain.internal && route.path.present?
-        route.errors.add(:path, :path_not_supported_for_internal_domain)
-      end
+      return unless !route.domain.nil? && route.domain.internal && route.path.present?
+
+      route.errors.add(:path, :path_not_supported_for_internal_domain)
     end
 
     def validate_wildcard_host_not_included_with_internal_domain
-      if !route.domain.nil? && route.domain.internal && route.wildcard_host?
-        route.errors.add(:host, :wildcard_host_not_supported_for_internal_domain)
-      end
+      return unless !route.domain.nil? && route.domain.internal && route.wildcard_host?
+
+      route.errors.add(:host, :wildcard_host_not_supported_for_internal_domain)
     end
 
     def validate_port_included
-      if route.port.nil?
-        route.errors.add(:port, :port_required)
-      end
+      return unless route.port.nil?
+
+      route.errors.add(:port, :port_required)
     end
 
     def validate_port_not_included
-      if route.port.present?
-        route.errors.add(:port, :port_unsupported)
-      end
+      return unless route.port.present?
+
+      route.errors.add(:port, :port_unsupported)
     end
 
     def validate_port_number
-      if route.port && router_group.reservable_ports.exclude?(route.port)
-        route.errors.add(:port, :port_unavailable)
-      end
+      return unless route.port && router_group.reservable_ports.exclude?(route.port)
+
+      route.errors.add(:port, :port_unavailable)
     end
 
     def validate_port_not_taken
-      if port_taken?
-        route.errors.add(:port, :port_taken)
-      end
+      return unless port_taken?
+
+      route.errors.add(:port, :port_taken)
     end
 
     def port_taken?

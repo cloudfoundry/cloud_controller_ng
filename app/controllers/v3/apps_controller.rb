@@ -41,7 +41,7 @@ class AppsV3Controller < ApplicationController
                 AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               else
                 AppListFetcher.fetch(message, permission_queryer.readable_space_guids,
-eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
+                                     eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
               end
 
     decorators = []
@@ -58,7 +58,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
              path: '/v3/apps',
              message: message,
              decorators: decorators
-      )
+           )
   end
 
   def show
@@ -89,9 +89,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
-    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
-      FeatureFlag.raise_unless_enabled!(:diego_docker)
-    end
+    FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
 
     lifecycle = AppLifecycleProvider.provide_for_create(message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -163,9 +161,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
-    if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
-      FeatureFlag.raise_unless_enabled!(:diego_docker)
-    end
+    FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
 
     AppStart.start(app: app, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -207,9 +203,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
-    if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
-      FeatureFlag.raise_unless_enabled!(:diego_docker)
-    end
+    FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -303,11 +297,11 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)
 
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
-      resource_path:         "apps/#{app_guid}",
-      related_instance:      droplet,
-      relationship_name:     'current_droplet',
+      resource_path: "apps/#{app_guid}",
+      related_instance: droplet,
+      relationship_name: 'current_droplet',
       related_resource_name: 'droplets',
-      app_model:             app
+      app_model: app
     )
   rescue AppAssignDroplet::Error => e
     unprocessable!(e.message)
@@ -320,11 +314,11 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
-      resource_path:         "apps/#{app.guid}",
-      related_instance:      droplet,
-      relationship_name:     'current_droplet',
+      resource_path: "apps/#{app.guid}",
+      related_instance: droplet,
+      relationship_name: 'current_droplet',
       related_resource_name: 'droplets',
-      app_model:             app
+      app_model: app
     )
   end
 
@@ -344,7 +338,7 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
 
     render status: :ok, json: {
       read_basic_data: true,
-      read_sensitive_data: permission_queryer.can_read_secrets_in_space?(space.id, space.organization_id),
+      read_sensitive_data: permission_queryer.can_read_secrets_in_space?(space.id, space.organization_id)
     }
   end
 
@@ -363,9 +357,9 @@ eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
   private
 
   def handle_order_by_presented_value(page_results)
-    if page_results.try(:pagination_options).try(:order_by) == 'desired_state'
-      page_results.pagination_options.order_by = 'state'
-    end
+    return unless page_results.try(:pagination_options).try(:order_by) == 'desired_state'
+
+    page_results.pagination_options.order_by = 'state'
   end
 
   def deployment_in_progress!

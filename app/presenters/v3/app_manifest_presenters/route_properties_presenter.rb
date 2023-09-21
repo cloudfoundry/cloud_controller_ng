@@ -11,7 +11,7 @@ module VCAP::CloudController
               }
             end
 
-            { routes: alphabetize(route_hashes).presence, }
+            { routes: alphabetize(route_hashes).presence }
           end
 
           private

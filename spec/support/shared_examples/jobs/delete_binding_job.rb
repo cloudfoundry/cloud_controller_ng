@@ -25,9 +25,9 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
 
     let(:action) do
       double('BindingAction', {
-        delete: delete_response,
-        poll: poll_response
-      })
+               delete: delete_response,
+               poll: poll_response
+             })
     end
 
     before do
@@ -59,13 +59,13 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
         context 'computes the maximum duration' do
           before do
             TestConfig.override(
-              broker_client_max_async_poll_duration_minutes: 90009
+              broker_client_max_async_poll_duration_minutes: 90_009
             )
             subject.perform
           end
 
           it 'sets to the default value' do
-            expect(subject.maximum_duration_seconds).to eq(90009.minutes)
+            expect(subject.maximum_duration_seconds).to eq(90_009.minutes)
           end
 
           context 'when the plan defines a duration' do
@@ -92,9 +92,9 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
     context 'delete in progress' do
       let(:new_action) do
         double('UnbindingDouble', {
-          delete: delete_response,
-          poll: poll_response,
-        })
+                 delete: delete_response,
+                 poll: poll_response
+               })
       end
 
       before do
@@ -103,9 +103,9 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
         subject.perform
 
         binding.save_with_attributes_and_new_operation({}, {
-          type: 'delete',
-          state: 'in progress'
-        })
+                                                         type: 'delete',
+                                                         state: 'in progress'
+                                                       })
       end
 
       it 'only calls poll' do
@@ -129,7 +129,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
 
       context 'the maximum duration' do
         it 'recomputes the value' do
-          subject.maximum_duration_seconds = 90009
+          subject.maximum_duration_seconds = 90_009
           TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
           subject.perform
           expect(subject.maximum_duration_seconds).to eq(8088.minutes)
@@ -137,7 +137,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
 
         context 'when the plan value changes between calls' do
           before do
-            subject.maximum_duration_seconds = 90009
+            subject.maximum_duration_seconds = 90_009
             service_plan.update(maximum_polling_duration: 5000)
             subject.perform
           end
@@ -182,7 +182,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
 
         expect { subject.perform }.to raise_error(
           CloudController::Errors::ApiError,
-          'unbind could not be completed: bad thing',
+          'unbind could not be completed: bad thing'
         )
 
         binding.reload
@@ -197,7 +197,7 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
 
         expect { subject.perform }.to raise_error(
           CloudController::Errors::ApiError,
-          'unbind could not be completed: not today',
+          'unbind could not be completed: not today'
         )
 
         binding.reload

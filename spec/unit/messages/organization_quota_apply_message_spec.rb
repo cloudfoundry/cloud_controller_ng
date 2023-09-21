@@ -13,13 +13,13 @@ module VCAP::CloudController
 
     describe '#organization_guids' do
       it 'returns the org guids' do
-        expect(subject.organization_guids).to eq(%w(org-guid-1 org-guid-2))
+        expect(subject.organization_guids).to eq(%w[org-guid-1 org-guid-2])
       end
     end
 
     describe 'validations' do
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
 
         it 'is not valid' do
           expect(subject).not_to be_valid

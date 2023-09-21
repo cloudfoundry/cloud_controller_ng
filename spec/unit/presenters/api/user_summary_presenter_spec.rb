@@ -29,26 +29,26 @@ RSpec.describe UserSummaryPresenter do
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({
-        metadata: {
-          guid: user.guid,
-          created_at: user.created_at.iso8601,
-          updated_at: user.updated_at.iso8601,
-        },
-        entity: {
-          organizations: [
-            OrganizationPresenter.new(org).to_hash,
-            OrganizationPresenter.new(managed_org).to_hash,
-            OrganizationPresenter.new(billing_managed_org).to_hash,
-            OrganizationPresenter.new(audited_org).to_hash
-          ],
-          managed_organizations: [OrganizationPresenter.new(managed_org).to_hash],
-          billing_managed_organizations: [OrganizationPresenter.new(billing_managed_org).to_hash],
-          audited_organizations: [OrganizationPresenter.new(audited_org).to_hash],
-          spaces: [SpacePresenter.new(space).to_hash],
-          managed_spaces: [SpacePresenter.new(managed_space).to_hash],
-          audited_spaces: [SpacePresenter.new(audited_space).to_hash]
-        }
-      })
+                                      metadata: {
+                                        guid: user.guid,
+                                        created_at: user.created_at.iso8601,
+                                        updated_at: user.updated_at.iso8601
+                                      },
+                                      entity: {
+                                        organizations: [
+                                          OrganizationPresenter.new(org).to_hash,
+                                          OrganizationPresenter.new(managed_org).to_hash,
+                                          OrganizationPresenter.new(billing_managed_org).to_hash,
+                                          OrganizationPresenter.new(audited_org).to_hash
+                                        ],
+                                        managed_organizations: [OrganizationPresenter.new(managed_org).to_hash],
+                                        billing_managed_organizations: [OrganizationPresenter.new(billing_managed_org).to_hash],
+                                        audited_organizations: [OrganizationPresenter.new(audited_org).to_hash],
+                                        spaces: [SpacePresenter.new(space).to_hash],
+                                        managed_spaces: [SpacePresenter.new(managed_space).to_hash],
+                                        audited_spaces: [SpacePresenter.new(audited_space).to_hash]
+                                      }
+                                    })
     end
   end
 end

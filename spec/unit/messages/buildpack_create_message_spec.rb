@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when no params are given' do
-        let(:params) {}
+        let(:params) { nil }
 
         it 'is not valid' do
           expect(subject).not_to be_valid

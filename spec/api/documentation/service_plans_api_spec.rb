@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Service Plans', type: [:api, :legacy_api] do
+RSpec.resource 'Service Plans', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
   let(:guid) { service_plan.guid }
@@ -39,7 +39,7 @@ RSpec.resource 'Service Plans', type: [:api, :legacy_api] do
                           VCAP::CloudController::ServiceInstancesController,
                           outer_model: :service_plan,
                           path: :service_instances,
-                          exclude_parameters: ['organization_guid', 'service_plan_guid']
+                          exclude_parameters: %w[organization_guid service_plan_guid]
     end
   end
 end

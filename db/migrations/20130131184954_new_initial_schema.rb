@@ -72,7 +72,7 @@ Sequel.migration do
       String :provider,      null: false, case_insensitive: true
       String :token,         null: false
 
-      index [:label, :provider], unique: true
+      index %i[label provider], unique: true
     end
 
     create_table :services do
@@ -90,7 +90,7 @@ Sequel.migration do
       Boolean :active, default: false
 
       index :label
-      index [:label, :provider], unique: true
+      index %i[label provider], unique: true
     end
 
     create_table :organizations do
@@ -132,7 +132,7 @@ Sequel.migration do
       Integer :service_id, null: false
       foreign_key [:service_id], :services, name: :fk_service_plans_service_id
 
-      index [:service_id, :name], unique: true
+      index %i[service_id name], unique: true
     end
 
     create_table :domains do
@@ -153,7 +153,7 @@ Sequel.migration do
       Integer :organization_id, null: false
       foreign_key [:organization_id], :organizations, name: :fk_spaces_organization_id
 
-      index [:organization_id, :name], unique: true
+      index %i[organization_id name], unique: true
     end
 
     create_table :apps do
@@ -181,7 +181,7 @@ Sequel.migration do
       # send the correct billing events to the "money maker"
       Integer :memory,           default: 256
       Integer :instances,        default: 0
-      Integer :file_descriptors, default: 16384
+      Integer :file_descriptors, default: 16_384
       Integer :disk_quota,       default: 2048
 
       # app state
@@ -205,7 +205,7 @@ Sequel.migration do
       foreign_key [:framework_id], :frameworks, name: :fk_apps_framework_id
 
       index :name
-      index [:space_id, :name], unique: true
+      index %i[space_id name], unique: true
     end
 
     create_table :domains_organizations do
@@ -215,7 +215,7 @@ Sequel.migration do
       Integer :organization_id, null: false
       foreign_key [:organization_id], :organizations, name: :fk_domains_organizations_organization_id
 
-      index [:domain_id, :organization_id], unique: true
+      index %i[domain_id organization_id], unique: true
     end
 
     create_table :domains_spaces do
@@ -225,7 +225,7 @@ Sequel.migration do
       Integer :domain_id, null: false
       foreign_key [:domain_id], :domains, name: :fk_domains_spaces_domain_id
 
-      index [:space_id, :domain_id], unique: true
+      index %i[space_id domain_id], unique: true
     end
 
     create_table :routes do
@@ -239,7 +239,7 @@ Sequel.migration do
       Integer :space_id, null: false
       foreign_key [:space_id], :spaces, name: :fk_routes_space_id
 
-      index [:host, :domain_id], unique: true
+      index %i[host domain_id], unique: true
     end
 
     create_table :service_instances do
@@ -257,7 +257,7 @@ Sequel.migration do
       foreign_key [:service_plan_id], :service_plans, name: :service_instances_service_plan_id
 
       index :name
-      index [:space_id, :name], unique: true # , :name => :space_id_name_index
+      index %i[space_id name], unique: true # , :name => :space_id_name_index
     end
 
     create_table :users do
@@ -277,11 +277,11 @@ Sequel.migration do
       Integer :route_id, null: false
       foreign_key [:route_id], :routes, name: :fk_apps_routes_route_id
 
-      index [:app_id, :route_id], unique: true
+      index %i[app_id route_id], unique: true
     end
 
     # Organization permissions
-    [:users, :managers, :billing_managers, :auditors].each do |perm|
+    %i[users managers billing_managers auditors].each do |perm|
       VCAP::Migration.create_permission_table(self, :organization, :org, perm)
     end
 
@@ -301,11 +301,11 @@ Sequel.migration do
       Integer :service_instance_id, null: false
       foreign_key [:service_instance_id], :service_instances, name: :fk_service_bindings_service_instance_id
 
-      index [:app_id, :service_instance_id], unique: true
+      index %i[app_id service_instance_id], unique: true
     end
 
     # App Space permissions
-    [:developers, :managers, :auditors].each do |perm|
+    %i[developers managers auditors].each do |perm|
       VCAP::Migration.create_permission_table(self, :space, :space, perm)
     end
   end

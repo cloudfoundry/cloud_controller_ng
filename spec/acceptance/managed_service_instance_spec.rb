@@ -30,10 +30,10 @@ module VCAP::CloudController
             update_service_instance(200, headers: admin_headers, body: body)
 
             expect(last_response).to have_status_code(201)
-            expect(a_request(:patch, update_url(service_instance)).with { |req|
+            expect(a_request(:patch, update_url(service_instance)).with do |req|
               request_body = JSON.parse(req.body)
               expect(request_body['parameters']).to eq(body[:parameters])
-            }).to have_been_made
+            end).to have_been_made
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['entity']).to include(

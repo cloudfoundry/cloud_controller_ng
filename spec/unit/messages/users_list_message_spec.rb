@@ -11,7 +11,7 @@ module VCAP::CloudController
           'guids' => 'user1-guid,user2-guid',
           'partial_usernames' => 'user',
           'usernames' => 'user1-name,user2-name',
-          'origins' => 'user1-origin,user2-origin',
+          'origins' => 'user1-origin,user2-origin'
         }
       end
 
@@ -57,7 +57,7 @@ module VCAP::CloudController
           {
             guids: nil,
             usernames: nil,
-            origins: nil,
+            origins: nil
           }
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
             {
               guids: 'a',
               usernames: { 'not' => 'an array' },
-              origins: 3.14159,
+              origins: 3.14159
             }
           end
 

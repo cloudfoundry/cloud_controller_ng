@@ -36,7 +36,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'invalid pagination' do
         it 'returns 400' do
-          get :index, params: { per_page: 99999999999999999 }, as: :json
+          get :index, params: { per_page: 99_999_999_999_999_999 }, as: :json
 
           expect(response.status).to eq 400
           expect(response.body).to include 'BadQueryParameter'
@@ -69,7 +69,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/abel beale/)
+        expect(response_names).to match_array(%w[abel beale])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -80,7 +80,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/quartz rocky/)
+        expect(response_names).to match_array(%w[quartz rocky])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -90,7 +90,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/rocky quartz/)
+        expect(response_names).to match_array(%w[rocky quartz])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -101,7 +101,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/rocky quartz/)
+        expect(response_names).to match_array(%w[rocky quartz])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -112,7 +112,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '-name', per_page: 2, page: 2 }, as: :json
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/clem beale/)
+        expect(response_names).to match_array(%w[clem beale])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=3/)
@@ -125,7 +125,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '-name', per_page: 2, page: 3 }, as: :json
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/abel/)
+        expect(response_names).to match_array(%w[abel])
         expect(parsed_body['pagination']['next']).to be_nil
         expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['previous']['href']).to match(/per_page=2/)
@@ -242,11 +242,11 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the label is invalid' do
         let(:request_body) do
           {
-              metadata: {
-                  labels: {
-                      'cloudfoundry.org/release' => 'stable'
-                  }
+            metadata: {
+              labels: {
+                'cloudfoundry.org/release' => 'stable'
               }
+            }
           }
         end
 
@@ -268,7 +268,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -285,16 +285,16 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the metadata is valid' do
         let(:request_body) do
           {
-              name: 'some-name',
-              relationships: { space: { data: { guid: space.guid } } },
-              metadata: {
-                  labels: {
-                      release: 'stable'
-                  },
-                  annotations: {
-                    this: 'is valid'
-                  },
+            name: 'some-name',
+            relationships: { space: { data: { guid: space.guid } } },
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                this: 'is valid'
               }
+            }
           }
         end
 
@@ -556,7 +556,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the space developer does not request lifecycle' do
         let(:request_body) do
           {
-            name: new_name,
+            name: new_name
           }
         end
 
@@ -583,11 +583,11 @@ RSpec.describe AppsV3Controller, type: :controller do
             context 'when the metadata is valid' do
               let(:request_body) do
                 {
-                    metadata: {
-                        labels: {
-                            release: 'stable'
-                        }
+                  metadata: {
+                    labels: {
+                      release: 'stable'
                     }
+                  }
                 }
               end
 
@@ -604,11 +604,11 @@ RSpec.describe AppsV3Controller, type: :controller do
             context 'when the metadata is invalid' do
               let(:request_body) do
                 {
-                    metadata: {
-                        labels: {
-                            'cloudfoundry.org/release' => 'stable'
-                        }
+                  metadata: {
+                    labels: {
+                      'cloudfoundry.org/release' => 'stable'
                     }
+                  }
                 }
               end
 
@@ -885,7 +885,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -918,8 +918,8 @@ RSpec.describe AppsV3Controller, type: :controller do
               annotations: {
                 new_anno: 'value',
                 existing_anno: 'is valid',
-                please: nil,
-              },
+                please: nil
+              }
             }
           }
         end
@@ -1000,15 +1000,15 @@ RSpec.describe AppsV3Controller, type: :controller do
       expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
         VCAP::CloudController::AppModel,
         app_model.guid,
-        app_delete_stub,
+        app_delete_stub
       )
       expect(AppsV3Controller::DeleteAppErrorTranslatorJob).to have_received(:new)
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
-      expect {
+      expect do
         delete :destroy, params: { guid: app_model.guid }
-      }.to change {
+      end.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
@@ -1278,7 +1278,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           'space_auditor' => 403,
           'org_manager' => 403,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -1415,7 +1415,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when restarting the app fails with a CannotCommunicateWithDiegoError' do
         before do
           allow(VCAP::CloudController::AppRestart).to receive(:restart).
-            and_raise(::VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError.new('Oh no!'))
+            and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError.new('Oh no!'))
         end
 
         it 'returns an CannotCommunicateWithDiegoError error' do
@@ -1453,7 +1453,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when given an invalid request' do
       it 'returns a validation error' do
-        get :builds, params: { guid: app_model.guid, "no-such-param": 42 }
+        get :builds, params: { guid: app_model.guid, 'no-such-param': 42 }
 
         expect(response.status).to eq 400
         expect(response.body).to include 'BadQueryParameter'
@@ -1485,7 +1485,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) { READ_ONLY_PERMS }
-      let(:api_call) { lambda { get :builds, params: { guid: app_model.guid } } }
+      let(:api_call) { -> { get :builds, params: { guid: app_model.guid } } }
     end
   end
 
@@ -1511,9 +1511,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     it 'records an audit event' do
-      expect {
+      expect do
         get :show_env, params: { guid: app_model.guid }
-      }.to change { VCAP::CloudController::Event.count }.by(1)
+      end.to change { VCAP::CloudController::Event.count }.by(1)
 
       event = VCAP::CloudController::Event.find(type: 'audit.app.environment.show')
       expect(event).not_to be_nil
@@ -1691,9 +1691,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             get :show_environment_variables, params: { guid: app_model.guid }, as: :json
 
             expect(response.status).to eq expected_return_value
-            if expected_return_value == 200
-              expect(parsed_body).to eq(expected_success_response)
-            end
+            expect(parsed_body).to eq(expected_success_response) if expected_return_value == 200
           end
         end
       end
@@ -1769,18 +1767,18 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(200)
         expect(parsed_body).to eq({
-          'links' => expected_success_response['links'],
-          'var' => {},
-        })
+                                    'links' => expected_success_response['links'],
+                                    'var' => {}
+                                  })
       end
     end
 
     it 'records an audit event' do
       set_current_user_as_admin(user: user, email: 'mona@example.com')
 
-      expect {
+      expect do
         get :show_environment_variables, params: { guid: app_model.guid }, as: :json
-      }.to change { VCAP::CloudController::Event.count }.by(1)
+      end.to change { VCAP::CloudController::Event.count }.by(1)
 
       event = VCAP::CloudController::Event.find(type: 'audit.app.environment_variables.show')
       expect(event).not_to be_nil
@@ -1856,10 +1854,10 @@ RSpec.describe AppsV3Controller, type: :controller do
 
               app_model.reload
               expect(app_model.environment_variables).to eq({
-                'override' => 'new-value',
-                'preserve' => 'value-to-keep',
-                'new-key' => 'another-new-value',
-              })
+                                                              'override' => 'new-value',
+                                                              'preserve' => 'value-to-keep',
+                                                              'new-key' => 'another-new-value'
+                                                            })
             end
           end
         end
@@ -2151,19 +2149,19 @@ RSpec.describe AppsV3Controller, type: :controller do
 
   describe 'DeleteAppErrorTranslatorJob' do
     let(:error_translator) { AppsV3Controller::DeleteAppErrorTranslatorJob.new(job) }
-    let(:job) {}
+    let(:job) { nil }
 
     context 'when the error is a SubResourceError' do
       it 'should translate it to CompoundError with underlying API errors' do
         translated_error = error_translator.translate_error(VCAP::CloudController::AppDelete::SubResourceError.new([
           StandardError.new('oops-1'),
-          StandardError.new('oops-2'),
+          StandardError.new('oops-2')
         ]))
 
         expect(translated_error).to be_a(CloudController::Errors::CompoundError)
         expect(translated_error.underlying_errors).to match_array([
           CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-1'),
-          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2'),
+          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2')
         ])
       end
     end

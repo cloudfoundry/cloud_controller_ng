@@ -6,11 +6,11 @@ module VCAP
     RSpec.describe IncludeBindingRouteDecorator do
       subject(:decorator) { described_class }
       let(:bindings) { Array.new(3) { RouteBinding.make } }
-      let(:routes) {
+      let(:routes) do
         bindings.
           map(&:route).
           map { |r| Presenters::V3::RoutePresenter.new(r).to_hash }
-      }
+      end
 
       it 'decorates the given hash with service instances from bindings' do
         dict = { foo: 'bar' }

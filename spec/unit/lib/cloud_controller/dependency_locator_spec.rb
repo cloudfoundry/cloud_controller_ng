@@ -12,11 +12,11 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#droplet_blobstore' do
     let(:config) do
       VCAP::CloudController::Config.new({
-        droplets: {
-          fog_connection: 'fog_connection',
-          droplet_directory_key: 'key',
-        },
-      })
+                                          droplets: {
+                                            fog_connection: 'fog_connection',
+                                            droplet_directory_key: 'key'
+                                          }
+                                        })
     end
 
     it 'creates blob store' do
@@ -29,11 +29,11 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#buildpack_cache_blobstore' do
     let(:config) do
       VCAP::CloudController::Config.new({
-        droplets: {
-          fog_connection: 'fog_connection',
-          droplet_directory_key: 'key',
-        }
-      })
+                                          droplets: {
+                                            fog_connection: 'fog_connection',
+                                            droplet_directory_key: 'key'
+                                          }
+                                        })
     end
 
     it 'creates blob store' do
@@ -41,7 +41,8 @@ RSpec.describe CloudController::DependencyLocator do
         options: config.get(:droplets),
         directory_key: 'key',
         root_dir: 'buildpack_cache',
-        resource_type: :buildpack_cache)
+        resource_type: :buildpack_cache
+      )
       locator.buildpack_cache_blobstore
     end
   end
@@ -49,11 +50,11 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#package_blobstore' do
     let(:config) do
       VCAP::CloudController::Config.new({
-        packages: {
-          fog_connection: 'fog_connection',
-          app_package_directory_key: 'key',
-        }
-      })
+                                          packages: {
+                                            fog_connection: 'fog_connection',
+                                            app_package_directory_key: 'key'
+                                          }
+                                        })
     end
 
     it 'creates blob store' do
@@ -66,17 +67,17 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#legacy_global_app_bits_cache' do
     let(:config) do
       VCAP::CloudController::Config.new({
-        resource_pool: {
-          fog_connection: 'fog_connection',
-          resource_directory_key: 'key',
-        }
-      })
+                                          resource_pool: {
+                                            fog_connection: 'fog_connection',
+                                            resource_directory_key: 'key'
+                                          }
+                                        })
     end
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
         options: config.get(:resource_pool),
-        directory_key: 'key',
+        directory_key: 'key'
       )
       locator.legacy_global_app_bits_cache
     end
@@ -85,18 +86,18 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#global_app_bits_cache' do
     let(:config) do
       VCAP::CloudController::Config.new({
-        resource_pool: {
-          fog_connection: 'fog_connection',
-          resource_directory_key: 'key',
-        }
-      })
+                                          resource_pool: {
+                                            fog_connection: 'fog_connection',
+                                            resource_directory_key: 'key'
+                                          }
+                                        })
     end
 
     it 'creates blob store with a app_bits_cache as root_dir' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
         options: config.get(:resource_pool),
         directory_key: 'key',
-        root_dir: 'app_bits_cache',
+        root_dir: 'app_bits_cache'
       )
       locator.global_app_bits_cache
     end
@@ -107,14 +108,14 @@ RSpec.describe CloudController::DependencyLocator do
     let(:my_config) do
       {
         internal_service_hostname: internal_service_hostname,
-        external_host:             'external.host',
-        tls_port:                  8283,
-        staging:                   {
+        external_host: 'external.host',
+        tls_port: 8283,
+        staging: {
           auth: {
-            user:     'username',
-            password: 'password',
+            user: 'username',
+            password: 'password'
           }
-        },
+        }
       }
     end
 
@@ -129,15 +130,14 @@ RSpec.describe CloudController::DependencyLocator do
         blobstore_tls_port: 8283,
         user: 'username',
         password: 'password',
-        mtls: true,
+        mtls: true
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client)
-        )
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client))
       locator.blobstore_url_generator
     end
   end
@@ -146,7 +146,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:my_config) do
       {
         internal_service_hostname: 'internal.service.hostname',
-        tls_port:                  8283,
+        tls_port: 8283
       }
     end
 
@@ -159,7 +159,8 @@ RSpec.describe CloudController::DependencyLocator do
         internal_service_hostname: 'internal.service.hostname',
         external_port: nil,
         tls_port: 8283,
-        mtls: true)
+        mtls: true
+      )
       TestConfig.config.delete(:external_port)
       locator.droplet_url_generator
     end
@@ -324,9 +325,8 @@ RSpec.describe CloudController::DependencyLocator do
                             {
                               url: 'routing-api-url',
                               routing_client_name: 'routing-client',
-                              routing_client_secret: 'routing-secret',
-                            }
-      )
+                              routing_client_secret: 'routing-secret'
+                            })
       TestConfig.config_instance
     end
 
@@ -347,7 +347,7 @@ RSpec.describe CloudController::DependencyLocator do
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:routing_api, :routing_client_name),
         secret: config.get(:routing_api, :routing_client_secret),
-        ca_file: config.get(:uaa, :ca_file),
+        ca_file: config.get(:uaa, :ca_file)
       ).and_return(uaa_client)
 
       client = locator.routing_api_client
@@ -367,7 +367,7 @@ RSpec.describe CloudController::DependencyLocator do
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:cc_service_key_client_name),
         secret: config.get(:cc_service_key_client_secret),
-        ca_file: config.get(:uaa, :ca_file),
+        ca_file: config.get(:uaa, :ca_file)
       ).and_return(uaa_client)
 
       client = locator.credhub_client
@@ -436,7 +436,7 @@ RSpec.describe CloudController::DependencyLocator do
         client_ca_path: nil,
         client_cert_path: nil,
         client_key_path: nil,
-        tls_subject_name: nil,
+        tls_subject_name: nil
       )
     end
 
@@ -444,7 +444,7 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.override(
         logcache: {
           host: 'some-logcache-host',
-          port: 1234,
+          port: 1234
         },
         logcache_tls: {
           ca_file: 'logcache-ca',
@@ -460,7 +460,7 @@ RSpec.describe CloudController::DependencyLocator do
         client_ca_path: 'logcache-ca',
         client_cert_path: 'logcache-client-ca',
         client_key_path: 'logcache-client-key',
-        tls_subject_name: 'some-tls-cert-san',
+        tls_subject_name: 'some-tls-cert-san'
       )
     end
   end
@@ -500,7 +500,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       TestConfig.override(
         statsd_host: host,
-        statsd_port: port,
+        statsd_port: port
       )
 
       expected_client = double(Statsd)
@@ -516,7 +516,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:diego_client) { double }
 
     before do
-      allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      allow(Diego::Client).to receive(:new).and_return(diego_client)
     end
 
     it 'uses diego' do
@@ -529,7 +529,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:diego_client) { double }
 
     before do
-      allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      allow(Diego::Client).to receive(:new).and_return(diego_client)
     end
 
     it 'uses diego' do
@@ -541,7 +541,7 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#build_instances_client' do
     let(:diego_client) { double }
     before do
-      allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      allow(Diego::Client).to receive(:new).and_return(diego_client)
     end
 
     it 'uses diego' do
@@ -554,7 +554,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:diego_client) { double }
 
     before do
-      allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      allow(Diego::Client).to receive(:new).and_return(diego_client)
     end
 
     it 'uses diego' do

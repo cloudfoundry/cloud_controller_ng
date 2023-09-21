@@ -23,7 +23,7 @@ engines:
   markdownlint:
     enabled: true
   rubocop:
-    enabled: false
+    Enabled: true
   scss-lint:
     enabled: true
   shellcheck:

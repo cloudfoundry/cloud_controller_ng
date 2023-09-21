@@ -26,6 +26,14 @@ class DeploymentsController < ApplicationController
     )
   end
 
+  def show
+    deployment = DeploymentModel.find(guid: hashed_params[:guid])
+
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_read_from_space?(deployment.app.space.id, deployment.app.space.organization_id)
+
+    render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
+  end
+
   def create
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
 
@@ -36,7 +44,7 @@ class DeploymentsController < ApplicationController
     app = AppModel.find(guid: message.app_guid)
 
     unprocessable!(unable_to_use) unless app && permission_queryer.can_manage_apps_in_active_space?(app.space.id) &&
-      permission_queryer.is_space_active?(app.space.id)
+                                         permission_queryer.is_space_active?(app.space.id)
     unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
     begin
@@ -73,19 +81,11 @@ class DeploymentsController < ApplicationController
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end
 
-  def show
-    deployment = DeploymentModel.find(guid: hashed_params[:guid])
-
-    resource_not_found!(:deployment) unless deployment && permission_queryer.can_read_from_space?(deployment.app.space.id, deployment.app.space.organization_id)
-
-    render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
-  end
-
   def cancel
     deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
     resource_not_found!(:deployment) unless deployment && permission_queryer.can_manage_apps_in_active_space?(deployment.app.space.id) &&
-      permission_queryer.is_space_active?(deployment.app.space.id)
+                                            permission_queryer.is_space_active?(deployment.app.space.id)
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)

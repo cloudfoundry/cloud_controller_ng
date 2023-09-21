@@ -4,32 +4,32 @@ RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :
   let(:db) { Sequel::Model.db }
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
-  org_roles = %w{
+  org_roles = %w[
     organizations_auditors
     organizations_billing_managers
     organizations_managers
     organizations_users
-  }
-  space_roles = %w{
+  ]
+  space_roles = %w[
     spaces_auditors
     spaces_developers
     spaces_managers
-  }
+  ]
 
   before do
-    space_roles.each { |s_role|
+    space_roles.each do |s_role|
       db[s_role.to_sym].insert({
-        user_id: user.id,
-        space_id: space.id
-      })
-    }
+                                 user_id: user.id,
+                                 space_id: space.id
+                               })
+    end
 
-    org_roles.each { |o_role|
+    org_roles.each do |o_role|
       db[o_role.to_sym].insert({
-        user_id: user.id,
-        organization_id: space.organization.id
-      })
-    }
+                                 user_id: user.id,
+                                 organization_id: space.organization.id
+                               })
+    end
   end
 
   roles = org_roles + space_roles

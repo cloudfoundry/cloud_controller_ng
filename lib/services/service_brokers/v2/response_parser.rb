@@ -28,10 +28,10 @@ module VCAP::Services
                   {
                     'AsyncRequired' => Errors::AsyncRequired,
                     'ConcurrencyError' => Errors::ConcurrencyError,
-                    'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
+                    'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict
                   },
-                  FailingValidator.new(Errors::ServiceBrokerBadResponse),
-                  )
+                  FailingValidator.new(Errors::ServiceBrokerBadResponse)
+                )
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -46,11 +46,13 @@ module VCAP::Services
               case unvalidated_response.code
               when 200, 201
                 JsonObjectValidator.new(@logger,
-                  CredentialsValidator.new(
-                    SyslogDrainValidator.new(opts[:service_guid],
-                      RouteServiceURLValidator.new(
-                        VolumeMountsValidator.new(opts[:service_guid],
-                          SuccessValidator.new(state: 'succeeded'))))))
+                                        CredentialsValidator.new(
+                                          SyslogDrainValidator.new(opts[:service_guid],
+                                                                   RouteServiceURLValidator.new(
+                                                                     VolumeMountsValidator.new(opts[:service_guid],
+                                                                                               SuccessValidator.new(state: 'succeeded'))
+                                                                   ))
+                                        ))
               when 202
                 JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
               when 409
@@ -60,7 +62,7 @@ module VCAP::Services
                                       { 'RequiresApp' => Errors::AppRequired,
                                         'AsyncRequired' => Errors::AsyncRequired,
                                         'ConcurrencyError' => Errors::ConcurrencyError },
-                                        FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -75,19 +77,19 @@ module VCAP::Services
               case unvalidated_response.code
               when 200
                 JsonObjectValidator.new(@logger,
-                    SuccessValidator.new(state: 'succeeded'))
+                                        SuccessValidator.new(state: 'succeeded'))
               when 201
                 IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
               when 202
                 JsonSchemaValidator.new(@logger, async_binding_response_schema, SuccessValidator.new)
               when 410
                 @logger.warn("Already deleted: #{unvalidated_response.uri}")
-                SuccessValidator.new { |res| {} }
+                SuccessValidator.new { |_res| {} }
               when 422
                 FailWhenValidator.new('error', {
-                  'AsyncRequired' => Errors::AsyncRequired,
-                  'ConcurrencyError' => Errors::ConcurrencyError
-                }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                        'AsyncRequired' => Errors::AsyncRequired,
+                                        'ConcurrencyError' => Errors::ConcurrencyError
+                                      }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -102,20 +104,20 @@ module VCAP::Services
               case unvalidated_response.code
               when 200
                 JsonObjectValidator.new(@logger,
-                  SuccessValidator.new(state: 'succeeded'))
+                                        SuccessValidator.new(state: 'succeeded'))
               when 201
                 IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
               when 202
                 JsonSchemaValidator.new(@logger, deprovision_response_schema,
-                    SuccessValidator.new(state: 'in progress'))
+                                        SuccessValidator.new(state: 'in progress'))
               when 410
                 @logger.warn("Already deleted: #{unvalidated_response.uri}")
-                SuccessValidator.new { |res| {} }
+                SuccessValidator.new { |_res| {} }
               when 422
                 FailWhenValidator.new('error', {
-                  'AsyncRequired' => Errors::AsyncRequired,
-                  'ConcurrencyError' => Errors::ConcurrencyError
-                }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                        'AsyncRequired' => Errors::AsyncRequired,
+                                        'ConcurrencyError' => Errors::ConcurrencyError
+                                      }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -132,7 +134,7 @@ module VCAP::Services
                 JsonObjectValidator.new(@logger, SuccessValidator.new)
               when 201, 202
                 JsonObjectValidator.new(@logger,
-                  FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                        FailingValidator.new(Errors::ServiceBrokerBadResponse))
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -147,18 +149,18 @@ module VCAP::Services
               case unvalidated_response.code
               when 200
                 JsonSchemaValidator.new(@logger, update_response_schema,
-                  SuccessValidator.new(state: 'succeeded'))
+                                        SuccessValidator.new(state: 'succeeded'))
               when 201
                 IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
               when 202
                 JsonSchemaValidator.new(@logger, update_response_schema,
-                  SuccessValidator.new(state: 'in progress'))
+                                        SuccessValidator.new(state: 'in progress'))
               when 422
                 FailWhenValidator.new('error', {
-                  'AsyncRequired' => Errors::AsyncRequired,
-                  'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
-                 },
-                  FailingValidator.new(Errors::ServiceBrokerRequestRejected))
+                                        'AsyncRequired' => Errors::AsyncRequired,
+                                        'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict
+                                      },
+                                      FailingValidator.new(Errors::ServiceBrokerRequestRejected))
               else
                 FailingValidator.new(Errors::ServiceBrokerBadResponse)
               end
@@ -180,12 +182,11 @@ module VCAP::Services
               )
             when 201, 202
               JsonObjectValidator.new(@logger,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse)
-              )
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
             when 400
               BadRequestValidator.new
             when 410
-              SuccessValidator.new { |res| {} }
+              SuccessValidator.new { |_res| {} }
             else
               CommonErrorValidator.new(FailingValidator.new(Errors::ServiceBrokerBadResponse))
             end
@@ -232,7 +233,7 @@ module VCAP::Services
             validator = yield unvalidated_response
             @logger.info('validators', log_context.merge({ validators: validator.stack })) if @log_validators
             validator.validate(**unvalidated_response.to_hash)
-          rescue => e
+          rescue StandardError => e
             @logger.error(e.class, log_context.merge({ description: e.to_h['description'] })) if @log_errors
             raise e
           end
@@ -245,9 +246,9 @@ module VCAP::Services
             'properties' => {
               'operation' => {
                 'type' => 'string',
-                'maxLength' => 10_000,
-              },
-            },
+                'maxLength' => 10_000
+              }
+            }
           }]
         end
 
@@ -257,13 +258,13 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'dashboard_url' => {
-                'type' => ['string', 'null'],
+                'type' => %w[string null]
               },
               'operation' => {
                 'type' => 'string',
-                'maxLength' => 10_000,
-              },
-            },
+                'maxLength' => 10_000
+              }
+            }
           }]
         end
 
@@ -274,9 +275,9 @@ module VCAP::Services
             'properties' => {
               'operation' => {
                 'type' => 'string',
-                'maxLength' => 10_000,
-              },
-            },
+                'maxLength' => 10_000
+              }
+            }
           }]
         end
 
@@ -286,12 +287,12 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'dashboard_url' => {
-                'type' => ['string', 'null'],
+                'type' => %w[string null]
               },
               'operation' => {
                 'type' => 'string',
                 'maxLength' => 10_000
-              },
+              }
             }
           }]
         end
@@ -302,18 +303,18 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'service_id' => {
-                'type' => 'string',
+                'type' => 'string'
               },
               'plan_id' => {
-                'type' => 'string',
+                'type' => 'string'
               },
               'dashboard_url' => {
-                'type' => 'string',
+                'type' => 'string'
               },
               'parameters' => {
-                'type' => 'object',
-              },
-            },
+                'type' => 'object'
+              }
+            }
           }]
         end
 
@@ -323,50 +324,50 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'parameters' => {
-                'type' => 'object',
+                'type' => 'object'
               },
               'credentials' => {
-                'type' => 'object',
+                'type' => 'object'
               },
               'syslog_drain_url' => {
-                'type' => 'string',
+                'type' => 'string'
               },
               'route_service_url' => {
-                'type' => 'string',
+                'type' => 'string'
               },
               'volume_mounts' => {
                 'type' => 'array',
                 'items' => {
                   'type' => 'object',
-                  'required' => ['device', 'device_type', 'driver', 'mode', 'container_dir'],
+                  'required' => %w[device device_type driver mode container_dir],
                   'properties' => {
                     'device' => {
                       'type' => 'object',
                       'required' => ['volume_id'],
                       'properties' => {
                         'volume_id' => {
-                          'type' => 'string',
+                          'type' => 'string'
                         },
                         'mount_config' => {
-                          'type' => ['object', 'null'],
-                        },
-                      },
+                          'type' => %w[object null]
+                        }
+                      }
                     },
                     'device_type' => {
-                      'type' => 'string',
+                      'type' => 'string'
                     },
                     'driver' => {
-                      'type' => 'string',
+                      'type' => 'string'
                     },
                     'mode' => {
-                      'enum' => ['r', 'rw'],
+                      'enum' => %w[r rw]
                     },
                     'container_dir' => {
-                      'type' => 'string',
-                    },
-                  },
-                },
-              },
+                      'type' => 'string'
+                    }
+                  }
+                }
+              }
             }
           }]
         end
@@ -419,7 +420,7 @@ module VCAP::Services
           end
 
           def info
-            self.name
+            name
           end
 
           def stack
@@ -434,7 +435,7 @@ module VCAP::Services
           end
 
           def info
-            self.name + (@service_guid ? "[#{@service_guid}]" : '')
+            name + (@service_guid ? "[#{@service_guid}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -446,11 +447,11 @@ module VCAP::Services
             end
 
             if !parsed_response['volume_mounts'].nil? &&
-              (!parsed_response['volume_mounts'].is_a?(Array) || parsed_response['volume_mounts'].any? { |mount_info| !mount_info.is_a?(Hash) })
+               (!parsed_response['volume_mounts'].is_a?(Array) || parsed_response['volume_mounts'].any? { |mount_info| !mount_info.is_a?(Hash) })
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, invalid_error_description(response.body))
             end
 
-            if !parsed_response['volume_mounts'].nil?
+            unless parsed_response['volume_mounts'].nil?
               parsed_response['volume_mounts'].each do |mount_info|
                 validate_mount(method, uri, response, mount_info)
               end
@@ -460,16 +461,16 @@ module VCAP::Services
           end
 
           def validate_mount(method, uri, response, mount_info)
-            %w(device_type device mode container_dir driver).each do |key|
+            %w[device_type device mode container_dir driver].each do |key|
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "missing required field '#{key}'") unless mount_info.key?(key)
             end
 
-            %w(device_type mode container_dir driver).each do |key|
+            %w[device_type mode container_dir driver].each do |key|
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "missing required field '#{key}'") unless
                 mount_info[key].is_a?(String) && !mount_info[key].empty?
             end
 
-            if !mount_info['device'].is_a?(Hash)
+            unless mount_info['device'].is_a?(Hash)
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device' must be an object but is " + mount_info['device'].class.to_s)
             end
 
@@ -477,9 +478,9 @@ module VCAP::Services
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device.volume_id' must be a non-empty string")
             end
 
-            if mount_info['device'].key?('mount_config') && !mount_info['device']['mount_config'].nil? && mount_info['device']['mount_config'].class != Hash
-              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "field 'device.mount_config' must be an object if it is defined")
-            end
+            return unless mount_info['device'].key?('mount_config') && !mount_info['device']['mount_config'].nil? && mount_info['device']['mount_config'].class != Hash
+
+            raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "field 'device.mount_config' must be an object if it is defined")
           end
 
           def invalid_error_description(body)
@@ -488,7 +489,7 @@ module VCAP::Services
 
           def not_required_error_description
             'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
-            'Please contact the service provider.'
+              'Please contact the service provider.'
           end
         end
 
@@ -499,15 +500,13 @@ module VCAP::Services
           end
 
           def info
-            self.name + (@service_guid ? "[#{@service_guid}]" : '')
+            name + (@service_guid ? "[#{@service_guid}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             service = VCAP::CloudController::Service.first(guid: @service_guid)
             parsed_response ||= MultiJson.load(response.body)
-            if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
-              raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
-            end
+            raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response) if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
 
             @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
@@ -516,9 +515,7 @@ module VCAP::Services
         class CredentialsValidator < Validator
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             parsed_response ||= MultiJson.load(response.body)
-            if parsed_response['credentials'] && !parsed_response['credentials'].is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_message)
-            end
+            raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_message) if parsed_response['credentials'] && !parsed_response['credentials'].is_a?(Hash)
 
             @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
@@ -542,9 +539,7 @@ module VCAP::Services
                 is_valid = false
               end
 
-              unless is_valid
-                raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
-              end
+              raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response) unless is_valid
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
@@ -586,7 +581,7 @@ module VCAP::Services
             @processor = if block_given?
                            block
                          else
-                           ->(response, parsed_response) do
+                           lambda do |response, parsed_response|
                              parsed_response ||= MultiJson.load(response.body)
                              broker_response = parsed_response.dup
                              state ||= broker_response.delete('state')
@@ -608,7 +603,7 @@ module VCAP::Services
           end
 
           def info
-            self.name + (@state ? "[#{@state}]" : '')
+            name + (@state ? "[#{@state}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -651,9 +646,7 @@ module VCAP::Services
               @logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
             end
 
-            unless parsed_response.is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_description(response))
-            end
+            raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_description(response)) unless parsed_response.is_a?(Hash)
 
             @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
@@ -672,17 +665,15 @@ module VCAP::Services
           end
 
           def info
-            self.name + (@valid_states ? "[#{@valid_states.join(',')}]" : '')
+            name + (@valid_states ? "[#{@valid_states.join(',')}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             parsed_response ||= MultiJson.load(response.body)
             state = state_from_parsed_response(parsed_response)
-            if @valid_states.include?(state)
-              @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
-            else
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response, error_description(state))
-            end
+            raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response, error_description(state)) unless @valid_states.include?(state)
+
+            @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
           end
 
           private
@@ -721,7 +712,7 @@ module VCAP::Services
 
             if parameters && !parameters.is_a?(Hash)
               raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
-                'The service broker response contained a parameters field that was not a JSON object.')
+                                                               'The service broker response contained a parameters field that was not a JSON object.')
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response, parsed_response: parsed_response)
@@ -737,7 +728,7 @@ module VCAP::Services
           end
 
           def info
-            self.name + (@schema_name ? "[#{@schema_name}]" : '')
+            name + (@schema_name ? "[#{@schema_name}]" : '')
           end
 
           def validate(method:, uri:, code:, response:, parsed_response: nil)
@@ -752,7 +743,8 @@ module VCAP::Services
                 uri,
                 method,
                 response,
-                "expected valid JSON object in body, broker returned '#{response.body}'")
+                "expected valid JSON object in body, broker returned '#{response.body}'"
+              )
             end
 
             schema_validation_errors = JSON::Validator.fully_validate(@schema, response.body)

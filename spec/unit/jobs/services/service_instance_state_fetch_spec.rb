@@ -9,14 +9,14 @@ module VCAP::CloudController
       RSpec.describe ServiceInstanceStateFetch, job_context: :worker do
         let(:proposed_service_plan) { ServicePlan.make }
         let(:proposed_maintenance_info) { { 'version' => '2.0' } }
-        let(:maximum_polling_duration_for_plan) {}
+        let(:maximum_polling_duration_for_plan) { nil }
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
-            name: 'new-fake-name',
-            service_plan_guid: proposed_service_plan.guid,
-            maintenance_info: proposed_maintenance_info,
-          })
+                                                      name: 'new-fake-name',
+                                                      service_plan_guid: proposed_service_plan.guid,
+                                                      maintenance_info: proposed_maintenance_info
+                                                    })
           operation.save
           service_instance = ManagedServiceInstance.make(service_plan: service_plan)
           service_instance.save
@@ -41,7 +41,7 @@ module VCAP::CloudController
             description: description
           }
         end
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -53,7 +53,7 @@ module VCAP::CloudController
             name,
             service_instance.guid,
             UserAuditInfo.new(user_guid: user.guid, user_email: user_email),
-            request_attrs,
+            request_attrs
           )
         end
 
@@ -64,20 +64,20 @@ module VCAP::CloudController
 
         describe '#initialize' do
           let(:default_polling_interval) { 120 }
-          let(:max_duration) { 10080 }
+          let(:max_duration) { 10_080 }
 
           before do
             config_override = {
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
-              broker_client_max_async_poll_duration_minutes: max_duration,
+              broker_client_max_async_poll_duration_minutes: max_duration
             }
             TestConfig.override(**config_override)
           end
 
           context 'when the caller does not provide the maximum number of attempts' do
             it 'should the default configuration value' do
-              Timecop.freeze(Time.now)
-              expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+              Timecop.freeze(Time.now.utc)
+              expect(job.end_timestamp).to eq(Time.now.utc + max_duration.minutes)
             end
           end
 
@@ -90,21 +90,21 @@ module VCAP::CloudController
           end
 
           context 'when the service plan has maximum_polling_duration' do
-            let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+            let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
 
             context "when the config value is smaller than plan's maximum_polling_duration" do
               let(:max_duration) { 10 } # in minutes
               it 'should set end_timestamp to config value' do
-                Timecop.freeze(Time.now)
-                expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+                Timecop.freeze(Time.now.utc)
+                expect(job.end_timestamp).to eq(Time.now.utc + max_duration.minutes)
               end
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
+              let(:max_duration) { 1_068_367_346 } # in minutes
               it "should set end_timestamp to the plan's maximum_polling_duration value" do
-                Timecop.freeze(Time.now)
-                expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
+                Timecop.freeze(Time.now.utc)
+                expect(job.end_timestamp).to eq(Time.now.utc + maximum_polling_duration_for_plan.seconds)
               end
             end
           end
@@ -114,8 +114,8 @@ module VCAP::CloudController
               allow(ManagedServiceInstance).to receive(:first) do |e|
                 raise Sequel::Error.new(e)
               end
-              Timecop.freeze(Time.now)
-              expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+              Timecop.freeze(Time.now.utc)
+              expect(job.end_timestamp).to eq(Time.now.utc + max_duration.minutes)
             end
           end
         end
@@ -362,7 +362,7 @@ module VCAP::CloudController
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
 
-              Timecop.freeze(Time.now + 1.hour) do
+              Timecop.freeze(Time.now.utc + 1.hour) do
                 Delayed::Job.last.invoke_job
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
@@ -386,7 +386,7 @@ module VCAP::CloudController
               end
 
               it 'is able to run the job again' do
-                Timecop.travel(Time.now + polling_interval.seconds) do
+                Timecop.travel(Time.now.utc + polling_interval.seconds) do
                   execute_all_jobs(expected_successes: 1, expected_failures: 0)
                 end
               end
@@ -448,13 +448,13 @@ module VCAP::CloudController
 
             before do
               run_job(job)
-              Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+              Timecop.travel(Time.now.utc + max_duration.minutes + 1.minute) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
             end
 
             it 'should not enqueue another fetch job' do
-              Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
+              Timecop.freeze(Time.now.utc + max_duration.minutes + 1.minute) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
             end
@@ -474,7 +474,7 @@ module VCAP::CloudController
               Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
               run_job(job)
 
-              Timecop.freeze(Time.now + job.poll_interval * 2)
+              Timecop.freeze(Time.now.utc + (job.poll_interval * 2))
               execute_all_jobs(expected_successes: 0, expected_failures: 0)
             end
           end
@@ -483,17 +483,17 @@ module VCAP::CloudController
             let(:state) { 'in progress' }
 
             it 'should compute the end_timestamp based on the current time' do
-              Timecop.freeze(Time.now)
+              Timecop.freeze(Time.now.utc)
 
               run_job(job)
 
               # should run enqueued job
-              Timecop.travel(Time.now + max_duration.minutes - 1.minute) do
+              Timecop.travel(Time.now.utc + max_duration.minutes - 1.minute) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
               end
 
               # should not run enqueued job
-              Timecop.travel(Time.now + max_duration.minutes) do
+              Timecop.travel(Time.now.utc + max_duration.minutes) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
             end
@@ -518,8 +518,8 @@ module VCAP::CloudController
             end
 
             it 'updates the poll interval after the next run' do
-              Timecop.freeze(Time.now)
-              first_run_time = Time.now
+              Timecop.freeze(Time.now.utc)
+              first_run_time = Time.now.utc
 
               Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -541,9 +541,9 @@ module VCAP::CloudController
             it 'exits without exploding' do
               service_instance.destroy
 
-              expect {
+              expect do
                 run_job(job)
-              }.not_to raise_error
+              end.not_to raise_error
             end
           end
 
@@ -558,10 +558,10 @@ module VCAP::CloudController
               Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
 
               broker.update({
-                broker_url:    updated_url,
-                auth_username: updated_username,
-                auth_password: updated_password
-              })
+                              broker_url: updated_url,
+                              auth_username: updated_username,
+                              auth_password: updated_password
+                            })
 
               allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(newClient)
               allow(newClient).to receive(:fetch_service_instance_last_operation).and_return(last_operation_response)
@@ -592,7 +592,7 @@ module VCAP::CloudController
 
           context 'when the job is new' do
             it 'adds the broker_client_max_async_poll_duration_minutes to the current time' do
-              now = Time.now
+              now = Time.now.utc
               expected_end_timestamp = now + max_poll_duration.minutes
               Timecop.freeze now do
                 expect(job.end_timestamp).to be_within(0.01).of(expected_end_timestamp)
@@ -602,12 +602,12 @@ module VCAP::CloudController
 
           context 'when the job is fetched from the database' do
             it 'returns the previously computed and persisted end_timestamp' do
-              now = Time.now
+              now = Time.now.utc
               expected_end_timestamp = now + max_poll_duration.minutes
 
               job_id = nil
               Timecop.freeze now do
-                enqueued_job = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic, run_at: Time.now).enqueue
+                enqueued_job = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic, run_at: Time.now.utc).enqueue
                 job_id = enqueued_job.id
               end
 

@@ -16,8 +16,7 @@ module VCAP::CloudController
           let(:request_attrs) do
             { 'app_guid' => app.guid,
               'type' => 'docker',
-              'data' => 'some data'
-            }
+              'data' => 'some data' }
           end
 
           it 'creates a new audit.app.start event' do

@@ -7,8 +7,8 @@ require 'actions/droplet_create'
 module VCAP::CloudController
   class StagingsController < RestController::BaseController
     def self.dependencies
-      [:droplet_blobstore, :buildpack_cache_blobstore, :package_blobstore,
-       :blobstore_url_generator, :missing_blob_handler, :blob_sender, :config]
+      %i[droplet_blobstore buildpack_cache_blobstore package_blobstore
+         blobstore_url_generator missing_blob_handler blob_sender config]
     end
 
     include CloudController::Errors
@@ -157,9 +157,9 @@ module VCAP::CloudController
       file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
 
-      if header_md5.present? && file_md5 != header_md5
-        raise ApiError.new_from_details('StagingError', 'content md5 did not match')
-      end
+      return unless header_md5.present? && file_md5 != header_md5
+
+      raise ApiError.new_from_details('StagingError', 'content md5 did not match')
     end
   end
 end

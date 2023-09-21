@@ -17,7 +17,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_for_app).with(
           an_instance_of(VCAP::CloudController::ProcessesListMessage),
-          hash_including(eager_loaded_associations: [:labels, :annotations])
+          hash_including(eager_loaded_associations: %i[labels annotations])
         ).and_call_original
 
         get :index, params: { app_guid: app.guid }
@@ -103,7 +103,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'eager loads associated resources that the presenter specifies' do
           expect(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_all).with(
             an_instance_of(VCAP::CloudController::ProcessesListMessage),
-            hash_including(eager_loaded_associations: [:labels, :annotations])
+            hash_including(eager_loaded_associations: %i[labels annotations])
           ).and_call_original
 
           get :index
@@ -139,7 +139,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       context 'because there are invalid values in parameters' do
-        let(:params) { { 'per_page' => 10000 } }
+        let(:params) { { 'per_page' => 10_000 } }
 
         it 'returns an 400 Bad Request' do
           get :index, params: params
@@ -261,7 +261,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
     let(:request_body) do
       {
-          'command' => 'new command',
+        'command' => 'new command'
       }
     end
     let(:user) { set_current_user(VCAP::CloudController::User.make) }

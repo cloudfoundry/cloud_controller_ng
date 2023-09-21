@@ -27,9 +27,9 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:body) do
           {
-            unexpected:    'woah',
+            unexpected: 'woah',
             relationships: {
-              app: { data: { guid: 'some-app-guid' } },
+              app: { data: { guid: 'some-app-guid' } }
             }
           }
         end

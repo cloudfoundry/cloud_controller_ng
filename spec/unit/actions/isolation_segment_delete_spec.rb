@@ -10,15 +10,15 @@ module VCAP::CloudController
 
     it 'can delete isolation segments' do
       subject.delete(isolation_segment_model)
-      expect {
+      expect do
         isolation_segment_model.reload
-      }.to raise_error(Sequel::Error, 'Record not found')
+      end.to raise_error(Sequel::Error, 'Record not found')
     end
 
     it 'raises a 422 when deleteing the shared isolation segment' do
-      expect {
+      expect do
         subject.delete(shared_isolation_segment_model)
-      }.to raise_error /Cannot delete the #{shared_isolation_segment_model.name}/
+      end.to raise_error(/Cannot delete the #{shared_isolation_segment_model.name}/)
     end
 
     context 'when the segment is assigned as an orgs default' do
@@ -30,10 +30,10 @@ module VCAP::CloudController
       end
 
       it 'raises an error' do
-        expect {
+        expect do
           subject.delete(isolation_segment_model)
-        }.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
-          'Revoke the Organization entitlements for your Isolation Segment.')
+        end.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
+                           'Revoke the Organization entitlements for your Isolation Segment.')
       end
     end
 
@@ -47,10 +47,10 @@ module VCAP::CloudController
       end
 
       it 'raises an error' do
-        expect {
+        expect do
           subject.delete(isolation_segment_model)
-        }.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
-          'Revoke the Organization entitlements for your Isolation Segment.')
+        end.to raise_error(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError,
+                           'Revoke the Organization entitlements for your Isolation Segment.')
       end
     end
   end

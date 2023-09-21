@@ -9,10 +9,10 @@ RSpec.shared_examples 'delayed job' do |job_class|
 
       complicated_objects_count = serialized.scan('!ruby/object').count
       expect(complicated_objects_count).to eq(1),
-        "Expected to get only single complicated object ('!ruby/object')\n" \
-          "But gotten: #{complicated_objects_count}\n" \
-          "Serialized job:\n" +
-          serialized
+                                           "Expected to get only single complicated object ('!ruby/object')\n" \
+                                           "But gotten: #{complicated_objects_count}\n" \
+                                           "Serialized job:\n" +
+                                           serialized
     end
 
     def create_job(job_class)
@@ -33,7 +33,7 @@ RSpec.shared_examples 'delayed job' do |job_class|
 
       return job_class.new(*args, **kwargs, &block) if block && !kwargs.empty?
       return job_class.new(*args, &block) if block
-      return job_class.new(*args, **kwargs) if !kwargs.empty?
+      return job_class.new(*args, **kwargs) unless kwargs.empty?
 
       job_class.new(*args)
     end

@@ -20,20 +20,20 @@ module VCAP::CloudController
 
     # TODO: apps are actually processes
     many_to_many :apps, class: 'VCAP::CloudController::ProcessModel',
-                        join_table:              RouteMappingModel.table_name,
-                        left_primary_key:        :guid, left_key: :route_guid,
-                        right_primary_key:       [:app_guid, :type], right_key: [:app_guid, :process_type],
-                        distinct:                true,
-                        order:                   Sequel.asc(:id),
-                        conditions:              { type: ProcessTypes::WEB }
+                        join_table: RouteMappingModel.table_name,
+                        left_primary_key: :guid, left_key: :route_guid,
+                        right_primary_key: %i[app_guid type], right_key: %i[app_guid process_type],
+                        distinct: true,
+                        order: Sequel.asc(:id),
+                        conditions: { type: ProcessTypes::WEB }
 
     many_to_many :shared_spaces,
-          left_key:          :route_guid,
-          left_primary_key:  :guid,
-          right_key:         :target_space_guid,
-          right_primary_key: :guid,
-          join_table:        :route_shares,
-          class: VCAP::CloudController::Space
+                 left_key: :route_guid,
+                 left_primary_key: :guid,
+                 right_key: :target_space_guid,
+                 right_primary_key: :guid,
+                 join_table: :route_shares,
+                 class: VCAP::CloudController::Space
 
     one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
@@ -47,7 +47,7 @@ module VCAP::CloudController
     add_association_dependencies annotations: :destroy
 
     def shared?
-      return VCAP::CloudController::Space.where(routes_shared_from_other_spaces: self).empty? == false
+      VCAP::CloudController::Space.where(routes_shared_from_other_spaces: self).empty? == false
     end
 
     def fqdn
@@ -55,15 +55,15 @@ module VCAP::CloudController
     end
 
     def uri
-      "#{fqdn}#{path}#{":#{port}" if !port.nil?}"
+      "#{fqdn}#{path}#{":#{port}" unless port.nil?}"
     end
 
     def as_summary_json
       {
-        guid:   guid,
-        host:   host,
-        port:   port,
-        path:   path,
+        guid: guid,
+        host: host,
+        port: port,
+        path: path,
         domain: {
           guid: domain.guid,
           name: domain.name
@@ -94,7 +94,7 @@ module VCAP::CloudController
 
       errors.add(:host, :presence) if host.nil?
 
-      validates_format /\A([\w\-]+|\*)\z/, :host if host && !host.empty?
+      validates_format(/\A([\w\-]+|\*)\z/, :host) if host && !host.empty?
 
       validate_uniqueness_on_host_and_domain if path.empty? && port.nil?
       validate_uniqueness_on_host_domain_and_port if path.empty?
@@ -133,31 +133,23 @@ module VCAP::CloudController
     def validate_ports
       return unless port
 
-      errors.add(:port, :invalid_port) if port < 0 || port > 65535
+      errors.add(:port, :invalid_port) if port < 0 || port > 65_535
     end
 
     def validate_path
       return if path == ''
 
-      if !UriUtils.is_uri?("pathcheck://#{host}#{path}")
-        errors.add(:path, :invalid_path)
-      end
+      errors.add(:path, :invalid_path) unless UriUtils.is_uri?("pathcheck://#{host}#{path}")
 
-      if path == '/'
-        errors.add(:path, :single_slash)
-      end
+      errors.add(:path, :single_slash) if path == '/'
 
-      if path[0] != '/'
-        errors.add(:path, :missing_beginning_slash)
-      end
+      errors.add(:path, :missing_beginning_slash) if path[0] != '/'
 
-      if path.match?(/\?/)
-        errors.add(:path, :path_contains_question)
-      end
+      errors.add(:path, :path_contains_question) if path.match?(/\?/)
 
-      if path.length > 128
-        errors.add(:path, :path_exceeds_valid_length)
-      end
+      return unless path.length > 128
+
+      errors.add(:path, :path_exceeds_valid_length)
     end
 
     def domains_match?
@@ -167,34 +159,32 @@ module VCAP::CloudController
     end
 
     def validate_changed_space(new_space)
-      unless FeatureFlag.enabled? :route_sharing
-        raise CloudController::Errors::InvalidAppRelation.new('Route and apps not in same space') if apps.any? { |app| app.space.id != space.id }
+      if !FeatureFlag.enabled?(:route_sharing) && apps.any? { |app| app.space.id != space.id }
+        raise CloudController::Errors::InvalidAppRelation.new('Route and apps not in same space')
       end
       raise InvalidOrganizationRelation.new("Organization cannot use domain #{domain.name}") if domain && !domain.usable_by_organization?(new_space.organization)
     end
 
     def self.user_visibility_filter(user)
       {
-         space_id: user.space_developer_space_ids.
-           union(user.space_manager_space_ids, from_self: false).
-           union(user.space_auditor_space_ids, from_self: false).
-           union(user.space_supporter_space_ids, from_self: false).
-           union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id)).
-           union(Space.join(user.org_auditor_org_ids, organization_id: :organization_id).select(:spaces__id)).
-           select(:space_id)
-       }
+        space_id: user.space_developer_space_ids.
+          union(user.space_manager_space_ids, from_self: false).
+          union(user.space_auditor_space_ids, from_self: false).
+          union(user.space_supporter_space_ids, from_self: false).
+          union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id)).
+          union(Space.join(user.org_auditor_org_ids, organization_id: :organization_id).select(:spaces__id)).
+          select(:space_id)
+      }
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
     def tcp?
       domain.shared? && domain.tcp? && port.present? && port > 0
     end
 
     def protocol
-      self.domain.protocols.first
+      domain.protocols.first
     end
 
     def internal?
@@ -230,17 +220,17 @@ module VCAP::CloudController
 
       n = Route.exclude(vip_offset: 1).
           exclude { vip_offset - 1 =~ Route.select(:vip_offset) }.order(:vip_offset).get { vip_offset - 1 } ||
-              (return (Route.max(:vip_offset) || 0) + 1)
+          (return (Route.max(:vip_offset) || 0) + 1)
       Route.where { vip_offset < n }.reverse(:vip_offset).get { vip_offset + 1 } || 1
     end
 
     def before_save
-      if internal? && vip_offset.nil?
-        len = internal_route_vip_range_len
-        raise OutOfVIPException.new('out of vip_offset slots') if self.class.exclude(vip_offset: nil).count >= len
+      return unless internal? && vip_offset.nil?
 
-        self.vip_offset = find_next_vip_offset
-      end
+      len = internal_route_vip_range_len
+      raise OutOfVIPException.new('out of vip_offset slots') if self.class.exclude(vip_offset: nil).count >= len
+
+      self.vip_offset = find_next_vip_offset
     end
 
     def internal_route_vip_range_len
@@ -255,7 +245,7 @@ module VCAP::CloudController
     end
 
     def destroy_route_bindings
-      errors = RouteBindingDelete.new.delete(self.route_binding_dataset)
+      errors = RouteBindingDelete.new.delete(route_binding_dataset)
       raise errors.first unless errors.empty?
     end
 
@@ -283,9 +273,9 @@ module VCAP::CloudController
     end
 
     def validate_host
-      if host && host.length > Domain::MAXIMUM_DOMAIN_LABEL_LENGTH
-        errors.add(:host, "must be no more than #{Domain::MAXIMUM_DOMAIN_LABEL_LENGTH} characters")
-      end
+      return unless host && host.length > Domain::MAXIMUM_DOMAIN_LABEL_LENGTH
+
+      errors.add(:host, "must be no more than #{Domain::MAXIMUM_DOMAIN_LABEL_LENGTH} characters")
     end
 
     def validate_fqdn
@@ -298,7 +288,7 @@ module VCAP::CloudController
     end
 
     def validate_domain
-      errors.add(:domain, :invalid_relation) if !valid_domain
+      errors.add(:domain, :invalid_relation) unless valid_domain
       errors.add(:host, 'is required for shared-domains') if domain && domain.shared? && !domain.tcp? && host.blank?
     end
 
@@ -319,13 +309,11 @@ module VCAP::CloudController
       space_routes_policy = MaxRoutesPolicy.new(space.space_quota_definition, SpaceRoutes.new(space))
       org_routes_policy   = MaxRoutesPolicy.new(space.organization.quota_definition, OrganizationRoutes.new(space.organization))
 
-      if space.space_quota_definition && !space_routes_policy.allow_more_routes?(1)
-        errors.add(:space, :total_routes_exceeded)
-      end
+      errors.add(:space, :total_routes_exceeded) if space.space_quota_definition && !space_routes_policy.allow_more_routes?(1)
 
-      if !org_routes_policy.allow_more_routes?(1)
-        errors.add(:organization, :total_routes_exceeded)
-      end
+      return if org_routes_policy.allow_more_routes?(1)
+
+      errors.add(:organization, :total_routes_exceeded)
     end
 
     def validate_total_reserved_route_ports
@@ -340,14 +328,12 @@ module VCAP::CloudController
       if space_quota_definition.present?
         space_route_port_counter = SpaceReservedRoutePorts.new(space)
         space_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(space_quota_definition, space_route_port_counter)
-        if !space_reserved_route_ports_policy.allow_more_route_ports?
-          errors.add(:space, :total_reserved_route_ports_exceeded)
-        end
+        errors.add(:space, :total_reserved_route_ports_exceeded) unless space_reserved_route_ports_policy.allow_more_route_ports?
       end
 
-      if !org_reserved_route_ports_policy.allow_more_route_ports?
-        errors.add(:organization, :total_reserved_route_ports_exceeded)
-      end
+      return if org_reserved_route_ports_policy.allow_more_route_ports?
+
+      errors.add(:organization, :total_reserved_route_ports_exceeded)
     end
 
     def validate_uniqueness_on_host_and_domain

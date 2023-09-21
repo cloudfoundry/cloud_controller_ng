@@ -9,10 +9,10 @@ module VCAP::CloudController
 
     let(:request) do
       double('Request', {
-        request_method: request_method,
-        path: path,
-        query_string: query_string,
-      })
+               request_method: request_method,
+               path: path,
+               query_string: query_string
+             })
     end
 
     subject(:diagnostics) { Diagnostics.new }
@@ -78,9 +78,9 @@ module VCAP::CloudController
       before { Thread.current[:current_request] = {} }
 
       it 'clears the request info from the thread local' do
-        expect {
+        expect do
           diagnostics.request_complete
-        }.to change {
+        end.to change {
           Thread.current[:current_request]
         }.from({}).to(nil)
       end
@@ -124,9 +124,9 @@ module VCAP::CloudController
         it 'captures the data as json' do
           filename = diagnostics.collect(output_dir)
           contents = IO.read(filename)
-          expect {
+          expect do
             JSON.parse(contents)
-          }.to_not raise_exception
+          end.to_not raise_exception
         end
 
         def data

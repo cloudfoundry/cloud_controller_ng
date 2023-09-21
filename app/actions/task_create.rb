@@ -22,15 +22,15 @@ module VCAP::CloudController
 
         template_process = process_from_template(message)
         task = TaskModel.create(
-          name:                  use_requested_name_or_generate_name(message),
-          app:                   app,
-          state:                 TaskModel::PENDING_STATE,
-          droplet:               droplet,
-          command:               command(message, template_process),
-          disk_in_mb:            disk_in_mb(message, template_process),
-          memory_in_mb:          memory_in_mb(message, template_process),
-          log_rate_limit:        log_rate_limit(message, template_process),
-          sequence_id:           app.max_task_sequence_id
+          name: use_requested_name_or_generate_name(message),
+          app: app,
+          state: TaskModel::PENDING_STATE,
+          droplet: droplet,
+          command: command(message, template_process),
+          disk_in_mb: disk_in_mb(message, template_process),
+          memory_in_mb: memory_in_mb(message, template_process),
+          log_rate_limit: log_rate_limit(message, template_process),
+          sequence_id: app.max_task_sequence_id
         )
 
         MetadataUpdate.update(task, message)
@@ -85,7 +85,7 @@ module VCAP::CloudController
     def submit_task(task)
       dependency_locator.bbs_task_client.desire_task(task, Diego::TASKS_DOMAIN)
       mark_task_as_running(task)
-    rescue => e
+    rescue StandardError => e
       fail_task(task)
       raise e
     end
@@ -97,11 +97,11 @@ module VCAP::CloudController
     def validate_maximum_disk!(message)
       return unless message.requested?(:disk_in_mb)
 
-      if message.disk_in_mb.to_i > config.get(:maximum_app_disk_in_mb)
-        raise MaximumDiskExceeded.new(
-          "Cannot request disk_in_mb greater than #{config.get(:maximum_app_disk_in_mb)}"
-        )
-      end
+      return unless message.disk_in_mb.to_i > config.get(:maximum_app_disk_in_mb)
+
+      raise MaximumDiskExceeded.new(
+        "Cannot request disk_in_mb greater than #{config.get(:maximum_app_disk_in_mb)}"
+      )
     end
 
     def dependency_locator

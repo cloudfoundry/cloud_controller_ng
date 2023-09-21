@@ -33,7 +33,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     read_table = {
@@ -52,7 +52,7 @@ module VCAP::CloudController
       org_user: false,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     reserved_table = {
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       admin: true,
       admin_read_only: false,
-      global_auditor: false,
+      global_auditor: false
     }
 
     write_table = {
@@ -82,12 +82,12 @@ module VCAP::CloudController
       org_user: false,
       org_manager: false,
       org_auditor: false,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     restricted_write_table = write_table.clone.merge({
-      space_developer: false,
-    })
+                                                       space_developer: false
+                                                     })
 
     it_behaves_like('an access control', :index, index_table)
     it_behaves_like('an access control', :read, read_table)

@@ -11,11 +11,11 @@ module VCAP::CloudController
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,
-      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
-      :tags, :maintenance_info
+                      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
+                      :tags, :maintenance_info
 
     import_attributes :name, :service_plan_guid,
-      :space_guid, :gateway_data, :maintenance_info
+                      :space_guid, :gateway_data, :maintenance_info
 
     strip_attributes :name
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
             'guid' => service.guid,
             'label' => service.label,
             'provider' => service.provider,
-            'version' => service.version,
+            'version' => service.version
           }
         }
       )
@@ -99,33 +99,21 @@ module VCAP::CloudController
       VCAP::Services::Api::SynchronousHttpRequest
     end
 
-    def service
-      service_plan.service
-    end
+    delegate :service, to: :service_plan
 
-    def service_broker
-      service_plan.service_broker
-    end
+    delegate :service_broker, to: :service_plan
 
-    def route_service?
-      service.route_service?
-    end
+    delegate :route_service?, to: :service
 
-    def shareable?
-      service.shareable?
-    end
+    delegate :shareable?, to: :service
 
-    def volume_service?
-      service.volume_service?
-    end
+    delegate :volume_service?, to: :service
 
     def logger
       @logger ||= Steno.logger('cc.models.service_instance')
     end
 
-    def bindable?
-      service_plan.bindable?
-    end
+    delegate :bindable?, to: :service_plan
 
     def merged_tags
       (service.tags + tags).uniq
@@ -142,9 +130,7 @@ module VCAP::CloudController
         instance_attrs, operation_attrs = extract_operation_attrs(attributes_to_update)
         update_attributes(instance_attrs)
 
-        if operation_attrs
-          update_last_operation(operation_attrs)
-        end
+        update_last_operation(operation_attrs) if operation_attrs
       end
     end
 
@@ -154,7 +140,7 @@ module VCAP::CloudController
     end
 
     def update_last_operation(operation_attrs)
-      self.last_operation.update_attributes operation_attrs
+      last_operation.update_attributes operation_attrs
     end
   end
 end

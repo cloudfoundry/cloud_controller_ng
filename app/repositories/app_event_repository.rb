@@ -7,11 +7,11 @@ module VCAP::CloudController
       include AppManifestEventMixins
       include TruncationMixin
 
-      CENSORED_FIELDS   = [:encrypted_environment_json,
-                           :command,
-                           :environment_json,
-                           :environment_variables,
-                           :docker_credentials].freeze
+      CENSORED_FIELDS   = %i[encrypted_environment_json
+                             command
+                             environment_json
+                             environment_variables
+                             docker_credentials].freeze
       SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system', user_name: 'system' }.freeze
 
       def create_app_crash_event(app, droplet_exited_payload)
@@ -30,8 +30,8 @@ module VCAP::CloudController
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = add_manifest_triggered(manifest_triggered, {
-          request: audit_hash,
-        })
+                                            request: audit_hash
+                                          })
         create_app_audit_event('audit.app.update', app, space, actor, metadata)
       end
 
@@ -86,9 +86,7 @@ module VCAP::CloudController
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = nil
-        unless recursive.nil?
-          metadata = { request: { recursive: recursive } }
-        end
+        metadata = { request: { recursive: recursive } } unless recursive.nil?
         create_app_audit_event('audit.app.delete-request', app, space, actor, metadata)
       end
 
@@ -103,14 +101,14 @@ module VCAP::CloudController
         app = route_mapping.app
         actor_hash = actor_or_system_hash(user_audit_info)
         metadata = add_manifest_triggered(manifest_triggered, {
-          route_guid: route.guid,
-          app_port: route_mapping.app_port,
-          route_mapping_guid: route_mapping.guid,
-          destination_guid: route_mapping.guid,
-          process_type: route_mapping.process_type,
-          weight: route_mapping.weight,
-          protocol: route_mapping.protocol,
-        })
+                                            route_guid: route.guid,
+                                            app_port: route_mapping.app_port,
+                                            route_mapping_guid: route_mapping.guid,
+                                            destination_guid: route_mapping.guid,
+                                            process_type: route_mapping.process_type,
+                                            weight: route_mapping.weight,
+                                            protocol: route_mapping.protocol
+                                          })
         create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
       end
 
@@ -119,14 +117,14 @@ module VCAP::CloudController
         app = route_mapping.app
         actor_hash = actor_or_system_hash(user_audit_info)
         metadata   = add_manifest_triggered(manifest_triggered, {
-          route_guid: route.guid,
-          app_port: route_mapping.app_port,
-          route_mapping_guid: route_mapping.guid,
-          destination_guid: route_mapping.guid,
-          process_type: route_mapping.process_type,
-          weight: route_mapping.weight,
-          protocol: route_mapping.protocol,
-        })
+                                              route_guid: route.guid,
+                                              app_port: route_mapping.app_port,
+                                              route_mapping_guid: route_mapping.guid,
+                                              destination_guid: route_mapping.guid,
+                                              process_type: route_mapping.process_type,
+                                              weight: route_mapping.weight,
+                                              protocol: route_mapping.protocol
+                                            })
         create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
       end
 
@@ -171,17 +169,17 @@ module VCAP::CloudController
 
       def create_app_audit_event(type, app, space, actor, metadata)
         Event.create(
-          space:          space,
-          type:           type,
-          timestamp:      Sequel::CURRENT_TIMESTAMP,
-          actee:          app.guid,
-          actee_type:     'app',
-          actee_name:     app.name,
-          actor:          actor[:guid],
-          actor_type:     actor[:type],
-          actor_name:     actor[:name],
+          space: space,
+          type: type,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          actee: app.guid,
+          actee_type: 'app',
+          actee_name: app.name,
+          actor: actor[:guid],
+          actor_type: actor[:type],
+          actor_name: actor[:name],
           actor_username: actor[:user_name],
-          metadata:       metadata
+          metadata: metadata
         )
       end
 

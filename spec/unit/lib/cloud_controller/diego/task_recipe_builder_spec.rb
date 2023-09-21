@@ -26,35 +26,35 @@ module VCAP::CloudController
         let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: lifecycle_type }) }
         let(:request_data) do
           {
-            stack:     'cool-stack'
+            stack: 'cool-stack'
           }
         end
         let(:package) { PackageModel.make(app: app) }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: {
-              'policy_group_id'    => app.guid,
-              'app_id'             => app.guid,
-              'space_id'           => app.space.guid,
-              'org_id'             => app.organization.guid,
-              'ports'              => '',
-              'container_workload' => Protocol::ContainerNetworkInfo::STAGING,
+              'policy_group_id' => app.guid,
+              'app_id' => app.guid,
+              'space_id' => app.space.guid,
+              'org_id' => app.organization.guid,
+              'ports' => '',
+              'container_workload' => Protocol::ContainerNetworkInfo::STAGING
             }
           )
         end
         let(:config) do
           Config.new({
-            tls_port: tls_port,
-            internal_service_hostname: internal_service_hostname,
-            staging: {
-              timeout_in_seconds: 90,
-            },
-            diego: {
-              use_privileged_containers_for_staging: false,
-              stager_url: 'http://stager.example.com',
-              pid_limit: 100,
-            },
-          })
+                       tls_port: tls_port,
+                       internal_service_hostname: internal_service_hostname,
+                       staging: {
+                         timeout_in_seconds: 90
+                       },
+                       diego: {
+                         use_privileged_containers_for_staging: false,
+                         stager_url: 'http://stager.example.com',
+                         pid_limit: 100
+                       }
+                     })
         end
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
@@ -91,13 +91,12 @@ module VCAP::CloudController
               "organization:#{app.organization.guid}",
               "space:#{app.space.guid}",
               "app:#{app.guid}"
-            ],
+            ]
           )
         end
         let(:lifecycle_protocol) do
           instance_double(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol,
-            staging_action_builder: lifecycle_action_builder
-          )
+                          staging_action_builder: lifecycle_action_builder)
         end
 
         before do
@@ -128,7 +127,7 @@ module VCAP::CloudController
               action: buildpack_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
-              image_layers: lifecycle_image_layers,
+              image_layers: lifecycle_image_layers
             )
           end
 
@@ -152,7 +151,7 @@ module VCAP::CloudController
             expect(result.cpu_weight).to eq(50)
 
             expect(result.completion_callback_url).to eq("https://#{internal_service_hostname}:#{tls_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
+                                                         "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
 
             timeout_action = result.action.timeout_action
             expect(timeout_action).not_to be_nil
@@ -163,7 +162,7 @@ module VCAP::CloudController
             expect(result.egress_rules).to match_array([
               rule_dns_everywhere,
               rule_http_everywhere,
-              rule_staging_specific,
+              rule_staging_specific
             ])
 
             expect(result.image_layers).to eq(lifecycle_image_layers)
@@ -200,8 +199,7 @@ module VCAP::CloudController
             PackageModel.make(:docker,
                               app: app,
                               docker_username: 'dockeruser',
-                              docker_password: 'dockerpass',
-                             )
+                              docker_password: 'dockerpass')
           end
 
           let(:docker_staging_action) { ::Diego::Bbs::Models::RunAction.new }
@@ -215,7 +213,7 @@ module VCAP::CloudController
               action: docker_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
-              image_layers: [],
+              image_layers: []
             )
           end
 
@@ -274,7 +272,7 @@ module VCAP::CloudController
             expect(result.egress_rules).to match_array([
               rule_dns_everywhere,
               rule_http_everywhere,
-              rule_staging_specific,
+              rule_staging_specific
             ])
           end
 
@@ -286,7 +284,7 @@ module VCAP::CloudController
           it 'sets the completion callback' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.completion_callback_url).to eq("https://#{internal_service_hostname}:#{tls_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
+                                                         "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
           end
 
           it 'sets the trusted cert path' do
@@ -353,21 +351,21 @@ module VCAP::CloudController
               'space_id' => app.space.guid,
               'org_id' => app.organization.guid,
               'ports' => '',
-              'container_workload' => Protocol::ContainerNetworkInfo::TASK,
+              'container_workload' => Protocol::ContainerNetworkInfo::TASK
             }
           )
         end
 
         let(:config) do
           Config.new({
-            tls_port: tls_port,
-            internal_service_hostname: internal_service_hostname,
-            diego: {
-              lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
-              pid_limit: 100,
-              use_privileged_containers_for_running: false,
-            },
-          })
+                       tls_port: tls_port,
+                       internal_service_hostname: internal_service_hostname,
+                       diego: {
+                         lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
+                         pid_limit: 100,
+                         use_privileged_containers_for_running: false
+                       }
+                     })
         end
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
@@ -400,19 +398,21 @@ module VCAP::CloudController
         end
 
         let(:task_action) { ::Diego::Bbs::Models::Action.new }
-        let(:lifecycle_environment_variables) { [
-          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
-          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
-          ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
-        ]
-        }
+        let(:lifecycle_environment_variables) do
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}')
+          ]
+        end
 
-        let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(
-          from: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
-          to: '/tmp/lifecycle',
-          cache_key: 'buildpack-potato-stack-lifecycle',
-        )]
-        }
+        let(:lifecycle_cached_dependencies) do
+          [::Diego::Bbs::Models::CachedDependency.new(
+            from: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+            to: '/tmp/lifecycle',
+            cache_key: 'buildpack-potato-stack-lifecycle'
+          )]
+        end
 
         let(:lifecycle_image_layers) { [::Diego::Bbs::Models::ImageLayer.new(name: 'some-layer')] }
 
@@ -422,7 +422,7 @@ module VCAP::CloudController
               "organization:#{task.app.organization.guid}",
               "space:#{task.app.space.guid}",
               "app:#{task.app.guid}"
-            ],
+            ]
           )
         end
 
@@ -436,14 +436,13 @@ module VCAP::CloudController
               task_environment_variables: lifecycle_environment_variables,
               stack: 'preloaded:potato-stack',
               cached_dependencies: lifecycle_cached_dependencies,
-              image_layers: lifecycle_image_layers,
+              image_layers: lifecycle_image_layers
             )
           end
 
           let(:lifecycle_protocol) do
             instance_double(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol,
-              task_action_builder: task_action_builder
-            )
+                            task_action_builder: task_action_builder)
           end
 
           before do
@@ -525,14 +524,14 @@ module VCAP::CloudController
                   driver: 'cephfs',
                   container_dir: '/data/images',
                   mode: 'r',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json)
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'local',
                   container_dir: '/data/scratch',
                   mode: 'rw',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
-                ),
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: '')
+                )
               ])
             end
           end
@@ -569,8 +568,7 @@ module VCAP::CloudController
             DropletModel.make(:docker,
                               app: app,
                               docker_receipt_username: 'dockerusername',
-                              docker_receipt_password: 'dockerpassword',
-                             )
+                              docker_receipt_password: 'dockerpassword')
           end
 
           let(:task_action_builder) do
@@ -580,14 +578,13 @@ module VCAP::CloudController
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
               image_layers: [],
-              stack: 'docker://potato-stack',
+              stack: 'docker://potato-stack'
             )
           end
 
           let(:lifecycle_protocol) do
             instance_double(VCAP::CloudController::Diego::Docker::LifecycleProtocol,
-              task_action_builder: task_action_builder
-            )
+                            task_action_builder: task_action_builder)
           end
 
           before do
@@ -671,14 +668,14 @@ module VCAP::CloudController
                   driver: 'cephfs',
                   container_dir: '/data/images',
                   mode: 'r',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json)
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
                   driver: 'local',
                   container_dir: '/data/scratch',
                   mode: 'rw',
-                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
-                ),
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: '')
+                )
               ])
             end
           end

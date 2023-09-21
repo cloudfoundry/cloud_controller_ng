@@ -6,13 +6,13 @@ module VCAP::Services::ServiceBrokers::V2
     let(:plan) { CatalogPlan.new(catalog_service, plan_attrs) }
     let(:plan_attrs) do
       {
-        'id'          => opts[:id] || 'broker-provided-plan-id',
-        'metadata'    => opts[:metadata] || {},
-        'name'        => opts[:name] || 'service-plan-name',
+        'id' => opts[:id] || 'broker-provided-plan-id',
+        'metadata' => opts[:metadata] || {},
+        'name' => opts[:name] || 'service-plan-name',
         'description' => opts[:description] || 'The description of the service plan',
-        'free'        => opts.fetch(:free, true),
-        'bindable'    => opts[:bindable],
-        'schemas'     => opts[:schemas] || {},
+        'free' => opts.fetch(:free, true),
+        'bindable' => opts[:bindable],
+        'schemas' => opts[:schemas] || {},
         'plan_updateable' => opts[:plan_updateable],
         'maximum_polling_duration' => opts[:maximum_polling_duration],
         'maintenance_info' => opts[:maintenance_info] || nil
@@ -45,7 +45,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'defaults schemas to an empty hash' do
-        expect(plan.schemas).to be {}
+        expect(plan.schemas).to(be { nil })
       end
 
       it 'allows a full maintenance_info object' do
@@ -121,7 +121,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @metadata is a hash' do
-        plan_attrs['metadata'] = ['list', 'of', 'strings']
+        plan_attrs['metadata'] = %w[list of strings]
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages).to include 'Plan metadata must be a hash, but has value ["list", "of", "strings"]'
@@ -198,7 +198,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @maintenance_info object serializes to 2000 characters or fewer' do
-        very_long_semantic_version = '2' * 1000 + '.' + '1' * 499 + '.' + '3' * 499
+        very_long_semantic_version = ('2' * 1000) + '.' + ('1' * 499) + '.' + ('3' * 499)
         plan_attrs['maintenance_info'] = { 'version' => very_long_semantic_version }
 
         expect(plan).to_not be_valid

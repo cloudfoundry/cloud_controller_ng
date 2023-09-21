@@ -121,7 +121,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
-              Membership::SPACE_AUDITOR], space.id)
+              Membership::SPACE_AUDITOR
+            ], space.id)
 
             expect(result).to be_truthy
           end
@@ -138,7 +139,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
-              Membership::SPACE_AUDITOR], space.id)
+              Membership::SPACE_AUDITOR
+            ], space.id)
 
             expect(result).to be_falsey
           end
@@ -165,8 +167,9 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_MANAGER,
-              Membership::SPACE_AUDITOR],
-              space.id)
+              Membership::SPACE_AUDITOR
+            ],
+                                              space.id)
             expect(result).to be_truthy
           end
         end
@@ -288,7 +291,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
-              Membership::ORG_AUDITOR], nil, organization.id)
+              Membership::ORG_AUDITOR
+            ], nil, organization.id)
 
             expect(result).to be_truthy
           end
@@ -305,7 +309,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
-              Membership::ORG_AUDITOR], nil, organization.id)
+              Membership::ORG_AUDITOR
+            ], nil, organization.id)
 
             expect(result).to be_falsey
           end
@@ -338,8 +343,9 @@ module VCAP::CloudController
               Membership::ORG_USER,
               Membership::ORG_MANAGER,
               Membership::ORG_AUDITOR,
-              Membership::ORG_BILLING_MANAGER],
-              nil, organization.id)
+              Membership::ORG_BILLING_MANAGER
+            ],
+                                              nil, organization.id)
             expect(result).to be_truthy
           end
         end
@@ -365,7 +371,7 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-            space.id, organization.id)
+                                              space.id, organization.id)
 
             expect(result).to be_truthy
           end
@@ -386,7 +392,7 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-            space.id, organization.id)
+                                              space.id, organization.id)
 
             expect(result).to be_falsey
           end

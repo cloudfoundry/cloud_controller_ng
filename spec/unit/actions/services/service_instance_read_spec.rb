@@ -91,7 +91,7 @@ module VCAP::CloudController
             action = ServiceInstanceRead.new
             begin
               action.fetch_parameters(service_instance)
-            rescue
+            rescue StandardError
               # tested elsewhere
             end
           end
@@ -111,7 +111,7 @@ module VCAP::CloudController
             action = ServiceInstanceRead.new
             begin
               action.fetch_parameters(service_instance)
-            rescue
+            rescue StandardError
               # tested elsewhere
             end
           end

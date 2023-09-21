@@ -10,10 +10,10 @@ module VCAP::CloudController
         class << self
           # :labels and :annotations come from MetadataPresentationHelpers
           def associated_resources
-            super + [
-              :space,
-              :service_instance_operation,
-              :service_plan_sti_eager_load,
+            super + %i[
+              space
+              service_instance_operation
+              service_plan_sti_eager_load
             ]
           end
         end
@@ -51,7 +51,7 @@ module VCAP::CloudController
             },
             metadata: {
               labels: hashified_labels(service_instance.labels),
-              annotations: hashified_annotations(service_instance.annotations),
+              annotations: hashified_annotations(service_instance.annotations)
             },
             links: {
               self: {
@@ -123,7 +123,7 @@ module VCAP::CloudController
           hash.merge({
                        relationships: relationships,
                        metadata: metadata,
-                       links: links,
+                       links: links
                      })
         end
 

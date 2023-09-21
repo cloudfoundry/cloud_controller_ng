@@ -21,7 +21,7 @@ module VCAP::CloudController
           let(:deployment) { DeploymentModel.make(app_guid: app.guid, droplet_guid: droplet.guid) }
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, droplet, user_audit_info, app.name,
-              app.space.guid, app.space.organization.guid, params, type)
+                                                            app.space.guid, app.space.organization.guid, params, type)
             event.reload
 
             expect(event.type).to eq('audit.app.deployment.create')
@@ -46,7 +46,7 @@ module VCAP::CloudController
           let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, nil, user_audit_info, app.name,
-              app.space.guid, app.space.organization.guid, params, type)
+                                                            app.space.guid, app.space.organization.guid, params, type)
             event.reload
 
             expect(event.type).to eq('audit.app.deployment.create')
@@ -72,7 +72,7 @@ module VCAP::CloudController
         let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
         it 'creates a new audit.app.deployment.cancel event' do
           event = DeploymentEventRepository.record_cancel(deployment, droplet, user_audit_info, app.name,
-            app.space.guid, app.space.organization.guid)
+                                                          app.space.guid, app.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.deployment.cancel')

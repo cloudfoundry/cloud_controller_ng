@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
+RSpec.resource 'Private Domains', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::PrivateDomain.first.guid }
   let!(:domains) { 3.times { VCAP::CloudController::PrivateDomain.make } }
@@ -28,18 +28,19 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
         org_guid = VCAP::CloudController::Organization.make.guid
         payload  = MultiJson.dump(
           {
-            name:                     'exmaple.com',
-            owning_organization_guid: org_guid,
-          }, pretty: true)
+            name: 'exmaple.com',
+            owning_organization_guid: org_guid
+          }, pretty: true
+        )
 
         client.post '/v2/private_domains', payload, headers
 
         expect(status).to eq 201
         standard_entity_response parsed_response, :private_domain,
-          expected_values: {
-            name:                     'exmaple.com',
-            owning_organization_guid: org_guid
-          }
+                                 expected_values: {
+                                   name: 'exmaple.com',
+                                   owning_organization_guid: org_guid
+                                 }
       end
     end
 
@@ -65,7 +66,8 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
           standard_entity_response(
             parsed_response['resources'].first,
             :private_domain,
-            expected_values: { name: 'my-domain.com' })
+            expected_values: { name: 'my-domain.com' }
+          )
         end
       end
     end

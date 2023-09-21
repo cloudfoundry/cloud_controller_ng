@@ -67,7 +67,7 @@ module VCAP::CloudController
         else
           complete_instance_and_save(instance, details)
         end
-      rescue => e
+      rescue StandardError => e
         save_failed_state(instance, e)
 
         raise e
@@ -87,7 +87,7 @@ module VCAP::CloudController
         when 'succeeded'
           fetch_result = fetch_service_instance(client, instance)
           complete_instance_and_save(instance, parse_response(fetch_result, last_operation_result))
-          return PollingFinished
+          PollingFinished
         when 'in progress'
           save_last_operation(instance, last_operation_result[:last_operation])
           ContinuePolling.call(last_operation_result[:retry_after])
@@ -97,7 +97,7 @@ module VCAP::CloudController
         end
       rescue LastOperationFailedState => e
         raise e
-      rescue => e
+      rescue StandardError => e
         save_failed_state(instance, e)
         raise e
       end
@@ -128,7 +128,7 @@ module VCAP::CloudController
             last_operation: {
               type: 'create',
               state: 'failed',
-              description: e.message,
+              description: e.message
             }
           }, instance
         )
@@ -163,7 +163,7 @@ module VCAP::CloudController
             fetch_result = client.fetch_service_instance(instance, user_guid: @user_audit_info.user_guid)
             result[:dashboard_url] = fetch_result[:dashboard_url] if fetch_result.key?(:dashboard_url)
           end
-        rescue => e
+        rescue StandardError => e
           logger.info('fetch-service-instance-failed', error: e.class.name, error_message: e.message)
         end
 
@@ -183,7 +183,7 @@ module VCAP::CloudController
 
       def broker_unavailable!
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-          'The service instance cannot be created because there is an operation in progress for the service broker.')
+                                                                 'The service instance cannot be created because there is an operation in progress for the service broker.')
       end
 
       class ValidationErrorHandler

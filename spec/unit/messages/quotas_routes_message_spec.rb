@@ -68,7 +68,7 @@ module VCAP::CloudController
 
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_routes: 1000000000000000000000000 }
+            { total_routes: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
         end
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_reserved_ports: 1000000000000000000000000 }
+            { total_reserved_ports: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do

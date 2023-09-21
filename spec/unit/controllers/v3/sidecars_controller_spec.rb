@@ -14,13 +14,13 @@ RSpec.describe SidecarsController, type: :controller do
   end
 
   describe 'index' do
-    let!(:process1) {
+    let!(:process1) do
       VCAP::CloudController::ProcessModel.make(
         :process,
-        app:        app_model,
-        type:       'web',
+        app: app_model,
+        type: 'web'
       )
-    }
+    end
 
     context 'when not accessed as an app or process subresource' do
       before do
@@ -28,9 +28,9 @@ RSpec.describe SidecarsController, type: :controller do
       end
 
       it 'fails to map a route' do
-        expect {
+        expect do
           get :index_by_process
-        }.to raise_error(ActionController::UrlGenerationError, /No route matches \{:action=>"index_by_process", :controller=>"sidecars"\}/)
+        end.to raise_error(ActionController::UrlGenerationError, /No route matches \{:action=>"index_by_process", :controller=>"sidecars"\}/)
       end
     end
 
@@ -57,10 +57,10 @@ RSpec.describe SidecarsController, type: :controller do
             'space_auditor' => 200,
             'org_manager' => 200,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { get :index_by_process, params: { process_guid: process1.guid } } }
+        let(:api_call) { -> { get :index_by_process, params: { process_guid: process1.guid } } }
       end
     end
 
@@ -76,10 +76,10 @@ RSpec.describe SidecarsController, type: :controller do
             'space_auditor' => 200,
             'org_manager' => 200,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { get :index_by_app, params: { app_guid: app_model.guid } } }
+        let(:api_call) { -> { get :index_by_app, params: { app_guid: app_model.guid } } }
       end
     end
   end
@@ -90,19 +90,19 @@ RSpec.describe SidecarsController, type: :controller do
     end
 
     let(:sidecar_name) { 'sidecar_one' }
-    let(:sidecar_params) {
+    let(:sidecar_params) do
       {
         guid: app_model.guid,
         name: sidecar_name,
         command: 'bundle exec rackup',
-        process_types: ['web', 'other_worker']
+        process_types: %w[web other_worker]
       }
-    }
+    end
 
     it 'creates a sidecar for a process' do
-      expect {
+      expect do
         post :create, params: sidecar_params, as: :json
-      }.to change { VCAP::CloudController::SidecarModel.count }.by(1)
+      end.to change { VCAP::CloudController::SidecarModel.count }.by(1)
 
       sidecar = VCAP::CloudController::SidecarModel.last
 
@@ -112,7 +112,7 @@ RSpec.describe SidecarsController, type: :controller do
         'guid' => sidecar.guid,
         'name' => 'sidecar_one',
         'command' => 'bundle exec rackup',
-        'process_types' => ['other_worker', 'web'],
+        'process_types' => %w[other_worker web],
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'memory_in_mb' => nil,
@@ -143,16 +143,16 @@ RSpec.describe SidecarsController, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'admin'               => 201,
-        'space_developer'     => 201,
-        'global_auditor'      => 403,
-        'space_manager'       => 403,
-        'space_auditor'       => 403,
-        'org_manager'         => 403,
-        'admin_read_only'     => 403,
-        'org_auditor'         => 404,
+        'admin' => 201,
+        'space_developer' => 201,
+        'global_auditor' => 403,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
+        'admin_read_only' => 403,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
-        'org_user'            => 404,
+        'org_user' => 404
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -197,29 +197,29 @@ RSpec.describe SidecarsController, type: :controller do
 
   describe '#update' do
     let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model) }
-    let(:sidecar_params) {
+    let(:sidecar_params) do
       {
         guid: sidecar.guid,
         name: 'my_sidecar',
         command: 'bundle exec rackup',
-        process_types: ['web', 'other_worker']
+        process_types: %w[web other_worker]
       }
-    }
+    end
 
     describe 'permissions by role' do
       let(:new_user) { VCAP::CloudController::User.make }
 
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'space_developer'     => 200,
-        'global_auditor'      => 403,
-        'space_manager'       => 403,
-        'space_auditor'       => 403,
-        'org_manager'         => 403,
-        'admin_read_only'     => 403,
-        'org_auditor'         => 404,
+        'admin' => 200,
+        'space_developer' => 200,
+        'global_auditor' => 403,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
+        'admin_read_only' => 403,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
-        'org_user'            => 404,
+        'org_user' => 404
       }
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -252,18 +252,18 @@ RSpec.describe SidecarsController, type: :controller do
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) do
         {
-          'admin'               => 200,
-          'space_developer'     => 200,
-          'global_auditor'      => 200,
-          'space_manager'       => 200,
-          'space_auditor'       => 200,
-          'org_manager'         => 200,
-          'admin_read_only'     => 200,
-          'org_auditor'         => 404,
-          'org_billing_manager' => 404,
+          'admin' => 200,
+          'space_developer' => 200,
+          'global_auditor' => 200,
+          'space_manager' => 200,
+          'space_auditor' => 200,
+          'org_manager' => 200,
+          'admin_read_only' => 200,
+          'org_auditor' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { get :show, params: { guid: sidecar.guid }, as: :json } }
+      let(:api_call) { -> { get :show, params: { guid: sidecar.guid }, as: :json } }
     end
   end
 
@@ -276,9 +276,9 @@ RSpec.describe SidecarsController, type: :controller do
       end
 
       it 'deletes the sidecar' do
-        expect {
+        expect do
           delete :destroy, params: { guid: sidecar.guid }, as: :json
-        }.to change { VCAP::CloudController::SidecarModel.count }.by(-1)
+        end.to change { VCAP::CloudController::SidecarModel.count }.by(-1)
       end
 
       context 'the sidecar is not found' do
@@ -293,18 +293,18 @@ RSpec.describe SidecarsController, type: :controller do
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) do
         {
-          'admin'               => 204,
-          'space_developer'     => 204,
-          'global_auditor'      => 403,
-          'space_manager'       => 403,
-          'space_auditor'       => 403,
-          'org_manager'         => 403,
-          'admin_read_only'     => 403,
-          'org_auditor'         => 404,
-          'org_billing_manager' => 404,
+          'admin' => 204,
+          'space_developer' => 204,
+          'global_auditor' => 403,
+          'space_manager' => 403,
+          'space_auditor' => 403,
+          'org_manager' => 403,
+          'admin_read_only' => 403,
+          'org_auditor' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { delete :destroy, params: { guid: sidecar.guid }, as: :json } }
+      let(:api_call) { -> { delete :destroy, params: { guid: sidecar.guid }, as: :json } }
     end
   end
 end

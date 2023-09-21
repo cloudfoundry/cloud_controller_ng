@@ -41,7 +41,8 @@ module VCAP::CloudController
         Repositories::PackageEventRepository.record_app_package_create(
           package,
           user_audit_info,
-          message.audit_hash)
+          message.audit_hash
+        )
       end
 
       def get_package_state(message)

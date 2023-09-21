@@ -76,7 +76,7 @@ module VCAP::CloudController::Validators
     end
 
     def valid_key_presence?(key)
-      !key.nil? && !key.empty?
+      key.present?
     end
 
     def valid_key_format?

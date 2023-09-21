@@ -91,7 +91,8 @@ RSpec.describe 'Service Broker API integration' do
             expect(async_update_service).to have_status_code(202)
 
             expect(
-              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_instance_last_operation(
               service_instance,
@@ -115,7 +116,8 @@ RSpec.describe 'Service Broker API integration' do
             expect(async_bind_service(status: 202)).to have_status_code(202)
 
             expect(
-              a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
+              a_request(:put, bind_url(service_instance, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_binding_last_operation(
               service_instance,
@@ -140,7 +142,8 @@ RSpec.describe 'Service Broker API integration' do
             service_binding = VCAP::CloudController::ServiceBinding.last
 
             expect(
-              a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+              a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_binding_last_operation(
               service_instance,
@@ -278,10 +281,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -301,10 +305,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -327,10 +332,11 @@ RSpec.describe 'Service Broker API integration' do
             }
 
             expect(
-              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
                 context = JSON.parse(req.body)['context']
                 context >= expected_context_attributes
-              }).to have_been_made
+              end
+            ).to have_been_made
           end
         end
 
@@ -348,14 +354,15 @@ RSpec.describe 'Service Broker API integration' do
 
     context 'service bindings context hash' do
       let(:catalog) { default_catalog(requires: ['route_forwarding']) }
-      let(:expected_context_attributes) { {
-        'platform' => 'cloudfoundry',
-        'organization_guid' => @org_guid,
-        'space_guid' => @space_guid,
-        'organization_name' => @space.organization.name,
-        'space_name' => @space.name
-      }
-      }
+      let(:expected_context_attributes) do
+        {
+          'platform' => 'cloudfoundry',
+          'organization_guid' => @org_guid,
+          'space_guid' => @space_guid,
+          'organization_name' => @space.organization.name,
+          'space_name' => @space.name
+        }
+      end
 
       before do
         setup_broker(catalog)
@@ -371,10 +378,11 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -385,10 +393,11 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -400,10 +409,11 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
     end
@@ -461,7 +471,7 @@ RSpec.describe 'Service Broker API integration' do
           ).to have_been_made
           expect { service_instance.reload }.not_to raise_error
 
-          Timecop.freeze(Time.now) do
+          Timecop.freeze(Time.now.utc) do
             stub_async_last_operation
             Delayed::Worker.new.work_off
             expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
@@ -505,7 +515,8 @@ RSpec.describe 'Service Broker API integration' do
           VCAP::CloudController::ManagedServiceInstance.make(
             space_guid: @space_guid,
             service_plan_guid: @plan_guid,
-            maintenance_info: { 'version' => '1.0.0' })
+            maintenance_info: { 'version' => '1.0.0' }
+          )
         end
 
         before do
@@ -564,7 +575,7 @@ RSpec.describe 'Service Broker API integration' do
             expect(a_request(:delete, unbind_url(service_binding))).to have_been_made
 
             expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
-              'audit.service_binding.start_create',
+              'audit.service_binding.start_create'
             )
 
             expect(service_binding.reload).not_to be_nil
@@ -580,7 +591,7 @@ RSpec.describe 'Service Broker API integration' do
 
           expect(service_binding.reload).not_to be_nil
 
-          Timecop.freeze(Time.now) do
+          Timecop.freeze(Time.now.utc) do
             Delayed::Worker.new.work_off
             expect(a_request(:get, %r{#{service_binding_url(service_binding)}/last_operation})).to have_been_made
           end
@@ -598,7 +609,7 @@ RSpec.describe 'Service Broker API integration' do
 end
 
 def assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration, default_max_poll_duration)
-  Timecop.freeze(Time.now) do
+  Timecop.freeze(Time.now.utc) do
     Delayed::Worker.new.work_off
     expect(a_request(:get, last_operation_url)).to have_been_made
 
@@ -616,7 +627,7 @@ def assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url
 end
 
 def assert_cc_polls_service_instance_last_operation(service_instance, default_poll_interval, retry_after_interval)
-  Timecop.freeze(Time.now) do
+  Timecop.freeze(Time.now.utc) do
     Delayed::Worker.new.work_off
     expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
 
@@ -631,7 +642,7 @@ def assert_cc_polls_service_instance_last_operation(service_instance, default_po
 end
 
 def assert_cc_polls_service_binding_last_operation(service_instance, default_poll_interval, retry_after_interval)
-  Timecop.freeze(Time.now) do
+  Timecop.freeze(Time.now.utc) do
     Delayed::Worker.new.work_off
     expect(a_request(:get, %r{#{bind_url(service_instance)}/last_operation})).to have_been_made
 

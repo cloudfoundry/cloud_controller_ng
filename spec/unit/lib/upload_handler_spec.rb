@@ -30,9 +30,9 @@ RSpec.describe UploadHandler do
       let(:params) { { "#{key}_path" => '/some/path', '<ngx_upload_module_dummy>' => '' } }
 
       it 'raises an error' do
-        expect {
+        expect do
           uploader.uploaded_file(params, key)
-        }.to raise_error(UploadHandler::MissingFilePathError, 'File field missing path information')
+        end.to raise_error(UploadHandler::MissingFilePathError, 'File field missing path information')
       end
     end
 
@@ -40,9 +40,9 @@ RSpec.describe UploadHandler do
       context 'when the path is an absolute path' do
         let(:params) { { "#{key}_path" => "#{tmpdir}/../path" } }
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
 
@@ -50,9 +50,9 @@ RSpec.describe UploadHandler do
         let(:params) { { "#{key}_path" => '../relative/file' } }
 
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
     end
@@ -99,9 +99,9 @@ RSpec.describe UploadHandler do
       context 'when the path is an absolute path' do
         let(:params) { { key => { 'tempfile' => "#{tmpdir}/../path" } } }
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
 
@@ -109,9 +109,9 @@ RSpec.describe UploadHandler do
         let(:params) { { key => { 'tempfile' => '../relative/file' } } }
 
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
     end

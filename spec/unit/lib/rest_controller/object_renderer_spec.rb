@@ -18,9 +18,9 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 11) }
 
         it 'raises BadQueryParameter error' do
-          expect {
+          expect do
             subject.render_json(controller, instance, opts)
-          }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
+          end.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
         end
       end
 

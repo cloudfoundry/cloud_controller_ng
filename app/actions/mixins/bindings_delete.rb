@@ -22,7 +22,7 @@ module VCAP::CloudController
             Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
             unbinding_operation_in_progress!(binding)
           end
-        rescue => e
+        rescue StandardError => e
           errors << e
         end
       end

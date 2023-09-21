@@ -9,19 +9,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }
@@ -126,19 +126,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }

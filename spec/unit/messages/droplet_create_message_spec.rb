@@ -31,7 +31,7 @@ module VCAP::CloudController
           {
             unexpected: 'woah',
             relationships: {
-              app: { data: { guid: 'some-app-guid' } },
+              app: { data: { guid: 'some-app-guid' } }
             }
           }
         end
@@ -80,14 +80,14 @@ module VCAP::CloudController
 
         it 'is not valid when process_types is not an object' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 'app-guid' } } },
-            process_types: 867 })
+                                               process_types: 867 })
           expect(message).not_to be_valid
           expect(message.errors_on(:process_types)).to include('must be an object')
         end
 
         it 'is not valid when process_types has an empty key' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 'app-guid' } } },
-            process_types: { "": 'invalid_ptype' } })
+                                               process_types: { "": 'invalid_ptype' } })
           expect(message.process_types).not_to be_nil
           expect(message).not_to be_valid
           expect(message.errors_on(:process_types)).to include('key must not be empty')
@@ -95,7 +95,7 @@ module VCAP::CloudController
 
         it 'is not valid when process_types has a non-string value' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 'app-guid' } } },
-            process_types: { web: 867 } })
+                                               process_types: { web: 867 } })
           expect(message.process_types).not_to be_nil
           expect(message).not_to be_valid
           expect(message.errors_on(:process_types)).to include('value must be a string')

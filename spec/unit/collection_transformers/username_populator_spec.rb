@@ -8,13 +8,13 @@ module VCAP::CloudController
     let(:user2) { User.new(guid: '2') }
 
     before do
-      allow(uaa_client).to receive(:usernames_for_ids).with(['1', '2']).and_return({
-        '1' => 'Username1',
-        '2' => 'Username2'
-      })
+      allow(uaa_client).to receive(:usernames_for_ids).with(%w[1 2]).and_return({
+                                                                                  '1' => 'Username1',
+                                                                                  '2' => 'Username2'
+                                                                                })
       allow(uaa_client).to receive(:usernames_for_ids).with(['1']).and_return({
-        '1' => 'Username1',
-      })
+                                                                                '1' => 'Username1'
+                                                                              })
     end
 
     describe 'transform' do

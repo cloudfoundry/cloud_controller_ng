@@ -116,9 +116,9 @@ module VCAP
           }
         end
 
-        let(:service_broker_update_request) {
+        let(:service_broker_update_request) do
           ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
-        }
+        end
 
         it 'does not update the broker in the DB' do
           action.enqueue_update

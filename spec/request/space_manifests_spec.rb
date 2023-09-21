@@ -7,9 +7,9 @@ RSpec.describe 'Space Manifests' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
-  let(:second_route) {
+  let(:second_route) do
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
-  }
+  end
 
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
@@ -42,11 +42,11 @@ RSpec.describe 'Space Manifests' do
             'routes' => [
               {
                 'route' => "https://#{route.host}.#{route.domain.name}",
-                'protocol' => 'http1',
+                'protocol' => 'http1'
               },
               {
                 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path",
-                'protocol' => 'http2',
+                'protocol' => 'http2'
               }
             ],
             'services' => [
@@ -61,15 +61,14 @@ RSpec.describe 'Space Manifests' do
               'annotations' => {
                 'potato' => 'idaho',
                 'juice' => 'newton',
-                'berry' => nil,
+                'berry' => nil
               },
               'labels' => {
                 'potato' => 'yam',
                 'downton' => nil,
-                'myspace.com/songs' => 'missing',
-              },
-            },
-          },
+                'myspace.com/songs' => 'missing'
+              }
+            } },
           { 'name' => app2_model.name,
             'instances' => 3,
             'memory' => '2048MB',
@@ -97,14 +96,13 @@ RSpec.describe 'Space Manifests' do
               'annotations' => {
                 'potato' => 'idaho',
                 'juice' => 'newton',
-                'berry' => nil,
+                'berry' => nil
               },
               'labels' => {
                 'potato' => 'yam',
-                'downton' => nil,
-              },
-            },
-          }
+                'downton' => nil
+              }
+            } }
         ]
       }.to_yaml
     end
@@ -117,13 +115,13 @@ RSpec.describe 'Space Manifests' do
       stub_bind(service_instance_1)
       stub_bind(service_instance_2)
       VCAP::CloudController::LabelsUpdate.update(app1_model, { 'potato' => 'french',
-                                                               'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
+                                                               'downton' => 'abbey road' }, VCAP::CloudController::AppLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(app1_model, { 'potato' => 'baked',
-        'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
+                                                                    'berry' => 'white' }, VCAP::CloudController::AppAnnotationModel)
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
+      let(:api_call) { ->(user_headers) { post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_headers) } }
       let(:org) { space.organization }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -165,7 +163,7 @@ RSpec.describe 'Space Manifests' do
 
       expect(last_response.status).to eq(202)
       job_guid = VCAP::CloudController::PollableJobModel.last.guid
-      expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+      expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
       Delayed::Worker.new.work_off
       expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
@@ -265,8 +263,7 @@ RSpec.describe 'Space Manifests' do
               ],
               'services' => [
                 service_instance_1.name
-              ]
-            },
+              ] },
             { 'name' => 'some-other-app',
               'instances' => 4,
               'memory' => '2048MB',
@@ -285,20 +282,19 @@ RSpec.describe 'Space Manifests' do
               },
               'services' => [
                 service_instance_1.name
-              ]
-            }
+              ] }
           ]
         }.to_yaml
       end
 
       it 'creates the app' do
-        expect {
+        expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           expect(last_response.status).to eq(202), last_response.body
-        }.to change { VCAP::CloudController::AppModel.count }.by(1)
+        end.to change { VCAP::CloudController::AppModel.count }.by(1)
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
         Delayed::Worker.new.work_off
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
@@ -339,8 +335,8 @@ RSpec.describe 'Space Manifests' do
             {
               'name' => docker_app.name,
               'routes' => [
-                { 'route' => "https://#{docker_route.host}.#{docker_route.domain.name}" },
-              ],
+                { 'route' => "https://#{docker_route.host}.#{docker_route.domain.name}" }
+              ]
             }
           ]
         }.to_yaml
@@ -351,7 +347,7 @@ RSpec.describe 'Space Manifests' do
         expect(last_response.status).to eq(202), last_response.body
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
         Delayed::Worker.new.work_off
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
@@ -371,21 +367,21 @@ RSpec.describe 'Space Manifests' do
         {
           'applications' => [
             { 'name' => app1_model.name,
-              'default-route' => true },
+              'default-route' => true }
           ]
         }.to_yaml
       end
 
       it 'returns a 202 but fails on the job' do
-        expect {
+        expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-        }.to change { VCAP::CloudController::AppModel.count }.by(0)
+        end.to change { VCAP::CloudController::AppModel.count }.by(0)
 
         expect(last_response).to have_status_code(202)
         expect(last_response.status).to eq(202), last_response.body
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
         Delayed::Worker.new.work_off
         job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
@@ -400,21 +396,21 @@ RSpec.describe 'Space Manifests' do
             'applications' => [
               { 'name' => app1_model.name,
                 'default-route' => true,
-                'routes' => [{ 'route' => "http://#{route.host}.#{shared_domain.name}" }] },
+                'routes' => [{ 'route' => "http://#{route.host}.#{shared_domain.name}" }] }
             ]
           }.to_yaml
         end
 
         it 'returns a 202 and succeeds' do
-          expect {
+          expect do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-          }.to change { VCAP::CloudController::AppModel.count }.by(0)
+          end.to change { VCAP::CloudController::AppModel.count }.by(0)
 
           expect(last_response).to have_status_code(202)
           expect(last_response.status).to eq(202), last_response.body
 
           job_guid = VCAP::CloudController::PollableJobModel.last.guid
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+          expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
           Delayed::Worker.new.work_off
           job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
@@ -430,7 +426,7 @@ RSpec.describe 'Space Manifests' do
           {
             'version' => 1,
             'applications' => [
-              { 'name' => app1_model.name },
+              { 'name' => app1_model.name }
             ]
           }.to_yaml
         end
@@ -447,7 +443,7 @@ RSpec.describe 'Space Manifests' do
           {
             'version' => 2,
             'applications' => [
-              { 'name' => app1_model.name },
+              { 'name' => app1_model.name }
             ]
           }.to_yaml
         end
@@ -464,12 +460,11 @@ RSpec.describe 'Space Manifests' do
     context 'when -1 is given as a log rate limit' do
       let(:yml_manifest) do
         {
-           'version' => 1,
-           'applications' => [
-             { 'name' => app1_model.name,
-               'log-rate-limit-per-second' => -1
-             },
-           ]
+          'version' => 1,
+          'applications' => [
+            { 'name' => app1_model.name,
+              'log-rate-limit-per-second' => -1 }
+          ]
         }.to_yaml
       end
 
@@ -478,11 +473,11 @@ RSpec.describe 'Space Manifests' do
 
         expect(last_response.status).to eq(202)
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
         Delayed::Worker.new.work_off
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
-          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+                                                                                VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
 
         app1_model.reload
         expect(app1_model.processes.first.log_rate_limit).to eq(-1)
@@ -502,12 +497,12 @@ RSpec.describe 'Space Manifests' do
         expect(last_response.status).to eq(202)
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
         Delayed::Worker.new.work_off
         # job does not restart app, so applying the manifest succeeds
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
-          VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+                                                                                VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
       end
     end
 
@@ -539,17 +534,16 @@ RSpec.describe 'Space Manifests' do
               ],
               'services' => [
                 service_instance_1.name
-              ]
-            }
+              ] }
           ]
         }.to_yaml
       end
 
       it 'creates audit events tagged with metadata.manifest_triggered' do
-        expect {
+        expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           Delayed::Worker.new.work_off
-        }.to change { VCAP::CloudController::Event.count }.by 10
+        end.to change { VCAP::CloudController::Event.count }.by 10
 
         manifest_triggered_events = VCAP::CloudController::Event.find_all { |event| event.metadata['manifest_triggered'] }
         expect(manifest_triggered_events.map(&:type)).to match_array([
@@ -561,11 +555,11 @@ RSpec.describe 'Space Manifests' do
           'audit.app.map-route',
           'audit.route.create',
           'audit.app.map-route',
-          'audit.service_binding.create',
+          'audit.service_binding.create'
         ])
 
         other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
-        expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+        expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest'])
       end
     end
 
@@ -651,7 +645,7 @@ RSpec.describe 'Space Manifests' do
                 'health-check-type' => process2.health_check_type
               }
             ]
-          },
+          }
         ]
       }
     end
@@ -660,7 +654,7 @@ RSpec.describe 'Space Manifests' do
       let(:diff_json) do
         {
           diff: a_collection_containing_exactly(
-            { op: 'replace', path: '/applications/0/disk-quota', was: '1024M', value: '2048M' },
+            { op: 'replace', path: '/applications/0/disk-quota', was: '1024M', value: '2048M' }
           )
         }
       end
@@ -714,9 +708,8 @@ RSpec.describe 'Space Manifests' do
             { op: 'add', path: '/applications/0/services', value: [
               'service-without-name-label',
               { name: 'service1',
-                parameters: { foo: 'bar' }
-              }
-            ] },
+                parameters: { foo: 'bar' } }
+            ] }
           )
         }
       end
@@ -727,13 +720,12 @@ RSpec.describe 'Space Manifests' do
         default_manifest['applications'][0]['services'] = [
           'service-without-name-label',
           { 'name' => 'service1',
-            'parameters' => { 'foo' => 'bar' }
-          }
+            'parameters' => { 'foo' => 'bar' } }
         ]
         default_manifest.to_yaml
       end
 
-      let(:api_call) { lambda { |user_headers| post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
+      let(:api_call) { ->(user_headers) { post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_headers) } }
       let(:org) { space.organization }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -795,7 +787,7 @@ RSpec.describe 'Space Manifests' do
                   'health-check-type' => process2.health_check_type
                 }
               ]
-            },
+            }
           ]
         }
       end
@@ -814,8 +806,9 @@ RSpec.describe 'Space Manifests' do
           { 'op' => 'add', 'path' => '/applications/0/stack', 'value' => process1.stack.name },
           { 'op' => 'add', 'path' => '/applications/0/processes', 'value' => [
             { 'disk_quota' => '1024M', 'health-check-type' => process1.health_check_type, 'instances' => process1.instances, 'memory' => '1024M', 'type' => process1.type },
-            { 'disk_quota' => '2048M', 'health-check-type' => process2.health_check_type, 'instances' => process2.instances, 'memory' => '2048M', 'type' => process2.type },
-          ] }] })
+            { 'disk_quota' => '2048M', 'health-check-type' => process2.health_check_type, 'instances' => process2.instances, 'memory' => '2048M', 'type' => process2.type }
+          ] }
+        ] })
       end
     end
 
@@ -823,31 +816,31 @@ RSpec.describe 'Space Manifests' do
       let(:user) { make_developer_for_space(space) }
       let(:manifest_with_changes) do
         {
-        'applications' => [
-          {
-            'name' => app1_model.name,
-            'stack' => process1.stack.name,
-            'routes' => [
-              {
-                'route' => "a_host.#{shared_domain.name}"
-              }
-            ],
-            'processes' => [
-              {
-                'type' => process1.type,
-                'instances' => process1.instances + 2,
-                'memory' => '2000M',
-                'disk_quota' => '2000M'
-              },
-              {
-                'type' => process2.type,
-                'instances' => process2.instances + 2,
-                'memory' => '4000M',
-                'disk_quota' => '4000M'
-              }
-            ]
-          },
-        ]
+          'applications' => [
+            {
+              'name' => app1_model.name,
+              'stack' => process1.stack.name,
+              'routes' => [
+                {
+                  'route' => "a_host.#{shared_domain.name}"
+                }
+              ],
+              'processes' => [
+                {
+                  'type' => process1.type,
+                  'instances' => process1.instances + 2,
+                  'memory' => '2000M',
+                  'disk_quota' => '2000M'
+                },
+                {
+                  'type' => process2.type,
+                  'instances' => process2.instances + 2,
+                  'memory' => '4000M',
+                  'disk_quota' => '4000M'
+                }
+              ]
+            }
+          ]
         }.to_yaml
       end
       let(:expected_changes) do
@@ -889,7 +882,7 @@ RSpec.describe 'Space Manifests' do
                 'process_types' => ['pink'],
                 'memory' => '1024M'
               }]
-            },
+            }
           ]
         }
       end
@@ -897,7 +890,7 @@ RSpec.describe 'Space Manifests' do
       let(:expected_changes) do
         [
           { 'op' => 'replace', 'path' => '/applications/0/sidecars/0/command', 'was' => 'go', 'value' => 'stop' },
-          { 'op' => 'replace', 'path' => '/applications/0/sidecars/0/memory', 'was' => '1024M', 'value' => '512M' },
+          { 'op' => 'replace', 'path' => '/applications/0/sidecars/0/memory', 'was' => '1024M', 'value' => '512M' }
         ]
       end
 
@@ -942,7 +935,7 @@ RSpec.describe 'Space Manifests' do
                 'process_types' => ['pink'],
                 'memory' => '1024M'
               }]
-            },
+            }
           ]
         }
       end
@@ -956,9 +949,9 @@ RSpec.describe 'Space Manifests' do
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
 
         new_sidecars = [{
-                'name' => 'rollsroyce',
-                'command' => 'go',
-                'process_types' => ['pink'],
+          'name' => 'rollsroyce',
+          'command' => 'go',
+          'process_types' => ['pink']
         }]
         sidecar_manifest['applications'][0]['sidecars'] = new_sidecars
         post "/v3/spaces/#{space.guid}/manifest_diff", sidecar_manifest.to_yaml, yml_headers(user_header)
@@ -994,9 +987,9 @@ RSpec.describe 'Space Manifests' do
                   'instances' => process1.instances,
                   'disk_quota' => '1024M',
                   'health-check-type' => process1.health_check_type
-                },
+                }
               ]
-            },
+            }
           ]
         }
       end
@@ -1022,7 +1015,7 @@ RSpec.describe 'Space Manifests' do
             {
               'name' => app1_model.name,
               'memory' => '256M',
-              'disk_quota' => '256M',
+              'disk_quota' => '256M'
             }
           ]
         }
@@ -1052,8 +1045,8 @@ RSpec.describe 'Space Manifests' do
           {
             'not-applications' => [
               {
-                'name' => 'new-app',
-              },
+                'name' => 'new-app'
+              }
             ]
           }.to_yaml
         end
@@ -1086,11 +1079,11 @@ RSpec.describe 'Space Manifests' do
       context 'the manifest is a not supported version' do
         let(:yml_manifest) do
           {
-            'version' => 1234567,
+            'version' => 1_234_567,
             'applications' => [
               {
-                'name' => 'new-app',
-              },
+                'name' => 'new-app'
+              }
             ]
           }.to_yaml
         end
@@ -1109,8 +1102,8 @@ RSpec.describe 'Space Manifests' do
           {
             'applications' => [
               {
-                'name' => 'new-app',
-              },
+                'name' => 'new-app'
+              }
             ]
           }.to_yaml
         end
@@ -1131,8 +1124,8 @@ RSpec.describe 'Space Manifests' do
           {
             'applications' => [
               {
-                'name' => 'new-app',
-              },
+                'name' => 'new-app'
+              }
             ]
           }.to_yaml
         end
@@ -1157,7 +1150,7 @@ RSpec.describe 'Space Manifests' do
               {
                 'name' => 'new-app',
                 'stack' => { 'hash' => 'but should be a string' }
-              },
+              }
             ]
           }.to_yaml
         end
@@ -1177,8 +1170,8 @@ RSpec.describe 'Space Manifests' do
         {
           'applications' => [
             {
-              'name' => 'new-app',
-            },
+              'name' => 'new-app'
+            }
           ]
         }.to_yaml
       end

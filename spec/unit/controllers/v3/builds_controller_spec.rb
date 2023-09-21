@@ -15,7 +15,7 @@ RSpec.describe BuildsController, type: :controller do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
         package_guid: package.guid,
-        build: build,
+        build: build
       )
     end
     let(:package2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -24,7 +24,7 @@ RSpec.describe BuildsController, type: :controller do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
         package_guid: package2.guid,
-        build: build2,
+        build: build2
       )
     end
 
@@ -51,12 +51,12 @@ RSpec.describe BuildsController, type: :controller do
           'space_auditor' => 200,
           'org_manager' => 200,
           'org_auditor' => 200,
-          'org_billing_manager' => 200,
+          'org_billing_manager' => 200
         }.freeze
 
         has_no_space_access = {
           'org_auditor' => true,
-          'org_billing_manager' => true,
+          'org_billing_manager' => true
         }
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -126,7 +126,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         context 'invalid pagination' do
-          let(:params) { { 'per_page' => 9999999999999999 } }
+          let(:params) { { 'per_page' => 9_999_999_999_999_999 } }
 
           it 'returns 400' do
             get :index, params: params
@@ -176,7 +176,7 @@ RSpec.describe BuildsController, type: :controller do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
@@ -185,7 +185,7 @@ RSpec.describe BuildsController, type: :controller do
       {
         package: {
           guid: package.guid
-        },
+        }
       }
     end
 
@@ -235,7 +235,7 @@ RSpec.describe BuildsController, type: :controller do
           {
             package: {
               guid: 'notexist-package'
-            },
+            }
           }
         end
 
@@ -273,7 +273,7 @@ RSpec.describe BuildsController, type: :controller do
           data: {
             buildpacks: [buildpack_request],
             stack: stack
-          },
+          }
         }
       end
       let(:req_body) do
@@ -334,7 +334,7 @@ RSpec.describe BuildsController, type: :controller do
               data: {
                 buildpacks: [],
                 stack: stack
-              },
+              }
             }
           end
 
@@ -353,7 +353,7 @@ RSpec.describe BuildsController, type: :controller do
               data: {
                 buildpacks: nil,
                 stack: stack
-              },
+              }
             }
           end
 
@@ -393,10 +393,9 @@ RSpec.describe BuildsController, type: :controller do
       let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
       let(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
-          app_guid: docker_app_model.guid,
-          type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
-          state: VCAP::CloudController::PackageModel::READY_STATE
-        )
+                                                 app_guid: docker_app_model.guid,
+                                                 type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
+                                                 state: VCAP::CloudController::PackageModel::READY_STATE)
       end
 
       let(:docker_lifecycle) do
@@ -473,7 +472,7 @@ RSpec.describe BuildsController, type: :controller do
           },
           staging_memory_in_mb: memory_in_mb,
           staging_disk_in_mb: disk_in_mb,
-          environment_variables: environment_variables,
+          environment_variables: environment_variables
         }
       end
 
@@ -481,9 +480,9 @@ RSpec.describe BuildsController, type: :controller do
         TestConfig.override(
           staging: {
             minimum_staging_memory_mb: 5,
-            minimum_staging_disk_mb: 5,
+            minimum_staging_disk_mb: 5
           },
-          maximum_app_disk_in_mb: 10,
+          maximum_app_disk_in_mb: 10
         )
       end
 
@@ -614,11 +613,11 @@ RSpec.describe BuildsController, type: :controller do
           {
             labels: {
               release: 'stable',
-              'seriouseats.com/potato' => 'mashed',
+              'seriouseats.com/potato' => 'mashed'
             },
             annotations: {
-              potato: 'idaho',
-            },
+              potato: 'idaho'
+            }
           }
         end
         it 'passes metadata' do
@@ -643,10 +642,10 @@ RSpec.describe BuildsController, type: :controller do
             'space_auditor' => 422,
             'org_manager' => 422,
             'org_auditor' => 422,
-            'org_billing_manager' => 422,
+            'org_billing_manager' => 422
           }
         end
-        let(:api_call) { lambda { post :create, params: req_body, as: :json } }
+        let(:api_call) { -> { post :create, params: req_body, as: :json } }
       end
 
       context 'when the user does not have write permissions for the resource' do
@@ -687,25 +686,25 @@ RSpec.describe BuildsController, type: :controller do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
     let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
     let(:new_labels) do
       {
         release: 'stable',
-        'seriouseats.com/potato' => 'mashed',
+        'seriouseats.com/potato' => 'mashed'
       }
     end
     let(:new_annotations) do
       {
-        potato: 'idaho',
+        potato: 'idaho'
       }
     end
     let(:metadata) do
       {
         labels: new_labels,
-        annotations: new_annotations,
+        annotations: new_annotations
       }
     end
     let(:req_body) do
@@ -729,19 +728,19 @@ RSpec.describe BuildsController, type: :controller do
       patch :update, params: req_body, as: :json
       expect(response.status).to eq(200), response.body
       expect(parsed_body['metadata']).to eq({
-        'labels' =>   {
-          'release' => 'stable',
-          'seriouseats.com/potato' => 'mashed',
-        },
-        'annotations' => {
-          'potato' => 'idaho',
-        }
-      })
+                                              'labels' => {
+                                                'release' => 'stable',
+                                                'seriouseats.com/potato' => 'mashed'
+                                              },
+                                              'annotations' => {
+                                                'potato' => 'idaho'
+                                              }
+                                            })
     end
 
     it 'returns 422 with invalid metadata' do
       patch :update, params: { guid: build.guid,
-        metadata: { annotations: { '' => 'stop', '*this*' => 'stuff' } } }, as: :json
+                               metadata: { annotations: { '' => 'stop', '*this*' => 'stuff' } } }, as: :json
       expect(response.status).to eq(422)
     end
 
@@ -756,14 +755,14 @@ RSpec.describe BuildsController, type: :controller do
         patch :update, params: req_body, as: :json
         expect(response.status).to eq(200), response.body
         expect(parsed_body['metadata']).to eq({
-          'labels' =>   {
-            'release' => 'stable',
-            'seriouseats.com/potato' => 'mashed',
-          },
-          'annotations' => {
-            'potato' => 'idaho',
-          }
-        })
+                                                'labels' => {
+                                                  'release' => 'stable',
+                                                  'seriouseats.com/potato' => 'mashed'
+                                                },
+                                                'annotations' => {
+                                                  'potato' => 'idaho'
+                                                }
+                                              })
       end
     end
 
@@ -779,10 +778,10 @@ RSpec.describe BuildsController, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 403,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { patch :update, params: req_body, as: :json } }
+        let(:api_call) { -> { patch :update, params: req_body, as: :json } }
       end
 
       context 'permissions' do
@@ -831,7 +830,7 @@ RSpec.describe BuildsController, type: :controller do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
         package_guid: package.guid,
-        build: build,
+        build: build
       )
     end
 
@@ -882,7 +881,7 @@ RSpec.describe BuildsController, type: :controller do
         'global_auditor' => 200,
         'org_billing_manager' => 404,
         'org_auditor' => 404,
-        'org_user' => 404,
+        'org_user' => 404
       }.each do |role, expected_return_value|
         context "as an #{role}" do
           before do
@@ -891,7 +890,7 @@ RSpec.describe BuildsController, type: :controller do
               org: organization,
               space: space,
               user: user,
-              scopes: %w(cloud_controller.read)
+              scopes: %w[cloud_controller.read]
             )
           end
 

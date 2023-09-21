@@ -22,9 +22,9 @@ module VCAP::CloudController
         let!(:unmapped_route_2) { Route.make(domain: domain, space: space, host: 'unmapped2') }
 
         it 'deletes only unmapped routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change { VCAP::CloudController::Route.count }.by(-2)
 
           expect { unmapped_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unmapped_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -39,9 +39,9 @@ module VCAP::CloudController
         let!(:unbound_route_2) { Route.make(domain: domain, space: space, host: 'unbound2') }
 
         it 'deletes only unbound routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change { VCAP::CloudController::Route.count }.by(-2)
 
           expect { unbound_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unbound_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -64,9 +64,9 @@ module VCAP::CloudController
         let!(:_3) { RouteMappingModel.make(app: app, route: unbound_and_mapped_route) }
 
         it 'deletes only BOTH unmapped and unbound routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-1)
+          end.to change { VCAP::CloudController::Route.count }.by(-1)
 
           expect { unbound_and_unmapped_route.refresh }.to raise_error Sequel::Error, 'Record not found'
         end

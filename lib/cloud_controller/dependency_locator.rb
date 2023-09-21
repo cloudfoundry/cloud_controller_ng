@@ -60,9 +60,7 @@ module CloudController
     end
 
     def prometheus_updater
-      unless @dependencies[:prometheus_updater]
-        register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
-      end
+      register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new) unless @dependencies[:prometheus_updater]
       @dependencies[:prometheus_updater]
     end
 
@@ -96,7 +94,7 @@ module CloudController
 
     def log_cache_metrics_client
       @dependencies[:log_cache_metrics_client] ||
-          register(:log_cache_metrics_client, Logcache::ContainerMetricBatcher.new(logcache_client))
+        register(:log_cache_metrics_client, Logcache::ContainerMetricBatcher.new(logcache_client))
     end
 
     def upload_handler
@@ -121,7 +119,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
-        resource_type: :droplets,
+        resource_type: :droplets
       )
     end
 
@@ -132,7 +130,7 @@ module CloudController
         options: options,
         directory_key: options.fetch(:droplet_directory_key),
         root_dir: BUILDPACK_CACHE_DIR,
-        resource_type: :buildpack_cache,
+        resource_type: :buildpack_cache
       )
     end
 
@@ -142,7 +140,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:app_package_directory_key),
-        resource_type: :packages,
+        resource_type: :packages
       )
     end
 
@@ -151,7 +149,7 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:resource_directory_key),
+        directory_key: options.fetch(:resource_directory_key)
       )
     end
 
@@ -161,7 +159,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:resource_directory_key),
-        root_dir: RESOURCE_POOL_DIR,
+        root_dir: RESOURCE_POOL_DIR
       )
     end
 
@@ -171,7 +169,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
-        resource_type: :buildpacks,
+        resource_type: :buildpacks
       )
     end
 
@@ -182,7 +180,7 @@ module CloudController
         blobstore_tls_port: config.get(:tls_port),
         user: config.get(:staging, :auth, :user),
         password: config.get(:staging, :auth, :password),
-        mtls:  !!config.get(:tls_port),
+        mtls: !!config.get(:tls_port)
       }
 
       Blobstore::UrlGenerator.new(
@@ -190,7 +188,7 @@ module CloudController
         package_blobstore,
         buildpack_cache_blobstore,
         buildpack_blobstore,
-        droplet_blobstore,
+        droplet_blobstore
       )
     end
 
@@ -199,7 +197,7 @@ module CloudController
         internal_service_hostname: config.get(:internal_service_hostname),
         external_port: config.get(:external_port),
         tls_port: config.get(:tls_port),
-        mtls:  !!config.get(:tls_port),
+        mtls: !!config.get(:tls_port)
       )
     end
 
@@ -272,7 +270,7 @@ module CloudController
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:cloud_controller_username_lookup_client_name),
         secret: config.get(:cloud_controller_username_lookup_client_secret),
-        ca_file: config.get(:uaa, :ca_file),
+        ca_file: config.get(:uaa, :ca_file)
       )
     end
 
@@ -283,7 +281,7 @@ module CloudController
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:routing_api, :routing_client_name),
         secret: config.get(:routing_api, :routing_client_secret),
-        ca_file: config.get(:uaa, :ca_file),
+        ca_file: config.get(:uaa, :ca_file)
       )
 
       skip_cert_verify = config.get(:skip_cert_verify)
@@ -296,7 +294,7 @@ module CloudController
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:cc_service_key_client_name),
         secret: config.get(:cc_service_key_client_secret),
-        ca_file: config.get(:uaa, :ca_file),
+        ca_file: config.get(:uaa, :ca_file)
       )
 
       Credhub::Client.new(config.get(:credhub_api, :internal_url), uaa_client)
@@ -329,7 +327,7 @@ module CloudController
     def registry_buddy_client
       RegistryBuddy::Client.new(
         VCAP::CloudController::Config.config.get(:registry_buddy, :host),
-        VCAP::CloudController::Config.config.get(:registry_buddy, :port),
+        VCAP::CloudController::Config.config.get(:registry_buddy, :port)
       )
     end
 
@@ -390,7 +388,7 @@ module CloudController
         client_key_file: config.get(:diego, :bbs, :key_file),
         connect_timeout: config.get(:diego, :bbs, :connect_timeout),
         send_timeout: config.get(:diego, :bbs, :send_timeout),
-        receive_timeout: config.get(:diego, :bbs, :receive_timeout),
+        receive_timeout: config.get(:diego, :bbs, :receive_timeout)
       )
     end
 
@@ -401,7 +399,7 @@ module CloudController
         client_ca_path: config.get(:logcache_tls, :ca_file),
         client_cert_path: config.get(:logcache_tls, :cert_file),
         client_key_path: config.get(:logcache_tls, :key_file),
-        tls_subject_name: config.get(:logcache_tls, :subject_name),
+        tls_subject_name: config.get(:logcache_tls, :subject_name)
       )
     end
 
@@ -411,9 +409,9 @@ module CloudController
       object_transformer = opts[:object_transformer]
 
       VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
-        max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
-        object_transformer: object_transformer,
-      })
+                                                                  max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
+                                                                  object_transformer: object_transformer
+                                                                })
     end
 
     def create_paginated_collection_renderer(opts={})
@@ -426,12 +424,12 @@ module CloudController
       collection_transformer = opts[:collection_transformer]
 
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
-        max_results_per_page: max_results_per_page,
-        default_results_per_page: default_results_per_page,
-        max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer,
-        max_total_results: max_total_results
-      })
+                                                                               max_results_per_page: max_results_per_page,
+                                                                               default_results_per_page: default_results_per_page,
+                                                                               max_inline_relations_depth: max_inline_relations_depth,
+                                                                               collection_transformer: collection_transformer,
+                                                                               max_total_results: max_total_results
+                                                                             })
     end
   end
 end

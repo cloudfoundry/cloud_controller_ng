@@ -64,7 +64,7 @@ module VCAP::CloudController
       let(:route_binding) do
         RouteBinding.new(
           service_instance: service_instance,
-          route: route,
+          route: route
         )
       end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
         it 'should rollback the binding' do
           invalid_new_operation = {
             state: 'will fail',
-            broker_provided_operation: 'too long' * 10000
+            broker_provided_operation: 'too long' * 10_000
           }
           expect { route_binding.save_with_new_operation({}, invalid_new_operation) }.to raise_error(Sequel::DatabaseError)
           expect(RouteBinding.count).to eq(0)

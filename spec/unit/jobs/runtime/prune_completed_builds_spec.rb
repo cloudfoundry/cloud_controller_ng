@@ -20,7 +20,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            BuildModel.make(id: i, state: BuildModel::FAILED_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::FAILED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -60,13 +60,13 @@ module VCAP::CloudController
         it 'does not delete in-flight builds over the limit' do
           total = 60
           (1..20).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
           (21..40).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now.utc - total + i)
           end
           (41..60).each do |i|
-            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
+            BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now.utc - total + i)
           end
 
           job.perform
@@ -83,9 +83,9 @@ module VCAP::CloudController
             BuildpackLifecycleDataModel.make(build: b)
           end
 
-          expect {
+          expect do
             job.perform
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'multiple apps' do
@@ -98,7 +98,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                BuildModel.make(id: i + 1000 * app_index, state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
+                BuildModel.make(id: i + (1000 * app_index), state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now.utc - total + i)
               end
             end
 

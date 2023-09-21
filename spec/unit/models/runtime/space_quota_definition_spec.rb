@@ -24,7 +24,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :total_routes }
       it { is_expected.to validate_presence :memory_limit }
       it { is_expected.to validate_presence :organization }
-      it { is_expected.to validate_uniqueness [:organization_id, :name] }
+      it { is_expected.to validate_uniqueness %i[organization_id name] }
 
       describe 'memory_limits' do
         it 'total memory_limit cannot be less than zero' do
@@ -173,14 +173,14 @@ module VCAP::CloudController
     describe 'Serialization' do
       it do
         is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+                                         :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                                         :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
 
       it do
         is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+                                         :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                                         :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
     end
 

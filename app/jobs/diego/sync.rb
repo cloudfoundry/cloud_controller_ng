@@ -16,11 +16,11 @@ module VCAP::CloudController
           config = CloudController::DependencyLocator.instance.config
           begin
             ## TODO: At some point in the future, start using a monotonic time source, rather than wall-clock time!
-            start = Time.now
+            start = Time.now.utc
             VCAP::CloudController::Diego::ProcessesSync.new(config: config).sync
             VCAP::CloudController::Diego::TasksSync.new(config: config).sync
           ensure
-            finish = Time.now
+            finish = Time.now.utc
             ## NOTE: We're taking time in seconds and multiplying by 1000 because we don't have
             ##       access to time in milliseconds. If you ever get access to reliable time in
             ##       milliseconds, then do know that the lack of precision here is not desired

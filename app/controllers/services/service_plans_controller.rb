@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     def update(guid)
       json_msg = self.class::UpdateMessage.decode(body)
-      @request_attrs = json_msg.extract(stringify_keys: true).select { |key, value| key == 'public' }
+      @request_attrs = json_msg.extract(stringify_keys: true).select { |key, _value| key == 'public' }
       logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
       raise InvalidRequest unless request_attrs
 
@@ -87,9 +87,7 @@ module VCAP::CloudController
     def delete(guid)
       plan = find_guid_and_validate_access(:delete, guid)
 
-      if plan.service_instances.present?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', plan.class.table_name)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', plan.class.table_name) if plan.service_instances.present?
 
       plan.destroy
 
@@ -97,7 +95,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:service_id, :name])
+      name_errors = e.errors.on(%i[service_id name])
       if name_errors && name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServicePlanNameTaken', "#{attributes['service_id']}-#{attributes['name']}")
       else

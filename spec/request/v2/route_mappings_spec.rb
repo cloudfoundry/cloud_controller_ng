@@ -21,20 +21,20 @@ RSpec.describe 'RouteMappings' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => route_mapping.guid,
-          'url'        => "/v2/route_mappings/#{route_mapping.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'app_port'   => nil,
-          'app_guid'   => process.guid,
-          'route_guid' => route.guid,
-          'app_url'    => "/v2/apps/#{process.guid}",
-          'route_url'  => "/v2/routes/#{route.guid}"
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => route_mapping.guid,
+                                                        'url' => "/v2/route_mappings/#{route_mapping.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'app_port' => nil,
+                                                        'app_guid' => process.guid,
+                                                        'route_guid' => route.guid,
+                                                        'app_url' => "/v2/apps/#{process.guid}",
+                                                        'route_url' => "/v2/routes/#{route.guid}"
+                                                      }
+                                                    })
     end
 
     it 'does not display route mappings without a web process' do
@@ -79,38 +79,38 @@ RSpec.describe 'RouteMappings' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => route_mapping1.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping1.guid}",
+                'guid' => route_mapping1.guid,
+                'url' => "/v2/route_mappings/#{route_mapping1.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process1.guid,
+                'app_port' => nil,
+                'app_guid' => process1.guid,
                 'route_guid' => route1.guid,
-                'app_url'    => "/v2/apps/#{process1.guid}",
-                'route_url'  => "/v2/routes/#{route1.guid}"
+                'app_url' => "/v2/apps/#{process1.guid}",
+                'route_url' => "/v2/routes/#{route1.guid}"
               }
             },
             {
               'metadata' => {
-                'guid'       => route_mapping2.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping2.guid}",
+                'guid' => route_mapping2.guid,
+                'url' => "/v2/route_mappings/#{route_mapping2.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process2.guid,
+                'app_port' => nil,
+                'app_guid' => process2.guid,
                 'route_guid' => route2.guid,
-                'app_url'    => "/v2/apps/#{process2.guid}",
-                'route_url'  => "/v2/routes/#{route2.guid}"
+                'app_url' => "/v2/apps/#{process2.guid}",
+                'route_url' => "/v2/routes/#{route2.guid}"
               }
             }
           ]
@@ -138,9 +138,10 @@ RSpec.describe 'RouteMappings' do
       request = MultiJson.dump(
         {
           route_guid: route.guid,
-          app_guid:   process.guid,
-          app_port:   9090
-        })
+          app_guid: process.guid,
+          app_port: 9090
+        }
+      )
 
       post '/v2/route_mappings', request, headers_for(user)
       expect(last_response.status).to eq(201)
@@ -149,20 +150,20 @@ RSpec.describe 'RouteMappings' do
       route_mapping   = VCAP::CloudController::RouteMappingModel.last
 
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => route_mapping.guid,
-          'url'        => "/v2/route_mappings/#{route_mapping.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'app_port'   => 9090,
-          'app_guid'   => process.guid,
-          'route_guid' => route.guid,
-          'app_url'    => "/v2/apps/#{process.guid}",
-          'route_url'  => "/v2/routes/#{route.guid}"
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => route_mapping.guid,
+                                                        'url' => "/v2/route_mappings/#{route_mapping.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'app_port' => 9090,
+                                                        'app_guid' => process.guid,
+                                                        'route_guid' => route.guid,
+                                                        'app_url' => "/v2/apps/#{process.guid}",
+                                                        'route_url' => "/v2/routes/#{route.guid}"
+                                                      }
+                                                    })
 
       expect(route_mapping.app_guid).to eq(process.guid)
       expect(route_mapping.route_guid).to eq(route.guid)
@@ -174,14 +175,14 @@ RSpec.describe 'RouteMappings' do
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
       expect(event.metadata).to eq({
-        'route_guid' => route.guid,
-        'app_port' => 9090,
-        'destination_guid' => route_mapping.guid,
-        'route_mapping_guid' => route_mapping.guid,
-        'process_type' => 'web',
-        'weight' => nil,
-        'protocol' => 'http1'
-      })
+                                     'route_guid' => route.guid,
+                                     'app_port' => 9090,
+                                     'destination_guid' => route_mapping.guid,
+                                     'route_mapping_guid' => route_mapping.guid,
+                                     'process_type' => 'web',
+                                     'weight' => nil,
+                                     'protocol' => 'http1'
+                                   })
     end
   end
 
@@ -201,14 +202,14 @@ RSpec.describe 'RouteMappings' do
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
       expect(event.metadata).to eq({
-        'route_guid' => route.guid,
-        'app_port' => route_mapping.app_port,
-        'destination_guid' => route_mapping.guid,
-        'route_mapping_guid' => route_mapping.guid,
-        'process_type' => 'web',
-        'weight' => nil,
-        'protocol' => 'http1'
-      })
+                                     'route_guid' => route.guid,
+                                     'app_port' => route_mapping.app_port,
+                                     'destination_guid' => route_mapping.guid,
+                                     'route_mapping_guid' => route_mapping.guid,
+                                     'process_type' => 'web',
+                                     'weight' => nil,
+                                     'protocol' => 'http1'
+                                   })
     end
   end
 end

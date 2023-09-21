@@ -20,7 +20,7 @@ module VCAP::CloudController
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_stop).with(
           app,
-          user_audit_info,
+          user_audit_info
         )
 
         AppStop.stop(app: app, user_audit_info: user_audit_info)
@@ -50,9 +50,9 @@ module VCAP::CloudController
         end
 
         it 'raises a InvalidApp exception' do
-          expect {
+          expect do
             AppStop.stop(app: app, user_audit_info: user_audit_info)
-          }.to raise_error(AppStop::InvalidApp, 'some message')
+          end.to raise_error(AppStop::InvalidApp, 'some message')
         end
       end
     end

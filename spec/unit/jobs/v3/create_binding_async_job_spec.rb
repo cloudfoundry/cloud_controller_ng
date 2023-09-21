@@ -11,12 +11,12 @@ module VCAP::CloudController
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
               service_instance: service_instance,
-              route: route,
+              route: route
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -30,12 +30,12 @@ module VCAP::CloudController
               type: 'app',
               service_instance: service_instance,
               app: AppModel.make(space: service_instance.space),
-              credentials: {},
+              credentials: {}
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -46,14 +46,14 @@ module VCAP::CloudController
         let(:binding) do
           ServiceKey.new.save_with_attributes_and_new_operation(
             {
-                service_instance: service_instance,
-                name: 'key-name',
-                credentials: {},
-              },
+              service_instance: service_instance,
+              name: 'key-name',
+              credentials: {}
+            },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 

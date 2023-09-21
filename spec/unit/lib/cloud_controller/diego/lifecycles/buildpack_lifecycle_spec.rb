@@ -16,7 +16,7 @@ module VCAP::CloudController
       context 'when the user specifies buildpacks' do
         let(:request_data) do
           {
-            buildpacks: ['cool-buildpack', 'rad-buildpack'],
+            buildpacks: %w[cool-buildpack rad-buildpack]
           }
         end
         before do
@@ -27,13 +27,13 @@ module VCAP::CloudController
         it 'uses the buildpacks from the user' do
           build = BuildModel.make
 
-          expect {
+          expect do
             buildpack_lifecycle.create_lifecycle_data_model(build)
-          }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
+          end.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
 
           data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
 
-          expect(data_model.buildpacks).to eq(['cool-buildpack', 'rad-buildpack'])
+          expect(data_model.buildpacks).to eq(%w[cool-buildpack rad-buildpack])
           expect(data_model.build).to eq(build)
         end
       end
@@ -46,19 +46,19 @@ module VCAP::CloudController
           before do
             Buildpack.make(name: 'cool-buildpack')
             Buildpack.make(name: 'rad-buildpack')
-            app.lifecycle_data.update(buildpacks: ['cool-buildpack', 'rad-buildpack'])
+            app.lifecycle_data.update(buildpacks: %w[cool-buildpack rad-buildpack])
           end
 
           it 'uses the buildpacks on the app' do
             build = BuildModel.make
 
-            expect {
+            expect do
               buildpack_lifecycle.create_lifecycle_data_model(build)
-            }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
+            end.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
 
             data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
 
-            expect(data_model.buildpacks).to eq(['cool-buildpack', 'rad-buildpack'])
+            expect(data_model.buildpacks).to eq(%w[cool-buildpack rad-buildpack])
             expect(data_model.build).to eq(build)
           end
         end
@@ -67,9 +67,9 @@ module VCAP::CloudController
           it 'does not assign any buildpacks' do
             build = BuildModel.make
 
-            expect {
+            expect do
               buildpack_lifecycle.create_lifecycle_data_model(build)
-            }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
+            end.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
 
             data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
 
@@ -118,8 +118,8 @@ module VCAP::CloudController
         staging_message.buildpack_data.stack = 'cool-stack'
 
         expect(buildpack_lifecycle.staging_environment_variables).to eq({
-          'CF_STACK' => 'cool-stack'
-        })
+                                                                          'CF_STACK' => 'cool-stack'
+                                                                        })
       end
     end
 
@@ -157,7 +157,7 @@ module VCAP::CloudController
       let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [instance_double(BuildpackInfo)] } }
       let(:request_data) do
         {
-          buildpacks: ['cool-buildpack', 'rad-buildpack'],
+          buildpacks: %w[cool-buildpack rad-buildpack]
         }
       end
 
@@ -168,7 +168,7 @@ module VCAP::CloudController
       it 'returns the expected value' do
         expect(buildpack_lifecycle.buildpack_infos).to eq(stubbed_data[:buildpack_infos])
 
-        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(['cool-buildpack', 'rad-buildpack'], Stack.default.name)
+        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(%w[cool-buildpack rad-buildpack], Stack.default.name)
       end
     end
 

@@ -35,11 +35,11 @@ module VCAP::CloudController
       end
 
       context 'when unexpected keys are requested' do
-        let(:params) {
+        let(:params) do
           {
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = ToManyRelationshipMessage.new(params)

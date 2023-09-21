@@ -12,7 +12,7 @@ module VCAP::CloudController
         },
         syslog_drain_url: 'https://drain.com/foo',
         route_service_url: 'https://route.com/bar',
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         metadata: {
           labels: {
             potato: 'mashed'

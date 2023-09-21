@@ -10,8 +10,8 @@ module Logcache
       @logcache_client = logcache_client
     end
 
-    def container_metrics(auth_token: nil, source_guid:, logcache_filter:)
-      now = Time.now
+    def container_metrics(source_guid:, logcache_filter:, auth_token: nil)
+      now = Time.now.utc
       start_time = TimeUtils.to_nanoseconds(now - 2.minutes)
       end_time = TimeUtils.to_nanoseconds(now)
       final_envelopes = []
@@ -64,46 +64,32 @@ module Logcache
       # on envelope.gauge.metrics - but it does not
       # rubocop:disable Style/PreferredHashMethods
       envelope.gauge.metrics.has_key?('cpu') ||
-      envelope.gauge.metrics.has_key?('memory') ||
-      envelope.gauge.metrics.has_key?('memory_quota') ||
-      envelope.gauge.metrics.has_key?('disk') ||
-      envelope.gauge.metrics.has_key?('disk_quota') ||
-      envelope.gauge.metrics.has_key?('log_rate') ||
-      envelope.gauge.metrics.has_key?('log_rate_limit')
+        envelope.gauge.metrics.has_key?('memory') ||
+        envelope.gauge.metrics.has_key?('memory_quota') ||
+        envelope.gauge.metrics.has_key?('disk') ||
+        envelope.gauge.metrics.has_key?('disk_quota') ||
+        envelope.gauge.metrics.has_key?('log_rate') ||
+        envelope.gauge.metrics.has_key?('log_rate_limit')
       # rubocop:enable Style/PreferredHashMethods
     end
 
-    def batch_metrics(source_guid, envelopes_by_instance)
+    def batch_metrics(_source_guid, envelopes_by_instance)
       metric_batch = ContainerMetricBatch.new
       metric_batch.instance_index = envelopes_by_instance.first.to_i
 
-      envelopes_by_instance.second.each { |e|
+      envelopes_by_instance.second.each do |e|
         # rubocop seems to think that there is a 'key?' method
         # on envelope.gauge.metrics - but it does not
         # rubocop:disable Style/PreferredHashMethods
-        if e.gauge.metrics.has_key?('cpu')
-          metric_batch.cpu_percentage = e.gauge.metrics['cpu'].value
-        end
-        if e.gauge.metrics.has_key?('memory')
-          metric_batch.memory_bytes = e.gauge.metrics['memory'].value.to_i
-        end
-        if e.gauge.metrics.has_key?('disk')
-          metric_batch.disk_bytes = e.gauge.metrics['disk'].value.to_i
-        end
-        if e.gauge.metrics.has_key?('log_rate')
-          metric_batch.log_rate = e.gauge.metrics['log_rate'].value.to_i
-        end
-        if e.gauge.metrics.has_key?('disk_quota')
-          metric_batch.disk_bytes_quota = e.gauge.metrics['disk_quota'].value.to_i
-        end
-        if e.gauge.metrics.has_key?('memory_quota')
-          metric_batch.memory_bytes_quota = e.gauge.metrics['memory_quota'].value.to_i
-        end
-        if e.gauge.metrics.has_key?('log_rate_limit')
-          metric_batch.log_rate_limit = e.gauge.metrics['log_rate_limit'].value.to_i
-        end
+        metric_batch.cpu_percentage = e.gauge.metrics['cpu'].value if e.gauge.metrics.has_key?('cpu')
+        metric_batch.memory_bytes = e.gauge.metrics['memory'].value.to_i if e.gauge.metrics.has_key?('memory')
+        metric_batch.disk_bytes = e.gauge.metrics['disk'].value.to_i if e.gauge.metrics.has_key?('disk')
+        metric_batch.log_rate = e.gauge.metrics['log_rate'].value.to_i if e.gauge.metrics.has_key?('log_rate')
+        metric_batch.disk_bytes_quota = e.gauge.metrics['disk_quota'].value.to_i if e.gauge.metrics.has_key?('disk_quota')
+        metric_batch.memory_bytes_quota = e.gauge.metrics['memory_quota'].value.to_i if e.gauge.metrics.has_key?('memory_quota')
+        metric_batch.log_rate_limit = e.gauge.metrics['log_rate_limit'].value.to_i if e.gauge.metrics.has_key?('log_rate_limit')
         # rubocop:enable Style/PreferredHashMethods
-      }
+      end
 
       metric_batch
     end

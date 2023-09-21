@@ -20,7 +20,7 @@ module VCAP
       begin
         File.unlink(@pid_file)
         @dirty = false
-      rescue
+      rescue StandardError
       end
       self
     end
@@ -46,7 +46,7 @@ module VCAP
 
       # Protip from Wilson: binary mode keeps things sane under Windows
       # Closing the fd releases our lock
-      File.open(@pid_file, 'a+b', 0644) do |f|
+      File.open(@pid_file, 'a+b', 0o644) do |f|
         f.flock(File::LOCK_EX)
 
         # Check if process is already running

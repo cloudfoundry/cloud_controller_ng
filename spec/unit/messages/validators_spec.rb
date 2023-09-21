@@ -54,7 +54,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'does not add an error if the field is an array' do
-        fake_class = array_class.new field: %w(an array)
+        fake_class = array_class.new field: %w[an array]
         expect(fake_class.valid?).to be_truthy
       end
     end
@@ -359,22 +359,22 @@ module VCAP::CloudController::Validators
       context 'allowed keys' do
         let(:fields_class_multiple_keys) do
           Class.new(fake_class) do
-            validates :field, fields: { allowed: { 'some.resource' => ['fake-value-1', 'fake-value-2'] } }
+            validates :field, fields: { allowed: { 'some.resource' => %w[fake-value-1 fake-value-2] } }
           end
         end
 
         it 'allows a multiple keys to be present' do
-          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2 fake-value-1) }
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2 fake-value-1] }
           expect(fake_class.valid?).to be_truthy
         end
 
         it 'allows a subset of keys' do
-          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2) }
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2] }
           expect(fake_class.valid?).to be_truthy
         end
 
         it 'reject keys not in the list' do
-          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w(fake-value-2 url) }
+          fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2 url] }
           expect(fake_class.valid?).to be_falsy
           expect(fake_class.errors[:field]).to include "valid keys for 'some.resource' are: 'fake-value-1', 'fake-value-2'"
         end
@@ -388,17 +388,17 @@ module VCAP::CloudController::Validators
         end
 
         it 'allows a multiple resources to be present' do
-          fake_class = fields_class_multiple_resources.new field: { 'a.resource': %w(fake-value), 'another.resource': %w(another-fake-value) }
+          fake_class = fields_class_multiple_resources.new field: { 'a.resource': %w[fake-value], 'another.resource': %w[another-fake-value] }
           expect(fake_class.valid?).to be_truthy
         end
 
         it 'allows a subset of the resources to be present' do
-          fake_class = fields_class_multiple_resources.new field: { 'another.resource': %w(another-fake-value) }
+          fake_class = fields_class_multiple_resources.new field: { 'another.resource': %w[another-fake-value] }
           expect(fake_class.valid?).to be_truthy
         end
 
         it 'rejects resources not specified' do
-          fake_class = fields_class_multiple_resources.new field: { 'wrong.resource': %w(another-fake-value) }
+          fake_class = fields_class_multiple_resources.new field: { 'wrong.resource': %w[another-fake-value] }
           expect(fake_class.valid?).to be_falsey
           expect(fake_class.errors[:field]).to include "[wrong.resource] valid resources are: 'a.resource', 'another.resource'"
         end
@@ -417,9 +417,9 @@ module VCAP::CloudController::Validators
       context 'when the healthcheck type is not "http"' do
         it 'correctly adds the health_check_type validation errors' do
           message = health_check_class.new({
-            health_check_type: 'not-http',
-            health_check_http_endpoint: 'a-great-uri'
-          })
+                                             health_check_type: 'not-http',
+                                             health_check_http_endpoint: 'a-great-uri'
+                                           })
 
           expect(message).to_not be_valid
           expect(message.errors_on(:health_check_type)).to include('must be "http" to set a health check HTTP endpoint')
@@ -576,7 +576,8 @@ module VCAP::CloudController::Validators
 
       it 'ensures that the data has the correct structure' do
         valid = to_many_class.new({ field: {
-          data: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] } })
+                                    data: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }]
+                                  } })
         invalid_one = to_many_class.new({ field: { data: { guid: '1234' } } })
         invalid_two = to_many_class.new({ field: { data: [{ guid: 1234 }, { guid: 1234 }] } })
         invalid_three = to_many_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
@@ -706,7 +707,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'is valid for an array' do
-        message = TargetGuidsMessage.new({ target_guids: ['guid1', 'guid2'] })
+        message = TargetGuidsMessage.new({ target_guids: %w[guid1 guid2] })
         expect(message).to be_valid
       end
 

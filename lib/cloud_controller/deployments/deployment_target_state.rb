@@ -58,14 +58,14 @@ module VCAP::CloudController
         app_guid: revision_sidecar.revision.app_guid,
         name: revision_sidecar.name,
         command: revision_sidecar.command,
-        memory: revision_sidecar.memory,
+        memory: revision_sidecar.memory
       )
 
       revision_sidecar.revision_sidecar_process_types.each do |revision_sidecar_process_type|
         SidecarProcessTypeModel.create(
           type: revision_sidecar_process_type.type,
           sidecar_guid: sidecar.guid,
-          app_guid: sidecar.app_guid,
+          app_guid: sidecar.app_guid
         )
       end
     end

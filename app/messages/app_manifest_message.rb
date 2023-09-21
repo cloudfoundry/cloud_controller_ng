@@ -11,42 +11,42 @@ require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    register_allowed_keys [
-      :buildpack,
-      :buildpacks,
-      :command,
-      :disk_quota,
-      :log_rate_limit_per_second,
-      :docker,
-      :env,
-      :health_check_http_endpoint,
-      :health_check_invocation_timeout,
-      :health_check_interval,
-      :health_check_timeout,
-      :health_check_type,
-      :readiness_health_check_http_endpoint,
-      :readiness_health_check_type,
-      :readiness_health_check_invocation_timeout,
-      :readiness_health_check_interval,
-      :instances,
-      :metadata,
-      :memory,
-      :name,
-      :no_route,
-      :processes,
-      :random_route,
-      :default_route,
-      :routes,
-      :services,
-      :sidecars,
-      :stack,
-      :timeout,
+    register_allowed_keys %i[
+      buildpack
+      buildpacks
+      command
+      disk_quota
+      log_rate_limit_per_second
+      docker
+      env
+      health_check_http_endpoint
+      health_check_invocation_timeout
+      health_check_interval
+      health_check_timeout
+      health_check_type
+      readiness_health_check_http_endpoint
+      readiness_health_check_type
+      readiness_health_check_invocation_timeout
+      readiness_health_check_interval
+      instances
+      metadata
+      memory
+      name
+      no_route
+      processes
+      random_route
+      default_route
+      routes
+      services
+      sidecars
+      stack
+      timeout
     ]
 
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
 
     def self.create_from_yml(parsed_yaml)
-      self.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
+      new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
     def self.underscore_keys(hash)
@@ -73,10 +73,10 @@ module VCAP::CloudController
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
     validate :validate_manifest_singular_buildpack_message!, if: ->(record) { record.requested?(:buildpack) }
-    validate :validate_manifest_routes_update_message!,      if: ->(record) {
+    validate :validate_manifest_routes_update_message!,      if: lambda { |record|
       record.requested?(:routes) ||
-      record.requested?(:no_route) ||
-      record.requested?(:random_route) ||
+        record.requested?(:no_route) ||
+        record.requested?(:random_route) ||
         record.requested?(:default_route)
     }
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
       {
         lifecycle: lifecycle_data,
-         metadata: requested?(:metadata) ? metadata : nil
+        metadata: requested?(:metadata) ? metadata : nil
       }.compact
     end
 
@@ -173,7 +173,7 @@ module VCAP::CloudController
       process_attributes
     end
 
-    def process_scale_attributes(memory: nil, disk_quota: nil, log_rate_limit_per_second: nil, instances:, type: nil)
+    def process_scale_attributes(instances:, memory: nil, disk_quota: nil, log_rate_limit_per_second: nil, type: nil)
       memory_in_mb = convert_to_mb(memory)
       disk_in_mb = convert_to_mb(disk_quota)
       log_rate_limit_in_bytes_per_second = convert_to_bytes_per_second(log_rate_limit_per_second)
@@ -197,13 +197,13 @@ module VCAP::CloudController
       end
     end
 
-    def sidecar_create_attributes(name:, memory: nil, command:, process_types: nil)
+    def sidecar_create_attributes(name:, command:, memory: nil, process_types: nil)
       memory_in_mb = convert_to_mb(memory) || memory
       {
         name: name,
         memory_in_mb: memory_in_mb,
         command: command,
-        process_types: process_types,
+        process_types: process_types
       }.compact
     end
 
@@ -218,13 +218,9 @@ module VCAP::CloudController
       mapping[:readiness_health_check_interval] = readiness_health_check_interval if requested?(:readiness_health_check_interval)
       mapping[:readiness_health_check_http_endpoint] = readiness_health_check_http_endpoint if requested?(:readiness_health_check_http_endpoint)
 
-      if requested?(:health_check_type)
-        mapping[:health_check_type] = converted_health_check_type(health_check_type)
-      end
+      mapping[:health_check_type] = converted_health_check_type(health_check_type) if requested?(:health_check_type)
 
-      if requested?(:readiness_health_check_type)
-        mapping[:readiness_health_check_type] = converted_health_check_type(readiness_health_check_type)
-      end
+      mapping[:readiness_health_check_type] = converted_health_check_type(readiness_health_check_type) if requested?(:readiness_health_check_type)
 
       mapping
     end
@@ -247,18 +243,14 @@ module VCAP::CloudController
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
         mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       end
-      if params.key?(:readiness_health_check_type)
-        mapping[:readiness_health_check_type] = converted_health_check_type(params[:readiness_health_check_type])
-      end
+      mapping[:readiness_health_check_type] = converted_health_check_type(params[:readiness_health_check_type]) if params.key?(:readiness_health_check_type)
       mapping
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
     def env_update_attribute_mapping
       mapping = {}
-      if requested?(:env) && env.is_a?(Hash)
-        mapping[:var] = env.transform_values(&:to_s)
-      end
+      mapping[:var] = env.transform_values(&:to_s) if requested?(:env) && env.is_a?(Hash)
       mapping
     end
 
@@ -324,9 +316,7 @@ module VCAP::CloudController
     end
 
     def validate_byte_format(human_readable_byte_value, attribute_name, allow_unlimited: false)
-      unless allow_unlimited && (human_readable_byte_value.to_s == '-1' || human_readable_byte_value.to_s == '0')
-        byte_converter.convert_to_mb(human_readable_byte_value)
-      end
+      byte_converter.convert_to_mb(human_readable_byte_value) unless allow_unlimited && (human_readable_byte_value.to_s == '-1' || human_readable_byte_value.to_s == '0')
 
       nil
     rescue ByteConverter::InvalidUnitsError
@@ -373,7 +363,7 @@ module VCAP::CloudController
         end
       end
 
-      %i/command metadata/.each do |error_type|
+      %i[command metadata].each do |error_type|
         app_update_message.errors[error_type].each do |error_message|
           errors.add(error_type, error_message)
         end
@@ -406,9 +396,7 @@ module VCAP::CloudController
     end
 
     def validate_processes!
-      unless processes.is_a?(Array)
-        return errors.add(:base, 'Processes must be an array of process configurations')
-      end
+      return errors.add(:base, 'Processes must be an array of process configurations') unless processes.is_a?(Array)
 
       errors.add(:base, 'All Processes must specify a type') if processes.any? { |p| p[:type].blank? }
 
@@ -428,9 +416,7 @@ module VCAP::CloudController
     end
 
     def validate_sidecars!
-      unless sidecars.is_a?(Array)
-        return errors.add(:base, 'Sidecars must be an array of sidecar configurations')
-      end
+      return errors.add(:base, 'Sidecars must be an array of sidecar configurations') unless sidecars.is_a?(Array)
 
       sidecar_create_messages.each do |sidecar_create_message|
         sidecar_create_message.validate
@@ -451,23 +437,21 @@ module VCAP::CloudController
     end
 
     def validate_buildpack_and_buildpacks_combination!
-      if requested?(:buildpack) && requested?(:buildpacks)
-        errors.add(:base, 'Buildpack and Buildpacks fields cannot be used together.')
-      end
+      return unless requested?(:buildpack) && requested?(:buildpacks)
+
+      errors.add(:base, 'Buildpack and Buildpacks fields cannot be used together.')
     end
 
     def validate_docker_enabled!
-      if requested?(:docker)
-        FeatureFlag.raise_unless_enabled!(:diego_docker)
-      end
-    rescue => e
+      FeatureFlag.raise_unless_enabled!(:diego_docker) if requested?(:docker)
+    rescue StandardError => e
       errors.add(:base, e.message)
     end
 
     def validate_docker_buildpacks_combination!
-      if requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
-        errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
-      end
+      return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
+
+      errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
     end
 
     def add_process_error!(error_message, type)

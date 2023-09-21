@@ -6,12 +6,13 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:instance)  { ManagedServiceInstance.make(space: space) }
-      let(:service_keys) { [
-        ServiceKey.make(:credhub_reference, name: 'credhub-key-1', service_instance: instance),
-        ServiceKey.make(name: 'non-credhub-key-1', service_instance: instance, credentials: non_credhub_creds),
-        ServiceKey.make(:credhub_reference, name: 'credhub-key-2', service_instance: instance)
-      ]
-      }
+      let(:service_keys) do
+        [
+          ServiceKey.make(:credhub_reference, name: 'credhub-key-1', service_instance: instance),
+          ServiceKey.make(name: 'non-credhub-key-1', service_instance: instance, credentials: non_credhub_creds),
+          ServiceKey.make(:credhub_reference, name: 'credhub-key-2', service_instance: instance)
+        ]
+      end
       let(:credhub_cred_1) { { 'username' => 'user' } }
       let(:credhub_cred_2) { { 'hello' => 'there' } }
       let(:non_credhub_creds) { { 'hello' => 'there' } }

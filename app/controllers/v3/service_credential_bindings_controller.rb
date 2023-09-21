@@ -24,7 +24,7 @@ class ServiceCredentialBindingsController < ApplicationController
     results = list_fetcher.fetch(
       readable_spaces_query: spaces_query,
       message: message,
-      eager_loaded_associations: Presenters::V3::ServiceCredentialBindingPresenter.associated_resources,
+      eager_loaded_associations: Presenters::V3::ServiceCredentialBindingPresenter.associated_resources
     )
 
     default_order_by_overriden = override_default_order_by(message)
@@ -211,7 +211,7 @@ class ServiceCredentialBindingsController < ApplicationController
       service_instance,
       app: app,
       volume_mount_services_enabled: volume_services_enabled?,
-      message: message,
+      message: message
     )
     log_telemetry(binding)
 
@@ -229,10 +229,10 @@ class ServiceCredentialBindingsController < ApplicationController
     TelemetryLogger.v3_emit(
       'bind-service',
       {
-        'service-id' =>  binding.service_instance.managed_instance? ? binding.service_instance.service_plan.service_guid : 'user-provided',
+        'service-id' => binding.service_instance.managed_instance? ? binding.service_instance.service_plan.service_guid : 'user-provided',
         'service-instance-id' => binding.service_instance.guid,
         'app-id' => binding.app_guid,
-        'user-id' => user_audit_info.user_guid,
+        'user-id' => user_audit_info.user_guid
       }
     )
   end
@@ -253,7 +253,7 @@ class ServiceCredentialBindingsController < ApplicationController
     bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
       type,
       binding_guid,
-      user_audit_info: user_audit_info,
+      user_audit_info: user_audit_info
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -261,7 +261,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def check_parameters_support(service_instance, message)
     parameters_not_supported! if service_instance.is_a?(VCAP::CloudController::UserProvidedServiceInstance) &&
-      message.requested?(:parameters)
+                                 message.requested?(:parameters)
   end
 
   def parameters_not_supported!
@@ -277,12 +277,12 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_service_instance?(service_instance)
-    if service_instance.present?
-      readable_spaces = service_instance.shared_spaces + [service_instance.space]
+    return unless service_instance.present?
 
-      readable_spaces.any? do |space|
-        permission_queryer.can_read_from_space?(space.id, space.organization_id)
-      end
+    readable_spaces = service_instance.shared_spaces + [service_instance.space]
+
+    readable_spaces.any? do |space|
+      permission_queryer.can_read_from_space?(space.id, space.organization_id)
     end
   end
 
@@ -316,7 +316,7 @@ class ServiceCredentialBindingsController < ApplicationController
       uaa_target: config.get(:uaa, :internal_url),
       client_id: config.get(:cc_service_key_client_name),
       secret: config.get(:cc_service_key_client_secret),
-      ca_file: config.get(:uaa, :ca_file),
+      ca_file: config.get(:uaa, :ca_file)
     )
   end
 
@@ -327,7 +327,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def fetch_credentials_value(name)
     credhub_client.get_credential_by_name(name)
-  rescue => e
+  rescue StandardError => e
     service_unavailable!("Fetching credentials from CredHub failed; reason: #{e.message}")
   end
 

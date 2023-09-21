@@ -8,7 +8,7 @@ RSpec.describe 'App Usage Events' do
   let(:org) { space.organization }
 
   describe 'GET /v3/app_usage_events/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/app_usage_events/#{usage_event.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/app_usage_events/#{usage_event.guid}", nil, user_headers } }
 
     let(:usage_event) { VCAP::CloudController::AppUsageEvent.make }
 
@@ -53,10 +53,10 @@ RSpec.describe 'App Usage Events' do
   end
 
   describe 'GET /v3/app_usage_events' do
-    let(:api_call) { lambda { |user_headers| get '/v3/app_usage_events', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/app_usage_events', nil, user_headers } }
 
-    let!(:app_usage_event) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now - 5.minutes) }
-    let!(:app_usage_event_2) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now - 5.minutes) }
+    let!(:app_usage_event) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now.utc - 5.minutes) }
+    let!(:app_usage_event_2) { VCAP::CloudController::AppUsageEvent.make(created_at: Time.now.utc - 5.minutes) }
 
     let(:app_usage_event_json) { build_usage_event_json(app_usage_event) }
     let(:app_usage_event_2_json) { build_usage_event_json(app_usage_event_2) }
@@ -139,7 +139,7 @@ RSpec.describe 'App Usage Events' do
   end
 
   describe 'POST /v3/app_usage_events/actions/destructively_purge_all_and_reseed', isolation: :truncation do
-    let(:api_call) { lambda { |user_headers| post '/v3/app_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/app_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
     let!(:app_process) do
@@ -186,7 +186,7 @@ RSpec.describe 'App Usage Events' do
       },
       'process' => {
         'guid' => app_usage_event.app_guid,
-        'type' => app_usage_event.process_type,
+        'type' => app_usage_event.process_type
       },
       'space' => {
         'guid' => app_usage_event.space_guid,
@@ -212,7 +212,7 @@ RSpec.describe 'App Usage Events' do
         'previous' => nil
       },
       'links' => {
-        'self' => { 'href' => "#{link_prefix}/v3/app_usage_events/#{app_usage_event.guid}" },
+        'self' => { 'href' => "#{link_prefix}/v3/app_usage_events/#{app_usage_event.guid}" }
       }
     }
   end

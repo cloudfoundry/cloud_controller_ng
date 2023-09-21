@@ -11,7 +11,7 @@ module VCAP::CloudController::Presenters
           paginated_result: paginated_result,
           path: path,
           message: message,
-          extra_presenter_args: extra_presenter_args,
+          extra_presenter_args: extra_presenter_args
         )
       end
 
@@ -32,9 +32,9 @@ module VCAP::CloudController::Presenters
       class MonkeyPresenter < BasePresenter
         def initialize(
           resource,
-            show_secrets: false,
-            censored_message: Censorship::REDACTED_CREDENTIAL,
-            banana: false
+          show_secrets: false,
+          censored_message: Censorship::REDACTED_CREDENTIAL,
+          banana: false
         )
           @banana = banana
 
@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters
 
         def to_hash
           {
-            name: @resource.name,
+            name: @resource.name
           }
         end
       end
@@ -53,19 +53,19 @@ module VCAP::CloudController::Presenters
 
         it 'returns a paginated response for the set, with path only used in pagination' do
           expect(presenter.to_hash).to eq({
-            pagination: {
-              total_results: 2,
-              total_pages: 1,
-              first: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
-              last: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
-              next: nil,
-              previous: nil
-            },
-            resources: [
-              { name: 'bobo' },
-              { name: 'george' },
-            ]
-          })
+                                            pagination: {
+                                              total_results: 2,
+                                              total_pages: 1,
+                                              first: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
+                                              last: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
+                                              next: nil,
+                                              previous: nil
+                                            },
+                                            resources: [
+                                              { name: 'bobo' },
+                                              { name: 'george' }
+                                            ]
+                                          })
         end
 
         it 'sends false for show_secrets' do

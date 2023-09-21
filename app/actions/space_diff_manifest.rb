@@ -7,7 +7,7 @@ module VCAP::CloudController
     IDENTIFIERS = {
       'processes' => 'type',
       'routes' => 'route',
-      'sidecars' => 'name',
+      'sidecars' => 'name'
     }.freeze
 
     class << self
@@ -28,7 +28,7 @@ module VCAP::CloudController
             manifest_presenter = Presenters::V3::AppManifestPresenter.new(
               existing_app,
               existing_app.service_bindings,
-              existing_app.route_mappings,
+              existing_app.route_mappings
             )
             existing_app_hash = manifest_presenter.to_hash.deep_stringify_keys['applications'][0]
             web_process_hash = existing_app_hash['processes'].find { |p| p['type'] == 'web' }
@@ -49,9 +49,7 @@ module VCAP::CloudController
             needs_pruning = %w[processes sidecars routes].include?(key)
             nested_attribute_exists = existing_value.present? && needs_pruning
 
-            if nested_attribute_exists
-              remove_default_missing_fields(existing_value, key, value)
-            end
+            remove_default_missing_fields(existing_value, key, value) if nested_attribute_exists
 
             # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
             next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
@@ -66,9 +64,7 @@ module VCAP::CloudController
             key_diffs.each do |diff|
               diff['path'] = "/applications/#{index}/#{key}" + diff['path']
 
-              if diff['op'] == 'replace' && diff['was'].nil?
-                diff['op'] = 'add'
-              end
+              diff['op'] = 'add' if diff['op'] == 'replace' && diff['was'].nil?
 
               json_diff << diff
             end
@@ -146,7 +142,7 @@ module VCAP::CloudController
       # rubocop:enable Metrics/CyclomaticComplexity
 
       def create_similarity
-        ->(before, after) do
+        lambda do |before, after|
           return nil unless before.is_a?(Hash) && after.is_a?(Hash)
 
           if before.key?('type') && after.key?('type')
@@ -160,7 +156,7 @@ module VCAP::CloudController
       end
 
       def normalize_units(manifest_app_hash)
-        byte_measurement_key_words = ['memory', 'disk-quota', 'disk_quota']
+        byte_measurement_key_words = %w[memory disk-quota disk_quota]
         manifest_app_hash.each_with_index do |process_hash, index|
           byte_measurement_key_words.each do |key|
             value = process_hash[key]
@@ -187,7 +183,7 @@ module VCAP::CloudController
       end
 
       def normalize_unit(non_normalized_value, attribute_name)
-        if %w(-1 0).include?(non_normalized_value.to_s)
+        if %w[-1 0].include?(non_normalized_value.to_s)
           non_normalized_value.to_s
         else
           byte_converter.human_readable_byte_value(byte_converter.convert_to_b(non_normalized_value))
@@ -209,10 +205,8 @@ module VCAP::CloudController
           if manifest_app_hash_resource.nil?
             existing_value.delete_at(i)
           else
-            resource.each do |k, v|
-              if manifest_app_hash_resource[k].nil?
-                existing_value[i].delete(k)
-              end
+            resource.each do |k, _v|
+              existing_value[i].delete(k) if manifest_app_hash_resource[k].nil?
             end
           end
         end

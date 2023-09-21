@@ -99,9 +99,9 @@ module VCAP::CloudController
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
 
                 it 'errors' do
-                  expect {
+                  expect do
                     factory.plan(name, buildpack_fields)
-                  }.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
+                  end.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
                 end
               end
             end
@@ -176,9 +176,9 @@ module VCAP::CloudController
               let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
 
               it 'errors' do
-                expect {
+                expect do
                   factory.plan(name, buildpack_fields)
-                }.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
+                end.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
               end
             end
 
@@ -238,7 +238,8 @@ module VCAP::CloudController
                 it 'raises' do
                   msg = "Attempt to install '#{name}' for multiple stacks failed. Buildpack '#{name}' cannot be locked during upgrade."
                   expect { factory.plan(name, buildpack_fields) }.to raise_error(
-                    BuildpackInstallerFactory::LockedStacklessBuildpackUpgradeError, msg)
+                    BuildpackInstallerFactory::LockedStacklessBuildpackUpgradeError, msg
+                  )
                 end
               end
             end
@@ -265,9 +266,10 @@ module VCAP::CloudController
 
           context 'and there are multiple matching Buildpacks' do
             let(:existing_stack) { Stack.make(name: 'existing stack') }
-            let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key:
+            let!(:existing_buildpack) do
+              Buildpack.make(name: name, stack: existing_stack.name, key:
               'new_key', guid: 'the-guid')
-            }
+            end
 
             let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
             let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'a_different_key', guid: 'a-different-guid') }
@@ -302,7 +304,8 @@ module VCAP::CloudController
             it 'raises' do
               msg = "Attempt to install '#{name}' failed. Ensure that all buildpacks have a stack associated with them before upgrading."
               expect { factory.plan(name, buildpack_fields) }.to raise_error(
-                BuildpackInstallerFactory::StacklessAndStackfulMatchingBuildpacksExistError, msg)
+                BuildpackInstallerFactory::StacklessAndStackfulMatchingBuildpacksExistError, msg
+              )
             end
           end
         end
@@ -312,9 +315,9 @@ module VCAP::CloudController
           let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack' }, { file: another_file, options: opts, stack: 'stack' }] }
 
           it 'raises a DuplicateInstall error' do
-            expect {
+            expect do
               factory.plan(name, buildpack_fields)
-            }.to raise_error(BuildpackInstallerFactory::DuplicateInstallError)
+            end.to raise_error(BuildpackInstallerFactory::DuplicateInstallError)
           end
         end
 
@@ -323,9 +326,9 @@ module VCAP::CloudController
           let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }, { file: another_file, options: opts, stack: nil }] }
 
           it 'raises a DuplicateInstall error' do
-            expect {
+            expect do
               factory.plan(name, buildpack_fields)
-            }.to raise_error(BuildpackInstallerFactory::DuplicateInstallError)
+            end.to raise_error(BuildpackInstallerFactory::DuplicateInstallError)
           end
         end
 
@@ -334,9 +337,9 @@ module VCAP::CloudController
           let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack' }, { file: another_file, options: opts, stack: nil }] }
 
           it 'raises a StacklessBuildpackIncompatibilityError error' do
-            expect {
+            expect do
               factory.plan(name, buildpack_fields)
-            }.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
+            end.to raise_error(BuildpackInstallerFactory::StacklessBuildpackIncompatibilityError)
           end
         end
       end

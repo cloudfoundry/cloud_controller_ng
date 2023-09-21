@@ -23,31 +23,31 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::UsersController).to have_creatable_attributes({
-          guid: { type: 'string', required: true },
-          admin: { type: 'bool', default: false },
-          space_guids: { type: '[string]' },
-          organization_guids: { type: '[string]' },
-          managed_organization_guids: { type: '[string]' },
-          billing_managed_organization_guids: { type: '[string]' },
-          audited_organization_guids: { type: '[string]' },
-          managed_space_guids: { type: '[string]' },
-          audited_space_guids: { type: '[string]' },
-          default_space_guid: { type: 'string' },
-        })
+                                                                                      guid: { type: 'string', required: true },
+                                                                                      admin: { type: 'bool', default: false },
+                                                                                      space_guids: { type: '[string]' },
+                                                                                      organization_guids: { type: '[string]' },
+                                                                                      managed_organization_guids: { type: '[string]' },
+                                                                                      billing_managed_organization_guids: { type: '[string]' },
+                                                                                      audited_organization_guids: { type: '[string]' },
+                                                                                      managed_space_guids: { type: '[string]' },
+                                                                                      audited_space_guids: { type: '[string]' },
+                                                                                      default_space_guid: { type: 'string' }
+                                                                                    })
       end
 
       it do
         expect(VCAP::CloudController::UsersController).to have_updatable_attributes({
-          admin: { type: 'bool' },
-          space_guids: { type: '[string]' },
-          organization_guids: { type: '[string]' },
-          managed_organization_guids: { type: '[string]' },
-          billing_managed_organization_guids: { type: '[string]' },
-          audited_organization_guids: { type: '[string]' },
-          managed_space_guids: { type: '[string]' },
-          audited_space_guids: { type: '[string]' },
-          default_space_guid: { type: 'string' },
-        })
+                                                                                      admin: { type: 'bool' },
+                                                                                      space_guids: { type: '[string]' },
+                                                                                      organization_guids: { type: '[string]' },
+                                                                                      managed_organization_guids: { type: '[string]' },
+                                                                                      billing_managed_organization_guids: { type: '[string]' },
+                                                                                      audited_organization_guids: { type: '[string]' },
+                                                                                      managed_space_guids: { type: '[string]' },
+                                                                                      audited_space_guids: { type: '[string]' },
+                                                                                      default_space_guid: { type: 'string' }
+                                                                                    })
       end
     end
 
@@ -55,13 +55,13 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::UsersController).to have_nested_routes(
           {
-            spaces:                        [:get, :put, :delete],
-            organizations:                 [:get, :put, :delete],
-            managed_organizations:         [:get, :put, :delete],
-            billing_managed_organizations: [:get, :put, :delete],
-            audited_organizations:         [:get, :put, :delete],
-            managed_spaces:                [:get, :put, :delete],
-            audited_spaces:                [:get, :put, :delete],
+            spaces: %i[get put delete],
+            organizations: %i[get put delete],
+            managed_organizations: %i[get put delete],
+            billing_managed_organizations: %i[get put delete],
+            audited_organizations: %i[get put delete],
+            managed_spaces: %i[get put delete],
+            audited_spaces: %i[get put delete]
           }
         )
       end
@@ -105,9 +105,9 @@ module VCAP::CloudController
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
-          greg.guid => 'Greg',
-          timothy.guid => 'Timothy'
-        })
+                                                                      greg.guid => 'Greg',
+                                                                      timothy.guid => 'Timothy'
+                                                                    })
       end
 
       it 'includes the usernames' do
@@ -124,8 +124,8 @@ module VCAP::CloudController
       before do
         set_current_user(greg, admin: true)
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
-          greg.guid => 'Greg',
-        })
+                                                                      greg.guid => 'Greg'
+                                                                    })
       end
 
       it 'includes the username' do
@@ -157,7 +157,7 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:other_user) { User.make(username: 'other_user') }
-      let(:expected_response) {
+      let(:expected_response) do
         {
           'metadata' => {
             'guid' => other_user.guid,
@@ -179,7 +179,7 @@ module VCAP::CloudController
             'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
           }
         }
-      }
+      end
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
@@ -423,7 +423,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
       end
 
@@ -464,9 +464,9 @@ module VCAP::CloudController
         org.add_auditor(user)
         space.add_auditor(user)
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
-          user.guid => user.username,
-          other_user.guid => other_user.username
-        })
+                                                                      user.guid => user.username,
+                                                                      other_user.guid => other_user.username
+                                                                    })
       end
 
       context 'when acting on behalf of the current user' do
@@ -492,7 +492,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
       end
 
@@ -559,7 +559,7 @@ module VCAP::CloudController
           it 'removing yourself is not allowed' do
             delete "/v2/users/#{billing_manager.guid}/billing_managed_organizations/#{org.guid}"
             expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30005)
+            expect(decoded_response['code']).to eq(30_005)
           end
         end
       end
@@ -591,7 +591,7 @@ module VCAP::CloudController
             set_current_user(billing_manager)
             delete "/v2/users/#{other_billing_manager.guid}/billing_managed_organizations/#{org.guid}"
             expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(10003)
+            expect(decoded_response['code']).to eq(10_003)
           end
         end
       end
@@ -607,8 +607,8 @@ module VCAP::CloudController
         org.add_user org_manager
         org.add_manager org_manager
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
-          org_manager.guid => org_manager.username
-        })
+                                                                      org_manager.guid => org_manager.username
+                                                                    })
       end
 
       describe 'removing the last org manager' do
@@ -619,8 +619,8 @@ module VCAP::CloudController
             set_current_user admin
             set_current_user_as_admin
             allow(uaa_client).to receive(:usernames_for_ids).and_return({
-              org_manager.guid => org_manager.username
-            })
+                                                                          org_manager.guid => org_manager.username
+                                                                        })
           end
 
           it 'is allowed' do
@@ -642,7 +642,7 @@ module VCAP::CloudController
 
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
             expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30004)
+            expect(decoded_response['code']).to eq(30_004)
           end
         end
       end
@@ -675,7 +675,7 @@ module VCAP::CloudController
           it 'is not allowed' do
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
             expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(10003)
+            expect(decoded_response['code']).to eq(10_003)
           end
         end
       end
@@ -697,7 +697,7 @@ module VCAP::CloudController
         it 'can not remove itself' do
           delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(30006)
+          expect(decoded_response['code']).to eq(30_006)
         end
 
         context 'when acting on another org user' do
@@ -710,7 +710,7 @@ module VCAP::CloudController
           it 'fails with 403' do
             delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
             expect(last_response.status).to eq(403)
-            expect(decoded_response['code']).to eq(10003)
+            expect(decoded_response['code']).to eq(10_003)
           end
         end
       end
@@ -867,8 +867,8 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_developer(user)
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
-          other_user.guid => other_user.username
-        })
+                                                                      other_user.guid => other_user.username
+                                                                    })
       end
 
       context 'when acting on behalf of the current user' do
@@ -894,7 +894,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
       end
 
@@ -935,7 +935,7 @@ module VCAP::CloudController
       describe 'PUT /v2/users/:guid/audited_spaces/:space_guid' do
         let(:event_type) { 'audit.user.space_auditor_add' }
 
-        let(:expected_response) {
+        let(:expected_response) do
           {
             'metadata' => {
               'guid' => other_user.guid,
@@ -957,7 +957,7 @@ module VCAP::CloudController
               'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
             }
           }
-        }
+        end
 
         before do
           set_current_user(user)
@@ -970,7 +970,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
 
         context 'as an admin' do
@@ -1014,7 +1014,7 @@ module VCAP::CloudController
       describe 'PUT /v2/users/:guid/managed_spaces/:space_guid' do
         let(:event_type) { 'audit.user.space_manager_add' }
 
-        let(:expected_response) {
+        let(:expected_response) do
           {
             'metadata' => {
               'guid' => other_user.guid,
@@ -1036,7 +1036,7 @@ module VCAP::CloudController
               'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
             }
           }
-        }
+        end
 
         before do
           set_current_user(user)
@@ -1049,7 +1049,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
 
         context 'as an admin' do
@@ -1095,7 +1095,7 @@ module VCAP::CloudController
       describe 'PUT /v2/users/:guid/spaces/:space_guid' do
         let(:event_type) { 'audit.user.space_developer_add' }
 
-        let(:expected_response) {
+        let(:expected_response) do
           {
             'metadata' => {
               'guid' => other_user.guid,
@@ -1107,7 +1107,7 @@ module VCAP::CloudController
               'admin' => false,
               'active' => false,
               'default_space_guid' => nil,
-              'username'   => 'other_user',
+              'username' => 'other_user',
               'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
               'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
               'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
@@ -1117,7 +1117,7 @@ module VCAP::CloudController
               'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
             }
           }
-        }
+        end
 
         before do
           set_current_user(user)
@@ -1130,7 +1130,7 @@ module VCAP::CloudController
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
         end
 
         context 'as an admin' do

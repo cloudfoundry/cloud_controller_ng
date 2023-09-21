@@ -12,9 +12,9 @@ module CloudController
       let(:local_dir) { Dir.mktmpdir }
       let(:connection_config) do
         {
-          provider:              'AWS',
-          aws_access_key_id:     'fake_access_key_id',
-          aws_secret_access_key: 'fake_secret_access_key',
+          provider: 'AWS',
+          aws_access_key_id: 'fake_access_key_id',
+          aws_secret_access_key: 'fake_secret_access_key'
         }
       end
       let(:directory_key) { 'a-directory-key' }
@@ -95,9 +95,10 @@ module CloudController
 
       context 'common behaviors' do
         let(:directory) { Fog::Storage.new(connection_config).directories.create(key: directory_key) }
-        let(:client) { FogClient.new(connection_config: connection_config,
-                                     directory_key: directory_key)
-        }
+        let(:client) do
+          FogClient.new(connection_config: connection_config,
+                        directory_key: directory_key)
+        end
         before :each do
           client.ensure_bucket_exists
         end
@@ -137,7 +138,7 @@ module CloudController
           it 'recursively copies the local files into the blobstore' do
             subdir = File.join(local_dir, 'subdir1', 'subdir2')
             FileUtils.mkdir_p(subdir)
-            File.open(File.join(subdir, 'file_with_content'), 'w') { |file| file.write(content) }
+            File.write(File.join(subdir, 'file_with_content'), content)
 
             client.cp_r_to_blobstore(local_dir)
             expect(client.exists?(sha_of_content)).to be true
@@ -169,7 +170,7 @@ module CloudController
 
             it 'does not copy files below the minimum size limit' do
               path = File.join(local_dir, 'file_with_little_content')
-              File.open(path, 'w') { |file| file.write('a') }
+              File.write(path, 'a')
 
               expect(client).not_to receive(:exists?)
               expect(client).not_to receive(:cp_to_blobstore)
@@ -178,7 +179,7 @@ module CloudController
 
             it 'does not copy files above the maximum size limit' do
               path = File.join(local_dir, 'file_with_more_content')
-              File.open(path, 'w') { |file| file.write('an amount of content that is larger than the maximum limit') }
+              File.write(path, 'an amount of content that is larger than the maximum limit')
 
               expect(client).not_to receive(:exists?)
               expect(client).not_to receive(:cp_to_blobstore)
@@ -195,7 +196,7 @@ module CloudController
             it 'copies files with mode >= 0600' do
               path = File.join(local_dir, 'file_with_sufficient_permissions')
               FileUtils.touch(path)
-              File.chmod(0600, path)
+              File.chmod(0o600, path)
 
               expect(client).to receive(:exists?)
               expect(client).to receive(:cp_to_blobstore)
@@ -205,7 +206,7 @@ module CloudController
             it 'does not copy files below the minimum file mode' do
               path = File.join(local_dir, 'file_with_insufficient_permissions')
               FileUtils.touch(path)
-              File.chmod(0444, path)
+              File.chmod(0o444, path)
 
               expect(client).not_to receive(:exists?)
               expect(client).not_to receive(:cp_to_blobstore)
@@ -237,7 +238,7 @@ module CloudController
             before do
               upload_tmpfile(client, sha_of_content)
               @original_umask = File.umask
-              File.umask(0022)
+              File.umask(0o022)
             end
 
             after do
@@ -256,7 +257,7 @@ module CloudController
             context 'when specifying a mode' do
               it 'does change permissions on the file' do
                 destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
-                client.download_from_blobstore(sha_of_content, destination, mode: 0753)
+                client.download_from_blobstore(sha_of_content, destination, mode: 0o753)
 
                 expect(sprintf('%<mode>o', mode: File.stat(destination).mode)).to eq('100753')
               end
@@ -333,7 +334,7 @@ module CloudController
 
             it 'does not copy files below the minimum size limit' do
               path = File.join(local_dir, 'file_with_little_content')
-              File.open(path, 'w') { |file| file.write('a') }
+              File.write(path, 'a')
               key = '987654321'
 
               client.cp_to_blobstore(path, key)
@@ -342,7 +343,7 @@ module CloudController
 
             it 'does not copy files above the maximum size limit' do
               path = File.join(local_dir, 'file_with_more_content')
-              File.open(path, 'w') { |file| file.write('an amount of content that is larger than the maximum limit') }
+              File.write(path, 'an amount of content that is larger than the maximum limit')
               key = '777777777'
 
               client.cp_to_blobstore(path, key)
@@ -358,10 +359,11 @@ module CloudController
             end
 
             context 'when encryption type is specified' do
-              let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
-                                                           directory_key: directory_key,
-                                                           storage_options: { encryption: 'my-algo' })
-              }
+              let(:client_with_encryption) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              storage_options: { encryption: 'my-algo' })
+              end
 
               it 'passes the encryption options to aws' do
                 path = File.join(local_dir, 'empty_file.png')
@@ -378,9 +380,10 @@ module CloudController
             end
 
             context 'when encryption type is not specified' do
-              let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
-                                                           directory_key: directory_key)
-              }
+              let(:client_with_encryption) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key)
+              end
 
               it 'does not pass the encryption options to aws' do
                 path = File.join(local_dir, 'empty_file.png')
@@ -431,9 +434,9 @@ module CloudController
 
           context 'when the source key has no file associated with it' do
             it 'does not attempt to copy over to the destination key' do
-              expect {
+              expect do
                 client.cp_file_between_keys('bogus', dest_key)
-              }.to raise_error(CloudController::Blobstore::FileNotFound)
+              end.to raise_error(CloudController::Blobstore::FileNotFound)
 
               expect(directory.files).to have(0).items
             end
@@ -503,26 +506,26 @@ module CloudController
 
           it 'should be ok if there are no files' do
             expect(directory.files).to have(0).items
-            expect {
+            expect do
               client.delete_all
-            }.to_not raise_error
+            end.to_not raise_error
           end
 
           context 'when the underlying blobstore allows multiple deletes in a single request' do
             let(:connection_config) do
               {
-                provider:              'AWS',
-                aws_access_key_id:     'fake_access_key_id',
-                aws_secret_access_key: 'fake_secret_access_key',
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key'
               }
             end
 
             it 'should be ok if there are no files' do
               Fog.mock!
               expect(directory.files).to have(0).items
-              expect {
+              expect do
                 client.delete_all
-              }.to_not raise_error
+              end.to_not raise_error
             end
 
             it 'deletes in groups of the page_size' do
@@ -553,8 +556,8 @@ module CloudController
 
             let(:client_with_root) do
               FogClient.new(connection_config: connection_config,
-                directory_key: directory_key,
-                root_dir: root_dir)
+                            directory_key: directory_key,
+                            root_dir: root_dir)
             end
 
             before :each do
@@ -618,26 +621,26 @@ module CloudController
 
           it 'should be ok if there are no files' do
             expect(directory.files).to have(0).items
-            expect {
+            expect do
               client.delete_all_in_path('nonsense_path')
-            }.to_not raise_error
+            end.to_not raise_error
           end
 
           context 'when the underlying blobstore allows multiple deletes in a single request' do
             let(:connection_config) do
               {
-                provider:              'AWS',
-                aws_access_key_id:     'fake_access_key_id',
-                aws_secret_access_key: 'fake_secret_access_key',
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key'
               }
             end
 
             it 'should be ok if there are no files' do
               Fog.mock!
               expect(directory.files).to have(0).items
-              expect {
+              expect do
                 client.delete_all_in_path('path!')
-              }.to_not raise_error
+              end.to_not raise_error
             end
           end
 
@@ -646,8 +649,8 @@ module CloudController
 
             let(:client_with_root) do
               FogClient.new(connection_config: connection_config,
-                directory_key: directory_key,
-                root_dir: root_dir)
+                            directory_key: directory_key,
+                            root_dir: root_dir)
             end
 
             before :each do
@@ -695,9 +698,9 @@ module CloudController
 
           it "should be ok if the file doesn't exist" do
             expect(directory.files).to have(0).items
-            expect {
+            expect do
               client.delete('non-existent-file')
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
 
@@ -717,9 +720,9 @@ module CloudController
 
           it "should be ok if the file doesn't exist" do
             blob = FogBlob.new(nil, nil)
-            expect {
+            expect do
               client.delete_blob(blob)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
 
@@ -755,8 +758,8 @@ module CloudController
 
         let(:client_with_root) do
           FogClient.new(connection_config: connection_config,
-            directory_key: directory_key,
-            root_dir: root_dir)
+                        directory_key: directory_key,
+                        root_dir: root_dir)
         end
 
         before :each do
@@ -781,7 +784,7 @@ module CloudController
               code       = res.code
               total_time += 0.1
               sleep 0.1
-            rescue
+            rescue StandardError
             end
           end
         end

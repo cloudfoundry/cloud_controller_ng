@@ -10,7 +10,7 @@ module VCAP::CloudController::Jobs
       {
         jobs: {
           global: {
-            timeout_in_seconds: global_timeout,
+            timeout_in_seconds: global_timeout
           },
           **priorities
         }
@@ -161,7 +161,7 @@ module VCAP::CloudController::Jobs
       end
 
       it 'uses the job timeout' do
-        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, _opts|
           expect(enqueued_job).to be_a TimeoutJob
           expect(enqueued_job.timeout).to eq(global_timeout)
         end
@@ -172,9 +172,9 @@ module VCAP::CloudController::Jobs
         it 'still restores delay_jobs flag' do
           expect(Delayed::Job).to receive(:enqueue).and_raise('Boom!')
           expect(Delayed::Worker.delay_jobs).to be(true)
-          expect {
+          expect do
             Enqueuer.new(wrapped_job, opts).run_inline
-          }.to raise_error(/Boom!/)
+          end.to raise_error(/Boom!/)
           expect(Delayed::Worker.delay_jobs).to be(true)
         end
       end

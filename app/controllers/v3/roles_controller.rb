@@ -10,19 +10,6 @@ require 'decorators/include_role_organization_decorator'
 require 'decorators/include_role_space_decorator'
 
 class RolesController < ApplicationController
-  def create
-    message = RoleCreateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    role = message.space_guid ? create_space_role(message) : create_org_role(message)
-
-    render status: :created, json: Presenters::V3::RolePresenter.new(role)
-  rescue RoleCreate::Error => e
-    unprocessable!(e)
-  rescue UaaUnavailable
-    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
-  end
-
   def index
     message = RolesListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -39,7 +26,7 @@ class RolesController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(roles, message.try(:pagination_options)),
       path: '/v3/roles',
       message: message,
-      decorators: decorators,
+      decorators: decorators
     )
   end
 
@@ -56,6 +43,19 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators: decorators)
+  end
+
+  def create
+    message = RoleCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    role = message.space_guid ? create_space_role(message) : create_org_role(message)
+
+    render status: :created, json: Presenters::V3::RolePresenter.new(role)
+  rescue RoleCreate::Error => e
+    unprocessable!(e)
+  rescue UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def destroy
@@ -183,7 +183,7 @@ class RolesController < ApplicationController
 
       if origins.length > 1
         unprocessable!(
-          "Ambiguous user. User with username '#{username}' exists in the following origins: "\
+          "Ambiguous user. User with username '#{username}' exists in the following origins: " \
           "#{origins.join(', ')}. Specify an origin to disambiguate."
         )
       end

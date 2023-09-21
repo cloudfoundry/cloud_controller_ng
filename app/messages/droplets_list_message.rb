@@ -2,14 +2,14 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class DropletsListMessage < MetadataListMessage
-    register_allowed_keys [
-      :app_guid,
-      :app_guids,
-      :current,
-      :organization_guids,
-      :package_guid,
-      :space_guids,
-      :states,
+    register_allowed_keys %i[
+      app_guid
+      app_guids
+      current
+      organization_guids
+      package_guid
+      space_guids
+      states
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -23,11 +23,11 @@ module VCAP::CloudController
     validate :not_app_nested_request, unless: -> { app_guid.present? }
 
     def to_param_hash
-      super(exclude: [:app_guid, :package_guid])
+      super(exclude: %i[app_guid package_guid])
     end
 
     def self.from_params(params)
-      super(params, %w(space_guids states app_guids organization_guids))
+      super(params, %w[space_guids states app_guids organization_guids])
     end
 
     private

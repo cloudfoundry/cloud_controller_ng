@@ -26,16 +26,16 @@ module VCAP::CloudController::Presenters::V3
           per_process_memory_in_mb: unlimited_to_nil(space_quota.instance_memory_limit),
           total_instances: unlimited_to_nil(space_quota.app_instance_limit),
           per_app_tasks: unlimited_to_nil(space_quota.app_task_limit),
-          log_rate_limit_in_bytes_per_second: unlimited_to_nil(space_quota.log_rate_limit),
+          log_rate_limit_in_bytes_per_second: unlimited_to_nil(space_quota.log_rate_limit)
         },
         services: {
           paid_services_allowed: space_quota.non_basic_services_allowed,
           total_service_instances: unlimited_to_nil(space_quota.total_services),
-          total_service_keys: unlimited_to_nil(space_quota.total_service_keys),
+          total_service_keys: unlimited_to_nil(space_quota.total_service_keys)
         },
         routes: {
           total_routes: unlimited_to_nil(space_quota.total_routes),
-          total_reserved_ports: unlimited_to_nil(space_quota.total_reserved_route_ports),
+          total_reserved_ports: unlimited_to_nil(space_quota.total_reserved_route_ports)
         },
         relationships: {
           organization: {
@@ -45,7 +45,7 @@ module VCAP::CloudController::Presenters::V3
             data: filtered_visible_spaces
           }
         },
-        links: build_links,
+        links: build_links
       }
     end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController::Presenters::V3
     def build_links
       {
         self: { href: url_builder.build_url(path: "/v3/space_quotas/#{space_quota.guid}") },
-        organization: { href: url_builder.build_url(path: "/v3/organizations/#{space_quota.organization.guid}") },
+        organization: { href: url_builder.build_url(path: "/v3/organizations/#{space_quota.organization.guid}") }
       }
     end
 

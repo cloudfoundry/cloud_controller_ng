@@ -164,9 +164,9 @@ module VCAP::CloudController
         it 'raises an AssociationNotEmpty error' do
           Organization.make(quota_definition: quota_definition)
 
-          expect {
+          expect do
             quota_definition.destroy
-          }.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
+          end.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
           expect(QuotaDefinition[quota_definition.id]).to eq quota_definition
         end
       end
@@ -185,11 +185,11 @@ module VCAP::CloudController
       end
 
       it 'will not change the value returned (deprecated)' do
-        expect {
+        expect do
           quota_definition.trial_db_allowed = true
-        }.to_not change {
+        end.to_not(change do
           quota_definition
-        }
+        end)
       end
     end
 

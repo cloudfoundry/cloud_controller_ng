@@ -22,7 +22,7 @@ module VCAP::CloudController::Presenters::V3
         total_services: 6,
         total_service_keys: 7,
         total_routes: 7,
-        total_reserved_route_ports: 2,
+        total_reserved_route_ports: 2
       )
     end
 

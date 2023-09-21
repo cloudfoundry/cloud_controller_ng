@@ -38,26 +38,29 @@ module VCAP::CloudController
         end
 
         it 'works for different filters' do
-          expect {
+          # SQL statement has eight WHERE conditions, one per UNIONed table.
+          expect do
             expect(Role.where(type: VCAP::CloudController::RoleTypes::ORGANIZATION_USER).count).to eq(2)
             expect(Role.where(guid: organization_manager.guid).count).to eq(1)
             expect(Role.where(user_id: user.id).count).to eq(2)
             expect(Role.where(organization_id: org.id).count).to eq(2)
             expect(Role.where(space_id: space.id).count).to eq(2)
-          }.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 5) # SQL statement has eight WHERE conditions, one per UNIONed table.
+          end.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 5)
         end
 
         it 'works for combined filters' do
-          expect {
+          # SQL statement has eight WHERE conditions, one per UNIONed table.
+          expect do
             expect(Role.where(type: VCAP::CloudController::RoleTypes::ORGANIZATION_USER).where(organization_id: org.id).count).to eq(1)
             expect(Role.where(user_id: user.id).where(space_id: space.id).count).to eq(1)
-          }.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 2) # SQL statement has eight WHERE conditions, one per UNIONed table.
+          end.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 2)
         end
 
         it 'works for filters applied with table name prefix' do
-          expect {
+          # SQL statement has eight WHERE conditions, one per UNIONed table.
+          expect do
             expect(Role.where(t1__guid: organization_billing_manager.guid).count).to eq(1)
-          }.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 1) # SQL statement has eight WHERE conditions, one per UNIONed table.
+          end.to have_queried_db_times(/((\bwhere\b).*?){8}/i, 1)
         end
       end
     end

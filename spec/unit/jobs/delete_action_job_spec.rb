@@ -45,17 +45,17 @@ module VCAP::CloudController
         context 'when can_return_warnings? is false' do
           let(:delete_action) { instance_double(ServiceInstanceDelete, delete: [], can_return_warnings?: false) }
           it 'does not expect warnings' do
-            expect {
+            expect do
               job.perform
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
 
         context 'when the delete action returns warnings' do
-          let(:delete_action) { instance_double(ServiceInstanceDelete, delete: [[], ['warning-1', 'warning-2']], can_return_warnings?: true) }
+          let(:delete_action) { instance_double(ServiceInstanceDelete, delete: [[], %w[warning-1 warning-2]], can_return_warnings?: true) }
 
           it 'returns the warnings' do
-            expect(job.perform).to match_array(['warning-1', 'warning-2'])
+            expect(job.perform).to match_array(%w[warning-1 warning-2])
           end
         end
       end

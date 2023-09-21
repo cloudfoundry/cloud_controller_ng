@@ -2,15 +2,15 @@ module VCAP::CloudController
   class IncludeBindingAppDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w(app).include?(i) }
+        include&.any? { |i| %w[app].include?(i) }
       end
 
       def decorate(hash, bindings)
         hash.deep_merge({
-          included: {
-            apps: apps(bindings).map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
-          }
-        })
+                          included: {
+                            apps: apps(bindings).map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
+                          }
+                        })
       end
 
       private

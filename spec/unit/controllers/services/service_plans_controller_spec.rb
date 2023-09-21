@@ -32,9 +32,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool', default: true },
               service_guid: { type: 'string', required: true },
-              service_instance_guids: { type: '[string]' },
+              service_instance_guids: { type: '[string]' }
             }
-           )
+          )
       end
 
       it do
@@ -48,8 +48,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool' },
               service_guid: { type: 'string' },
-              service_instance_guids: { type: '[string]' },
-            })
+              service_instance_guids: { type: '[string]' }
+            }
+          )
       end
     end
 
@@ -118,7 +119,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(ServicePlansController).to have_nested_routes({ service_instances: [:get, :put, :delete] })
+        expect(ServicePlansController).to have_nested_routes({ service_instances: %i[get put delete] })
       end
     end
 
@@ -143,7 +144,7 @@ module VCAP::CloudController
         organization = developer.organizations.first
         VCAP::CloudController::ServicePlanVisibility.create(
           organization: organization,
-          service_plan: private_plan,
+          service_plan: private_plan
         )
         get '/v2/service_plans'
         expect(plan_guids).to include(private_plan.guid)
@@ -193,7 +194,7 @@ module VCAP::CloudController
               'create' => { 'parameters' => {} }
             }
           }
-                           )
+        )
       end
 
       context 'when the plan does not set bindable' do
@@ -589,7 +590,7 @@ module VCAP::CloudController
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
         expect(last_response).to have_status_code(400)
 
-        expect(decoded_response.fetch('code')).to eq(10006)
+        expect(decoded_response.fetch('code')).to eq(10_006)
         expect(decoded_response.fetch('description')).to eq('Please delete the service_instances associations for your service_plans.')
       end
     end

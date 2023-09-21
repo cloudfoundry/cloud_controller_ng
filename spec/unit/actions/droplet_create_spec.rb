@@ -22,14 +22,15 @@ module VCAP::CloudController
 
     describe '#create' do
       context 'when no process_types are specified' do
-        let(:message) { DropletCreateMessage.new({
-          relationships: { app: { data: { guid: app.guid } } },
-        })
-        }
+        let(:message) do
+          DropletCreateMessage.new({
+                                     relationships: { app: { data: { guid: app.guid } } }
+                                   })
+        end
         it 'creates a droplet for app including the default process_types' do
-          expect {
+          expect do
             droplet_create.create(app, message, user_audit_info)
-          }.to change { DropletModel.count }.by(1)
+          end.to change { DropletModel.count }.by(1)
 
           droplet = DropletModel.last
 
@@ -44,27 +45,27 @@ module VCAP::CloudController
         it 'creates an audit event' do
           expect(Repositories::DropletEventRepository).
             to receive(:record_create).with(instance_of(DropletModel),
-              user_audit_info,
-              app.name,
-              app.space.guid,
-              app.organization.guid
-            )
+                                            user_audit_info,
+                                            app.name,
+                                            app.space.guid,
+                                            app.organization.guid)
 
           subject.create(app, message, user_audit_info)
         end
       end
 
       context 'when process_types are specified' do
-        let(:message) { DropletCreateMessage.new({
-          relationships: { app: { data: { guid: app.guid } } },
-          process_types: { web: 'ptype' },
-        })
-        }
+        let(:message) do
+          DropletCreateMessage.new({
+                                     relationships: { app: { data: { guid: app.guid } } },
+                                     process_types: { web: 'ptype' }
+                                   })
+        end
 
         it 'creates a droplet for app with given process_types' do
-          expect {
+          expect do
             droplet_create.create(app, message, user_audit_info)
-          }.to change { DropletModel.count }.by(1)
+          end.to change { DropletModel.count }.by(1)
 
           droplet = DropletModel.last
 
@@ -78,9 +79,9 @@ module VCAP::CloudController
         end
 
         it 'fails when app has docker lifecycle' do
-          expect {
+          expect do
             droplet_create.create(docker_app, message, user_audit_info)
-          }.to raise_error(DropletCreate::Error, 'Droplet creation is not available for apps with docker lifecycles.')
+          end.to raise_error(DropletCreate::Error, 'Droplet creation is not available for apps with docker lifecycles.')
         end
       end
     end
@@ -91,9 +92,9 @@ module VCAP::CloudController
       end
 
       it 'creates a droplet for build' do
-        expect {
+        expect do
           droplet_create.create_docker_droplet(build)
-        }.to change { [DropletModel.count, Event.count] }.by([1, 1])
+        end.to change { [DropletModel.count, Event.count] }.by([1, 1])
 
         droplet = DropletModel.last
 
@@ -120,23 +121,23 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(app.space_guid)
         expect(event.organization_guid).to eq(app.space.organization.guid)
         expect(event.metadata).to eq({
-          'droplet_guid' => droplet.guid,
-          'package_guid' => package.guid,
-        })
+                                       'droplet_guid' => droplet.guid,
+                                       'package_guid' => package.guid
+                                     })
       end
 
       context 'when the build does not contain created_by fields' do
         let(:build) do
           BuildModel.make(
             app: app,
-            package: package,
+            package: package
           )
         end
 
         it 'sets the actor to UNKNOWN' do
-          expect {
+          expect do
             droplet_create.create_docker_droplet(build)
-          }.to change { [DropletModel.count, Event.count] }.by([1, 1])
+          end.to change { [DropletModel.count, Event.count] }.by([1, 1])
 
           droplet = DropletModel.last
           expect(droplet.build).to eq(build)
@@ -148,9 +149,9 @@ module VCAP::CloudController
           expect(event.actor_name).to eq('')
           expect(event.actor_username).to eq('')
           expect(event.metadata).to eq({
-            'droplet_guid' => droplet.guid,
-            'package_guid' => package.guid,
-          })
+                                         'droplet_guid' => droplet.guid,
+                                         'package_guid' => package.guid
+                                       })
         end
       end
     end
@@ -159,9 +160,9 @@ module VCAP::CloudController
       let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(build: build) }
 
       it 'sets it on the droplet' do
-        expect {
+        expect do
           droplet_create.create_buildpack_droplet(build)
-        }.to change { [DropletModel.count, Event.count] }.by([1, 1])
+        end.to change { [DropletModel.count, Event.count] }.by([1, 1])
 
         droplet = DropletModel.last
 
@@ -186,23 +187,23 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(app.space_guid)
         expect(event.organization_guid).to eq(app.space.organization.guid)
         expect(event.metadata).to eq({
-          'droplet_guid' => droplet.guid,
-          'package_guid' => package.guid,
-        })
+                                       'droplet_guid' => droplet.guid,
+                                       'package_guid' => package.guid
+                                     })
       end
 
       context 'when the build does not contain created_by fields' do
         let(:build) do
           BuildModel.make(
             app: app,
-            package: package,
+            package: package
           )
         end
 
         it 'sets the actor to UNKNOWN' do
-          expect {
+          expect do
             droplet_create.create_buildpack_droplet(build)
-          }.to change { [DropletModel.count, Event.count] }.by([1, 1])
+          end.to change { [DropletModel.count, Event.count] }.by([1, 1])
 
           droplet = DropletModel.last
           expect(droplet.build).to eq(build)
@@ -214,9 +215,9 @@ module VCAP::CloudController
           expect(event.actor_name).to eq('')
           expect(event.actor_username).to eq('')
           expect(event.metadata).to eq({
-            'droplet_guid' => droplet.guid,
-            'package_guid' => package.guid,
-          })
+                                         'droplet_guid' => droplet.guid,
+                                         'package_guid' => package.guid
+                                       })
         end
       end
     end

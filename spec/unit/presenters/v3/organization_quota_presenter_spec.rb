@@ -23,7 +23,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:updated_at]).to eq(organization_quota.updated_at)
         expect(result[:name]).to eq(organization_quota.name)
 
-        expect(result[:apps][:total_memory_in_mb]).to eq(20480)
+        expect(result[:apps][:total_memory_in_mb]).to eq(20_480)
         expect(result[:apps][:per_process_memory_in_mb]).to eq(nil)
         expect(result[:apps][:total_instances]).to eq(nil)
         expect(result[:apps][:per_app_tasks]).to eq(nil)

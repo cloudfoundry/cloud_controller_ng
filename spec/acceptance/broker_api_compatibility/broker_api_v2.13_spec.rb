@@ -17,7 +17,7 @@ RSpec.describe 'Service Broker API integration' do
       let(:create_instance_schema) { { '$schema' => draft_schema } }
       let(:update_instance_schema) { { '$schema' => draft_schema } }
       let(:create_binding_schema) { { '$schema' => draft_schema } }
-      let(:schemas) {
+      let(:schemas) do
         {
           'service_instance' => {
             'create' => {
@@ -33,7 +33,7 @@ RSpec.describe 'Service Broker API integration' do
             }
           }
         }
-      }
+      end
 
       let(:catalog) { default_catalog(plan_schemas: schemas) }
 
@@ -46,8 +46,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_instance']['create']
@@ -56,16 +56,16 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           context 'with a valid update schema' do
-            let(:update_instance_schema) {
+            let(:update_instance_schema) do
               {
                 '$schema' => draft_schema
               }
-            }
+            end
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               update_schema = parsed_body['entity']['schemas']['service_instance']['update']
@@ -81,7 +81,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.create must be a hash, but has value true')
             end
           end
@@ -94,7 +94,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.update must be a hash, but has value true')
             end
           end
@@ -106,8 +106,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_binding']['create']
@@ -123,7 +123,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_binding.create must be a hash, but has value true')
             end
           end
@@ -132,9 +132,8 @@ RSpec.describe 'Service Broker API integration' do
         context 'when the broker catalog defines a plan without plan schemas' do
           it 'responds with an empty schema' do
             get("/v2/service_plans/#{@large_plan_guid}",
-              {}.to_json,
-              json_headers(admin_headers)
-            )
+                {}.to_json,
+                json_headers(admin_headers))
 
             parsed_body = MultiJson.load(last_response.body)
             expect(parsed_body['entity']['schemas']).
@@ -178,11 +177,11 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           context 'with a valid update schema' do
-            let(:update_instance_schema) {
+            let(:update_instance_schema) do
               {
                 '$schema' => draft_schema
               }
-            }
+            end
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
@@ -203,7 +202,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.create must be a hash, but has value true')
             end
           end
@@ -216,7 +215,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.update must be a hash, but has value true')
             end
           end
@@ -503,10 +502,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -531,10 +531,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -561,10 +562,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
     end

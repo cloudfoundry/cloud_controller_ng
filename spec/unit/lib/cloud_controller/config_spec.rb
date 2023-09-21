@@ -2,36 +2,36 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Config do
-    let(:test_config_hash) {
+    let(:test_config_hash) do
       {
         packages: {
           fog_connection: {},
           fog_aws_storage_options: {
             encryption: 'AES256'
           },
-          app_package_directory_key: 'app_key',
+          app_package_directory_key: 'app_key'
         },
         droplets: {
           fog_connection: {},
-          droplet_directory_key: 'droplet_key',
+          droplet_directory_key: 'droplet_key'
         },
         buildpacks: {
           fog_connection: {},
-          buildpack_directory_key: 'bp_key',
+          buildpack_directory_key: 'bp_key'
         },
         resource_pool: {
           minimum_size: 9001,
           maximum_size: 0,
           fog_connection: {},
-          resource_directory_key: 'resource_key',
+          resource_directory_key: 'resource_key'
         },
         external_domain: 'host',
         tls_port: 1234,
         staging: {
           auth: {
             user: 'user',
-            password: 'password',
-          },
+            password: 'password'
+          }
         },
         reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
         diego: {},
@@ -39,18 +39,18 @@ module VCAP::CloudController
         db_encryption_key: '123-456',
         install_buildpacks: [
           {
-            name: 'some-buildpack',
+            name: 'some-buildpack'
           }
         ]
       }
-    }
+    end
     subject(:config_instance) { Config.new(test_config_hash) }
 
     describe '.load_from_file' do
       it 'raises if the file does not exist' do
-        expect {
+        expect do
           Config.load_from_file('nonexistent.yml', context: :worker)
-        }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
+        end.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
 
       context 'merges default values' do
@@ -74,8 +74,8 @@ module VCAP::CloudController
           end
 
           it 'sets a default value for database' do
-            expect(config[:db][:db_connection_string]).to eq(ENV['DB_CONNECTION_STRING'])
-            expect(config[:db][:database]).to eq(DatabasePartsParser.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
+            expect(config[:db][:db_connection_string]).to eq(ENV.fetch('DB_CONNECTION_STRING', nil))
+            expect(config[:db][:database]).to eq(DatabasePartsParser.database_parts_from_connection(ENV.fetch('DB_CONNECTION_STRING', nil)))
           end
 
           context 'special passwords characters' do
@@ -86,9 +86,9 @@ module VCAP::CloudController
               let(:password) { raw_password }
 
               it "can't handle an unescaped @" do
-                expect {
+                expect do
                   DatabasePartsParser.database_parts_from_connection(uri)
-                }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
+                end.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
               end
             end
 
@@ -229,19 +229,19 @@ module VCAP::CloudController
           end
 
           context 'unit test' do
-            let(:config_contents) {
+            let(:config_contents) do
               {
                 'some_key' => 'some-value',
                 'database_encryption' => {
                   'keys' => {
                     'foo' => 'bar',
                     'head' => 'banging',
-                    'array' => %w[a b c],
+                    'array' => %w[a b c]
                   },
                   'current_key_label' => 'foo'
                 }
               }
-            }
+            end
             let(:cc_config_file) do
               file = Tempfile.new('cc_config.yml')
               file.write(YAML.dump(config_contents))
@@ -260,7 +260,7 @@ module VCAP::CloudController
                   keys: {
                     foo: 'bar',
                     head: 'banging',
-                    array: %w[a b c],
+                    array: %w[a b c]
                   },
                   current_key_label: 'foo'
                 }
@@ -273,7 +273,7 @@ module VCAP::CloudController
                   'some_secret' => 'shhhhh!',
                   'database_encryption' => {
                     'keys' => {
-                      'password' => 'totes-s3cre7',
+                      'password' => 'totes-s3cre7'
                     }
                   }
                 }
@@ -292,7 +292,7 @@ module VCAP::CloudController
                       foo: 'bar',
                       head: 'banging',
                       array: %w[a b c],
-                      password: 'totes-s3cre7',
+                      password: 'totes-s3cre7'
                     },
                     current_key_label: 'foo'
                   }
@@ -301,9 +301,9 @@ module VCAP::CloudController
             end
 
             context 'when the config has no "kubernetes" key' do
-              let(:config_contents) {
+              let(:config_contents) do
                 { 'some_non_kubernetes_key' => true }
-              }
+              end
 
               it 'uses the Vms schema to validate the config' do
                 allow(VCAP::CloudController::ConfigSchemas::Vms::ApiSchema).to receive(:validate)
@@ -319,36 +319,36 @@ module VCAP::CloudController
 
     describe '#configure_components' do
       let(:dependency_locator) { CloudController::DependencyLocator.instance }
-      let(:test_config_hash) {
+      let(:test_config_hash) do
         {
           packages: {
             fog_connection: {},
             fog_aws_storage_options: {
               encryption: 'AES256'
             },
-            app_package_directory_key: 'app_key',
+            app_package_directory_key: 'app_key'
           },
           droplets: {
             fog_connection: {},
-            droplet_directory_key: 'droplet_key',
+            droplet_directory_key: 'droplet_key'
           },
           buildpacks: {
             fog_connection: {},
-            buildpack_directory_key: 'bp_key',
+            buildpack_directory_key: 'bp_key'
           },
           resource_pool: {
             minimum_size: 9001,
             maximum_size: 0,
             fog_connection: {},
-            resource_directory_key: 'resource_key',
+            resource_directory_key: 'resource_key'
           },
           external_host: 'host',
           tls_port: 1234,
           staging: {
             auth: {
               user: 'user',
-              password: 'password',
-            },
+              password: 'password'
+            }
           },
 
           reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
@@ -356,7 +356,7 @@ module VCAP::CloudController
           stacks_file: 'path/to/stacks/file',
           db_encryption_key: '123-456'
         }
-      }
+      end
 
       before do
         allow(Stack).to receive(:configure)
@@ -484,43 +484,43 @@ module VCAP::CloudController
 
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
-          fog_connection: {},
-          fog_aws_storage_options: {
-            encryption: 'AES256'
-          },
-          app_package_directory_key: 'app_key',
-        })
+                                                       fog_connection: {},
+                                                       fog_aws_storage_options: {
+                                                         encryption: 'AES256'
+                                                       },
+                                                       app_package_directory_key: 'app_key'
+                                                     })
         expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
       end
 
       it 'raises an exception when given an invalid key' do
-        expect {
+        expect do
           config_instance.get(:blub_blub)
-        }.to raise_error Config::InvalidConfigPath, /"blub_blub" is not a valid config key/
+        end.to raise_error Config::InvalidConfigPath, /"blub_blub" is not a valid config key/
       end
 
       it 'raises when you dig into a leaf property' do
-        expect {
+        expect do
           config_instance.get(:external_domain, :pantaloons)
-        }.to raise_error Config::InvalidConfigPath, /"external_domain.pantaloons" is not a valid config key/
+        end.to raise_error Config::InvalidConfigPath, /"external_domain.pantaloons" is not a valid config key/
       end
 
       it 'raises when you dig into hashes' do
-        expect {
+        expect do
           config_instance.get(:packages, :fog_aws_storage_options, :encryption)
-        }.to raise_error Config::InvalidConfigPath, /"packages.fog_aws_storage_options.encryption" is not a valid config key/
+        end.to raise_error Config::InvalidConfigPath, /"packages.fog_aws_storage_options.encryption" is not a valid config key/
       end
 
       it 'raises when given a path with an invalid key' do
-        expect {
+        expect do
           config_instance.get(:packages, :ham_sandwich)
-        }.to raise_error Config::InvalidConfigPath, /"packages.ham_sandwich" is not a valid config key/
+        end.to raise_error Config::InvalidConfigPath, /"packages.ham_sandwich" is not a valid config key/
       end
 
       it 'raises when you dig into arrays' do
-        expect {
+        expect do
           config_instance.get(:install_buildpacks, :name)
-        }.to raise_error Config::InvalidConfigPath, /"install_buildpacks.name" is not a valid config key/
+        end.to raise_error Config::InvalidConfigPath, /"install_buildpacks.name" is not a valid config key/
       end
     end
 

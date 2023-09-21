@@ -17,17 +17,17 @@ module VCAP::CloudController
     describe '#delete' do
       shared_examples 'deletion' do |opts|
         it 'deletes the correct role' do
-          expect {
+          expect do
             subject.delete(Role.where(guid: role.guid))
-          }.to change { Role.count }.by(-1)
+          end.to change { Role.count }.by(-1)
 
           expect { role.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'records an audit event' do
-          expect {
+          expect do
             subject.delete(Role.where(guid: role.guid))
-          }.to change { Event.count }.by(1)
+          end.to change { Event.count }.by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])

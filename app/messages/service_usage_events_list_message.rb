@@ -2,10 +2,10 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class ServiceUsageEventsListMessage < ListMessage
-    register_allowed_keys [
-      :after_guid,
-      :service_instance_types,
-      :service_offering_guids,
+    register_allowed_keys %i[
+      after_guid
+      service_instance_types
+      service_offering_guids
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(after_guid service_instance_types service_offering_guids))
+      super(params, %w[after_guid service_instance_types service_offering_guids])
     end
   end
 end

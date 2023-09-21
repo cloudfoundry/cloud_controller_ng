@@ -12,7 +12,7 @@ module VCAP::CloudController::RoutingApi
     let(:routing_api) { Client.new(routing_api_url, uaa_client, skip_cert_verify) }
 
     before do
-      if !routing_api_url.nil?
+      unless routing_api_url.nil?
         uri = URI(routing_api_url)
         uri.path = path
         stub_request(:get, uri.to_s).
@@ -31,16 +31,16 @@ module VCAP::CloudController::RoutingApi
       let(:body) do
         [
           { guid: 'random-guid-1', name: 'group-name', type: 'tcp' },
-          { guid: 'random-guid-2', name: 'group-name', type: 'tcp' },
+          { guid: 'random-guid-2', name: 'group-name', type: 'tcp' }
         ].to_json
       end
 
       context 'when the routing api url does not exist' do
         let(:routing_api_url) { nil }
         it 'raises a RoutingApiUnavailable error' do
-          expect {
+          expect do
             routing_api.router_groups
-          }.to raise_error RoutingApiUnavailable
+          end.to raise_error RoutingApiUnavailable
         end
       end
 
@@ -75,9 +75,9 @@ module VCAP::CloudController::RoutingApi
             end
 
             it 'raises a UaaUnavailable' do
-              expect {
+              expect do
                 routing_api.router_groups
-              }.to raise_error UaaUnavailable
+              end.to raise_error UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
                 to have_been_made.times(0)
@@ -95,9 +95,9 @@ module VCAP::CloudController::RoutingApi
           end
 
           it 'raises a error' do
-            expect {
+            expect do
               routing_api.router_groups
-            }.to raise_error RoutingApiUnavailable
+            end.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
               to have_been_made.times(1)
@@ -136,9 +136,9 @@ module VCAP::CloudController::RoutingApi
           end
 
           it 'returns a RoutingApiUnavailable error' do
-            expect {
+            expect do
               routing_api.router_groups
-            }.to raise_error RoutingApiUnavailable
+            end.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
               to have_been_made.times(1)
@@ -152,7 +152,7 @@ module VCAP::CloudController::RoutingApi
       let(:body) do
         [
           { guid: 'random-guid-1', name: 'group-name', type: 'tcp' },
-          { guid: 'router-group-guid', name: 'group-name', type: 'my-type' },
+          { guid: 'router-group-guid', name: 'group-name', type: 'my-type' }
         ].to_json
       end
 
@@ -180,7 +180,7 @@ module VCAP::CloudController::RoutingApi
       let(:body) do
         [
           { guid: 'random-guid-1', name: 'group-name', type: 'tcp' },
-          { guid: 'router-group-guid', name: 'group-name-2', type: 'my-type' },
+          { guid: 'router-group-guid', name: 'group-name-2', type: 'my-type' }
         ].to_json
       end
 

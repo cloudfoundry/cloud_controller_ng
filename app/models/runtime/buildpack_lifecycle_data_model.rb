@@ -8,28 +8,28 @@ module VCAP::CloudController
     set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :droplet,
-      class: '::VCAP::CloudController::DropletModel',
-      key: :droplet_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: '::VCAP::CloudController::DropletModel',
+                key: :droplet_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     many_to_one :build,
-      class: '::VCAP::CloudController::BuildModel',
-      key: :build_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: '::VCAP::CloudController::BuildModel',
+                key: :build_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     many_to_one :app,
-      class: '::VCAP::CloudController::AppModel',
-      key: :app_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: '::VCAP::CloudController::AppModel',
+                key: :app_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     one_to_many :buildpack_lifecycle_buildpacks,
-      class: '::VCAP::CloudController::BuildpackLifecycleBuildpackModel',
-      key: :buildpack_lifecycle_data_guid,
-      primary_key: :guid,
-      order: :id
+                class: '::VCAP::CloudController::BuildpackLifecycleBuildpackModel',
+                key: :buildpack_lifecycle_data_guid,
+                primary_key: :guid,
+                order: :id
     plugin :nested_attributes
     nested_attributes :buildpack_lifecycle_buildpacks, destroy: true
     add_association_dependencies buildpack_lifecycle_buildpacks: :destroy
@@ -40,17 +40,17 @@ module VCAP::CloudController
     alias_method :legacy_admin_buildpack_name=, :admin_buildpack_name=
 
     def buildpacks
-      if self.buildpack_lifecycle_buildpacks.present?
-        self.buildpack_lifecycle_buildpacks.map(&:name)
+      if buildpack_lifecycle_buildpacks.present?
+        buildpack_lifecycle_buildpacks.map(&:name)
       else
-        legacy_buildpack_name = self.legacy_admin_buildpack_name || self.legacy_buildpack_url
+        legacy_buildpack_name = legacy_admin_buildpack_name || legacy_buildpack_url
         Array(legacy_buildpack_name)
       end
     end
 
     def buildpack_models
-      if self.buildpack_lifecycle_buildpacks.present?
-        self.buildpack_lifecycle_buildpacks.map do |buildpack|
+      if buildpack_lifecycle_buildpacks.present?
+        buildpack_lifecycle_buildpacks.map do |buildpack|
           Buildpack.find(name: buildpack.name) || CustomBuildpack.new(buildpack.name)
         end
       else
@@ -70,7 +70,7 @@ module VCAP::CloudController
         self.legacy_admin_buildpack_name = self.legacy_buildpack_url = nil
       end
 
-      buildpacks_to_remove = self.buildpack_lifecycle_buildpacks.map { |bp| { id: bp.id, _delete: true } }
+      buildpacks_to_remove = buildpack_lifecycle_buildpacks.map { |bp| { id: bp.id, _delete: true } }
       buildpacks_to_add = new_buildpacks.map { |buildpack_url| attributes_from_buildpack(buildpack_url) }
       self.buildpack_lifecycle_buildpacks_attributes = buildpacks_to_add + buildpacks_to_remove
     end
@@ -91,9 +91,9 @@ module VCAP::CloudController
     end
 
     def validate
-      if app && (build || droplet)
-        errors.add(:lifecycle_data, 'Must be associated with an app OR a build+droplet, but not both')
-      end
+      return unless app && (build || droplet)
+
+      errors.add(:lifecycle_data, 'Must be associated with an app OR a build+droplet, but not both')
     end
 
     private
@@ -120,7 +120,7 @@ module VCAP::CloudController
     def attributes_from_buildpack_hash(buildpack)
       {
         buildpack_name: buildpack[:name],
-        version: buildpack[:version],
+        version: buildpack[:version]
       }.merge(buildpack[:key] ? attributes_from_buildpack_key(buildpack[:key]) : attributes_from_buildpack_name(buildpack[:name]))
     end
 
@@ -136,9 +136,9 @@ module VCAP::CloudController
     end
 
     def legacy_buildpack
-      return self.legacy_admin_buildpack_name if self.legacy_admin_buildpack_name.present?
+      return legacy_admin_buildpack_name if legacy_admin_buildpack_name.present?
 
-      self.buildpack_url
+      buildpack_url
     end
 
     def legacy_buildpack_model

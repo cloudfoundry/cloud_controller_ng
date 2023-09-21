@@ -2,17 +2,17 @@ require 'spec_helper'
 
 RSpec.describe HealthCheckPolicy do
   let(:process) { VCAP::CloudController::ProcessModelFactory.make }
-  let(:health_check_type) {}
-  let(:health_check_timeout) {}
-  let(:health_check_invocation_timeout) {}
-  let(:health_check_interval) {}
-  let(:health_check_http_endpoint) {}
+  let(:health_check_type) { nil }
+  let(:health_check_timeout) { nil }
+  let(:health_check_invocation_timeout) { nil }
+  let(:health_check_interval) { nil }
+  let(:health_check_http_endpoint) { nil }
 
   let(:max_health_check_timeout) { 512 }
 
-  subject(:validator) {
+  subject(:validator) do
     HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
-  }
+  end
 
   describe 'health_check_type' do
     context 'defaults' do

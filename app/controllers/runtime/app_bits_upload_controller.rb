@@ -45,17 +45,17 @@ module VCAP::CloudController
 
       upload_handler = CloudController::DependencyLocator.instance.upload_handler
       upload_message = PackageUploadMessage.new({
-        bits_path:        upload_handler.uploaded_file(request.POST, 'application'),
-        bits_name:        upload_handler.uploaded_filename(request.POST, 'application'),
-        resources: json_param('resources')
-      })
+                                                  bits_path: upload_handler.uploaded_file(request.POST, 'application'),
+                                                  bits_name: upload_handler.uploaded_filename(request.POST, 'application'),
+                                                  resources: json_param('resources')
+                                                })
       uploader = PackageUpload.new
 
       if async?
         enqueued_job = uploader.upload_async_without_event(
           message: upload_message,
           package: package,
-          config:  config,
+          config: config
         )
         result = [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
       else
@@ -67,8 +67,9 @@ module VCAP::CloudController
         'upload-package',
         {
           'app-id' => process.app_guid,
-          'user-id' => current_user.guid,
-        })
+          'user-id' => current_user.guid
+        }
+      )
       result
     end
 
@@ -97,7 +98,8 @@ module VCAP::CloudController
     def record_upload_bits(package)
       Repositories::PackageEventRepository.record_app_upload_bits(
         package,
-        UserAuditInfo.from_context(SecurityContext))
+        UserAuditInfo.from_context(SecurityContext)
+      )
     end
 
     def json_param(name)

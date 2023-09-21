@@ -4,8 +4,8 @@ require 'cloud_controller/deployment_updater/updater'
 module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Updater do
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
-    let(:a_day_ago) { Time.now - 1.day }
-    let(:an_hour_ago) { Time.now - 1.hour }
+    let(:a_day_ago) { Time.now.utc - 1.day }
+    let(:an_hour_ago) { Time.now.utc - 1.hour }
     let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
     let(:droplet) { DropletModel.make }
     let!(:web_process) do
@@ -13,7 +13,7 @@ module VCAP::CloudController
         instances: current_web_instances,
         created_at: a_day_ago,
         guid: 'guid-original',
-        app: app,
+        app: app
       )
     end
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
@@ -24,7 +24,7 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED,
+        state: ProcessModel::STOPPED
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
@@ -44,13 +44,13 @@ module VCAP::CloudController
     end
 
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
-    let(:all_instances_results) {
+    let(:all_instances_results) do
       {
         0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
         1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-        2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+        2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
       }
-    }
+    end
     let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
@@ -67,17 +67,17 @@ module VCAP::CloudController
       end
 
       it 'scales the old web process down by one after the first iteration' do
-        expect {
+        expect do
           subject.scale
-        }.to change {
+        end.to change {
           web_process.reload.instances
         }.by(-1)
       end
 
       it 'scales up the new web process by one' do
-        expect {
+        expect do
           subject.scale
-        }.to change {
+        end.to change {
           deploying_web_process.reload.instances
         }.by(1)
       end
@@ -87,13 +87,14 @@ module VCAP::CloudController
           DropletModel.make(
             process_types: {
               'clock' => 'droplet_clock_command',
-              'worker' => 'droplet_worker_command',
-            })
+              'worker' => 'droplet_worker_command'
+            }
+          )
         end
 
         let(:current_deploying_instances) { original_web_process_instance_count }
 
-        let!(:interim_deploying_web_process) {
+        let!(:interim_deploying_web_process) do
           ProcessModel.make(
             app: web_process.app,
             created_at: an_hour_ago,
@@ -101,7 +102,7 @@ module VCAP::CloudController
             instances: 1,
             guid: 'guid-interim'
           )
-        }
+        end
 
         let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
 
@@ -124,7 +125,7 @@ module VCAP::CloudController
 
         it 'replaces the existing web process with the deploying_web_process' do
           deploying_web_process_guid = deploying_web_process.guid
-          expect(ProcessModel.map(&:type)).to match_array(['web', 'web', 'web', 'worker', 'clock'])
+          expect(ProcessModel.map(&:type)).to match_array(%w[web web web worker clock])
 
           subject.scale
 
@@ -138,7 +139,7 @@ module VCAP::CloudController
           expect(ProcessModel.find(guid: deploying_web_process_guid)).not_to be_nil
           expect(ProcessModel.find(guid: deployment.app.guid)).to be_nil
 
-          expect(ProcessModel.map(&:type)).to match_array(['web', 'worker', 'clock'])
+          expect(ProcessModel.map(&:type)).to match_array(%w[web worker clock])
         end
 
         it 'cleans up any extra processes from the deployment train' do
@@ -213,9 +214,9 @@ module VCAP::CloudController
         it 'does not destroy any route mappings' do
           expect do
             subject.scale
-          end.not_to change {
+          end.not_to(change do
             RouteMappingModel.count
-          }
+          end)
         end
       end
 
@@ -227,7 +228,7 @@ module VCAP::CloudController
             instances: 0,
             app: app,
             created_at: a_day_ago - 11,
-            type: ProcessTypes::WEB,
+            type: ProcessTypes::WEB
           )
         end
         let!(:oldest_web_process_with_instances) do
@@ -236,7 +237,7 @@ module VCAP::CloudController
             instances: 1,
             app: app,
             created_at: a_day_ago - 10,
-            type: ProcessTypes::WEB,
+            type: ProcessTypes::WEB
           )
         end
 
@@ -247,9 +248,9 @@ module VCAP::CloudController
         let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid) }
 
         it 'destroys the oldest web process and ignores the original web process' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change { ProcessModel.find(guid: web_process.guid) }
+          end.not_to(change { ProcessModel.find(guid: web_process.guid) })
           expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
           expect(oldest_label.exists?).to be_falsey
         end
@@ -257,76 +258,76 @@ module VCAP::CloudController
 
       context 'when one of the deploying_web_process instances is starting' do
         let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) {
+        let(:all_instances_results) do
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
             1 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
-            2 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
           }
-        }
+        end
 
         it 'does not scales the process' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             web_process.reload.instances
-          }
+          end)
 
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             deploying_web_process.reload.instances
-          }
+          end)
         end
       end
 
       context 'when one of the deploying_web_process instances is not routable' do
         let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) {
+        let(:all_instances_results) do
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
             1 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
-            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
           }
-        }
+        end
 
         it 'does not scales the process' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             web_process.reload.instances
-          }
+          end)
 
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             deploying_web_process.reload.instances
-          }
+          end)
         end
       end
 
       context 'when one of the deploying_web_process instances is failing' do
         let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) {
+        let(:all_instances_results) do
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
             1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-            2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
           }
-        }
+        end
 
         it 'does not scale the process' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             web_process.reload.instances
-          }
+          end)
 
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             deploying_web_process.reload.instances
-          }
+          end)
         end
       end
 
@@ -350,13 +351,13 @@ module VCAP::CloudController
         end
 
         context 'when some instances are crashing' do
-          let(:all_instances_results) {
+          let(:all_instances_results) do
             {
               0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
               1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
             }
-          }
+          end
 
           it 'changes nothing' do
             subject.scale
@@ -370,27 +371,27 @@ module VCAP::CloudController
 
       context 'setting deployment last_healthy_at' do
         it 'updates the deployments last_healthy_at when scaling' do
-          Timecop.travel(Time.now + 1.minute) do
-            expect {
+          Timecop.travel(Time.now.utc + 1.minute) do
+            expect do
               subject.scale
-            }.to change { deployment.reload.last_healthy_at }
+            end.to(change { deployment.reload.last_healthy_at })
           end
         end
 
         context 'when instances are failing' do
-          let(:all_instances_results) {
+          let(:all_instances_results) do
             {
               0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
               1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
             }
-          }
+          end
 
           it 'does not update the deployments last_healthy_at' do
-            Timecop.travel(Time.now + 1.minute) do
-              expect {
+            Timecop.travel(Time.now.utc + 1.minute) do
+              expect do
                 subject.scale
-              }.to_not change { deployment.reload.last_healthy_at }
+              end.to_not(change { deployment.reload.last_healthy_at })
             end
           end
         end
@@ -404,17 +405,17 @@ module VCAP::CloudController
         end
 
         it 'does not scale the process' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             web_process.reload.instances
-          }
+          end)
 
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             deploying_web_process.reload.instances
-          }
+          end)
         end
       end
 
@@ -427,11 +428,11 @@ module VCAP::CloudController
         end
 
         it 'logs the error' do
-          expect {
+          expect do
             subject.scale
-          }.not_to change {
+          end.not_to(change do
             failing_process.reload.instances
-          }
+          end)
 
           expect(logger).to have_received(:error).with(
             'error-scaling-deployment',
@@ -443,9 +444,9 @@ module VCAP::CloudController
         end
 
         it 'does not throw an error (so that other deployments can still proceed)' do
-          expect {
+          expect do
             subject.scale
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -456,14 +457,14 @@ module VCAP::CloudController
             type: 'web-deployment-guid-legacy',
             instances: current_deploying_instances,
             guid: 'guid-legacy',
-            revision: revision,
+            revision: revision
           )
         end
 
         it 'scales up the coerced web process by one' do
-          expect {
+          expect do
             subject.scale
-          }.to change {
+          end.to change {
             deploying_web_process.reload.instances
           }.by(1)
         end
@@ -595,7 +596,7 @@ module VCAP::CloudController
             {
               0 => { state: 'STARTING' },
               1 => { state: 'CRASHED' },
-              2 => { state: 'DOWN' },
+              2 => { state: 'DOWN' }
             }
           end
           let!(:interim_deploying_web_process_no_running_instance) do

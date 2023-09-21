@@ -27,9 +27,9 @@ module VCAP::CloudController
 
       context 'when no attributes defined' do
         it 'deletes the blob' do
-          expect {
+          expect do
             job.perform
-          }.to change {
+          end.to change {
             blobstore.exists?(key)
           }.from(true).to(false)
         end
@@ -40,9 +40,9 @@ module VCAP::CloudController
           blob = blobstore.blob(key)
           job.attributes = blob.attributes
 
-          expect {
+          expect do
             job.perform
-          }.to change {
+          end.to change {
             blobstore.exists?(key)
           }.from(true).to(false)
         end
@@ -54,11 +54,11 @@ module VCAP::CloudController
         end
 
         it 'does not delete the blob' do
-          expect {
+          expect do
             job.perform
-          }.to_not change {
+          end.to_not(change do
             blobstore.exists?(key)
-          }
+          end)
         end
       end
 

@@ -2,9 +2,9 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class DomainUpdateSharedOrgsMessage < MetadataBaseMessage
-    register_allowed_keys [
-      :data,
-      :guid
+    register_allowed_keys %i[
+      data
+      guid
     ]
 
     validates_with NoAdditionalKeysValidator

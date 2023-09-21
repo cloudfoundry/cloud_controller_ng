@@ -17,7 +17,7 @@ module VCAP::CloudController::Presenters::V3
         default: stack.default?,
         metadata: {
           labels: hashified_labels(stack.labels),
-          annotations: hashified_annotations(stack.annotations),
+          annotations: hashified_annotations(stack.annotations)
         },
         links: build_links
       }
@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
       {
         self: {
           href: url_builder.build_url(path: "/v3/stacks/#{stack.guid}")
-        },
+        }
       }
     end
   end

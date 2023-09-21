@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class AdjectiveNounGenerator
-    ADJECTIVES = %w(accountable
+    ADJECTIVES = %w[accountable
                     active
                     agile
                     anxious
@@ -83,9 +83,9 @@ module VCAP::CloudController
                     unexpected
                     wacky
                     wise
-                    zany).freeze
+                    zany].freeze
 
-    NOUNS = %w(aardvark
+    NOUNS = %w[aardvark
                alligator
                antelope
                armadillo
@@ -197,7 +197,7 @@ module VCAP::CloudController
                wolf
                wolverine
                wombat
-               zebra).freeze
+               zebra].freeze
 
     def initialize
       @rand = Random.new

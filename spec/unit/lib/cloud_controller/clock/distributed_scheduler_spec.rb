@@ -19,9 +19,9 @@ module VCAP::CloudController
       executor = instance_double(DistributedExecutor).as_null_object
       allow(DistributedExecutor).to receive(:new).and_return executor
 
-      DistributedScheduler.new.schedule_periodic_job name: 'my-job', interval: 1.minute, fudge: 1.second, thread: true, at: Time.at(0), timeout: 3.minutes
+      DistributedScheduler.new.schedule_periodic_job name: 'my-job', interval: 1.minute, fudge: 1.second, thread: true, at: Time.at(0).utc, timeout: 3.minutes
 
-      expect(Clockwork).to have_received(:every).with(1.minute, 'my-job.job', { at: Time.at(0), thread: true })
+      expect(Clockwork).to have_received(:every).with(1.minute, 'my-job.job', { at: Time.at(0).utc, thread: true })
       expect(executor).to have_received(:execute_job).with(name: 'my-job', interval: 1.minute, fudge: 1.second, timeout: 3.minutes)
     end
   end

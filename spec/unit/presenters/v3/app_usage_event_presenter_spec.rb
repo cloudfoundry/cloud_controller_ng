@@ -38,7 +38,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
           app_guid: '',
           process_type: nil,
           task_guid: 'task-guid',
-          task_name: 'some-task',
+          task_name: 'some-task'
         )
       end
 

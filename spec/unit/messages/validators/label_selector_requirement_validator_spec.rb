@@ -9,6 +9,7 @@ module VCAP::CloudController::Validators
         include VCAP::CloudController::Validators
 
         attr_accessor :requirements
+
         validates_with LabelSelectorRequirementValidator
 
         def self.model_name
@@ -43,7 +44,7 @@ module VCAP::CloudController::Validators
     end
 
     context 'when the label_selector key is not valid' do
-      let(:keys) { %w/v- -v -v- .v v. .v./ }
+      let(:keys) { %w[v- -v -v- .v v. .v.] }
       let(:requirements) { keys.map { |k| VCAP::CloudController::LabelSelectorRequirement.new(key: k, operator: :equal, values: 'value') } }
       it 'fails' do
         expect(message).not_to be_valid
@@ -78,14 +79,14 @@ module VCAP::CloudController::Validators
     end
 
     context 'when the key prefix is not too long' do
-      let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'a.' * (252 / 2) + 'b/foo', operator: :equal, values: 'value')] }
+      let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: ('a.' * (252 / 2)) + 'b/foo', operator: :equal, values: 'value')] }
       it 'is valid' do
         expect(message).to be_valid
       end
     end
 
     context 'when the key prefix is too long' do
-      let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'a.' * (252 / 2) + 'bb/foo', operator: :equal, values: 'value')] }
+      let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: ('a.' * (252 / 2)) + 'bb/foo', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
         expect(message.errors_on(:base).first).to include('is greater than 253 characters')
@@ -117,7 +118,7 @@ module VCAP::CloudController::Validators
     end
 
     context 'when the key name starts or ends with invalid characters' do
-      let(:keys) { %w/v- -v -v- .v v. .v./ }
+      let(:keys) { %w[v- -v -v- .v v. .v.] }
       let(:requirements) { keys.map { |k| VCAP::CloudController::LabelSelectorRequirement.new(key: "mangos.org/#{k}", operator: :equal, values: 'value') } }
       it 'fails' do
         expect(message).not_to be_valid
@@ -158,7 +159,7 @@ module VCAP::CloudController::Validators
     end
 
     context 'when the value starts or ends with invalid characters' do
-      let(:values) { %w/v- -v -v- .v v. .v./ }
+      let(:values) { %w[v- -v -v- .v v. .v.] }
       let(:requirements) { values.map { |v| VCAP::CloudController::LabelSelectorRequirement.new(key: 'mangos.org/tangelos', operator: :equal, values: v.to_s) } }
       it 'fails' do
         expect(message).not_to be_valid

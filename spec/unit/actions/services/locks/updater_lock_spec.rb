@@ -29,9 +29,9 @@ module VCAP::CloudController
         end
 
         it 'does not let you lock again' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error CloudController::Errors::ApiError
+          end.to raise_error CloudController::Errors::ApiError
         end
       end
 
@@ -41,9 +41,9 @@ module VCAP::CloudController
         end
 
         it 'raises an AsyncServiceInstanceOperationInProgress error' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error CloudController::Errors::ApiError do |err|
+          end.to raise_error CloudController::Errors::ApiError do |err|
             expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
           end
         end
@@ -58,9 +58,9 @@ module VCAP::CloudController
         end
 
         it 'raises an ServiceBindingLockedError error' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error LockCheck::ServiceBindingLockedError do |err|
+          end.to raise_error LockCheck::ServiceBindingLockedError do |err|
             expect(err.service_binding).to eq(service_binding_2)
           end
         end
@@ -80,9 +80,9 @@ module VCAP::CloudController
         end
 
         it 'does not update the service instance' do
-          expect {
+          expect do
             updater_lock.unlock_and_fail!
-          }.to_not change { service_instance.updated_at }
+          end.to_not(change { service_instance.updated_at })
         end
       end
 

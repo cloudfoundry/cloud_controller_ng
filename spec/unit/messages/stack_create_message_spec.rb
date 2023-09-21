@@ -7,16 +7,16 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
 
     let(:valid_params) do
       {
-      name: 'reasonable-name',
-      metadata: {
-        labels: {
-          potato: 'mashed'
-        },
-        annotations: {
-          happy: 'annotation',
-        },
+        name: 'reasonable-name',
+        metadata: {
+          labels: {
+            potato: 'mashed'
+          },
+          annotations: {
+            happy: 'annotation'
+          }
+        }
       }
-    }
     end
 
     it 'is valid if using the valid parameters' do

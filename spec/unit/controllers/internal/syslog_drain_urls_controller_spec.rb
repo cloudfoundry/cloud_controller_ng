@@ -20,7 +20,7 @@ module VCAP::CloudController
         expect(decoded_v5_available).to eq(true)
         expect(decoded_results).to include(
           {
-            app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
+            app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
                               'hostname' => 'org-1.space-1.app-1' }
           }
         )
@@ -38,7 +38,7 @@ module VCAP::CloudController
           expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-2.space-2.app-2' }
             }
           )
@@ -57,7 +57,7 @@ module VCAP::CloudController
           expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-3.space-3.app-3' }
             }
           )
@@ -76,7 +76,7 @@ module VCAP::CloudController
           expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-4.space-4.app-4' }
             }
           )
@@ -84,13 +84,13 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: truncate overlong name components to first 63' do
-        let(:orgName) { 'org-5-' + 'x' * (63 - 6) }
+        let(:orgName) { 'org-5-' + ('x' * (63 - 6)) }
         let(:orgNamePlus) { orgName + 'y' }
         let(:org) { Organization.make(name: orgNamePlus) }
-        let(:spaceName) { 'space-5-' + 'x' * (63 - 8) }
+        let(:spaceName) { 'space-5-' + ('x' * (63 - 8)) }
         let(:spaceNamePlus) { spaceName + 'y' }
         let(:space) { Space.make(name: spaceNamePlus, organization: org) }
-        let(:appName) { 'app-5-' + 'x' * (63 - 6) }
+        let(:appName) { 'app-5-' + ('x' * (63 - 6)) }
         let(:appNamePlus) { appName + 'y' }
         let(:app_obj) { AppModel.make(name: appNamePlus, space: space) }
 
@@ -101,20 +101,19 @@ module VCAP::CloudController
           expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
-                                'hostname' => "#{orgName}.#{spaceName}.#{appName}"
-              }
+              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+                                'hostname' => "#{orgName}.#{spaceName}.#{appName}" }
             }
           )
         end
       end
 
       context 'rfc-1034-compliance: keep 63-char names' do
-        let(:orgName) { 'org-5-' + 'x' * (63 - 6) }
+        let(:orgName) { 'org-5-' + ('x' * (63 - 6)) }
         let(:org) { Organization.make(name: orgName) }
-        let(:spaceName) { 'space-5-' + 'x' * (63 - 8) }
+        let(:spaceName) { 'space-5-' + ('x' * (63 - 8)) }
         let(:space) { Space.make(name: spaceName, organization: org) }
-        let(:appName) { 'app-5-' + 'x' * (63 - 6) }
+        let(:appName) { 'app-5-' + ('x' * (63 - 6)) }
         let(:app_obj) { AppModel.make(name: appName, space: space) }
 
         it 'retains length-compliant names' do
@@ -124,9 +123,8 @@ module VCAP::CloudController
           expect(decoded_v5_available).to eq(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
-                                'hostname' => "#{orgName}.#{spaceName}.#{appName}"
-              }
+              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+                                'hostname' => "#{orgName}.#{spaceName}.#{appName}" }
             }
           )
         end
@@ -171,7 +169,7 @@ module VCAP::CloudController
             ServiceBinding.make(
               app: app_obj,
               syslog_drain_url: "syslog://example.com/#{i}",
-              service_instance: UserProvidedServiceInstance.make(space: app_obj.space),
+              service_instance: UserProvidedServiceInstance.make(space: app_obj.space)
             )
           end
         end
@@ -205,7 +203,7 @@ module VCAP::CloudController
         it 'returns non-intersecting results when token is supplied' do
           get '/internal/v4/syslog_drain_urls', {
             'batch_size' => 2,
-            'next_id'    => 0
+            'next_id' => 0
           }
 
           saved_results = decoded_results.dup
@@ -213,7 +211,7 @@ module VCAP::CloudController
 
           get '/internal/v4/syslog_drain_urls', {
             'batch_size' => 2,
-            'next_id'    => decoded_response['next_id'],
+            'next_id' => decoded_response['next_id']
           }
 
           new_results = decoded_results.dup
@@ -232,7 +230,7 @@ module VCAP::CloudController
           while apps.size < total_size
             get '/internal/v4/syslog_drain_urls', {
               'batch_size' => 2,
-              'next_id'    => token,
+              'next_id' => token
             }
 
             expect(last_response.status).to eq(200)
@@ -243,7 +241,7 @@ module VCAP::CloudController
           expect(apps.size).to eq(total_size)
           get '/internal/v4/syslog_drain_urls', {
             'batch_size' => 2,
-            'next_id'    => token,
+            'next_id' => token
           }
           expect(decoded_results.size).to eq(0)
           expect(decoded_v5_available).to eq(true)
@@ -258,7 +256,7 @@ module VCAP::CloudController
           it 'does not affect the paging results' do
             get '/internal/v4/syslog_drain_urls', {
               'batch_size' => 2,
-              'next_id'    => 0
+              'next_id' => 0
             }
 
             saved_results = decoded_results.dup
@@ -276,7 +274,7 @@ module VCAP::CloudController
           it 'does not affect the paging results' do
             get '/internal/v4/syslog_drain_urls', {
               'batch_size' => 2,
-              'next_id'    => 0
+              'next_id' => 0
             }
 
             saved_results = decoded_results.dup
@@ -305,78 +303,102 @@ module VCAP::CloudController
       let(:instance14) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let(:instance15) { UserProvidedServiceInstance.make(space: app_obj.space) }
       let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
-      let!(:binding_with_drain4) { ServiceBinding.make(
-        syslog_drain_url: 'barfoo',
-        app: app_obj3,
-        service_instance: instance4,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
-      }
-      let!(:binding_with_drain5) { ServiceBinding.make(
-        syslog_drain_url: 'barfoo2',
-        app: app_obj,
-        service_instance: instance7,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
-      }
-      let!(:binding_with_drain6) { ServiceBinding.make(
-        syslog_drain_url: 'barfoo2',
-        app: app_obj2,
-        service_instance: instance8,
-        credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' })
-      }
-      let!(:binding_with_drain7) { ServiceBinding.make(
-        syslog_drain_url: 'barfoo2',
-        app: app_obj3,
-        service_instance: instance5,
-        credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
-      }
-      let!(:binding_with_drain8) { ServiceBinding.make(
-        syslog_drain_url: 'barfoo2',
-        app: app_obj4,
-        service_instance: instance6,
-        credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' })
-      }
-      let!(:binding_with_drain9) { ServiceBinding.make(
-        syslog_drain_url: 'no_credentials_1',
-        app: app_obj3,
-        service_instance: instance9,
-        credentials: nil)
-      }
-      let!(:binding_with_drain10) { ServiceBinding.make(
-        syslog_drain_url: 'no_credentials_2',
-        app: app_obj4,
-        service_instance: instance10,
-        credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
-      }
-      let!(:binding_with_drain11) { ServiceBinding.make(
-        syslog_drain_url: 'no_credentials_3',
-        app: app_obj,
-        service_instance: instance11,
-        credentials: { 'foo' => '', 'cert' => '', 'ca' => '' })
-      }
-      let!(:binding_with_drain12) { ServiceBinding.make(
-        syslog_drain_url: 'collision_test',
-        app: app_obj,
-        service_instance: instance12,
-        credentials: { 'cert' => '', 'key' => '', 'ca' => '' })
-      }
-      let!(:binding_with_drain13) { ServiceBinding.make(
-        syslog_drain_url: 'collision_test',
-        app: app_obj,
-        service_instance: instance13,
-        credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' })
-      }
-      let!(:binding_with_drain14) { ServiceBinding.make(
-        syslog_drain_url: 'collision_test',
-        app: app_obj,
-        service_instance: instance14,
-        credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' })
-      }
-      let!(:binding_with_drain15) { ServiceBinding.make(
-        syslog_drain_url: 'collision_test',
-        app: app_obj,
-        service_instance: instance15,
-        credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' })
-      }
+      let!(:binding_with_drain4) do
+        ServiceBinding.make(
+          syslog_drain_url: 'barfoo',
+          app: app_obj3,
+          service_instance: instance4,
+          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+        )
+      end
+      let!(:binding_with_drain5) do
+        ServiceBinding.make(
+          syslog_drain_url: 'barfoo2',
+          app: app_obj,
+          service_instance: instance7,
+          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+        )
+      end
+      let!(:binding_with_drain6) do
+        ServiceBinding.make(
+          syslog_drain_url: 'barfoo2',
+          app: app_obj2,
+          service_instance: instance8,
+          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+        )
+      end
+      let!(:binding_with_drain7) do
+        ServiceBinding.make(
+          syslog_drain_url: 'barfoo2',
+          app: app_obj3,
+          service_instance: instance5,
+          credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
+        )
+      end
+      let!(:binding_with_drain8) do
+        ServiceBinding.make(
+          syslog_drain_url: 'barfoo2',
+          app: app_obj4,
+          service_instance: instance6,
+          credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
+        )
+      end
+      let!(:binding_with_drain9) do
+        ServiceBinding.make(
+          syslog_drain_url: 'no_credentials_1',
+          app: app_obj3,
+          service_instance: instance9,
+          credentials: nil
+        )
+      end
+      let!(:binding_with_drain10) do
+        ServiceBinding.make(
+          syslog_drain_url: 'no_credentials_2',
+          app: app_obj4,
+          service_instance: instance10,
+          credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
+        )
+      end
+      let!(:binding_with_drain11) do
+        ServiceBinding.make(
+          syslog_drain_url: 'no_credentials_3',
+          app: app_obj,
+          service_instance: instance11,
+          credentials: { 'foo' => '', 'cert' => '', 'ca' => '' }
+        )
+      end
+      let!(:binding_with_drain12) do
+        ServiceBinding.make(
+          syslog_drain_url: 'collision_test',
+          app: app_obj,
+          service_instance: instance12,
+          credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
+        )
+      end
+      let!(:binding_with_drain13) do
+        ServiceBinding.make(
+          syslog_drain_url: 'collision_test',
+          app: app_obj,
+          service_instance: instance13,
+          credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' }
+        )
+      end
+      let!(:binding_with_drain14) do
+        ServiceBinding.make(
+          syslog_drain_url: 'collision_test',
+          app: app_obj,
+          service_instance: instance14,
+          credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' }
+        )
+      end
+      let!(:binding_with_drain15) do
+        ServiceBinding.make(
+          syslog_drain_url: 'collision_test',
+          app: app_obj,
+          service_instance: instance15,
+          credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' }
+        )
+      end
 
       it 'returns a list of syslog drain urls and their credentials' do
         get '/internal/v5/syslog_drain_urls', '{}'
@@ -397,7 +419,8 @@ module VCAP::CloudController
                 { 'cert' => 'cert1',
                   'key' => 'key1',
                   'ca' => 'ca1',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
+              ] },
             { 'url' => 'barfoo2',
               'credentials' => [
                 { 'cert' => 'cert1',
@@ -405,13 +428,16 @@ module VCAP::CloudController
                   'ca' => 'ca1',
                   'apps' => [
                     { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] },
+                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
+                  ] },
                 { 'cert' => 'cert2',
                   'key' => 'key2',
                   'ca' => 'ca2',
-                   'apps' => [
-                     { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
-                     { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+                  'apps' => [
+                    { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
+                    { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }
+                  ] }
+              ] },
             { 'url' => 'collision_test',
               'credentials' => [
                 { 'cert' => '',
@@ -429,14 +455,15 @@ module VCAP::CloudController
                 { 'cert' => '',
                   'key' => 'has-key',
                   'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
               ] },
             { 'url' => 'fish%2cfinger',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
                   'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
+              ] },
             { 'url' => 'foobar',
               'credentials' => [
                 { 'cert' => '',
@@ -444,31 +471,37 @@ module VCAP::CloudController
                   'ca' => '',
                   'apps' => [
                     { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }] }] },
+                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
+                  ] }
+              ] },
             { 'url' => 'no_credentials_1',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
                   'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }] },
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
+              ] },
             { 'url' => 'no_credentials_2',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
                   'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }] },
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }
+              ] },
             { 'url' => 'no_credentials_3',
               'credentials' => [
                 { 'cert' => '',
                   'key' => '',
                   'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }] },
-          ])
+                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
+              ] }
+          ]
+        )
       end
 
       it 'supports paging' do
         get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2,
+          'batch_size' => 2
         }
         expect(last_response).to be_successful
         expect(decoded_next_id).to be(2)

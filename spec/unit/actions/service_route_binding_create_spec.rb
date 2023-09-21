@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:route) { Route.make(space: space) }
       let(:route_service_url) { 'https://route_service_url.com' }
 
-      let(:message) {
+      let(:message) do
         VCAP::CloudController::ServiceRouteBindingCreateMessage.new(
           metadata: {
             labels: {
@@ -19,7 +19,7 @@ module VCAP::CloudController
             }
           }
         )
-      }
+      end
 
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:user_guid) { Sham.uaa_id }
@@ -44,7 +44,7 @@ module VCAP::CloudController
             expect(precursor.route).to eq(route)
             expect(precursor).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
-              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
             )
             expect(precursor.route_service_url).to be_nil
             expect(precursor.last_operation.type).to eq('create')
@@ -56,11 +56,11 @@ module VCAP::CloudController
             let(:route) { Route.make(domain: domain, space: space) }
 
             it 'raises an error' do
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
-                'Route services cannot be bound to internal routes',
+                'Route services cannot be bound to internal routes'
               )
             end
           end
@@ -69,11 +69,11 @@ module VCAP::CloudController
             let(:route) { Route.make }
 
             it 'raises an error' do
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
-                'The service instance and the route are in different spaces',
+                'The service instance and the route are in different spaces'
               )
             end
           end
@@ -82,11 +82,11 @@ module VCAP::CloudController
             it 'raises an error' do
               RouteBinding.make(service_instance: service_instance, route: route)
 
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::RouteBindingAlreadyExists,
-                'The route and service instance are already bound',
+                'The route and service instance are already bound'
               )
             end
           end
@@ -96,11 +96,11 @@ module VCAP::CloudController
               other_instance = UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url)
               RouteBinding.make(service_instance: other_instance, route: route)
 
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
-                'A route may only be bound to a single service instance',
+                'A route may only be bound to a single service instance'
               )
             end
           end
@@ -108,11 +108,11 @@ module VCAP::CloudController
 
         RSpec.shared_examples '#precursor for non-route service instance' do
           it 'raises an error' do
-            expect {
+            expect do
               action.precursor(service_instance, route, message: message)
-            }.to raise_error(
+            end.to raise_error(
               ServiceRouteBindingCreate::UnprocessableCreate,
-              'This service instance does not support route binding',
+              'This service instance does not support route binding'
             )
           end
         end
@@ -134,11 +134,11 @@ module VCAP::CloudController
             let(:service_offering) { Service.make(bindable: false, requires: ['route_forwarding']) }
 
             it 'raises an error' do
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
-                'This service instance does not support binding',
+                'This service instance does not support binding'
               )
             end
           end
@@ -147,9 +147,9 @@ module VCAP::CloudController
             it 'raises an error' do
               service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
 
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'There is an operation in progress for the service instance'
               )
@@ -160,9 +160,9 @@ module VCAP::CloudController
             it 'raises an error' do
               service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
 
-              expect {
+              expect do
                 action.precursor(service_instance, route, message: message)
-              }.to raise_error(
+              end.to raise_error(
                 ServiceRouteBindingCreate::UnprocessableCreate,
                 'Service instance not found'
               )
@@ -298,8 +298,8 @@ module VCAP::CloudController
             {
               last_operation: {
                 state: state,
-                description: description,
-              },
+                description: description
+              }
             }
           end
           let(:broker_client) do
@@ -308,7 +308,7 @@ module VCAP::CloudController
               {
                 bind: bind_response,
                 fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
-                fetch_service_binding: fetch_binding_response,
+                fetch_service_binding: fetch_binding_response
               }
             )
           end

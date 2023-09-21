@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Organizations', type: [:api, :legacy_api] do
+RSpec.resource 'Organizations', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
@@ -23,7 +23,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
     end
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController do
-      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: %w[name id]
     end
     standard_model_get :organization, nested_associations: [:quota_definition]
     standard_model_delete :organization do
@@ -61,7 +61,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
     let(:username_map) do
       {
         everything_user.guid => 'everything@example.com',
-        user_user.guid       => 'user@example.com',
+        user_user.guid => 'user@example.com'
       }
     end
 

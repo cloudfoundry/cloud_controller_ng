@@ -13,14 +13,12 @@ module VCAP::CloudController
       end
     end
 
-    let(:pid) { 23456 }
+    let(:pid) { 23_456 }
     let(:pid_dir) { Dir.mktmpdir }
     let(:pid_path) { File.join(pid_dir, 'pidfile') }
 
     before do
-      File.open(pid_path, 'w') do |file|
-        file.write(pid)
-      end
+      File.write(pid_path, pid)
 
       # Kernel methods must be stubbed on the object instance that uses them
       allow(drain).to receive(:sleep)

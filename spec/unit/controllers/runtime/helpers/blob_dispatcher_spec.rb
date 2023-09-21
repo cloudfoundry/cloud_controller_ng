@@ -28,9 +28,9 @@ module VCAP::CloudController
         let(:blob) { nil }
 
         it 'raises BlobNotFound' do
-          expect {
+          expect do
             dispatcher.send_or_redirect(guid: package_guid)
-          }.to raise_error(CloudController::Errors::BlobNotFound)
+          end.to raise_error(CloudController::Errors::BlobNotFound)
         end
       end
 
@@ -82,9 +82,9 @@ module VCAP::CloudController
           end
 
           it 'raises a BlobstoreUnavailble ApiError' do
-            expect {
+            expect do
               dispatcher.send_or_redirect(guid: package_guid)
-            }.to raise_error do |e|
+            end.to raise_error do |e|
               expect(e).to be_a(CloudController::Errors::ApiError)
               expect(e.name).to eq('BlobstoreUnavailable')
             end

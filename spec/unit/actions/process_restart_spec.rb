@@ -11,7 +11,7 @@ module VCAP::CloudController
       let(:app) do
         AppModel.make(
           :docker,
-          desired_state:         desired_state,
+          desired_state: desired_state,
           environment_variables: environment_variables
         )
       end
@@ -55,15 +55,15 @@ module VCAP::CloudController
         end
 
         it 'generates a STOP usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-          }.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(1)
         end
 
         it 'generates a START usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
         end
 
         context 'when submitting the stop request to the backend fails' do
@@ -72,9 +72,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing STARTED state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-stop-error')
+            end.to raise_error('some-stop-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
           end
@@ -86,18 +86,18 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
           end
 
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
           end
@@ -125,15 +125,15 @@ module VCAP::CloudController
         end
 
         it 'generates a START usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
         end
 
         it 'does not generate a STOP usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-          }.to_not change { AppUsageEvent.where(state: 'STOPPED').count }
+          end.to_not(change { AppUsageEvent.where(state: 'STOPPED').count })
         end
 
         context 'when submitting the start request to the backend fails' do
@@ -142,18 +142,18 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STOPPED')
           end
 
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
           end

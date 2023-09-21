@@ -111,20 +111,6 @@ class PackagesController < ApplicationController
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
-  def destroy
-    package = PackageModel.where(guid: hashed_params[:guid]).first
-
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
-    suspended! unless permission_queryer.is_space_active?(package.space.id)
-
-    delete_action = PackageDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
-    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
-  end
-
   def create
     package = hashed_params[:source_guid] ? create_copy : create_fresh
 
@@ -145,6 +131,20 @@ class PackagesController < ApplicationController
     package = PackageUpdate.new.update(package, message)
 
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
+  end
+
+  def destroy
+    package = PackageModel.where(guid: hashed_params[:guid]).first
+
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
+    suspended! unless permission_queryer.is_space_active?(package.space.id)
+
+    delete_action = PackageDelete.new(user_audit_info)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
+    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   private

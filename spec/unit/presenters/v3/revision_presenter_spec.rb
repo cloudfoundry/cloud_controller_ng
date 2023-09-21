@@ -9,16 +9,16 @@ module VCAP::CloudController::Presenters::V3
         app: app_model,
         process_types: {
           'web' => 'droplet_web_command',
-          'worker' => 'droplet_worker_command',
-        })
+          'worker' => 'droplet_worker_command'
+        }
+      )
     end
     let(:revision) do
       VCAP::CloudController::RevisionModel.make(:custom_web_command,
-        app: app_model,
-        version: 300,
-        droplet_guid: droplet.guid,
-        description: 'Initial revision'
-      )
+                                                app: app_model,
+                                                version: 300,
+                                                droplet_guid: droplet.guid,
+                                                description: 'Initial revision')
     end
 
     let!(:revision_sidecar) do
@@ -59,7 +59,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::RevisionAnnotationModel.make(
         key_name: 'altitude',
         value: '14,412',
-        resource_guid: revision.guid,
+        resource_guid: revision.guid
       )
     end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::RevisionAnnotationModel.make(
         key_name: 'maize',
         value: 'hfcs',
-        resource_guid: revision.guid,
+        resource_guid: revision.guid
       )
     end
 
@@ -76,8 +76,8 @@ module VCAP::CloudController::Presenters::V3
         result = RevisionPresenter.new(revision).to_hash
         links = {
           self: { href: "#{link_prefix}/v3/revisions/#{revision.guid}" },
-          app:  { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          environment_variables:  { href: "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables" },
+          app: { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          environment_variables: { href: "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables" }
         }
         expect(result[:guid]).to eq(revision.guid)
         expect(result[:droplet][:guid]).to eq(revision.droplet_guid)
@@ -106,8 +106,9 @@ module VCAP::CloudController::Presenters::V3
             state: VCAP::CloudController::DropletModel::EXPIRED_STATE,
             process_types: {
               'web' => 'droplet_web_command',
-              'worker' => 'droplet_worker_command',
-            })
+              'worker' => 'droplet_worker_command'
+            }
+          )
         end
 
         it 'returns deployable is false' do

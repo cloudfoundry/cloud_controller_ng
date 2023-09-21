@@ -34,9 +34,9 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises an api error' do
-            expect {
+            expect do
               client.desire_app(process)
-            }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+            end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
               expect(e.name).to eq('RunnerUnavailable')
             end
           end
@@ -54,9 +54,9 @@ module VCAP::CloudController::Diego
           let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::InvalidRequest, message: 'bad request') }
 
           it 'raises an RunnerInvalidRequest api error' do
-            expect {
+            expect do
               client.desire_app(process)
-            }.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
+            end.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
               expect(e.name).to eq('RunnerInvalidRequest')
             end
           end
@@ -66,9 +66,9 @@ module VCAP::CloudController::Diego
           let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(message: 'error message') }
 
           it 'raises an api error' do
-            expect {
+            expect do
               client.desire_app(process)
-            }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+            end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
               expect(e.name).to eq('RunnerError')
             end
           end
@@ -125,9 +125,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_app(process_guid)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -139,9 +139,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_app(process_guid)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end
@@ -177,9 +177,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_index(process_guid, index)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -191,9 +191,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_index(process_guid, index)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end
@@ -228,9 +228,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.get_app(process)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -242,9 +242,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.get_app(process)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end
@@ -291,9 +291,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::InvalidRequest, message: 'bad request') }
 
         it 'raises an RunnerInvalidRequest api error' do
-          expect {
+          expect do
             client.update_app(process, existing_lrp)
-          }.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
             expect(e.name).to eq('RunnerInvalidRequest')
           end
         end
@@ -303,9 +303,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.update_app(process, existing_lrp)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -317,9 +317,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.update_app(process, existing_lrp)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end
@@ -345,9 +345,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_scheduling_infos
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -359,9 +359,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_scheduling_infos
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end
@@ -386,9 +386,9 @@ module VCAP::CloudController::Diego
         let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.bump_freshness
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
           end
         end
@@ -400,9 +400,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.bump_freshness
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('RunnerUnavailable')
           end
         end

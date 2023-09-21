@@ -19,7 +19,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       role_to_expected_http_response = {
         'admin' => 201,
         'admin_read_only' => 403,
-        'global_auditor' => 403,
+        'global_auditor' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -30,7 +30,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             post :create, params: { name: 'my-sweet-org' }, as: :json
 
             expect(response.status).to eq(expected_return_value),
-              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+                                       "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
             if expected_return_value == 200
               expect(parsed_body['guid']).to eq(org.guid)
               expect(parsed_body['name']).to eq('Eric\'s Farm')
@@ -142,7 +142,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     it 'eager loads associated resources that the presenter specifies' do
       expect(VCAP::CloudController::OrgListFetcher).to receive(:fetch).with(
-        hash_including(eager_loaded_associations: [:labels, :annotations, :quota_definition])
+        hash_including(eager_loaded_associations: %i[labels annotations quota_definition])
       ).and_call_original
 
       get :index
@@ -156,8 +156,8 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { names: 'Marmot,Beaver' }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
-            'Marmot', 'Beaver'
+          expect(parsed_body['resources'].map { |r| r['name'] }).to match_array(%w[
+            Marmot Beaver
           ])
         end
       end
@@ -167,11 +167,11 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { order_by: 'name' }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to eql([
-            'Beaver',
-            'Capybara',
-            'Marmot',
-            'Rat',
+          expect(parsed_body['resources'].map { |r| r['name'] }).to eql(%w[
+            Beaver
+            Capybara
+            Marmot
+            Rat
           ])
         end
       end
@@ -484,7 +484,8 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     context 'when the assignment fails' do
       before do
         allow_any_instance_of(VCAP::CloudController::SetDefaultIsolationSegment).to receive(:set).and_raise(
-          VCAP::CloudController::SetDefaultIsolationSegment::Error.new('bad thing happened!'))
+          VCAP::CloudController::SetDefaultIsolationSegment::Error.new('bad thing happened!')
+        )
       end
 
       it 'returns 422' do
@@ -561,10 +562,10 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 403,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json } }
+        let(:api_call) { -> { patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json } }
       end
     end
   end
@@ -580,7 +581,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     let(:annotations) do
       {
         potato: 'yellow',
-        beet: 'golden',
+        beet: 'golden'
       }
     end
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -764,10 +765,10 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 200,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
       end
 
       context 'when the org is suspended' do
@@ -785,10 +786,10 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
               'space_auditor' => 403,
               'org_manager' => 403,
               'org_auditor' => 403,
-              'org_billing_manager' => 403,
+              'org_billing_manager' => 403
             }
           end
-          let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+          let(:api_call) { -> { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
         end
       end
     end

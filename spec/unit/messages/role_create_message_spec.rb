@@ -41,7 +41,7 @@ module VCAP::CloudController
           },
           space: {
             data: space_data
-          },
+          }
         }
       }
     end
@@ -55,7 +55,7 @@ module VCAP::CloudController
           },
           organization: {
             data: org_data
-          },
+          }
         }
       }
     end
@@ -185,7 +185,7 @@ module VCAP::CloudController
     end
 
     context 'when no params are given' do
-      let(:params) {}
+      let(:params) { nil }
 
       it 'is not valid' do
         message = subject.new(params)
@@ -281,7 +281,7 @@ module VCAP::CloudController
             relationships: {
               space: {
                 data: space_data
-              },
+              }
             }
           }
         end
@@ -399,7 +399,7 @@ module VCAP::CloudController
           let(:user_data) do
             {
               guid: user_guid,
-              username: username,
+              username: username
             }
           end
 
@@ -531,7 +531,7 @@ module VCAP::CloudController
             },
             organization: {
               data: { guid: org_guid }
-            },
+            }
           }
         }
       end

@@ -12,7 +12,7 @@ Sequel.migration do
       Integer :organization_id, null: false
 
       foreign_key [:organization_id], :organizations, name: :fk_sqd_organization_id
-      index [:organization_id, :name], unique: true, name: :sqd_org_id_index
+      index %i[organization_id name], unique: true, name: :sqd_org_id_index
     end
   end
 end

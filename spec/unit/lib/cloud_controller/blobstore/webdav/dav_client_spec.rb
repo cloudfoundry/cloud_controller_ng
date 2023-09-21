@@ -7,14 +7,15 @@ module CloudController
       subject(:client) do
         DavClient.new(
           directory_key: directory_key,
-          httpclient:    httpclient,
-          signer:        signer,
-          endpoint:      'http://localhost',
-          user:          user,
-          password:      password,
-          root_dir:      root_dir,
-          min_size:      min_size,
-          max_size:      max_size)
+          httpclient: httpclient,
+          signer: signer,
+          endpoint: 'http://localhost',
+          user: user,
+          password: password,
+          root_dir: root_dir,
+          min_size: min_size,
+          max_size: max_size
+        )
       end
       let(:httpclient) { instance_double(HTTPClient) }
       let(:response) { instance_double(HTTP::Message) }
@@ -136,7 +137,7 @@ module CloudController
         describe 'file permissions' do
           before do
             @original_umask = File.umask
-            File.umask(0022)
+            File.umask(0o022)
           end
 
           after do
@@ -159,7 +160,7 @@ module CloudController
               allow(response).to receive_messages(status: 200)
               allow(httpclient).to receive(:get).and_yield('content').and_return(response)
 
-              client.download_from_blobstore('foobar', destination_path, mode: 0753)
+              client.download_from_blobstore('foobar', destination_path, mode: 0o753)
 
               expect(sprintf('%<mode>o', mode: File.stat(destination_path).mode)).to eq('100753')
             end
@@ -200,7 +201,7 @@ module CloudController
           allow(response).to receive_messages(status: 201, content: '')
 
           expect(httpclient).to receive(:put) do |*args|
-            uri, body, _ = args
+            uri, body, = args
             expect(uri).to eq('http://localhost/admin/droplets/fo/ob/foobar')
             expect(body).to be_kind_of(File)
             expect(body.read).to eq('file content')
@@ -215,7 +216,7 @@ module CloudController
           allow(httpclient).to receive(:put).and_return(response)
 
           expect(httpclient).to receive(:put) do |*args|
-            uri, body, _ = args
+            uri, body, = args
             expect(uri).to eq('http://localhost/admin/droplets/fo/ob/foobar')
             expect(body).to be_kind_of(File)
             expect(body.read).to eq('file content')
@@ -320,10 +321,12 @@ module CloudController
 
           expect(httpclient).to have_received(:put).thrice
           expect(httpclient).to have_received(:put).with(
-            "http://localhost/admin/droplets/#{tmpfile1_sha[0..1]}/#{tmpfile1_sha[2..3]}/#{tmpfile1_sha}", a_kind_of(File), {})
+            "http://localhost/admin/droplets/#{tmpfile1_sha[0..1]}/#{tmpfile1_sha[2..3]}/#{tmpfile1_sha}", a_kind_of(File), {}
+          )
           expect(httpclient).to have_received(:put).with("http://localhost/admin/droplets/#{tmpfile2_sha[0..1]}/#{tmpfile2_sha[2..3]}/#{tmpfile2_sha}", a_kind_of(File), {})
           expect(httpclient).to have_received(:put).with(
-            "http://localhost/admin/droplets/#{nested_tmpfile1_sha[0..1]}/#{nested_tmpfile1_sha[2..3]}/#{nested_tmpfile1_sha}", a_kind_of(File), {})
+            "http://localhost/admin/droplets/#{nested_tmpfile1_sha[0..1]}/#{nested_tmpfile1_sha[2..3]}/#{nested_tmpfile1_sha}", a_kind_of(File), {}
+          )
         end
 
         context 'when a file already exists in the blobstore' do
@@ -340,7 +343,8 @@ module CloudController
 
             expect(httpclient).to have_received(:put).twice
             expect(httpclient).not_to have_received(:put).with(
-              "http://localhost/admin/droplets/#{nested_tmpfile1_sha[0..1]}/#{nested_tmpfile1_sha[2..3]}/#{nested_tmpfile1_sha}", a_kind_of(File), {})
+              "http://localhost/admin/droplets/#{nested_tmpfile1_sha[0..1]}/#{nested_tmpfile1_sha[2..3]}/#{nested_tmpfile1_sha}", a_kind_of(File), {}
+            )
           end
         end
 
@@ -364,7 +368,8 @@ module CloudController
               client.cp_r_to_blobstore(source_dir)
 
               expect(httpclient).not_to have_received(:put).with(
-                "http://localhost/admin/droplets/#{small_file_sha[0..1]}/#{small_file_sha[2..3]}/#{small_file_sha}", a_kind_of(File), {})
+                "http://localhost/admin/droplets/#{small_file_sha[0..1]}/#{small_file_sha[2..3]}/#{small_file_sha}", a_kind_of(File), {}
+              )
             end
           end
 
@@ -384,7 +389,8 @@ module CloudController
               client.cp_r_to_blobstore(source_dir)
 
               expect(httpclient).not_to have_received(:put).with(
-                "http://localhost/admin/droplets/#{large_file_sha[0..1]}/#{large_file_sha[2..3]}/#{large_file_sha}", a_kind_of(File), {})
+                "http://localhost/admin/droplets/#{large_file_sha[0..1]}/#{large_file_sha[2..3]}/#{large_file_sha}", a_kind_of(File), {}
+              )
             end
           end
         end
@@ -393,7 +399,7 @@ module CloudController
           context 'sufficient file permissions' do
             let!(:sufficiently_permissioned_file) do
               Tempfile.open('', source_dir) do |tmpfile|
-                File.chmod(0600, tmpfile)
+                File.chmod(0o600, tmpfile)
                 tmpfile
               end
             end
@@ -406,14 +412,15 @@ module CloudController
               client.cp_r_to_blobstore(source_dir)
 
               expect(httpclient).to have_received(:put).with(
-                "http://localhost/admin/droplets/#{sufficient_perm_file_sha[0..1]}/#{sufficient_perm_file_sha[2..3]}/#{sufficient_perm_file_sha}", a_kind_of(File), {})
+                "http://localhost/admin/droplets/#{sufficient_perm_file_sha[0..1]}/#{sufficient_perm_file_sha[2..3]}/#{sufficient_perm_file_sha}", a_kind_of(File), {}
+              )
             end
           end
 
           context 'insufficient file permissions' do
             let!(:insufficiently_permissioned_file) do
               Tempfile.open('', source_dir) do |tmpfile|
-                File.chmod(0444, tmpfile)
+                File.chmod(0o444, tmpfile)
                 tmpfile
               end
             end
@@ -426,7 +433,8 @@ module CloudController
               client.cp_r_to_blobstore(source_dir)
 
               expect(httpclient).not_to have_received(:put).with(
-                "http://localhost/admin/droplets/#{insufficient_perm_file_sha[0..1]}/#{insufficient_perm_file_sha[2..3]}/#{insufficient_perm_file_sha}", a_kind_of(File), {})
+                "http://localhost/admin/droplets/#{insufficient_perm_file_sha[0..1]}/#{insufficient_perm_file_sha[2..3]}/#{insufficient_perm_file_sha}", a_kind_of(File), {}
+              )
             end
           end
         end
@@ -497,9 +505,9 @@ module CloudController
             allow(httpclient).to receive(:put).and_return(instance_double(HTTP::Message, status: 204, content: ''))
             allow(httpclient).to receive(:request).and_return(response)
 
-            expect {
+            expect do
               client.cp_file_between_keys('foobar', 'bazbar')
-            }.to raise_error(CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/)
+            end.to raise_error(CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/)
           end
         end
 
@@ -546,9 +554,9 @@ module CloudController
           allow(response).to receive_messages(status: 404, content: 'Not Found')
           allow(httpclient).to receive(:delete).and_return(response)
 
-          expect {
+          expect do
             client.delete('foobar')
-          }.to raise_error CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/
+          end.to raise_error CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/
         end
 
         it 'should raise an exception when there is an error deleting an object' do
@@ -578,7 +586,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(Errno::EIO.new)
             expect { client.delete('and bingo was his name-o') }.to raise_error BlobstoreError
-            expect(logger).to have_received(:error).with(%r(^Error with blobstore: Input/output error))
+            expect(logger).to have_received(:error).with(%r{^Error with blobstore: Input/output error})
           end
         end
       end
@@ -594,17 +602,17 @@ module CloudController
 
         it 'raises FileNotfound when the server returns 404' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 404, content: ''))
-          expect {
+          expect do
             client.delete_all
-          }.to raise_error(FileNotFound, /Could not find object/)
+          end.to raise_error(FileNotFound, /Could not find object/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
         end
 
         it 'raises an error when the server returns any other code' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 500, content: ''))
-          expect {
+          expect do
             client.delete_all
-          }.to raise_error(BlobstoreError, /Could not delete all/)
+          end.to raise_error(BlobstoreError, /Could not delete all/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/', header: {})
         end
 
@@ -642,9 +650,9 @@ module CloudController
 
         it 'raises an error when the server returns any other code' do
           allow(httpclient).to receive(:delete).and_return(instance_double(HTTP::Message, status: 500, content: ''))
-          expect {
+          expect do
             client.delete_all_in_path('foobar')
-          }.to raise_error(BlobstoreError, /Could not delete all in path/)
+          end.to raise_error(BlobstoreError, /Could not delete all in path/)
           expect(logger).to have_received(:error).with(/^Error with blobstore: Could not delete all in path/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
         end
@@ -859,7 +867,7 @@ module CloudController
         it 'enumerates a web dav blobstore' do
           blob_keys = client.files_for('nested').first(2).map(&:key)
 
-          expect(blob_keys).to match_array(%w(nested-dir-1/some-blob nested-dir-2/some-other-blob))
+          expect(blob_keys).to match_array(%w[nested-dir-1/some-blob nested-dir-2/some-other-blob])
         end
 
         context 'when provided a path to ignore' do
@@ -892,7 +900,7 @@ module CloudController
           end
 
           it 'does not enumerate ignored directories' do
-            blob_keys = client.files_for('', %w(some-directory ignored-directory))
+            blob_keys = client.files_for('', %w[some-directory ignored-directory])
             expect(blob_keys.first).to be(nil)
           end
         end
@@ -945,7 +953,7 @@ module CloudController
           it 'only enumerates directories that start with the prefix' do
             blob_keys = client.files_for('ab').map(&:key)
 
-            expect(blob_keys).to match_array(%w(ab-directory/some-blob))
+            expect(blob_keys).to match_array(%w[ab-directory/some-blob])
           end
         end
       end

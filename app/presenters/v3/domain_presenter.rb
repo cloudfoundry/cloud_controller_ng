@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
         },
         metadata: {
           labels: hashified_labels(domain.labels),
-          annotations: hashified_annotations(domain.annotations),
+          annotations: hashified_annotations(domain.annotations)
         },
         links: build_links
       }

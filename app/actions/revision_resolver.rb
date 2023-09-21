@@ -15,7 +15,7 @@ module VCAP::CloudController
             environment_variables: app.environment_variables,
             description: 'Initial revision.',
             commands_by_process_type: app.commands_by_process_type,
-            user_audit_info: user_audit_info,
+            user_audit_info: user_audit_info
           )
         end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
             environment_variables: app.environment_variables,
             description: formatted_revision_reasons(reasons),
             commands_by_process_type: app.commands_by_process_type,
-            user_audit_info: user_audit_info,
+            user_audit_info: user_audit_info
           )
         end
       end
@@ -38,9 +38,7 @@ module VCAP::CloudController
         return nil unless app.revisions_enabled
 
         reasons = revision_reasons(app.latest_revision, revision)
-        if reasons.empty?
-          raise NoUpdateRollback.new('Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
-        end
+        raise NoUpdateRollback.new('Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.') if reasons.empty?
 
         reasons.push("Rolled back to revision #{revision.version}.")
 
@@ -50,7 +48,7 @@ module VCAP::CloudController
           environment_variables: revision.environment_variables,
           description: formatted_revision_reasons(reasons),
           commands_by_process_type: revision.commands_by_process_type,
-          user_audit_info: user_audit_info,
+          user_audit_info: user_audit_info
         )
       end
 
@@ -59,13 +57,9 @@ module VCAP::CloudController
       def revision_reasons(latest_revision, revision_to_create)
         reasons = []
 
-        if latest_revision.droplet_guid != revision_to_create.droplet_guid
-          reasons.push('New droplet deployed.')
-        end
+        reasons.push('New droplet deployed.') if latest_revision.droplet_guid != revision_to_create.droplet_guid
 
-        if latest_revision.environment_variables != revision_to_create.environment_variables
-          reasons.push('New environment variables deployed.')
-        end
+        reasons.push('New environment variables deployed.') if latest_revision.environment_variables != revision_to_create.environment_variables
 
         reasons.push(*list_process_command_changes(
           latest_revision.commands_by_process_type,

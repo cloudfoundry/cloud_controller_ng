@@ -5,7 +5,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
   let(:stack) do
     VCAP::CloudController::Stack.make(
       run_rootfs_image: 'run-image',
-      build_rootfs_image: 'build-image',
+      build_rootfs_image: 'build-image'
     )
   end
 
@@ -30,7 +30,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
     VCAP::CloudController::StackAnnotationModel.make(
       key_name: 'altitude',
       value: '14,412',
-      resource_guid: stack.guid,
+      resource_guid: stack.guid
     )
   end
 
@@ -38,7 +38,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
     VCAP::CloudController::StackAnnotationModel.make(
       key_name: 'maize',
       value: 'hfcs',
-      resource_guid: stack.guid,
+      resource_guid: stack.guid
     )
   end
 

@@ -19,7 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
         {
           url: url,
           auth_username: auth_username,
-          auth_password: auth_password,
+          auth_password: auth_password
         },
         fake_logger
       )
@@ -96,7 +96,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'uses SSL' do
           make_request
           expect(a_request(http_method, 'https://broker.example.com/the/path').
-            with(basic_auth: ['me', 'abc123']).
+            with(basic_auth: %w[me abc123]).
             with(query: hash_including({}))).
             to have_been_made
         end
@@ -104,14 +104,14 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'ssl cert verification' do
           let(:http_client) do
             double(:http_client,
-              :connect_timeout= => nil,
-              :receive_timeout= => nil,
-              :send_timeout= => nil,
-              :set_auth => nil,
-              :default_header= => nil,
-              :default_header => {},
-              :ssl_config => ssl_config,
-              :request => response)
+                   :connect_timeout= => nil,
+                   :receive_timeout= => nil,
+                   :send_timeout= => nil,
+                   :set_auth => nil,
+                   :default_header= => nil,
+                   :default_header => {},
+                   :ssl_config => ssl_config,
+                   :request => response)
           end
 
           let(:response) { double(:response, code: nil, reason: nil, body: {}.to_json, headers: nil) }
@@ -184,7 +184,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when user guid is not provided' do
           it 'does not set the X-Broker-Api-Originating-Identity' do
             make_request
-            no_user_guid = ->(request) {
+            no_user_guid = lambda { |request|
               expect(request.headers).not_to have_key(VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY)
               true
             }
@@ -277,14 +277,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:http_client) do
         double(:http_client,
-          :connect_timeout= => nil,
-          :receive_timeout= => nil,
-          :send_timeout= => nil,
-          :set_auth => nil,
-          :default_header= => nil,
-          :default_header => {},
-          :ssl_config => ssl_config,
-          :request => response)
+               :connect_timeout= => nil,
+               :receive_timeout= => nil,
+               :send_timeout= => nil,
+               :set_auth => nil,
+               :default_header= => nil,
+               :default_header => {},
+               :ssl_config => ssl_config,
+               :request => response)
       end
 
       let(:response) { double(:response, code: 200, reason: 'OK', body: {}.to_json, headers: {}) }
@@ -396,7 +396,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not set a Content-Type header' do
           make_request
-          no_content_type = ->(request) {
+          no_content_type = lambda { |request|
             expect(request.headers).not_to have_key('Content-Type')
             true
           }
@@ -610,7 +610,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not set a Content-Type header' do
           make_request
-          no_content_type = ->(request) {
+          no_content_type = lambda { |request|
             expect(request.headers).not_to have_key('Content-Type')
             true
           }

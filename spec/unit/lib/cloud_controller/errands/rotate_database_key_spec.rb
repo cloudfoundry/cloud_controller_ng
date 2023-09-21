@@ -30,7 +30,7 @@ module VCAP::CloudController
         let(:service_broker) { ServiceBroker.make(:space_scoped) }
         let(:service_broker_update_request) { ServiceBrokerUpdateRequest.make(service_broker_id: service_broker.id, fk_service_brokers_id: service_broker.id) }
 
-        let(:encrypted_models) {
+        let(:encrypted_models) do
           {
             'VCAP::CloudController::AppModel' => app,
             'VCAP::CloudController::PackageModel' => PackageModel.make(:docker, package_hash: Sham.guid, error: 'a-error', docker_image: 'image', docker_username: 'user'),
@@ -44,9 +44,9 @@ module VCAP::CloudController
             'VCAP::CloudController::ServiceInstance' => service_instance,
             'VCAP::CloudController::ServiceBroker' => service_broker,
             'VCAP::CloudController::ServiceBrokerUpdateRequest' => service_broker_update_request,
-            'VCAP::CloudController::ServiceKey' => ServiceKey.make,
+            'VCAP::CloudController::ServiceKey' => ServiceKey.make
           }
-        }
+        end
 
         let(:database_encryption_keys) { { old: 'old-key', new: 'new-key' } }
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
           allow(Encryptor).to receive(:encrypted_classes).and_return([
             'VCAP::CloudController::ServiceBinding',
             'VCAP::CloudController::AppModel',
-            'VCAP::CloudController::ServiceInstance',
+            'VCAP::CloudController::ServiceInstance'
           ])
         end
 
@@ -118,7 +118,7 @@ module VCAP::CloudController
           it 'do not change their values' do
             entity = encrypted_models[klass]
             vals = entity.reload.values.except(*encrypted_columns(entity.class))
-            expect(vals.values.all? { |x| !x.blank? }).to be_truthy, "all fields of #{entity.class} need to have values"
+            expect(vals.values.all? { |x| x.present? }).to be_truthy, "all fields of #{entity.class} need to have values"
 
             RotateDatabaseKey.perform(batch_size: 1)
 
@@ -138,9 +138,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               RotateDatabaseKey.perform(batch_size: 1)
-            }.to raise_error(CloudController::Errors::ApiError, /Please set the desired encryption key/)
+            end.to raise_error(CloudController::Errors::ApiError, /Please set the desired encryption key/)
           end
         end
 
@@ -242,7 +242,7 @@ module VCAP::CloudController
             RSpec.shared_examples 'a row operation' do |op, args=[]|
               it op.to_s do
                 allow(Encryptor).to receive(:encrypted_classes).and_return([
-                  'VCAP::CloudController::TaskModel',
+                  'VCAP::CloudController::TaskModel'
                 ])
 
                 allow_any_instance_of(VCAP::CloudController::TaskModel).to receive(op) do |task|
@@ -267,7 +267,7 @@ module VCAP::CloudController
 
           it 'does not roll-back simultaneous changes to models', isolation: :truncation do
             allow(Encryptor).to receive(:encrypted_classes).and_return([
-              'VCAP::CloudController::TaskModel',
+              'VCAP::CloudController::TaskModel'
             ])
 
             task_the_second.delete
@@ -285,11 +285,11 @@ module VCAP::CloudController
               # while the rotator errand is running. We do this in a separate thread to ensure that the database connection
               # is distinct from the db connection that `RotateDatabaseKey.perform` is using, not to attempt to update
               # the TaskModel concurrently
-              Thread.new {
+              Thread.new do
                 encrypted_new_env_vars = TaskModel.make(salt: task_model.salt, environment_variables: new_environment_variables).environment_variables_without_encryption
                 db = Sequel.connect(task_model.db.opts)
                 db.run("UPDATE tasks SET encryption_key_label = 'new', encrypted_environment_variables = '#{encrypted_new_env_vars}' where guid = '#{task_model.guid}';")
-              }.join
+              end.join
 
               task_model.method(:db).call
             end
@@ -316,7 +316,7 @@ module VCAP::CloudController
           allow(Steno).to receive(:logger).and_return(logger)
           allow(Encryptor).to receive(:encrypted_classes).and_return([
             'VCAP::CloudController::TaskModel',
-            'VCAP::CloudController::AppModel',
+            'VCAP::CloudController::AppModel'
           ])
           allow(Encryptor).to receive(:current_encryption_key_label) { 'current' }
           allow(Encryptor).to receive(:database_encryption_keys) { { 'current' => 'thing' } }
@@ -341,9 +341,9 @@ module VCAP::CloudController
           end
 
           it 'logs information about the record and re-raises the error' do
-            expect {
+            expect do
               RotateDatabaseKey.perform
-            }.to raise_error(StandardError, 'nooooooooo!!!')
+            end.to raise_error(StandardError, 'nooooooooo!!!')
             expect(logger).to have_received(:error).with("Error 'StandardError' occurred while updating record: #{app.class}, id: #{app.id}")
           end
         end

@@ -3,7 +3,7 @@ require 'messages/list_message'
 module VCAP::CloudController
   class AppUsageEventsListMessage < ListMessage
     register_allowed_keys [
-      :after_guid,
+      :after_guid
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -19,7 +19,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(after_guid))
+      super(params, %w[after_guid])
     end
   end
 end

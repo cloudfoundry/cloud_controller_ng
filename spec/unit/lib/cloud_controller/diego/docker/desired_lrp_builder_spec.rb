@@ -10,18 +10,18 @@ module VCAP::CloudController
             ports: ports,
             docker_image: 'user/repo:tag',
             execution_metadata: execution_metadata,
-            start_command: 'dd if=/dev/random of=/dev/null',
+            start_command: 'dd if=/dev/random of=/dev/null'
           }
         end
         let(:config) do
           Config.new({
-            diego: {
-              lifecycle_bundles: {
-                docker: 'http://docker.example.com/path/to/lifecycle.tgz'
-              },
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-            }
-          })
+                       diego: {
+                         lifecycle_bundles: {
+                           docker: 'http://docker.example.com/path/to/lifecycle.tgz'
+                         },
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads
+                       }
+                     })
         end
         let(:ports) { [] }
         let(:execution_metadata) { '{}' }
@@ -47,7 +47,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::CachedDependency.new(
                 from: 'foo://bar.baz',
                 to: '/tmp/lifecycle',
-                cache_key: 'docker-lifecycle',
+                cache_key: 'docker-lifecycle'
               )
             ])
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('http://docker.example.com/path/to/lifecycle.tgz')
@@ -81,7 +81,7 @@ module VCAP::CloudController
                   url: 'foo://bar.baz',
                   destination_path: '/tmp/lifecycle',
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                 )
               )
             end
@@ -103,37 +103,37 @@ module VCAP::CloudController
         describe '#ports' do
           context 'when ports is an empty array' do
             let(:ports) { [] }
-            let(:execution_metadata) {
+            let(:execution_metadata) do
               {
                 ports: [
                   { 'port' => '1', 'protocol' => 'udp' },
                   { 'port' => '2', 'protocol' => 'udp' },
                   { 'port' => '3', 'protocol' => 'tcp' },
-                  { 'port' => '4', 'protocol' => 'tcp' },
+                  { 'port' => '4', 'protocol' => 'tcp' }
                 ]
               }.to_json
-            }
+            end
 
             it 'sets PORT to the first TCP port entry from execution_metadata' do
               expect(builder.ports).to eq([3, 4])
             end
 
             context 'when the ports array does not contain any TCP entries' do
-              let(:execution_metadata) {
+              let(:execution_metadata) do
                 { ports: [{ 'port' => '1', 'protocol' => 'udp' }] }.to_json
-              }
+              end
 
               it 'raises an error' do
-                expect {
+                expect do
                   builder.ports
-                }.to raise_error(CloudController::Errors::ApiError, /No tcp ports found in image metadata/)
+                end.to raise_error(CloudController::Errors::ApiError, /No tcp ports found in image metadata/)
               end
             end
 
             context 'when the execution_metadata has an empty array of ports' do
-              let(:execution_metadata) {
+              let(:execution_metadata) do
                 { ports: [] }.to_json
-              }
+              end
 
               it 'returns an array containing only the default' do
                 expect(builder.ports).to eq([DEFAULT_APP_PORT])
@@ -141,9 +141,9 @@ module VCAP::CloudController
             end
 
             context 'when the execution_metadata does not contain ports' do
-              let(:execution_metadata) {
+              let(:execution_metadata) do
                 {}.to_json
-              }
+              end
 
               it 'returns an array containing only the default' do
                 expect(builder.ports).to eq([DEFAULT_APP_PORT])
@@ -177,7 +177,7 @@ module VCAP::CloudController
 
           it 'returns the array of environment variables' do
             expect(builder.port_environment_variables).to match_array([
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
+              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11')
             ])
           end
         end

@@ -2,10 +2,10 @@ module VCAP::CloudController
   class UserAnnotationModel < Sequel::Model(:user_annotations_migration_view)
     set_primary_key :id
     many_to_one :user,
-      class: 'VCAP::CloudController::UserModel',
-      primary_key: :guid,
-      key: :resource_guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::UserModel',
+                primary_key: :guid,
+                key: :resource_guid,
+                without_guid_generation: true
 
     include MetadataModelMixin
   end

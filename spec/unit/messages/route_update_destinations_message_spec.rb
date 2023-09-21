@@ -267,7 +267,7 @@ module VCAP::CloudController
           end
         end
         context 'when port is greater than 65535' do
-          let(:port) { 65536 }
+          let(:port) { 65_536 }
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors.full_messages).to contain_exactly(
@@ -319,7 +319,7 @@ module VCAP::CloudController
         context 'and all 10+ destinations are for the same app but different ports' do
           let(:params) do
             {
-              destinations: (1..11).map { |i|
+              destinations: (1..11).map do |i|
                 {
                   app: {
                     guid: 'app-guid',
@@ -329,7 +329,7 @@ module VCAP::CloudController
                   },
                   port: 8080 + i
                 }
-              }
+              end
             }
           end
 
@@ -344,7 +344,7 @@ module VCAP::CloudController
         context 'and all 10+ combinations have unique process types' do
           let(:params) do
             {
-              destinations: (1..100).map { |i|
+              destinations: (1..100).map do |i|
                 {
                   app: {
                     guid: 'app-guid',
@@ -354,7 +354,7 @@ module VCAP::CloudController
                   },
                   port: 8080
                 }
-              }
+              end
             }
           end
 
@@ -366,7 +366,7 @@ module VCAP::CloudController
         context 'when 100+ combinations have unique process types' do
           let(:params) do
             {
-              destinations: (1..101).map { |i|
+              destinations: (1..101).map do |i|
                 {
                   app: {
                     guid: 'app-guid',
@@ -376,7 +376,7 @@ module VCAP::CloudController
                   },
                   port: 8080
                 }
-              }
+              end
             }
           end
 
@@ -420,14 +420,14 @@ module VCAP::CloudController
             {
               destinations: [
                 {
-                  app: { guid: 'app-guid' },
+                  app: { guid: 'app-guid' }
                 },
                 {
-                  app: { guid: 'app-guid' },
+                  app: { guid: 'app-guid' }
                 },
                 {
-                  app: { guid: 'app-guid' },
-                },
+                  app: { guid: 'app-guid' }
+                }
               ]
             }
           end
@@ -457,7 +457,7 @@ module VCAP::CloudController
             expect(subject).to be_invalid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: weighted destinations can only be used when replacing all destinations.',
-              'Destinations[1]: weighted destinations can only be used when replacing all destinations.',
+              'Destinations[1]: weighted destinations can only be used when replacing all destinations.'
             )
           end
         end
@@ -481,7 +481,7 @@ module VCAP::CloudController
                 {
                   app: { guid: 'app-guid' },
                   weight: 55
-                },
+                }
               ]
             }
           end
@@ -496,14 +496,14 @@ module VCAP::CloudController
             {
               destinations: [
                 {
-                  app: { guid: 'app-guid' },
+                  app: { guid: 'app-guid' }
                 },
                 {
-                  app: { guid: 'app-guid' },
+                  app: { guid: 'app-guid' }
                 },
                 {
-                  app: { guid: 'app-guid' },
-                },
+                  app: { guid: 'app-guid' }
+                }
               ]
             }
           end
@@ -594,7 +594,7 @@ module VCAP::CloudController
                 {
                   app: { guid: 'app-guid' },
                   weight: 15
-                },
+                }
               ]
             }
           end
@@ -639,7 +639,7 @@ module VCAP::CloudController
             {
               app: { guid: 'app-guid' },
               protocol: protocol
-            },
+            }
           ]
         }
       end
@@ -708,14 +708,14 @@ module VCAP::CloudController
             process_type: 'web',
             app_port: nil,
             weight: nil,
-            protocol: nil,
+            protocol: nil
           },
           {
             app_guid: 'some-other-guid',
             process_type: 'web',
             app_port: 9000,
             weight: nil,
-            protocol: nil,
+            protocol: nil
           }
         ])
       end

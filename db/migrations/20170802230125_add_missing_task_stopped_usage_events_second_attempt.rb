@@ -8,7 +8,8 @@ Sequel.migration do
                            exclude(task_guid: self[:tasks].select(:guid)).
                            group_by(:task_guid).
                            having { count.function.* < 2 },
-                         id: :id)
+                           id: :id
+                         )
 
     events_to_backfill.each do |started_event|
       next unless started_event[:state] == 'TASK_STARTED'

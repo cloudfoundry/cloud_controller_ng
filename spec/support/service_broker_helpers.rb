@@ -96,7 +96,7 @@ module ServiceBrokerHelpers
 
   def provision_url_for_broker(broker, accepts_incomplete: nil)
     path = "/v2/service_instances/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(broker)}#{path}#{query_params}/
@@ -104,7 +104,7 @@ module ServiceBrokerHelpers
 
   def update_url_for_broker(broker, accepts_incomplete: nil)
     path = "/v2/service_instances/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(broker)}#{path}#{query_params}/
@@ -117,7 +117,7 @@ module ServiceBrokerHelpers
 
   def bind_url(service_instance, accepts_incomplete: nil)
     path = "/v2/service_instances/#{service_instance.guid}/service_bindings/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(service_instance.service_broker)}#{path}#{query_params}/
