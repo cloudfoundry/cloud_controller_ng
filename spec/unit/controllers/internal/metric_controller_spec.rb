@@ -19,14 +19,6 @@ module VCAP::CloudController
             raise "Unexpected call: #{instance_var}"
           end
         end
-
-        VCAP::CloudController::Metrics::PeriodicUpdater.new(
-          Time.now.utc,
-          Steno::Sink::Counter.new,
-          Steno.logger('cc.api'),
-          VCAP::CloudController::Metrics::StatsdUpdater.new,
-          VCAP::CloudController::Metrics::PrometheusUpdater.new
-        ).update!
       end
 
       describe '#index' do

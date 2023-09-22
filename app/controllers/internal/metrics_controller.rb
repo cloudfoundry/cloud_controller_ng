@@ -8,6 +8,7 @@ module VCAP::CloudController
       get '/internal/v4/metrics', :index
 
       def index
+        CloudController::DependencyLocator.instance.periodic_updater.update!
         [200, Prometheus::Client::Formats::Text.marshal(Prometheus::Client.registry)]
       end
     end

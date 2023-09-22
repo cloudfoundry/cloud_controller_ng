@@ -170,6 +170,7 @@ module VCAP::CloudController
         VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
         prometheus_updater
         )
+      CloudController::DependencyLocator.instance.register(:periodic_updater, @periodic_updater)
     end
 
     def statsd_client

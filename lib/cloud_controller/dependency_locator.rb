@@ -59,6 +59,19 @@ module CloudController
       @dependencies[:runners] || register(:runners, VCAP::CloudController::Runners.new(config))
     end
 
+    def periodic_updater
+      @dependencies[:periodic_updater] ||
+        register(:periodic_updater,
+                 VCAP::CloudController::Metrics::PeriodicUpdater.new(
+                   Time.now.utc,
+                   Steno::Sink::Counter.new,
+                   Steno.logger('cc.api'),
+                   VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
+                   prometheus_updater
+                 )
+        )
+    end
+
     def prometheus_updater
       register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new) unless @dependencies[:prometheus_updater]
       @dependencies[:prometheus_updater]
