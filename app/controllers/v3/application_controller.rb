@@ -68,6 +68,8 @@ class ApplicationController < ActionController::Base
   before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :hashify_params
   before_action :null_coalesce_body
+  before_action :validate_content_type!
+  before_action :validate_request_format!
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
@@ -221,6 +223,19 @@ class ApplicationController < ActionController::Base
 
   def null_coalesce_body
     hashed_params[:body] ||= {}
+  end
+
+  def validate_content_type!
+    return if request.content_type.nil? || Mime::Type.lookup(request.content_type) == :json
+
+    logger.error("Invalid content-type: #{request.content_type}")
+    bad_request!('Invalid Content-Type')
+  end
+
+  def validate_request_format!
+    return if !hashed_params.include?(:format) || hashed_params[:format] == 'json'
+
+    bad_request!('Invalid format requested')
   end
 
   def membership

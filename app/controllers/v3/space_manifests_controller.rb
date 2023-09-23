@@ -8,8 +8,6 @@ require 'actions/space_diff_manifest'
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
 
-  before_action :validate_content_type!
-
   def apply_manifest
     space = Space.find(guid: hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
@@ -86,14 +84,16 @@ class SpaceManifestsController < ApplicationController
   end
 
   def validate_content_type!
-    if !request_content_type_is_yaml?
-      logger.error("Content-type isn't yaml: #{request.content_type}")
-      bad_request!('Content-Type must be yaml')
-    end
+    return if Mime::Type.lookup(request.content_type) == :yaml
+
+    logger.error("Invalid content-type: #{request.content_type}")
+    bad_request!('Invalid Content-Type')
   end
 
-  def request_content_type_is_yaml?
-    Mime::Type.lookup(request.content_type) == :yaml
+  def validate_request_format!
+    return unless hashed_params.include?(:format)
+
+    bad_request!('Invalid format requested')
   end
 
   def check_version_is_supported!
