@@ -244,4 +244,43 @@ RSpec.shared_examples 'create binding job' do |binding_type|
       expect(binding.last_operation.description).to eq('Service Broker failed to bind within the required time.')
     end
   end
+
+  describe 'cancelling a binding creation' do
+    let(:action) { double('BindingAction', { bind: nil }) }
+
+    before do
+      allow(VCAP::CloudController::V3::CreateServiceBindingFactory).to receive(:action).and_return(action)
+    end
+
+    context 'when binding gets deleted while service broker polling times out' do
+      before do
+        allow(action).to receive(:poll) do
+          binding.destroy # Simulate a successful deletion happening in parallel...
+          raise 'Service Broker Timeout' # ... and raise an error (would be: ServiceBrokers::V2::Errors::HttpClientTimeout).
+        end
+      end
+
+      it 'reports the error and does not try to update the (non-existing) binding / last_operation' do
+        expect { subject.perform }.to raise_error(
+          CloudController::Errors::ApiError, 'bind could not be completed: Service Broker Timeout'
+        )
+        expect { binding.reload }.to raise_error(Sequel::NoExistingObject)
+      end
+    end
+
+    context 'when binding gets deleted immediately before the job expires' do
+      before do
+        allow(action).to receive(:poll) do
+          binding.destroy # Simulate a successful deletion happening in parallel.
+          { finished: false }
+        end
+      end
+
+      it 'does not try to update the (non-existing) binding / last_operation' do
+        subject.perform
+        subject.handle_timeout
+        expect { binding.reload }.to raise_error(Sequel::NoExistingObject)
+      end
+    end
+  end
 end
