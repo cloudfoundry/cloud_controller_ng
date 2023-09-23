@@ -10,6 +10,7 @@ module Logcache
 
     let(:host) { 'doppler.service.cf.internal' }
     let(:port) { '8080' }
+    let(:timeout) { nil }
     let(:expected_request_options) { { 'headers' => { 'Authorization' => 'bearer oauth-token' } } }
 
     describe 'with TLS' do
@@ -20,7 +21,7 @@ module Logcache
       let(:credentials) { instance_double(GRPC::Core::ChannelCredentials) }
       let(:channel_arg_hash) { { GRPC::Core::Channel::SSL_TARGET => tls_subject_name } }
       let(:client) do
-        Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+        Logcache::Client.new(host: host, port: port, timeout: timeout, client_ca_path: client_ca_path,
                              client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
       end
       let(:client_ca) { File.open(client_ca_path).read }
@@ -76,7 +77,7 @@ module Logcache
         end
 
         let(:client) do
-          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+          Logcache::Client.new(host: host, port: port, timeout: timeout, client_ca_path: client_ca_path,
                                client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
         end
 
@@ -107,7 +108,7 @@ module Logcache
         end
 
         let(:client) do
-          Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
+          Logcache::Client.new(host: host, port: port, timeout: timeout, client_ca_path: client_ca_path,
                                client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
         end
 
@@ -150,17 +151,17 @@ module Logcache
         Logcache::Client.new(
           host: host,
           port: port,
+          timeout: timeout,
           client_ca_path: nil,
           client_cert_path: nil,
           client_key_path: nil,
           tls_subject_name: nil
         )
       end
+      let(:instance_count) { 2 }
+      let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
 
       describe '#container_metrics' do
-        let(:instance_count) { 2 }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
-
         before do
           expect(GRPC::Core::ChannelCredentials).not_to receive(:new)
           expect(Logcache::V1::Egress::Stub).to receive(:new).
@@ -183,6 +184,20 @@ module Logcache
             envelope_types: [:GAUGE]
           )
           expect(logcache_service).to have_received(:read).with(logcache_request)
+        end
+      end
+
+      describe 'when logcache is unreachable' do
+        let(:host) { '192.0.2.1' } # don't use an unresolvable hostname, but some unused IP address (see RFC 5737)
+        let(:timeout) { 1 }
+
+        it 'aborts the request after the given timeout and raises an error' do
+          start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          expect {
+            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          }.to raise_error(CloudController::Errors::ApiError, /Connection to Log Cache timed out/)
+          end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          expect(end_time - start_time).to be_between(timeout, timeout + 1)
         end
       end
     end

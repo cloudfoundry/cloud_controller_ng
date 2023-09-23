@@ -6,7 +6,9 @@ module Logcache
     MAX_LIMIT = 1000
     DEFAULT_LIMIT = 100
 
-    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:)
+    def initialize(host:, port:, timeout:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:)
+      timeout ||= 250
+
       if client_ca_path
         client_ca = IO.read(client_ca_path)
         client_key = IO.read(client_key_path)
@@ -16,13 +18,13 @@ module Logcache
           "#{host}:#{port}",
           GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
           channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
-          timeout: 250
+          timeout: timeout
         )
       else
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
           :this_channel_is_insecure,
-          timeout: 250
+          timeout: timeout
         )
       end
     end
