@@ -17,6 +17,7 @@ module VCAP::CloudController
           app_instance_limit: message.total_instances || QuotaDefinition::UNLIMITED,
           app_task_limit: message.per_app_tasks || QuotaDefinition::UNLIMITED,
           log_rate_limit: message.log_rate_limit_in_bytes_per_second || QuotaDefinition::UNLIMITED,
+          graceful_shutdown: message.graceful_shutdown || QuotaDefinition::DEFAULT_GRACEFUL_SHUTDOWN;
 
           # Services
           total_services: message.total_service_instances || QuotaDefinition::DEFAULT_TOTAL_SERVICES,

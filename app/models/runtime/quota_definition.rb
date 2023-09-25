@@ -5,6 +5,7 @@ module VCAP::CloudController
     # Default values
     DEFAULT_NON_BASIC_SERVICES_ALLOWED = true
     DEFAULT_MEMORY_LIMIT = UNLIMITED
+    DEFAULT_GRACEFUL_SHUTDOWN = -1
     DEFAULT_TOTAL_SERVICES = UNLIMITED
     DEFAULT_TOTAL_ROUTES = UNLIMITED
 
@@ -13,11 +14,11 @@ module VCAP::CloudController
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
       :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_rate_limit
+      :log_rate_limit :graceful_shutdown
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
       :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_rate_limit
+      :log_rate_limit :graceful_shutdown
 
     def validate
       validates_presence :name
