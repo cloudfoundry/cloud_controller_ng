@@ -127,13 +127,20 @@ module VCAP::CloudController
           end
 
           it 'deletes it from the database' do
-            subject.delete
+            action.delete
 
             expect(ServiceInstance.all).to be_empty
+            expect(ServiceInstanceOperation.all).to be_empty
+          end
+
+          it "sets the operation to 'delete in progress'" do
+            expect_any_instance_of(ServiceInstance).to receive(:save_with_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+
+            action.delete
           end
 
           it 'creates an audit event' do
-            subject.delete
+            action.delete
 
             expect(event_repository).to have_received(:record_user_provided_service_instance_event).with(
               :delete,
@@ -256,13 +263,20 @@ module VCAP::CloudController
 
           context 'when the client succeeds synchronously' do
             it 'deletes it from the database' do
-              subject.delete
+              action.delete
 
               expect(ServiceInstance.all).to be_empty
+              expect(ServiceInstanceOperation.all).to be_empty
+            end
+
+            it "sets the operation to 'delete in progress'" do
+              expect_any_instance_of(ServiceInstance).to receive(:save_with_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+
+              action.delete
             end
 
             it 'creates an audit event' do
-              subject.delete
+              action.delete
 
               expect(event_repository).to have_received(:record_service_instance_event).with(
                 :delete,
@@ -289,6 +303,9 @@ module VCAP::CloudController
             end
 
             it 'updates the last operation' do
+              expect_any_instance_of(ServiceInstance).to receive(:save_with_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+              expect_any_instance_of(ServiceInstance).to receive(:save_with_new_operation).and_call_original
+
               action.delete
 
               expect(ServiceInstance.first.last_operation.type).to eq('delete')
@@ -335,6 +352,7 @@ module VCAP::CloudController
                 action.delete
 
                 expect(ServiceInstance.all).to be_empty
+                expect(ServiceInstanceOperation.all).to be_empty
               end
             end
 
@@ -654,6 +672,7 @@ module VCAP::CloudController
             action.poll
 
             expect(ServiceInstance.all).to be_empty
+            expect(ServiceInstanceOperation.all).to be_empty
           end
 
           it 'creates an audit event' do

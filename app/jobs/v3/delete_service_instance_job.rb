@@ -5,7 +5,7 @@ require 'actions/v3/service_instance_delete'
 module VCAP::CloudController
   module V3
     class DeleteServiceInstanceJob < VCAP::CloudController::Jobs::ReoccurringJob
-      attr_reader :resource_guid
+      attr_reader :resource_guid, :user_audit_info
 
       def initialize(guid, user_audit_info)
         super()
@@ -55,19 +55,17 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :user_audit_info
-
       def service_instance
-        ManagedServiceInstance.first(guid: resource_guid)
+        @service_instance ||= ManagedServiceInstance.first(guid: resource_guid)
       end
 
       def delete_in_progress?
-        service_instance.last_operation&.type == 'delete' &&
+        service_instance.reload.last_operation&.type == 'delete' &&
           service_instance.last_operation&.state == 'in progress'
       end
 
       def action
-        ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info))
+        @action ||= ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info))
       end
     end
   end

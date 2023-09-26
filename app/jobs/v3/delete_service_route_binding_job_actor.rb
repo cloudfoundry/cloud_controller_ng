@@ -1,6 +1,3 @@
-require 'jobs/reoccurring_job'
-require 'cloud_controller/errors/api_error'
-
 module VCAP::CloudController
   module V3
     class DeleteServiceRouteBindingJobActor
