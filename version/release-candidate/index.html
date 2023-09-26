@@ -14941,6 +14941,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The host the instance is running on</td>
 </tr>
 <tr>
+<td><strong>instance_internal_ip</strong></td>
+<td><em>string</em></td>
+<td>The internal IP address of the instance</td>
+</tr>
+<tr>
 <td><strong>instance_ports</strong></td>
 <td><em>object</em></td>
 <td>JSON array of port mappings between the network-exposed port used to communicate with the app (<code class="prettyprint">external</code>) and port opened to the running process that it can listen on (<code class="prettyprint">internal</code>)</td>
@@ -15127,6 +15132,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
         </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">69705728</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.244.16.10"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"instance_internal_ip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.255.93.167"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"instance_ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"external"</span><span class="p">:</span><span class="w"> </span><span class="mi">64546</span><span class="p">,</span><span class="w">
@@ -15157,6 +15163,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"disk_quota"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"fds_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="p">,</span><span class="w">
       </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"instance_internal_ip"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
       </span><span class="nt">"instance_ports"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"isolation_segment"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"log_rate_limit"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
