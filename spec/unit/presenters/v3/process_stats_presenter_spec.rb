@@ -12,6 +12,7 @@ module VCAP::CloudController::Presenters::V3
       let(:net_info_1) {
         {
           address: '1.2.3.4',
+          instance_address: '5.6.7.8',
           ports: [
             {
               host_port: 8080,
@@ -31,6 +32,7 @@ module VCAP::CloudController::Presenters::V3
       let(:net_info_2) {
         {
           address: '',
+          instance_address: '',
           ports: nil
         }
       }
@@ -116,6 +118,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:details]).to eq(nil)
         expect(result[0][:isolation_segment]).to eq('hecka-compliant')
         expect(result[0][:host]).to eq('myhost')
+        expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
         expect(result[0][:instance_ports]).to eq(instance_ports_1)
         expect(result[0][:uptime]).to eq(12345)
         expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
@@ -156,6 +159,7 @@ module VCAP::CloudController::Presenters::V3
         let(:net_info_1) {
           {
             address: '1.2.3.4',
+            instance_address: '5.6.7.8',
             ports: [
               {
                 host_port: 8080,
@@ -193,6 +197,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:details]).to eq(nil)
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
+          expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
           expect(result[0][:instance_ports]).to eq(instance_ports_1)
           expect(result[0][:uptime]).to eq(12345)
           expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
@@ -235,6 +240,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:details]).to eq(nil)
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
+          expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
           expect(result[0][:instance_ports]).to eq(instance_ports_1)
           expect(result[0][:uptime]).to eq(12345)
           expect(result[0][:mem_quota]).to be_nil

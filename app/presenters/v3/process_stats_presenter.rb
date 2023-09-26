@@ -32,12 +32,13 @@ module VCAP::CloudController
 
         def found_instance_stats_hash(index, stats)
           {
-            type:       @type,
-            index:      index,
-            state:      stats[:state],
-            host:       stats[:stats][:host],
-            uptime:     stats[:stats][:uptime],
-            mem_quota:  stats[:stats][:mem_quota],
+            type: @type,
+            index: index,
+            state: stats[:state],
+            host: stats[:stats][:host],
+            instance_internal_ip: stats[:stats][:net_info][:instance_address],
+            uptime: stats[:stats][:uptime],
+            mem_quota: stats[:stats][:mem_quota],
             disk_quota: stats[:stats][:disk_quota],
             log_rate_limit:  stats[:stats][:log_rate_limit],
             fds_quota:  stats[:stats][:fds_quota],
