@@ -37,6 +37,8 @@ module VCAP::CloudController
       def delete
         operation_in_progress! if blocking_operation_in_progress?
 
+        update_last_operation unless service_instance.operation_in_progress?
+
         errors = remove_associations
         raise errors.first if errors.any?
 
@@ -44,13 +46,16 @@ module VCAP::CloudController
         if result[:finished]
           perform_delete_actions
         else
-          update_last_operation_with_operation_id(result[:operation])
+          update_last_operation_with_details(operation: result[:operation])
           record_start_delete_event
         end
 
-        return result
+        result
       rescue => e
-        update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
+        unless (e.is_a? CloudController::Errors::ApiError) && e.name == 'AsyncServiceInstanceOperationInProgress'
+          update_last_operation_with_failure(e.message)
+        end
+
         raise e
       end
 
@@ -61,7 +66,7 @@ module VCAP::CloudController
         )
         case result[:last_operation][:state]
         when 'in progress'
-          update_last_operation_with_description(result[:last_operation][:description])
+          update_last_operation_with_details(description: result[:last_operation][:description])
           ContinuePolling.call(result[:retry_after])
         when 'succeeded'
           perform_delete_actions
@@ -152,21 +157,16 @@ module VCAP::CloudController
         end
       end
 
-      def update_last_operation_with_operation_id(operation_id)
-        service_instance.save_with_new_operation(
-          {},
-          {
-            type: 'delete',
-            state: 'in progress',
-            broker_provided_operation: operation_id
-          }
-        )
+      def update_last_operation
+        service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
       end
 
-      def update_last_operation_with_description(description)
-        lo = service_instance.last_operation.to_hash
-        lo[:broker_provided_operation] = service_instance.last_operation.broker_provided_operation
-        lo[:description] = description
+      def update_last_operation_with_details(description: nil, operation: nil)
+        lo = { type: 'delete', state: 'in progress' }
+        description ||= service_instance.last_operation&.description
+        operation ||= service_instance.last_operation&.broker_provided_operation
+        lo.merge!({ description: description }) unless description.nil?
+        lo.merge!({ broker_provided_operation: operation }) unless operation.nil?
         service_instance.save_with_new_operation({}, lo)
       end
 

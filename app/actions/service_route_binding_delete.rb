@@ -7,20 +7,17 @@ module VCAP::CloudController
       def initialize(user_audit_info)
         super()
         @user_audit_info = user_audit_info
+        @event_repository_type = Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING
       end
 
       private
 
       def event_repository
-        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
-          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
+        @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(@event_repository_type)
       end
 
       def perform_delete_actions(binding)
-        event_repository.record_delete(
-          binding,
-          @user_audit_info
-        )
+        event_repository.record_delete(binding, @user_audit_info)
 
         binding.destroy
         binding.notify_diego

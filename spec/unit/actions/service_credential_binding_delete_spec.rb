@@ -17,11 +17,19 @@ module VCAP::CloudController
         allow(binding_event_repo).to receive(:record_start_delete)
       end
 
-      RSpec.shared_examples 'successful credential binding delete' do |klass|
+      RSpec.shared_examples 'successful credential binding delete' do |klass, klass_operation|
         it 'deletes the binding' do
           action.delete(binding)
 
           expect(klass.all).to be_empty
+          expect(klass_operation.all).to be_empty
+        end
+
+        it "sets the operation to 'delete in progress'" do
+          expect_any_instance_of(klass).to receive(:save_with_attributes_and_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+          expect_any_instance_of(klass).to receive(:save_with_attributes_and_new_operation).and_call_original
+
+          action.delete(binding)
         end
 
         it 'creates an audit event' do
@@ -40,7 +48,7 @@ module VCAP::CloudController
         end
       end
 
-      RSpec.shared_examples 'managed service instance binding delete' do |klass|
+      RSpec.shared_examples 'managed service instance binding delete' do |klass, klass_operation|
         context 'managed service instance' do
           let(:service_instance) { ManagedServiceInstance.make(space: space) }
 
@@ -54,7 +62,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it_behaves_like 'successful credential binding delete', klass
+            it_behaves_like 'successful credential binding delete', klass, klass_operation
           end
 
           context 'async unbinding' do
@@ -212,12 +220,12 @@ module VCAP::CloudController
         end
 
         describe '#delete' do
-          it_behaves_like 'managed service instance binding delete', ServiceBinding
+          it_behaves_like 'managed service instance binding delete', ServiceBinding, ServiceBindingOperation
 
           context 'user-provided service instance' do
             let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
 
-            it_behaves_like 'successful credential binding delete', ServiceBinding
+            it_behaves_like 'successful credential binding delete', ServiceBinding, ServiceBindingOperation
           end
         end
 
@@ -245,7 +253,7 @@ module VCAP::CloudController
         end
 
         describe '#delete' do
-          it_behaves_like 'managed service instance binding delete', ServiceKey
+          it_behaves_like 'managed service instance binding delete', ServiceKey, ServiceKeyOperation
         end
 
         describe '#poll' do

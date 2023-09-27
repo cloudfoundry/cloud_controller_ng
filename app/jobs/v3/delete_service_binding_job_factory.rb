@@ -38,10 +38,10 @@ module VCAP::CloudController
         case binding
         when RouteBinding
           :route
-        when ServiceKey
-          :key
         when ServiceBinding
           :credential
+        when ServiceKey
+          :key
         else
           raise InvalidType
         end

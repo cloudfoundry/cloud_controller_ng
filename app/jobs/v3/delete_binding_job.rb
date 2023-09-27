@@ -14,11 +14,11 @@ module VCAP::CloudController
       end
 
       def actor
-        DeleteServiceBindingFactory.for(@type)
+        @actor ||= DeleteServiceBindingFactory.for(@type)
       end
 
       def action
-        DeleteServiceBindingFactory.action(@type, @user_audit_info)
+        @action ||= DeleteServiceBindingFactory.action(@type, @user_audit_info)
       end
 
       def operation
@@ -79,11 +79,11 @@ module VCAP::CloudController
       private
 
       def binding
-        actor.get_resource(resource_guid)
+        @binding ||= actor.get_resource(resource_guid)
       end
 
       def delete_in_progress?
-        binding.last_operation&.type == 'delete' &&
+        binding.reload.last_operation&.type == 'delete' &&
           binding.last_operation&.state == 'in progress'
       end
 

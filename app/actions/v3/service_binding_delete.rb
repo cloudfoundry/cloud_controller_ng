@@ -25,18 +25,20 @@ module VCAP::CloudController
       def delete(binding)
         operation_in_progress! if blocking_operation_in_progress?(binding)
 
+        update_last_operation(binding) unless binding.operation_in_progress?
+
         result = send_unbind_to_client(binding)
         if result[:finished]
           perform_delete_actions(binding)
         else
           perform_start_delete_actions(binding)
-          update_last_operation(binding, operation: result[:operation])
+          update_last_operation_with_details(binding, operation: result[:operation])
         end
 
-        return result
+        result
       rescue => e
         unless e.is_a? ConcurrencyError
-          update_last_operation(binding, state: 'failed', description: e.message)
+          update_last_operation_with_failure(binding, e.message)
         end
 
         raise e
@@ -48,7 +50,7 @@ module VCAP::CloudController
 
         case details[:last_operation][:state]
         when 'in progress'
-          update_last_operation(
+          update_last_operation_with_details(
             binding,
             description: details[:last_operation][:description],
             operation: binding.last_operation.broker_provided_operation)
@@ -57,13 +59,13 @@ module VCAP::CloudController
           perform_delete_actions(binding)
           return PollingFinished
         when 'failed'
-          update_last_operation(binding, state: 'failed', description: details[:last_operation][:description])
+          update_last_operation_with_failure(binding, details[:last_operation][:description])
           raise LastOperationFailedState
         end
       rescue LastOperationFailedState => e
         raise e
       rescue => e
-        update_last_operation(binding, state: 'failed', description: e.message)
+        update_last_operation_with_failure(binding, e.message)
         raise e
       end
 
@@ -86,15 +88,28 @@ module VCAP::CloudController
         unprocessable!(binding, err)
       end
 
-      def update_last_operation(binding, description: nil, state: 'in progress', operation: nil)
+      def update_last_operation(binding)
+        binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
+      end
+
+      def update_last_operation_with_details(binding, description: nil, operation: nil)
+        lo = { type: 'delete', state: 'in progress' }
+        description ||= binding.last_operation&.description
+        operation ||= binding.last_operation&.broker_provided_operation
+        lo.merge!({ description: description }) unless description.nil?
+        lo.merge!({ broker_provided_operation: operation }) unless operation.nil?
+        binding.save_with_attributes_and_new_operation({}, lo)
+      end
+
+      def update_last_operation_with_failure(binding, message)
         binding.save_with_attributes_and_new_operation(
           {},
           {
             type: 'delete',
-            state: state,
-            description: description,
-            broker_provided_operation: operation || binding.last_operation&.broker_provided_operation
-          })
+            state: 'failed',
+            description: message,
+          }
+        )
       end
 
       def unprocessable!(binding, err)

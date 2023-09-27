@@ -10,6 +10,7 @@ module VCAP::CloudController
         perform_action
 
         expect(RouteBinding.all).to be_empty
+        expect(RouteBindingOperation.all).to be_empty
       end
 
       it 'creates an audit event' do
@@ -99,6 +100,12 @@ module VCAP::CloudController
             end
 
             it_behaves_like 'successful route binding delete'
+
+            it "sets the operation to 'delete in progress'" do
+              expect_any_instance_of(RouteBinding).to receive(:save_with_attributes_and_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+
+              perform_action
+            end
           end
 
           context 'async unbinding' do
@@ -126,6 +133,12 @@ module VCAP::CloudController
           let(:perform_action) { action.delete(binding) }
 
           it_behaves_like 'successful route binding delete'
+
+          it "sets the operation to 'delete in progress'" do
+            expect_any_instance_of(RouteBinding).to receive(:save_with_attributes_and_new_operation).with({}, { type: 'delete', state: 'in progress' }).and_call_original
+
+            perform_action
+          end
         end
       end
 
