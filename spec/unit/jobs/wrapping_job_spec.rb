@@ -8,9 +8,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.error(job, 'foobar')
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -20,9 +20,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.reschedule_at(job, 'foobar')
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -32,9 +32,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.before(job)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -54,9 +54,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.after(job)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -66,9 +66,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.success(job)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -78,9 +78,9 @@ module VCAP::CloudController
           it 'should no raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.failure(job)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end

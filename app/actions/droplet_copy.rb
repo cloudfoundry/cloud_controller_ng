@@ -2,14 +2,14 @@ module VCAP::CloudController
   class DropletCopy
     class InvalidCopyError < StandardError; end
 
-    CLONED_ATTRIBUTES = [
-      :buildpack_receipt_buildpack_guid,
-      :process_types,
-      :buildpack_receipt_buildpack,
-      :execution_metadata,
-      :docker_receipt_image,
-      :docker_receipt_username,
-      :docker_receipt_password,
+    CLONED_ATTRIBUTES = %i[
+      buildpack_receipt_buildpack_guid
+      process_types
+      buildpack_receipt_buildpack
+      execution_metadata
+      docker_receipt_image
+      docker_receipt_username
+      docker_receipt_password
     ].freeze
 
     def initialize(source_droplet)
@@ -43,7 +43,7 @@ module VCAP::CloudController
           destination_app.name,
           destination_app.space_guid,
           destination_app.space.organization_guid
-          )
+        )
       end
 
       new_droplet
@@ -53,9 +53,9 @@ module VCAP::CloudController
       # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
       # because mysql will deadlock when requests happen concurrently otherwise.
       BuildpackLifecycleDataModel.create(
-        stack:     @source_droplet.buildpack_lifecycle_data.stack,
+        stack: @source_droplet.buildpack_lifecycle_data.stack,
         buildpacks: @source_droplet.buildpack_lifecycle_data.buildpacks,
-        droplet:   new_droplet,
+        droplet: new_droplet
       )
       new_droplet.buildpack_lifecycle_data(reload: true)
 

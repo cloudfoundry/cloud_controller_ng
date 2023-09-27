@@ -97,11 +97,10 @@ RSpec.describe 'Feature Flags Request' do
 
   describe 'PATCH /v3/feature_flags/:name' do
     let(:feature_flag) { VCAP::CloudController::FeatureFlag.new(name: 'diego_docker', enabled: true, error_message: 'error') }
-    let(:patch_body) {
+    let(:patch_body) do
       { 'enabled' => feature_flag.enabled,
-        'custom_error_message' => feature_flag.error_message,
-      }
-    }
+        'custom_error_message' => feature_flag.error_message }
+    end
 
     context 'user is not admin' do
       let(:user) { make_user }

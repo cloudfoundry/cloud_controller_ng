@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
 
     let(:object) { VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: service_plan) }
 

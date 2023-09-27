@@ -51,7 +51,7 @@ module VCAP::CloudController
           routes = Route.
                    where(Sequel.lit("#{Route.table_name}.id > ?", last_id)).
                    order("#{Route.table_name}__id".to_sym).
-                   join(:domains, [[:id, :domain_id], [:name, allowed_domains]]).
+                   join(:domains, [%i[id domain_id], [:name, allowed_domains]]).
                    eager(:domain).
                    limit(BATCH_SIZE)
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
                            where(Sequel.lit("#{RouteMappingModel.table_name}.id > ?", last_id)).
                            order("#{RouteMappingModel.table_name}__id".to_sym).
                            join(:routes, guid: :route_guid).
-                           join(:domains, [[:id, :domain_id], [:name, allowed_domains]]).
+                           join(:domains, [%i[id domain_id], [:name, allowed_domains]]).
                            eager(:process).
                            limit(BATCH_SIZE)
 

@@ -63,9 +63,9 @@ module VCAP::CloudController
           it 'wraps the error in an ApiError' do
             allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
 
-            expect {
+            expect do
               logging_context_job.perform
-            }.to raise_error(CloudController::Errors::ApiError, /three retries/)
+            end.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
         end
       end
@@ -199,8 +199,8 @@ module VCAP::CloudController
 
           it 'renders the exception in V3 error format' do
             expect(YAML).to receive(:dump).with(hash_including({
-              'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
-            }))
+                                                                 'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
+                                                               }))
             logging_context_job.error(job, error)
           end
         end

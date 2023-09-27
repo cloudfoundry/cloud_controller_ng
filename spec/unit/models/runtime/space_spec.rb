@@ -7,61 +7,61 @@ module VCAP::CloudController
     describe 'Validations' do
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :organization }
-      it { is_expected.to validate_uniqueness [:organization_id, :name] }
+      it { is_expected.to validate_uniqueness %i[organization_id name] }
       it { is_expected.to strip_whitespace :name }
 
       context 'name' do
         subject(:space) { Space.make }
 
         it 'should allow standard ascii character' do
-          space.name = "A -_- word 2!?()\'\"&+."
-          expect {
+          space.name = "A -_- word 2!?()'\"&+."
+          expect do
             space.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         describe 'database errors' do
           it 'translates database uniqueness errors into Sequel Validation Errors' do
             dup_space = Space.new(organization_guid: space.organization.guid, name: space.name)
-            expect {
+            expect do
               dup_space.save(validate: false)
-            }.to raise_error(Space::DBNameUniqueRaceError)
+            end.to raise_error(Space::DBNameUniqueRaceError)
           end
 
           it 'does not translate db errors not about name uniqueness' do
             invalid_space = Space.new
-            expect {
+            expect do
               invalid_space.save(validate: false)
-            }.to raise_error(Sequel::DatabaseError)
+            end.to raise_error(Sequel::DatabaseError)
           end
         end
 
         it 'should allow backslash character' do
           space.name = 'a\\word'
-          expect {
+          expect do
             space.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should allow unicode characters' do
           space.name = '防御力¡'
-          expect {
+          expect do
             space.save
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'should not allow newline character' do
           space.name = "a \n word"
-          expect {
+          expect do
             space.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
         it 'should not allow escape character' do
           space.name = "a \e word"
-          expect {
+          expect do
             space.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -77,12 +77,12 @@ module VCAP::CloudController
       it { is_expected.to have_associated :events }
       it { is_expected.to have_associated :service_instances, class: UserProvidedServiceInstance }
       it { is_expected.to have_associated :managed_service_instances }
-      it { is_expected.to have_associated :routes, associated_instance: ->(space) { Route.make(space: space) } }
+      it { is_expected.to have_associated :routes, associated_instance: ->(space) { Route.make(space:) } }
       it { is_expected.to have_associated :security_groups }
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
       it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
-      it { is_expected.to have_associated :service_instances_shared_from_other_spaces, associated_instance: ->(space) { ManagedServiceInstance.make(space: Space.make) } }
+      it { is_expected.to have_associated :service_instances_shared_from_other_spaces, associated_instance: ->(_space) { ManagedServiceInstance.make(space: Space.make) } }
 
       describe 'space_quota_definition' do
         subject(:space) { Space.make }
@@ -116,7 +116,7 @@ module VCAP::CloudController
       end
 
       describe 'domains' do
-        subject(:space) { Space.make(organization: organization) }
+        subject(:space) { Space.make(organization:) }
         let(:organization) { Organization.make }
 
         context 'listing domains' do
@@ -132,14 +132,14 @@ module VCAP::CloudController
         context 'adding domains' do
           it 'does not add the domain to the space if it is a shared domain' do
             shared_domain = SharedDomain.make
-            expect { space.add_domain(shared_domain) }.not_to change { space.domains }
+            expect { space.add_domain(shared_domain) }.not_to(change { space.domains })
           end
 
           it "does nothing if the private domain already belongs to the space's org" do
             org = Organization.make
             private_domain = PrivateDomain.make(owning_organization: org)
             space = Space.make(organization: org)
-            expect { space.add_domain(private_domain) }.not_to change { space.domains }
+            expect { space.add_domain(private_domain) }.not_to(change { space.domains })
           end
 
           it 'reports an error if the private domain belongs to another org' do
@@ -164,13 +164,13 @@ module VCAP::CloudController
           private_domain2 = PrivateDomain.make(owning_organization: org)
           shared_domain = SharedDomain.make
 
-          expect {
+          expect do
             @eager_loaded_space = Space.eager(:domains).where(id: space.id).all.first
-          }.to have_queried_db_times(/domains/i, 1)
+          end.to have_queried_db_times(/domains/i, 1)
 
-          expect {
+          expect do
             @eager_loaded_domains = @eager_loaded_space.domains.to_a
-          }.to have_queried_db_times(//, 0)
+          end.to have_queried_db_times(//, 0)
 
           expect(@eager_loaded_space).to eql(space)
           expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
@@ -189,17 +189,17 @@ module VCAP::CloudController
 
           shared_domain = SharedDomain.make
 
-          expect {
+          expect do
             @eager_loaded_spaces = Space.eager(:domains).where(id: [space1.id, space2.id]).limit(2).all
-          }.to have_queried_db_times(/domains/i, 1)
+          end.to have_queried_db_times(/domains/i, 1)
 
           expected_domains = [private_domain1, shared_domain, private_domain2, shared_domain]
 
-          expect {
+          expect do
             expect(@eager_loaded_spaces).to have(2).items
             actual_domains = @eager_loaded_spaces[0].domains + @eager_loaded_spaces[1].domains
             expect(actual_domains).to match_array(expected_domains)
-          }.to have_queried_db_times(//, 0)
+          end.to have_queried_db_times(//, 0)
         end
 
         it 'passes in dataset to be loaded to eager_block option' do
@@ -211,9 +211,9 @@ module VCAP::CloudController
 
           eager_block = proc { |ds| ds.where(id: private_domain1.id) }
 
-          expect {
+          expect do
             @eager_loaded_space = Space.eager(domains: eager_block).where(id: space.id).all.first
-          }.to have_queried_db_times(/domains/i, 1)
+          end.to have_queried_db_times(/domains/i, 1)
 
           expect(@eager_loaded_space.domains).to eql([private_domain1])
         end
@@ -228,14 +228,14 @@ module VCAP::CloudController
           route1 = Route.make(domain: domain1, space: space)
           route2 = Route.make(domain: domain2, space: space)
 
-          expect {
+          expect do
             @eager_loaded_space = Space.eager(domains: :routes).where(id: space.id).all.first
-          }.to have_queried_db_times(/domains/i, 1)
+          end.to have_queried_db_times(/domains/i, 1)
 
-          expect {
+          expect do
             expect(@eager_loaded_space.domains[0].routes).to eql([route1])
             expect(@eager_loaded_space.domains[1].routes).to eql([route2])
-          }.to have_queried_db_times(//, 0)
+          end.to have_queried_db_times(//, 0)
         end
       end
 
@@ -317,9 +317,9 @@ module VCAP::CloudController
         context 'adding an isolation segment' do
           context "and the Space's org does not have the isolation segment" do
             it 'raises UnableToPerform' do
-              expect {
-                space.update(isolation_segment_model: isolation_segment_model)
-              }.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization's allowed list can be used./)
+              expect do
+                space.update(isolation_segment_model:)
+              end.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization's allowed list can be used./)
               space.reload
 
               expect(space.isolation_segment_model).to be_nil
@@ -340,13 +340,13 @@ module VCAP::CloudController
 
             context 'and the space has apps' do
               before do
-                AppModel.make(space: space)
+                AppModel.make(space:)
               end
 
               it 'adds the isolation segment but does not affect the running app' do
-                expect {
+                expect do
                   space.update(isolation_segment_guid: isolation_segment_model.guid)
-                }.to_not raise_error
+                end.to_not raise_error
                 space.reload
 
                 expect(space.isolation_segment_model).to eq(isolation_segment_model)
@@ -358,7 +358,7 @@ module VCAP::CloudController
         context 'removing an isolation segment' do
           before do
             assigner.assign(isolation_segment_model, [space.organization])
-            space.update(isolation_segment_model: isolation_segment_model)
+            space.update(isolation_segment_model:)
           end
 
           it 'removes the isolation segment' do
@@ -380,14 +380,14 @@ module VCAP::CloudController
               wrong_org = Organization.make
               user = make_user_for_org(wrong_org)
 
-              expect {
+              expect do
                 space.send("add_#{perm.singularize}", user)
-              }.to raise_error exception
+              end.to raise_error exception
             end
           end
         end
 
-        %w(developer manager auditor supporter).each do |perm|
+        %w[developer manager auditor supporter].each do |perm|
           include_examples 'bad app space permission', perm
         end
       end
@@ -395,8 +395,8 @@ module VCAP::CloudController
       describe 'apps which is the process relationship' do
         it 'has apps' do
           space = Space.make
-          process1 = ProcessModelFactory.make(space: space)
-          process2 = ProcessModelFactory.make(space: space)
+          process1 = ProcessModelFactory.make(space:)
+          process2 = ProcessModelFactory.make(space:)
           expect(space.apps).to match_array([process1, process2])
         end
 
@@ -409,8 +409,8 @@ module VCAP::CloudController
 
         context 'when there are multiple web processes for an app' do
           let(:space) { Space.make }
-          let(:app_one) { AppModel.make(space: space) }
-          let(:app_two) { AppModel.make(space: space) }
+          let(:app_one) { AppModel.make(space:) }
+          let(:app_two) { AppModel.make(space:) }
           let!(:web_process_app_one) do
             VCAP::CloudController::ProcessModel.make(
               app: app_one,
@@ -537,8 +537,9 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh }
-      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
-        :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
+      it {
+        is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
+                                         :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
       }
     end
 
@@ -572,7 +573,7 @@ module VCAP::CloudController
 
       context 'when there are service instances' do
         before do
-          ManagedServiceInstance.make(space: space)
+          ManagedServiceInstance.make(space:)
         end
 
         it 'raises a ForeignKeyConstraintViolation error' do
@@ -581,21 +582,21 @@ module VCAP::CloudController
       end
 
       it 'destroys all routes' do
-        route = Route.make(space: space)
-        expect {
+        route = Route.make(space:)
+        expect do
           subject.destroy
-        }.to change {
+        end.to change {
           Route.where(id: route.id).count
         }.by(-1)
       end
 
       it "doesn't do anything to domains" do
         PrivateDomain.make(owning_organization: space.organization)
-        expect {
+        expect do
           subject.destroy
-        }.not_to change {
+        end.not_to(change do
           space.organization.domains
-        }
+        end)
       end
 
       it 'nullifies any default_users' do
@@ -606,13 +607,13 @@ module VCAP::CloudController
       end
 
       it 'does not destroy any events related to the space' do
-        event = Event.make(space: space)
+        event = Event.make(space:)
 
-        expect {
+        expect do
           subject.destroy
-        }.to_not change {
+        end.to_not(change do
           Event.where(id: [event.id]).count
-        }
+        end)
 
         event = Event.find(id: event.id)
         expect(event).to be
@@ -660,7 +661,7 @@ module VCAP::CloudController
         let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
         it 'there is always more remaining memory' do
-          expect(space.has_remaining_memory(1234567890)).to eq(true)
+          expect(space.has_remaining_memory(1_234_567_890)).to eq(true)
         end
       end
     end
@@ -671,7 +672,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org, space_quota_definition: quota) }
       let(:space2) { Space.make(organization: org, space_quota_definition: quota) }
-      let!(:app_model) { AppModel.make(space: space) }
+      let!(:app_model) { AppModel.make(space:) }
 
       context 'when the quota is unlimited' do
         let(:log_rate_limit) { QuotaDefinition::UNLIMITED }
@@ -819,11 +820,11 @@ module VCAP::CloudController
         let(:space_quota_definition_guid) { 'something-that-doesnt-exist' }
 
         it 'raises an error' do
-          expect {
+          expect do
             space.space_quota_definition_guid = space_quota_definition_guid
             space.save
-          }.to raise_error(CloudController::Errors::ApiError,
-            /Could not find SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
+          end.to raise_error(CloudController::Errors::ApiError,
+                             /Could not find SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end
       end
     end

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe Membership do
     let(:user) { User.make }
-    let!(:space) { Space.make(organization: organization) }
+    let!(:space) { Space.make(organization:) }
     let(:organization) { Organization.make }
 
     let(:membership) { Membership.new(user) }
@@ -121,7 +121,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
-              Membership::SPACE_AUDITOR], space.id)
+              Membership::SPACE_AUDITOR
+            ], space.id)
 
             expect(result).to be_truthy
           end
@@ -138,7 +139,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_MANAGER,
               Membership::SPACE_DEVELOPER,
-              Membership::SPACE_AUDITOR], space.id)
+              Membership::SPACE_AUDITOR
+            ], space.id)
 
             expect(result).to be_falsey
           end
@@ -165,8 +167,9 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_MANAGER,
-              Membership::SPACE_AUDITOR],
-              space.id)
+              Membership::SPACE_AUDITOR
+            ],
+                                              space.id)
             expect(result).to be_truthy
           end
         end
@@ -288,7 +291,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
-              Membership::ORG_AUDITOR], nil, organization.id)
+              Membership::ORG_AUDITOR
+            ], nil, organization.id)
 
             expect(result).to be_truthy
           end
@@ -305,7 +309,8 @@ module VCAP::CloudController
             result = membership.role_applies?([
               Membership::ORG_MANAGER,
               Membership::ORG_BILLING_MANAGER,
-              Membership::ORG_AUDITOR], nil, organization.id)
+              Membership::ORG_AUDITOR
+            ], nil, organization.id)
 
             expect(result).to be_falsey
           end
@@ -338,8 +343,9 @@ module VCAP::CloudController
               Membership::ORG_USER,
               Membership::ORG_MANAGER,
               Membership::ORG_AUDITOR,
-              Membership::ORG_BILLING_MANAGER],
-              nil, organization.id)
+              Membership::ORG_BILLING_MANAGER
+            ],
+                                              nil, organization.id)
             expect(result).to be_truthy
           end
         end
@@ -365,7 +371,7 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-            space.id, organization.id)
+                                              space.id, organization.id)
 
             expect(result).to be_truthy
           end
@@ -386,7 +392,7 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-            space.id, organization.id)
+                                              space.id, organization.id)
 
             expect(result).to be_falsey
           end
@@ -430,7 +436,7 @@ module VCAP::CloudController
 
         context 'for space managers' do
           it 'returns all orgs for spaces in which the user is a space manager' do
-            SpaceManager.create(user: user, space: space)
+            SpaceManager.create(user:, space:)
             guids = membership.authorized_org_guids(Membership::SPACE_MANAGER)
             expect(guids).to eq([organization.guid])
           end
@@ -438,7 +444,7 @@ module VCAP::CloudController
 
         context 'for space developers' do
           it 'returns all orgs for spaces in which the user is a space developer' do
-            SpaceDeveloper.create(user: user, space: space)
+            SpaceDeveloper.create(user:, space:)
             guids = membership.authorized_org_guids(Membership::SPACE_DEVELOPER)
             expect(guids).to eq([organization.guid])
           end
@@ -446,7 +452,7 @@ module VCAP::CloudController
 
         context 'for space supporters' do
           it 'returns all orgs for spaces in which the user is a space supporters' do
-            SpaceSupporter.create(user: user, space: space)
+            SpaceSupporter.create(user:, space:)
             guids = membership.authorized_org_guids(Membership::SPACE_SUPPORTER)
             expect(guids).to eq([organization.guid])
           end
@@ -454,7 +460,7 @@ module VCAP::CloudController
 
         context 'for space auditors' do
           it 'returns all orgs for spaces in which the user is a space auditor' do
-            SpaceAuditor.create(user: user, space: space)
+            SpaceAuditor.create(user:, space:)
             guids = membership.authorized_org_guids(Membership::SPACE_AUDITOR)
             expect(guids).to eq([organization.guid])
           end

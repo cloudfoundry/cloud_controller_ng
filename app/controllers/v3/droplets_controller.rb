@@ -56,7 +56,7 @@ class DropletsController < ApplicationController
 
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.id, droplet.space.organization_id)
     show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.id, droplet.space.organization_id)
-    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets:)
   end
 
   def destroy
@@ -131,9 +131,7 @@ class DropletsController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(droplet.space.id)
     suspended! unless permission_queryer.is_space_active?(droplet.space.id)
 
-    unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
-      unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.')
-    end
+    unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.') unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
 
     pollable_job = DropletUpload.new.upload_async(
       message: message,
@@ -154,20 +152,16 @@ class DropletsController < ApplicationController
 
     unauthorized! unless permission_queryer.can_download_droplet?(droplet.space.id, droplet.space.organization_id)
 
-    unless droplet.buildpack?
-      unprocessable!("Cannot download droplets with 'docker' lifecycle.")
-    end
+    unprocessable!("Cannot download droplets with 'docker' lifecycle.") unless droplet.buildpack?
 
-    unless droplet.staged?
-      unprocessable!('Only staged droplets can be downloaded.')
-    end
+    unprocessable!('Only staged droplets can be downloaded.') unless droplet.staged?
 
     VCAP::CloudController::Repositories::DropletEventRepository.record_download(
       droplet,
       user_audit_info,
       droplet.app.name,
       droplet.space.guid,
-      droplet.space.organization.guid,
+      droplet.space.organization.guid
     )
 
     send_droplet_blob(droplet)
@@ -180,9 +174,7 @@ class DropletsController < ApplicationController
   end
 
   def send_droplet_blob(droplet)
-    if droplet.blobstore_key.nil?
-      resource_not_found_with_message!('Blobstore key not present on droplet. This may be due to a failed build.')
-    end
+    resource_not_found_with_message!('Blobstore key not present on droplet. This may be due to a failed build.') if droplet.blobstore_key.nil?
 
     droplet_blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
     BlobDispatcher.new(blobstore: droplet_blobstore, controller: self).send_or_redirect(guid: droplet.blobstore_key)

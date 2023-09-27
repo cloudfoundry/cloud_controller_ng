@@ -21,9 +21,9 @@ module VCAP::CloudController
       end
 
       it 'deletes both space records' do
-        expect {
+        expect do
           space_delete.delete(space_dataset)
-        }.to change { Space.count }.by(-2)
+        end.to change { Space.count }.by(-2)
         expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
           actee_type: 'space',
           actee_name: 'space-1',
           space_guid: space.guid,
-          organization_guid: space.organization.guid,
+          organization_guid: space.organization.guid
         )
         expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
         expect(event.timestamp).to be
@@ -56,9 +56,9 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated apps' do
-          expect {
+          expect do
             space_delete.delete(space_dataset)
-          }.to change { AppModel.count }.by(-1)
+          end.to change { AppModel.count }.by(-1)
           expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
@@ -70,9 +70,9 @@ module VCAP::CloudController
           end
 
           it 'deletes service instances' do
-            expect {
+            expect do
               space_delete.delete(space_dataset)
-            }.to change { ServiceInstance.count }.by(-1)
+            end.to change { ServiceInstance.count }.by(-1)
             expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
@@ -115,9 +115,9 @@ module VCAP::CloudController
             end
 
             it 'deletes the other instances' do
-              expect {
+              expect do
                 space_delete.delete(space_dataset)
-              }.to change { ServiceInstance.count }.by(-2)
+              end.to change { ServiceInstance.count }.by(-2)
               expect { service_instance_1.refresh }.not_to raise_error
               expect { service_instance_2.refresh }.not_to raise_error
               expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -203,7 +203,7 @@ module VCAP::CloudController
             end
 
             context 'and there are multiple service instances deprovisioned with accepts_incomplete' do
-              let!(:service_instance_2) { ManagedServiceInstance.make(space: space) } # deletion fail
+              let!(:service_instance_2) { ManagedServiceInstance.make(space:) } # deletion fail
 
               before do
                 stub_deprovision(service_instance_2, accepts_incomplete: true, status: 202)
@@ -238,9 +238,9 @@ module VCAP::CloudController
             allow(broker_to_be_deleted).to receive(:destroy)
             expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to eq broker_to_be_deleted
 
-            expect {
+            expect do
               space_delete.delete(Space.where(guid: space.guid))
-            }.to change { Space.count }.by(-1)
+            end.to change { Space.count }.by(-1)
 
             expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be nil
           end
@@ -249,9 +249,9 @@ module VCAP::CloudController
             it 'deletes associated private brokers' do
               expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to eq broker_to_be_deleted
 
-              expect {
+              expect do
                 space_delete.delete(Space.where(guid: space.guid))
-              }.to change { Space.count }.by(-1)
+              end.to change { Space.count }.by(-1)
 
               expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be nil
             end
@@ -267,9 +267,9 @@ module VCAP::CloudController
               it 'deletes all but the associated broker' do
                 expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to eq broker_to_be_deleted
 
-                expect {
+                expect do
                   space_delete.delete(Space.where(guid: space.guid))
-                }.to change { ServiceBroker.count }.by(-1)
+                end.to change { ServiceBroker.count }.by(-1)
                 expect { broker_to_be_deleted.refresh }.not_to raise_error
                 expect { broker_to_be_deleted2.refresh }.to raise_error Sequel::Error, 'Record not found'
               end
@@ -287,13 +287,13 @@ module VCAP::CloudController
 
         describe 'routes and route mappings' do
           let!(:process) { ProcessModel.make app: app, type: 'web' }
-          let!(:route) { Route.make space: space }
+          let!(:route) { Route.make space: }
 
           it 'deletes routes in the space (by way of model association dependency)' do
             expect(route.exists?).to be true
-            expect {
+            expect do
               space_delete.delete(space_dataset)
-            }.to change { Route.count }.by(-1)
+            end.to change { Route.count }.by(-1)
           end
         end
 
@@ -314,9 +314,9 @@ module VCAP::CloudController
           end
 
           it 'deletes associated space labels' do
-            expect {
+            expect do
               space_delete.delete(space_dataset)
-            }.to change { SpaceLabelModel.count }.by(-2)
+            end.to change { SpaceLabelModel.count }.by(-2)
             expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
         end

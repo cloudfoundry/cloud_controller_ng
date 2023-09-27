@@ -71,10 +71,10 @@ module VCAP::CloudController
         bytes_read = 0
 
         timing = ::Benchmark.realtime do
-          bytes_read = Buildpack.map { |buildpack|
+          bytes_read = Buildpack.map do |buildpack|
             buildpack_blobstore_client.download_from_blobstore(buildpack.key, tempfile.path)
             File.stat(tempfile.path).size
-          }.sum
+          end.sum
         end
 
         [bytes_read, timing]
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
         100.times.each do |i|
           f = File.open(File.join(dir, i.to_s), 'w')
-          f.write('foo' * (65536 + i))
+          f.write('foo' * (65_536 + i))
         end
 
         dir

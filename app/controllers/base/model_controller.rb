@@ -103,7 +103,7 @@ module VCAP::CloudController::RestController
         enumerate_dataset,
         self.class.path,
         @opts,
-        params,
+        params
       )
     end
 
@@ -235,22 +235,18 @@ module VCAP::CloudController::RestController
     # @param [User] user The user for which to validate access.
     #
     # @param [Roles] The roles for the current user or client.
-    def validate_access(operation, obj, *args)
+    def validate_access(operation, obj, *)
       if @access_context.cannot?("#{operation}_with_token".to_sym, obj)
-        if obj.is_a? Class
-          obj = obj.to_s
-        end
+        obj = obj.to_s if obj.is_a? Class
         logger.info('allowy.access-denied.insufficient-scope', op: "#{operation}_with_token", obj: obj, user: user, roles: roles)
         raise CloudController::Errors::ApiError.new_from_details('InsufficientScope')
       end
 
-      if @access_context.cannot?(operation, obj, *args)
-        if obj.is_a? Class
-          obj = obj.to_s
-        end
-        logger.info('allowy.access-denied.not-authorized', op: operation, obj: obj, user: user, roles: roles)
-        raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
-      end
+      return unless @access_context.cannot?(operation, obj, *)
+
+      obj = obj.to_s if obj.is_a? Class
+      logger.info('allowy.access-denied.not-authorized', op: operation, obj: obj, user: user, roles: roles)
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
 
     # The model associated with this api endpoint.
@@ -291,16 +287,12 @@ module VCAP::CloudController::RestController
 
     def raise_if_has_dependent_associations!(obj)
       associations = obj.class.associations.select do |association|
-        if obj.class.association_dependencies_hash[association]
-          if obj.class.association_dependencies_hash[association] == :destroy
-            obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
-          end
-        end
+        next unless obj.class.association_dependencies_hash[association]
+
+        obj.has_one_to_many?(association) || obj.has_one_to_one?(association) if obj.class.association_dependencies_hash[association] == :destroy
       end
 
-      if associations.any?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations.join(', '), obj.class.table_name)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations.join(', '), obj.class.table_name) if associations.any?
     end
 
     # Find an object and validate that the current user has rights to
@@ -322,7 +314,7 @@ module VCAP::CloudController::RestController
     end
 
     def find_guid(guid, find_model=model)
-      obj = find_model.find(guid: guid)
+      obj = find_model.find(guid:)
       raise self.class.not_found_exception(guid, find_model) if obj.nil?
 
       obj
@@ -376,9 +368,7 @@ module VCAP::CloudController::RestController
       # Set the exception that is raised when the associated model can't be found
       #
       # @return [String] The class name of the exception model to raise
-      def not_found_exception_name=(exception_name)
-        @not_found_exception_name = exception_name
-      end
+      attr_writer :not_found_exception_name
 
       # Return the name of the exception that is raised when the associated model can't be found
       #
@@ -397,12 +387,12 @@ module VCAP::CloudController::RestController
 
       # Start the DSL for defining attributes.  This is used inside
       # the api controller classes.
-      def define_attributes(&blk)
+      def define_attributes(&)
         k = Class.new do
           include ControllerDSL
         end
 
-        k.new(self).instance_eval(&blk)
+        k.new(self).instance_eval(&)
       end
 
       def sortable_parameters(*keys)

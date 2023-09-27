@@ -3,13 +3,13 @@ require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class ManifestRoutesUpdateMessage < BaseMessage
-    register_allowed_keys [:routes, :no_route, :random_route, :default_route]
+    register_allowed_keys %i[routes no_route random_route default_route]
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
-        if is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
-          record.errors.add(:routes, message: 'must be a list of route objects')
-        end
+        return unless is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
+
+        record.errors.add(:routes, message: 'must be a list of route objects')
       end
 
       def is_not_array?(routes)
@@ -76,9 +76,9 @@ module VCAP::CloudController
     def is_boolean(field, field_name:)
       return if field.nil?
 
-      unless [true, false].include?(field)
-        errors.add(:base, "#{field_name} must be a boolean")
-      end
+      return if [true, false].include?(field)
+
+      errors.add(:base, "#{field_name} must be a boolean")
     end
 
     def random_route_and_default_route_conflict

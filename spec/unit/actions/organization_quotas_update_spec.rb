@@ -10,35 +10,35 @@ module VCAP::CloudController
 
         let(:message) do
           VCAP::CloudController::OrganizationQuotasUpdateMessage.new({
-              name: 'don-quixote',
-              apps: {
-                total_memory_in_mb: 5120,
-                per_process_memory_in_mb: 1024,
-                total_instances: 8,
-                per_app_tasks: nil,
-                log_rate_limit_in_bytes_per_second: 2000
-              },
-              services: {
-                paid_services_allowed: false,
-                total_service_instances: 10,
-                total_service_keys: 20,
-              },
-              routes: {
-                total_routes: 8,
-                total_reserved_ports: 6
-              },
-              domains: {
-                total_domains: 7
-              }
-          })
+                                                                       name: 'don-quixote',
+                                                                       apps: {
+                                                                         total_memory_in_mb: 5120,
+                                                                         per_process_memory_in_mb: 1024,
+                                                                         total_instances: 8,
+                                                                         per_app_tasks: nil,
+                                                                         log_rate_limit_in_bytes_per_second: 2000
+                                                                       },
+                                                                       services: {
+                                                                         paid_services_allowed: false,
+                                                                         total_service_instances: 10,
+                                                                         total_service_keys: 20
+                                                                       },
+                                                                       routes: {
+                                                                         total_routes: 8,
+                                                                         total_reserved_ports: 6
+                                                                       },
+                                                                       domains: {
+                                                                         total_domains: 7
+                                                                       }
+                                                                     })
         end
 
         let(:minimum_message) do
           VCAP::CloudController::OrganizationQuotasCreateMessage.new({
-            domains: {
-                total_private_domains: 7
-              }
-          })
+                                                                       domains: {
+                                                                         total_private_domains: 7
+                                                                       }
+                                                                     })
         end
 
         it 'updates an organization quota with the given values' do
@@ -77,18 +77,18 @@ module VCAP::CloudController
               and_raise(Sequel::ValidationFailed.new(errors))
 
             message = VCAP::CloudController::OrganizationQuotasCreateMessage.new(name: 'foobar')
-            expect {
+            expect do
               OrganizationQuotasUpdate.update(org_quota, message)
-            }.to raise_error(OrganizationQuotasUpdate::Error, 'blork is busted')
+            end.to raise_error(OrganizationQuotasUpdate::Error, 'blork is busted')
           end
 
           context 'when it is a uniqueness error' do
             let(:victoria_org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'victoria_org_quota') }
 
             let(:name) { 'victoria_org_quota' }
-            let(:update_message) { VCAP::CloudController::OrganizationQuotasUpdateMessage.new(name: name) }
+            let(:update_message) { VCAP::CloudController::OrganizationQuotasUpdateMessage.new(name:) }
 
-            let(:create_message) { VCAP::CloudController::OrganizationQuotasCreateMessage.new(name: name) }
+            let(:create_message) { VCAP::CloudController::OrganizationQuotasCreateMessage.new(name:) }
 
             let(:org_quotas_create) { OrganizationQuotasCreate.new }
 
@@ -97,9 +97,9 @@ module VCAP::CloudController
             end
 
             it 'raises a human-friendly error' do
-              expect {
+              expect do
                 OrganizationQuotasUpdate.update(org_quota, update_message)
-              }.to raise_error(OrganizationQuotasUpdate::Error, "Organization Quota '#{name}' already exists.")
+              end.to raise_error(OrganizationQuotasUpdate::Error, "Organization Quota '#{name}' already exists.")
             end
           end
         end
@@ -122,7 +122,7 @@ module VCAP::CloudController
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
-                                 "'org-name-1' which contains apps running with an unlimited log rate limit.")
+                                                                  "'org-name-1' which contains apps running with an unlimited log rate limit.")
             end
           end
           context 'and they are in two orgs' do
@@ -133,7 +133,7 @@ module VCAP::CloudController
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
-                                 "'org-name-1', 'org-name-2' which contain apps running with an unlimited log rate limit.")
+                                                                  "'org-name-1', 'org-name-2' which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -145,7 +145,7 @@ module VCAP::CloudController
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
-                                 "'org-name-1', 'org-name-2' and 3 other orgs which contain apps running with an unlimited log rate limit.")
+                                                                  "'org-name-1', 'org-name-2' and 3 other orgs which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -160,7 +160,7 @@ module VCAP::CloudController
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
-                                 "'org-name' which contains apps running with an unlimited log rate limit.")
+                                                                  "'org-name' which contains apps running with an unlimited log rate limit.")
             end
           end
         end

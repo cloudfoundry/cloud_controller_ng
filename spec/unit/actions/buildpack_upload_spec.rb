@@ -17,9 +17,9 @@ module VCAP::CloudController
       context 'when the buildpack and message are valid' do
         it 'enqueues and returns an upload job' do
           returned_job = nil
-          expect {
-            returned_job = buildpack_upload.upload_async(message: message, buildpack: buildpack, config: config)
-          }.to change { Delayed::Job.count }.by(1)
+          expect do
+            returned_job = buildpack_upload.upload_async(message:, buildpack:, config:)
+          end.to change { Delayed::Job.count }.by(1)
 
           job = Delayed::Job.last
           expect(returned_job.delayed_job_guid).to eq(job.guid)
@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         it 'leaves the state as AWAITING_UPLOAD' do
-          buildpack_upload.upload_async(message: message, buildpack: buildpack, config: config)
+          buildpack_upload.upload_async(message:, buildpack:, config:)
           expect(Buildpack.find(guid: buildpack.guid).state).to eq(Buildpack::CREATED_STATE)
         end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
             '/tmp/path',
             'buildpack.zip'
           ).and_call_original
-          buildpack_upload.upload_async(message: message, buildpack: buildpack, config: config)
+          buildpack_upload.upload_async(message:, buildpack:, config:)
         end
       end
     end

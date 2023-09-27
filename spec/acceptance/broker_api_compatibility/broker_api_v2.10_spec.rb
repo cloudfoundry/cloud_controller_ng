@@ -16,14 +16,14 @@ RSpec.describe 'Service Broker API integration' do
       let(:broker_response_status) { 200 }
       let(:broker_response_body) do
         {
-            'volume_mounts' => [{
-                 'device_type' => 'shared',
-                 'other' => 'stuff',
-                 'device' => { 'volume_id' => 'foo', 'mount_config' => { 'extra' => 'garbage' } },
-                 'mode' => 'rw',
-                 'container_dir' => '/var/vcap/data/foo',
-                 'driver' => 'mydriver'
-             }]
+          'volume_mounts' => [{
+            'device_type' => 'shared',
+            'other' => 'stuff',
+            'device' => { 'volume_id' => 'foo', 'mount_config' => { 'extra' => 'garbage' } },
+            'mode' => 'rw',
+            'container_dir' => '/var/vcap/data/foo',
+            'driver' => 'mydriver'
+          }]
         }.to_json
       end
       let(:app_guid) { @app_guid }
@@ -47,7 +47,7 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'displays the volume mount information to the user' do
           post('/v2/service_bindings',
-               { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
+               { app_guid:, service_instance_guid: }.to_json,
                admin_headers)
 
           parsed_body = MultiJson.load(last_response.body)

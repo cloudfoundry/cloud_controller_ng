@@ -18,7 +18,7 @@ module VCAP::CloudController
       it 'eager loads space guids only' do
         security_group_1.add_space(associated_space)
         security_group_1.add_staging_space(associated_space)
-        [:spaces, :staging_spaces].each do |key|
+        %i[spaces staging_spaces].each do |key|
           expect(security_group.associations[key].length).to eq(1)
           expect(security_group.associations[key].first.keys).to contain_exactly(:guid)
         end

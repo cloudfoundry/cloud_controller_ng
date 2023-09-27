@@ -2,10 +2,10 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    ALLOWED_MAINTENANCE_INFO_KEYS = ['version', 'description'].freeze
+    ALLOWED_MAINTENANCE_INFO_KEYS = %w[version description].freeze
 
     attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info,
-      :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
+                :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
@@ -27,9 +27,9 @@ module VCAP::Services::ServiceBrokers::V2
 
       @schemas_data = schemas
 
-      if @schemas_data.is_a? Hash
-        @schemas = CatalogSchemas.new(schemas)
-      end
+      return unless @schemas_data.is_a? Hash
+
+      @schemas = CatalogSchemas.new(schemas)
     end
 
     def valid?
@@ -69,31 +69,31 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_maintenance_info_keys!
       disallowed_attrs = @maintenance_info.slice!(*ALLOWED_MAINTENANCE_INFO_KEYS)
       extra_keys       = disallowed_attrs.keys
-      if extra_keys.any?
-        errors.add(%(#{human_readable_attr_name(:maintenance_info)} contains invalid key(s): #{extra_keys.join(', ')}))
-      end
+      return unless extra_keys.any?
+
+      errors.add(%(#{human_readable_attr_name(:maintenance_info)} contains invalid key(s): #{extra_keys.join(', ')}))
     end
 
     def validate_schemas!
-      if schemas && !schemas.valid?
-        errors.add_nested(schemas, schemas.errors)
-      end
+      return unless schemas && !schemas.valid?
+
+      errors.add_nested(schemas, schemas.errors)
     end
 
     def human_readable_attr_name(name)
       {
-        broker_provided_id:           'Plan id',
-        name:                         'Plan name',
-        description:                  'Plan description',
-        metadata:                     'Plan metadata',
-        free:                         'Plan free',
-        bindable:                     'Plan bindable',
-        plan_updateable:              'Plan updateable',
-        schemas:                      'Plan schemas',
-        maximum_polling_duration:     'Maximum polling duration',
-        maintenance_info:             'Maintenance info',
-        maintenance_info_version:     'Maintenance info version',
-        maintenance_info_description: 'Maintenance info description',
+        broker_provided_id: 'Plan id',
+        name: 'Plan name',
+        description: 'Plan description',
+        metadata: 'Plan metadata',
+        free: 'Plan free',
+        bindable: 'Plan bindable',
+        plan_updateable: 'Plan updateable',
+        schemas: 'Plan schemas',
+        maximum_polling_duration: 'Maximum polling duration',
+        maintenance_info: 'Maintenance info',
+        maintenance_info_version: 'Maintenance info version',
+        maintenance_info_description: 'Maintenance info description'
       }.fetch(name) { raise NotImplementedError }
     end
   end

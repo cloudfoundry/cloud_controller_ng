@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe RouteMappingModel do
     describe '#process' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
       let!(:web_process) do
         VCAP::CloudController::ProcessModel.make(
           app: app_model,
@@ -33,12 +33,12 @@ module VCAP::CloudController
 
     describe 'protocol' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
       let!(:web_process) do
         VCAP::CloudController::ProcessModel.make(
           app: app_model,
-          type: VCAP::CloudController::ProcessTypes::WEB,
+          type: VCAP::CloudController::ProcessTypes::WEB
         )
       end
       context 'setting' do
@@ -128,7 +128,7 @@ module VCAP::CloudController
         end
 
         context 'tcp route' do
-          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:routing_api_client) { double('routing_api_client', router_group:) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
           before do
@@ -136,11 +136,12 @@ module VCAP::CloudController
             allow_any_instance_of(RouteValidator).to receive(:validate)
           end
 
-          let(:tcp_route) { VCAP::CloudController::Route.make(
-            :tcp,
-            space: space,
-          )
-          }
+          let(:tcp_route) do
+            VCAP::CloudController::Route.make(
+              :tcp,
+              space:
+            )
+          end
 
           it 'returns nil as tcp' do
             protocol = nil
@@ -242,39 +243,39 @@ module VCAP::CloudController
 
     describe 'validations' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
 
       it 'must define an app_port' do
         invalid_route_mapping_opts = { app: app_model, route: route, process_type: 'buckeyes', app_port: nil }
-        expect {
+        expect do
           RouteMappingModel.make(invalid_route_mapping_opts)
-        }.to raise_error(Sequel::ValidationFailed, /app_port presence/)
+        end.to raise_error(Sequel::ValidationFailed, /app_port presence/)
       end
 
       it 'validates uniqueness across app_guid, route_guid, process_type, and app_port' do
         valid_route_mapping_opts = { app: app_model, route: route, process_type: 'buckeyes', app_port: -1 }
         RouteMappingModel.make(valid_route_mapping_opts)
 
-        expect {
+        expect do
           RouteMappingModel.make(valid_route_mapping_opts)
-        }.to raise_error(Sequel::ValidationFailed, /app_guid and route_guid and process_type and app_port unique/)
+        end.to raise_error(Sequel::ValidationFailed, /app_guid and route_guid and process_type and app_port unique/)
       end
 
       it 'validates that a weight is either between 1 and 100' do
         valid_route_mapping_opts = { app: app_model, route: route, process_type: 'something', app_port: 1000, weight: 1000 }
 
-        expect {
+        expect do
           RouteMappingModel.make(valid_route_mapping_opts)
-        }.to raise_error(Sequel::ValidationFailed, /must be between 1 and 100/)
+        end.to raise_error(Sequel::ValidationFailed, /must be between 1 and 100/)
       end
 
       it 'validates the weight can be nil' do
         valid_route_mapping_opts = { app: app_model, route: route, process_type: 'something', app_port: 1000, weight: nil }
 
-        expect {
+        expect do
           RouteMappingModel.make(valid_route_mapping_opts)
-        }.to change { RouteMappingModel.count }.by(1)
+        end.to change { RouteMappingModel.count }.by(1)
       end
 
       describe 'copilot integration', isolation: :truncation do
@@ -285,11 +286,11 @@ module VCAP::CloudController
         context 'on delete' do
           let!(:route_mapping) do
             RouteMappingModel.make({
-              app: app_model,
-              route: route,
-              process_type: 'buckeyes',
-              app_port: -1
-            })
+                                     app: app_model,
+                                     route: route,
+                                     process_type: 'buckeyes',
+                                     app_port: -1
+                                   })
           end
 
           it 'unmaps the route in copilot' do

@@ -7,19 +7,19 @@ require 'repositories/service_generic_binding_event_repository'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceCredentialBindingAppCreate do
-      subject(:action) { described_class.new(user_audit_info, audit_hash, manifest_triggered: manifest_triggered) }
+      subject(:action) { described_class.new(user_audit_info, audit_hash, manifest_triggered:) }
 
       let(:manifest_triggered) { false }
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:volume_mount_services_enabled) { true }
       let(:space) { Space.make }
-      let(:app) { AppModel.make(space: space) }
+      let(:app) { AppModel.make(space:) }
       let(:binding_details) {}
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
       let(:name) { 'foo' }
-      let(:message) {
+      let(:message) do
         VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
           {
             name: name,
@@ -33,7 +33,7 @@ module VCAP::CloudController
             }
           }
         )
-      }
+      end
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_create)
@@ -43,7 +43,7 @@ module VCAP::CloudController
       describe '#precursor' do
         RSpec.shared_examples 'the credential binding precursor' do
           it 'returns a service credential binding precursor' do
-            binding = action.precursor(service_instance, app: app, message: message)
+            binding = action.precursor(service_instance, app:, message:)
 
             expect(binding).to_not be_nil
             expect(binding).to eq(ServiceBinding.where(guid: binding.guid).first)
@@ -59,18 +59,18 @@ module VCAP::CloudController
           end
 
           it 'raises an error when no app is specified' do
-            expect { action.precursor(service_instance, message: message) }.to raise_error(
+            expect { action.precursor(service_instance, message:) }.to raise_error(
               ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'No app was specified'
             )
           end
 
           context 'when a binding already exists' do
-            let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+            let!(:binding) { ServiceBinding.make(service_instance:, app:) }
 
             context 'when no last binding operation exists' do
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'The app is already bound to the service instance'
                 )
@@ -83,7 +83,7 @@ module VCAP::CloudController
               end
 
               it 'deletes the existing binding and creates a new one' do
-                b = action.precursor(service_instance, app: app, message: message)
+                b = action.precursor(service_instance, app:, message:)
 
                 expect(b.guid).not_to eq(binding.guid)
                 expect(b.create_in_progress?).to be_truthy
@@ -97,7 +97,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'The app is already bound to the service instance'
                 )
@@ -110,9 +110,9 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                 'The app is already bound to the service instance'
+                  'The app is already bound to the service instance'
                 )
               end
             end
@@ -123,7 +123,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'The binding is getting deleted or its deletion failed'
                 )
@@ -136,7 +136,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'The binding is getting deleted or its deletion failed'
                 )
@@ -155,14 +155,14 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:si_details) {
+          let(:si_details) do
             {
-            space: space,
-            name: 'instance_name',
-            credentials: { 'password' => 'rennt', 'username' => 'lola' },
-            syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
+              space: space,
+              name: 'instance_name',
+              credentials: { 'password' => 'rennt', 'username' => 'lola' },
+              syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
             }
-          }
+          end
           let(:service_instance) { UserProvidedServiceInstance.make(**si_details) }
 
           it_behaves_like 'the credential binding precursor'
@@ -171,7 +171,7 @@ module VCAP::CloudController
         context 'managed service instance' do
           let(:si_details) do
             {
-              space: space
+              space:
             }
           end
 
@@ -184,7 +184,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app: app, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'Service plan does not allow bindings'
                 )
@@ -197,9 +197,9 @@ module VCAP::CloudController
               end
 
               it 'does not raise an error' do
-                expect {
+                expect do
                   action.precursor(service_instance, app: app, volume_mount_services_enabled: true, message: message)
-                }.not_to raise_error
+                end.not_to raise_error
               end
             end
 
@@ -207,9 +207,9 @@ module VCAP::CloudController
               let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **si_details) }
 
               it 'raises an error' do
-                expect {
+                expect do
                   action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                }.to raise_error(
+                end.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'Support for volume mount services is disabled'
                 )
@@ -220,9 +220,9 @@ module VCAP::CloudController
               it 'raises an error' do
                 service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
 
-                expect {
+                expect do
                   action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                }.to raise_error(
+                end.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
                   'There is an operation in progress for the service instance'
                 )
@@ -233,12 +233,12 @@ module VCAP::CloudController
               it 'raises an error' do
                 service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
 
-                expect {
+                expect do
                   action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                }.to raise_error(
+                end.to raise_error(
                   ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                       'Service instance not found'
-                     )
+                  'Service instance not found'
+                )
               end
             end
 
@@ -246,9 +246,9 @@ module VCAP::CloudController
               let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **si_details) }
 
               it 'does not raise an error' do
-                expect {
+                expect do
                   action.precursor(service_instance, app: app, volume_mount_services_enabled: true, message: message)
-                }.not_to raise_error
+                end.not_to raise_error
               end
             end
 
@@ -270,13 +270,13 @@ module VCAP::CloudController
       end
 
       context '#bind' do
-        let(:precursor) { action.precursor(service_instance, app: app, message: message) }
-        let(:details) {
+        let(:precursor) { action.precursor(service_instance, app:, message:) }
+        let(:details) do
           {
             credentials: { 'password' => 'rennt', 'username' => 'lola' },
             syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
           }
-        }
+        end
         let(:bind_response) { { binding: details } }
 
         it_behaves_like 'service binding creation', ServiceBinding
@@ -285,7 +285,7 @@ module VCAP::CloudController
           context 'managed service instance' do
             let(:service_offering) { Service.make(bindings_retrievable: true) }
             let(:service_plan) { ServicePlan.make(service: service_offering) }
-            let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+            let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
             before do
@@ -317,9 +317,9 @@ module VCAP::CloudController
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
-                user_audit_info,
-                audit_hash,
-                manifest_triggered: false
+                  user_audit_info,
+                  audit_hash,
+                  manifest_triggered: false
                 )
               end
 
@@ -330,9 +330,9 @@ module VCAP::CloudController
                   action.bind(precursor)
                   expect(binding_event_repo).to have_received(:record_start_create).with(
                     precursor,
-                  user_audit_info,
-                  audit_hash,
-                  manifest_triggered: true
+                    user_audit_info,
+                    audit_hash,
+                    manifest_triggered: true
                   )
                 end
               end
@@ -340,13 +340,13 @@ module VCAP::CloudController
           end
 
           context 'user-provided service instance' do
-            let(:details) {
+            let(:details) do
               {
                 space: space,
                 credentials: { 'password' => 'rennt', 'username' => 'lola' },
                 syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
               }
-            }
+            end
             let(:service_instance) { UserProvidedServiceInstance.make(**details) }
 
             it_behaves_like 'the sync credential binding', ServiceBinding, true
@@ -370,20 +370,21 @@ module VCAP::CloudController
 
       describe '#poll' do
         let(:original_name) { name }
-        let(:binding) { action.precursor(service_instance, app: app, message: message) }
-        let(:volume_mounts) { [{
-        'driver' => 'cephdriver',
-        'container_dir' => '/data/images',
-        'mode' => 'r',
-        'device_type' => 'shared',
-        'device' => {
-        'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-        'mount_config' => {
-        'key' => 'value'
-        }
-        }
-        }]
-        }
+        let(:binding) { action.precursor(service_instance, app:, message:) }
+        let(:volume_mounts) do
+          [{
+            'driver' => 'cephdriver',
+            'container_dir' => '/data/images',
+            'mode' => 'r',
+            'device_type' => 'shared',
+            'device' => {
+              'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+              'mount_config' => {
+                'key' => 'value'
+              }
+            }
+          }]
+        end
         let(:syslog_drain_url) { 'https://drain.syslog.example.com/runlolarun' }
 
         it_behaves_like 'polling service credential binding creation'

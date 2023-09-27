@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Environment Variable Groups', type: [:api, :legacy_api] do
+RSpec.resource 'Environment Variable Groups', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:staging_group) { VCAP::CloudController::EnvironmentVariableGroup.staging }
   let(:running_group) { VCAP::CloudController::EnvironmentVariableGroup.running }
@@ -14,16 +14,16 @@ RSpec.resource 'Environment Variable Groups', type: [:api, :legacy_api] do
         explanation 'returns the set of default environment variables available during staging'
 
         staging_group.update(environment_json: {
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                               'abc' => 123,
+                               'do-re-me' => 'far-so-la-tee'
+                             })
 
         client.get '/v2/config/environment_variable_groups/staging', {}, headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                                        'abc' => 123,
+                                        'do-re-me' => 'far-so-la-tee'
+                                      })
       end
     end
 
@@ -32,16 +32,16 @@ RSpec.resource 'Environment Variable Groups', type: [:api, :legacy_api] do
         explanation 'returns the set of default environment variables available to running apps'
 
         running_group.update(environment_json: {
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                               'abc' => 123,
+                               'do-re-me' => 'far-so-la-tee'
+                             })
 
         client.get '/v2/config/environment_variable_groups/running', {}, headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                                        'abc' => 123,
+                                        'do-re-me' => 'far-so-la-tee'
+                                      })
       end
     end
 
@@ -54,9 +54,9 @@ RSpec.resource 'Environment Variable Groups', type: [:api, :legacy_api] do
         client.put '/v2/config/environment_variable_groups/running', MultiJson.dump(req, pretty: true), headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                                        'abc' => 123,
+                                        'do-re-me' => 'far-so-la-tee'
+                                      })
       end
     end
 
@@ -69,9 +69,9 @@ RSpec.resource 'Environment Variable Groups', type: [:api, :legacy_api] do
         client.put '/v2/config/environment_variable_groups/staging', MultiJson.dump(req, pretty: true), headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
-          'abc'      => 123,
-          'do-re-me' => 'far-so-la-tee'
-        })
+                                        'abc' => 123,
+                                        'do-re-me' => 'far-so-la-tee'
+                                      })
       end
     end
   end

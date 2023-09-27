@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IncludeRouteDomainDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w(domain).include?(i) }
+        include&.any? { |i| %w[domain].include?(i) }
       end
 
       def decorate(hash, routes)

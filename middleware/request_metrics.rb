@@ -13,7 +13,7 @@ module CloudFoundry
 
         [status, headers, body]
       # in case of e.g. DB exceptions which are not being caught, make sure the metric is being decreased
-      rescue => e
+      rescue StandardError => e
         status = 500
         raise e
       ensure

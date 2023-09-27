@@ -55,12 +55,12 @@ RSpec.describe 'Staging Security Groups' do
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:security_group) do
       VCAP::CloudController::SecurityGroup.make(
-        name:  'my-group-name',
+        name: 'my-group-name',
         rules: [
           {
-            'protocol'    => 'tcp',
-            'ports'       => '443',
-            'destination' => '192.168.10.0/24',
+            'protocol' => 'tcp',
+            'ports' => '443',
+            'destination' => '192.168.10.0/24'
           }
         ]
       )
@@ -76,27 +76,27 @@ RSpec.describe 'Staging Security Groups' do
       put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil, admin_headers_for(user)
       expect(last_response.status).to eq(201)
       expect(MultiJson.load(last_response.body)).to be_a_response_like({
-        'metadata' => {
-          'guid'       => security_group.guid,
-          'url'        => "/v2/security_groups/#{security_group.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'name'               => 'my-group-name',
-          'rules'              => [
-            {
-              'protocol'    => 'tcp',
-              'ports'       => '443',
-              'destination' => '192.168.10.0/24'
-            }
-          ],
-          'running_default'    => false,
-          'staging_default'    => false,
-          'spaces_url'         => "/v2/security_groups/#{security_group.guid}/spaces",
-          'staging_spaces_url' => "/v2/security_groups/#{security_group.guid}/staging_spaces"
-        }
-      })
+                                                                         'metadata' => {
+                                                                           'guid' => security_group.guid,
+                                                                           'url' => "/v2/security_groups/#{security_group.guid}",
+                                                                           'created_at' => iso8601,
+                                                                           'updated_at' => iso8601
+                                                                         },
+                                                                         'entity' => {
+                                                                           'name' => 'my-group-name',
+                                                                           'rules' => [
+                                                                             {
+                                                                               'protocol' => 'tcp',
+                                                                               'ports' => '443',
+                                                                               'destination' => '192.168.10.0/24'
+                                                                             }
+                                                                           ],
+                                                                           'running_default' => false,
+                                                                           'staging_default' => false,
+                                                                           'spaces_url' => "/v2/security_groups/#{security_group.guid}/spaces",
+                                                                           'staging_spaces_url' => "/v2/security_groups/#{security_group.guid}/staging_spaces"
+                                                                         }
+                                                                       })
 
       security_group.reload
       space.reload

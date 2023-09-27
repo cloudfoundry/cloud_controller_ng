@@ -3,7 +3,7 @@ require 'netaddr'
 module VCAP::CloudController
   class SecurityGroup < Sequel::Model
     SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
-    MAX_RULES_CHAR_LENGTH = 2**24 - 1
+    MAX_RULES_CHAR_LENGTH = (2**24) - 1
 
     plugin :serialization
 
@@ -14,10 +14,10 @@ module VCAP::CloudController
 
     many_to_many :spaces
     many_to_many :staging_spaces,
-      class: 'VCAP::CloudController::Space',
-      join_table: 'staging_security_groups_spaces',
-      right_key: :staging_space_id,
-      left_key: :staging_security_group_id
+                 class: 'VCAP::CloudController::Space',
+                 join_table: 'staging_security_groups_spaces',
+                 right_key: :staging_space_id,
+                 left_key: :staging_security_group_id
 
     add_association_dependencies spaces: :nullify, staging_spaces: :nullify
 
@@ -51,9 +51,9 @@ module VCAP::CloudController
 
       # use this instead of validates_max_length b/c we care about the serialized
       # value that is happening due to our use of the serialize_attributes on rules column
-      if self[:rules].length > MAX_RULES_CHAR_LENGTH
-        errors.add(:rules, "length must not exceed #{MAX_RULES_CHAR_LENGTH} characters")
-      end
+      return unless self[:rules].length > MAX_RULES_CHAR_LENGTH
+
+      errors.add(:rules, "length must not exceed #{MAX_RULES_CHAR_LENGTH} characters")
     end
 
     def validate_rules

@@ -12,8 +12,8 @@ module CloudController
           blobstore_host: blobstore_host,
           blobstore_external_port: external_port,
           blobstore_tls_port: tls_port,
-          user:           username,
-          password:       password,
+          user: username,
+          password: password
         }
       end
 
@@ -27,10 +27,10 @@ module CloudController
 
       subject(:url_generator) do
         LocalUrlGenerator.new(connection_options,
-          package_blobstore,
-          buildpack_cache_blobstore,
-          admin_buildpack_blobstore,
-          droplet_blobstore)
+                              package_blobstore,
+                              buildpack_cache_blobstore,
+                              admin_buildpack_blobstore,
+                              droplet_blobstore)
       end
 
       describe 'admin buildpacks' do

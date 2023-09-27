@@ -38,7 +38,7 @@ module VCAP::CloudController::RestController
       end
 
       context 'when order_by has multiple values' do
-        let(:opts) { { order_by: ['field', 'id'] } }
+        let(:opts) { { order_by: %w[field id] } }
 
         it 'orders by the specified column' do
           expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `field` ASC, `id` ASC'))
@@ -54,7 +54,7 @@ module VCAP::CloudController::RestController
         end
 
         context 'when order_by has multiple values' do
-          let(:order_by) { { order_by: ['field', 'id'] } }
+          let(:order_by) { { order_by: %w[field id] } }
 
           it 'orders by the specified column' do
             expect(sql).to eq(normalize_quotes('SELECT * FROM `test_models` ORDER BY `field` DESC, `id` DESC'))

@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class DomainDeleteSharedOrgMessage < BaseMessage
-    register_allowed_keys [:guid, :org_guid]
+    register_allowed_keys %i[guid org_guid]
 
     validates_with NoAdditionalKeysValidator
 

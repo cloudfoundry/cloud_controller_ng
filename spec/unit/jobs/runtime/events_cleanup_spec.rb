@@ -11,15 +11,15 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       it 'removes app events that are older than the specified cutoff age' do
-        expect {
+        expect do
           job.perform
-        }.to change { Event.find(id: old_event.id) }.to(nil)
+        end.to change { Event.find(id: old_event.id) }.to(nil)
       end
 
       it 'leaves the events that are younger than the specified cutoff age' do
-        expect {
+        expect do
           job.perform
-        }.not_to change { Event.find(id: event.id) }
+        end.not_to(change { Event.find(id: event.id) })
       end
 
       it 'knows its job name' do

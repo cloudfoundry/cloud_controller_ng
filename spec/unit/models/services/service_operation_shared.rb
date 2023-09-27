@@ -32,7 +32,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: true },
           { type: 'update', state: 'failed',      result: true },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: true },
+          { type: 'delete', state: 'failed',      result: true }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.terminal_state?).to be test[:result]
@@ -59,7 +59,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: true },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.operation_in_progress?).to be test[:result]
@@ -86,7 +86,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.create_initial?).to be test[:result]
@@ -113,7 +113,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.create_in_progress?).to be test[:result]
@@ -140,7 +140,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.create_succeeded?).to be test[:result]
@@ -167,7 +167,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.create_failed?).to be test[:result]
@@ -194,7 +194,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.update_in_progress?).to be test[:result]
@@ -221,7 +221,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: true },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.update_succeeded?).to be test[:result]
@@ -248,7 +248,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: true },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.update_failed?).to be test[:result]
@@ -275,7 +275,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: true },
-          { type: 'delete', state: 'failed',      result: false },
+          { type: 'delete', state: 'failed',      result: false }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.delete_in_progress?).to be test[:result]
@@ -302,7 +302,7 @@ RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_
           { type: 'update', state: 'succeeded',   result: false },
           { type: 'update', state: 'failed',      result: false },
           { type: 'delete', state: 'in progress', result: false },
-          { type: 'delete', state: 'failed',      result: true },
+          { type: 'delete', state: 'failed',      result: true }
         ].each do |test|
           update_operation(test[:type], test[:state])
           expect(service.delete_failed?).to be test[:result]

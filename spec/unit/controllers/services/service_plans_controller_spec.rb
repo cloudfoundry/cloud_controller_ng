@@ -32,9 +32,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool', default: true },
               service_guid: { type: 'string', required: true },
-              service_instance_guids: { type: '[string]' },
+              service_instance_guids: { type: '[string]' }
             }
-           )
+          )
       end
 
       it do
@@ -48,8 +48,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool' },
               service_guid: { type: 'string' },
-              service_instance_guids: { type: '[string]' },
-            })
+              service_instance_guids: { type: '[string]' }
+            }
+          )
       end
     end
 
@@ -118,7 +119,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(ServicePlansController).to have_nested_routes({ service_instances: [:get, :put, :delete] })
+        expect(ServicePlansController).to have_nested_routes({ service_instances: %i[get put delete] })
       end
     end
 
@@ -143,7 +144,7 @@ module VCAP::CloudController
         organization = developer.organizations.first
         VCAP::CloudController::ServicePlanVisibility.create(
           organization: organization,
-          service_plan: private_plan,
+          service_plan: private_plan
         )
         get '/v2/service_plans'
         expect(plan_guids).to include(private_plan.guid)
@@ -193,7 +194,7 @@ module VCAP::CloudController
               'create' => { 'parameters' => {} }
             }
           }
-                           )
+        )
       end
 
       context 'when the plan does not set bindable' do
@@ -240,7 +241,7 @@ module VCAP::CloudController
 
           context 'and the user has a service instance associated with that plan' do
             let(:organization) { Organization.make }
-            let(:space) { Space.make(organization: organization) }
+            let(:space) { Space.make(organization:) }
 
             before do
               space.organization.add_user(user)
@@ -252,7 +253,7 @@ module VCAP::CloudController
               broker = ServiceBroker.make
               service = Service.make(service_broker: broker)
               service_plan = ServicePlan.make(service: service, public: false, active: false)
-              ManagedServiceInstance.make(space: space, service_plan: service_plan)
+              ManagedServiceInstance.make(space:, service_plan:)
               service_plan.reload
 
               set_current_user(user)
@@ -273,7 +274,7 @@ module VCAP::CloudController
               broker = ServiceBroker.make
               service = Service.make(:v2, service_broker: broker)
               service_plan = ServicePlan.make(:v2, service: service, public: true, active: true)
-              ManagedServiceInstance.make(:v2, space: space, service_plan: service_plan)
+              ManagedServiceInstance.make(:v2, space:, service_plan:)
               service_plan.update(public: false)
               service_plan.reload
 
@@ -344,7 +345,7 @@ module VCAP::CloudController
 
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
-            private_broker = ServiceBroker.make(space: space)
+            private_broker = ServiceBroker.make(space:)
             service = Service.make(service_broker: private_broker)
             private_broker_service_plan = ServicePlan.make(service: service, public: false)
 
@@ -364,7 +365,7 @@ module VCAP::CloudController
           it 'does not list the inactive service plan' do
             service = Service.make
             service_plan = ServicePlan.make(service: service, public: true, active: true)
-            ManagedServiceInstance.make(service_plan: service_plan)
+            ManagedServiceInstance.make(service_plan:)
             service_plan.update(public: false)
             service_plan.reload
 
@@ -585,11 +586,11 @@ module VCAP::CloudController
 
       it 'should prevent recursive deletions if there are any instances' do
         set_current_user_as_admin
-        ManagedServiceInstance.make(service_plan: service_plan)
+        ManagedServiceInstance.make(service_plan:)
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
         expect(last_response).to have_status_code(400)
 
-        expect(decoded_response.fetch('code')).to eq(10006)
+        expect(decoded_response.fetch('code')).to eq(10_006)
         expect(decoded_response.fetch('description')).to eq('Please delete the service_instances associations for your service_plans.')
       end
     end

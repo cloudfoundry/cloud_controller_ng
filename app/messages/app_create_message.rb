@@ -3,7 +3,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:name, :environment_variables, :relationships, :lifecycle]
+    register_allowed_keys %i[name environment_variables relationships lifecycle]
 
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
@@ -20,13 +20,13 @@ module VCAP::CloudController
     validates :environment_variables, hash: true, allow_nil: true
 
     validates :lifecycle_type,
-      string: true,
-      if: lifecycle_type_requested?
+              string: true,
+              if: lifecycle_type_requested?
 
     validates :lifecycle_data,
-      hash: true,
-      allow_nil: false,
-      if: lifecycle_requested?
+              hash: true,
+              allow_nil: false,
+              if: lifecycle_requested?
 
     delegate :space_guid, to: :relationships_message
 

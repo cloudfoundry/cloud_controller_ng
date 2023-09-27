@@ -27,9 +27,9 @@ module VCAP::CloudController
           let(:message) { DomainCreateMessage.new({ name: domain }) }
 
           it 'returns an error' do
-            expect {
-              subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, %{The domain name "#{domain}" cannot be created because "#{private_domain.name}" is already reserved by another domain})
+            expect do
+              subject.create(message:)
+            end.to raise_error(DomainCreate::Error, %(The domain name "#{domain}" cannot be created because "#{private_domain.name}" is already reserved by another domain))
           end
         end
 
@@ -38,9 +38,9 @@ module VCAP::CloudController
           let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
 
           it 'returns an informative error message' do
-            expect {
-              subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, %{The domain name "#{existing_domain.name}" is already in use})
+            expect do
+              subject.create(message:)
+            end.to raise_error(DomainCreate::Error, %(The domain name "#{existing_domain.name}" is already in use))
           end
         end
 
@@ -49,9 +49,9 @@ module VCAP::CloudController
           let(:message) { DomainCreateMessage.new({ name: 'foo.com', relationships: { organization: { data: { guid: org.guid } } } }) }
 
           it 'returns an informative error message' do
-            expect {
-              subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, "The number of private domains exceeds the quota for organization \"#{org.name}\"")
+            expect do
+              subject.create(message:)
+            end.to raise_error(DomainCreate::Error, "The number of private domains exceeds the quota for organization \"#{org.name}\"")
           end
         end
       end
@@ -62,26 +62,26 @@ module VCAP::CloudController
 
           let(:message) do
             DomainCreateMessage.new({
-              name: name,
-              internal: internal,
-              metadata: metadata
-            })
+                                      name:,
+                                      internal:,
+                                      metadata:
+                                    })
           end
 
           it 'creates a domain with all the provided fields' do
             domain = nil
 
-            expect {
-              domain = subject.create(message: message)
-            }.to change { SharedDomain.count }.by(1)
+            expect do
+              domain = subject.create(message:)
+            end.to change { SharedDomain.count }.by(1)
 
             expect(domain.name).to eq(name)
             expect(domain.internal).to eq(internal)
             expect(domain.guid).to_not be_nil
             expect(domain).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
-                              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-              )
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+            )
             expect(domain).to have_annotations(
               { key_name: 'anno', value: 'tations' }
             )
@@ -96,26 +96,26 @@ module VCAP::CloudController
 
         let(:message) do
           DomainCreateMessage.new({
-            name: name,
-            relationships: {
-              organization: {
-                data: { guid: organization.guid }
-              },
-              shared_organizations: {
-                data: [
-                  { guid: shared_org1.guid },
-                  { guid: shared_org2.guid }
-                ]
-              }
-            },
-            metadata: metadata
-          })
+                                    name: name,
+                                    relationships: {
+                                      organization: {
+                                        data: { guid: organization.guid }
+                                      },
+                                      shared_organizations: {
+                                        data: [
+                                          { guid: shared_org1.guid },
+                                          { guid: shared_org2.guid }
+                                        ]
+                                      }
+                                    },
+                                    metadata: metadata
+                                  })
         end
 
         it 'creates a private domain' do
-          expect {
+          expect do
             subject.create(message: message, shared_organizations: [shared_org1, shared_org2])
-          }.to change { PrivateDomain.count }.by(1)
+          end.to change { PrivateDomain.count }.by(1)
 
           domain = PrivateDomain.last
           expect(domain.name).to eq name
@@ -123,8 +123,8 @@ module VCAP::CloudController
           expect(domain.shared_organizations).to contain_exactly(shared_org1, shared_org2)
           expect(domain).to have_labels(
             { prefix: nil, key_name: 'release', value: 'stable' },
-                            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-            )
+            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+          )
           expect(domain).to have_annotations(
             { key_name: 'anno', value: 'tations' }
           )
@@ -137,25 +137,25 @@ module VCAP::CloudController
 
           let(:message) do
             DomainCreateMessage.new({
-              name: name,
-              router_group: router_group_guid,
-              metadata: metadata
-            })
+                                      name: name,
+                                      router_group: router_group_guid,
+                                      metadata: metadata
+                                    })
           end
 
           it 'creates a domain with all the provided fields' do
             domain = nil
 
-            expect {
-              domain = subject.create(message: message)
-            }.to change { SharedDomain.count }.by(1)
+            expect do
+              domain = subject.create(message:)
+            end.to change { SharedDomain.count }.by(1)
 
             expect(domain.name).to eq(name)
             expect(domain.router_group_guid).to eq(router_group_guid[:guid])
             expect(domain.guid).to_not be_nil
             expect(domain).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
-              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
             )
             expect(domain).to have_annotations(
               { key_name: 'anno', value: 'tations' }

@@ -2,12 +2,12 @@ require 'messages/service_instance_message'
 
 module VCAP::CloudController
   class ServiceInstanceUpdateUserProvidedMessage < ServiceInstanceMessage
-    register_allowed_keys [
-      :name,
-      :tags,
-      :credentials,
-      :syslog_drain_url,
-      :route_service_url,
+    register_allowed_keys %i[
+      name
+      tags
+      credentials
+      syslog_drain_url
+      route_service_url
     ]
 
     validates_with NoAdditionalKeysValidator
@@ -24,15 +24,15 @@ module VCAP::CloudController
     private
 
     def route_service_url_must_be_https
-      if route_service_url.present? && route_service_url.is_a?(String) && !route_service_url.starts_with?('https:')
-        errors.add(:route_service_url, 'must be https')
-      end
+      return unless route_service_url.present? && route_service_url.is_a?(String) && !route_service_url.starts_with?('https:')
+
+      errors.add(:route_service_url, 'must be https')
     end
 
     def tags_must_be_strings
-      if tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
-        errors.add(:tags, 'must be a list of strings')
-      end
+      return unless tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
+
+      errors.add(:tags, 'must be a list of strings')
     end
   end
 end

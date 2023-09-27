@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
       let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: { version: '2.0.0' }) }
-      let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
+      let(:new_service_plan) { ServicePlan.make(:v2, service:) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
       let(:space) { service_instance.space }
 
@@ -19,7 +19,7 @@ module VCAP::CloudController
           space: space,
           service_plan: old_service_plan,
           service: service,
-          update_attrs: update_attrs,
+          update_attrs: update_attrs
         }
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
           let(:active) {}
           let(:public) {}
 
-          let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: active, public: public) }
+          let(:old_service_plan) { ServicePlan.make(:v2, service:, active:, public:) }
 
           context 'when the current user is an admin' do
             before do
@@ -96,9 +96,9 @@ module VCAP::CloudController
           let(:update_attrs) { { 'space_guid' => 'asdf' } }
 
           it 'raises a validation error' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /Cannot update space/)
+            end.to raise_error(CloudController::Errors::ApiError, /Cannot update space/)
           end
         end
 
@@ -112,9 +112,9 @@ module VCAP::CloudController
           let(:update_attrs) { { 'name' => 'new name' } }
 
           it 'raises a validation error with the specific message' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /You have exceeded your space's services limit./)
+            end.to raise_error(CloudController::Errors::ApiError, /You have exceeded your space's services limit./)
           end
         end
 
@@ -131,9 +131,9 @@ module VCAP::CloudController
             end
 
             it 'raises a validation error' do
-              expect {
+              expect do
                 ServiceUpdateValidator.validate!(service_instance, **args)
-              }.to raise_error(CloudController::Errors::ApiError, /cannot switch to non-bindable/)
+              end.to raise_error(CloudController::Errors::ApiError, /cannot switch to non-bindable/)
             end
           end
 
@@ -152,9 +152,9 @@ module VCAP::CloudController
           end
 
           it 'raises a validation error if the plan changes' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
+            end.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
           end
 
           context 'when the plan does not change' do
@@ -181,9 +181,9 @@ module VCAP::CloudController
             end
 
             it 'raises a validation error' do
-              expect {
+              expect do
                 ServiceUpdateValidator.validate!(service_instance, **args)
-              }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
+              end.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
             end
           end
         end
@@ -196,9 +196,9 @@ module VCAP::CloudController
           end
 
           it 'raises a validation error' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
+            end.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
           end
         end
 
@@ -206,9 +206,9 @@ module VCAP::CloudController
           let(:update_attrs) { { 'service_plan_guid' => 'does-not-exist' } }
 
           it 'raises a validation error' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /Plan/)
+            end.to raise_error(CloudController::Errors::ApiError, /Plan/)
           end
         end
 
@@ -219,9 +219,9 @@ module VCAP::CloudController
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
           it 'raises a validation error' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(CloudController::Errors::ApiError, /Plan/)
+            end.to raise_error(CloudController::Errors::ApiError, /Plan/)
           end
         end
 
@@ -236,9 +236,9 @@ module VCAP::CloudController
             let(:update_attrs) { { 'name' => 'something_new' } }
 
             it 'raises a validation error' do
-              expect {
+              expect do
                 ServiceUpdateValidator.validate!(service_instance, **args)
-              }.to raise_error(CloudController::Errors::ApiError, /shared cannot be renamed/)
+              end.to raise_error(CloudController::Errors::ApiError, /shared cannot be renamed/)
             end
           end
 
@@ -264,9 +264,9 @@ module VCAP::CloudController
           let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
 
           it 'errors' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(
+            end.to raise_error(
               CloudController::Errors::ApiError,
               'The service broker does not support upgrades for service instances created from this plan.'
             )
@@ -277,9 +277,9 @@ module VCAP::CloudController
           let(:update_attrs) { { 'maintenance_info' => { 'version' => 'not a semantic version' } } }
 
           it 'errors' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(
+            end.to raise_error(
               CloudController::Errors::ApiError,
               'maintenance_info.version should be a semantic version.'
             )
@@ -287,15 +287,17 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info and plan_id are changed' do
-          let(:update_attrs) { {
-            'maintenance_info' => { 'version' => '2.0.0' },
-            'service_plan_guid' => new_service_plan.guid }
-          }
+          let(:update_attrs) do
+            {
+              'maintenance_info' => { 'version' => '2.0.0' },
+              'service_plan_guid' => new_service_plan.guid
+            }
+          end
 
           it 'errors' do
-            expect {
+            expect do
               ServiceUpdateValidator.validate!(service_instance, **args)
-            }.to raise_error(
+            end.to raise_error(
               CloudController::Errors::ApiError,
               'maintenance_info should not be changed when switching to different plan.'
             )
@@ -328,9 +330,9 @@ module VCAP::CloudController
               let(:update_attrs) { { 'toppings' => 'anchovies' } }
 
               it 'errors' do
-                expect {
+                expect do
                   ServiceUpdateValidator.validate!(service_instance, **args)
-                }.to raise_error(CloudController::Errors::ApiError, /paid service plans are not allowed/)
+                end.to raise_error(CloudController::Errors::ApiError, /paid service plans are not allowed/)
               end
             end
 
@@ -354,15 +356,15 @@ module VCAP::CloudController
               let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
               it 'errors' do
-                expect {
+                expect do
                   ServiceUpdateValidator.validate!(service_instance, **args)
-                }.to raise_error(CloudController::Errors::ApiError, /paid service plans are not allowed/)
+                end.to raise_error(CloudController::Errors::ApiError, /paid service plans are not allowed/)
               end
 
               it 'does not update the plan on the service instance' do
-                expect {
+                expect do
                   ServiceUpdateValidator.validate!(service_instance, **args)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(service_instance.service_plan).to eq(old_service_plan)
                 expect(service_instance.reload.service_plan).to eq(old_service_plan)
@@ -383,7 +385,7 @@ module VCAP::CloudController
         context 'when parameters update requested' do
           let(:update_attrs) { { 'parameters' => { 'foo' => 'bar' } } }
 
-          let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: active, public: public) }
+          let(:old_service_plan) { ServicePlan.make(:v2, service:, active:, public:) }
 
           let(:active) {}
           let(:public) {}
@@ -398,9 +400,9 @@ module VCAP::CloudController
               let(:public) { false }
 
               it 'raises a validation error' do
-                expect {
+                expect do
                   ServiceUpdateValidator.validate!(service_instance, **args)
-                }.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
+                end.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
               end
             end
 
@@ -409,9 +411,9 @@ module VCAP::CloudController
               let(:public) { false }
 
               it 'raises a validation error' do
-                expect {
+                expect do
                   ServiceUpdateValidator.validate!(service_instance, **args)
-                }.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
+                end.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
               end
             end
           end

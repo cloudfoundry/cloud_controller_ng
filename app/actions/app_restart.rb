@@ -19,7 +19,7 @@ module VCAP::CloudController
               process: process,
               config: config,
               revision: app.latest_revision,
-              stop_in_runtime: need_to_stop_in_runtime,
+              stop_in_runtime: need_to_stop_in_runtime
             )
           end
           record_audit_event(app, user_audit_info)
@@ -33,7 +33,7 @@ module VCAP::CloudController
       def record_audit_event(app, user_audit_info)
         Repositories::AppEventRepository.new.record_app_restart(
           app,
-          user_audit_info,
+          user_audit_info
         )
       end
     end

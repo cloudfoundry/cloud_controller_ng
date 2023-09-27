@@ -44,13 +44,11 @@ module CloudFoundry
         end
 
         # Return a 401 if the token is invalid and if the rate limit is already exceeded
-        if status == 429 && VCAP::CloudController::SecurityContext.invalid_token? && !VCAP::CloudController::SecurityContext.missing_token?
-          return invalid_token!(env, headers)
-        end
+        return invalid_token!(env, headers) if status == 429 && VCAP::CloudController::SecurityContext.invalid_token? && !VCAP::CloudController::SecurityContext.missing_token?
 
         headers['X-USER-GUID'] = env['cf.user_guid'] if env['cf.user_guid']
 
-        return [status, headers, body]
+        [status, headers, body]
       rescue VCAP::CloudController::UaaUnavailable => e
         logger.error("Failed communicating with UAA: #{e.message}")
         [502, { 'Content-Type:' => 'application/json' }, [error_message(env, 'UaaUnavailable')]]

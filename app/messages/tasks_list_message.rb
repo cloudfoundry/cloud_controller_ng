@@ -2,14 +2,14 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class TasksListMessage < MetadataListMessage
-    register_allowed_keys [
-      :names,
-      :states,
-      :app_guids,
-      :organization_guids,
-      :space_guids,
-      :app_guid,
-      :sequence_ids,
+    register_allowed_keys %i[
+      names
+      states
+      app_guids
+      organization_guids
+      space_guids
+      app_guid
+      sequence_ids
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
@@ -28,7 +28,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(names states app_guids organization_guids space_guids sequence_ids))
+      super(params, %w[names states app_guids organization_guids space_guids sequence_ids])
     end
 
     private

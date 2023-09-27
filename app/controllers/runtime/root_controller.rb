@@ -30,11 +30,11 @@ module VCAP::CloudController
           },
 
           network_policy_v0: {
-            href: api_url_builder.build_url(path: '/networking/v0/external'),
+            href: api_url_builder.build_url(path: '/networking/v0/external')
           },
 
           network_policy_v1: {
-            href: api_url_builder.build_url(path: '/networking/v1/external'),
+            href: api_url_builder.build_url(path: '/networking/v1/external')
           },
 
           login: {
@@ -66,7 +66,7 @@ module VCAP::CloudController
               host_key_fingerprint: config.get(:info, :app_ssh_host_key_fingerprint),
               oauth_client: config.get(:info, :app_ssh_oauth_client)
             }
-          },
+          }
 
         }
       }

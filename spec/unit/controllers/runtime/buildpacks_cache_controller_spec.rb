@@ -8,9 +8,9 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'returns the job' do
-        expect {
+        expect do
           delete '/v2/blobstores/buildpack_cache'
-        }.to change {
+        end.to change {
           Delayed::Job.count
         }.by(1)
 

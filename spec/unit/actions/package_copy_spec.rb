@@ -6,13 +6,13 @@ module VCAP::CloudController
     subject(:package_copy) { PackageCopy.new }
 
     let(:target_app) { AppModel.make }
-    let!(:source_package) { PackageModel.make(type: type) }
+    let!(:source_package) { PackageModel.make(type:) }
     let(:type) { 'docker' }
 
     describe '#copy' do
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'amelia@cats.com' }
-      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+      let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
       before do
         allow(Repositories::PackageEventRepository).to receive(:record_app_package_copy)
@@ -57,9 +57,9 @@ module VCAP::CloudController
 
           it 'enqueues a job to copy the bits in the blobstore' do
             package = nil
-            expect {
+            expect do
               package = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-            }.to change { Delayed::Job.count }.by(1)
+            end.to change { Delayed::Job.count }.by(1)
 
             job = Delayed::Job.last
             expect(job.queue).to eq(Jobs::Queues.generic)
@@ -77,9 +77,9 @@ module VCAP::CloudController
           end
 
           it 'does no enqueue a job to copy the bits in the blobstore' do
-            expect {
+            expect do
               package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-            }.not_to change { Delayed::Job.count }
+            end.not_to(change { Delayed::Job.count })
           end
         end
       end
@@ -90,9 +90,9 @@ module VCAP::CloudController
         end
 
         it 'raises an InvalidPackage error' do
-          expect {
+          expect do
             package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-          }.to raise_error(PackageCopy::InvalidPackage, 'the message')
+          end.to raise_error(PackageCopy::InvalidPackage, 'the message')
         end
       end
 
@@ -100,9 +100,9 @@ module VCAP::CloudController
         let!(:source_package) { PackageModel.make(type: type, app_guid: target_app.guid) }
 
         it 'raises an InvalidPackage error' do
-          expect {
+          expect do
             package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-          }.to raise_error(PackageCopy::InvalidPackage, 'Source and destination app cannot be the same')
+          end.to raise_error(PackageCopy::InvalidPackage, 'Source and destination app cannot be the same')
         end
       end
     end

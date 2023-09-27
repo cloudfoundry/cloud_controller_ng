@@ -50,7 +50,7 @@ module VCAP::CloudController
 
     describe 'default values' do
       let(:pagination_options) { PaginationOptions.new(options) }
-      let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
+      let(:options) { { page:, per_page:, order_by:, order_direction: } }
       let(:page) { 2 }
       let(:per_page) { 5 }
       let(:order_by) { 'anything' }
@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     describe 'ordering_configured?' do
-      let(:pagination_options) { PaginationOptions.new(order_by: order_by, order_direction: order_direction) }
+      let(:pagination_options) { PaginationOptions.new(order_by:, order_direction:) }
       let(:order_by) { 'anything' }
       let(:order_direction) { 'desc' }
 

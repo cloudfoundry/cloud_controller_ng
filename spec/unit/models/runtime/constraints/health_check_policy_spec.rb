@@ -10,9 +10,9 @@ RSpec.describe HealthCheckPolicy do
 
   let(:max_health_check_timeout) { 512 }
 
-  subject(:validator) {
+  subject(:validator) do
     HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
-  }
+  end
 
   describe 'health_check_type' do
     context 'defaults' do

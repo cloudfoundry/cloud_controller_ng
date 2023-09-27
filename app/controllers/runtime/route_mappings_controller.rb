@@ -15,7 +15,7 @@ module VCAP::CloudController
     query_parameters :app_guid, :route_guid
 
     def read(guid)
-      route_mapping = RouteMappingModel.where(guid: guid).first
+      route_mapping = RouteMappingModel.where(guid:).first
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping && route_mapping.process_type == ProcessTypes::WEB
 
       validate_access(:read, route_mapping)
@@ -38,9 +38,7 @@ module VCAP::CloudController
 
       route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
 
-      if !request_attrs.key?('app_port') && !process.ports.blank?
-        add_warning("Route has been mapped to app port #{route_mapping.app_port}.")
-      end
+      add_warning("Route has been mapped to app port #{route_mapping.app_port}.") if !request_attrs.key?('app_port') && !process.ports.blank?
 
       [
         HTTP::CREATED,
@@ -58,7 +56,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      route_mapping = RouteMappingModel.where(guid: guid).first
+      route_mapping = RouteMappingModel.where(guid:).first
       permissions = Permissions.new(SecurityContext.current_user)
 
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
@@ -90,9 +88,7 @@ module VCAP::CloudController
     def get_app_port(process_guid, app_port)
       if app_port.blank?
         process = ProcessModel.find(guid: process_guid)
-        if !process.nil? && !process.ports.blank?
-          return process.ports[0]
-        end
+        return process.ports[0] if !process.nil? && !process.ports.blank?
       end
 
       app_port

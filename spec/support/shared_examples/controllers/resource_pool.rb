@@ -21,21 +21,17 @@ shared_context 'resource pool' do
         contents = SecureRandom.uuid
 
         descriptor = {
-            'sha1' => Digester.new.digest(contents),
-            'size' => contents.length,
-            'mode' => '666'
+          'sha1' => Digester.new.digest(contents),
+          'size' => contents.length,
+          'mode' => '666'
         }
         @descriptors << descriptor
 
         file_duplication_factor.times do |i|
-          File.open("#{path}-#{i}", 'w') do |f|
-            f.write contents
-          end
+          File.write("#{path}-#{i}", contents)
         end
 
-        File.open("#{path}-not-allowed", 'w') do |f|
-          f.write 'A' * @max_file_size
-        end
+        File.write("#{path}-not-allowed", 'A' * @max_file_size)
       end
     end
 
@@ -44,14 +40,14 @@ shared_context 'resource pool' do
 
   let(:resource_pool_config) do
     {
-        maximum_size: maximum_file_size,
-        minimum_size: minimum_file_size,
-        resource_directory_key: 'spec-cc-resources',
-        fog_connection: {
-            provider: 'AWS',
-            aws_access_key_id: 'fake_aws_key_id',
-            aws_secret_access_key: 'fake_secret_access_key',
-        }
+      maximum_size: maximum_file_size,
+      minimum_size: minimum_file_size,
+      resource_directory_key: 'spec-cc-resources',
+      fog_connection: {
+        provider: 'AWS',
+        aws_access_key_id: 'fake_aws_key_id',
+        aws_secret_access_key: 'fake_secret_access_key'
+      }
     }
   end
 

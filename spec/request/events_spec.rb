@@ -5,12 +5,12 @@ RSpec.describe 'Events' do
   describe 'GET /v3/audit_events' do
     let(:user) { make_user }
     let(:admin_header) { admin_headers_for(user) }
-    let(:user_audit_info) {
+    let(:user_audit_info) do
       VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com')
-    }
+    end
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
 
     let!(:unscoped_event) { VCAP::CloudController::Event.make(actee: 'dir/key', type: 'blob.remove_orphan', organization_guid: '') }
     let!(:org_scoped_event) { VCAP::CloudController::Event.make(created_at: Time.now + 100, type: 'audit.organization.create', actee: org.guid, organization_guid: org.guid) }
@@ -104,7 +104,7 @@ RSpec.describe 'Events' do
     end
 
     context 'without filters' do
-      let(:api_call) { lambda { |user_headers| get '/v3/audit_events', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/audit_events', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: [])
@@ -130,10 +130,10 @@ RSpec.describe 'Events' do
         get '/v3/audit_events?types=audit.app.restart', nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [space_scoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [space_scoped_event_json]
+                                         })
       end
     end
 
@@ -142,10 +142,10 @@ RSpec.describe 'Events' do
         get "/v3/audit_events?target_guids=#{app_model.guid}", nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [space_scoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [space_scoped_event_json]
+                                         })
       end
     end
 
@@ -154,20 +154,20 @@ RSpec.describe 'Events' do
         get "/v3/audit_events?target_guids[not]=#{app_model.guid}", nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [unscoped_event_json, org_scoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [unscoped_event_json, org_scoped_event_json]
+                                         })
       end
 
       it 'works for multiple guids' do
         get "/v3/audit_events?target_guids[not]=#{app_model.guid},#{org.guid}", nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [unscoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [unscoped_event_json]
+                                         })
       end
     end
 
@@ -176,10 +176,10 @@ RSpec.describe 'Events' do
         get "/v3/audit_events?space_guids=#{space.guid}", nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [space_scoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [space_scoped_event_json]
+                                         })
       end
     end
 
@@ -187,7 +187,7 @@ RSpec.describe 'Events' do
       let(:resource_klass) { VCAP::CloudController::Event }
       let(:headers) { admin_headers }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/audit_events?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/audit_events?#{filters}", nil, headers }
       end
     end
 
@@ -196,10 +196,10 @@ RSpec.describe 'Events' do
         get "/v3/audit_events?organization_guids=#{org.guid}", nil, admin_header
 
         expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [org_scoped_event_json, space_scoped_event_json]
-        })
+                 resources: parsed_response['resources']
+               }).to match_json_response({
+                                           resources: [org_scoped_event_json, space_scoped_event_json]
+                                         })
       end
     end
   end
@@ -209,26 +209,26 @@ RSpec.describe 'Events' do
     let(:admin_header) { admin_headers_for(user) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }
-    let(:api_call) { lambda { |user_headers| get "/v3/audit_events/#{event.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/audit_events/#{event.guid}", nil, user_headers } }
 
     context 'when the audit_event does exist ' do
       context 'when the event happens in a space' do
-        let(:event) {
+        let(:event) do
           VCAP::CloudController::Event.make(
-            type:              'audit.app.update',
-            actor:             'some-user-guid',
-            actor_type:        'some-user',
-            actor_name:        'username',
-            actor_username:    'system',
-            actee:             'app-guid',
-            actee_type:        'app',
-            actee_name:        '',
-            timestamp:         Sequel::CURRENT_TIMESTAMP,
-            metadata:          {},
-            space_guid:        space.guid,
-            organization_guid: org.guid,
+            type: 'audit.app.update',
+            actor: 'some-user-guid',
+            actor_type: 'some-user',
+            actor_name: 'username',
+            actor_username: 'system',
+            actee: 'app-guid',
+            actee_type: 'app',
+            actee_name: '',
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            metadata: {},
+            space_guid: space.guid,
+            organization_guid: org.guid
           )
-        }
+        end
 
         let(:event_json) do
           {
@@ -264,7 +264,7 @@ RSpec.describe 'Events' do
         let(:expected_codes_and_responses) do
           responses_for_space_restricted_single_endpoint(
             event_json,
-            permitted_roles: %w(
+            permitted_roles: %w[
               admin
               admin_read_only
               global_auditor
@@ -272,7 +272,7 @@ RSpec.describe 'Events' do
               space_auditor
               space_developer
               space_supporter
-            )
+            ]
           )
         end
 
@@ -291,28 +291,28 @@ RSpec.describe 'Events' do
             h
           end
 
-          it_behaves_like 'permissions for single object endpoint', %w(admin admin_read_only global_auditor org_auditor)
+          it_behaves_like 'permissions for single object endpoint', %w[admin admin_read_only global_auditor org_auditor]
         end
       end
 
       context 'when the event happens in an org' do
-        let(:event) {
+        let(:event) do
           VCAP::CloudController::Event.make(
-            type:              'audit.organization.update',
-            actor:             'some-user-guid',
-            actor_type:        'some-user',
-            actor_name:        'username',
-            actor_username:    'system',
-            actee:             org.guid,
-            actee_type:        'organization',
-            actee_name:        '',
-            timestamp:         Sequel::CURRENT_TIMESTAMP,
-            metadata:          {},
-            space:             nil,
-            space_guid:        '',
+            type: 'audit.organization.update',
+            actor: 'some-user-guid',
+            actor_type: 'some-user',
+            actor_name: 'username',
+            actor_username: 'system',
+            actee: org.guid,
+            actee_type: 'organization',
+            actee_name: '',
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            metadata: {},
+            space: nil,
+            space_guid: '',
             organization_guid: org.guid
           )
-        }
+        end
 
         let(:event_json) do
           {
@@ -394,27 +394,27 @@ RSpec.describe 'Events' do
             h
           end
 
-          it_behaves_like 'permissions for single object endpoint', %w(admin admin_read_only global_auditor)
+          it_behaves_like 'permissions for single object endpoint', %w[admin admin_read_only global_auditor]
         end
       end
 
       context 'when the event has neither space nor org' do
-        let(:event) {
+        let(:event) do
           VCAP::CloudController::Event.create(
-            type:              'blob.remove_orphan',
-            actor:             'system',
-            actor_type:        'system',
-            actor_name:        'system',
-            actor_username:    'system',
-            actee:             'directory_key/blob_key',
-            actee_type:        'blob',
-            actee_name:        '',
-            timestamp:         Sequel::CURRENT_TIMESTAMP,
-            metadata:          {},
-            space_guid:        '',
+            type: 'blob.remove_orphan',
+            actor: 'system',
+            actor_type: 'system',
+            actor_name: 'system',
+            actor_username: 'system',
+            actee: 'directory_key/blob_key',
+            actee_type: 'blob',
+            actee_name: '',
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            metadata: {},
+            space_guid: '',
             organization_guid: ''
           )
-        }
+        end
 
         let(:event_json) do
           {
@@ -448,7 +448,7 @@ RSpec.describe 'Events' do
             code: 404,
             response_object: []
           )
-          %w(admin admin_read_only global_auditor).each do |role|
+          %w[admin admin_read_only global_auditor].each do |role|
             h[role] = {
               code: 200,
               response_object: event_json
@@ -470,21 +470,21 @@ RSpec.describe 'Events' do
     end
 
     context 'when the user is not logged in' do
-      let(:event) {
+      let(:event) do
         VCAP::CloudController::Event.make(
-          type:              'audit.app.update',
-          actor:             'some-user-guid',
-          actor_type:        'some-user',
-          actor_name:        'username',
-          actor_username:    'system',
-          actee:             'app-guid',
-          actee_type:        'app',
-          actee_name:        '',
-          timestamp:         Sequel::CURRENT_TIMESTAMP,
-          metadata:          {},
-          space_guid:        space.guid,
+          type: 'audit.app.update',
+          actor: 'some-user-guid',
+          actor_type: 'some-user',
+          actor_name: 'username',
+          actor_username: 'system',
+          actee: 'app-guid',
+          actee_type: 'app',
+          actee_name: '',
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          metadata: {},
+          space_guid: space.guid
         )
-      }
+      end
 
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/audit_events/#{event.guid}", nil, base_json_headers

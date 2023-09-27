@@ -20,7 +20,7 @@ module VCAP::CloudController
     )
 
     def self.dependencies
-      [:app_event_repository, :droplet_blobstore, :stagers, :upload_handler]
+      %i[app_event_repository droplet_blobstore stagers upload_handler]
     end
 
     define_attributes do
@@ -34,7 +34,7 @@ module VCAP::CloudController
       attribute :debug, String, default: nil
       attribute :disk_quota, Integer, default: nil
       attribute :log_rate_limit, Integer, default: nil
-      attribute :environment_json, Hash, default: {}, redact_in: [:create, :update]
+      attribute :environment_json, Hash, default: {}, redact_in: %i[create update]
       attribute :health_check_http_endpoint, String, default: nil
       attribute :health_check_type, String, default: 'port'
       attribute :health_check_timeout, Integer, default: nil
@@ -43,16 +43,16 @@ module VCAP::CloudController
       attribute :name, String
       attribute :production, Message::Boolean, default: false
       attribute :state, String, default: 'STOPPED'
-      attribute :detected_start_command, String, exclude_in: [:create, :update]
+      attribute :detected_start_command, String, exclude_in: %i[create update]
       attribute :ports, [Integer], default: nil
 
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes, exclude_in: [:create, :update], route_for: :get
-      to_many :events, exclude_in: [:create, :update], link_only: true
-      to_many :service_bindings, exclude_in: [:create, :update], route_for: [:get]
-      to_many :route_mappings, exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
+      to_many :routes, exclude_in: %i[create update], route_for: :get
+      to_many :events, exclude_in: %i[create update], link_only: true
+      to_many :service_bindings, exclude_in: %i[create update], route_for: [:get]
+      to_many :route_mappings, exclude_in: %i[create update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
@@ -69,17 +69,17 @@ module VCAP::CloudController
       [
         HTTP::OK,
         MultiJson.dump({
-          staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
-          running_env_json:     EnvironmentVariableGroup.running.environment_json,
-          environment_json:     process.app.environment_variables,
-          system_env_json:      SystemEnvPresenter.new(process.service_bindings).system_env,
-          application_env_json: { 'VCAP_APPLICATION' => vcap_application },
-        }, pretty: true)
+                         staging_env_json: EnvironmentVariableGroup.staging.environment_json,
+                         running_env_json: EnvironmentVariableGroup.running.environment_json,
+                         environment_json: process.app.environment_variables,
+                         system_env_json: SystemEnvPresenter.new(process.service_bindings).system_env,
+                         application_env_json: { 'VCAP_APPLICATION' => vcap_application }
+                       }, pretty: true)
       ]
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors     = e.errors.on([:space_guid, :name])
+      space_and_name_errors     = e.errors.on(%i[space_guid name])
       memory_errors             = e.errors.on(:memory)
       instance_number_errors    = e.errors.on(:instances)
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
@@ -156,13 +156,14 @@ module VCAP::CloudController
         process,
         space,
         UserAuditInfo.from_context(SecurityContext),
-        recursive_delete?)
+        recursive_delete?
+      )
 
       TelemetryLogger.v2_emit(
         'delete-app',
         {
           'app-id' => process.app_guid,
-          'user-id' => current_user.guid,
+          'user-id' => current_user.guid
         }
       )
 
@@ -192,7 +193,7 @@ module VCAP::CloudController
       enqueued_job = nil
       DropletModel.db.transaction do
         droplet = DropletModel.create(app: process.app, state: DropletModel::PROCESSING_UPLOAD_STATE)
-        BuildpackLifecycleDataModel.create(droplet: droplet)
+        BuildpackLifecycleDataModel.create(droplet:)
 
         droplet_upload_job = Jobs::V2::UploadDropletFromUser.new(droplet_path, droplet.guid)
         enqueued_job       = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::Queues.local(config)).enqueue
@@ -217,11 +218,11 @@ module VCAP::CloudController
     def self.duplicated_older_process_guids(dataset)
       # Details at https://groups.google.com/d/msg/sequel-talk/wVuTgcCk2gw/VlPVVI2SBgAJ
       ProcessModel.db.from(dataset.as(:p1), dataset.as(:p2)).
-        where {
+        where do
           (p1[:app_guid] =~ p2[:app_guid]) &
             ((p1[:created_at] < p2[:created_at]) |
               ((p1[:created_at] =~ p2[:created_at]) & (p1[:id] < p2[:id])))
-        }.
+        end.
         distinct.select { p1[:guid] }
     end
 
@@ -244,9 +245,9 @@ module VCAP::CloudController
       updated_diego_flag = request_attrs['diego']
       ports              = request_attrs['ports']
       ignore_empty_ports! if ports == []
-      if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
-        add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
-      end
+      return unless should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
+
+      add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
     end
 
     def ignore_empty_ports!
@@ -264,19 +265,17 @@ module VCAP::CloudController
       global_allow_ssh = VCAP::CloudController::Config.config.get(:allow_app_ssh_access)
       ssh_allowed      = global_allow_ssh && (space.allow_ssh || roles.admin?)
 
-      if app_enable_ssh && !ssh_allowed
-        raise CloudController::Errors::ApiError.new_from_details(
-          'InvalidRequest',
-          'enable_ssh must be false due to global allow_ssh setting',
-        )
-      end
+      return unless app_enable_ssh && !ssh_allowed
+
+      raise CloudController::Errors::ApiError.new_from_details(
+        'InvalidRequest',
+        'enable_ssh must be false due to global allow_ssh setting'
+      )
     end
 
     def after_update(app)
       stager_response = app.last_stager_response
-      if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
-        set_header('X-App-Staging-Log', stager_response.streaming_log_url)
-      end
+      set_header('X-App-Staging-Log', stager_response.streaming_log_url) if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url
 
       @app_event_repository.record_app_update(app, app.space, user_audit_info, request_attrs)
     end
@@ -301,22 +300,22 @@ module VCAP::CloudController
         'update-app',
         {
           'app-id' => process.app_guid,
-          'user-id' => current_user.guid,
+          'user-id' => current_user.guid
         }
       )
 
-      if %w(instances memory disk_quota).any? { |k| @request_attrs.key?(k) }
+      if %w[instances memory disk_quota].any? { |k| @request_attrs.key?(k) }
         TelemetryLogger.v2_emit(
           'scale-app',
           {
             'app-id' => process.app_guid,
-            'user-id' => current_user.guid,
+            'user-id' => current_user.guid
           },
           {
             'instance-count' => process.instances,
             'memory-in-mb' => process.memory,
             'disk-in-mb' => process.disk_quota,
-            'process-type' => process.type,
+            'process-type' => process.type
           }
         )
       end
@@ -327,7 +326,7 @@ module VCAP::CloudController
             'start-app',
             {
               'app-id' => process.app_guid,
-              'user-id' => current_user.guid,
+              'user-id' => current_user.guid
             }
           )
         end
@@ -336,7 +335,7 @@ module VCAP::CloudController
             'stop-app',
             {
               'app-id' => process.app_guid,
-              'user-id' => current_user.guid,
+              'user-id' => current_user.guid
             }
           )
         end
@@ -361,13 +360,14 @@ module VCAP::CloudController
         process,
         process.space,
         user_audit_info,
-        request_attrs)
+        request_attrs
+      )
 
       TelemetryLogger.v2_emit(
         'create-app',
         {
           'app-id' => process.app_guid,
-          'user-id' => current_user.guid,
+          'user-id' => current_user.guid
         }
       )
 
@@ -402,7 +402,8 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::SpaceMismatch
         raise CloudController::Errors::InvalidRelation.new(
-          'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.')
+          'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.'
+        )
       end
 
       after_update(process)
@@ -460,30 +461,28 @@ module VCAP::CloudController
       find_guid_and_validate_access(:read_permissions, guid, ProcessModel)
 
       [HTTP::OK, JSON.generate({
-        read_sensitive_data: true,
-        read_basic_data:     true
-      })]
+                                 read_sensitive_data: true,
+                                 read_basic_data: true
+                               })]
     rescue CloudController::Errors::ApiError => e
-      if e.name == 'NotAuthorized'
-        process = find_guid(guid, ProcessModel)
-        membership = VCAP::CloudController::Membership.new(current_user)
+      raise e unless e.name == 'NotAuthorized'
 
-        basic_access = [
-          VCAP::CloudController::Membership::SPACE_MANAGER,
-          VCAP::CloudController::Membership::SPACE_AUDITOR,
-          VCAP::CloudController::Membership::ORG_MANAGER,
-        ]
+      process = find_guid(guid, ProcessModel)
+      membership = VCAP::CloudController::Membership.new(current_user)
 
-        raise e unless SecurityContext.global_auditor? ||
-          membership.role_applies?(basic_access, process.space.id, process.organization.id)
+      basic_access = [
+        VCAP::CloudController::Membership::SPACE_MANAGER,
+        VCAP::CloudController::Membership::SPACE_AUDITOR,
+        VCAP::CloudController::Membership::ORG_MANAGER
+      ]
 
-        [HTTP::OK, JSON.generate({
-          read_sensitive_data: false,
-          read_basic_data:     true
-        })]
-      else
-        raise e
-      end
+      raise e unless SecurityContext.global_auditor? ||
+                     membership.role_applies?(basic_access, process.space.id, process.organization.id)
+
+      [HTTP::OK, JSON.generate({
+                                 read_sensitive_data: false,
+                                 read_basic_data: true
+                               })]
     end
 
     def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)

@@ -1,4 +1,3 @@
-require 'set'
 require 'fetchers/base_list_fetcher'
 require 'fetchers/label_selector_query_generator'
 
@@ -30,7 +29,8 @@ module VCAP::CloudController
             omniscient,
             readable_orgs_query,
             readable_spaces_query,
-            dataset)
+            dataset
+          )
         end
 
         if message.requested?(:space_guids)
@@ -41,14 +41,13 @@ module VCAP::CloudController
             omniscient,
             readable_orgs_query,
             readable_spaces_query,
-            dataset)
+            dataset
+          )
         end
 
         # Add filter for public plans. This is needed for non-admin users or in addition to the other datasets (i.e. an admin
         # that filters for a specific org / space guid also gets the public plans).
-        if !omniscient || (!plan_dataset.nil? || !broker_dataset.nil?)
-          public_dataset = publicly_readable(dataset)
-        end
+        public_dataset = publicly_readable(dataset) if !omniscient || (!plan_dataset.nil? || !broker_dataset.nil?)
 
         # For performance reasons, the three sub-queries are processed individually and UNIONed together.
         datasets = [plan_dataset, broker_dataset, public_dataset].compact
@@ -69,19 +68,19 @@ module VCAP::CloudController
       end
 
       def readable_by_plan_org(dataset, readable_orgs_query)
-        unless readable_orgs_query.nil?
-          plan_dataset = dataset.clone
-          plan_dataset = join_plan_org_visibilities(plan_dataset)
-          plan_dataset.where { Sequel[:service_plan_visibilities][:organization_id] =~ readable_orgs_query.select(:id) }
-        end
+        return if readable_orgs_query.nil?
+
+        plan_dataset = dataset.clone
+        plan_dataset = join_plan_org_visibilities(plan_dataset)
+        plan_dataset.where { Sequel[:service_plan_visibilities][:organization_id] =~ readable_orgs_query.select(:id) }
       end
 
       def readable_by_broker_space(dataset, readable_spaces_query)
-        unless readable_spaces_query.nil?
-          broker_dataset = dataset.clone
-          broker_dataset = join_service_brokers(broker_dataset)
-          broker_dataset.where { Sequel[:service_brokers][:space_id] =~ readable_spaces_query.select(:id) }
-        end
+        return if readable_spaces_query.nil?
+
+        broker_dataset = dataset.clone
+        broker_dataset = join_service_brokers(broker_dataset)
+        broker_dataset.where { Sequel[:service_brokers][:space_id] =~ readable_spaces_query.select(:id) }
       end
 
       def filter_by_org_guid(org_guids, plan_dataset, broker_dataset, omniscient, readable_orgs_query, readable_spaces_query, dataset)

@@ -6,12 +6,11 @@ module VCAP::CloudController
     let(:can_read_globally) { false }
     let(:readable_org_guids) { [] }
 
-    let(:permission_querier) {
+    let(:permission_querier) do
       double('Permission Querier',
-        can_read_globally?: can_read_globally,
-        readable_org_guids_query: Organization.where(guid: readable_org_guids).select(:guid)
-      )
-    }
+             can_read_globally?: can_read_globally,
+             readable_org_guids_query: Organization.where(guid: readable_org_guids).select(:guid))
+    end
 
     let(:fetcher) { ServicePlanVisibilityFetcher.new(permission_querier) }
 
@@ -39,11 +38,11 @@ module VCAP::CloudController
           it 'returns the complete list of orgs' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_1.guid]
-            )).to contain_exactly(org1, org2)
+                   )).to contain_exactly(org1, org2)
 
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_2.guid]
-            )).to contain_exactly(org2)
+                   )).to contain_exactly(org2)
           end
         end
 
@@ -53,11 +52,11 @@ module VCAP::CloudController
           it 'returns the complete list of orgs' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_1.guid]
-            )).to contain_exactly(org1, org2)
+                   )).to contain_exactly(org1, org2)
 
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_2.guid]
-            )).to contain_exactly(org2)
+                   )).to contain_exactly(org2)
           end
         end
 
@@ -67,11 +66,11 @@ module VCAP::CloudController
           it 'only returns `org2`' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_1.guid]
-            )).to contain_exactly(org2)
+                   )).to contain_exactly(org2)
 
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_2.guid]
-            )).to contain_exactly(org2)
+                   )).to contain_exactly(org2)
           end
         end
 
@@ -81,13 +80,13 @@ module VCAP::CloudController
           it 'only returns `org1` when visible in org1' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_1.guid]
-            )).to contain_exactly(org1)
+                   )).to contain_exactly(org1)
           end
 
           it 'return empty when the plan is not visible in `org1`' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_2.guid]
-            )).to be_empty
+                   )).to be_empty
           end
         end
 
@@ -95,11 +94,11 @@ module VCAP::CloudController
           it 'returns an empty list' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_1.guid]
-            )).to be_empty
+                   )).to be_empty
 
             expect(fetcher.fetch_orgs(
                      service_plan_guids: [plan_2.guid]
-            )).to be_empty
+                   )).to be_empty
           end
         end
       end
@@ -115,7 +114,7 @@ module VCAP::CloudController
             it 'returns the visible orgs' do
               expect(fetcher.fetch_orgs(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to contain_exactly(org2)
+                     )).to contain_exactly(org2)
             end
           end
 
@@ -125,7 +124,7 @@ module VCAP::CloudController
             it 'returns all orgs' do
               expect(fetcher.fetch_orgs(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to contain_exactly(org1, org2)
+                     )).to contain_exactly(org1, org2)
             end
           end
 
@@ -135,7 +134,7 @@ module VCAP::CloudController
             it 'returns all orgs' do
               expect(fetcher.fetch_orgs(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to contain_exactly(org1, org2)
+                     )).to contain_exactly(org1, org2)
             end
           end
         end
@@ -147,7 +146,7 @@ module VCAP::CloudController
           it 'returns an empty list' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: []
-            )).to be_empty
+                   )).to be_empty
           end
         end
 
@@ -156,7 +155,7 @@ module VCAP::CloudController
           it 'returns an empty list' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: []
-            )).to be_empty
+                   )).to be_empty
           end
         end
       end
@@ -170,11 +169,11 @@ module VCAP::CloudController
           it 'returns true' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_1.guid]
-            )).to be_truthy
+                   )).to be_truthy
 
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_2.guid]
-            )).to be_truthy
+                   )).to be_truthy
           end
         end
 
@@ -184,11 +183,11 @@ module VCAP::CloudController
           it 'returns true' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_1.guid]
-            )).to be_truthy
+                   )).to be_truthy
 
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_2.guid]
-            )).to be_truthy
+                   )).to be_truthy
           end
         end
 
@@ -198,11 +197,11 @@ module VCAP::CloudController
           it 'returns true' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_1.guid]
-            )).to be_truthy
+                   )).to be_truthy
 
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_2.guid]
-            )).to be_truthy
+                   )).to be_truthy
           end
         end
 
@@ -212,13 +211,13 @@ module VCAP::CloudController
           it 'returns true for `plan_1`' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_1.guid]
-            )).to be_truthy
+                   )).to be_truthy
           end
 
           it 'returns false for `plan_2`' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_2.guid]
-            )).to be_falsey
+                   )).to be_falsey
           end
         end
 
@@ -226,11 +225,11 @@ module VCAP::CloudController
           it 'returns false' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_1.guid]
-            )).to be_falsey
+                   )).to be_falsey
 
             expect(fetcher.any_orgs?(
                      service_plan_guids: [plan_2.guid]
-            )).to be_falsey
+                   )).to be_falsey
           end
         end
       end
@@ -246,7 +245,7 @@ module VCAP::CloudController
             it 'returns true' do
               expect(fetcher.any_orgs?(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to be_truthy
+                     )).to be_truthy
             end
           end
 
@@ -256,7 +255,7 @@ module VCAP::CloudController
             it 'returns true' do
               expect(fetcher.any_orgs?(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to be_truthy
+                     )).to be_truthy
             end
           end
 
@@ -266,7 +265,7 @@ module VCAP::CloudController
             it 'returns true' do
               expect(fetcher.any_orgs?(
                        service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-              )).to be_truthy
+                     )).to be_truthy
             end
           end
         end
@@ -278,7 +277,7 @@ module VCAP::CloudController
           it 'returns false' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: []
-            )).to be_falsey
+                   )).to be_falsey
           end
         end
 
@@ -287,7 +286,7 @@ module VCAP::CloudController
           it 'returns false' do
             expect(fetcher.any_orgs?(
                      service_plan_guids: []
-            )).to be_falsey
+                   )).to be_falsey
           end
         end
       end

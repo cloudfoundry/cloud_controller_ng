@@ -4,13 +4,13 @@ module VCAP::CloudController
   RSpec.describe RouteValidator do
     let(:space_quota) { SpaceQuotaDefinition.make }
     let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
-    let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: space }
+    let(:route) { Route.new port:, host:, path:, domain:, space: }
     let(:validator) { RouteValidator.new(route) }
     let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
     let(:router_group_guid) { 'router-group-guid' }
-    let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
+    let(:domain) { SharedDomain.make(router_group_guid:) }
     let(:port) { 8080 }
     let(:host) { '' }
     let(:path) { '' }
@@ -19,7 +19,7 @@ module VCAP::CloudController
       TestConfig.override(
         kubernetes: { host_url: nil },
         external_domain: 'api2.vcap.me',
-        external_protocol: 'https',
+        external_protocol: 'https'
       )
       allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).
         and_return(routing_api_client)
@@ -29,7 +29,7 @@ module VCAP::CloudController
       let(:port) { nil }
 
       context 'with a tcp domain' do
-        let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
+        let(:domain) { SharedDomain.make(router_group_guid:) }
 
         it 'adds port_required error to the route' do
           validator.validate
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
         context 'when port is already taken in the same router group' do
           context 'in same domain' do
-            let(:another_route) { Route.new(domain: domain, port: port, space: space) }
+            let(:another_route) { Route.new(domain:, port:, space:) }
 
             before do
               TestConfig.override(kubernetes: nil)
@@ -142,7 +142,7 @@ module VCAP::CloudController
           end
 
           context 'in different domain' do
-            let(:another_domain) { SharedDomain.make(router_group_guid: router_group_guid) }
+            let(:another_domain) { SharedDomain.make(router_group_guid:) }
             let(:another_route) { Route.new(domain: another_domain, port: port, space: Space.make) }
 
             before do

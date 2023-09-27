@@ -33,8 +33,8 @@ module VCAP::CloudController
       end
 
       context 'when there are service bindings' do
-        let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
-        let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+        let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
+        let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
 
         it 'records a service instance with a service binding delete event' do
           purger.purge(service_instance)
@@ -70,8 +70,8 @@ module VCAP::CloudController
       end
 
       context 'when there are service keys' do
-        let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
-        let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
+        let!(:service_key_1) { ServiceKey.make(service_instance:) }
+        let!(:service_key_2) { ServiceKey.make(service_instance:) }
 
         it 'records a service instance with a service key delete event' do
           purger.purge(service_instance)

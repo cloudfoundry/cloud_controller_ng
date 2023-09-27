@@ -37,13 +37,9 @@ module VCAP::CloudController
           dataset = dataset.where(guid: app.droplet_guid)
         end
 
-        if message.requested?(:app_guids)
-          dataset = dataset.where(app_guid: message.app_guids)
-        end
+        dataset = dataset.where(app_guid: message.app_guids) if message.requested?(:app_guids)
 
-        if message.requested?(:states)
-          dataset = dataset.where(state: message.states)
-        end
+        dataset = dataset.where(state: message.states) if message.requested?(:states)
 
         droplet_table_name = DropletModel.table_name
 
@@ -64,7 +60,7 @@ module VCAP::CloudController
             label_klass: DropletLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: DropletModel,
+            resource_klass: DropletModel
           )
         end
 
@@ -76,7 +72,8 @@ module VCAP::CloudController
         return nil unless permitted_space_guids || filtered_space_guids
         return filtered_space_guids & permitted_space_guids if filtered_space_guids && permitted_space_guids
         return permitted_space_guids if permitted_space_guids
-        return filtered_space_guids if filtered_space_guids
+
+        filtered_space_guids
       end
     end
   end

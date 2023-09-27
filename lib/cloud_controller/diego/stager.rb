@@ -32,7 +32,7 @@ module VCAP::CloudController
         messenger.send_stage_request(@config, staging_details)
       rescue CloudController::Errors::ApiError => e
         raise e
-      rescue => e
+      rescue StandardError => e
         raise CloudController::Errors::ApiError.new_from_details('StagerError', e)
       end
 

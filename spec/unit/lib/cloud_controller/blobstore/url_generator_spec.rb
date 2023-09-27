@@ -7,8 +7,8 @@ module CloudController
         {
           blobstore_host: 'api.example.com',
           blobstore_tls_port: 9293,
-          user:           'username',
-          password:       'password',
+          user: 'username',
+          password: 'password'
         }
       end
 
@@ -22,10 +22,10 @@ module CloudController
 
       subject(:url_generator) do
         UrlGenerator.new(blobstore_options,
-          package_blobstore,
-          buildpack_cache_blobstore,
-          admin_buildpack_blobstore,
-          droplet_blobstore)
+                         package_blobstore,
+                         buildpack_cache_blobstore,
+                         admin_buildpack_blobstore,
+                         droplet_blobstore)
       end
 
       before do

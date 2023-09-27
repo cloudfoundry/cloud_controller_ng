@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     let(:message) { SpaceQuotasListMessage.from_params(filters) }
 
-    subject { SpaceQuotaListFetcher.fetch(message: message, readable_space_quota_guids: readable_space_quota_guids).all }
+    subject { SpaceQuotaListFetcher.fetch(message:, readable_space_quota_guids:).all }
 
     describe '#fetch' do
       context 'when filters are not provided' do

@@ -27,7 +27,7 @@ module VCAP::CloudController
         FACTORIES = {
           'mysql' => MysqlOptionsFactory,
           'mysql2' => MysqlOptionsFactory,
-          'postgres' => PostgresOptionsFactory,
+          'postgres' => PostgresOptionsFactory
         }.freeze
 
         def base_options(opts)
@@ -38,7 +38,7 @@ module VCAP::CloudController
             max_connections: opts[:max_connections],
             pool_timeout: opts[:pool_timeout],
             read_timeout: opts[:read_timeout],
-            sql_mode: [:strict_trans_tables, :strict_all_tables, :no_zero_in_date],
+            sql_mode: %i[strict_trans_tables strict_all_tables no_zero_in_date]
           }
         end
 

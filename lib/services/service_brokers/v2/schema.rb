@@ -9,6 +9,7 @@ module VCAP
           include ActiveModel::Validations
 
           attr_reader :schema
+
           MAX_SCHEMA_SIZE = 65_536
 
           validates_length_of :to_json, maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB'
@@ -42,7 +43,7 @@ module VCAP
 
             begin
               errors = JSON::Validator.fully_validate(metaschema, @schema, errors_as_objects: true)
-            rescue => e
+            rescue StandardError => e
               add_schema_error_msg(e)
               return nil
             end
@@ -65,7 +66,7 @@ module VCAP
               add_schema_error_msg("No external references are allowed: #{e}")
             rescue JSON::Schema::ValidationError
               # We don't care if our input fails validation on broker schema
-            rescue => e
+            rescue StandardError => e
               add_schema_error_msg(e)
             end
           end

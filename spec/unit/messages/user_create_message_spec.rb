@@ -7,14 +7,15 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when valid params are given' do
-        let(:params) { {
-          guid: 'some-user-guid',
-          'metadata' => {
-            'labels' => { 'key' => 'value' },
-            'annotations' => { 'key' => 'value' }
+        let(:params) do
+          {
+            guid: 'some-user-guid',
+            'metadata' => {
+              'labels' => { 'key' => 'value' },
+              'annotations' => { 'key' => 'value' }
+            }
           }
-        }
-        }
+        end
 
         it 'is valid' do
           expect(subject).to be_valid

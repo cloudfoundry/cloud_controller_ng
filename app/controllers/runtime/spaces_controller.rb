@@ -8,25 +8,25 @@ module VCAP::CloudController
     include UaaOriginValidator
 
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
-       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository]
+      %i[space_event_repository username_and_roles_populating_collection_renderer uaa_client
+         services_event_repository user_event_repository app_event_repository route_event_repository]
     end
 
     define_attributes do
       attribute :name, String
       attribute :allow_ssh, Message::Boolean, default: true
-      attribute :isolation_segment_guid, String, default: nil, optional_in: [:create, :update]
+      attribute :isolation_segment_guid, String, default: nil, optional_in: %i[create update]
 
       to_one :organization
       to_many :developers
       to_many :managers
       to_many :auditors
-      to_many :apps,                    exclude_in: [:create, :update], route_for: :get
-      to_many :routes,                  exclude_in: [:create, :update], route_for: :get
+      to_many :apps,                    exclude_in: %i[create update], route_for: :get
+      to_many :routes,                  exclude_in: %i[create update], route_for: :get
       to_many :domains
       to_many :service_instances,       route_for: :get
-      to_many :app_events,              link_only: true, exclude_in: [:create, :update], route_for: :get
-      to_many :events,                  link_only: true, exclude_in: [:create, :update], route_for: :get
+      to_many :app_events,              link_only: true, exclude_in: %i[create update], route_for: :get
+      to_many :events,                  link_only: true, exclude_in: %i[create update], route_for: :get
       to_many :security_groups
       to_many :staging_security_groups
       to_one :space_quota_definition, optional_in: [:create], exclude_in: [:update]
@@ -38,11 +38,9 @@ module VCAP::CloudController
     deprecated_endpoint "#{path_guid}/domains"
 
     def self.translate_validation_exception(e, attributes)
-      if e.is_a?(Space::DBNameUniqueRaceError)
-        return CloudController::Errors::ApiError.new_from_details('SpaceNameTaken', attributes['name'])
-      end
+      return CloudController::Errors::ApiError.new_from_details('SpaceNameTaken', attributes['name']) if e.is_a?(Space::DBNameUniqueRaceError)
 
-      name_errors = e.errors.on([:organization_id, :name])
+      name_errors = e.errors.on(%i[organization_id name])
       if name_errors && name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('SpaceNameTaken', attributes['name'])
       else
@@ -86,7 +84,7 @@ module VCAP::CloudController
         SpaceUserRolesFetcher.new.fetch(space),
         associated_path,
         opts,
-        {},
+        {}
       )
     end
 
@@ -126,14 +124,14 @@ module VCAP::CloudController
         Service,
         Service.space_or_org_visible_for_user(space, SecurityContext.current_user),
         ServicesController.query_parameters,
-        @opts,
+        @opts
       )
 
       associated_path = "#{self.class.url_for_guid(guid)}/services"
 
       opts = @opts.merge(
         additional_visibility_filters: {
-          service_plans: proc { |ds| ds.space_visible(space) },
+          service_plans: proc { |ds| ds.space_visible(space) }
         }
       )
 
@@ -142,7 +140,7 @@ module VCAP::CloudController
         filtered_dataset,
         associated_path,
         opts,
-        {},
+        {}
       )
     end
 
@@ -156,7 +154,8 @@ module VCAP::CloudController
         model_class,
         model_class.user_visible(@access_context.user, @access_context.admin_override),
         ServiceInstancesController.query_parameters,
-        @opts)
+        @opts
+      )
 
       service_instances = service_instances.filter(Sequel.or([
         [:space, space],
@@ -250,7 +249,7 @@ module VCAP::CloudController
 
       define_method("remove_#{role}_by_user_id") do |guid, user_id|
         space = if user_id == SecurityContext.current_user.guid
-                  Space.first(guid: guid)
+                  Space.first(guid:)
                 else
                   find_guid_and_validate_access(:update, guid)
                 end
@@ -269,11 +268,12 @@ module VCAP::CloudController
       route_delete_action = RouteDelete.new(
         app_event_repository: @app_event_repository,
         route_event_repository: @route_event_repository,
-        user_audit_info: UserAuditInfo.from_context(SecurityContext))
+        user_audit_info: UserAuditInfo.from_context(SecurityContext)
+      )
 
       space.routes.each do |route|
         validate_access(:delete, route)
-        route_delete_action.delete_unmapped_route(route: route)
+        route_delete_action.delete_unmapped_route(route:)
       end
 
       [HTTP::NO_CONTENT, nil]
@@ -305,9 +305,7 @@ module VCAP::CloudController
     end
 
     def visible_relationship_dataset(name, obj)
-      if name != :apps
-        return super
-      end
+      return super if name != :apps
 
       dataset = obj.user_visible_relationship_dataset(name, @access_context.user, @access_context.admin_override)
       AppsController.filter_dataset(dataset)
@@ -363,9 +361,9 @@ module VCAP::CloudController
     end
 
     def raise_if_dependency_present!(space)
-      if space.service_instances.present? || space.app_models.present? || space.service_brokers.present?
-        raise CloudController::Errors::ApiError.new_from_details('NonrecursiveSpaceDeletionFailed', space.name)
-      end
+      return unless space.service_instances.present? || space.app_models.present? || space.service_brokers.present?
+
+      raise CloudController::Errors::ApiError.new_from_details('NonrecursiveSpaceDeletionFailed', space.name)
     end
 
     def check_org_update_access!(space)
@@ -381,11 +379,11 @@ module VCAP::CloudController
       VCAP::CloudController::Roles::SPACE_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
-        if request_attrs[key]
-          current_role_guids[role] = []
-          space.send(role.pluralize.to_sym).each do |user|
-            current_role_guids[role] << user.guid
-          end
+        next unless request_attrs[key]
+
+        current_role_guids[role] = []
+        space.send(role.pluralize.to_sym).each do |user|
+          current_role_guids[role] << user.guid
         end
       end
 
@@ -400,39 +398,39 @@ module VCAP::CloudController
 
         user_guids_removed = []
 
-        if request_attrs[key]
-          user_guids_added = request_attrs[key]
+        next unless request_attrs[key]
 
-          if current_role_guids[role]
-            user_guids_added = request_attrs[key] - current_role_guids[role]
-            user_guids_removed = current_role_guids[role] - request_attrs[key]
-          end
+        user_guids_added = request_attrs[key]
 
-          user_guids_added.each do |user_id|
-            user = User.first(guid: user_id) || User.create(guid: user_id)
-            user.username = '' unless user.username
+        if current_role_guids[role]
+          user_guids_added = request_attrs[key] - current_role_guids[role]
+          user_guids_removed = current_role_guids[role] - request_attrs[key]
+        end
 
-            @user_event_repository.record_space_role_add(
-              space,
-                user,
-                role,
-                user_audit_info,
-                request_attrs
-            )
-          end
+        user_guids_added.each do |user_id|
+          user = User.first(guid: user_id) || User.create(guid: user_id)
+          user.username = '' unless user.username
 
-          user_guids_removed.each do |user_id|
-            user = User.first(guid: user_id)
-            user.username = '' unless user.username
+          @user_event_repository.record_space_role_add(
+            space,
+            user,
+            role,
+            user_audit_info,
+            request_attrs
+          )
+        end
 
-            @user_event_repository.record_space_role_remove(
-              space,
-                user,
-                role,
-                user_audit_info,
-                request_attrs
-            )
-          end
+        user_guids_removed.each do |user_id|
+          user = User.first(guid: user_id)
+          user.username = '' unless user.username
+
+          @user_event_repository.record_space_role_remove(
+            space,
+            user,
+            role,
+            user_audit_info,
+            request_attrs
+          )
         end
       end
     end

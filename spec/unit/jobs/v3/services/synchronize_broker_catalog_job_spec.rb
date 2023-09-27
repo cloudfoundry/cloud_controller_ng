@@ -21,14 +21,14 @@ module VCAP
           let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
 
           subject(:job) do
-            SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: user_audit_info)
+            SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info:)
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
-              with(broker: broker).
+              with(broker:).
               and_return(broker_client)
           end
 
@@ -56,13 +56,13 @@ module VCAP
 
               it 'errors when there are validation errors' do
                 job.perform
-                fail('expected error to be raised')
+                raise('expected error to be raised')
               rescue ::CloudController::Errors::ApiError => e
                 expect(e.message).to include(
                   'Service broker catalog is invalid',
-                    'Service dashboard_client id must be unique',
-                    'Service service-name',
-                    'nested-error'
+                  'Service dashboard_client id must be unique',
+                  'Service service-name',
+                  'nested-error'
                 )
               end
             end
@@ -72,12 +72,12 @@ module VCAP
 
               it 'errors when there are validation errors' do
                 job.perform
-                fail('expected error to be raised')
+                raise('expected error to be raised')
               rescue ::CloudController::Errors::ApiError => e
                 expect(e.message).to include(
                   'Service broker catalog is incompatible',
-                    'Service 2 is declared to be a route service but support for route services is disabled.',
-                    'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
+                  'Service 2 is declared to be a route service but support for route services is disabled.',
+                  'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
                 )
               end
             end
@@ -93,12 +93,12 @@ module VCAP
 
               it 'errors when there are uaa synchronization errors' do
                 job.perform
-                fail('expected error to be raised')
+                raise('expected error to be raised')
               rescue ::CloudController::Errors::ApiError => e
                 expect(e.message).to include(
                   'Service broker catalog is invalid',
-                    'Service service_name',
-                    'Service dashboard client id must be unique'
+                  'Service service_name',
+                  'Service dashboard client id must be unique'
                 )
               end
             end
@@ -161,7 +161,7 @@ module VCAP
 
               expect { job.perform }.to raise_error(
                 ::CloudController::Errors::V3::ApiError,
-                  'The service broker was removed before the synchronization completed'
+                'The service broker was removed before the synchronization completed'
               )
             end
           end
@@ -177,7 +177,7 @@ module VCAP
 
             validation_errors.add_nested(
               double('double-name', name: 'service-name'),
-                Services::ValidationErrors.new.add('nested-error')
+              Services::ValidationErrors.new.add('nested-error')
             )
 
             allow(catalog).to receive(:valid?).and_return(false)
@@ -186,7 +186,7 @@ module VCAP
 
           def uaa_conflicting_catalog
             allow(Services::ServiceClientProvider).to receive(:provide).
-              with(broker: broker).
+              with(broker:).
               and_return(FakeServiceBrokerV2Client::WithConflictingUAAClient.new)
           end
 

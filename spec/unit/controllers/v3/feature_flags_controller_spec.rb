@@ -11,13 +11,13 @@ RSpec.describe FeatureFlagsController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'reader' => 200,
-        'unauthenticated' => 401,
+        'unauthenticated' => 401
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             get :index
 
@@ -86,8 +86,8 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-        flag1: false,
-      })
+                   flag1: false
+                 })
       set_current_user(user)
     end
 
@@ -129,14 +129,14 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
-        flag1: false,
-      })
+                   flag1: false
+                 })
       set_current_user(user)
     end
 
     context 'when user is not an admin' do
       before do
-        set_current_user_as_reader_and_writer(user: user)
+        set_current_user_as_reader_and_writer(user:)
       end
 
       it 'returns 403' do
@@ -149,7 +149,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
     context 'when user is an admin' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when updating the feature flag fails' do
@@ -201,7 +201,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
         it 'works with an empty request body' do
           patch :update, params: {
-            name: feature_flag_name,
+            name: feature_flag_name
           }, as: :json
 
           expect(response.status).to eq 200

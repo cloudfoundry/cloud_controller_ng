@@ -70,21 +70,21 @@ module VCAP::Services
         describe 'JsonSchemaValidator' do
           let(:json_validator) { ResponseParser::JsonSchemaValidator.new(logger, schema, inner_validator) }
           let(:logger) { instance_double(Steno::Logger, warn: nil) }
-          let(:schema) {
+          let(:schema) do
             [:some_schema, {
               '$schema' => 'http://json-schema.org/draft-04/schema#',
               'type' => 'object',
-              'properties' => {},
+              'properties' => {}
             }]
-          }
+          end
           let(:inner_validator) { instance_double(InnerValidator) }
-          let(:broker_response) {
+          let(:broker_response) do
             ResponseParser::UnvalidatedResponse.new('GET', 'https://example.com', '/path',
                                                     HttpResponse.new(
                                                       code: '200',
-                                                      body: broker_response_body,
-            ))
-          }
+                                                      body: broker_response_body
+                                                    ))
+          end
 
           before do
             allow(Steno).to receive(:logger).and_return(logger)
@@ -114,7 +114,8 @@ module VCAP::Services
                 it 'raises' do
                   expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
                     expect(e.to_h['description']).to eq(
-                      "The service broker returned an invalid response: expected valid JSON object in body, broker returned '#{body}'")
+                      "The service broker returned an invalid response: expected valid JSON object in body, broker returned '#{body}'"
+                    )
                     expect(e.response_code).to eq(502)
                     expect(e.to_h['http']['method']).to eq('GET')
                     expect(e.to_h['http']['status']).to eq(200)
@@ -128,7 +129,7 @@ module VCAP::Services
               it 'logs the error' do
                 begin
                   json_validator.validate(**broker_response.to_hash)
-                rescue
+                rescue StandardError
                   # this is tested above
                 end
 
@@ -138,29 +139,29 @@ module VCAP::Services
           end
 
           context 'when the schema has required properties' do
-            let(:schema) {
+            let(:schema) do
               [:some_schema, {
                 'id' => 'some-id',
                 '$schema' => 'http://json-schema.org/draft-04/schema#',
                 'type' => 'object',
-                'required' => ['prop1', 'prop2'],
+                'required' => %w[prop1 prop2],
                 'properties' => {
                   'prop1' => {
-                    'type' => 'boolean',
+                    'type' => 'boolean'
                   },
                   'prop2' => {
-                    'type' => 'string',
+                    'type' => 'string'
                   }
                 }
               }]
-            }
+            end
 
             context 'and there is a single validation failure' do
-              let(:broker_response_body) {
+              let(:broker_response_body) do
                 {
                   prop1: true
                 }.to_json
-              }
+              end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
@@ -175,9 +176,9 @@ module VCAP::Services
             end
 
             context 'and there are multiple validation failures' do
-              let(:broker_response_body) {
+              let(:broker_response_body) do
                 {}.to_json
-              }
+              end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { json_validator.validate(**broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
@@ -185,7 +186,8 @@ module VCAP::Services
                   expect(description_lines[0]).to eq('The service broker returned an invalid response: ')
                   expect(description_lines.drop(1)).to contain_exactly(
                     "The property '#/' did not contain a required property of 'prop2'",
-                    "The property '#/' did not contain a required property of 'prop1'")
+                    "The property '#/' did not contain a required property of 'prop1'"
+                  )
                   expect(e.response_code).to eq(502)
                   expect(e.to_h['http']['method']).to eq('GET')
                   expect(e.to_h['http']['status']).to eq(200)
@@ -274,7 +276,7 @@ module VCAP::Services
             let(:body) { body }
             let(:logger) { instance_double(Steno::Logger, error: nil, warn: nil, info: nil) }
             let(:call_method) do
-              ->(response_parser, method_name, path, fake_response, service_param) do
+              lambda do |response_parser, method_name, path, fake_response, service_param|
                 if service_param
                   service = case service_param
                             when :syslog
@@ -307,13 +309,13 @@ module VCAP::Services
                 end
 
                 # All errors are logged as 'error'.
-                expect_log_with_data(logger, :error, error, description ? { description: description } : {})
+                expect_log_with_data(logger, :error, error, description ? { description: } : {})
 
                 # Some parsing errors are logged as 'warning'.
                 expect_warning ? expect_log(logger, :warn, /MultiJson parse error/) : expect_no_log(logger, :warn)
 
                 # Validators are logged as 'information'.
-                expect_log_with_data(logger, :info, 'validators', validators ? { validators: validators } : {})
+                expect_log_with_data(logger, :info, 'validators', validators ? { validators: } : {})
               end
             else
               it 'returns the parsed response' do
@@ -325,7 +327,7 @@ module VCAP::Services
                 expect_warning ? expect_log(logger, :warn, /Already deleted/) : expect_no_log(logger, :warn)
 
                 # Validators are logged as 'information'.
-                expect_log_with_data(logger, :info, 'validators', validators ? { validators: validators } : {})
+                expect_log_with_data(logger, :info, 'validators', validators ? { validators: } : {})
               end
             end
           end
@@ -369,7 +371,7 @@ module VCAP::Services
 
         def self.broker_error_json(description: nil)
           response = {
-            'error' => 'BadRequest',
+            'error' => 'BadRequest'
           }
 
           response['description'] = description unless description.nil?
@@ -388,7 +390,7 @@ module VCAP::Services
 
         def self.broker_body_with_state(state)
           {
-            'state' => state,
+            'state' => state
           }
         end
 
@@ -406,7 +408,7 @@ module VCAP::Services
 
         def self.with_invalid_dashboard_url
           {
-            'dashboard_url' =>  {
+            'dashboard_url' => {
               'foo' => 'bar'
             }
           }
@@ -426,7 +428,7 @@ module VCAP::Services
 
         def self.with_invalid_route_service_url_with_space
           {
-              'route_service_url' => 'http:/route-service.cf apps.io'
+            'route_service_url' => 'http:/route-service.cf apps.io'
           }
         end
 
@@ -503,7 +505,7 @@ module VCAP::Services
         def self.client_result_with_state(state, description: nil, status_code: nil)
           response_body = {
             'last_operation' => {
-              'state' => state,
+              'state' => state
             }
           }
 
@@ -512,62 +514,62 @@ module VCAP::Services
           response_body
         end
 
-        def self.response_not_understood(expected_state, actual_state, uri)
+        def self.response_not_understood(expected_state, actual_state, _uri)
           actual_state = actual_state ? "'#{actual_state}'" : 'null'
           'The service broker returned an invalid response: ' \
-          "expected state was '#{expected_state}', broker returned #{actual_state}."
+            "expected state was '#{expected_state}', broker returned #{actual_state}."
         end
 
-        def self.invalid_json_error(body, uri)
+        def self.invalid_json_error(body, _uri)
           'The service broker returned an invalid response: ' \
-          "expected valid JSON object in body, broker returned '#{body}'"
+            "expected valid JSON object in body, broker returned '#{body}'"
         end
 
-        def self.broker_returned_an_error(status, body, uri)
+        def self.broker_returned_an_error(status, body, _uri)
           'The service broker returned an invalid response. ' \
-          "Status Code: #{status} message, Body: #{body}"
+            "Status Code: #{status} message, Body: #{body}"
         end
 
-        def self.invalid_volume_mounts_error(body, uri)
+        def self.invalid_volume_mounts_error(body, _uri)
           'The service broker returned an invalid response: ' \
-          "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
+            "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
         end
 
-        def self.invalid_volume_mounts_missing_field_error(field, uri)
+        def self.invalid_volume_mounts_missing_field_error(field, _uri)
           'The service broker returned an invalid response: ' \
-          "missing required field '#{field}'"
+            "missing required field '#{field}'"
         end
 
-        def self.invalid_volume_mounts_missing_volume_id_error(uri)
+        def self.invalid_volume_mounts_missing_volume_id_error(_uri)
           'The service broker returned an invalid response: ' \
-          "required field 'device.volume_id' must be a non-empty string"
+            "required field 'device.volume_id' must be a non-empty string"
         end
 
-        def self.invalid_volume_mounts_bad_mount_config_error(uri)
+        def self.invalid_volume_mounts_bad_mount_config_error(_uri)
           'The service broker returned an invalid response: ' \
-          "field 'device.mount_config' must be an object if it is defined"
+            "field 'device.mount_config' must be an object if it is defined"
         end
 
-        def self.invalid_volume_mounts_device_type_error(uri)
+        def self.invalid_volume_mounts_device_type_error(_uri)
           'The service broker returned an invalid response: ' \
-          "required field 'device' must be an object but is String"
+            "required field 'device' must be an object but is String"
         end
 
-        def self.volume_mounts_not_required_error(uri)
+        def self.volume_mounts_not_required_error(_uri)
           'The service broker returned an invalid response: ' \
-          'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
-          'Please contact the service provider.'
+            'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
+            'Please contact the service provider.'
         end
 
-        def self.malformed_response_error(uri, message)
+        def self.malformed_response_error(_uri, message)
           "The service broker returned an invalid response: #{message}"
         end
 
-        def self.broker_bad_response_error(uri, message)
+        def self.broker_bad_response_error(_uri, message)
           "The service broker returned an invalid response. #{message}"
         end
 
-        def self.broker_timeout_error(uri)
+        def self.broker_timeout_error(_uri)
           'The request to the service broker timed out'
         end
 
@@ -580,12 +582,12 @@ module VCAP::Services
         def self.with_valid_volume_mounts_nil_mount_config
           {
             'volume_mounts' => [{
-                'device_type' => 'none',
-                'device' => { 'volume_id' => 'foo', 'mount_config' => nil },
-                'mode' => 'r',
-                'container_dir' => 'none',
-                'driver' => 'none'
-              }]
+              'device_type' => 'none',
+              'device' => { 'volume_id' => 'foo', 'mount_config' => nil },
+              'mode' => 'r',
+              'container_dir' => 'none',
+              'driver' => 'none'
+            }]
           }
         end
 

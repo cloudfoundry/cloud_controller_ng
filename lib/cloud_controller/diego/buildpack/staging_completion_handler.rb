@@ -10,29 +10,29 @@ module VCAP::CloudController
         end
 
         def self.schema
-          ->(_dsl) {
+          lambda { |_dsl|
             {
               result: {
                 execution_metadata: String,
-                lifecycle_type:     Lifecycles::BUILDPACK,
+                lifecycle_type: Lifecycles::BUILDPACK,
                 lifecycle_metadata: {
-                  optional(:buildpack_key) =>      String,
+                  optional(:buildpack_key) => String,
                   detected_buildpack: String,
                   optional(:buildpacks) => [
                     {
                       key: String,
                       optional(:name) => String,
-                      optional(:version) => String,
+                      optional(:version) => String
                     }
                   ]
                 },
-                process_types:      dict(Symbol, String),
+                process_types: dict(Symbol, String),
                 optional(:sidecars) => enum(nil, [
                   {
                     name: String,
                     command: String,
                     process_types: [String],
-                    optional(:memory) => Integer,
+                    optional(:memory) => Integer
                   }
                 ])
               }
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
         private
 
-        def handle_missing_droplet!(payload)
+        def handle_missing_droplet!(_payload)
           build.fail_to_stage!(nil, 'no droplet')
         end
 
@@ -61,9 +61,9 @@ module VCAP::CloudController
             droplet.lock!
             build.lock!
             droplet.set_buildpack_receipt(
-              buildpack_key:       buildpack_key,
-              buildpack_url:       buildpack_url,
-              detect_output:       lifecycle_data[:detected_buildpack],
+              buildpack_key: buildpack_key,
+              buildpack_url: buildpack_url,
+              detect_output: lifecycle_data[:detected_buildpack],
               requested_buildpack: droplet.buildpack_lifecycle_data.buildpacks.first
             )
             # TODO: What if lifecycle_data[:buildpacks] is nil?  Delete current buildpacks?
@@ -76,9 +76,7 @@ module VCAP::CloudController
             droplet.mark_as_staged
             build.mark_as_staged
             droplet.process_types = payload[:result][:process_types]
-            if payload[:result][:sidecars]
-              droplet.sidecars = payload[:result][:sidecars]
-            end
+            droplet.sidecars = payload[:result][:sidecars] if payload[:result][:sidecars]
             droplet.execution_metadata = payload[:result][:execution_metadata]
             build.save_changes(raise_on_save_failure: true)
             droplet.save_changes(raise_on_save_failure: true)

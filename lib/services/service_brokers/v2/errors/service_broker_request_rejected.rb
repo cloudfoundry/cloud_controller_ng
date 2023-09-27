@@ -3,7 +3,7 @@ module VCAP::Services
     module V2
       module Errors
         class ServiceBrokerRequestRejected < HttpResponseError
-          def initialize(uri, method, response)
+          def initialize(_uri, method, response)
             begin
               hash = MultiJson.load(response.body)
             rescue MultiJson::ParseError

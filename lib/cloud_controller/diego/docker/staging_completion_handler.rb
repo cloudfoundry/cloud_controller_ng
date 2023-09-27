@@ -11,14 +11,14 @@ module VCAP::CloudController
         end
 
         def self.schema
-          ->(_dsl) {
+          lambda { |_dsl|
             {
               result: {
                 execution_metadata: String,
-                process_types:      dict(Symbol, String),
-                lifecycle_type:     Lifecycles::DOCKER,
+                process_types: dict(Symbol, String),
+                lifecycle_type: Lifecycles::DOCKER,
                 lifecycle_metadata: {
-                  docker_image: String,
+                  docker_image: String
                 }
               }
             }
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         private
 
-        def handle_missing_droplet!(payload)
+        def handle_missing_droplet!(_payload)
           @droplet = create_droplet_from_build(build)
         end
 

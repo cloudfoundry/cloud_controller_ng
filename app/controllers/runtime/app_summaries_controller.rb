@@ -17,11 +17,11 @@ module VCAP::CloudController
       process = find_guid_and_validate_access(:read, guid)
 
       app_info = {
-        'guid'              => process.app_guid,
-        'name'              => process.name,
-        'routes'            => process.routes.map(&:as_summary_json),
+        'guid' => process.app_guid,
+        'name' => process.name,
+        'routes' => process.routes.map(&:as_summary_json),
         'running_instances' => instances_reporters.number_of_starting_and_running_instances_for_process(process),
-        'services'          => process.service_bindings.map { |service_binding| service_binding.service_instance.as_summary_json },
+        'services' => process.service_bindings.map { |service_binding| service_binding.service_instance.as_summary_json },
         'available_domains' => (process.space.organization.private_domains + SharedDomain.all).map(&:as_summary_json)
       }.merge(process.to_hash)
 

@@ -30,7 +30,7 @@ module VCAP::CloudController
           production: false,
           instances: 1,
           memory: free_mem_size,
-          state: 'STARTED',
+          state: 'STARTED'
         )
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
           production: true,
           instances: 1,
           memory: prod_mem_size,
-          state: 'STARTED',
+          state: 'STARTED'
         )
       end
     end
@@ -67,7 +67,7 @@ module VCAP::CloudController
             'app_count' => num_apps,
             'service_count' => num_services,
             'mem_dev_total' => free_mem_size * num_free_apps,
-            'mem_prod_total' => prod_mem_size * num_prod_apps,
+            'mem_prod_total' => prod_mem_size * num_prod_apps
           )
         end
       end
@@ -93,7 +93,7 @@ module VCAP::CloudController
             'app_count' => num_apps,
             'service_count' => num_services,
             'mem_dev_total' => free_mem_size * num_free_apps,
-            'mem_prod_total' => prod_mem_size * num_prod_apps,
+            'mem_prod_total' => prod_mem_size * num_prod_apps
           )
         end
       end

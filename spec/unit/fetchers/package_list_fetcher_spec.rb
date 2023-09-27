@@ -30,7 +30,7 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       before do
-        results = fetcher.fetch_all(message: message)
+        results = fetcher.fetch_all(message:)
       end
       it 'returns a Sequel::Dataset' do
         expect(results).to be_a(Sequel::Dataset)
@@ -176,7 +176,7 @@ module VCAP::CloudController
       returned_app = nil
 
       before do
-        returned_app, results = fetcher.fetch_for_app(message: message)
+        returned_app, results = fetcher.fetch_for_app(message:)
       end
       let(:filters) { { app_guid: app_in_space1.guid } }
 

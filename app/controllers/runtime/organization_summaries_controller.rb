@@ -13,7 +13,7 @@ module VCAP::CloudController
         space_summary = {
           app_count: 0,
           mem_dev_total: 0,
-          mem_prod_total: 0,
+          mem_prod_total: 0
         }
 
         space.apps.each do |app|
@@ -27,7 +27,7 @@ module VCAP::CloudController
         {
           guid: space.guid,
           name: space.name,
-          service_count: space.service_instances_dataset.count,
+          service_count: space.service_instances_dataset.count
         }.merge(space_summary)
       end
 

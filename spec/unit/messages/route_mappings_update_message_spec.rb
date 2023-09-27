@@ -21,8 +21,8 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:body) do
           {
-            unexpected:    'woah',
-            weight:      '123',
+            unexpected: 'woah',
+            weight: '123'
           }
         end
 

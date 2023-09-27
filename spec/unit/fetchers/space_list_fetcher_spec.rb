@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'when names filter is given' do
-        let(:message) { SpacesListMessage.from_params({ names: ['Lamb', 'Buffalo'] }) }
+        let(:message) { SpacesListMessage.from_params({ names: %w[Lamb Buffalo] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       it 'fetches all the spaces' do
-        all_spaces = fetcher.fetch_all(message: message)
+        all_spaces = fetcher.fetch_all(message:)
         expect(all_spaces.count).to eq(4)
 
         expect(all_spaces).to match_array([
@@ -80,7 +80,7 @@ module VCAP::CloudController
         let(:message) { SpacesListMessage.from_params({ names: ['Lamb'] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
-          results = fetcher.fetch_all(message: message).all
+          results = fetcher.fetch_all(message:).all
           expect(results).to match_array([space1])
         end
       end
@@ -89,32 +89,35 @@ module VCAP::CloudController
         let(:message) { SpacesListMessage.from_params({ organization_guids: [org2.guid] }) }
 
         it 'includes the spaces belonging to the specified organizations' do
-          results = fetcher.fetch_all(message: message).all
+          results = fetcher.fetch_all(message:).all
           expect(results).to match_array([space2, space4])
         end
       end
 
       context 'when organization_guids  and a label_selector are provided' do
-        let(:message) do SpacesListMessage.from_params(
-          { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' })
+        let(:message) do
+          SpacesListMessage.from_params(
+            { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' }
+          )
         end
         let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
         let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
 
         it 'returns the correct set of spaces' do
-          results = fetcher.fetch_all(message: message).all
+          results = fetcher.fetch_all(message:).all
           expect(results).to contain_exactly(space2)
         end
       end
 
       context 'when a label_selector is provided' do
-        let(:message) do SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
+        let(:message) do
+          SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
         end
         let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
         let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
 
         it 'returns the correct set of spaces' do
-          results = fetcher.fetch_all(message: message).all
+          results = fetcher.fetch_all(message:).all
           expect(results).to contain_exactly(space1)
         end
       end

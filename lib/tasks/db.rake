@@ -6,8 +6,8 @@ namespace :db do
   task :create_migration do
     RakeConfig.context = :migrate
 
-    name = ENV['NAME']
-    abort('no NAME specified. use `rake db:create_migration NAME=add_users`') if !name
+    name = ENV.fetch('NAME', nil)
+    abort('no NAME specified. use `rake db:create_migration NAME=add_users`') unless name
 
     migrations_dir = File.join('db', 'migrations')
 
@@ -58,7 +58,7 @@ namespace :db do
   task :pick do
     unless ENV['DB_CONNECTION_STRING']
       ENV['DB'] ||= %w[mysql postgres].sample
-      puts "Using #{ENV['DB']}"
+      puts "Using #{ENV.fetch('DB', nil)}"
     end
   end
 
@@ -70,7 +70,7 @@ namespace :db do
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -c 'create database #{db_config.name};'"
       extensions = 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
@@ -90,7 +90,7 @@ namespace :db do
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
     when 'mysql'
@@ -147,7 +147,7 @@ namespace :db do
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name}"
     when 'mysql'
@@ -211,11 +211,11 @@ namespace :db do
       puts 'Dumping schema...'
       schema = db.dump_schema_migration(indexes: true, foreign_keys: true)
 
-      File.open('db/schema.rb', 'w') { |f|
+      File.open('db/schema.rb', 'w') do |f|
         f.write("# rubocop:disable all\n")
         f.write(schema)
         f.write("# rubocop:enable all\n")
-      }
+      end
 
       puts 'Wrote db/schema.rb'
     end
@@ -254,7 +254,7 @@ namespace :db do
 
   def parse_db_connection_string
     host = port = passenv = ''
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       user = '-U postgres'
       pass = ''
@@ -262,9 +262,7 @@ namespace :db do
         uri = URI.parse(ENV['DB_CONNECTION_STRING'])
         host = "-h #{uri.host}"
         port = "-p #{uri.port}" if uri.port
-        if uri.user
-          user = "-U #{uri.user}"
-        end
+        user = "-U #{uri.user}" if uri.user
         passenv = "PGPASSWORD=#{uri.password}" if uri.password
       end
     when 'mysql'
@@ -274,12 +272,8 @@ namespace :db do
         uri = URI.parse(ENV['DB_CONNECTION_STRING'])
         host = "-h #{uri.host}"
         port = "-P #{uri.port}" if uri.port
-        if uri.user
-          user = "-u #{uri.user}"
-        end
-        if uri.password
-          pass = "--password=#{uri.password}"
-        end
+        user = "-u #{uri.user}" if uri.user
+        pass = "--password=#{uri.password}" if uri.password
       end
     end
     [host, port, user, pass, passenv]
@@ -292,8 +286,8 @@ namespace :db do
 
       yield
     else
-      %w(postgres mysql).each do |db_type|
-        connection_string = DbConfig.new(db_type: db_type).connection_string
+      %w[postgres mysql].each do |db_type|
+        connection_string = DbConfig.new(db_type:).connection_string
         RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: connection_string))
         yield
 
@@ -312,7 +306,7 @@ namespace :db do
     end
 
     puts 'Istio sidecar is now terminated'
-  rescue => e
+  rescue StandardError => e
     puts "Request to Istio sidecar failed. This is expected if your kubernetes cluster does not use Istio. Error: #{e}"
   end
 end

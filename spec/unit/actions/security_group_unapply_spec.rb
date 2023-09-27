@@ -15,9 +15,9 @@ module VCAP::CloudController
 
       context 'when unapplying a security group from a space' do
         it 'removes the space from the security group' do
-          expect {
+          expect do
             subject.unapply_running(security_group, space)
-          }.to change { security_group.spaces.count }.by(-1)
+          end.to change { security_group.spaces.count }.by(-1)
 
           expect(security_group.spaces.count).to eq(0)
         end
@@ -36,9 +36,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.unapply_running(security_group, space)
-          }.to raise_error(SecurityGroupUnapply::Error, 'blork is busted')
+          end.to raise_error(SecurityGroupUnapply::Error, 'blork is busted')
         end
       end
     end
@@ -55,9 +55,9 @@ module VCAP::CloudController
 
       context 'when unapplying a security group from a space' do
         it 'removes the space from the security group' do
-          expect {
+          expect do
             subject.unapply_staging(security_group, space)
-          }.to change { security_group.staging_spaces.count }.by(-1)
+          end.to change { security_group.staging_spaces.count }.by(-1)
 
           expect(security_group.staging_spaces.count).to eq(0)
         end
@@ -76,9 +76,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.unapply_staging(security_group, space)
-          }.to raise_error(SecurityGroupUnapply::Error, 'blork is busted')
+          end.to raise_error(SecurityGroupUnapply::Error, 'blork is busted')
         end
       end
     end

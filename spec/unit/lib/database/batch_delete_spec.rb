@@ -18,9 +18,9 @@ RSpec.describe Database::BatchDelete do
     it 'deletes in batches' do
       expect(batch_delete).to receive(:delete_batch).exactly(4).times.and_call_original
 
-      expect {
+      expect do
         batch_delete.delete
-      }.to change { VCAP::CloudController::Event.count }.by(-4)
+      end.to change { VCAP::CloudController::Event.count }.by(-4)
     end
 
     it 'returns number of records deleted' do

@@ -7,15 +7,15 @@ RSpec.describe DropletsController, type: :controller do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE,
-        state: VCAP::CloudController::PackageModel::READY_STATE)
+                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                                               state: VCAP::CloudController::PackageModel::READY_STATE)
     end
     let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
       app_model.lifecycle_data.update(buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
   end
@@ -44,9 +44,9 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     it 'returns a 201 OK response with the new droplet' do
-      expect {
+      expect do
         post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
-      }.to change { target_app.reload.droplets.count }.from(0).to(1)
+      end.to change { target_app.reload.droplets.count }.from(0).to(1)
       expect(response.status).to eq(201), response.body
       expect(target_app.droplets.first.guid).to eq(parsed_body['guid'])
     end
@@ -149,7 +149,7 @@ RSpec.describe DropletsController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+      allow_user_secret_access(user, space:)
     end
 
     it 'returns a 200 OK and the droplet' do
@@ -187,7 +187,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:org) { space.organization }
 
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 not found' do
@@ -207,7 +207,7 @@ RSpec.describe DropletsController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
     end
 
     it 'returns a 202 ACCEPTED and the job link in header' do
@@ -215,13 +215,13 @@ RSpec.describe DropletsController, type: :controller do
 
       expect(response.status).to eq(202)
       expect(response.body).to be_empty
-      expect(response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+      expect(response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
-      expect {
+      expect do
         delete :destroy, params: { guid: droplet.guid }
-      }.to change {
+      end.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
@@ -275,8 +275,8 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user cannot read the droplet due to roles' do
         before do
-          disallow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
+          disallow_user_read_access(user, space:)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -289,7 +289,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user can read but cannot write to the space' do
         before do
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns 403 NotAuthorized' do
@@ -317,7 +317,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
-        app = VCAP::CloudController::AppModel.make(space: space)
+        app = VCAP::CloudController::AppModel.make(space:)
         droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         VCAP::CloudController::DropletModel.make
@@ -337,7 +337,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user cannot read the app' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -378,7 +378,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user cannot read the package' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -404,7 +404,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:params) { { 'order_by' => '^%' } }
 
         it 'returns 400' do
-          get :index, params: params
+          get(:index, params:)
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -416,7 +416,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:params) { { 'bad_param' => 'foo' } }
 
         it 'returns 400' do
-          get :index, params: params
+          get(:index, params:)
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -426,10 +426,10 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       context 'invalid pagination' do
-        let(:params) { { 'per_page' => 9999999999999999 } }
+        let(:params) { { 'per_page' => 9_999_999_999_999_999 } }
 
         it 'returns 400' do
-          get :index, params: params
+          get(:index, params:)
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -508,7 +508,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the user cannot read the droplet due to roles' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
           disallow_user_build_update_access(user)
         end
 
@@ -523,7 +523,7 @@ RSpec.describe DropletsController, type: :controller do
       context 'when the user can read but cannot write to the space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
           disallow_user_build_update_access(user)
         end
 
@@ -584,7 +584,7 @@ RSpec.describe DropletsController, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -607,7 +607,7 @@ RSpec.describe DropletsController, type: :controller do
               },
               annotations: {
                 this: 'is valid'
-              },
+              }
             }
           }
         end

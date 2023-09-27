@@ -8,7 +8,7 @@ module VCAP
         let(:user_guid) { 'user-guid' }
         let(:user_email) { 'user-email' }
         let(:user_name) { 'user-name' }
-        let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_name: user_name, user_email: user_email) }
+        let(:user_audit_info) { UserAuditInfo.new(user_guid:, user_name:, user_email:) }
 
         subject(:task_event_repository) { TaskEventRepository.new }
 
@@ -27,9 +27,9 @@ module VCAP
             expect(event.metadata[:task_guid]).to eq(task.guid)
             expect(event.metadata[:request]).to eq(
               {
-                name:         task.name,
+                name: task.name,
                 memory_in_mb: task.memory_in_mb,
-                command:      '[PRIVATE DATA HIDDEN]'
+                command: '[PRIVATE DATA HIDDEN]'
               }
             )
             expect(event.space_guid).to eq(task.space.guid)
@@ -52,9 +52,9 @@ module VCAP
             expect(event.metadata[:task_guid]).to eq(task.guid)
             expect(event.metadata[:request]).to eq(
               {
-                name:         task.name,
+                name: task.name,
                 memory_in_mb: task.memory_in_mb,
-                command:      '[PRIVATE DATA HIDDEN]'
+                command: '[PRIVATE DATA HIDDEN]'
               }
             )
             expect(event.space_guid).to eq(task.space.guid)

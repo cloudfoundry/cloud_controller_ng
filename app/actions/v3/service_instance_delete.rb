@@ -48,8 +48,8 @@ module VCAP::CloudController
           record_start_delete_event
         end
 
-        return result
-      rescue => e
+        result
+      rescue StandardError => e
         update_last_operation_with_failure(e.message) unless service_instance.operation_in_progress?
         raise e
       end
@@ -72,7 +72,7 @@ module VCAP::CloudController
       rescue DeleteFailed => e
         update_last_operation_with_failure(e.message)
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'delete', e.message)
-      rescue => e
+      rescue StandardError => e
         update_last_operation_with_failure(e.message)
         ContinuePolling.call(nil)
       end
@@ -83,7 +83,7 @@ module VCAP::CloudController
           {
             type: 'delete',
             state: 'failed',
-            description: message,
+            description: message
           }
         )
       end
@@ -134,7 +134,7 @@ module VCAP::CloudController
       end
 
       def remove_associations
-        errors = delete_bindings(RouteBinding.where(service_instance: service_instance), user_audit_info: service_event_repository.user_audit_info)
+        errors = delete_bindings(RouteBinding.where(service_instance:), user_audit_info: service_event_repository.user_audit_info)
         errors += delete_bindings(service_instance.service_bindings, user_audit_info: service_event_repository.user_audit_info)
         errors += delete_bindings(service_instance.service_keys, user_audit_info: service_event_repository.user_audit_info)
         errors + unshare_all_spaces
@@ -147,7 +147,7 @@ module VCAP::CloudController
         unshare_action = ServiceInstanceUnshare.new
         space_guids.each_with_object([]) do |space_guid, errors|
           unshare_action.unshare(service_instance, Space.first(guid: space_guid), service_event_repository.user_audit_info)
-        rescue => e
+        rescue StandardError => e
           errors << e
         end
       end

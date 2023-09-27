@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:fake_req) { '' }
     let(:dependencies) do
       {
-        statsd_client: double(Statsd),
+        statsd_client: double(Statsd)
       }
     end
 
@@ -23,10 +23,10 @@ module VCAP::CloudController
       context 'with app spaces' do
         let(:org) { Organization.make }
         let(:as) { Space.make(organization: org) }
-        let(:api) {
+        let(:api) do
           SecurityContext.set(user)
           LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
-        }
+        end
 
         before do
           user.add_organization(org)
@@ -58,19 +58,19 @@ module VCAP::CloudController
       it 'should raise LegacyApiWithoutDefaultSpace if the user has no app spaces' do
         SecurityContext.set(user)
         api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
-        expect {
+        expect do
           api.default_space
-        }.to raise_error(CloudController::Errors::ApiError, /legacy api call requiring a default app space was called/)
+        end.to raise_error(CloudController::Errors::ApiError, /legacy api call requiring a default app space was called/)
       end
 
       context 'with app spaces' do
         let(:org) { Organization.make }
         let(:as1) { Space.make(organization: org) }
         let(:as2) { Space.make(organization: org) }
-        let(:api) {
+        let(:api) do
           SecurityContext.set(user)
           LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
-        }
+        end
 
         before do
           user.add_organization(org)

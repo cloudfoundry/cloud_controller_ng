@@ -22,7 +22,7 @@ module VCAP::CloudController::Presenters::V3
         total_services: 6,
         total_service_keys: 7,
         total_routes: 7,
-        total_reserved_route_ports: 2,
+        total_reserved_route_ports: 2
       )
     end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible).to_hash }
+      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids:, all_spaces_visible:).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(space_quota.guid)

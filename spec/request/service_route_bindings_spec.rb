@@ -39,16 +39,16 @@ RSpec.describe 'v3 service route bindings' do
       let(:params) do
         {
           include: 'route,service_instance',
-          route_guids: %w(foo bar),
-          service_instance_names: %w(foo bar),
-          service_instance_guids: %w(foo bar),
+          route_guids: %w[foo bar],
+          service_instance_names: %w[foo bar],
+          service_instance_guids: %w[foo bar],
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
           label_selector: 'foo==bar',
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -63,9 +63,9 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     describe 'a mix of bindings' do
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
-      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space, route_service_url: route_service_url) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space:, route_service_url:) }
+      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:, route_service_url:) }
       let(:route_binding_1) do
         bind_service_to_route(service_instance_1, route)
       end
@@ -195,7 +195,7 @@ RSpec.describe 'v3 service route bindings' do
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::RouteBinding }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/service_route_bindings?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/service_route_bindings?#{filters}", nil, headers }
         end
         let(:headers) { admin_headers }
       end
@@ -253,7 +253,7 @@ RSpec.describe 'v3 service route bindings' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::RouteBindingListFetcher).to receive(:fetch_all).with(
           an_instance_of(VCAP::CloudController::ServiceRouteBindingsListMessage),
-          hash_including(eager_loaded_associations: [:labels, :annotations, :route_binding_operation, :service_instance, :route])
+          hash_including(eager_loaded_associations: %i[labels annotations route_binding_operation service_instance route])
         ).and_call_original
 
         get '/v3/service_route_bindings', nil, admin_headers
@@ -264,20 +264,20 @@ RSpec.describe 'v3 service route bindings' do
 
   describe 'GET /v3/service_route_bindings/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{guid}", nil, user_headers } }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
     let(:route_binding) do
       VCAP::CloudController::RouteBinding.new.save_with_new_operation(
-        { service_instance: service_instance, route: route, route_service_url: route_service_url },
+        { service_instance:, route:, route_service_url: },
         { type: 'create', state: 'succeeded' }
       )
     end
     let(:guid) { route_binding.guid }
-    let(:metadata) {
+    let(:metadata) do
       {
         labels: { peanut: 'butter' },
         annotations: { butter: 'yes' }
       }
-    }
+    end
     let(:expected_body) do
       expected_json(
         binding_guid: guid,
@@ -295,7 +295,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'user-provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -308,7 +308,7 @@ RSpec.describe 'v3 service route bindings' do
     context 'managed service instance' do
       let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -327,16 +327,16 @@ RSpec.describe 'v3 service route bindings' do
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Service route binding not found',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          })
+                    'detail' => 'Service route binding not found',
+                    'title' => 'CF-ResourceNotFound',
+                    'code' => 10_010
+                  })
         )
       end
     end
 
     describe 'include' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -370,12 +370,13 @@ RSpec.describe 'v3 service route bindings' do
 
   describe 'POST /v3/service_route_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_route_bindings', request.to_json, user_headers } }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:metadata) { {
-      labels: { peanut: 'butter' },
-      annotations: { number: 'eight' }
-    }
-    }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:metadata) do
+      {
+        labels: { peanut: 'butter' },
+        annotations: { number: 'eight' }
+      }
+    end
     let(:request) do
       {
         metadata: metadata,
@@ -407,10 +408,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "Unknown field(s): 'foo', Relationships 'relationships' is not an object",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "Unknown field(s): 'foo', Relationships 'relationships' is not an object",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -428,10 +429,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "Metadata has unexpected field(s): 'foo'",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "Metadata has unexpected field(s): 'foo'",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -449,10 +450,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Support for route services is disabled',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'Support for route services is disabled',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -468,10 +469,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The route could not be found: #{route.guid}",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The route could not be found: #{route.guid}",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -480,7 +481,7 @@ RSpec.describe 'v3 service route bindings' do
 
       context 'route is internal' do
         let(:domain) { VCAP::CloudController::SharedDomain.make(internal: true, name: 'my.domain.com') }
-        let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+        let(:route) { VCAP::CloudController::Route.make(domain:, space:) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(admin_headers)
@@ -488,10 +489,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Route services cannot be bound to internal routes',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'Route services cannot be bound to internal routes',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -507,10 +508,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'The service instance and the route are in different spaces',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'The service instance and the route are in different spaces',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -518,12 +519,12 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'route is bound to a different service instance' do
-        let(:other_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+        let(:other_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
 
         before do
           VCAP::CloudController::RouteBinding.make(
             route: route,
-            service_instance: other_service_instance,
+            service_instance: other_service_instance
           )
         end
 
@@ -533,10 +534,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'A route may only be bound to a single service instance',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'A route may only be bound to a single service instance',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
@@ -544,8 +545,8 @@ RSpec.describe 'v3 service route bindings' do
       context 'binding already exists' do
         before do
           VCAP::CloudController::RouteBinding.make(
-            route: route,
-            service_instance: service_instance,
+            route:,
+            service_instance:
           )
         end
 
@@ -555,21 +556,21 @@ RSpec.describe 'v3 service route bindings' do
 
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'The route and service instance are already bound.',
-              'title' => 'CF-ServiceInstanceAlreadyBoundToSameRoute',
-              'code' => 130008,
-            })
+                      'detail' => 'The route and service instance are already bound.',
+                      'title' => 'CF-ServiceInstanceAlreadyBoundToSameRoute',
+                      'code' => 130_008
+                    })
           )
         end
       end
 
       context 'service instance is bound to a different route' do
-        let(:other_route) { VCAP::CloudController::Route.make(space: space) }
+        let(:other_route) { VCAP::CloudController::Route.make(space:) }
 
         before do
           VCAP::CloudController::RouteBinding.make(
             route: other_route,
-            service_instance: service_instance,
+            service_instance: service_instance
           )
         end
 
@@ -622,7 +623,7 @@ RSpec.describe 'v3 service route bindings' do
         let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
         let(:route_service_url) { 'https://route_service_url.com' }
         let(:broker_status_code) { 201 }
-        let(:broker_response) { { route_service_url: route_service_url } }
+        let(:broker_response) { { route_service_url: } }
         let(:client_body) do
           {
             context: {
@@ -637,8 +638,8 @@ RSpec.describe 'v3 service route bindings' do
             service_id: service_instance.service_plan.service.unique_id,
             plan_id: service_instance.service_plan.unique_id,
             bind_resource: {
-              route: route.uri,
-            },
+              route: route.uri
+            }
           }
         end
 
@@ -660,7 +661,7 @@ RSpec.describe 'v3 service route bindings' do
               with(
                 query: { accepts_incomplete: true },
                 body: client_body,
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
         end
@@ -709,31 +710,31 @@ RSpec.describe 'v3 service route bindings' do
             expect(event.actee).to eq(binding.guid)
             expect(event.actee_name).to eq('')
             expect(event.data).to include({
-              'request' => request.with_indifferent_access
-            })
+                                            'request' => request.with_indifferent_access
+                                          })
           end
         end
 
         context 'when the binding completes asynchronously' do
           let(:broker_status_code) { 202 }
           let(:operation) { Sham.guid }
-          let(:broker_response) { { operation: operation } }
+          let(:broker_response) { { operation: } }
           let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
           let(:last_operation_status_code) { 200 }
           let(:description) { Sham.description }
           let(:state) { 'in progress' }
           let(:last_operation_body) do
             {
-              description: description,
-              state: state,
+              description:,
+              state:
             }
           end
 
           before do
             stub_request(:get, broker_binding_last_operation_url).
               with(query: hash_including({
-                operation: operation
-              })).
+                                           operation:
+                                         })).
               to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
           end
 
@@ -747,9 +748,9 @@ RSpec.describe 'v3 service route bindings' do
                   query: {
                     operation: operation,
                     service_id: service_instance.service_plan.service.unique_id,
-                    plan_id: service_instance.service_plan.unique_id,
+                    plan_id: service_instance.service_plan.unique_id
                   },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -771,8 +772,8 @@ RSpec.describe 'v3 service route bindings' do
             expect(event).to be
             expect(event.actee).to eq(binding.guid)
             expect(event.data).to include({
-              'request' => request.with_indifferent_access
-            })
+                                            'request' => request.with_indifferent_access
+                                          })
           end
 
           it 'enqueues the next fetch last operation job' do
@@ -790,10 +791,10 @@ RSpec.describe 'v3 service route bindings' do
             expect(
               a_request(:get, broker_binding_last_operation_url).
                 with(query: {
-                  operation: operation,
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                })
+                       operation: operation,
+                       service_id: service_instance.service_plan.service.unique_id,
+                       plan_id: service_instance.service_plan.unique_id
+                     })
             ).to have_been_made.twice
           end
 
@@ -801,7 +802,7 @@ RSpec.describe 'v3 service route bindings' do
             let(:state) { 'succeeded' }
             let(:fetch_binding_status_code) { 200 }
             let(:fetch_binding_body) do
-              { route_service_url: route_service_url }
+              { route_service_url: }
             end
 
             before do
@@ -815,7 +816,7 @@ RSpec.describe 'v3 service route bindings' do
               encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
               expect(
                 a_request(:get, broker_bind_url).with(
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
               ).to have_been_made.once
             end
@@ -861,11 +862,8 @@ RSpec.describe 'v3 service route bindings' do
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
               expect(job.cf_api_error).not_to be_nil
               error = YAML.safe_load(job.cf_api_error)
-              expect(error['errors'].first).to include({
-                'code' => 90001,
-                'title' => 'CF-ServiceBindingInvalid',
-                'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
-              })
+              error_message = 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data'
+              expect(error['errors'].first).to include({ 'detail' => error_message, 'title' => 'CF-ServiceBindingInvalid', 'code' => 90_001 })
             end
           end
         end
@@ -882,13 +880,13 @@ RSpec.describe 'v3 service route bindings' do
                   organization_guid: org.guid,
                   organization_name: org.name,
                   space_guid: space.guid,
-                  space_name: space.name,
+                  space_name: space.name
                 },
                 service_id: service_instance.service_plan.service.unique_id,
                 plan_id: service_instance.service_plan.unique_id,
                 bind_resource: {
-                  route: route.uri,
-                },
+                  route: route.uri
+                }
               }
             end
           end
@@ -918,10 +916,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'This service instance does not support route binding',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'This service instance does not support route binding',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -937,10 +935,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'This service instance does not support binding',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'This service instance does not support binding',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -956,10 +954,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance could not be found: #{service_instance.guid}",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The service instance could not be found: #{service_instance.guid}",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -974,16 +972,16 @@ RSpec.describe 'v3 service route bindings' do
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service instance'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service instance'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
     end
 
     context 'user-provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
 
       it_behaves_like 'create route binding'
 
@@ -1052,10 +1050,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Binding parameters are not supported for user-provided service instances',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'Binding parameters are not supported for user-provided service instances',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -1063,7 +1061,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'service instance not configured for route binding' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(space_dev_headers)
@@ -1071,10 +1069,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'This service instance does not support route binding',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'This service instance does not support route binding',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -1090,10 +1088,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => "The service instance could not be found: #{service_instance.guid}",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => "The service instance could not be found: #{service_instance.guid}",
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
 
           expect(VCAP::CloudController::RouteBinding.all).to be_empty
@@ -1103,13 +1101,13 @@ RSpec.describe 'v3 service route bindings' do
   end
 
   describe 'DELETE /v3/service_route_bindings/:guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/service_route_bindings/#{guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/service_route_bindings/#{guid}", nil, user_headers } }
 
     context 'route binding exists' do
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
-          { service_instance: service_instance, route: route, route_service_url: route_service_url },
+          { service_instance:, route:, route_service_url: },
           { type: 'create', state: 'succeeded' }
         )
       end
@@ -1123,15 +1121,15 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'user-provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
 
-        let(:db_check) {
+        let(:db_check) do
           lambda do
             expect(VCAP::CloudController::RouteBinding.all).to be_empty
             expect(VCAP::CloudController::RouteBindingLabelModel.all).to be_empty
             expect(VCAP::CloudController::RouteBindingAnnotationModel.all).to be_empty
           end
-        }
+        end
 
         it 'creates an audit log' do
           api_call.call(admin_headers)
@@ -1141,12 +1139,12 @@ RSpec.describe 'v3 service route bindings' do
           expect(event).to be
           expect(event.actee).to eq(binding.guid)
           expect(event.data).to include({
-            'request' => {
-              'app_guid' => nil,
-              'route_guid' => route.guid,
-              'service_instance_guid' => service_instance.guid
-            }
-          })
+                                          'request' => {
+                                            'app_guid' => nil,
+                                            'route_guid' => route.guid,
+                                            'service_instance_guid' => service_instance.guid
+                                          }
+                                        })
         end
 
         context 'permissions' do
@@ -1166,9 +1164,9 @@ RSpec.describe 'v3 service route bindings' do
       context 'managed service instance' do
         let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
 
-        let(:db_check) { lambda {} }
+        let(:db_check) { -> {} }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
         let(:broker_base_url) { service_instance.service_broker.broker_url }
         let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
@@ -1179,7 +1177,7 @@ RSpec.describe 'v3 service route bindings' do
           {
             service_id: service_instance.service_plan.service.unique_id,
             plan_id: service_instance.service_plan.unique_id,
-            accepts_incomplete: true,
+            accepts_incomplete: true
           }
         end
 
@@ -1218,7 +1216,7 @@ RSpec.describe 'v3 service route bindings' do
             expect(last_response).to have_status_code(202)
 
             stub_request(:delete, broker_unbind_url).
-              with(query: query).
+              with(query:).
               to_return(status: broker_unbind_status_code, body: broker_response.to_json, headers: {})
           end
 
@@ -1230,7 +1228,7 @@ RSpec.describe 'v3 service route bindings' do
               a_request(:delete, broker_unbind_url).
                 with(
                   query: query,
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -1257,35 +1255,35 @@ RSpec.describe 'v3 service route bindings' do
               expect(event).to be
               expect(event.actee).to eq(binding.guid)
               expect(event.data).to include({
-                'request' => {
-                  'app_guid' => nil,
-                  'route_guid' => route.guid,
-                  'service_instance_guid' => service_instance.guid
-                }
-              })
+                                              'request' => {
+                                                'app_guid' => nil,
+                                                'route_guid' => route.guid,
+                                                'service_instance_guid' => service_instance.guid
+                                              }
+                                            })
             end
           end
 
           context 'when the unbind responds asynchronously' do
             let(:broker_unbind_status_code) { 202 }
             let(:operation) { Sham.guid }
-            let(:broker_response) { { operation: operation } }
+            let(:broker_response) { { operation: } }
             let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
             let(:last_operation_status_code) { 200 }
             let(:description) { Sham.description }
             let(:state) { 'in progress' }
             let(:last_operation_body) do
               {
-                description: description,
-                state: state,
+                description:,
+                state:
               }
             end
 
             before do
               stub_request(:get, broker_binding_last_operation_url).
                 with(query: hash_including({
-                  operation: operation
-                })).
+                                             operation:
+                                           })).
                 to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
             end
 
@@ -1299,9 +1297,9 @@ RSpec.describe 'v3 service route bindings' do
                     query: {
                       operation: operation,
                       service_id: service_instance.service_plan.service.unique_id,
-                      plan_id: service_instance.service_plan.unique_id,
+                      plan_id: service_instance.service_plan.unique_id
                     },
-                    headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                    headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                   )
               ).to have_been_made.once
             end
@@ -1324,12 +1322,12 @@ RSpec.describe 'v3 service route bindings' do
               expect(event).to be
               expect(event.actee).to eq(binding.guid)
               expect(event.data).to include({
-                'request' => {
-                  'app_guid' => nil,
-                  'route_guid' => route.guid,
-                  'service_instance_guid' => service_instance.guid
-                }
-              })
+                                              'request' => {
+                                                'app_guid' => nil,
+                                                'route_guid' => route.guid,
+                                                'service_instance_guid' => service_instance.guid
+                                              }
+                                            })
             end
 
             it 'enqueues the next fetch last operation job' do
@@ -1347,10 +1345,10 @@ RSpec.describe 'v3 service route bindings' do
               expect(
                 a_request(:get, broker_binding_last_operation_url).
                   with(query: {
-                    operation: operation,
-                    service_id: service_instance.service_plan.service.unique_id,
-                    plan_id: service_instance.service_plan.unique_id,
-                  })
+                         operation: operation,
+                         service_id: service_instance.service_plan.service.unique_id,
+                         plan_id: service_instance.service_plan.unique_id
+                       })
               ).to have_been_made.twice
             end
 
@@ -1413,7 +1411,7 @@ RSpec.describe 'v3 service route bindings' do
               expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
               expect(job.cf_api_error).not_to be_nil
               error = YAML.safe_load(job.cf_api_error)
-              expect(error['errors'].first['code']).to eq(10009)
+              expect(error['errors'].first['code']).to eq(10_009)
               expect(error['errors'].first['detail']).
                 to include('The service broker rejected the request. Status Code: 418 I\'m a Teapot, Body: "nope"')
             end
@@ -1427,10 +1425,10 @@ RSpec.describe 'v3 service route bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('There is an operation in progress for the service instance'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('There is an operation in progress for the service instance'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1441,10 +1439,10 @@ RSpec.describe 'v3 service route bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('There is an operation in progress for the service binding.'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('There is an operation in progress for the service binding.'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1457,10 +1455,10 @@ RSpec.describe 'v3 service route bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('There is an operation in progress for the service binding.'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('There is an operation in progress for the service binding.'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1475,13 +1473,13 @@ RSpec.describe 'v3 service route bindings' do
           context 'and the broker accepts the delete request' do
             before do
               @delete_stub = stub_request(:delete, broker_unbind_url).
-                             with(query: query).
+                             with(query:).
                              to_return(status: 202, body: '{"operation": "very important delete info"}', headers: {})
 
               @last_op_stub = stub_request(:get, "#{broker_unbind_url}/last_operation").
                               with(query: hash_including({
-                  operation: 'very important delete info'
-                })).
+                                                           operation: 'very important delete info'
+                                                         })).
                               to_return(status: 200, body: '{"state": "in progress"}', headers: {})
             end
 
@@ -1503,7 +1501,7 @@ RSpec.describe 'v3 service route bindings' do
           context 'and the broker rejects the delete request' do
             before do
               stub_request(:delete, broker_unbind_url).
-                with(query: query).
+                with(query:).
                 to_return(status: 422, body: '{"error": "ConcurrencyError"}', headers: {})
 
               api_call.call(admin_headers)
@@ -1530,10 +1528,10 @@ RSpec.describe 'v3 service route bindings' do
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Service route binding not found',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          })
+                    'detail' => 'Service route binding not found',
+                    'title' => 'CF-ResourceNotFound',
+                    'code' => 10_010
+                  })
         )
       end
     end
@@ -1543,8 +1541,8 @@ RSpec.describe 'v3 service route bindings' do
     let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
     let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let(:binding) { bind_service_to_route(service_instance, route) }
 
     let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{binding.guid}/parameters", nil, user_headers } }
@@ -1597,7 +1595,7 @@ RSpec.describe 'v3 service route bindings' do
         expect(
           a_request(:get, broker_fetch_binding_url).
             with(
-              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
             )
         ).to have_been_made.once
       end
@@ -1610,10 +1608,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Bad request: this service does not support fetching route bindings parameters.',
-              'title' => 'CF-BadRequest',
-              'code' => 1004,
-            })
+                      'detail' => 'Bad request: this service does not support fetching route bindings parameters.',
+                      'title' => 'CF-BadRequest',
+                      'code' => 1004
+                    })
           )
         end
       end
@@ -1621,9 +1619,9 @@ RSpec.describe 'v3 service route bindings' do
       context 'when there is an operation in progress' do
         before do
           binding.save_with_new_operation({}, {
-            type: 'create',
-            state: 'in progress'
-          })
+                                            type: 'create',
+                                            state: 'in progress'
+                                          })
         end
 
         it 'returns the appropriate error' do
@@ -1631,10 +1629,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'There is an operation in progress for the service route binding.',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            })
+                      'detail' => 'There is an operation in progress for the service route binding.',
+                      'title' => 'CF-UnprocessableEntity',
+                      'code' => 10_008
+                    })
           )
         end
       end
@@ -1642,11 +1640,12 @@ RSpec.describe 'v3 service route bindings' do
 
     context 'user provided service instances' do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://route.example.com') }
-      let(:error_response) { {
-        code: 'CF-BadRequest',
-        error: 'User provided service instances do not support fetching service binding parameters.'
-      }
-      }
+      let(:error_response) do
+        {
+          code: 'CF-BadRequest',
+          error: 'User provided service instances do not support fetching service binding parameters.'
+        }
+      end
 
       context 'permissions' do
         let(:expected_codes_and_responses) do
@@ -1682,41 +1681,41 @@ RSpec.describe 'v3 service route bindings' do
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(
           include({
-            'detail' => 'Bad request: user provided service instances do not support fetching route bindings parameters.',
-            'title' => 'CF-BadRequest',
-            'code' => 1004,
-          })
+                    'detail' => 'Bad request: user provided service instances do not support fetching route bindings parameters.',
+                    'title' => 'CF-BadRequest',
+                    'code' => 1004
+                  })
         )
       end
     end
   end
 
   describe 'PATCH /v3/service_route_bindings/:guid' do
-    let(:api_call) { lambda { |user_headers| patch "/v3/service_route_bindings/#{guid}", update_request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/service_route_bindings/#{guid}", update_request_body.to_json, user_headers } }
 
     let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
     let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan, route_service_url: route_service_url) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
     let(:binding) { bind_service_to_route(service_instance, route) }
     let(:guid) { binding.guid }
     let(:labels) { { potato: 'sweet' } }
     let(:annotations) { { style: 'mashed', amount: 'all' } }
-    let(:update_request_body) {
+    let(:update_request_body) do
       {
         metadata: {
-          labels: labels,
-          annotations: annotations
+          labels:,
+          annotations:
         }
       }
-    }
+    end
     let(:binding_name) { '' }
 
     it_behaves_like 'metadata update for service binding', 'service_route_binding'
 
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
-        let(:response_object) {
+        let(:response_object) do
           expected_json(
             binding_guid: binding.guid,
             route_service_url: route_service_url,
@@ -1726,11 +1725,11 @@ RSpec.describe 'v3 service route bindings' do
             last_operation_state: 'succeeded',
             include_params_link: service_instance.managed_instance?,
             metadata: {
-              labels: labels,
-              annotations: annotations
+              labels:,
+              annotations:
             }
           )
-        }
+        end
 
         let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200, success_body: response_object) }
       end
@@ -1763,7 +1762,7 @@ RSpec.describe 'v3 service route bindings' do
         updated_at: iso8601,
         description: nil,
         state: last_operation_state,
-        type: last_operation_type,
+        type: last_operation_type
       },
       metadata: metadata,
       relationships: {
@@ -1787,7 +1786,7 @@ RSpec.describe 'v3 service route bindings' do
         },
         route: {
           href: "#{link_prefix}/v3/routes/#{route_guid}"
-        },
+        }
       }.tap do |ls|
         if include_params_link
           ls[:parameters] = {
@@ -1801,7 +1800,7 @@ RSpec.describe 'v3 service route bindings' do
   def bind_service_to_route(service_instance, route)
     route_service_url = service_instance.route_service_url
     VCAP::CloudController::RouteBinding.new.save_with_new_operation(
-      { service_instance: service_instance, route: route, route_service_url: route_service_url },
+      { service_instance:, route:, route_service_url: },
       { type: 'create', state: 'succeeded' }
     )
   end

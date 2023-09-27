@@ -3,7 +3,7 @@ require 'actions/v2/services/service_binding_delete'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingDelete do
-    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email), accepts_incomplete) }
+    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid:, user_email:), accepts_incomplete) }
     let(:accepts_incomplete) { false }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
@@ -49,9 +49,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -72,9 +72,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -86,10 +86,11 @@ module VCAP::CloudController
         end
 
         it 'decorates the error with app name and service instance name' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(
-            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey")
+          end.to raise_error(
+            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey"
+          )
         end
       end
     end
@@ -267,7 +268,7 @@ module VCAP::CloudController
       end
 
       context 'when accepts_incomplete is not provided as an argument' do
-        let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
+        let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid:, user_email:)) }
 
         it 'defaults to false and asks the broker to unbind the instance sync' do
           expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: false)

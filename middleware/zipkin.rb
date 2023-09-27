@@ -6,7 +6,7 @@ module CloudFoundry
       end
 
       def call(env)
-        return call_app(env) if !(env['HTTP_X_B3_TRACEID'] && env['HTTP_X_B3_SPANID'])
+        return call_app(env) unless env['HTTP_X_B3_TRACEID'] && env['HTTP_X_B3_SPANID']
 
         env['b3.trace_id'], env['b3.span_id'] = external_b3_ids(env)
 
@@ -15,7 +15,7 @@ module CloudFoundry
 
         zipkin_headers = {
           'X-B3-TraceId' => env['HTTP_X_B3_TRACEID'],
-          'X-B3-SpanId'  => env['HTTP_X_B3_SPANID']
+          'X-B3-SpanId' => env['HTTP_X_B3_SPANID']
         }
 
         begin
@@ -34,7 +34,7 @@ module CloudFoundry
 
       def external_b3_ids(env)
         trace_id = env['HTTP_X_B3_TRACEID']
-        span_id = env ['HTTP_X_B3_SPANID']
+        span_id = env['HTTP_X_B3_SPANID']
 
         [trace_id, span_id]
       end

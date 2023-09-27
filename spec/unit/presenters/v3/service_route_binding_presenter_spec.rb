@@ -8,21 +8,21 @@ module VCAP
     RSpec.describe Presenters::V3::ServiceRouteBindingPresenter do
       let(:space) { VCAP::CloudController::Space.make }
       let(:route_service_url) { 'https://route_service_url.com' }
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
-      let(:route) { Route.make(space: space) }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
+      let(:route) { Route.make(space:) }
       let(:guid) { Sham.guid }
       let(:binding) do
         RouteBinding.new.save_with_new_operation(
           {
-            guid: guid,
-            service_instance: service_instance,
-            route: route,
-            route_service_url: route_service_url,
+            guid:,
+            service_instance:,
+            route:,
+            route_service_url:
           },
           {
             type: 'fake type',
             state: 'fake state',
-            description: 'fake description',
+            description: 'fake description'
           }
         )
       end
@@ -49,7 +49,7 @@ module VCAP
             },
             metadata: {
               labels: {
-                ruby: 'lang',
+                ruby: 'lang'
               },
               annotations: {
                 'prefix/key' => 'bar'
@@ -76,7 +76,7 @@ module VCAP
               },
               service_instance: {
                 href: %r{.*/v3/service_instances/#{service_instance.guid}}
-              },
+              }
 
             }
           }
@@ -86,10 +86,10 @@ module VCAP
       context 'no last_operation' do
         let(:binding) do
           RouteBinding.make(
-            guid: guid,
-            service_instance: service_instance,
-            route: route,
-            route_service_url: route_service_url,
+            guid:,
+            service_instance:,
+            route:,
+            route_service_url:
           )
         end
 
@@ -111,7 +111,7 @@ module VCAP
         let(:decorator1) { double('FakeDecorator', decorate: { foo: 'bar' }) }
         let(:decorator2) { double('FakeDecorator', decorate: { xyzzy: 'omg' }) }
         let(:decorators) { [decorator1, decorator2] }
-        let(:presenter) { described_class.new(binding, decorators: decorators) }
+        let(:presenter) { described_class.new(binding, decorators:) }
         let!(:content) { presenter.to_hash }
 
         it 'adds the decorated information' do
@@ -133,8 +133,8 @@ module VCAP
         it 'include parameters for managed service instance bindings' do
           presenter = described_class.new(binding)
           expect(presenter.to_hash.dig(:links, :parameters)).to match({
-            href: %r{.*/v3/service_route_bindings/#{guid}/parameters}
-          })
+                                                                        href: %r{.*/v3/service_route_bindings/#{guid}/parameters}
+                                                                      })
         end
       end
     end

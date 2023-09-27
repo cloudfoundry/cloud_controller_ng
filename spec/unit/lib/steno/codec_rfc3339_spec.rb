@@ -39,7 +39,7 @@ RSpec.describe Steno::Codec::JsonRFC3339 do
     end
 
     it 'should encode timestamps as UTC-formatted strings' do
-      allow(record).to receive(:timestamp).and_return 1396473763 # 2014-04-02 22:22:43 +01:00
+      allow(record).to receive(:timestamp).and_return 1_396_473_763 # 2014-04-02 22:22:43 +01:00
       parsed = Yajl::Parser.parse(codec.encode_record(record))
 
       expect(parsed['timestamp'].class).to eq(String)
@@ -49,9 +49,9 @@ RSpec.describe Steno::Codec::JsonRFC3339 do
 
   def make_record(opts={})
     Steno::Record.new(opts[:source] || 'my_source',
-      opts[:level]   || :debug,
-      opts[:message] || 'test message',
-      nil,
-      opts[:data] || {})
+                      opts[:level]   || :debug,
+                      opts[:message] || 'test message',
+                      nil,
+                      opts[:data] || {})
   end
 end

@@ -10,7 +10,7 @@ module VCAP::CloudController
     let!(:object) { VCAP::CloudController::Event.make(space_guid: space.guid, organization_guid: org.guid) }
     let(:scopes) { nil }
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     it_behaves_like :admin_full_access
     it_behaves_like :admin_read_only_access

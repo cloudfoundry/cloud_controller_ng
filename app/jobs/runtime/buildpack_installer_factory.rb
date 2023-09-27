@@ -46,19 +46,19 @@ module VCAP::CloudController
 
             planned_jobs << if guid_of_buildpack_to_update
                               VCAP::CloudController::Jobs::Runtime::UpdateBuildpackInstaller.new({
-                                name: buildpack_name,
-                                stack: buildpack_fields[:stack],
-                                file: buildpack_fields[:file],
-                                options: buildpack_fields[:options],
-                                upgrade_buildpack_guid: guid_of_buildpack_to_update
-                              })
+                                                                                                   name: buildpack_name,
+                                                                                                   stack: buildpack_fields[:stack],
+                                                                                                   file: buildpack_fields[:file],
+                                                                                                   options: buildpack_fields[:options],
+                                                                                                   upgrade_buildpack_guid: guid_of_buildpack_to_update
+                                                                                                 })
                             else
                               VCAP::CloudController::Jobs::Runtime::CreateBuildpackInstaller.new({
-                                name: buildpack_name,
-                                stack: buildpack_fields[:stack],
-                                file: buildpack_fields[:file],
-                                options: buildpack_fields[:options]
-                              })
+                                                                                                   name: buildpack_name,
+                                                                                                   stack: buildpack_fields[:stack],
+                                                                                                   file: buildpack_fields[:file],
+                                                                                                   options: buildpack_fields[:options]
+                                                                                                 })
                             end
           end
 
@@ -78,22 +78,22 @@ module VCAP::CloudController
         end
 
         def ensure_no_buildpack_downgraded_to_nil_stack!(buildpacks)
-          if buildpacks.size > 1 && buildpacks.any? { |b| b.stack.nil? }
-            msg = "Attempt to install '#{buildpacks.first.name}' failed. Ensure that all buildpacks have a stack associated with them before upgrading."
-            raise StacklessAndStackfulMatchingBuildpacksExistError.new(msg)
-          end
+          return unless buildpacks.size > 1 && buildpacks.any? { |b| b.stack.nil? }
+
+          msg = "Attempt to install '#{buildpacks.first.name}' failed. Ensure that all buildpacks have a stack associated with them before upgrading."
+          raise StacklessAndStackfulMatchingBuildpacksExistError.new(msg)
         end
 
         def ensure_no_mix_of_stackless_and_stackful_buildpacks!(manifest_fields)
-          if manifest_fields.size > 1 && manifest_fields.any? { |buildpack_fields| buildpack_fields[:stack].nil? }
-            raise StacklessBuildpackIncompatibilityError
-          end
+          return unless manifest_fields.size > 1 && manifest_fields.any? { |buildpack_fields| buildpack_fields[:stack].nil? }
+
+          raise StacklessBuildpackIncompatibilityError
         end
 
         def ensure_no_duplicate_buildpack_stacks!(manifest_fields)
-          if manifest_fields.uniq { |buildpack_fields| buildpack_fields[:stack] }.length < manifest_fields.length
-            raise DuplicateInstallError
-          end
+          return unless manifest_fields.uniq { |buildpack_fields| buildpack_fields[:stack] }.length < manifest_fields.length
+
+          raise DuplicateInstallError
         end
 
         def find_buildpack_to_update(found_buildpacks, detected_stack, planned_jobs)
@@ -108,9 +108,7 @@ module VCAP::CloudController
           raise StacklessBuildpackIncompatibilityError if detected_stack.nil?
 
           buildpack_to_update = find_buildpack_with_nil_stack(found_buildpacks)
-          if buildpack_to_update && buildpack_not_yet_updated_from_nil_stack(planned_jobs, buildpack_to_update.guid)
-            return buildpack_to_update.guid
-          end
+          return buildpack_to_update.guid if buildpack_to_update && buildpack_not_yet_updated_from_nil_stack(planned_jobs, buildpack_to_update.guid)
 
           nil
         end
@@ -122,10 +120,10 @@ module VCAP::CloudController
         #
         def ensure_no_attempt_to_upgrade_a_stackless_locked_buildpack(buildpack_name, found_buildpacks, manifest_fields)
           nil_locked_buildpack = found_buildpacks.find { |bp| bp.locked && bp.stack.nil? }
-          if manifest_fields.size > 1 && nil_locked_buildpack
-            msg = "Attempt to install '#{buildpack_name}' for multiple stacks failed. Buildpack '#{buildpack_name}' cannot be locked during upgrade."
-            raise LockedStacklessBuildpackUpgradeError.new(msg)
-          end
+          return unless manifest_fields.size > 1 && nil_locked_buildpack
+
+          msg = "Attempt to install '#{buildpack_name}' for multiple stacks failed. Buildpack '#{buildpack_name}' cannot be locked during upgrade."
+          raise LockedStacklessBuildpackUpgradeError.new(msg)
         end
       end
     end

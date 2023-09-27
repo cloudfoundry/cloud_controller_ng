@@ -12,13 +12,13 @@ module VCAP::CloudController
         let(:maximum_polling_duration_for_plan) {}
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_binding) do
-          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan: service_plan))
+          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan:))
           service_binding.service_binding_operation = service_binding_operation
           service_binding
         end
         let(:last_operation) { service_binding.reload.last_operation }
 
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:default_polling_interval) { 60 }
         let(:user) { User.make }
         let(:user_email) { 'fake@mail.foo' }
@@ -32,7 +32,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(
             broker_client_default_async_poll_interval_seconds: default_polling_interval,
-            broker_client_max_async_poll_duration_minutes: max_duration,
+            broker_client_max_async_poll_duration_minutes: max_duration
           )
         end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
         end
 
         describe '#initialize' do
-          let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+          let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
 
           context 'when the service plan has maximum_polling_duration' do
@@ -55,7 +55,7 @@ module VCAP::CloudController
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
+              let(:max_duration) { 1_068_367_346 } # in minutes
 
               it "should set end_timestamp to the plan's maximum_polling_duration value" do
                 Timecop.freeze(Time.now)
@@ -79,7 +79,7 @@ module VCAP::CloudController
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
           let(:state) { 'in progress' }
           let(:description) { '10%' }
-          let(:last_operation_response) { { last_operation: { state: state, description: description } } }
+          let(:last_operation_response) { { last_operation: { state:, description: } } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do
@@ -171,27 +171,27 @@ module VCAP::CloudController
                 it 'should update the service binding' do
                   service_binding.reload
                   expect(service_binding.volume_mounts).to eq([{
-                    'driver' => 'cephdriver',
-                    'container_dir' => '/data/images',
-                    'mode' => 'r',
-                    'device_type' => 'shared',
-                    'device' => {
-                      'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-                      'mount_config' => {
-                        'key' => 'value'
-                      }
-                    }
-                  }])
+                                                                'driver' => 'cephdriver',
+                                                                'container_dir' => '/data/images',
+                                                                'mode' => 'r',
+                                                                'device_type' => 'shared',
+                                                                'device' => {
+                                                                  'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                                                                  'mount_config' => {
+                                                                    'key' => 'value'
+                                                                  }
+                                                                }
+                                                              }])
                 end
               end
 
               context 'and the broker returns invalid credentials' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '200',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: 'invalid' } }
                 let(:response_malformed_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(nil, nil, broker_response, nil) }
 
@@ -242,12 +242,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker returns with invalid status code' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
 
@@ -283,12 +283,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker response timeout' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new(nil, nil, broker_response) }
 

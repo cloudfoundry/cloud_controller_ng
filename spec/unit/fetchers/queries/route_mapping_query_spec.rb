@@ -3,7 +3,7 @@ require 'fetchers/queries/route_mapping_query'
 
 module VCAP::RestAPI
   RSpec.describe RouteMappingQuery do
-    let(:queryable_attributes) { %w(app_guid) }
+    let(:queryable_attributes) { %w[app_guid] }
 
     describe 'filtering by app_guid' do
       context 'equals operation (:)' do

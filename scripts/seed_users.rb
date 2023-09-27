@@ -2,8 +2,8 @@
 
 NUM_USERS = 5000
 
-org_roles = %w/manager auditor billing_manager/
-space_roles = %w/developer manager auditor/
+org_roles = %w[manager auditor billing_manager]
+space_roles = %w[developer manager auditor]
 
 NUM_USERS.times do |i|
   org = Organization.all.sample

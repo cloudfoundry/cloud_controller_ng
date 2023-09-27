@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppStart do
     let(:user_guid) { 'some-guid' }
     let(:user_email) { '1@2.3' }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
@@ -14,7 +14,7 @@ module VCAP::CloudController
         let(:app) do
           AppModel.make(
             :docker,
-            desired_state:         'STOPPED',
+            desired_state: 'STOPPED',
             environment_variables: environment_variables
           )
         end
@@ -24,17 +24,17 @@ module VCAP::CloudController
         let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
 
         before do
-          app.update(droplet: droplet)
+          app.update(droplet:)
           VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'starts the app' do
-          AppStart.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app:, user_audit_info:)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'sets the docker image on the process' do
-          AppStart.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app:, user_audit_info:)
 
           process1.reload
           expect(process1.docker_image).to eq(droplet.docker_receipt_image)
@@ -44,29 +44,29 @@ module VCAP::CloudController
       context 'when the app has a buildpack lifecycle' do
         let(:app) do
           AppModel.make(:buildpack,
-            desired_state:         'STOPPED',
-            environment_variables: environment_variables)
+                        desired_state: 'STOPPED',
+                        environment_variables: environment_variables)
         end
-        let!(:droplet) { DropletModel.make(app: app) }
+        let!(:droplet) { DropletModel.make(app:) }
         let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
         let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
 
         before do
-          app.update(droplet: droplet)
+          app.update(droplet:)
         end
 
         it 'sets the desired state on the app' do
-          AppStart.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app:, user_audit_info:)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_start).with(
             app,
-            user_audit_info,
+            user_audit_info
           )
 
-          AppStart.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app:, user_audit_info:)
         end
 
         context 'when the app is invalid' do
@@ -75,18 +75,18 @@ module VCAP::CloudController
           end
 
           it 'raises a InvalidApp exception' do
-            expect {
-              AppStart.start(app: app, user_audit_info: user_audit_info)
-            }.to raise_error(AppStart::InvalidApp, 'some message')
+            expect do
+              AppStart.start(app:, user_audit_info:)
+            end.to raise_error(AppStart::InvalidApp, 'some message')
           end
         end
 
         context 'and the droplet has a package' do
           let!(:droplet) do
             DropletModel.make(
-              app:     app,
+              app: app,
               package: package,
-              state:   DropletModel::STAGED_STATE,
+              state: DropletModel::STAGED_STATE
             )
           end
           let(:package) do
@@ -99,7 +99,7 @@ module VCAP::CloudController
           end
 
           it 'the package_hash for each process refers to the latest package' do
-            AppStart.start(app: app, user_audit_info: user_audit_info)
+            AppStart.start(app:, user_audit_info:)
 
             process1.reload
             expect(process1.package_hash).to eq(package.sha256_checksum)
@@ -124,8 +124,8 @@ module VCAP::CloudController
             state: DropletModel::STAGED_STATE,
             process_types: {
               'web' => 'webby',
-              'worker' => 'workworkwork',
-            },
+              'worker' => 'workworkwork'
+            }
           )
         end
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
@@ -136,7 +136,7 @@ module VCAP::CloudController
           app.update(revisions_enabled: true)
           app.update(droplet: dropletB)
           expect do
-            AppStart.start(app: app, user_audit_info: user_audit_info)
+            AppStart.start(app:, user_audit_info:)
           end.to change { RevisionModel.count }.by(1)
           last_revision = RevisionModel.last
           expect(last_revision.version).to eq(new_revision_number)
@@ -148,15 +148,15 @@ module VCAP::CloudController
           app.update(revisions_enabled: true)
           app.update(droplet: dropletB)
           expect do
-            AppStart.start(app: app, user_audit_info: user_audit_info)
-          end.not_to change { RevisionModel.count }
+            AppStart.start(app:, user_audit_info:)
+          end.not_to(change { RevisionModel.count })
         end
 
         it 'does not create a new revision if the droplet did not change' do
           app.update(revisions_enabled: true)
           app.update(droplet: dropletA)
           expect do
-            AppStart.start(app: app, user_audit_info: user_audit_info)
+            AppStart.start(app:, user_audit_info:)
           end.to change { RevisionModel.count }.by(0)
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)
@@ -167,7 +167,7 @@ module VCAP::CloudController
           app.update(revisions_enabled: false)
           app.update(droplet: dropletB)
           expect do
-            AppStart.start(app: app, user_audit_info: user_audit_info)
+            AppStart.start(app:, user_audit_info:)
           end.to change { RevisionModel.count }.by(0)
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)

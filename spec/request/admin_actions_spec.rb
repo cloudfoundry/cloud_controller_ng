@@ -8,14 +8,14 @@ RSpec.describe 'admin actions' do
   let(:admin_header) { admin_headers_for(user) }
 
   describe 'POST /v3/admin/actions/clear_buildpack_cache' do
-    let(:api_call) { lambda { |user_headers| post '/v3/admin/actions/clear_buildpack_cache', {}, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/admin/actions/clear_buildpack_cache', {}, user_headers } }
 
     let(:expected_codes_and_responses) do
       h = Hash.new(
-        code: 403,
+        code: 403
       )
       h['admin'] = {
-        code: 202,
+        code: 202
       }
       h
     end

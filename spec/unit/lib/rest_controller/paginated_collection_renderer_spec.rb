@@ -11,11 +11,11 @@ module VCAP::CloudController::RestController
     let(:serializer) { PreloadedObjectSerializer.new }
     let(:renderer_opts) do
       {
-        default_results_per_page: default_results_per_page,
-        max_results_per_page: max_results_per_page,
-        max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer,
-        max_total_results: max_total_results
+        default_results_per_page:,
+        max_results_per_page:,
+        max_inline_relations_depth:,
+        collection_transformer:,
+        max_total_results:
       }
     end
     let(:default_results_per_page) { 100_000 }
@@ -27,13 +27,13 @@ module VCAP::CloudController::RestController
     describe '#render_json' do
       let(:opts) do
         {
-            page: page,
-            results_per_page: results_per_page,
-            inline_relations_depth: inline_relations_depth,
-            orphan_relations: orphan_relations,
-            exclude_relations: exclude_relations,
-            include_relations: include_relations,
-            max_total_results: max_total_results
+          page:,
+          results_per_page:,
+          inline_relations_depth:,
+          orphan_relations:,
+          exclude_relations:,
+          include_relations:,
+          max_total_results:
         }
       end
       let(:page) { nil }
@@ -160,9 +160,9 @@ module VCAP::CloudController::RestController
           let(:inline_relations_depth) { 11 }
 
           it 'raises BadQueryParameter error' do
-            expect {
+            expect do
               render_json_call
-            }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
+            end.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
           end
         end
 

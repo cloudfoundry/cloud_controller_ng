@@ -46,7 +46,8 @@ module VCAP::CloudController
 
       it 'records a share event' do
         expect_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_unshare).with(
-          route, user_audit_info, target_space2.guid)
+          route, user_audit_info, target_space2.guid
+        )
 
         route_unshare.unshare(route, target_space2, user_audit_info)
       end
@@ -59,9 +60,9 @@ module VCAP::CloudController
         it 'does not unshare the space' do
           expect(route.shared_spaces.length).to eq 3
 
-          expect {
+          expect do
             route_unshare.unshare(route, target_space1, user_audit_info)
-          }.to raise_error('db failure')
+          end.to raise_error('db failure')
 
           route.reload
           expect(route.shared_spaces.length).to eq 3
@@ -70,10 +71,10 @@ module VCAP::CloudController
 
       context 'when attempting to unshare the owning space' do
         it 'does not permit you to unshare that space' do
-          expect {
+          expect do
             route_unshare.unshare(route, route.space, user_audit_info)
-          }.to raise_error(VCAP::CloudController::RouteUnshare::Error,
-                           "Unable to unshare route '#{route.uri}' from space '#{route.space.guid}'. Routes cannot be removed from the space that owns them.")
+          end.to raise_error(VCAP::CloudController::RouteUnshare::Error,
+                             "Unable to unshare route '#{route.uri}' from space '#{route.space.guid}'. Routes cannot be removed from the space that owns them.")
 
           route.reload
 

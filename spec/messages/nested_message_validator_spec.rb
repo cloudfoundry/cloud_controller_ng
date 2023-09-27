@@ -40,14 +40,14 @@ module VCAP::CloudController
         end
 
         it 'must override should_validate?' do
-          expect { incomplete_validator.validate(record) }.to raise_error /must declare when it should be run/
+          expect { incomplete_validator.validate(record) }.to raise_error(/must declare when it should be run/)
           expect { complete_validator.validate(record) }.to_not raise_error
         end
 
         it 'must override error_key' do
           allow(incomplete_validator).to receive(:should_validate?).and_return true
           allow(incomplete_validator).to receive(:valid?).and_return false
-          expect { incomplete_validator.validate(record) }.to raise_error /must declare where in record errors should be stored/
+          expect { incomplete_validator.validate(record) }.to raise_error(/must declare where in record errors should be stored/)
           expect { complete_validator.validate(record) }.to_not raise_error
         end
 

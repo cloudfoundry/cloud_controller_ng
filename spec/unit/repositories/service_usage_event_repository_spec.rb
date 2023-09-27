@@ -41,9 +41,9 @@ module VCAP::CloudController
 
           context 'fails to create the event if no custom state provided' do
             it 'will raise an error' do
-              expect {
+              expect do
                 repository.create_from_service_instance(service_instance, nil)
-              }.to raise_error(Sequel::NotNullConstraintViolation)
+              end.to raise_error(Sequel::NotNullConstraintViolation)
             end
           end
 
@@ -54,9 +54,9 @@ module VCAP::CloudController
               end
 
               it 'will raise an error' do
-                expect {
+                expect do
                   repository.create_from_service_instance(service_instance, custom_state)
-                }.to raise_error(NoMethodError)
+                end.to raise_error(NoMethodError)
               end
             end
           end
@@ -96,9 +96,9 @@ module VCAP::CloudController
         it 'will purge all existing events' do
           ServiceInstance.each(&:destroy)
 
-          expect {
+          expect do
             repository.purge_and_reseed_service_instances!
-          }.to change { ServiceUsageEvent.count }.to(0)
+          end.to change { ServiceUsageEvent.count }.to(0)
         end
 
         context 'when there are existing service instances' do
@@ -172,9 +172,9 @@ module VCAP::CloudController
         it 'will delete events created before the specified cutoff time' do
           new_event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
 
-          expect {
+          expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          }.to change {
+          end.to change {
             ServiceUsageEvent.count
           }.to(1)
 
@@ -182,9 +182,9 @@ module VCAP::CloudController
         end
 
         it 'will keep the last record even if before the cutoff age' do
-          expect {
+          expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          }.to change {
+          end.to change {
             ServiceUsageEvent.count
           }.to(1)
 

@@ -114,7 +114,8 @@ module VCAP::CloudController
       end
 
       context 'filtering labels' do
-        let(:message) do DropletsListMessage.from_params({ 'label_selector' => 'key=value' })
+        let(:message) do
+          DropletsListMessage.from_params({ 'label_selector' => 'key=value' })
         end
         let!(:droplet1Label) { DropletLabelModel.make(key_name: 'key', value: 'value', droplet: staged_droplet_for_app1) }
         let!(:droplet2Label) { DropletLabelModel.make(key_name: 'key2', value: 'value2', droplet: failed_droplet_for_app1) }

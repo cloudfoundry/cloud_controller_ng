@@ -13,12 +13,12 @@ module VCAP::CloudController
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
-            name: 'new-fake-name',
-            service_plan_guid: proposed_service_plan.guid,
-            maintenance_info: proposed_maintenance_info,
-          })
+                                                      name: 'new-fake-name',
+                                                      service_plan_guid: proposed_service_plan.guid,
+                                                      maintenance_info: proposed_maintenance_info
+                                                    })
           operation.save
-          service_instance = ManagedServiceInstance.make(service_plan: service_plan)
+          service_instance = ManagedServiceInstance.make(service_plan:)
           service_instance.save
 
           service_instance.service_instance_operation = operation
@@ -41,7 +41,7 @@ module VCAP::CloudController
             description: description
           }
         end
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -53,7 +53,7 @@ module VCAP::CloudController
             name,
             service_instance.guid,
             UserAuditInfo.new(user_guid: user.guid, user_email: user_email),
-            request_attrs,
+            request_attrs
           )
         end
 
@@ -64,12 +64,12 @@ module VCAP::CloudController
 
         describe '#initialize' do
           let(:default_polling_interval) { 120 }
-          let(:max_duration) { 10080 }
+          let(:max_duration) { 10_080 }
 
           before do
             config_override = {
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
-              broker_client_max_async_poll_duration_minutes: max_duration,
+              broker_client_max_async_poll_duration_minutes: max_duration
             }
             TestConfig.override(**config_override)
           end
@@ -90,7 +90,7 @@ module VCAP::CloudController
           end
 
           context 'when the service plan has maximum_polling_duration' do
-            let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+            let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
 
             context "when the config value is smaller than plan's maximum_polling_duration" do
               let(:max_duration) { 10 } # in minutes
@@ -101,7 +101,7 @@ module VCAP::CloudController
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
+              let(:max_duration) { 1_068_367_346 } # in minutes
               it "should set end_timestamp to the plan's maximum_polling_duration value" do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
@@ -121,7 +121,7 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
-          let(:last_operation_response) { { last_operation: { state: state, description: description }, response_code: 200 } }
+          let(:last_operation_response) { { last_operation: { state:, description: }, response_code: 200 } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do
@@ -146,7 +146,7 @@ module VCAP::CloudController
             end
 
             context 'when the broker does not return a description' do
-              let(:last_operation_response) { { last_operation: { state: state } } }
+              let(:last_operation_response) { { last_operation: { state: } } }
               let(:response) do
                 {
                   state: 'in progress'
@@ -474,7 +474,7 @@ module VCAP::CloudController
               Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
               run_job(job)
 
-              Timecop.freeze(Time.now + job.poll_interval * 2)
+              Timecop.freeze(Time.now + (job.poll_interval * 2))
               execute_all_jobs(expected_successes: 0, expected_failures: 0)
             end
           end
@@ -541,9 +541,9 @@ module VCAP::CloudController
             it 'exits without exploding' do
               service_instance.destroy
 
-              expect {
+              expect do
                 run_job(job)
-              }.not_to raise_error
+              end.not_to raise_error
             end
           end
 
@@ -558,10 +558,10 @@ module VCAP::CloudController
               Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
 
               broker.update({
-                broker_url:    updated_url,
-                auth_username: updated_username,
-                auth_password: updated_password
-              })
+                              broker_url: updated_url,
+                              auth_username: updated_username,
+                              auth_password: updated_password
+                            })
 
               allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(newClient)
               allow(newClient).to receive(:fetch_service_instance_last_operation).and_return(last_operation_response)

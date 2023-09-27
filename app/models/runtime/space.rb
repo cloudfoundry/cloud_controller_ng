@@ -24,8 +24,8 @@ module VCAP::CloudController
     plugin :many_through_many
 
     many_to_one :isolation_segment_model,
-       primary_key: :guid,
-       key: :isolation_segment_guid
+                primary_key: :guid,
+                key: :isolation_segment_guid
 
     define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
@@ -42,104 +42,104 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::SpaceAnnotationModel', key: :resource_guid, primary_key: :guid
 
     many_through_many :apps, [
-      [:spaces, :id, :guid],
-      [:apps, :space_guid, :guid]
+      %i[spaces id guid],
+      %i[apps space_guid guid]
     ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: ProcessTypes::WEB },
-      after_load: SELECT_NEWEST_PROCESS
+       after_load: SELECT_NEWEST_PROCESS
 
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
     many_to_many :service_instances_shared_from_other_spaces,
-          left_key:          :target_space_guid,
-          left_primary_key:  :guid,
-          right_key:         :service_instance_guid,
-          right_primary_key: :guid,
-          join_table:        :service_instance_shares,
-          class: 'VCAP::CloudController::ServiceInstance'
+                 left_key: :target_space_guid,
+                 left_primary_key: :guid,
+                 right_key: :service_instance_guid,
+                 right_primary_key: :guid,
+                 join_table: :service_instance_shares,
+                 class: 'VCAP::CloudController::ServiceInstance'
 
     many_to_many :routes_shared_from_other_spaces,
-          left_key:          :target_space_guid,
-          left_primary_key:  :guid,
-          right_key:         :route_guid,
-          right_primary_key: :guid,
-          join_table:        :route_shares,
-          class: 'VCAP::CloudController::Route'
+                 left_key: :target_space_guid,
+                 left_primary_key: :guid,
+                 right_key: :route_guid,
+                 right_primary_key: :guid,
+                 join_table: :route_shares,
+                 class: 'VCAP::CloudController::Route'
 
     one_to_many :service_brokers
     one_to_many :routes
     one_to_many :tasks,
                 dataset: -> { TaskModel.filter(app: app_models) }
     many_to_many :security_groups,
-    dataset: -> {
-      SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
-        where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true)).distinct(:id)
-    },
-    eager_loader: ->(spaces_map) {
-      space_ids = spaces_map[:id_map].keys
-      # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
-      spaces_map[:rows].each { |space| space.associations[:security_groups] = [] }
-      default_security_groups = SecurityGroup.where(running_default: true).all
-      SecurityGroupsSpace.where(space_id: space_ids).eager(:security_group).all do |security_group_space|
-        space = spaces_map[:id_map][security_group_space.space_id].first
-        space.associations[:security_groups] << security_group_space.security_group
-      end
-      spaces_map[:rows].each do |space|
-        space.associations[:security_groups] += default_security_groups
-        space.associations[:security_groups].uniq!
-      end
-    }
+                 dataset: lambda {
+                   SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
+                     where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true)).distinct(:id)
+                 },
+                 eager_loader: lambda { |spaces_map|
+                   space_ids = spaces_map[:id_map].keys
+                   # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
+                   spaces_map[:rows].each { |space| space.associations[:security_groups] = [] }
+                   default_security_groups = SecurityGroup.where(running_default: true).all
+                   SecurityGroupsSpace.where(space_id: space_ids).eager(:security_group).all do |security_group_space|
+                     space = spaces_map[:id_map][security_group_space.space_id].first
+                     space.associations[:security_groups] << security_group_space.security_group
+                   end
+                   spaces_map[:rows].each do |space|
+                     space.associations[:security_groups] += default_security_groups
+                     space.associations[:security_groups].uniq!
+                   end
+                 }
 
     many_to_many :staging_security_groups,
-    class: 'VCAP::CloudController::SecurityGroup',
-    join_table: 'staging_security_groups_spaces',
-    left_key: :staging_space_id,
-    right_key: :staging_security_group_id,
-    dataset: -> {
-      SecurityGroup.left_join(:staging_security_groups_spaces, staging_security_group_id: :id).
-        where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true)).distinct(:id)
-    },
-    eager_loader: ->(spaces_map) {
-      space_ids = spaces_map[:id_map].keys
-      # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
-      spaces_map[:rows].each { |space| space.associations[:staging_security_groups] = [] }
-      default_security_groups = SecurityGroup.where(staging_default: true).all
-      StagingSecurityGroupsSpace.where(staging_space_id: space_ids).eager(:security_group).all do |security_group_space|
-        space = spaces_map[:id_map][security_group_space.staging_space_id].first
-        space.associations[:staging_security_groups] << security_group_space.security_group
-      end
-      spaces_map[:rows].each do |space|
-        space.associations[:staging_security_groups] += default_security_groups
-        space.associations[:staging_security_groups].uniq!
-      end
-    }
+                 class: 'VCAP::CloudController::SecurityGroup',
+                 join_table: 'staging_security_groups_spaces',
+                 left_key: :staging_space_id,
+                 right_key: :staging_security_group_id,
+                 dataset: lambda {
+                   SecurityGroup.left_join(:staging_security_groups_spaces, staging_security_group_id: :id).
+                     where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true)).distinct(:id)
+                 },
+                 eager_loader: lambda { |spaces_map|
+                   space_ids = spaces_map[:id_map].keys
+                   # Set all associations to nil so if no records are found, we don't do another query when somebody tries to load the association
+                   spaces_map[:rows].each { |space| space.associations[:staging_security_groups] = [] }
+                   default_security_groups = SecurityGroup.where(staging_default: true).all
+                   StagingSecurityGroupsSpace.where(staging_space_id: space_ids).eager(:security_group).all do |security_group_space|
+                     space = spaces_map[:id_map][security_group_space.staging_space_id].first
+                     space.associations[:staging_security_groups] << security_group_space.security_group
+                   end
+                   spaces_map[:rows].each do |space|
+                     space.associations[:staging_security_groups] += default_security_groups
+                     space.associations[:staging_security_groups].uniq!
+                   end
+                 }
 
     one_to_many :app_events,
-      dataset: -> { AppEvent.filter(app: apps) }
+                dataset: -> { AppEvent.filter(app: apps) }
 
     one_to_many :default_users, class: 'VCAP::CloudController::User', key: :default_space_id
 
     one_to_many :domains,
-      dataset: -> { organization.domains_dataset },
-      adder: ->(domain) { domain.addable_to_organization!(organization) },
-      eager_loader: proc { |eo|
-        id_map = {}
-        eo[:rows].each do |space|
-          space.associations[:domains] = []
-          id_map[space.organization_id] ||= []
-          id_map[space.organization_id] << space
-        end
-        ds = Domain.shared_or_owned_by(id_map.keys)
-        ds = ds.eager(eo[:associations]) if eo[:associations]
-        ds = eo[:eager_block].call(ds) if eo[:eager_block]
-        ds.all do |domain|
-          if domain.shared?
-            id_map.each_value { |spaces| spaces.each { |space| space.associations[:domains] << domain } }
-          else
-            id_map[domain.owning_organization_id].each { |space| space.associations[:domains] << domain }
-          end
-        end
-      }
+                dataset: -> { organization.domains_dataset },
+                adder: ->(domain) { domain.addable_to_organization!(organization) },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |space|
+                    space.associations[:domains] = []
+                    id_map[space.organization_id] ||= []
+                    id_map[space.organization_id] << space
+                  end
+                  ds = Domain.shared_or_owned_by(id_map.keys)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+                  ds.all do |domain|
+                    if domain.shared?
+                      id_map.each_value { |spaces| spaces.each { |space| space.associations[:domains] << domain } }
+                    else
+                      id_map[domain.owning_organization_id].each { |space| space.associations[:domains] << domain }
+                    end
+                  end
+                }
 
     many_to_one :space_quota_definition
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
     import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
-      :manager_guids, :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid
+                      :manager_guids, :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name
 
@@ -178,25 +178,25 @@ module VCAP::CloudController
     def add_auditor(user)
       validate_auditor(user)
       SpaceAuditor.find_or_create(user_id: user.id, space_id: id)
-      self.reload
+      reload
     end
 
     def add_supporter(user)
       validate_supporter(user)
       SpaceSupporter.find_or_create(user_id: user.id, space_id: id)
-      self.reload
+      reload
     end
 
     def add_manager(user)
       validate_manager(user)
       SpaceManager.find_or_create(user_id: user.id, space_id: id)
-      self.reload
+      reload
     end
 
     def add_developer(user)
       validate_developer(user)
       SpaceDeveloper.find_or_create(user_id: user.id, space_id: id)
-      self.reload
+      reload
     end
 
     def has_developer?(user)
@@ -226,16 +226,14 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :organization
-      validates_unique [:organization_id, :name]
+      validates_unique %i[organization_id name]
       validates_format SPACE_NAME_REGEX, :name
 
-      if space_quota_definition && space_quota_definition.organization_id != organization.id
-        errors.add(:space_quota_definition, :invalid_organization)
-      end
+      errors.add(:space_quota_definition, :invalid_organization) if space_quota_definition && space_quota_definition.organization_id != organization.id
 
-      if column_changed?(:isolation_segment_guid)
-        validate_isolation_segment(isolation_segment_model)
-      end
+      return unless column_changed?(:isolation_segment_guid)
+
+      validate_isolation_segment(isolation_segment_model)
     end
 
     def validate_isolation_segment(isolation_segment_model)
@@ -263,8 +261,8 @@ module VCAP::CloudController
     end
 
     def find_visible_service_instance_by_name(name)
-      shared = self.service_instances_shared_from_other_spaces_dataset.where(name: name).all
-      source = self.service_instances_dataset.where(name: name).all
+      shared = service_instances_shared_from_other_spaces_dataset.where(name:).all
+      source = service_instances_dataset.where(name:).all
 
       (shared | source).first
     end
@@ -369,11 +367,11 @@ module VCAP::CloudController
 
     def validate_isolation_segment_set(isolation_segment_model)
       isolation_segment_guids = organization.isolation_segment_models.map(&:guid)
-      unless isolation_segment_guids.include?(isolation_segment_model.guid)
-        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
-                                                                 'Adding the Isolation Segment to the Space',
-                                                                 "Only Isolation Segments in the Organization's allowed list can be used.")
-      end
+      return if isolation_segment_guids.include?(isolation_segment_model.guid)
+
+      raise CloudController::Errors::ApiError.new_from_details('UnableToPerform',
+                                                               'Adding the Isolation Segment to the Space',
+                                                               "Only Isolation Segments in the Organization's allowed list can be used.")
     end
   end
 end

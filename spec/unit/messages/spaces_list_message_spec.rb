@@ -22,9 +22,9 @@ module VCAP::CloudController
 
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.names).to eql(['foo', 'bar'])
-        expect(message.organization_guids).to eql(['org1-guid', 'org2-guid'])
-        expect(message.guids).to eql(['space1-guid', 'space2-guid'])
+        expect(message.names).to eql(%w[foo bar])
+        expect(message.organization_guids).to eql(%w[org1-guid org2-guid])
+        expect(message.guids).to eql(%w[space1-guid space2-guid])
         expect(message.include).to eql(['organization'])
       end
 

@@ -55,7 +55,7 @@ module VCAP::CloudController
       end
 
       describe '#record_route_share' do
-        let(:target_space_guids) { ['space-guid', 'another-guid'] }
+        let(:target_space_guids) { %w[space-guid another-guid] }
 
         it 'records event correctly' do
           event = route_event_repository.record_route_share(route, actor_audit_info, target_space_guids)
@@ -138,12 +138,12 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight,
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
         context 'when route mapping has weight' do
@@ -164,12 +164,12 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight,
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
       end
@@ -194,12 +194,12 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
         context 'when route mapping has weight' do
@@ -220,12 +220,12 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
       end

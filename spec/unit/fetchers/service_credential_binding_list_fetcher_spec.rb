@@ -18,21 +18,21 @@ module VCAP
 
       describe 'app and key bindings' do
         let(:space) { VCAP::CloudController::Space.make }
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
 
-        let(:key_details) {
+        let(:key_details) do
           {
             credentials: '{"some":"key"}'
           }
-        }
+        end
 
-        let(:app_binding_details) {
+        let(:app_binding_details) do
           {
             credentials: '{"some":"app secret"}',
             syslog_drain_url: 'http://example.com/drain-app',
-            volume_mounts: ['ccc', 'ddd']
+            volume_mounts: %w[ccc ddd]
           }
-        }
+        end
         let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, **key_details) }
         let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_binding_details) }
 
@@ -46,7 +46,7 @@ module VCAP
         context 'when getting everything' do
           it 'returns both key and app bindings' do
             bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
-            to_hash = ->(b) {
+            to_hash = lambda { |b|
               {
                 guid: b.guid,
                 credentials: b.credentials,
@@ -68,7 +68,7 @@ module VCAP
           let!(:app_other_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance) }
 
           it 'returns only the bindings within that space' do
-            bindings = fetcher.fetch(readable_spaces_query: readable_spaces_query, message: message).all
+            bindings = fetcher.fetch(readable_spaces_query:, message:).all
             binding_guids = bindings.map(&:guid)
 
             expect(binding_guids).to contain_exactly(key_binding.guid, app_binding.guid)
@@ -76,7 +76,7 @@ module VCAP
         end
 
         describe 'filters' do
-          let(:another_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+          let(:another_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
           let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: another_instance) }
           let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: another_instance, name: Sham.name) }
 
@@ -198,9 +198,9 @@ module VCAP
           end
 
           context 'when there is no match' do
-            let(:params) {
+            let(:params) do
               { service_instance_guids: ['fake-guid'], service_instance_names: ['fake-name'] }
-            }
+            end
             it 'returns empty' do
               bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings).to be_empty
@@ -208,9 +208,9 @@ module VCAP
           end
 
           context 'when multiple filters are passed' do
-            let(:params) {
+            let(:params) do
               { names: [key_binding.name, another_binding.name], service_instance_guids: [another_instance.guid] }
-            }
+            end
             it 'returns the right result' do
               bindings = fetcher.fetch(readable_spaces_query: nil, message: message).all
               expect(bindings.map(&:guid)).to contain_exactly(another_binding.guid)

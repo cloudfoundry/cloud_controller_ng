@@ -1,8 +1,8 @@
 module VCAP
   module CloudController
     class ProcessModelFactory
-      APP_ATTRIBUTES     = %i(name space environment_json stack enable_ssh).freeze
-      PACKAGE_ATTRIBUTES = %i(docker_image docker_credentials).freeze
+      APP_ATTRIBUTES     = %i[name space environment_json stack enable_ssh].freeze
+      PACKAGE_ATTRIBUTES = %i[docker_image docker_credentials].freeze
 
       class << self
         def make(*args)
@@ -34,9 +34,7 @@ module VCAP
           return process_attributes[:app] if process_attributes[:app]
 
           parent_app_blueprint_type = package_attributes[:docker_image].present? ? :docker : nil
-          if process_attributes.key?(:state)
-            parent_app_attributes[:desired_state] = process_attributes[:state]
-          end
+          parent_app_attributes[:desired_state] = process_attributes[:state] if process_attributes.key?(:state)
 
           if parent_app_attributes.any?
             buildpack_keys = {}

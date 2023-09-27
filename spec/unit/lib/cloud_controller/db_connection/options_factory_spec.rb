@@ -4,20 +4,20 @@ require 'cloud_controller/db_connection/mysql_options_factory'
 
 RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
   let(:adapter) { '' }
-  let(:required_options) { { database: { adapter: adapter } } }
+  let(:required_options) { { database: { adapter: } } }
 
   describe '.build' do
     describe 'database schemes' do
       it 'raises if the database_scheme is unsupported' do
-        expect {
+        expect do
           VCAP::CloudController::DbConnection::OptionsFactory.build(database: { adapter: 'foo' })
-        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* 'foo'/)
+        end.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* 'foo'/)
       end
 
       it 'raises if the database_scheme is missing' do
-        expect {
+        expect do
           VCAP::CloudController::DbConnection::OptionsFactory.build(database: {})
-        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* ''/)
+        end.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* ''/)
       end
 
       context 'for `mysql`' do
@@ -55,12 +55,12 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
     end
 
     describe 'default options' do
-      let(:adapter) { ['mysql', 'postgres'].sample }
+      let(:adapter) { %w[mysql postgres].sample }
 
       it 'sets the sql_mode' do
         db_connection_options = VCAP::CloudController::DbConnection::OptionsFactory.build(required_options)
 
-        expect(db_connection_options[:sql_mode]).to eq([:strict_trans_tables, :strict_all_tables, :no_zero_in_date])
+        expect(db_connection_options[:sql_mode]).to eq(%i[strict_trans_tables strict_all_tables no_zero_in_date])
       end
 
       it 'sets the max connections' do
@@ -115,7 +115,7 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
                                           password: 'p4ssw0rd',
                                           database: 'databasename'
                                         }
-          ))
+                                      ))
 
         expect(db_connection_options).to include(
           adapter: 'mysql',

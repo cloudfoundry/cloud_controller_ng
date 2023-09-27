@@ -29,7 +29,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
     get '/div_0' do
       1 / 0
-    rescue => e
+    rescue StandardError => e
       e.set_backtrace(['/foo:1', '/bar:2'])
       raise e
     end
@@ -86,7 +86,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
     it 'should return a 404' do
       expect(last_response.status).to eq(404)
-      expect(decoded_response['code']).to eq(10000)
+      expect(decoded_response['code']).to eq(10_000)
       expect(decoded_response['description']).to match(/Unknown request/)
     end
 
@@ -102,7 +102,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     it 'should return 500' do
       expect(last_response.status).to eq(500)
       expect(decoded_response).to eq({
-                                       'code' => 10001,
+                                       'code' => 10_001,
                                        'error_code' => 'UnknownError',
                                        'description' => 'An unknown error occurred.'
                                      })
@@ -142,7 +142,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
     it 'should return structure' do
       decoded_response = MultiJson.load(last_response.body)
-      expect(decoded_response['code']).to eq(10001)
+      expect(decoded_response['code']).to eq(10_001)
       expect(decoded_response['description']).to eq('boring message')
 
       expect(decoded_response['error_code']).to eq('CF-StructuredErrorWithResponseCode')

@@ -7,7 +7,7 @@ module VCAP::CloudController
       {
         type: 'user-provided',
         name: 'my-service-instance',
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         relationships: {
           space: {
             data: {
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       describe 'type' do
         it 'accepts the valid types' do
-          %w{managed user-provided}.each do |t|
+          %w[managed user-provided].each do |t|
             body[:type] = t
             message = described_class.new(body)
             expect(message).to be_valid

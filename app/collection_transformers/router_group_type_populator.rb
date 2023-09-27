@@ -6,7 +6,7 @@ module VCAP::CloudController
       @routing_api_client = routing_api_client
     end
 
-    def transform(domains, opts={})
+    def transform(domains, _opts={})
       return domains unless routing_api_client.enabled?
       return domains if domains.select { |d| d.router_group_guid.present? }.blank?
 

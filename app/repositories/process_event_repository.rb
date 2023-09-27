@@ -11,15 +11,15 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(process.app_guid, "Added process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
-          process_guid: process.guid,
-          process_type: process.type,
-        })
+                                            process_guid: process.guid,
+                                            process_type: process.type
+                                          })
 
         create_event(
-          process:        process,
-          type:           'audit.app.process.create',
-          actor_guid:     user_audit_info.user_guid,
-          actor_name:     user_audit_info.user_email,
+          process: process,
+          type: 'audit.app.process.create',
+          actor_guid: user_audit_info.user_guid,
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
           metadata: metadata
         )
@@ -29,12 +29,12 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(process.app_guid, "Deleting process: \"#{process.type}\"")
 
         create_event(
-          process:        process,
-          type:           'audit.app.process.delete',
-          actor_guid:     user_audit_info.user_guid,
-          actor_name:     user_audit_info.user_email,
+          process: process,
+          type: 'audit.app.process.delete',
+          actor_guid: user_audit_info.user_guid,
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       {
+          metadata: {
             process_guid: process.guid,
             process_type: process.type
           }
@@ -47,16 +47,16 @@ module VCAP::CloudController
         request           = request.dup.symbolize_keys
         request[:command] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if request.key?(:command)
         metadata = add_manifest_triggered(manifest_triggered, {
-          process_guid: process.guid,
-          process_type: process.type,
-          request: request
-        })
+                                            process_guid: process.guid,
+                                            process_type: process.type,
+                                            request: request
+                                          })
 
         create_event(
-          process:        process,
-          type:           'audit.app.process.update',
-          actor_guid:     user_audit_info.user_guid,
-          actor_name:     user_audit_info.user_email,
+          process: process,
+          type: 'audit.app.process.update',
+          actor_guid: user_audit_info.user_guid,
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
           metadata: metadata
         )
@@ -66,16 +66,16 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(process.app_guid, "Scaling process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
-          process_guid: process.guid,
-          process_type: process.type,
-          request: request,
-        })
+                                            process_guid: process.guid,
+                                            process_type: process.type,
+                                            request: request
+                                          })
 
         create_event(
-          process:        process,
-          type:           'audit.app.process.scale',
-          actor_guid:     user_audit_info.user_guid,
-          actor_name:     user_audit_info.user_email,
+          process: process,
+          type: 'audit.app.process.scale',
+          actor_guid: user_audit_info.user_guid,
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
           metadata: metadata
         )
@@ -85,14 +85,14 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(process.app_guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
 
         create_event(
-          process:        process,
-          type:           'audit.app.process.terminate_instance',
-          actor_guid:     user_audit_info.user_guid,
-          actor_name:     user_audit_info.user_email,
+          process: process,
+          type: 'audit.app.process.terminate_instance',
+          actor_guid: user_audit_info.user_guid,
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       {
-            process_guid:  process.guid,
-            process_type:  process.type,
+          metadata: {
+            process_guid: process.guid,
+            process_type: process.type,
             process_index: index
           }
         )
@@ -103,12 +103,12 @@ module VCAP::CloudController
         crash_payload['exit_description'] = truncate(crash_payload['exit_description'])
 
         create_event(
-          process:    process,
-          type:       'audit.app.process.crash',
+          process: process,
+          type: 'audit.app.process.crash',
           actor_guid: process.guid,
           actor_name: process.type,
           actor_type: 'process',
-          metadata:   crash_payload
+          metadata: crash_payload
         )
       end
 
@@ -116,12 +116,12 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(process.app_guid, 'Process is being rescheduled')
 
         create_event(
-          process:    process,
-          type:       'audit.app.process.rescheduling',
+          process: process,
+          type: 'audit.app.process.rescheduling',
           actor_guid: process.guid,
           actor_name: process.type,
           actor_type: 'process',
-          metadata:   rescheduling_payload
+          metadata: rescheduling_payload
         )
       end
 
@@ -131,17 +131,17 @@ module VCAP::CloudController
         def create_event(process:, type:, actor_guid:, actor_name:, metadata:, actor_username: '', actor_type: 'user')
           app = process.app
           Event.create(
-            type:           type,
-            actee:          app.guid,
-            actee_type:     'app',
-            actee_name:     app.name,
-            actor:          actor_guid,
-            actor_type:     actor_type,
-            actor_name:     actor_name,
+            type: type,
+            actee: app.guid,
+            actee_type: 'app',
+            actee_name: app.name,
+            actor: actor_guid,
+            actor_type: actor_type,
+            actor_name: actor_name,
             actor_username: actor_username,
-            timestamp:      Sequel::CURRENT_TIMESTAMP,
-            space:          process.space,
-            metadata:       metadata
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            space: process.space,
+            metadata: metadata
           )
         end
       end

@@ -14,20 +14,21 @@ RSpec.describe TasksController, type: :controller do
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
     end
 
     let(:request_body) do
       {
         name: 'mytask',
         command: 'rake db:migrate && true',
-        memory_in_mb: 2048,
+        memory_in_mb: 2048
       }
     end
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
       VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
       app_model.droplet = droplet
@@ -62,7 +63,7 @@ RSpec.describe TasksController, type: :controller do
           name: 'mytask',
           command: 'rake db:migrate && true',
           memory_in_mb: nil,
-          disk_in_mb: nil,
+          disk_in_mb: nil
         }
       end
 
@@ -91,7 +92,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'succeeds for admins' do
-          set_current_user_as_admin(user: user)
+          set_current_user_as_admin(user:)
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(202)
@@ -114,7 +115,7 @@ RSpec.describe TasksController, type: :controller do
       context 'when the user does not have write permissions on the app space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 403 unauthorized' do
@@ -127,7 +128,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user does not have read permissions on the app space' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -151,16 +152,17 @@ RSpec.describe TasksController, type: :controller do
 
     context 'metadata' do
       context 'when the label is invalid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                'cloudfoundry.org/release' => 'stable'
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  'cloudfoundry.org/release' => 'stable'
+                }
               }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -172,20 +174,21 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when the annotation is invalid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                'release' => 'stable'
-              },
-              annotations: {
-                "": 'mashed',
-                "/potato": '.value.'
-              },
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  'release' => 'stable'
+                },
+                annotations: {
+                  "": 'mashed',
+                  '/potato': '.value.'
+                }
+              }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -197,19 +200,20 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when the metadata is valid' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              labels: {
-                release: 'stable'
-              },
-              annotations: {
-                this: 'is valid'
-              },
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                labels: {
+                  release: 'stable'
+                },
+                annotations: {
+                  this: 'is valid'
+                }
+              }
             }
-          }
-        )
-        }
+          )
+        end
 
         it 'Returns a 202 and the app with metadata' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
@@ -224,17 +228,18 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when there are too many annotations' do
-        let(:metadata_request_body) { request_body.merge(
-          {
-            metadata: {
-              annotations: {
-                radish: 'daikon',
-                potato: 'idaho'
+        let(:metadata_request_body) do
+          request_body.merge(
+            {
+              metadata: {
+                annotations: {
+                  radish: 'daikon',
+                  potato: 'idaho'
+                }
               }
             }
-          }
-        )
-        }
+          )
+        end
 
         before do
           VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
@@ -306,10 +311,10 @@ RSpec.describe TasksController, type: :controller do
       end
 
       context 'when a custom droplet guid is provided' do
-        let(:custom_droplet) {
+        let(:custom_droplet) do
           VCAP::CloudController::DropletModel.make(app_guid: app_model.guid,
                                                    state: VCAP::CloudController::DropletModel::STAGED_STATE)
-        }
+        end
 
         it 'successfully creates a task on the specifed droplet' do
           post :create, params: { app_guid: app_model.guid }.merge(
@@ -361,7 +366,7 @@ RSpec.describe TasksController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+      allow_user_secret_access(user, space:)
     end
 
     it 'returns a 200 and the task' do
@@ -388,7 +393,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user does not have read permissions on the app space' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -403,7 +408,7 @@ RSpec.describe TasksController, type: :controller do
       context 'when the user has read, but not write permissions on the app space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 200' do
@@ -455,7 +460,7 @@ RSpec.describe TasksController, type: :controller do
         VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
 
-        get :index, params: params
+        get(:index, params:)
 
         parsed_response = parsed_body
         expect(parsed_response['pagination']['total_results']).to eq(2)
@@ -465,7 +470,7 @@ RSpec.describe TasksController, type: :controller do
 
     context 'when accessed as an app subresource' do
       before do
-        allow_user_secret_access(user, space: space)
+        allow_user_secret_access(user, space:)
       end
 
       it 'uses the app as a filter' do
@@ -488,7 +493,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user cannot view secrets' do
         before do
-          disallow_user_secret_access(user, space: space)
+          disallow_user_secret_access(user, space:)
         end
 
         it 'excludes secrets' do
@@ -511,7 +516,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -585,7 +590,7 @@ RSpec.describe TasksController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
       CloudController::DependencyLocator.instance.register(:bbs_task_client, client)
       allow(client).to receive(:cancel_task).and_return(nil)
     end
@@ -624,7 +629,7 @@ RSpec.describe TasksController, type: :controller do
     context 'permissions' do
       context 'when the user does not have read permissions on the app space' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound' do
@@ -639,7 +644,7 @@ RSpec.describe TasksController, type: :controller do
       context 'when the user has read, but not write permissions on the app space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 403 NotAuthorized' do
@@ -657,7 +662,7 @@ RSpec.describe TasksController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
     end
 
     context 'when the request is invalid' do
@@ -702,7 +707,7 @@ RSpec.describe TasksController, type: :controller do
             },
             annotations: {
               '' => 'uhoh'
-            },
+            }
           }
         }
       end
@@ -743,8 +748,8 @@ RSpec.describe TasksController, type: :controller do
                 style: 'casserole'
               },
               annotations: {
-                potato: 'russet',
-              },
+                potato: 'russet'
+              }
             }
           }
         end
@@ -756,11 +761,11 @@ RSpec.describe TasksController, type: :controller do
           expected_metadata_response = {
             'labels' => {
               'potato' => 'yam',
-              'style' => 'casserole',
+              'style' => 'casserole'
             },
             'annotations' => {
               'potato' => 'russet',
-              'style' => 'french',
+              'style' => 'french'
             }
           }
 
@@ -771,7 +776,7 @@ RSpec.describe TasksController, type: :controller do
         context 'permissions' do
           context 'when the user cannot read the app' do
             before do
-              disallow_user_read_access(user, space: space)
+              disallow_user_read_access(user, space:)
             end
 
             it 'returns a 404 ResourceNotFound error' do
@@ -785,7 +790,7 @@ RSpec.describe TasksController, type: :controller do
           context 'when the user can read but cannot write to the app' do
             before do
               allow_user_read_access_for(user, spaces: [space])
-              disallow_user_write_access(user, space: space)
+              disallow_user_write_access(user, space:)
             end
 
             it 'raises ApiError NotAuthorized' do
@@ -805,8 +810,8 @@ RSpec.describe TasksController, type: :controller do
                   style: nil
                 },
                 annotations: {
-                  potato: nil,
-                },
+                  potato: nil
+                }
               }
             }
           end
@@ -817,10 +822,10 @@ RSpec.describe TasksController, type: :controller do
             expect(response.status).to eq(200)
             expected_metadata_response = {
               'labels' => {
-                'potato' => 'yam',
+                'potato' => 'yam'
               },
               'annotations' => {
-                'style' => 'french',
+                'style' => 'french'
               }
             }
 

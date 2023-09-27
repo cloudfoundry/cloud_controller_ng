@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
         execution_metadata: 'black-box-string',
         package_guid: 'abcdefabcdef12345',
         droplet_hash: 'droplet-sha1-checksum',
-        sha256_checksum: 'droplet-sha256-checksum',
+        sha256_checksum: 'droplet-sha256-checksum'
       )
     end
 
@@ -54,13 +54,12 @@ module VCAP::CloudController::Presenters::V3
             { name: 'the-happiest-buildpack',
               detect_output: 'the-happiest-buildpack-detect-output',
               buildpack_name: nil,
-              version: nil
-            },
+              version: nil },
             { name: 'shaq',
               detect_output: nil,
               buildpack_name: nil,
-              version: nil
-            }])
+              version: nil }
+          ])
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -148,12 +147,12 @@ module VCAP::CloudController::Presenters::V3
             {
               name: buildpack1_other_name,
               version: buildpack1_version,
-              key: buildpack1.key,
+              key: buildpack1.key
             },
             {
               name: buildpack2_other_name,
-              key: buildpack2.key,
-            },
+              key: buildpack2.key
+            }
           ]
         end
 
@@ -187,13 +186,12 @@ module VCAP::CloudController::Presenters::V3
             { name: 'rosanna',
               detect_output: nil,
               version: '1.9.82',
-              buildpack_name: 'toto',
-            },
+              buildpack_name: 'toto' },
             { name: 'chris-cross',
               detect_output: 'black cow',
               buildpack_name: 'sailing',
-              version: nil
-            }])
+              version: nil }
+          ])
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -254,7 +252,7 @@ module VCAP::CloudController::Presenters::V3
           VCAP::CloudController::DropletAnnotationModel.make(
             resource_guid: droplet.guid,
             key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
 

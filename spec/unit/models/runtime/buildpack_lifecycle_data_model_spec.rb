@@ -80,9 +80,9 @@ module VCAP::CloudController
           end
 
           it 'persists multiple buildpacks and reads them back' do
-            lifecycle_data.buildpacks = ['some-buildpack', 'another-buildpack']
+            lifecycle_data.buildpacks = %w[some-buildpack another-buildpack]
             lifecycle_data.save
-            expect(lifecycle_data.reload.buildpacks).to eq ['some-buildpack', 'another-buildpack']
+            expect(lifecycle_data.reload.buildpacks).to eq %w[some-buildpack another-buildpack]
           end
 
           context 'multi-field buildpack-lifecycle-buildpacks' do
@@ -104,18 +104,18 @@ module VCAP::CloudController
                 {
                   name: buildpack1_other_name,
                   version: buildpack1_version,
-                  key: buildpack1.key,
+                  key: buildpack1.key
                 },
                 {
                   name: buildpack2_other_name,
                   version: buildpack2_version,
-                  key: buildpack2.key,
+                  key: buildpack2.key
                 },
                 {
                   name: buildpack3_other_name,
                   version: buildpack3_version,
-                  key: buildpack3_key,
-                },
+                  key: buildpack3_key
+                }
               ]
             end
 
@@ -130,27 +130,24 @@ module VCAP::CloudController
                 to match_array([
                   { version: '3.1',
                     name: 'valley',
-                    buildpack_name: 'pleasant-valley-buildpack'
-                  },
+                    buildpack_name: 'pleasant-valley-buildpack' },
                   { version: '95',
                     name: 'gilooley',
-                    buildpack_name: 'stepping-stone-buildpack'
-                  },
+                    buildpack_name: 'stepping-stone-buildpack' },
                   { version: 'ME',
                     name: 'hilltop',
-                    buildpack_name: 'git://my-buildpacks.tv/fred/barney.git'
-                  },
+                    buildpack_name: 'git://my-buildpacks.tv/fred/barney.git' }
                 ])
             end
           end
 
           context 'when the lifecycle already contains a list of buildpacks' do
             subject(:lifecycle_data) do
-              BuildpackLifecycleDataModel.create(buildpacks: ['some-buildpack', 'another-buildpack'])
+              BuildpackLifecycleDataModel.create(buildpacks: %w[some-buildpack another-buildpack])
             end
 
             it 'overrides the list of buildpacks and reads it back' do
-              expect(lifecycle_data.buildpacks).to eq ['some-buildpack', 'another-buildpack']
+              expect(lifecycle_data.buildpacks).to eq %w[some-buildpack another-buildpack]
 
               lifecycle_data.buildpacks = ['new-buildpack']
               lifecycle_data.save
@@ -327,9 +324,9 @@ module VCAP::CloudController
         end
 
         context 'when using mutiple buildpacks' do
-          subject(:lifecycle_data) {
+          subject(:lifecycle_data) do
             BuildpackLifecycleDataModel.new(buildpacks: ['https://github.com/buildpacks/the-best', 'ruby'])
-          }
+          end
 
           it 'returns true' do
             expect(lifecycle_data.using_custom_buildpack?).to eq true
@@ -358,9 +355,9 @@ module VCAP::CloudController
 
       context 'when using multiple buildpacks' do
         context 'and there are custom buildpacks' do
-          subject(:lifecycle_data) {
+          subject(:lifecycle_data) do
             BuildpackLifecycleDataModel.new(buildpacks: ['ruby', 'https://github.com/buildpacks/the-best'])
-          }
+          end
 
           it 'returns the first url' do
             expect(lifecycle_data.first_custom_buildpack_url).to eq 'https://github.com/buildpacks/the-best'
@@ -368,9 +365,9 @@ module VCAP::CloudController
         end
 
         context 'and there are not any custom buildpacks' do
-          subject(:lifecycle_data) {
-            BuildpackLifecycleDataModel.new(buildpacks: ['ruby', 'java'])
-          }
+          subject(:lifecycle_data) do
+            BuildpackLifecycleDataModel.new(buildpacks: %w[ruby java])
+          end
 
           it 'returns nil' do
             expect(lifecycle_data.first_custom_buildpack_url).to be_nil

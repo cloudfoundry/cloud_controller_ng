@@ -13,9 +13,7 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:types)
-          dataset = dataset.where(type: message.types)
-        end
+        dataset = dataset.where(type: message.types) if message.requested?(:types)
 
         if message.requested?(:target_guids)
           dataset = if message.exclude_target_guids?
@@ -25,13 +23,9 @@ module VCAP::CloudController
                     end
         end
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(space_guid: message.space_guids)
-        end
+        dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
 
-        if message.requested?(:organization_guids)
-          dataset = dataset.where(organization_guid: message.organization_guids)
-        end
+        dataset = dataset.where(organization_guid: message.organization_guids) if message.requested?(:organization_guids)
 
         super(message, dataset, Event)
       end

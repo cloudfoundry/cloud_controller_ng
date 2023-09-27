@@ -12,7 +12,7 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:app_model) { AppModel.make(space: space) }
+      let(:app_model) { AppModel.make(space:) }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)

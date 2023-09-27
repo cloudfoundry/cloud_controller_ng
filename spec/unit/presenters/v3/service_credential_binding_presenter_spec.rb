@@ -46,10 +46,10 @@ module VCAP
               },
               metadata: {
                 annotations: {
-                'prefix/key' => 'bar'
+                  'prefix/key' => 'bar'
                 },
                 labels: {
-                  lang: 'ruby',
+                  lang: 'ruby'
                 }
               },
               relationships: {
@@ -155,7 +155,7 @@ module VCAP
                   'prefix/key' => 'bar'
                 },
                 labels: {
-                  lang: 'ruby',
+                  lang: 'ruby'
                 }
               },
               relationships: {
@@ -218,8 +218,8 @@ module VCAP
 
         before do
           allow(decorator).to receive(:decorate).with({}, array_including(credential_binding)).and_return({
-            included: { resource: { guid: 'app-guid' } }
-          })
+                                                                                                            included: { resource: { guid: 'app-guid' } }
+                                                                                                          })
         end
 
         let(:credential_binding) do

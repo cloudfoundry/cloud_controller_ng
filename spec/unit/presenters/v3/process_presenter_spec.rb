@@ -6,29 +6,30 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:health_check_type) { 'http' }
-      let(:process) {
+      let(:process) do
         VCAP::CloudController::ProcessModel.make(
-          diego:                      true,
-          app_guid:                   app_model.guid,
-          instances:                  3,
-          memory:                     42,
-          disk_quota:                 37,
-          command:                    'rackup',
-          metadata:                   {},
-          health_check_type:          health_check_type,
-          health_check_timeout:       51,
-          health_check_interval:      23,
+          diego: true,
+          app_guid: app_model.guid,
+          instances: 3,
+          memory: 42,
+          disk_quota: 37,
+          command: 'rackup',
+          metadata: {},
+          health_check_type: health_check_type,
+          health_check_timeout: 51,
+          health_check_interval: 23,
           health_check_http_endpoint: '/healthcheck',
-          created_at:                 Time.at(1)
+          created_at: Time.at(1)
         )
-      }
+      end
       let(:result) { ProcessPresenter.new(process).to_hash }
-      let(:links) do {
+      let(:links) do
+        {
           self: { href: "#{link_prefix}/v3/processes/#{process.guid}" },
           scale: { href: "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", method: 'POST' },
           app: { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
           space: { href: "#{link_prefix}/v3/spaces/#{process.space_guid}" },
-          stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" }
         }
       end
 
@@ -53,7 +54,7 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::ProcessAnnotationModel.make(
           key_name: 'altitude',
           value: '14,412',
-          resource_guid: process.guid,
+          resource_guid: process.guid
         )
       end
 
@@ -61,7 +62,7 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::ProcessAnnotationModel.make(
           key_name: 'maize',
           value: 'hfcs',
-          resource_guid: process.guid,
+          resource_guid: process.guid
         )
       end
 
@@ -75,7 +76,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         before do
-          app_model.update(droplet: droplet)
+          app_model.update(droplet:)
           process.update(command: nil)
         end
 

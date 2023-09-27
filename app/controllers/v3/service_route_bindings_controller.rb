@@ -46,7 +46,7 @@ class ServiceRouteBindingsController < ApplicationController
 
     check_parameters_support(service_instance, message)
     action = V3::ServiceRouteBindingCreate.new(user_audit_info, message.audit_hash)
-    precursor = action.precursor(service_instance, route, message: message)
+    precursor = action.precursor(service_instance, route, message:)
 
     case service_instance
     when ManagedServiceInstance
@@ -153,7 +153,7 @@ class ServiceRouteBindingsController < ApplicationController
       binding_guid,
       user_audit_info: user_audit_info,
       audit_hash: message.audit_hash,
-      parameters: message.parameters,
+      parameters: message.parameters
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -163,7 +163,7 @@ class ServiceRouteBindingsController < ApplicationController
     bind_job = VCAP::CloudController::V3::DeleteBindingJob.new(
       :route,
       binding_guid,
-      user_audit_info: user_audit_info,
+      user_audit_info:
     )
     pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
     pollable_job.guid
@@ -173,13 +173,13 @@ class ServiceRouteBindingsController < ApplicationController
     if permission_queryer.can_read_globally?
       RouteBindingListFetcher.fetch_all(
         message,
-        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources
       )
     else
       RouteBindingListFetcher.fetch_some(
         message,
         space_guids: space_guids,
-        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources,
+        eager_loaded_associations: Presenters::V3::ServiceRouteBindingPresenter.associated_resources
       )
     end
   end
@@ -195,10 +195,8 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def fetch_service_instance(guid)
-    service_instance = VCAP::CloudController::ServiceInstance.first(guid: guid)
-    unless service_instance && can_read_from_space?(service_instance.space)
-      service_instance_not_found!(guid)
-    end
+    service_instance = VCAP::CloudController::ServiceInstance.first(guid:)
+    service_instance_not_found!(guid) unless service_instance && can_read_from_space?(service_instance.space)
 
     unauthorized! unless can_bind_in_active_space?(service_instance.space)
     suspended! unless is_space_active?(service_instance.space)
@@ -207,17 +205,15 @@ class ServiceRouteBindingsController < ApplicationController
   end
 
   def fetch_route(guid)
-    route = VCAP::CloudController::Route.first(guid: guid)
-    unless route && can_read_from_space?(route.space)
-      route_not_found!(guid)
-    end
+    route = VCAP::CloudController::Route.first(guid:)
+    route_not_found!(guid) unless route && can_read_from_space?(route.space)
 
     route
   end
 
   def check_parameters_support(service_instance, message)
     parameters_not_supported! if service_instance.is_a?(VCAP::CloudController::UserProvidedServiceInstance) &&
-      message.requested?(:parameters)
+                                 message.requested?(:parameters)
   end
 
   def service_event_repository

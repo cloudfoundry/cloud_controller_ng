@@ -9,8 +9,8 @@ module VCAP::CloudController
       {
         name: 'sidecar-name',
         command: './start',
-        process_types: ['web', 'worker'],
-        memory_in_mb: 300,
+        process_types: %w[web worker],
+        memory_in_mb: 300
       }
     end
     let(:message) { SidecarCreateMessage.new(params) }
@@ -18,14 +18,14 @@ module VCAP::CloudController
     describe '.create' do
       it 'creates a sidecar for the app' do
         sidecar = nil
-        expect {
+        expect do
           sidecar = SidecarCreate.create(app.guid, message)
-        }.to change { SidecarModel.where(app: app).count }.by(1)
+        end.to change { SidecarModel.where(app:).count }.by(1)
 
         expect(sidecar.app_guid).to eq(app.guid)
         expect(sidecar.name).to eq('sidecar-name')
         expect(sidecar.command).to eq('./start')
-        expect(sidecar.process_types).to eq(['web', 'worker'])
+        expect(sidecar.process_types).to eq(%w[web worker])
         expect(sidecar.memory).to eq(300)
         expect(sidecar.origin).to eq('user')
       end
@@ -36,15 +36,15 @@ module VCAP::CloudController
             {
               name: 'sidecar-name',
               command: './start',
-              process_types: ['web', 'worker'],
-              memory_in_mb: 500,
+              process_types: %w[web worker],
+              memory_in_mb: 500
             }
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarCreate.create(app.guid, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarCreate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "web" process'
             )
@@ -56,15 +56,15 @@ module VCAP::CloudController
             {
               name: 'sidecar-name',
               command: './start',
-              process_types: ['web', 'worker'],
-              memory_in_mb: 600,
+              process_types: %w[web worker],
+              memory_in_mb: 600
             }
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarCreate.create(app.guid, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarCreate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "web" process'
             )
@@ -78,15 +78,15 @@ module VCAP::CloudController
             {
               name: 'sidecar-name',
               command: './start',
-              process_types: ['web', 'worker'],
-              memory_in_mb: 300,
+              process_types: %w[web worker],
+              memory_in_mb: 300
             }
           end
 
           it 'raises InvalidSidecar' do
-            expect {
+            expect do
               SidecarCreate.create(app.guid, message)
-            }.to raise_error(
+            end.to raise_error(
               SidecarCreate::InvalidSidecar,
               'The memory allocation defined is too large to run with the dependent "web" process'
             )
@@ -98,20 +98,20 @@ module VCAP::CloudController
             {
               name: 'sidecar-name',
               command: './start',
-              process_types: ['web', 'worker'],
+              process_types: %w[web worker]
             }
           end
 
           it 'creates a sidecar for the app with nil memory' do
             sidecar = nil
-            expect {
+            expect do
               sidecar = SidecarCreate.create(app.guid, message)
-            }.to change { SidecarModel.where(app: app).count }.by(1)
+            end.to change { SidecarModel.where(app:).count }.by(1)
 
             expect(sidecar.app_guid).to eq(app.guid)
             expect(sidecar.name).to eq('sidecar-name')
             expect(sidecar.command).to eq('./start')
-            expect(sidecar.process_types).to eq(['web', 'worker'])
+            expect(sidecar.process_types).to eq(%w[web worker])
             expect(sidecar.memory).to be_nil
           end
         end

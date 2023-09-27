@@ -27,32 +27,32 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::AppLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::AppAnnotationModel', key: :resource_guid, primary_key: :guid
     one_to_many :revisions,
-      class: 'VCAP::CloudController::RevisionModel',
-      key: :app_guid,
-      primary_key: :guid,
-      order: [Sequel.asc(:created_at), Sequel.asc(:id)]
+                class: 'VCAP::CloudController::RevisionModel',
+                key: :app_guid,
+                primary_key: :guid,
+                order: [Sequel.asc(:created_at), Sequel.asc(:id)]
 
     one_to_many :sidecars, class: 'VCAP::CloudController::SidecarModel', key: :app_guid, primary_key: :guid
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
 
     one_to_many :web_processes,
-      class: 'VCAP::CloudController::ProcessModel',
-      key: :app_guid,
-      primary_key: :guid,
-      conditions: { type: ProcessTypes::WEB } do |dataset|
-        dataset.order(Sequel.asc(:created_at), Sequel.asc(:id))
-      end
+                class: 'VCAP::CloudController::ProcessModel',
+                key: :app_guid,
+                primary_key: :guid,
+                conditions: { type: ProcessTypes::WEB } do |dataset|
+      dataset.order(Sequel.asc(:created_at), Sequel.asc(:id))
+    end
 
     one_to_one :buildpack_lifecycle_data,
-                class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
-                key: :app_guid,
-                primary_key: :guid
+               class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
+               key: :app_guid,
+               primary_key: :guid
 
     one_to_one :kpack_lifecycle_data,
-                class: 'VCAP::CloudController::KpackLifecycleDataModel',
-                key: :app_guid,
-                primary_key: :guid
+               class: 'VCAP::CloudController::KpackLifecycleDataModel',
+               key: :app_guid,
+               primary_key: :guid
 
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
@@ -67,7 +67,7 @@ module VCAP::CloudController
     plugin :after_initialize
 
     def after_initialize
-      self.enable_ssh = Config.config.get(:default_app_ssh_access) if self.enable_ssh.nil?
+      self.enable_ssh = Config.config.get(:default_app_ssh_access) if enable_ssh.nil?
     end
 
     def validate
@@ -77,18 +77,18 @@ module VCAP::CloudController
       validate_environment_variables
       validate_droplet_is_staged
 
-      validates_unique [:space_guid, :name], message: Sequel.lit("App with the name '#{name}' already exists.")
+      validates_unique %i[space_guid name], message: Sequel.lit("App with the name '#{name}' already exists.")
     end
 
     def lifecycle_type
-      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
 
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if self.buildpack_lifecycle_data
-      return kpack_lifecycle_data if self.kpack_lifecycle_data
+      return buildpack_lifecycle_data if buildpack_lifecycle_data
+      return kpack_lifecycle_data if kpack_lifecycle_data
 
       DockerLifecycleDataModel.new
     end
@@ -163,9 +163,9 @@ module VCAP::CloudController
     end
 
     def validate_droplet_is_staged
-      if droplet && droplet.state != DropletModel::STAGED_STATE
-        errors.add(:droplet, 'must be in staged state')
-      end
+      return unless droplet && droplet.state != DropletModel::STAGED_STATE
+
+      errors.add(:droplet, 'must be in staged state')
     end
   end
 end

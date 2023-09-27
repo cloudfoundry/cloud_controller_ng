@@ -53,12 +53,12 @@ class OrganizationsV3Controller < ApplicationController
     org = nil
 
     Organization.db.transaction do
-      org = OrganizationCreate.new(user_audit_info: user_audit_info).create(message)
+      org = OrganizationCreate.new(user_audit_info:).create(message)
 
-      if !roles.admin?
+      unless roles.admin?
         [
           RoleTypes::ORGANIZATION_USER,
-          RoleTypes::ORGANIZATION_MANAGER,
+          RoleTypes::ORGANIZATION_MANAGER
         ].each do |role|
           RoleCreate.new(message, user_audit_info).create_organization_role(type: role,
                                                                             user: current_user,
@@ -183,7 +183,7 @@ class OrganizationsV3Controller < ApplicationController
       paginated_result: paginated_result,
       path: "/v3/organizations/#{org.guid}/users",
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
@@ -223,11 +223,11 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def fetch_org(guid)
-    Organization.where(guid: guid).first
+    Organization.where(guid:).first
   end
 
   def fetch_isolation_segment(guid)
-    IsolationSegmentModel.where(guid: guid).first
+    IsolationSegmentModel.where(guid:).first
   end
 
   def fetch_orgs(message)

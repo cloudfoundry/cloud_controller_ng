@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       it 'errors when `organizations` is defined but `type` is not "organization"' do
-        message = subject.from_params({ type: 'public', organizations: %w(some-org another-org) })
+        message = subject.from_params({ type: 'public', organizations: %w[some-org another-org] })
         expect(message).not_to be_valid
         expect(message.errors[:organizations]).to include('must be blank')
       end

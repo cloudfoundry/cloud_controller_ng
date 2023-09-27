@@ -20,12 +20,12 @@ RSpec.describe 'ServiceInstances' do
 
     it 'creates a service instance' do
       post_params = MultiJson.dump({
-        name:              'awesome-service-instance',
-        space_guid:        space.guid,
-        service_plan_guid: service_plan.guid,
-        parameters:        { 'KEY' => 'val' },
-        tags:              ['no-sql', 'georeplicated'],
-      })
+                                     name: 'awesome-service-instance',
+                                     space_guid: space.guid,
+                                     service_plan_guid: service_plan.guid,
+                                     parameters: { 'KEY' => 'val' },
+                                     tags: %w[no-sql georeplicated]
+                                   })
 
       post '/v2/service_instances', post_params, admin_headers
 
@@ -35,37 +35,38 @@ RSpec.describe 'ServiceInstances' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => service_instance.guid,
-            'url'        => "/v2/service_instances/#{service_instance.guid}",
+            'guid' => service_instance.guid,
+            'url' => "/v2/service_instances/#{service_instance.guid}",
             'created_at' => iso8601,
-            'updated_at' => iso8601 },
+            'updated_at' => iso8601
+          },
           'entity' => {
-            'name'                 => 'awesome-service-instance',
-            'credentials'          => service_instance.credentials,
-            'service_guid'         => service_plan.service.guid,
-            'service_plan_guid'    => service_plan.guid,
-            'space_guid'           => space.guid,
-            'gateway_data'         => service_instance.gateway_data,
-            'dashboard_url'        => service_instance.dashboard_url,
-            'type'                 => 'managed_service_instance',
+            'name' => 'awesome-service-instance',
+            'credentials' => service_instance.credentials,
+            'service_guid' => service_plan.service.guid,
+            'service_plan_guid' => service_plan.guid,
+            'space_guid' => space.guid,
+            'gateway_data' => service_instance.gateway_data,
+            'dashboard_url' => service_instance.dashboard_url,
+            'type' => 'managed_service_instance',
             'last_operation' => {
-              'type'        => 'create',
-              'state'       => 'succeeded',
+              'type' => 'create',
+              'state' => 'succeeded',
               'description' => '',
-              'updated_at'  => iso8601,
-              'created_at'  => iso8601
+              'updated_at' => iso8601,
+              'created_at' => iso8601
             },
-            'tags'                            => ['no-sql', 'georeplicated'],
-            'maintenance_info'                => {},
-            'space_url'                       => "/v2/spaces/#{space.guid}",
-            'service_url'                     => "/v2/services/#{service_instance.service.guid}",
-            'service_plan_url'                => "/v2/service_plans/#{service_plan.guid}",
-            'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
-            'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
-            'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
-            'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
-            'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
-            'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+            'tags' => %w[no-sql georeplicated],
+            'maintenance_info' => {},
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'service_url' => "/v2/services/#{service_instance.service.guid}",
+            'service_plan_url' => "/v2/service_plans/#{service_plan.guid}",
+            'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+            'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
+            'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+            'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+            'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+            'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
           }
         }
       )
@@ -74,8 +75,8 @@ RSpec.describe 'ServiceInstances' do
 
   describe 'PUT /v2/service_instances/:guid' do
     let(:service) { VCAP::CloudController::Service.make(plan_updateable: true) }
-    let(:old_service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-    let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:old_service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: old_service_plan) }
 
     before do
@@ -86,12 +87,12 @@ RSpec.describe 'ServiceInstances' do
 
     it 'updates a service instance' do
       put_params = MultiJson.dump({
-        name:              'awesome-service-instance',
-        space_guid:        space.guid,
-        service_plan_guid: new_service_plan.guid,
-        parameters:        { 'KEY' => 'val' },
-        tags:              ['no-sql', 'georeplicated'],
-      })
+                                    name: 'awesome-service-instance',
+                                    space_guid: space.guid,
+                                    service_plan_guid: new_service_plan.guid,
+                                    parameters: { 'KEY' => 'val' },
+                                    tags: %w[no-sql georeplicated]
+                                  })
 
       put "/v2/service_instances/#{service_instance.guid}", put_params, admin_headers
 
@@ -101,37 +102,38 @@ RSpec.describe 'ServiceInstances' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => service_instance.guid,
-            'url'        => "/v2/service_instances/#{service_instance.guid}",
+            'guid' => service_instance.guid,
+            'url' => "/v2/service_instances/#{service_instance.guid}",
             'created_at' => iso8601,
-            'updated_at' => iso8601 },
+            'updated_at' => iso8601
+          },
           'entity' => {
-            'name'                 => 'awesome-service-instance',
-            'credentials'          => service_instance.credentials,
-            'service_guid'         => new_service_plan.service.guid,
-            'service_plan_guid'    => new_service_plan.guid,
-            'space_guid'           => space.guid,
-            'gateway_data'         => service_instance.gateway_data,
-            'dashboard_url'        => service_instance.dashboard_url,
-            'type'                 => 'managed_service_instance',
+            'name' => 'awesome-service-instance',
+            'credentials' => service_instance.credentials,
+            'service_guid' => new_service_plan.service.guid,
+            'service_plan_guid' => new_service_plan.guid,
+            'space_guid' => space.guid,
+            'gateway_data' => service_instance.gateway_data,
+            'dashboard_url' => service_instance.dashboard_url,
+            'type' => 'managed_service_instance',
             'last_operation' => {
-              'type'        => 'update',
+              'type' => 'update',
               'description' => '',
-              'state'       => 'succeeded',
-              'updated_at'  => iso8601,
-              'created_at'  => iso8601
+              'state' => 'succeeded',
+              'updated_at' => iso8601,
+              'created_at' => iso8601
             },
-            'tags'                            => ['no-sql', 'georeplicated'],
-            'maintenance_info'                => {},
-            'space_url'                       => "/v2/spaces/#{space.guid}",
-            'service_url'                     => "/v2/services/#{service_instance.service.guid}",
-            'service_plan_url'                => "/v2/service_plans/#{new_service_plan.guid}",
-            'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
-            'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
-            'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
-            'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
-            'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
-            'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+            'tags' => %w[no-sql georeplicated],
+            'maintenance_info' => {},
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'service_url' => "/v2/services/#{service_instance.service.guid}",
+            'service_plan_url' => "/v2/service_plans/#{new_service_plan.guid}",
+            'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+            'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
+            'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+            'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+            'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+            'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
           }
         }
       )
@@ -139,7 +141,7 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(active: false) }
 
     before do
@@ -164,32 +166,32 @@ RSpec.describe 'ServiceInstances' do
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
-                'guid'       => service_instance.guid,
-                'url'        => "/v2/service_instances/#{service_instance.guid}",
+                'guid' => service_instance.guid,
+                'url' => "/v2/service_instances/#{service_instance.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'                            => service_instance.name,
-                'credentials'                     => service_instance.credentials,
-                'service_guid'                    => service_instance.service.guid,
-                'service_plan_guid'               => service_plan.guid,
-                'space_guid'                      => service_instance.space_guid,
-                'gateway_data'                    => service_instance.gateway_data,
-                'dashboard_url'                   => service_instance.dashboard_url,
-                'type'                            => service_instance.type,
-                'last_operation'                  => service_instance.last_operation,
-                'tags'                            => service_instance.tags,
-                'maintenance_info'                => { 'version' => '2.0', 'description' => 'Test description' },
-                'space_url'                       => "/v2/spaces/#{space.guid}",
-                'service_url'                     => "/v2/services/#{service_instance.service.guid}",
-                'service_plan_url'                => "/v2/service_plans/#{service_plan.guid}",
-                'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
-                'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
-                'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
-                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                'name' => service_instance.name,
+                'credentials' => service_instance.credentials,
+                'service_guid' => service_instance.service.guid,
+                'service_plan_guid' => service_plan.guid,
+                'space_guid' => service_instance.space_guid,
+                'gateway_data' => service_instance.gateway_data,
+                'dashboard_url' => service_instance.dashboard_url,
+                'type' => service_instance.type,
+                'last_operation' => service_instance.last_operation,
+                'tags' => service_instance.tags,
+                'maintenance_info' => { 'version' => '2.0', 'description' => 'Test description' },
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'service_url' => "/v2/services/#{service_instance.service.guid}",
+                'service_plan_url' => "/v2/service_plans/#{service_plan.guid}",
+                'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+                'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
+                'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
               }
             }
           )
@@ -212,31 +214,31 @@ RSpec.describe 'ServiceInstances' do
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
-                'guid'       => service_instance.guid,
-                'url'        => "/v2/service_instances/#{service_instance.guid}",
+                'guid' => service_instance.guid,
+                'url' => "/v2/service_instances/#{service_instance.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'                            => service_instance.name,
-                'credentials'                     => service_instance.credentials,
-                'service_guid'                    => service_instance.service.guid,
-                'service_plan_guid'               => service_plan.guid,
-                'space_guid'                      => service_instance.space_guid,
-                'gateway_data'                    => service_instance.gateway_data,
-                'dashboard_url'                   => service_instance.dashboard_url,
-                'type'                            => service_instance.type,
-                'last_operation'                  => service_instance.last_operation,
-                'tags'                            => service_instance.tags,
-                'maintenance_info'                => { 'version' => '2.0', 'description' => 'Test description' },
-                'space_url'                       => "/v2/spaces/#{space.guid}",
-                'service_url'                     => "/v2/services/#{service_instance.service.guid}",
-                'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
-                'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
-                'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
-                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                'name' => service_instance.name,
+                'credentials' => service_instance.credentials,
+                'service_guid' => service_instance.service.guid,
+                'service_plan_guid' => service_plan.guid,
+                'space_guid' => service_instance.space_guid,
+                'gateway_data' => service_instance.gateway_data,
+                'dashboard_url' => service_instance.dashboard_url,
+                'type' => service_instance.type,
+                'last_operation' => service_instance.last_operation,
+                'tags' => service_instance.tags,
+                'maintenance_info' => { 'version' => '2.0', 'description' => 'Test description' },
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'service_url' => "/v2/services/#{service_instance.service.guid}",
+                'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+                'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
+                'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
               }
             }
           )
@@ -258,31 +260,31 @@ RSpec.describe 'ServiceInstances' do
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
-                'guid'       => service_instance.guid,
-                'url'        => "/v2/service_instances/#{service_instance.guid}",
+                'guid' => service_instance.guid,
+                'url' => "/v2/service_instances/#{service_instance.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'                            => service_instance.name,
-                'credentials'                     => service_instance.credentials,
-                'service_guid'                    => service_instance.service.guid,
-                'service_plan_guid'               => service_plan.guid,
-                'space_guid'                      => service_instance.space_guid,
-                'gateway_data'                    => service_instance.gateway_data,
-                'dashboard_url'                   => service_instance.dashboard_url,
-                'type'                            => service_instance.type,
-                'last_operation'                  => service_instance.last_operation,
-                'tags'                            => service_instance.tags,
-                'maintenance_info'                => { 'version' => '2.0', 'description' => 'Test description' },
-                'space_url'                       => "/v2/spaces/#{space.guid}",
-                'service_url'                     => "/v2/services/#{service_instance.service.guid}",
-                'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
-                'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
-                'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
-                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                'name' => service_instance.name,
+                'credentials' => service_instance.credentials,
+                'service_guid' => service_instance.service.guid,
+                'service_plan_guid' => service_plan.guid,
+                'space_guid' => service_instance.space_guid,
+                'gateway_data' => service_instance.gateway_data,
+                'dashboard_url' => service_instance.dashboard_url,
+                'type' => service_instance.type,
+                'last_operation' => service_instance.last_operation,
+                'tags' => service_instance.tags,
+                'maintenance_info' => { 'version' => '2.0', 'description' => 'Test description' },
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'service_url' => "/v2/services/#{service_instance.service.guid}",
+                'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+                'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
+                'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+                'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
               }
             }
           )
@@ -293,8 +295,8 @@ RSpec.describe 'ServiceInstances' do
 
   describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
     let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
 
     context 'with a managed service instance' do
       before do
@@ -305,9 +307,9 @@ RSpec.describe 'ServiceInstances' do
           fb.parameters = {
             parameters: {
               top_level_param: {
-                nested_param: true,
+                nested_param: true
               },
-              another_param: 'some-value',
+              another_param: 'some-value'
             }
           }
           fb
@@ -323,9 +325,9 @@ RSpec.describe 'ServiceInstances' do
         expect(MultiJson.load(parsed_response)).to be_a_response_like(
           {
             'top_level_param' => {
-              'nested_param' => true,
+              'nested_param' => true
             },
-            'another_param' => 'some-value',
+            'another_param' => 'some-value'
           }
         )
       end
@@ -334,10 +336,10 @@ RSpec.describe 'ServiceInstances' do
 
   describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
     let(:service) { VCAP::CloudController::Service.make(:routing, bindings_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let!(:route_binding) { VCAP::CloudController::RouteBinding.make(route: route, service_instance: service_instance) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let!(:route_binding) { VCAP::CloudController::RouteBinding.make(route:, service_instance:) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -345,9 +347,9 @@ RSpec.describe 'ServiceInstances' do
         fb.parameters = {
           parameters: {
             top_level_param: {
-              nested_param: true,
+              nested_param: true
             },
-            another_param: 'some-value',
+            another_param: 'some-value'
           }
         }
         fb
@@ -363,16 +365,16 @@ RSpec.describe 'ServiceInstances' do
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
-            'nested_param' => true,
+            'nested_param' => true
           },
-          'another_param' => 'some-value',
+          'another_param' => 'some-value'
         }
       )
     end
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
 
     before do
       service_instance.add_shared_space(VCAP::CloudController::Space.make)
@@ -385,10 +387,10 @@ RSpec.describe 'ServiceInstances' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
-        'space_guid' => space.guid,
-        'space_name' => space.name,
-        'organization_name' => space.organization.name
-      })
+                                                      'space_guid' => space.guid,
+                                                      'space_name' => space.name,
+                                                      'organization_name' => space.organization.name
+                                                    })
     end
 
     context 'when the user is a member of the space where a service instance has been shared to' do
@@ -419,16 +421,16 @@ RSpec.describe 'ServiceInstances' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
-          'space_guid' => space.guid,
-          'space_name' => space.name,
-          'organization_name' => space.organization.name
-        })
+                                                        'space_guid' => space.guid,
+                                                        'space_name' => space.name,
+                                                        'organization_name' => space.organization.name
+                                                      })
       end
     end
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
 
@@ -489,10 +491,10 @@ RSpec.describe 'ServiceInstances' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \
-          "Unsharing #{service_instance.name} will automatically delete any bindings " \
-          'that have been made to applications in other spaces.'
+                                                     "Unsharing #{service_instance.name} will automatically delete any bindings " \
+                                                     'that have been made to applications in other spaces.'
         expect(parsed_response['error_code']).to eq 'CF-ServiceInstanceDeletionSharesExists'
-        expect(parsed_response['code']).to eq 390002
+        expect(parsed_response['code']).to eq 390_002
       end
     end
 
@@ -511,14 +513,14 @@ RSpec.describe 'ServiceInstances' do
           'fake-name',
           service_instance.guid,
           VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'test@example.org'),
-          {},
+          {}
         )
         VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
 
         allow(broker_client).to receive(:fetch_service_instance_last_operation).and_return(
           last_operation: {
             type: 'create',
-            state: 'in progress',
+            state: 'in progress'
           }
         )
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -527,7 +529,8 @@ RSpec.describe 'ServiceInstances' do
       context 'when broker rejected a delete operation' do
         before do
           error = CloudController::Errors::ApiError.new_from_details(
-            'AsyncServiceInstanceOperationInProgress', service_instance.name)
+            'AsyncServiceInstanceOperationInProgress', service_instance.name
+          )
           allow(broker_client).to receive(:deprovision).and_raise(error)
 
           set_current_user_as_admin
@@ -541,7 +544,7 @@ RSpec.describe 'ServiceInstances' do
             allow(broker_client).to receive(:fetch_service_instance_last_operation).and_return(
               last_operation: {
                 type: 'create',
-                state: 'succeeded',
+                state: 'succeeded'
               }
             )
 
@@ -557,13 +560,13 @@ RSpec.describe 'ServiceInstances' do
   describe 'POST /v2/user_provided_service_instances' do
     it 'creates a user-provided service instance' do
       post_params = MultiJson.dump({
-        name:              'awesome-service-instance',
-        space_guid:        space.guid,
-        tags:              ['no-sql', 'georeplicated'],
-        syslog_drain_url:  'syslog://example.com',
-        credentials:       { somekey: 'somevalue' },
-        route_service_url: 'https://logger.example.com',
-      })
+                                     name: 'awesome-service-instance',
+                                     space_guid: space.guid,
+                                     tags: %w[no-sql georeplicated],
+                                     syslog_drain_url: 'syslog://example.com',
+                                     credentials: { somekey: 'somevalue' },
+                                     route_service_url: 'https://logger.example.com'
+                                   })
 
       post '/v2/user_provided_service_instances', post_params, admin_headers
 
@@ -573,21 +576,22 @@ RSpec.describe 'ServiceInstances' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => service_instance.guid,
-            'url'        => "/v2/user_provided_service_instances/#{service_instance.guid}",
+            'guid' => service_instance.guid,
+            'url' => "/v2/user_provided_service_instances/#{service_instance.guid}",
             'created_at' => iso8601,
-            'updated_at' => iso8601 },
+            'updated_at' => iso8601
+          },
           'entity' => {
-            'name'                 => 'awesome-service-instance',
-            'credentials'          => { 'somekey' => 'somevalue' },
-            'space_guid'           => space.guid,
-            'type'                 => 'user_provided_service_instance',
-            'tags'                 => ['no-sql', 'georeplicated'],
-            'space_url'            => "/v2/spaces/#{space.guid}",
+            'name' => 'awesome-service-instance',
+            'credentials' => { 'somekey' => 'somevalue' },
+            'space_guid' => space.guid,
+            'type' => 'user_provided_service_instance',
+            'tags' => %w[no-sql georeplicated],
+            'space_url' => "/v2/spaces/#{space.guid}",
             'service_bindings_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings",
-            'routes_url'           => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
-            'syslog_drain_url'     => 'syslog://example.com',
-            'route_service_url'    => 'https://logger.example.com',
+            'routes_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
+            'syslog_drain_url' => 'syslog://example.com',
+            'route_service_url' => 'https://logger.example.com'
           }
         }
       )
@@ -595,17 +599,17 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'PUT /v2/user_provided_service_instances/:guid' do
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
     it 'updates the user-provided service instance' do
       put_params = MultiJson.dump({
-        name:              'awesome-service-instance',
-        space_guid:        space.guid,
-        tags:              ['no-sql', 'georeplicated'],
-        syslog_drain_url:  'syslog://example.com',
-        credentials:       { somekey: 'somevalue' },
-        route_service_url: 'https://logger.example.com',
-      })
+                                    name: 'awesome-service-instance',
+                                    space_guid: space.guid,
+                                    tags: %w[no-sql georeplicated],
+                                    syslog_drain_url: 'syslog://example.com',
+                                    credentials: { somekey: 'somevalue' },
+                                    route_service_url: 'https://logger.example.com'
+                                  })
 
       put "/v2/user_provided_service_instances/#{service_instance.guid}", put_params, admin_headers
 
@@ -614,21 +618,22 @@ RSpec.describe 'ServiceInstances' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => service_instance.guid,
-            'url'        => "/v2/user_provided_service_instances/#{service_instance.guid}",
+            'guid' => service_instance.guid,
+            'url' => "/v2/user_provided_service_instances/#{service_instance.guid}",
             'created_at' => iso8601,
-            'updated_at' => iso8601 },
+            'updated_at' => iso8601
+          },
           'entity' => {
-            'name'                 => 'awesome-service-instance',
-            'credentials'          => { 'somekey' => 'somevalue' },
-            'space_guid'           => space.guid,
-            'type'                 => 'user_provided_service_instance',
-            'tags'                 => ['no-sql', 'georeplicated'],
-            'space_url'            => "/v2/spaces/#{space.guid}",
+            'name' => 'awesome-service-instance',
+            'credentials' => { 'somekey' => 'somevalue' },
+            'space_guid' => space.guid,
+            'type' => 'user_provided_service_instance',
+            'tags' => %w[no-sql georeplicated],
+            'space_url' => "/v2/spaces/#{space.guid}",
             'service_bindings_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings",
-            'routes_url'           => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
-            'syslog_drain_url'     => 'syslog://example.com',
-            'route_service_url'    => 'https://logger.example.com',
+            'routes_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
+            'syslog_drain_url' => 'syslog://example.com',
+            'route_service_url' => 'https://logger.example.com'
           }
         }
       )

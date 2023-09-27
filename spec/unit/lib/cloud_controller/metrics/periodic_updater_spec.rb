@@ -37,7 +37,7 @@ module VCAP::CloudController::Metrics
         it 'should update the number of running tasks' do
           VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
           VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
-            VCAP::CloudController::TaskModel.make(state: state)
+            VCAP::CloudController::TaskModel.make(state:)
           end
 
           periodic_updater.update_task_stats
@@ -137,8 +137,8 @@ module VCAP::CloudController::Metrics
 
           allow(EventMachine).to receive(:add_periodic_timer) do |interval, &block|
             @periodic_timers << {
-              interval: interval,
-              block:    block
+              interval:,
+              block:
             }
           end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController::Metrics
           periodic_updater.update_job_queue_length
 
           expected_pending_job_count_by_queue = {
-            'cc-api-0':   1
+            'cc-api-0': 1
           }
           expected_total = 1
 
@@ -264,7 +264,7 @@ module VCAP::CloudController::Metrics
           periodic_updater.update_job_queue_length
 
           expected_pending_job_count_by_queue = {
-            'cc-api-0':   0
+            'cc-api-0': 0
           }
           expected_total = 0
 
@@ -281,9 +281,9 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_job_queue_length
 
         expected_pending_job_count_by_queue = {
-          cc_local:   2,
+          cc_local: 2,
           cc_generic: 1,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 3
 
@@ -298,9 +298,9 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_job_queue_length
 
         expected_pending_job_count_by_queue = {
-          cc_local:   1,
+          cc_local: 1,
           cc_generic: 1,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 2
 
@@ -315,7 +315,7 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_job_queue_length
 
         expected_pending_job_count_by_queue = {
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 0
 
@@ -329,9 +329,9 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_job_queue_length
 
         expected_pending_job_count_by_queue = {
-          cc_local:   1,
+          cc_local: 1,
           cc_generic: 1,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 2
 
@@ -341,9 +341,9 @@ module VCAP::CloudController::Metrics
         Delayed::Job.dataset.delete
         periodic_updater.update_job_queue_length
         expected_pending_job_count_by_queue = {
-          cc_local:   0,
+          cc_local: 0,
           cc_generic: 0,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 0
 
@@ -368,7 +368,7 @@ module VCAP::CloudController::Metrics
           periodic_updater.update_failed_job_count
 
           expected_failed_jobs_by_queue = {
-            'cc-api-0':   1
+            'cc-api-0': 1
           }
           expected_total = 1
 
@@ -386,7 +386,7 @@ module VCAP::CloudController::Metrics
           periodic_updater.update_failed_job_count
 
           expected_failed_jobs_by_queue = {
-            'cc-api-0':   0
+            'cc-api-0': 0
           }
           expected_total = 0
 
@@ -406,9 +406,9 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_failed_job_count
 
         expected_failed_jobs_by_queue = {
-          cc_local:   2,
+          cc_local: 2,
           cc_generic: 1,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 3
 
@@ -423,9 +423,9 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_failed_job_count
 
         expected_failed_jobs_by_queue = {
-          cc_local:   1,
+          cc_local: 1,
           cc_generic: 1,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 2
 
@@ -435,9 +435,9 @@ module VCAP::CloudController::Metrics
         Delayed::Job.dataset.delete
         periodic_updater.update_failed_job_count
         expected_failed_jobs_by_queue = {
-          cc_local:   0,
+          cc_local: 0,
           cc_generic: 0,
-          'cc-api-0':   0
+          'cc-api-0': 0
         }
         expected_total = 0
 
@@ -456,18 +456,18 @@ module VCAP::CloudController::Metrics
 
       it 'should contain EventMachine data and send it to all updaters' do
         expected_thread_info = {
-          thread_count:  Thread.list.size,
+          thread_count: Thread.list.size,
           event_machine: {
             connection_count: 123,
-            threadqueue:      {
-              size:        20,
-              num_waiting: 0,
+            threadqueue: {
+              size: 20,
+              num_waiting: 0
             },
             resultqueue: {
-              size:        0,
-              num_waiting: 1,
-            },
-          },
+              size: 0,
+              num_waiting: 1
+            }
+          }
         }
 
         expect(updater1).to have_received(:update_thread_info).with(expected_thread_info)
@@ -480,18 +480,18 @@ module VCAP::CloudController::Metrics
 
         it 'does not blow up' do
           expected_thread_info = {
-            thread_count:  Thread.list.size,
+            thread_count: Thread.list.size,
             event_machine: {
               connection_count: 123,
-              threadqueue:      {
-                size:        0,
-                num_waiting: 0,
+              threadqueue: {
+                size: 0,
+                num_waiting: 0
               },
               resultqueue: {
-                size:        0,
-                num_waiting: 0,
-              },
-            },
+                size: 0,
+                num_waiting: 0
+              }
+            }
           }
 
           expect(updater1).to have_received(:update_thread_info).with(expected_thread_info)
@@ -540,29 +540,29 @@ module VCAP::CloudController::Metrics
     describe '#update_log_counts' do
       let(:expected) do
         {
-          off:    1,
-          fatal:  2,
-          error:  3,
-          warn:   4,
-          info:   5,
-          debug:  6,
+          off: 1,
+          fatal: 2,
+          error: 3,
+          warn: 4,
+          info: 5,
+          debug: 6,
           debug1: 7,
           debug2: 8,
-          all:    9
+          all: 9
         }
       end
 
       let(:count) do
         {
-          'off'    => 1,
-          'fatal'  => 2,
-          'error'  => 3,
-          'warn'   => 4,
-          'info'   => 5,
-          'debug'  => 6,
+          'off' => 1,
+          'fatal' => 2,
+          'error' => 3,
+          'warn' => 4,
+          'info' => 5,
+          'debug' => 6,
           'debug1' => 7,
           'debug2' => 8,
-          'all'    => 9
+          'all' => 9
         }
       end
 
@@ -634,9 +634,9 @@ module VCAP::CloudController::Metrics
 
       it 'swallows errors' do
         allow(logger).to receive(:info)
-        expect {
+        expect do
           periodic_updater.catch_error { raise 'RDoom' }
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'logs errors' do

@@ -26,10 +26,10 @@ module VCAP::CloudController
           translated_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
           routable = actual_lrp.has_routable? ? actual_lrp.routable : true
           result = {
-            state:    translated_state,
+            state: translated_state,
             routable: routable,
-            uptime:   nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
-            since:    nanoseconds_to_seconds(actual_lrp.since),
+            uptime: nanoseconds_to_seconds(current_time_ns - actual_lrp.since),
+            since: nanoseconds_to_seconds(actual_lrp.since)
           }
 
           result[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(instances, process)
-      rescue => e
+      rescue StandardError => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
 
         logger.error('all_instances_for_app.error', error: e.to_s)
@@ -80,7 +80,7 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue => e
+      rescue StandardError => e
         logger.error('number_of_starting_and_running_instances_for_process.error', error: e.to_s)
         UNKNOWN_INSTANCE_COUNT
       end
@@ -93,12 +93,12 @@ module VCAP::CloudController
 
           crashed_instances << {
             'instance' => actual_lrp.actual_lrp_instance_key.instance_guid,
-            'uptime'   => 0,
-            'since'    => nanoseconds_to_seconds(actual_lrp.since),
+            'uptime' => 0,
+            'since' => nanoseconds_to_seconds(actual_lrp.since)
           }
         end
         crashed_instances
-      rescue => e
+      rescue StandardError => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
 
         logger.error('crashed_instances_for_app.error', error: e.to_s)

@@ -5,22 +5,22 @@ RSpec.describe MaxServiceInstancePolicy do
   let(:space) { VCAP::CloudController::Space.make organization: org }
   let(:service_instance) do
     service_plan = VCAP::CloudController::ServicePlan.make
-    VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: service_plan
+    VCAP::CloudController::ManagedServiceInstance.make_unsaved space:, service_plan:
   end
   let(:total_services) { 2 }
-  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: total_services }
+  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: }
   let(:existing_service_count) { 0 }
   let(:error_name) { :random_error_name }
 
   let(:policy) { MaxServiceInstancePolicy.new(service_instance, existing_service_count, quota, error_name) }
 
   def make_service_instance
-    VCAP::CloudController::ManagedServiceInstance.make space: space
+    VCAP::CloudController::ManagedServiceInstance.make space:
   end
 
   it 'counts only managed service instances' do
     total_services.times do
-      VCAP::CloudController::UserProvidedServiceInstance.make space: space
+      VCAP::CloudController::UserProvidedServiceInstance.make space:
     end
 
     expect(policy).to validate_without_error(service_instance)

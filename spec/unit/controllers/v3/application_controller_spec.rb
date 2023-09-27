@@ -26,7 +26,7 @@ RSpec.describe ApplicationController, type: :controller do
     def compound_error
       raise CloudController::Errors::CompoundError.new [
         CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error1'),
-        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2'),
+        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2')
       ]
     end
 
@@ -345,7 +345,7 @@ RSpec.describe ApplicationController, type: :controller do
       expect(warnings).to eq([
         'warning,a',
         'wa,rning b',
-        '!@#$%^&*(),:|{}+=-<>',
+        '!@#$%^&*(),:|{}+=-<>'
       ])
     end
   end

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
     let(:bind_status) { 200 }
-    let(:bind_body) { { credentials: credentials } }
+    let(:bind_body) { { credentials: } }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
         {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
-          statsd_client: double(Statsd),
+          statsd_client: double(Statsd)
         }
       end
       let(:config) { double(Config, get: nil) }
@@ -169,8 +169,8 @@ module VCAP::CloudController
       let(:service_instance_guid) { instance.guid }
       let(:req) do
         {
-          name: name,
-          service_instance_guid: service_instance_guid
+          name:,
+          service_instance_guid:
         }.to_json
       end
 
@@ -239,7 +239,7 @@ module VCAP::CloudController
                 'name' => req[:name]
               }
             }
-                                    )
+          )
         end
 
         context 'when attempting to create service key for an unbindable service' do
@@ -249,7 +249,8 @@ module VCAP::CloudController
 
             req = {
               name: name,
-              service_instance_guid: instance.guid }.to_json
+              service_instance_guid: instance.guid
+            }.to_json
 
             post '/v2/service_keys', req
           end
@@ -385,9 +386,9 @@ module VCAP::CloudController
           let(:parameters) { { foo: 'bar' } }
           let(:req) do
             {
-              name: name,
-              service_instance_guid: service_instance_guid,
-              parameters: parameters
+              name:,
+              service_instance_guid:,
+              parameters:
             }.to_json
           end
 
@@ -441,8 +442,8 @@ module VCAP::CloudController
     describe 'GET', '/v2/service_keys' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance_a) { ManagedServiceInstance.make(space: space) }
-      let(:instance_b) { ManagedServiceInstance.make(space: space) }
+      let(:instance_a) { ManagedServiceInstance.make(space:) }
+      let(:instance_b) { ManagedServiceInstance.make(space:) }
       let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
       let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
       let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
@@ -482,7 +483,7 @@ module VCAP::CloudController
     describe 'GET', '/v2/service_keys/:service_key_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance) { ManagedServiceInstance.make(space: space) }
+      let(:instance) { ManagedServiceInstance.make(space:) }
       let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
 
       before { set_current_user(developer) }
@@ -641,9 +642,9 @@ module VCAP::CloudController
       end
 
       it 'deletes the service key' do
-        expect {
+        expect do
           delete "/v2/service_keys/#{service_key.guid}"
-        }.to change(ServiceKey, :count).by(-1)
+        end.to change(ServiceKey, :count).by(-1)
         expect(last_response).to have_status_code 204
         expect(last_response.body).to be_empty
         expect { service_key.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -675,8 +676,8 @@ module VCAP::CloudController
       end
 
       context 'when the service key is for managed service instance' do
-        let(:service_plan) { ServicePlan.make(service: service) }
-        let(:managed_service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:service_plan) { ServicePlan.make(service:) }
+        let(:managed_service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
 
         context 'when the service has bindings_retrievable set to false' do
           let(:service) { Service.make(bindings_retrievable: false) }
@@ -803,7 +804,7 @@ module VCAP::CloudController
               'org_manager' => 404,
               'org_auditor' => 404,
               'org_billing_manager' => 404,
-              'org_user' => 404,
+              'org_user' => 404
             }.each do |role, expected_status|
               context "as a(n) #{role} in the binding space" do
                 before do
@@ -833,7 +834,7 @@ module VCAP::CloudController
         end
       end
       context 'when the key is for a user provided service' do
-        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
 
         it 'returns a 400' do
           service_key = ServiceKey.make(service_instance: user_provided_service_instance)

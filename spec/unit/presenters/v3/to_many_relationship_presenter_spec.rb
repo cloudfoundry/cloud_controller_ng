@@ -28,7 +28,7 @@ module VCAP::CloudController::Presenters::V3
     let(:relation_url) { 'cash/guid' }
     let(:relationship_path) { 'money' }
     let(:decorators) { [] }
-    subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related: build_related, decorators: decorators) }
+    subject(:relationship_presenter) { ToManyRelationshipPresenter.new(relation_url, data, relationship_path, build_related:, decorators:) }
     let(:url_builder) { VCAP::CloudController::Presenters::ApiUrlBuilder }
 
     describe '#to_hash' do
@@ -41,14 +41,13 @@ module VCAP::CloudController::Presenters::V3
 
         it 'provides a links section' do
           expect(result[:links]).to eq({
-            self: {
-              href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
-            },
-            related: {
-              href: url_builder.build_url(path: "/v3/#{relation_url}/#{relationship_path}")
-            }
-          }
-          )
+                                         self: {
+                                           href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
+                                         },
+                                         related: {
+                                           href: url_builder.build_url(path: "/v3/#{relation_url}/#{relationship_path}")
+                                         }
+                                       })
         end
       end
 
@@ -86,17 +85,17 @@ module VCAP::CloudController::Presenters::V3
         let(:build_related) { false }
         it 'does not include a related field in links' do
           expect(result[:links]).to eq({
-            self: {
-              href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
-            }
-          })
+                                         self: {
+                                           href: url_builder.build_url(path: "/v3/#{relation_url}/relationships/#{relationship_path}")
+                                         }
+                                       })
         end
       end
 
       context 'when a decorator is provided' do
         let(:fake_decorator) { double }
         let(:impl) do
-          ->(hash, resources) do
+          lambda do |hash, resources|
             hash.tap { |h| h[:included] = { resource: { guid: "included #{resources[0].guid}" } } }
           end
         end

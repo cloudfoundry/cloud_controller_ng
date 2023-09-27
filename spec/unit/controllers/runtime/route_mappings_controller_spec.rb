@@ -32,9 +32,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_manager }
 
             include_examples 'permission enumeration', 'OrgManager',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 1
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
           end
 
           describe 'OrgUser' do
@@ -42,9 +42,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_member }
 
             include_examples 'permission enumeration', 'OrgUser',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 0
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
           end
 
           describe 'BillingManager' do
@@ -52,9 +52,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_billing_manager }
 
             include_examples 'permission enumeration', 'BillingManager',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 0
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
           end
 
           describe 'Auditor' do
@@ -62,9 +62,9 @@ module VCAP::CloudController
             let(:member_b) { @org_b_auditor }
 
             include_examples 'permission enumeration', 'Auditor',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 0
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 0
           end
         end
 
@@ -74,9 +74,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_manager }
 
             include_examples 'permission enumeration', 'SpaceManager',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 1
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
           end
 
           describe 'Developer' do
@@ -84,9 +84,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_developer }
 
             include_examples 'permission enumeration', 'Developer',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 1
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
           end
 
           describe 'SpaceAuditor' do
@@ -94,9 +94,9 @@ module VCAP::CloudController
             let(:member_b) { @space_b_auditor }
 
             include_examples 'permission enumeration', 'SpaceAuditor',
-              name:      'route_mapping',
-              path:      '/v2/route_mappings',
-              enumerate: 1
+                             name: 'route_mapping',
+                             path: '/v2/route_mappings',
+                             enumerate: 1
           end
         end
       end
@@ -104,8 +104,8 @@ module VCAP::CloudController
       describe 'GET /v2/route_mappings' do
         let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
-        let(:route) { Route.make(space: space) }
-        let(:process) { ProcessModelFactory.make(space: space) }
+        let(:route) { Route.make(space:) }
+        let(:process) { ProcessModelFactory.make(space:) }
         let(:route_mapping) { RouteMappingModel.make(app: process, route: route) }
 
         before do
@@ -142,7 +142,7 @@ module VCAP::CloudController
 
       describe 'POST /v2/route_mappings' do
         let(:space) { Space.make }
-        let(:route) { Route.make(space: space) }
+        let(:route) { Route.make(space:) }
         let(:process) { ProcessModelFactory.make(space: space, ports: [8080, 9090]) }
         let(:developer) { make_developer_for_space(space) }
         let(:body) do
@@ -175,13 +175,13 @@ module VCAP::CloudController
 
               post '/v2/route_mappings', body
               expect(last_response).to have_status_code(400)
-              expect(decoded_response['code']).to eq(210006)
+              expect(decoded_response['code']).to eq(210_006)
             end
           end
         end
 
         context 'and there is another app already bound to the specified route' do
-          let(:route_2) { Route.make(space: space) }
+          let(:route_2) { Route.make(space:) }
           let(:body_2) do
             {
               app_guid: process.guid,
@@ -280,7 +280,7 @@ module VCAP::CloudController
 
               post '/v2/route_mappings', body
               expect(last_response).to have_status_code(400)
-              expect(decoded_response['code']).to eq(210006)
+              expect(decoded_response['code']).to eq(210_006)
               expect(decoded_response['description']).to include('port 9090')
             end
           end
@@ -307,9 +307,9 @@ module VCAP::CloudController
             let(:developer) { make_developer_for_space(space1) }
             let(:body) do
               {
-                app_guid:   process.guid,
+                app_guid: process.guid,
                 route_guid: route.guid,
-                app_port:   9090
+                app_port: 9090
               }.to_json
             end
 
@@ -324,7 +324,7 @@ module VCAP::CloudController
         context 'when the app does not exist' do
           let(:body) do
             {
-              app_guid:   'app_obj_guid',
+              app_guid: 'app_obj_guid',
               route_guid: route.guid
             }.to_json
           end
@@ -340,7 +340,7 @@ module VCAP::CloudController
         context 'when the route does not exist' do
           let(:body) do
             {
-              app_guid:   process.guid,
+              app_guid: process.guid,
               route_guid: 'route_guid'
             }.to_json
           end
@@ -359,12 +359,12 @@ module VCAP::CloudController
           let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
           let(:process) { ProcessModelFactory.make(space: space, ports: [9090], diego: true) }
           let(:space_developer) { make_developer_for_space(space) }
-          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:routing_api_client) { double('routing_api_client', router_group:) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
           let(:body) do
             {
-              app_guid:   process.guid,
+              app_guid: process.guid,
               route_guid: tcp_route.guid
             }.to_json
           end
@@ -392,7 +392,7 @@ module VCAP::CloudController
             let(:route) { Route.make(port: 9090, host: '', space: space) }
             let(:body) do
               {
-                app_guid:   process.guid,
+                app_guid: process.guid,
                 route_guid: route.guid
               }.to_json
             end
@@ -413,7 +413,7 @@ module VCAP::CloudController
           let(:route) { Route.make }
           let(:body) do
             {
-              app_guid:   process.guid,
+              app_guid: process.guid,
               route_guid: route.guid
             }.to_json
           end
@@ -442,7 +442,7 @@ module VCAP::CloudController
 
       describe 'DELETE /v2/route_mappings/:guid' do
         let(:route) { Route.make }
-        let(:process) { ProcessModelFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space:) }
         let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
         let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }

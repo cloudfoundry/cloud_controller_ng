@@ -15,9 +15,9 @@ module VCAP::CloudController
 
       it 'enqueues and returns an upload job' do
         returned_job = nil
-        expect {
-          returned_job = droplet_upload.upload_async(message: message, droplet: droplet, config: config, user_audit_info: user_audit_info)
-        }.to change { Delayed::Job.count }.by(1)
+        expect do
+          returned_job = droplet_upload.upload_async(message:, droplet:, config:, user_audit_info:)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job.delayed_job_guid).to eq(job.guid)
@@ -27,7 +27,7 @@ module VCAP::CloudController
       end
 
       it 'changes the state to processing upload' do
-        droplet_upload.upload_async(message: message, droplet: droplet, config: config, user_audit_info: user_audit_info)
+        droplet_upload.upload_async(message:, droplet:, config:, user_audit_info:)
         expect(DropletModel.find(guid: droplet.guid).state).to eq(DropletModel::PROCESSING_UPLOAD_STATE)
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
           droplet.app.space.organization_guid
         )
 
-        droplet_upload.upload_async(message: message, droplet: droplet, config: config, user_audit_info: user_audit_info)
+        droplet_upload.upload_async(message:, droplet:, config:, user_audit_info:)
       end
     end
   end

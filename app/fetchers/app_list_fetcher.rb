@@ -19,13 +19,9 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:names)
-          dataset = dataset.where(name: message.names)
-        end
+        dataset = dataset.where(name: message.names) if message.requested?(:names)
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(space_guid: message.space_guids)
-        end
+        dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
 
         if message.requested?(:organization_guids)
           dataset = dataset.
@@ -50,7 +46,7 @@ module VCAP::CloudController
             label_klass: AppLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: AppModel,
+            resource_klass: AppModel
           )
         end
 

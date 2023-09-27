@@ -234,7 +234,7 @@ module VCAP::CloudController
                 it 'fails to authorize the upload' do
                   headers = headers_for(user)
 
-                  Timecop.travel(Time.now.utc + 1.week + 10000.seconds) do
+                  Timecop.travel(Time.now.utc + 1.week + 10_000.seconds) do
                     put "/v2/apps/#{process.app.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(401)
@@ -314,9 +314,9 @@ module VCAP::CloudController
         end
 
         it 'creates a delayed job' do
-          expect {
+          expect do
             put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, headers_for(user)
-          }.to change {
+          end.to change {
             Delayed::Job.count
           }.by(1)
 
@@ -327,16 +327,16 @@ module VCAP::CloudController
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
           expect(response_body).to eq({
-            metadata: {
-              guid: job.guid,
-              created_at: job.created_at.iso8601,
-              url: "/v2/jobs/#{job.guid}"
-            },
-            entity: {
-              guid: job.guid,
-              status: 'queued'
-            }
-          })
+                                        metadata: {
+                                          guid: job.guid,
+                                          created_at: job.created_at.iso8601,
+                                          url: "/v2/jobs/#{job.guid}"
+                                        },
+                                        entity: {
+                                          guid: job.guid,
+                                          status: 'queued'
+                                        }
+                                      })
         end
 
         describe 'resources' do
@@ -344,9 +344,9 @@ module VCAP::CloudController
             let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
 
             it 'fails to upload' do
-              expect {
+              expect do
                 put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-              }.to change {
+              end.to change {
                 Delayed::Job.count
               }.by(1)
 
@@ -367,9 +367,9 @@ module VCAP::CloudController
               end
 
               it 'fails to upload' do
-                expect {
+                expect do
                   put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-                }.to change {
+                end.to change {
                   Delayed::Job.count
                 }.by(1)
 
@@ -385,9 +385,9 @@ module VCAP::CloudController
               let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
 
               it 'fails to upload' do
-                expect {
+                expect do
                   put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-                }.to change {
+                end.to change {
                   Delayed::Job.count
                 }.by(1)
 
@@ -456,9 +456,9 @@ module VCAP::CloudController
 
       context 'when a source guid is supplied' do
         it 'returns a delayed job' do
-          expect {
+          expect do
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
-          }.to change {
+          end.to change {
             Delayed::Job.count
           }.by(1)
 
@@ -481,9 +481,9 @@ module VCAP::CloudController
         end
 
         it 'records audit events on the source and destination apps' do
-          expect {
+          expect do
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
-          }.to change {
+          end.to change {
             Event.count
           }.by(2)
 

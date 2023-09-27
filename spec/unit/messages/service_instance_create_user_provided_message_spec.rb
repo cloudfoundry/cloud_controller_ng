@@ -13,7 +13,7 @@ module VCAP::CloudController
         },
         syslog_drain_url: 'https://drain.com/foo',
         route_service_url: 'https://route.com/bar',
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         relationships: {
           space: {
             data: {
@@ -59,16 +59,16 @@ module VCAP::CloudController
 
     it 'accepts the minimal request' do
       message = described_class.new({
-        type: 'user-provided',
-        name: 'my-service-instance',
-        relationships: {
-          space: {
-            data: {
-              guid: 'space-guid'
-            }
-          }
-        }
-      })
+                                      type: 'user-provided',
+                                      name: 'my-service-instance',
+                                      relationships: {
+                                        space: {
+                                          data: {
+                                            guid: 'space-guid'
+                                          }
+                                        }
+                                      }
+                                    })
       expect(message).to be_valid
     end
 

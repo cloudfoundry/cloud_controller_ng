@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:body) do
           {
             routes: [
-              { route: 'existing.example.com' },
+              { route: 'existing.example.com' }
             ],
             surprise_key: 'surprise'
           }
@@ -56,7 +56,7 @@ module VCAP::CloudController
         let(:routes) do
           [
             { 'route' => 'existing.example.com' },
-            { 'route' => 'new.example.com' },
+            { 'route' => 'new.example.com' }
           ]
         end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
             'no_route' => false,
             'routes' => [
               { 'route' => 'existing.example.com' },
-              { 'route' => 'new.example.com' },
+              { 'route' => 'new.example.com' }
             ]
           }
         end
@@ -162,9 +162,8 @@ module VCAP::CloudController
           { 'routes' =>
             [
               { 'route' => 'existing.example.com' },
-              { 'route' => 'new.example.com', 'protocol' => 'http2' },
-            ]
-          }
+              { 'route' => 'new.example.com', 'protocol' => 'http2' }
+            ] }
         end
 
         it 'returns true' do
@@ -179,9 +178,8 @@ module VCAP::CloudController
           { 'routes' =>
             [
               { 'route' => 'potato://bad.example.com' },
-              { 'route' => 'new.example.com' },
-            ]
-          }
+              { 'route' => 'new.example.com' }
+            ] }
         end
 
         it 'returns false' do
@@ -199,9 +197,8 @@ module VCAP::CloudController
               { 'route' => 'existing.example.com', 'protocol' => 'bologna' },
               { 'route' => 'http2.example.com', 'protocol' => 'http2' },
               { 'route' => 'http1.example.com', 'protocol' => 'http1' },
-              { 'route' => 'tcp.example.com', 'protocol' => 'tcp' },
-            ]
-          }
+              { 'route' => 'tcp.example.com', 'protocol' => 'tcp' }
+            ] }
         end
 
         it 'returns false' do

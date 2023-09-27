@@ -14,7 +14,7 @@ RSpec.describe 'Tasks' do
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(
       app_guid: app_model.guid,
-      state:    VCAP::CloudController::DropletModel::STAGED_STATE,
+      state: VCAP::CloudController::DropletModel::STAGED_STATE
     )
   end
   let(:developer_headers) { headers_for(user, email: user_email, user_name: user_name) }
@@ -34,7 +34,7 @@ RSpec.describe 'Tasks' do
       let(:resource_klass) { VCAP::CloudController::TaskModel }
       let(:headers) { admin_headers }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/tasks?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/tasks?#{filters}", nil, headers }
       end
     end
 
@@ -44,25 +44,25 @@ RSpec.describe 'Tasks' do
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }
       let(:excluded_params) do
-        [
-          :app_guid,
-          :sequence_ids
+        %i[
+          app_guid
+          sequence_ids
         ]
       end
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          guids:   'foo,bar',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          guids: 'foo,bar',
           app_guids: 'foo,bar',
           space_guids: 'test',
-          names: ['foo', 'bar'],
-          states:  ['test', 'foo'],
+          names: %w[foo bar],
+          states: %w[test foo],
           organization_guids: 'foo,bar',
-          label_selector:   'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          label_selector: 'foo,bar',
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -73,25 +73,25 @@ RSpec.describe 'Tasks' do
       let(:message) { VCAP::CloudController::TasksListMessage }
       let(:user_header) { developer_headers }
       let(:excluded_params) do
-        [
-          :space_guids,
-          :app_guids,
-          :organization_guids
+        %i[
+          space_guids
+          app_guids
+          organization_guids
         ]
       end
       let(:params) do
         {
-          states: ['foo', 'bar'],
-          guids: ['foo', 'bar'],
-          names: ['foo', 'bar'],
+          states: %w[foo bar],
+          guids: %w[foo bar],
+          names: %w[foo bar],
           app_guid: app_model.guid,
           sequence_ids: '1,2',
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          label_selector:   'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          label_selector: 'foo,bar',
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -100,26 +100,26 @@ RSpec.describe 'Tasks' do
       let(:user) { make_developer_for_space(space) }
       it 'returns a paginated list of tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
-          name:         'task one',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task one',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          disk_in_mb:   10,
-          log_rate_limit: 20,
+          disk_in_mb: 10,
+          log_rate_limit: 20
         )
         task2 = VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 100,
-          disk_in_mb:   500,
-          log_rate_limit: 1024,
+          disk_in_mb: 500,
+          log_rate_limit: 1024
         )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
+          droplet: app_model.droplet
         )
 
         get '/v3/tasks?per_page=2', nil, developer_headers
@@ -128,116 +128,116 @@ RSpec.describe 'Tasks' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like({
-          'pagination' => {
-            'total_results' => 3,
-            'total_pages'   => 2,
-            'first'         => { 'href' => "#{link_prefix}/v3/tasks?page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
-            'next'          => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
-            'previous'      => nil,
-          },
-          'resources' => [
-            {
-              'guid'         => task1.guid,
-              'sequence_id'  => task1.sequence_id,
-              'name'         => 'task one',
-              'state'        => 'RUNNING',
-              'memory_in_mb' => 5,
-              'disk_in_mb'   => 10,
-              'log_rate_limit_in_bytes_per_second' => 20,
-              'result' => {
-                'failure_reason' => nil
-              },
-              'droplet_guid' => task1.droplet.guid,
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'created_at'   => iso8601,
-              'updated_at'   => iso8601,
-              'links'        => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-                },
-                'cancel' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
-                  'method' => 'POST',
-                },
-                'droplet' => {
-                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
-                }
-              }
-            },
-            {
-              'guid'         => task2.guid,
-              'sequence_id'  => task2.sequence_id,
-              'name'         => 'task two',
-              'state'        => 'RUNNING',
-              'memory_in_mb' => 100,
-              'disk_in_mb'   => 500,
-              'log_rate_limit_in_bytes_per_second' => 1024,
-              'result' => {
-                'failure_reason' => nil
-              },
-              'droplet_guid' => task2.droplet.guid,
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'created_at'   => iso8601,
-              'updated_at'   => iso8601,
-              'links'        => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-                },
-                'cancel' => {
-                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
-                  'method' => 'POST',
-                },
-                'droplet' => {
-                  'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
-                }
-              }
-            }
-          ]
-        })
+                                                        'pagination' => {
+                                                          'total_results' => 3,
+                                                          'total_pages' => 2,
+                                                          'first' => { 'href' => "#{link_prefix}/v3/tasks?page=1&per_page=2" },
+                                                          'last' => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
+                                                          'next' => { 'href' => "#{link_prefix}/v3/tasks?page=2&per_page=2" },
+                                                          'previous' => nil
+                                                        },
+                                                        'resources' => [
+                                                          {
+                                                            'guid' => task1.guid,
+                                                            'sequence_id' => task1.sequence_id,
+                                                            'name' => 'task one',
+                                                            'state' => 'RUNNING',
+                                                            'memory_in_mb' => 5,
+                                                            'disk_in_mb' => 10,
+                                                            'log_rate_limit_in_bytes_per_second' => 20,
+                                                            'result' => {
+                                                              'failure_reason' => nil
+                                                            },
+                                                            'droplet_guid' => task1.droplet.guid,
+                                                            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                                                            'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                                            'created_at' => iso8601,
+                                                            'updated_at' => iso8601,
+                                                            'links' => {
+                                                              'self' => {
+                                                                'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
+                                                              },
+                                                              'app' => {
+                                                                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                              },
+                                                              'cancel' => {
+                                                                'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                                                                'method' => 'POST'
+                                                              },
+                                                              'droplet' => {
+                                                                'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            'guid' => task2.guid,
+                                                            'sequence_id' => task2.sequence_id,
+                                                            'name' => 'task two',
+                                                            'state' => 'RUNNING',
+                                                            'memory_in_mb' => 100,
+                                                            'disk_in_mb' => 500,
+                                                            'log_rate_limit_in_bytes_per_second' => 1024,
+                                                            'result' => {
+                                                              'failure_reason' => nil
+                                                            },
+                                                            'droplet_guid' => task2.droplet.guid,
+                                                            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                                                            'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                                            'created_at' => iso8601,
+                                                            'updated_at' => iso8601,
+                                                            'links' => {
+                                                              'self' => {
+                                                                'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
+                                                              },
+                                                              'app' => {
+                                                                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                              },
+                                                              'cancel' => {
+                                                                'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                                                                'method' => 'POST'
+                                                              },
+                                                              'droplet' => {
+                                                                'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+                                                              }
+                                                            }
+                                                          }
+                                                        ]
+                                                      })
       end
     end
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| get '/v3/tasks', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/tasks', nil, user_headers } }
       let(:task1) do
         VCAP::CloudController::TaskModel.make(
-          name:     'task one',
-          command:  'echo task',
+          name: 'task one',
+          command: 'echo task',
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
+          droplet: app_model.droplet
         )
       end
 
       let(:task2) do
         VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          disk_in_mb:   10,
-          log_rate_limit: 20,
+          disk_in_mb: 10,
+          log_rate_limit: 20
         )
       end
 
       let(:expected_response) do
         [
           {
-            'guid'         => task1.guid,
-            'sequence_id'  => task1.sequence_id,
-            'name'         => 'task one',
-            'state'        => 'RUNNING',
+            'guid' => task1.guid,
+            'sequence_id' => task1.sequence_id,
+            'name' => 'task one',
+            'state' => 'RUNNING',
             'memory_in_mb' => 256,
-            'disk_in_mb'   => nil,
+            'disk_in_mb' => nil,
             'log_rate_limit_in_bytes_per_second' => -1,
             'result' => {
               'failure_reason' => nil
@@ -245,9 +245,9 @@ RSpec.describe 'Tasks' do
             'droplet_guid' => task1.droplet.guid,
             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at'   => iso8601,
-            'updated_at'   => iso8601,
-            'links'        => {
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
               },
@@ -256,7 +256,7 @@ RSpec.describe 'Tasks' do
               },
               'cancel' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
-                'method' => 'POST',
+                'method' => 'POST'
               },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -264,12 +264,12 @@ RSpec.describe 'Tasks' do
             }
           },
           {
-            'guid'         => task2.guid,
-            'sequence_id'  => task2.sequence_id,
-            'name'         => 'task two',
-            'state'        => 'RUNNING',
+            'guid' => task2.guid,
+            'sequence_id' => task2.sequence_id,
+            'name' => 'task two',
+            'state' => 'RUNNING',
             'memory_in_mb' => 5,
-            'disk_in_mb'   => 10,
+            'disk_in_mb' => 10,
             'log_rate_limit_in_bytes_per_second' => 20,
             'result' => {
               'failure_reason' => nil
@@ -277,9 +277,9 @@ RSpec.describe 'Tasks' do
             'droplet_guid' => task2.droplet.guid,
             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at'   => iso8601,
-            'updated_at'   => iso8601,
-            'links'        => {
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
               },
@@ -288,7 +288,7 @@ RSpec.describe 'Tasks' do
               },
               'cancel' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
-                'method' => 'POST',
+                'method' => 'POST'
               },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -313,34 +313,34 @@ RSpec.describe 'Tasks' do
 
       it 'returns a paginated list of tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
-          name:         'task one',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task one',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          state:        VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+          state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE
         )
         task2 = VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
-          memory_in_mb: 100,
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
+          memory_in_mb: 100
         )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
+          droplet: app_model.droplet
         )
         VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
         VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gunnison', task: task2)
 
         query = {
-          app_guids:          app_model.guid,
-          names:              'task one',
+          app_guids: app_model.guid,
+          names: 'task one',
           organization_guids: app_model.organization.guid,
-          space_guids:        app_model.space.guid,
-          states:             'SUCCEEDED',
-          label_selector:     'boomerang',
+          space_guids: app_model.space.guid,
+          states: 'SUCCEEDED',
+          label_selector: 'boomerang'
         }
 
         get "/v3/tasks?#{query.to_query}", nil, developer_headers
@@ -356,47 +356,47 @@ RSpec.describe 'Tasks' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
+            'last' => { 'href' => "#{link_prefix}/v3/tasks?#{expected_query}" },
+            'next' => nil,
+            'previous' => nil
           }
         )
       end
 
       it 'filters by label selectors' do
         task1 = VCAP::CloudController::TaskModel.make(
-          name:         'task one',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task one',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          state:        VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
-            )
+          state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE
+        )
         VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
-          memory_in_mb: 100,
-            )
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
+          memory_in_mb: 100
+        )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
-            )
+          droplet: app_model.droplet
+        )
 
         VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
 
         get '/v3/tasks?label_selector=boomerang=gel', {}, developer_headers
 
         expected_pagination = {
-            'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
         }
 
         parsed_response = MultiJson.load(last_response.body)
@@ -413,24 +413,24 @@ RSpec.describe 'Tasks' do
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:task) do
         VCAP::CloudController::TaskModel.make(
-          name:         'task',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          disk_in_mb:   50,
-          log_rate_limit: 64,
+          disk_in_mb: 50,
+          log_rate_limit: 64
         )
       end
-      let(:api_call) { lambda { |user_headers| get "/v3/tasks/#{task.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/tasks/#{task.guid}", nil, user_headers } }
       let(:expected_response) do
         {
-          'guid'         => task.guid,
-          'sequence_id'  => task.sequence_id,
-          'name'         => 'task',
-          'state'        => 'RUNNING',
+          'guid' => task.guid,
+          'sequence_id' => task.sequence_id,
+          'name' => 'task',
+          'state' => 'RUNNING',
           'memory_in_mb' => 5,
-          'disk_in_mb'   => 50,
+          'disk_in_mb' => 50,
           'log_rate_limit_in_bytes_per_second' => 64,
           'result' => {
             'failure_reason' => nil
@@ -438,9 +438,9 @@ RSpec.describe 'Tasks' do
           'droplet_guid' => task.droplet.guid,
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'created_at'   => iso8601,
-          'updated_at'   => iso8601,
-          'links'        => {
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/tasks/#{task.guid}"
             },
@@ -449,7 +449,7 @@ RSpec.describe 'Tasks' do
             },
             'cancel' => {
               'href' => "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel",
-              'method' => 'POST',
+              'method' => 'POST'
             },
             'droplet' => {
               'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -490,33 +490,34 @@ RSpec.describe 'Tasks' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.task.cancel',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        app_model.name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.app.task.cancel',
+                                        actor: user.guid,
+                                        actor_type: 'user',
+                                        actor_name: user_email,
+                                        actor_username: user_name,
+                                        actee: app_model.guid,
+                                        actee_type: 'app',
+                                        actee_name: app_model.name,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['task_guid']).to eq(task.guid)
     end
   end
 
   describe 'PATCH /v3/tasks/:guid' do
     let(:user) { make_developer_for_space(space) }
-    let(:task) { VCAP::CloudController::TaskModel.make(
-      name: 'task',
-      command: 'echo task',
-      app_guid: app_model.guid,
-      droplet_guid: app_model.droplet.guid,
-      disk_in_mb: 50,
-      memory_in_mb: 5,
-      log_rate_limit: 10,
-    )
-    }
+    let(:task) do
+      VCAP::CloudController::TaskModel.make(
+        name: 'task',
+        command: 'echo task',
+        app_guid: app_model.guid,
+        droplet_guid: app_model.droplet.guid,
+        disk_in_mb: 50,
+        memory_in_mb: 5,
+        log_rate_limit: 10
+      )
+    end
     let(:request_body) do
       {
         metadata: {
@@ -537,30 +538,30 @@ RSpec.describe 'Tasks' do
 
       expect(last_response.status).to eq(200)
       expected_response = {
-        'guid'         => task.guid,
-        'sequence_id'  => task.sequence_id,
-        'name'         => 'task',
-        'command'      => 'echo task',
-        'state'        => 'RUNNING',
+        'guid' => task.guid,
+        'sequence_id' => task.sequence_id,
+        'name' => 'task',
+        'command' => 'echo task',
+        'state' => 'RUNNING',
         'memory_in_mb' => 5,
-        'disk_in_mb'   => 50,
+        'disk_in_mb' => 50,
         'log_rate_limit_in_bytes_per_second' => 10,
         'result' => {
           'failure_reason' => nil
         },
         'droplet_guid' => task.droplet.guid,
         'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-        'metadata' =>  {
+        'metadata' => {
           'labels' => {
             'potato' => 'yam'
           },
           'annotations' => {
             'potato' => 'idaho'
-          },
+          }
         },
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links'        => {
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links' => {
           'self' => {
             'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
           },
@@ -569,7 +570,7 @@ RSpec.describe 'Tasks' do
           },
           'cancel' => {
             'href' => "#{link_prefix}/v3/tasks/#{task_guid}/actions/cancel",
-            'method' => 'POST',
+            'method' => 'POST'
           },
           'droplet' => {
             'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -580,7 +581,7 @@ RSpec.describe 'Tasks' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |headers| patch "/v3/tasks/#{task_guid}", request_body, headers } }
+      let(:api_call) { ->(headers) { patch "/v3/tasks/#{task_guid}", request_body, headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
@@ -612,7 +613,7 @@ RSpec.describe 'Tasks' do
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
     let(:task) { VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid }
-    let(:api_call) { lambda { |user_headers| post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
     let(:expected_response) do
       {
         guid: task.guid,
@@ -642,17 +643,17 @@ RSpec.describe 'Tasks' do
         },
         links: {
           self: {
-            href: %r(#{link_prefix}/v3/tasks/#{task.guid})
+            href: %r{#{link_prefix}/v3/tasks/#{task.guid}}
           },
           app: {
             href: "#{link_prefix}/v3/apps/#{app_model.guid}"
           },
           cancel: {
-            href: %r(#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel),
+            href: %r{#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel},
             method: 'POST'
           },
           droplet: {
-            href: %r(#{link_prefix}/v3/droplets/#{task.droplet.guid})
+            href: %r{#{link_prefix}/v3/droplets/#{task.droplet.guid}}
           }
         }
       }
@@ -695,26 +696,26 @@ RSpec.describe 'Tasks' do
 
       it 'returns a paginated list of tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
-          name:         'task one',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task one',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          disk_in_mb:   50,
-          log_rate_limit: 64,
+          disk_in_mb: 50,
+          log_rate_limit: 64
         )
         task2 = VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 100,
-          disk_in_mb:   500,
-          log_rate_limit: 256,
+          disk_in_mb: 500,
+          log_rate_limit: 256
         )
         VCAP::CloudController::TaskModel.make(
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
+          droplet: app_model.droplet
         )
 
         get "/v3/apps/#{app_model.guid}/tasks?per_page=2", nil, developer_headers
@@ -723,21 +724,21 @@ RSpec.describe 'Tasks' do
           {
             'pagination' => {
               'total_results' => 3,
-              'total_pages'   => 2,
-              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
-              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
-              'next'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
-              'previous'      => nil,
+              'total_pages' => 2,
+              'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=1&per_page=2" },
+              'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+              'next' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?page=2&per_page=2" },
+              'previous' => nil
             },
             'resources' => [
               {
-                'guid'         => task1.guid,
-                'sequence_id'  => task1.sequence_id,
-                'name'         => 'task one',
-                'command'      => 'echo task',
-                'state'        => 'RUNNING',
+                'guid' => task1.guid,
+                'sequence_id' => task1.sequence_id,
+                'name' => 'task one',
+                'command' => 'echo task',
+                'state' => 'RUNNING',
                 'memory_in_mb' => 5,
-                'disk_in_mb'   => 50,
+                'disk_in_mb' => 50,
                 'log_rate_limit_in_bytes_per_second' => 64,
                 'result' => {
                   'failure_reason' => nil
@@ -745,9 +746,9 @@ RSpec.describe 'Tasks' do
                 'droplet_guid' => task1.droplet.guid,
                 'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at'   => iso8601,
-                'updated_at'   => iso8601,
-                'links'        => {
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
                   },
@@ -756,7 +757,7 @@ RSpec.describe 'Tasks' do
                   },
                   'cancel' => {
                     'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
-                    'method' => 'POST',
+                    'method' => 'POST'
                   },
                   'droplet' => {
                     'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -764,13 +765,13 @@ RSpec.describe 'Tasks' do
                 }
               },
               {
-                'guid'         => task2.guid,
-                'sequence_id'  => task2.sequence_id,
-                'name'         => 'task two',
-                'command'      => 'echo task',
-                'state'        => 'RUNNING',
+                'guid' => task2.guid,
+                'sequence_id' => task2.sequence_id,
+                'name' => 'task two',
+                'command' => 'echo task',
+                'state' => 'RUNNING',
                 'memory_in_mb' => 100,
-                'disk_in_mb'   => 500,
+                'disk_in_mb' => 500,
                 'log_rate_limit_in_bytes_per_second' => 256,
                 'result' => {
                   'failure_reason' => nil
@@ -778,9 +779,9 @@ RSpec.describe 'Tasks' do
                 'droplet_guid' => task2.droplet.guid,
                 'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'created_at'   => iso8601,
-                'updated_at'   => iso8601,
-                'links'        => {
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
                   },
@@ -789,7 +790,7 @@ RSpec.describe 'Tasks' do
                   },
                   'cancel' => {
                     'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
-                    'method' => 'POST',
+                    'method' => 'POST'
                   },
                   'droplet' => {
                     'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -807,36 +808,36 @@ RSpec.describe 'Tasks' do
     end
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/tasks", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/tasks", nil, user_headers } }
       let(:task1) do
         VCAP::CloudController::TaskModel.make(
-          name:     'task one',
-          command:      'echo task',
+          name: 'task one',
+          command: 'echo task',
           app_guid: app_model.guid,
-          droplet:  app_model.droplet,
+          droplet: app_model.droplet
         )
       end
 
       let(:task2) do
         VCAP::CloudController::TaskModel.make(
-          name:         'task two',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
+          name: 'task two',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
           memory_in_mb: 5,
-          disk_in_mb:   10,
+          disk_in_mb: 10
         )
       end
 
       let(:expected_response) do
         [
           {
-            'guid'         => task1.guid,
-            'sequence_id'  => task1.sequence_id,
-            'name'         => 'task one',
-            'state'        => 'RUNNING',
+            'guid' => task1.guid,
+            'sequence_id' => task1.sequence_id,
+            'name' => 'task one',
+            'state' => 'RUNNING',
             'memory_in_mb' => 256,
-            'disk_in_mb'   => nil,
+            'disk_in_mb' => nil,
             'log_rate_limit_in_bytes_per_second' => -1,
             'result' => {
               'failure_reason' => nil
@@ -844,9 +845,9 @@ RSpec.describe 'Tasks' do
             'droplet_guid' => task1.droplet.guid,
             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at'   => iso8601,
-            'updated_at'   => iso8601,
-            'links'        => {
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task1.guid}"
               },
@@ -855,7 +856,7 @@ RSpec.describe 'Tasks' do
               },
               'cancel' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
-                'method' => 'POST',
+                'method' => 'POST'
               },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -863,12 +864,12 @@ RSpec.describe 'Tasks' do
             }
           },
           {
-            'guid'         => task2.guid,
-            'sequence_id'  => task2.sequence_id,
-            'name'         => 'task two',
-            'state'        => 'RUNNING',
+            'guid' => task2.guid,
+            'sequence_id' => task2.sequence_id,
+            'name' => 'task two',
+            'state' => 'RUNNING',
             'memory_in_mb' => 5,
-            'disk_in_mb'   => 10,
+            'disk_in_mb' => 10,
             'log_rate_limit_in_bytes_per_second' => -1,
             'result' => {
               'failure_reason' => nil
@@ -876,9 +877,9 @@ RSpec.describe 'Tasks' do
             'droplet_guid' => task2.droplet.guid,
             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
-            'created_at'   => iso8601,
-            'updated_at'   => iso8601,
-            'links'        => {
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task2.guid}"
               },
@@ -887,7 +888,7 @@ RSpec.describe 'Tasks' do
               },
               'cancel' => {
                 'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
-                'method' => 'POST',
+                'method' => 'POST'
               },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -909,11 +910,11 @@ RSpec.describe 'Tasks' do
     describe 'perms' do
       it 'exlcudes secrets when the user should not see them' do
         VCAP::CloudController::TaskModel.make(
-          name:         'task one',
-          command:      'echo task',
-          app_guid:     app_model.guid,
-          droplet:      app_model.droplet,
-          memory_in_mb: 5,
+          name: 'task one',
+          command: 'echo task',
+          app_guid: app_model.guid,
+          droplet: app_model.droplet,
+          memory_in_mb: 5
         )
 
         get "/v3/apps/#{app_model.guid}/tasks", nil, headers_for(make_auditor_for_space(space))
@@ -942,11 +943,11 @@ RSpec.describe 'Tasks' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next' => nil,
+            'previous' => nil
           }
         )
       end
@@ -968,11 +969,11 @@ RSpec.describe 'Tasks' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next' => nil,
+            'previous' => nil
           }
         )
       end
@@ -994,11 +995,11 @@ RSpec.describe 'Tasks' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks?#{expected_query}" },
+            'next' => nil,
+            'previous' => nil
           }
         )
       end
@@ -1008,7 +1009,7 @@ RSpec.describe 'Tasks' do
         let(:additional_resource_params) { { app: app_model } }
         let(:headers) { admin_headers }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/apps/#{app_model.guid}/tasks?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/apps/#{app_model.guid}/tasks?#{filters}", nil, headers }
         end
       end
     end
@@ -1016,21 +1017,22 @@ RSpec.describe 'Tasks' do
 
   describe 'POST /v3/apps/:guid/tasks' do
     let(:user) { make_developer_for_space(space) }
-    let(:body) do {
-      name:         'best task ever',
-      command:      'be rake && true',
-      memory_in_mb: 1234,
-      disk_in_mb:   1000,
-      log_rate_limit_in_bytes_per_second: task_log_rate_limit_in_bytes_per_second,
-      metadata: {
-        labels: {
-          bananas: 'gros_michel',
-        },
-        annotations: {
-          'wombats' => 'althea',
+    let(:body) do
+      {
+        name: 'best task ever',
+        command: 'be rake && true',
+        memory_in_mb: 1234,
+        disk_in_mb: 1000,
+        log_rate_limit_in_bytes_per_second: task_log_rate_limit_in_bytes_per_second,
+        metadata: {
+          labels: {
+            bananas: 'gros_michel'
+          },
+          annotations: {
+            'wombats' => 'althea'
+          }
         }
-      },
-    }
+      }
     end
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
@@ -1047,24 +1049,24 @@ RSpec.describe 'Tasks' do
       sequence_id     = parsed_response['sequence_id']
 
       expected_response = {
-        'guid'         => guid,
-        'sequence_id'  => sequence_id,
-        'name'         => 'best task ever',
-        'command'      => 'be rake && true',
-        'state'        => 'RUNNING',
+        'guid' => guid,
+        'sequence_id' => sequence_id,
+        'name' => 'best task ever',
+        'command' => 'be rake && true',
+        'state' => 'RUNNING',
         'memory_in_mb' => 1234,
-        'disk_in_mb'   => 1000,
+        'disk_in_mb' => 1000,
         'log_rate_limit_in_bytes_per_second' => task_log_rate_limit_in_bytes_per_second,
         'result' => {
           'failure_reason' => nil
         },
         'droplet_guid' => droplet.guid,
         'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-        'metadata' => { 'labels' => { 'bananas' => 'gros_michel', },
-          'annotations' => { 'wombats' => 'althea' } },
-        'created_at'   => iso8601,
-        'updated_at'   => iso8601,
-        'links'        => {
+        'metadata' => { 'labels' => { 'bananas' => 'gros_michel' },
+                        'annotations' => { 'wombats' => 'althea' } },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links' => {
           'self' => {
             'href' => "#{link_prefix}/v3/tasks/#{guid}"
           },
@@ -1073,7 +1075,7 @@ RSpec.describe 'Tasks' do
           },
           'cancel' => {
             'href' => "#{link_prefix}/v3/tasks/#{guid}/actions/cancel",
-            'method' => 'POST',
+            'method' => 'POST'
           },
           'droplet' => {
             'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"
@@ -1083,29 +1085,29 @@ RSpec.describe 'Tasks' do
 
       expect(last_response.status).to eq(202), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
-      expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+      expect(VCAP::CloudController::TaskModel.find(guid:)).to be_present
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.task.create',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        app_model.name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.app.task.create',
+                                        actor: user.guid,
+                                        actor_type: 'user',
+                                        actor_name: user_email,
+                                        actor_username: user_name,
+                                        actee: app_model.guid,
+                                        actee_type: 'app',
+                                        actee_name: app_model.name,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata).to eq({
-        'task_guid' => guid,
-        'request'   => {
-          'name'         => 'best task ever',
-          'command'      => '[PRIVATE DATA HIDDEN]',
-          'memory_in_mb' => 1234,
-        }
-      })
+                                     'task_guid' => guid,
+                                     'request' => {
+                                       'name' => 'best task ever',
+                                       'command' => '[PRIVATE DATA HIDDEN]',
+                                       'memory_in_mb' => 1234
+                                     }
+                                   })
     end
 
     describe 'log_rate_limit' do
@@ -1177,14 +1179,14 @@ RSpec.describe 'Tasks' do
       let(:non_assigned_droplet) do
         VCAP::CloudController::DropletModel.make(
           app_guid: app_model.guid,
-          state:    VCAP::CloudController::DropletModel::STAGED_STATE,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
       end
 
       it 'uses the requested droplet' do
         body = {
-          name:         'best task ever',
-          command:      'be rake && true',
+          name: 'best task ever',
+          command: 'be rake && true',
           memory_in_mb: 1234,
           droplet_guid: non_assigned_droplet.guid
         }
@@ -1197,7 +1199,7 @@ RSpec.describe 'Tasks' do
         expect(last_response.status).to eq(202)
         expect(parsed_response['droplet_guid']).to eq(non_assigned_droplet.guid)
         expect(parsed_response['links']['droplet']['href']).to eq("#{link_prefix}/v3/droplets/#{non_assigned_droplet.guid}")
-        expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
+        expect(VCAP::CloudController::TaskModel.find(guid:)).to be_present
       end
     end
 
@@ -1205,14 +1207,14 @@ RSpec.describe 'Tasks' do
       let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start') }
       it 'uses the command from the template process' do
         body = {
-          name:         'best task ever',
+          name: 'best task ever',
           template: {
             process: {
               guid: process.guid
             }
           },
           memory_in_mb: 1234,
-          disk_in_mb:   1000,
+          disk_in_mb: 1000
         }
 
         post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
@@ -1221,13 +1223,13 @@ RSpec.describe 'Tasks' do
         sequence_id     = parsed_response['sequence_id']
 
         expected_response = {
-          'guid'         => guid,
-          'sequence_id'  => sequence_id,
-          'name'         => 'best task ever',
-          'command'      => process.command,
-          'state'        => 'RUNNING',
+          'guid' => guid,
+          'sequence_id' => sequence_id,
+          'name' => 'best task ever',
+          'command' => process.command,
+          'state' => 'RUNNING',
           'memory_in_mb' => 1234,
-          'disk_in_mb'   => 1000,
+          'disk_in_mb' => 1000,
           'log_rate_limit_in_bytes_per_second' => process.log_rate_limit,
           'result' => {
             'failure_reason' => nil
@@ -1235,9 +1237,9 @@ RSpec.describe 'Tasks' do
           'droplet_guid' => droplet.guid,
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'created_at'   => iso8601,
-          'updated_at'   => iso8601,
-          'links'        => {
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/tasks/#{guid}"
             },
@@ -1246,7 +1248,7 @@ RSpec.describe 'Tasks' do
             },
             'cancel' => {
               'href' => "#{link_prefix}/v3/tasks/#{guid}/actions/cancel",
-              'method' => 'POST',
+              'method' => 'POST'
             },
             'droplet' => {
               'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"
@@ -1268,7 +1270,7 @@ RSpec.describe 'Tasks' do
             'create-task' => {
               'api-version' => 'v3',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
 
@@ -1281,7 +1283,7 @@ RSpec.describe 'Tasks' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |headers| post "/v3/apps/#{app_model.guid}/tasks", body.to_json, headers } }
+      let(:api_call) { ->(headers) { post "/v3/apps/#{app_model.guid}/tasks", body.to_json, headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }

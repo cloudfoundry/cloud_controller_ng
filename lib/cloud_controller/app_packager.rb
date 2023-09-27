@@ -21,24 +21,24 @@ class AppPackager
       %(unzip -qq -n #{Shellwords.escape(@path)} -d #{Shellwords.escape(destination_dir)})
     )
 
-    unless status.success?
-      logger.error("Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
-      invalid_zip!(first_mapped_error(error))
-    end
+    return if status.success?
+
+    logger.error("Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
+    invalid_zip!(first_mapped_error(error))
   end
 
   def append_dir_contents(additional_contents_dir)
-    unless empty_directory?(additional_contents_dir)
-      output, error, status = Open3.capture3(
-        %(zip -q -r --symlinks #{Shellwords.escape(@path)} .),
-        chdir: additional_contents_dir,
-      )
+    return if empty_directory?(additional_contents_dir)
 
-      unless status.success?
-        logger.error("Could not zip the package\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'Error appending additional resources to package')
-      end
-    end
+    output, error, status = Open3.capture3(
+      %(zip -q -r --symlinks #{Shellwords.escape(@path)} .),
+      chdir: additional_contents_dir
+    )
+
+    return if status.success?
+
+    logger.error("Could not zip the package\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
+    raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'Error appending additional resources to package')
   end
 
   def fix_subdir_permissions(root_path, app_contents_path)
@@ -68,9 +68,7 @@ class AppPackager
   end
 
   def remove_dirs_from_zip(zip_path, dirs_from_zip, root_path, app_contents_path)
-    unless empty_directory?(root_path)
-      fix_permissions_for_file_deletion(app_contents_path)
-    end
+    fix_permissions_for_file_deletion(app_contents_path) unless empty_directory?(root_path)
     dirs_from_zip.each_slice(DIRECTORY_DELETE_BATCH_SIZE) do |directory_slice|
       remove_dir(zip_path, directory_slice)
     end
@@ -82,21 +80,21 @@ class AppPackager
       %(zip -d #{Shellwords.escape(zip_path)}) + ' -- ' + directory_arg_list
     )
 
-    unless status.success?
-      logger.error("Could not remove the directories\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
-      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'Error removing zip directories.')
-    end
+    return if status.success?
+
+    logger.error("Could not remove the directories\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
+    raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'Error removing zip directories.')
   end
 
   def fix_permissions_for_file_deletion(destination_dir)
     stdout, error, status = Open3.capture3(%(chmod -R u+rwX #{Shellwords.escape(destination_dir)}))
-    unless status.success?
-      logger.error("Cleanup of some files may have failed, error fixing zip file permissions\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
-    end
+    return if status.success?
+
+    logger.error("Cleanup of some files may have failed, error fixing zip file permissions\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
   end
 
   def empty_directory?(dir)
-    (Dir.entries(dir) - %w(.. .)).empty?
+    (Dir.entries(dir) - %w[.. .]).empty?
   end
 
   def invalid_zip!(error=nil)
@@ -111,13 +109,11 @@ class AppPackager
 
     case error
     when /end-of-central-directory\s+signature\s+not\s+found/i
-      return 'end-of-central-directory signature not found'
+      'end-of-central-directory signature not found'
     when /zipfile\s+is\s+empty/i
-      return 'zipfile is empty'
+      'zipfile is empty'
     when /mismatching\s+"local"\s+filename/i
-      return 'mismatching local filename'
-    else
-      return
+      'mismatching local filename'
     end
   end
 end

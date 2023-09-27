@@ -5,20 +5,20 @@ module VCAP::CloudController
   RSpec.describe ServiceCredentialAppBindingCreateMessage do
     subject { ServiceCredentialAppBindingCreateMessage }
 
-    let(:params) {
+    let(:params) do
       {
         type: 'app',
         name: 'some-name',
         parameters: {
-            some_param: 'very important',
-            another_param: 'epa'
+          some_param: 'very important',
+          another_param: 'epa'
         },
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } },
           app: { data: { guid: 'some-app-guid' } }
         }
       }
-    }
+    end
 
     describe '.from_params' do
       let(:message) { subject.new(params) }
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
       context 'type' do
         it 'accepts app and key' do
-          %w{app key}.each do |type|
+          %w[app key].each do |type|
             params[:type] = type
             expect(subject.new(params)).to be_valid
           end

@@ -3,14 +3,14 @@ require 'actions/app_update'
 
 module VCAP::CloudController
   RSpec.describe AppUpdate do
-    subject(:app_update) { AppUpdate.new(user_audit_info, runners: runners) }
+    subject(:app_update) { AppUpdate.new(user_audit_info, runners:) }
 
     let(:app_model) { AppModel.make(name: app_name) }
     let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
     let!(:ruby_buildpack) { Buildpack.make(name: 'ruby', stack: stack.name) }
@@ -26,8 +26,8 @@ module VCAP::CloudController
       let(:lifecycle) { AppLifecycleProvider.provide_for_update(message, app_model) }
       let(:message) do
         AppUpdateMessage.new({
-          name: 'new name',
-        })
+                               name: 'new name'
+                             })
       end
 
       describe 'audit events' do
@@ -37,7 +37,7 @@ module VCAP::CloudController
             app_model.space,
             user_audit_info,
             {
-              'name' => 'new name',
+              'name' => 'new name'
             },
             manifest_triggered: false
           )
@@ -54,7 +54,7 @@ module VCAP::CloudController
               app_model.space,
               user_audit_info,
               {
-                'name' => 'new name',
+                'name' => 'new name'
               },
               manifest_triggered: true
             )
@@ -106,8 +106,8 @@ module VCAP::CloudController
           context 'when there is a CannotCommunicateWithDiegoError' do
             before do
               allow(runner).to receive(:update_metric_tags).and_invoke(
-                lambda { raise(Diego::Runner::CannotCommunicateWithDiegoError.new) },
-                lambda {}
+                -> { raise(Diego::Runner::CannotCommunicateWithDiegoError.new) },
+                -> {}
               )
             end
 
@@ -221,11 +221,11 @@ module VCAP::CloudController
       describe 'updating lifecycle' do
         let(:message) do
           AppUpdateMessage.new({
-              lifecycle: {
-                type: 'buildpack',
-                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: stack.name }
-              }
-            })
+                                 lifecycle: {
+                                   type: 'buildpack',
+                                   data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: stack.name }
+                                 }
+                               })
         end
 
         it 'updates the apps lifecycle' do
@@ -245,49 +245,50 @@ module VCAP::CloudController
         context 'when the lifecycle is invalid' do
           let(:message) do
             AppUpdateMessage.new({
-              lifecycle: {
-                type: 'buildpack',
-                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: 'non-existent-stack' }
-              }
-            })
+                                   lifecycle: {
+                                     type: 'buildpack',
+                                     data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: 'non-existent-stack' }
+                                   }
+                                 })
           end
 
           it 'raises an AppUpdate::InvalidApp error' do
-            expect { app_update.update(app_model, message, lifecycle)
-            }.to raise_error(AppUpdate::InvalidApp, 'Buildpack "ruby" must be an existing admin buildpack or a valid git URI, Stack must be an existing stack')
+            expect do
+              app_update.update(app_model, message, lifecycle)
+            end.to raise_error(AppUpdate::InvalidApp, 'Buildpack "ruby" must be an existing admin buildpack or a valid git URI, Stack must be an existing stack')
           end
         end
 
         context 'when changing the lifecycle type' do
           let(:message) do
             AppUpdateMessage.new({
-              lifecycle: {
-                type: 'docker',
-                data: {}
-              }
-            })
+                                   lifecycle: {
+                                     type: 'docker',
+                                     data: {}
+                                   }
+                                 })
           end
 
           it 'raises an InvalidApp error' do
             expect(app_model.lifecycle_type).to eq('buildpack')
 
-            expect {
+            expect do
               app_update.update(app_model, message, lifecycle)
-            }.to raise_error(AppUpdate::InvalidApp, /Lifecycle type cannot be changed/)
+            end.to raise_error(AppUpdate::InvalidApp, /Lifecycle type cannot be changed/)
           end
         end
 
         context 'when custom buildpacks are disabled and user provides a custom buildpack' do
           let(:message) do
             AppUpdateMessage.new({
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
-                  stack:      'cflinuxfs4'
-                }
-              }
-            })
+                                   lifecycle: {
+                                     type: 'buildpack',
+                                     data: {
+                                       buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
+                                       stack: 'cflinuxfs4'
+                                     }
+                                   }
+                                 })
           end
 
           before do
@@ -295,16 +296,18 @@ module VCAP::CloudController
           end
 
           it 'raises an InvalidApp error' do
-            expect {
+            expect do
               app_update.update(app_model, message, lifecycle)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
 
           it 'does not modify the app' do
             lifecycle_data = app_model.lifecycle_data
-            expect {
-              app_update.update(app_model, message, lifecycle) rescue nil
-            }.not_to change { [app_model, lifecycle_data, Event.count] }
+            expect do
+              app_update.update(app_model, message, lifecycle)
+            rescue StandardError
+              nil
+            end.not_to(change { [app_model, lifecycle_data, Event.count] })
           end
         end
       end
@@ -315,18 +318,18 @@ module VCAP::CloudController
 
         let(:message) do
           AppUpdateMessage.new({
-            metadata: {
-              labels: {
-                release: 'stable',
-                'joyofcooking.com/potato': 'mashed'
-              },
-              annotations: {
-                contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-                existing_anno: 'new-value',
-                please: nil,
-              }
-            }
-          })
+                                 metadata: {
+                                   labels: {
+                                     release: 'stable',
+                                     'joyofcooking.com/potato': 'mashed'
+                                   },
+                                   annotations: {
+                                     contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+                                     existing_anno: 'new-value',
+                                     please: nil
+                                   }
+                                 }
+                               })
         end
 
         it 'updates the labels' do
@@ -339,7 +342,7 @@ module VCAP::CloudController
           app_update.update(app_model, message, lifecycle)
           expect(app_model).to have_annotations(
             { key_name: 'contacts', value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' },
-            { key_name: 'existing_anno', value: 'new-value' },
+            { key_name: 'existing_anno', value: 'new-value' }
           )
           expect(AppAnnotationModel.find(resource_guid: app_model.guid, key_name: 'please')).to be_nil
         end

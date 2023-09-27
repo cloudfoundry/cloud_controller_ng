@@ -7,10 +7,11 @@ module VCAP::CloudController
         process_types: {
           'web' => 'droplet_web_command',
           'worker' => 'droplet_worker_command',
-          'droplet_only' => 'droplet_only_command',
-        })
+          'droplet_only' => 'droplet_only_command'
+        }
+      )
     end
-    let(:revision) { RevisionModel.make(droplet: droplet) }
+    let(:revision) { RevisionModel.make(droplet:) }
 
     describe 'validations' do
       context 'when a droplet_guid is not present' do
@@ -38,25 +39,25 @@ module VCAP::CloudController
         RevisionProcessCommandModel.make(
           revision: revision,
           process_type: 'non_droplet',
-          process_command: 'non_droplet_command',
+          process_command: 'non_droplet_command'
         )
       end
 
       before do
         RevisionProcessCommandModel.where(
           revision: revision,
-          process_type: 'worker',
+          process_type: 'worker'
         ).update(process_command: 'on the railroad')
       end
 
       describe '#commands_by_process_type' do
         it 'returns a hash of process types to commands' do
           expect(revision.commands_by_process_type).to eq({
-            'web' => nil,
-            'worker' => 'on the railroad',
-            'droplet_only' => nil,
-            'non_droplet' => 'non_droplet_command',
-          })
+                                                            'web' => nil,
+                                                            'worker' => 'on the railroad',
+                                                            'droplet_only' => nil,
+                                                            'non_droplet' => 'non_droplet_command'
+                                                          })
         end
       end
 
@@ -64,9 +65,9 @@ module VCAP::CloudController
         let(:revision) { RevisionModel.make }
 
         it 'creates a RevisionProcessCommandModel' do
-          expect {
+          expect do
             revision.add_command_for_process_type('other_process', 'doing some stuff')
-          }.to change { RevisionProcessCommandModel.count }.by(1)
+          end.to change { RevisionProcessCommandModel.count }.by(1)
 
           command = RevisionProcessCommandModel.last
           expect(command.process_type).to eq 'other_process'
@@ -76,7 +77,7 @@ module VCAP::CloudController
     end
 
     describe 'when the env vars on the big side of the encrypted column' do
-      let(:env_vars) { { 'foo' => SecureRandom.base64(12000) } }
+      let(:env_vars) { { 'foo' => SecureRandom.base64(12_000) } }
       let(:app) { AppModel.make(environment_variables: env_vars) }
       let(:revision) { RevisionModel.make(environment_variables: env_vars) }
       it 'allows it' do

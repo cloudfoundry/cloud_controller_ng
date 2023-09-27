@@ -9,30 +9,30 @@ module VCAP::CloudController::Diego
     let(:space) { app.space }
     let(:staging_disk_in_mb) { 512 }
     let(:service) { VCAP::CloudController::Service.make(label: 'elephantsql-n/a') }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
     let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
     let(:expected_vcap_application) do
       {
         cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-        limits:              {
-          mem:  task.memory_in_mb,
+        limits: {
+          mem: task.memory_in_mb,
           disk: staging_disk_in_mb,
-          fds:  TestConfig.config[:instance_file_descriptor_limit] || 16384,
+          fds: TestConfig.config[:instance_file_descriptor_limit] || 16_384
         },
-        application_id:      app.guid,
+        application_id: app.guid,
         application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-        application_name:    app.name,
-        application_uris:    [],
-        version:             /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-        name:                app.name,
-        space_name:          space.name,
-        space_id:            space.guid,
-        organization_id:     space.organization.guid,
+        application_name: app.name,
+        application_uris: [],
+        version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+        name: app.name,
+        space_name: space.name,
+        space_id: space.guid,
+        organization_id: space.organization.guid,
         organization_name: space.organization.name,
-        uris:                [],
-        users:               nil
+        uris: [],
+        users: nil
       }
     end
 
@@ -100,27 +100,27 @@ module VCAP::CloudController::Diego
         let(:expected_vcap_application) do
           {
             cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-            limits:              {
-              mem:  task.memory_in_mb,
+            limits: {
+              mem: task.memory_in_mb,
               disk: staging_disk_in_mb,
-              fds:  TestConfig.config[:instance_file_descriptor_limit] || 16384,
+              fds: TestConfig.config[:instance_file_descriptor_limit] || 16_384
             },
-            application_id:      app.guid,
+            application_id: app.guid,
             application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            application_name:    app.name,
-            application_uris:    match_array([route1.fqdn, route2.fqdn]),
-            version:             /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            uris:                match_array([route1.fqdn, route2.fqdn]),
-            name:                app.name,
-            space_name:          space.name,
-            space_id:            space.guid,
-            organization_id:     space.organization.guid,
+            application_name: app.name,
+            application_uris: match_array([route1.fqdn, route2.fqdn]),
+            version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+            uris: match_array([route1.fqdn, route2.fqdn]),
+            name: app.name,
+            space_name: space.name,
+            space_id: space.guid,
+            organization_id: space.organization.guid,
             organization_name: space.organization.name,
-            users:               nil
+            users: nil
           }
         end
-        let(:route1) { VCAP::CloudController::Route.make(space: space) }
-        let(:route2) { VCAP::CloudController::Route.make(space: space) }
+        let(:route1) { VCAP::CloudController::Route.make(space:) }
+        let(:route2) { VCAP::CloudController::Route.make(space:) }
 
         before do
           VCAP::CloudController::RouteMappingModel.make(app: app, route: route1)

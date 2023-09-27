@@ -9,9 +9,9 @@ module VCAP::CloudController
         @stagers.validate_process(process)
 
         message = BuildCreateMessage.new({
-          staging_memory_in_mb: process.memory,
-          staging_disk_in_mb:   process.disk_quota
-        })
+                                           staging_memory_in_mb: process.memory,
+                                           staging_disk_in_mb: process.disk_quota
+                                         })
 
         lifecycle = LifecycleProvider.provide(process.latest_package, message)
 
@@ -21,8 +21,8 @@ module VCAP::CloudController
         build_creator = BuildCreate.new(memory_limit_calculator: NonQuotaValidatingStagingMemoryCalculator.new)
 
         build = build_creator.create_and_stage_without_event(
-          package:             process.latest_package,
-          lifecycle:           lifecycle,
+          package: process.latest_package,
+          lifecycle: lifecycle,
           start_after_staging: true
         )
         TelemetryLogger.v2_emit(
@@ -34,8 +34,9 @@ module VCAP::CloudController
           }, {
             'lifecycle' => build.lifecycle_type,
             'buildpacks' => build.lifecycle_data&.buildpacks,
-            'stack' => build.lifecycle_data&.stack,
-        })
+            'stack' => build.lifecycle_data&.stack
+          }
+        )
 
         process.last_stager_response = build_creator.staging_response
       rescue Diego::Runner::CannotCommunicateWithDiegoError => e

@@ -38,9 +38,9 @@ module CloudController::Presenters::V2
         end
 
         it 'raises NotLoadedAssociationError when association is not loaded and will be included so that this object is not responsible for checking authorization' do
-          expect {
+          expect do
             subject.to_hash(VCAP::CloudController::TestModelManyToOnesController, test_model_many_to_one, opts, 0, [])
-          }.to raise_error(CloudController::Errors::NotLoadedAssociationError, /test_model.*VCAP::CloudController::TestModelManyToOne/)
+          end.to raise_error(CloudController::Errors::NotLoadedAssociationError, /test_model.*VCAP::CloudController::TestModelManyToOne/)
         end
       end
 
@@ -74,9 +74,9 @@ module CloudController::Presenters::V2
         it 'raises NotLoadedAssociationError when association is not loaded and will be included so that this object is not responsible for checking authorization' do
           test_model.reload
           test_model.remove_all_test_model_many_to_ones
-          expect {
+          expect do
             subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 1), 0, [])
-          }.to raise_error(CloudController::Errors::NotLoadedAssociationError, /test_model_many_to_manies.*VCAP::CloudController::TestModel/)
+          end.to raise_error(CloudController::Errors::NotLoadedAssociationError, /test_model_many_to_manies.*VCAP::CloudController::TestModel/)
         end
       end
 
@@ -90,24 +90,24 @@ module CloudController::Presenters::V2
         hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 2), 0, [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
           { 'metadata' => {
-            'guid' => test_model_many_to_many.guid,
-            'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
-            'created_at' => test_model_many_to_many.created_at,
-          },
-          'entity' => {
-            'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels",
-            'test_model_second_levels' => [
-              {
-                'metadata' =>
-                  {
-                    'guid' => test_model_second_level.guid,
-                    'url' => "/v2/test_model_second_levels/#{test_model_second_level.guid}",
-                    'created_at' => test_model_second_level.created_at
-                  },
-                'entity' => {}
-              }
-            ]
-          } }
+              'guid' => test_model_many_to_many.guid,
+              'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
+              'created_at' => test_model_many_to_many.created_at
+            },
+            'entity' => {
+              'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels",
+              'test_model_second_levels' => [
+                {
+                  'metadata' =>
+                    {
+                      'guid' => test_model_second_level.guid,
+                      'url' => "/v2/test_model_second_levels/#{test_model_second_level.guid}",
+                      'created_at' => test_model_second_level.created_at
+                    },
+                  'entity' => {}
+                }
+              ]
+            } }
         ])
       end
 
@@ -127,7 +127,7 @@ module CloudController::Presenters::V2
             'metadata' => {
               'guid' => test_model_many_to_many.guid,
               'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
-              'created_at' => test_model_many_to_many.created_at,
+              'created_at' => test_model_many_to_many.created_at
             },
             'entity' => {
               'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels",
@@ -181,13 +181,13 @@ module CloudController::Presenters::V2
         hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 2, exclude_relations: 'test_model_second_levels'), 0, [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
           { 'metadata' => {
-            'guid' => test_model_many_to_many.guid,
-            'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
-            'created_at' => test_model_many_to_many.created_at,
-          },
-          'entity' => {
-            'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
-          } }
+              'guid' => test_model_many_to_many.guid,
+              'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
+              'created_at' => test_model_many_to_many.created_at
+            },
+            'entity' => {
+              'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
+            } }
         ])
       end
 
@@ -199,19 +199,19 @@ module CloudController::Presenters::V2
         test_model_many_to_many.add_test_model_second_level test_model_second_level
 
         hash = subject.to_hash(VCAP::CloudController::TestModelsController,
-          test_model,
-          opts.merge(inline_relations_depth: 2, include_relations: 'test_model_many_to_manies'),
-          0,
-          [])
+                               test_model,
+                               opts.merge(inline_relations_depth: 2, include_relations: 'test_model_many_to_manies'),
+                               0,
+                               [])
         expect(hash.fetch('test_model_many_to_manies')).to eql([
           { 'metadata' => {
-            'guid' => test_model_many_to_many.guid,
-            'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
-            'created_at' => test_model_many_to_many.created_at,
-          },
-          'entity' => {
-            'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
-          } }
+              'guid' => test_model_many_to_many.guid,
+              'url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}",
+              'created_at' => test_model_many_to_many.created_at
+            },
+            'entity' => {
+              'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels"
+            } }
         ])
       end
     end

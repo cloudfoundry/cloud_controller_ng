@@ -110,25 +110,25 @@ module VCAP::CloudController
       it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_org_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'raises exception and does not SELECT all guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_org_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_org_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'returns org guids from membership via subquery' do
@@ -345,25 +345,25 @@ module VCAP::CloudController
       it 'raises exception and does not SELECT all guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_space_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'raises exception and does not SELECT all guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_space_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'raises exception and does not SELECT all guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
-        expect {
+        expect do
           subject.readable_space_guids
-        }.to raise_error('must not be called for users that can read globally')
+        end.to raise_error('must not be called for users that can read globally')
       end
 
       it 'returns space guids from membership via subquery' do
@@ -1155,7 +1155,7 @@ module VCAP::CloudController
 
       it 'returns all the space quota guids for any global read role' do
         global_roles = [set_current_user_as_admin, set_current_user_as_global_auditor, set_current_user_as_admin_read_only]
-        global_roles.each { |user|
+        global_roles.each do |user|
           subject = Permissions.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
@@ -1163,7 +1163,7 @@ module VCAP::CloudController
           expect(space_quota_guids).to include(squota1.guid)
           expect(space_quota_guids).to include(squota2.guid)
           expect(space_quota_guids).to include(squota3.guid)
-        }
+        end
       end
 
       it 'returns space quota guids when the user is an org_manager' do
@@ -1182,14 +1182,14 @@ module VCAP::CloudController
           set_current_user_as_role(role: 'org_user', org: org2),
           set_current_user_as_role(role: 'org_auditor', org: org2)
         ]
-        org_roles.each { |user|
+        org_roles.each do |user|
           subject = Permissions.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
           expect(space_quota_guids).not_to include(squota1.guid)
           expect(space_quota_guids).not_to include(squota2.guid)
           expect(space_quota_guids).not_to include(squota3.guid)
-        }
+        end
       end
 
       it 'returns space quotas when the user has an appropriate space membership' do
@@ -1199,14 +1199,14 @@ module VCAP::CloudController
           set_current_user_as_role(role: 'space_auditor', org: org2, space: space2)
         ]
 
-        space_roles.each { |user|
+        space_roles.each do |user|
           subject = Permissions.new(user)
 
           space_quota_guids = subject.readable_space_quota_guids
           expect(space_quota_guids).to contain_exactly(squota3.guid)
           expect(space_quota_guids).not_to include(squota1.guid)
           expect(space_quota_guids).not_to include(squota2.guid)
-        }
+        end
       end
     end
   end

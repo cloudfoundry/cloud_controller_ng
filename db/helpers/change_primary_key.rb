@@ -14,10 +14,10 @@ end
 
 def add_primary_key_to_table(table, key)
   db = self
-  unless has_primary_key(db, table, key)
-    alter_table table do
-      add_primary_key :id, name: key
-    end
+  return if has_primary_key(db, table, key)
+
+  alter_table table do
+    add_primary_key :id, name: key
   end
 end
 

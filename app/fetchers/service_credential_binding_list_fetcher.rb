@@ -5,7 +5,7 @@ module VCAP
   module CloudController
     class ServiceCredentialBindingListFetcher < BaseListFetcher
       class << self
-        FILTERABLE_PROPERTIES = %w{
+        FILTERABLE_PROPERTIES = %w[
           service_instance_name
           service_instance_guid
           name
@@ -16,7 +16,7 @@ module VCAP
           service_plan_guid
           service_offering_name
           service_offering_guid
-        }.freeze
+        ].freeze
 
         def fetch(readable_spaces_query: nil, message: nil, eager_loaded_associations: [])
           dataset = case readable_spaces_query

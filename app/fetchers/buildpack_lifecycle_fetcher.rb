@@ -4,7 +4,7 @@ module VCAP::CloudController
       def fetch(buildpack_names, stack_name)
         {
           stack: Stack.find(name: stack_name),
-          buildpack_infos: ordered_buildpacks(buildpack_names, stack_name),
+          buildpack_infos: ordered_buildpacks(buildpack_names, stack_name)
         }
       end
 

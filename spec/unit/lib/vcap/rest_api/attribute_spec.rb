@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it "should work with an Array passed in via #{opt}" do
-          attr = NamedAttribute.new('some_attr', opt => [:read, :update])
+          attr = NamedAttribute.new('some_attr', opt => %i[read update])
           expect(attr.send(meth, :create)).to be false
           expect(attr.send(meth, :read)).to be true
           expect(attr.send(meth, :update)).to be true

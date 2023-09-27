@@ -6,9 +6,7 @@ module VCAP
     class ServiceInstanceMessage < MetadataBaseMessage
       def audit_hash
         super.tap do |h|
-          if h['credentials'].present?
-            h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
-          end
+          h['credentials'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN if h['credentials'].present?
         end
       end
     end

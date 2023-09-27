@@ -7,11 +7,11 @@ module VCAP::CloudController
 
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
     let(:org) { Organization.make }
     let(:space) { Space.make(organization: org) }
-    let(:app) { AppModel.make(space: space) }
+    let(:app) { AppModel.make(space:) }
     let(:domain) { PrivateDomain.make(owning_organization: org) }
 
     describe '#delete' do
@@ -22,9 +22,9 @@ module VCAP::CloudController
         let!(:unmapped_route_2) { Route.make(domain: domain, space: space, host: 'unmapped2') }
 
         it 'deletes only unmapped routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change { VCAP::CloudController::Route.count }.by(-2)
 
           expect { unmapped_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unmapped_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -33,15 +33,15 @@ module VCAP::CloudController
 
       context 'when there are some bound routes and some unbound routes' do
         let!(:bound_route) { Route.make(domain: domain, space: space, host: 'bound') }
-        let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
         let!(:_) { RouteBinding.make(service_instance: service_instance, route: bound_route) }
         let!(:unbound_route_1) { Route.make(domain: domain, space: space, host: 'unbound1') }
         let!(:unbound_route_2) { Route.make(domain: domain, space: space, host: 'unbound2') }
 
         it 'deletes only unbound routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change { VCAP::CloudController::Route.count }.by(-2)
 
           expect { unbound_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unbound_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       context 'when there is a mix of bound and mapped routes' do
-        let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
 
         let!(:bound_and_mapped_route) { Route.make(domain: domain, space: space, host: 'bound', path: '/mapped') }
         let!(:_0) { RouteBinding.make(service_instance: service_instance, route: bound_and_mapped_route) }
@@ -64,9 +64,9 @@ module VCAP::CloudController
         let!(:_3) { RouteMappingModel.make(app: app, route: unbound_and_mapped_route) }
 
         it 'deletes only BOTH unmapped and unbound routes' do
-          expect {
+          expect do
             subject.delete(space)
-          }.to change { VCAP::CloudController::Route.count }.by(-1)
+          end.to change { VCAP::CloudController::Route.count }.by(-1)
 
           expect { unbound_and_unmapped_route.refresh }.to raise_error Sequel::Error, 'Record not found'
         end

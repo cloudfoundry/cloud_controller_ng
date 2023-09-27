@@ -32,12 +32,12 @@ module VCAP::CloudController
     let(:message) { BuildsListMessage.from_params(filters) }
     let(:filters) { {} }
 
-    let!(:lifecycle_data_for_app) {
+    let!(:lifecycle_data_for_app) do
       BuildpackLifecycleDataModel.make(
         build: staging_build_for_app3_space2,
         buildpacks: [Buildpack.make.name]
       )
-    }
+    end
 
     describe '#fetch_all' do
       it 'returns a Sequel::Dataset' do
@@ -87,7 +87,8 @@ module VCAP::CloudController
               :labels,
               :annotations,
               { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }
-            ]).where(id: staging_build_for_app3_space2.id).all
+            ]
+          ).where(id: staging_build_for_app3_space2.id).all
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:annotations)).to be true
           expect(results.first.associations.key?(:buildpack_lifecycle_data)).to be true
@@ -120,7 +121,8 @@ module VCAP::CloudController
             eager_loaded_associations: [
               :labels,
               { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }
-            ]).where(id: staging_build_for_app3_space2.id).all
+            ]
+          ).where(id: staging_build_for_app3_space2.id).all
 
           expect(results.first.buildpack_lifecycle_data.associations.key?(:buildpack_lifecycle_buildpacks)).to be true
           expect(results.first.associations.key?(:buildpack_lifecycle_data)).to be true

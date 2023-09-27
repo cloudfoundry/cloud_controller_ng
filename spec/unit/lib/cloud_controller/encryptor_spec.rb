@@ -222,32 +222,32 @@ module VCAP::CloudController
 
     describe '#set_field_as_encrypted' do
       context 'model does not have the salt column' do
-        let(:columns) { [:id, :name, :size, :encryption_key_label] }
+        let(:columns) { %i[id name size encryption_key_label] }
 
         context 'default name' do
           it 'raises an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name
-            }.to raise_error(RuntimeError, /salt/)
+            end.to raise_error(RuntimeError, /salt/)
           end
         end
 
         context 'explicit name' do
           it 'raises an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name, salt: :foobar
-            }.to raise_error(RuntimeError, /foobar/)
+            end.to raise_error(RuntimeError, /foobar/)
           end
         end
       end
 
       context 'model has the salt column' do
-        let(:columns) { [:id, :name, :size, :salt, :encryption_key_label, :encryption_iterations] }
+        let(:columns) { %i[id name size salt encryption_key_label encryption_iterations] }
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_class.send :set_field_as_encrypted, :name
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'creates a salt generation method' do
@@ -262,12 +262,12 @@ module VCAP::CloudController
         end
 
         context 'explicit name' do
-          let(:columns) { [:id, :name, :size, :foobar, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[id name size foobar encryption_key_label encryption_iterations] }
 
           it 'does not raise an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name, salt: :foobar
-            }.to_not raise_error
+            end.to_not raise_error
           end
 
           it 'creates a salt generation method' do
@@ -278,17 +278,17 @@ module VCAP::CloudController
       end
 
       context 'model does not have the "encryption_key_label" column' do
-        let(:columns) { [:id, :name, :salt, :size] }
+        let(:columns) { %i[id name salt size] }
 
         it 'raises an error' do
-          expect {
+          expect do
             base_class.send :set_field_as_encrypted, :name
-          }.to raise_error(RuntimeError, /encryption_key_label/)
+          end.to raise_error(RuntimeError, /encryption_key_label/)
         end
       end
 
       context 'model does not have the "encryption_iterations" column' do
-        let(:columns) { [:id, :name, :salt, :encryption_key_label] }
+        let(:columns) { %i[id name salt encryption_key_label] }
 
         it 'raises and error' do
           expect { base_class.send :set_field_as_encrypted, :name }.to raise_error(RuntimeError, /encryption_iterations/)
@@ -297,7 +297,7 @@ module VCAP::CloudController
     end
 
     describe 'field-specific methods' do
-      let(:columns) { [:sekret, :salt, :encryption_key_label, :encryption_iterations] }
+      let(:columns) { %i[sekret salt encryption_key_label encryption_iterations] }
       let(:model_class) do
         Class.new(base_class) do
           set_field_as_encrypted :sekret
@@ -375,18 +375,18 @@ module VCAP::CloudController
           context 'when the value is nil' do
             it 'stores a default nil value without trying to encrypt' do
               expect(subject.sekret_without_encryption).to_not be_nil
-              expect {
+              expect do
                 subject.sekret = nil
-              }.to change(subject, :sekret_without_encryption).to(nil)
+              end.to change(subject, :sekret_without_encryption).to(nil)
             end
           end
 
           context 'when the value is blank' do
             it 'stores a default nil value without trying to encrypt' do
               expect(subject.sekret_without_encryption).to_not be_nil
-              expect {
+              expect do
                 subject.sekret = ''
-              }.to change(subject, :sekret_without_encryption).to(nil)
+              end.to change(subject, :sekret_without_encryption).to(nil)
             end
           end
         end
@@ -416,7 +416,7 @@ module VCAP::CloudController
           end
 
           context 'model has a value for encryption_key_label' do
-            let(:columns) { [:sekret, :salt, :encryption_key_label, :encryption_iterations] }
+            let(:columns) { %i[sekret salt encryption_key_label encryption_iterations] }
 
             before do
               allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
@@ -487,14 +487,14 @@ module VCAP::CloudController
 
           it 're-encrypts the field after it has been serialized (the encryptor only works for strings, not hashes)' do
             subject.sekret = { 'foo' => 'bar' }
-            expect(subject.sekret_without_serialization).to eq(%({\"foo\":\"bar\"}))
+            expect(subject.sekret_without_serialization).to eq(%({"foo":"bar"}))
             expect(subject.sekret).to eq({ 'foo' => 'bar' })
             expect(subject.encryption_key_label).to eq(Encryptor.current_encryption_key_label)
           end
         end
 
         context 'and the model has another encrypted field' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
           let(:multi_field_class) do
             Class.new(base_class) do
@@ -528,7 +528,7 @@ module VCAP::CloudController
         end
 
         context 'and the model is a subclass of the class with encrypted fields' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
 
           let(:sti_class_parent) do
@@ -598,7 +598,7 @@ module VCAP::CloudController
         end
 
         context 'and the model has another encrypted field' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
           let(:multi_field_class) do
             Class.new(base_class) do
@@ -633,7 +633,7 @@ module VCAP::CloudController
         end
 
         context 'and the model is a subclass of the class with encrypted fields' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
 
           let(:sti_class_parent) do
@@ -681,7 +681,7 @@ module VCAP::CloudController
       end
 
       describe 'alternative storage column is specified' do
-        let(:columns) { [:sekret, :salt, :encrypted_sekret, :encryption_key_label, :encryption_iterations] }
+        let(:columns) { %i[sekret salt encrypted_sekret encryption_key_label encryption_iterations] }
 
         let(:model_class) do
           Class.new(base_class) do

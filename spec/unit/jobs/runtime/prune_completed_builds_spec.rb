@@ -83,9 +83,9 @@ module VCAP::CloudController
             BuildpackLifecycleDataModel.make(build: b)
           end
 
-          expect {
+          expect do
             job.perform
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'multiple apps' do
@@ -98,14 +98,14 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                BuildModel.make(id: i + 1000 * app_index, state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
+                BuildModel.make(id: i + (1000 * app_index), state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
               end
             end
 
             job.perform
 
-            expect(BuildModel.where(app: app).count).to eq(15)
-            expect(BuildModel.where(app: app).map(&:id)).to match_array((36..50).to_a)
+            expect(BuildModel.where(app:).count).to eq(15)
+            expect(BuildModel.where(app:).map(&:id)).to match_array((36..50).to_a)
 
             expect(BuildModel.where(app: app_the_second).count).to eq(15)
             expect(BuildModel.where(app: app_the_second).map(&:id)).to match_array((1036..1050).to_a)

@@ -8,9 +8,7 @@ module VCAP::CloudController
 
     def convert_to_mb(human_readable_byte_value)
       return nil unless human_readable_byte_value.present?
-      if !human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
-        raise NonNumericError
-      end
+      raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
       PalmCivet.to_megabytes(human_readable_byte_value.to_s)
     rescue PalmCivet::InvalidByteQuantityError
@@ -19,9 +17,7 @@ module VCAP::CloudController
 
     def convert_to_b(human_readable_byte_value)
       return nil unless human_readable_byte_value.present?
-      if !human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
-        raise NonNumericError
-      end
+      raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
       PalmCivet.to_bytes(human_readable_byte_value.to_s)
     rescue PalmCivet::InvalidByteQuantityError
@@ -31,16 +27,12 @@ module VCAP::CloudController
     def human_readable_byte_value(bytes)
       return nil unless bytes.present?
 
-      if !bytes.is_a?(Integer)
-        raise InvalidBytesError
-      end
+      raise InvalidBytesError unless bytes.is_a?(Integer)
 
-      units = %w(B K M G T)
+      units = %w[B K M G T]
       while units.any?
         unit_in_bytes = 1024**(units.length - 1)
-        if bytes.remainder(unit_in_bytes).zero?
-          return "#{bytes / unit_in_bytes}#{units.last}"
-        end
+        return "#{bytes / unit_in_bytes}#{units.last}" if bytes.remainder(unit_in_bytes).zero?
 
         units.pop
       end

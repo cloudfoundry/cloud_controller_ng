@@ -8,7 +8,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: Time.at(1),
         updated_at: Time.at(2),
         environment_variables: { 'some' => 'stuff' },
-        desired_state: 'STOPPED',
+        desired_state: 'STOPPED'
       )
     end
     let(:buildpack_name) { 'the-happiest-buildpack' }
@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       let(:service) { VCAP::CloudController::Service.make(label: 'rabbit', tags: ['swell']) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app.space, service_plan: service_plan, name: 'rabbit-instance') }
       let!(:service_binding) do
         VCAP::CloudController::ServiceBinding.create(app: app, service_instance: service_instance,
@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the app environment variables as json' do
         expect(result[:environment_variables]).to eq(app.environment_variables)
         expect(result[:application_env_json][:VCAP_APPLICATION][:name]).to eq(app.name)
-        expect(result[:application_env_json][:VCAP_APPLICATION][:limits][:fds]).to eq(16384)
+        expect(result[:application_env_json][:VCAP_APPLICATION][:limits][:fds]).to eq(16_384)
         expect(result[:system_env_json]).to have_key(:VCAP_SERVICES)
         expect(result[:staging_env_json]).to eq({})
         expect(result[:running_env_json]).to eq({})

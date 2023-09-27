@@ -24,7 +24,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_db_presence :service_instance_id }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness [:name, :service_instance_id] }
+      it { is_expected.to validate_uniqueness %i[name service_instance_id] }
 
       context 'MaxServiceKeysPolicy' do
         let(:service_key) { ServiceKey.make }
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
     describe 'user_visibility_filter' do
       let!(:service_instance) { ManagedServiceInstance.make }
-      let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+      let!(:service_key) { ServiceKey.make(service_instance:) }
       let!(:other_key) { ServiceKey.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:auditor) { make_auditor_for_space(service_instance.space) }
@@ -166,13 +166,13 @@ module VCAP::CloudController
 
     describe '#save_with_attributes_and_new_operation' do
       let(:service_instance) { ServiceInstance.make }
-      let(:binding) {
+      let(:binding) do
         ServiceKey.new(
           service_instance: service_instance,
-          credentials:      {},
-          name:             'foo',
+          credentials: {},
+          name: 'foo'
         )
-      }
+      end
 
       it 'creates a new last_operation object and associates it with the binding' do
         last_operation = {
@@ -214,18 +214,19 @@ module VCAP::CloudController
 
       context 'when attributes are passed in' do
         let(:credentials) { { password: 'rice' } }
-        let(:attributes) {
+        let(:attributes) do
           {
             name: 'gohan',
-            credentials: credentials,
+            credentials: credentials
           }
-        }
-        let(:last_operation) { {
-          state: 'in progress',
-          type: 'create',
-          description: '10%'
-        }
-        }
+        end
+        let(:last_operation) do
+          {
+            state: 'in progress',
+            type: 'create',
+            description: '10%'
+          }
+        end
 
         it 'updates the attributes' do
           binding.save_with_attributes_and_new_operation(attributes, last_operation)
@@ -239,17 +240,16 @@ module VCAP::CloudController
         end
 
         it 'only saves permitted attributes' do
-          expect {
+          expect do
             binding.save_with_attributes_and_new_operation(attributes.merge(
                                                              parameters: {
                                                                foo: 'bar',
                                                                ding: 'dong'
                                                              },
-                                                             endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
-            ),
-              last_operation
-            )
-          }.not_to raise_error
+                                                             endpoints: [{ host: 'mysqlhost', ports: ['3306'] }]
+                                                           ),
+                                                           last_operation)
+          end.not_to raise_error
         end
       end
     end

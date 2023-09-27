@@ -16,7 +16,7 @@ module VCAP::CloudController
               :connection_validation_timeout => Integer,
               optional(:log_db_queries) => bool,
               optional(:ssl_verify_hostname) => bool,
-              optional(:ca_cert_path) => String,
+              optional(:ca_cert_path) => String
             },
 
             db_encryption_key: enum(String, NilClass),
@@ -30,8 +30,8 @@ module VCAP::CloudController
             logging: {
               level: String, # debug, info, etc.
               file: String, # Log file to use
-              syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
-            },
+              syslog: String # Name to associate with syslog messages (should start with 'vcap.')
+            }
           }
         end
 

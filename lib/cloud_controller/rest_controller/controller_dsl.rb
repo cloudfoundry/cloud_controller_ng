@@ -20,7 +20,7 @@ module VCAP::CloudController::RestController
       attr_reader :route_for
 
       def initialize(name, opts={})
-        @route_for = opts[:route_for] || [:get, :put, :delete]
+        @route_for = opts[:route_for] || %i[get put delete]
         super
       end
     end

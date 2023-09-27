@@ -5,7 +5,7 @@ module VCAP::CloudController
     include FindProcessThroughApp
 
     def self.dependencies
-      [:instances_reporters, :index_stopper]
+      %i[instances_reporters index_stopper]
     end
 
     path_base 'apps'

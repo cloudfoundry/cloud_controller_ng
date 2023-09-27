@@ -7,7 +7,7 @@ module VCAP::CloudController
     include FindProcessThroughApp
 
     def self.dependencies
-      [:app_event_repository, :stagers]
+      %i[app_event_repository stagers]
     end
 
     path_base 'apps'
@@ -43,12 +43,12 @@ module VCAP::CloudController
         'restage-app',
         {
           'app-id' => process.app_guid,
-          'user-id' => current_user.guid,
+          'user-id' => current_user.guid
         }, {
-        'lifecycle' => process.app.lifecycle_type,
-        'buildpacks' => process.app.lifecycle_data.buildpacks,
-        'stack' => process.app.lifecycle_data.stack
-      }
+          'lifecycle' => process.app.lifecycle_type,
+          'buildpacks' => process.app.lifecycle_data.buildpacks,
+          'stack' => process.app.lifecycle_data.stack
+        }
       )
 
       [
@@ -67,21 +67,15 @@ module VCAP::CloudController
     private
 
     def validate_process!(process)
-      unless process.web?
-        raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process.guid)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process.guid) unless process.web?
 
-      if process.instances < 1
-        raise CloudController::Errors::ApiError.new_from_details('StagingError', 'App must have at least 1 instance to stage.')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('StagingError', 'App must have at least 1 instance to stage.') if process.instances < 1
 
-      if process.pending?
-        raise CloudController::Errors::ApiError.new_from_details('NotStaged')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('NotStaged') if process.pending?
 
-      if process.latest_package.nil?
-        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-      end
+      return unless process.latest_package.nil?
+
+      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
     end
   end
 end

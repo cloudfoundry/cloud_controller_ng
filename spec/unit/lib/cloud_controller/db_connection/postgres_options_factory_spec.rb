@@ -10,7 +10,8 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
     let(:postgres_options) do
       VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
         database: {
-          adapter: 'postgres' },
+          adapter: 'postgres'
+        },
         ca_cert_path: ca_cert_path,
         ssl_verify_hostname: ssl_verify_hostname
       )

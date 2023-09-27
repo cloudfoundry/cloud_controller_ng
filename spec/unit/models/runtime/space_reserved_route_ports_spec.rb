@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SpaceReservedRoutePorts do
     let(:organization) { Organization.make }
-    let(:space_quota) { SpaceQuotaDefinition.make(organization: organization) }
+    let(:space_quota) { SpaceQuotaDefinition.make(organization:) }
     let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }
 
     subject(:space_routes) { SpaceReservedRoutePorts.new(space) }
@@ -21,7 +21,7 @@ module VCAP::CloudController
         let!(:mock_router_api_client) do
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000, 1234, 3455, 2222])
           routing_api_client = double('routing_api_client', router_group: router_group, enabled?: true)
-          allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client: routing_api_client))
+          allow(CloudController::DependencyLocator).to receive(:instance).and_return(double(:api_client, routing_api_client:))
         end
 
         before do
@@ -29,7 +29,7 @@ module VCAP::CloudController
           Route.make(host: '', space: space, domain: domain, port: 1234)
           Route.make(host: '', space: space, domain: domain, port: 3455)
           Route.make(host: '', space: space, domain: domain, port: 4444)
-          Route.make(space: space)
+          Route.make(space:)
         end
 
         it 'should have return the number of reserved ports' do

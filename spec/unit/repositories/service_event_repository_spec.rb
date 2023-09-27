@@ -92,7 +92,7 @@ module VCAP::CloudController
             name: service_broker.name,
             broker_url: service_broker.broker_url,
             auth_username: service_broker.auth_username,
-            auth_password: service_broker.auth_password,
+            auth_password: service_broker.auth_password
           }
         end
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
               bindable: true,
               active: false,
               plan_updateable: false,
-              unique_id: 'broker-provided-id',
+              unique_id: 'broker-provided-id'
             )
           end
 
@@ -208,23 +208,23 @@ module VCAP::CloudController
 
             event = Event.first(type: 'audit.service.create')
             expect(event.metadata).to include({
-              'service_broker_guid' => service.service_broker.guid,
-              'unique_id' => service.broker_provided_id,
-              'provider' => service.provider,
-              'url' => service.url,
-              'version' => service.version,
-              'info_url' => service.info_url,
-              'bindable' => service.bindable,
-              'long_description' => service.long_description,
-              'documentation_url' => service.documentation_url,
-              'label' => service.label,
-              'description' => service.description,
-              'tags' => service.tags,
-              'extra' => service.extra,
-              'active' => service.active,
-              'requires' => service.requires,
-              'plan_updateable' => service.plan_updateable,
-            })
+                                                'service_broker_guid' => service.service_broker.guid,
+                                                'unique_id' => service.broker_provided_id,
+                                                'provider' => service.provider,
+                                                'url' => service.url,
+                                                'version' => service.version,
+                                                'info_url' => service.info_url,
+                                                'bindable' => service.bindable,
+                                                'long_description' => service.long_description,
+                                                'documentation_url' => service.documentation_url,
+                                                'label' => service.label,
+                                                'description' => service.description,
+                                                'tags' => service.tags,
+                                                'extra' => service.extra,
+                                                'active' => service.active,
+                                                'requires' => service.requires,
+                                                'plan_updateable' => service.plan_updateable
+                                              })
           end
         end
 
@@ -311,15 +311,15 @@ module VCAP::CloudController
 
             event = Event.first(type: 'audit.service_plan.create')
             expect(event.metadata).to include({
-              'name' => plan.name,
-              'description' => plan.description,
-              'free' => plan.free,
-              'active' => plan.active,
-              'extra' => plan.extra,
-              'unique_id' => plan.broker_provided_id,
-              'public' => plan.public,
-              'service_guid' => service.guid,
-            })
+                                                'name' => plan.name,
+                                                'description' => plan.description,
+                                                'free' => plan.free,
+                                                'active' => plan.active,
+                                                'extra' => plan.extra,
+                                                'unique_id' => plan.broker_provided_id,
+                                                'public' => plan.public,
+                                                'service_guid' => service.guid
+                                              })
           end
         end
 
@@ -387,7 +387,7 @@ module VCAP::CloudController
       describe '#record_service_plan_event' do
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
         let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let(:plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+        let(:plan) { VCAP::CloudController::ServicePlan.make(service:) }
 
         it 'creates an event with empty metadata because it is only used for delete events' do
           repository.record_service_plan_event(:delete, plan)
@@ -468,7 +468,7 @@ module VCAP::CloudController
           let(:client_attrs) do
             {
               'id' => 'client-id',
-              'secret' => 'super-secret',
+              'secret' => 'super-secret'
             }
           end
 
@@ -527,20 +527,20 @@ module VCAP::CloudController
         end
 
         it 'allows parameters to not be hashy' do
-          expect {
+          expect do
             repository.record_service_instance_event(:create, instance, 5)
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'when there are params' do
           it 'redacts the arbitrary user parameters' do
             repository.record_service_instance_event(:create, instance, {
-              'parameters' => {
-                'favorite_dog' => 'chihuahua',
-                'username' => 'my-secret-username',
-                'password' => 'my-secret-password'
-              }
-            })
+                                                       'parameters' => {
+                                                         'favorite_dog' => 'chihuahua',
+                                                         'username' => 'my-secret-username',
+                                                         'password' => 'my-secret-password'
+                                                       }
+                                                     })
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
             expect(event.metadata['request']['parameters']).to eq('[PRIVATE DATA HIDDEN]')
@@ -607,11 +607,11 @@ module VCAP::CloudController
             repository.record_user_provided_service_instance_event(:create, instance, params)
             event = Event.first(type: 'audit.user_provided_service_instance.create')
             expect(event.metadata).to eq('request' => {
-              'name' => params['name'],
-              'credentials' => '[REDACTED]',
-              'space_guid' => params['space_guid'],
-              'syslog_drain_url' => params['syslog_drain_url']
-            })
+                                           'name' => params['name'],
+                                           'credentials' => '[REDACTED]',
+                                           'space_guid' => params['space_guid'],
+                                           'syslog_drain_url' => params['syslog_drain_url']
+                                         })
           end
         end
       end
@@ -635,10 +635,10 @@ module VCAP::CloudController
         it 'records an event for create action' do
           repository.record_service_key_event(:create, service_key)
           metadata = {
-              'request' => {
-                  'service_instance_guid' => service_key.service_instance.guid,
-                  'name' => service_key.name
-              }
+            'request' => {
+              'service_instance_guid' => service_key.service_instance.guid,
+              'name' => service_key.name
+            }
           }
 
           check_event_data 'audit.service_key.create', metadata
@@ -722,7 +722,7 @@ module VCAP::CloudController
         specify 'record_service_plan_event logs an error but does not propagate errors' do
           broker = VCAP::CloudController::ServiceBroker.make
           service = VCAP::CloudController::Service.make(service_broker: broker)
-          service_plan = VCAP::CloudController::ServicePlan.make(service: service)
+          service_plan = VCAP::CloudController::ServicePlan.make(service:)
           repository.record_service_plan_event(:create, service_plan)
           expect(logger).to have_received(:error)
         end
@@ -771,13 +771,13 @@ module VCAP::CloudController
         specify 'with_service_plan_event logs an error but does not propagate errors' do
           broker = VCAP::CloudController::ServiceBroker.make
           service = VCAP::CloudController::Service.new(
-            service_broker:  broker,
-            label:           'name',
-            description:     'some description',
-            bindable:        true,
-            active:          false,
+            service_broker: broker,
+            label: 'name',
+            description: 'some description',
+            bindable: true,
+            active: false,
             plan_updateable: false,
-            unique_id:       'broker-provided-id',
+            unique_id: 'broker-provided-id'
           )
           repository.with_service_event(service) { service.save }
           expect(logger).to have_received(:error)

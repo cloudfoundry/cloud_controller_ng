@@ -1,9 +1,7 @@
 Sequel.migration do
   up do
     collate_opts = {}
-    if self.class.name.match?(/mysql/i)
-      collate_opts[:collate] = :utf8_bin
-    end
+    collate_opts[:collate] = :utf8_bin if self.class.name.match?(/mysql/i)
 
     alter_table :isolation_segments do
       if self.class.name.match?(/mysql/i)

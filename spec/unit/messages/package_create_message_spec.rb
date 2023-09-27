@@ -184,14 +184,14 @@ module VCAP::CloudController
 
         it 'redacts the password field' do
           expect(message.audit_hash).to eq({
-            'relationships' => relationships.deep_stringify_keys,
-            'type' => 'docker',
-            'data' => {
-              'image' => image,
-              'username' => docker_username,
-              'password' => '***'
-            }
-          })
+                                             'relationships' => relationships.deep_stringify_keys,
+                                             'type' => 'docker',
+                                             'data' => {
+                                               'image' => image,
+                                               'username' => docker_username,
+                                               'password' => '***'
+                                             }
+                                           })
         end
       end
 
@@ -199,16 +199,16 @@ module VCAP::CloudController
         let(:message) do
           data = {
             type: 'buildpack',
-            relationships: relationships,
+            relationships: relationships
           }
           PackageCreateMessage.new(data)
         end
 
         it 'returns the audit_hash' do
           expect(message.audit_hash).to eq({
-            'relationships' => relationships.deep_stringify_keys,
-            'type' => 'buildpack',
-          })
+                                             'relationships' => relationships.deep_stringify_keys,
+                                             'type' => 'buildpack'
+                                           })
         end
       end
     end

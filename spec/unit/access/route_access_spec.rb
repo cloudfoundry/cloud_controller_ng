@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
-    let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+    let(:object) { VCAP::CloudController::Route.make(domain:, space:) }
 
     before do
       flag.save
@@ -33,7 +33,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     read_table = {
@@ -52,7 +52,7 @@ module VCAP::CloudController
       org_user: false,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     reserved_table = {
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       admin: true,
       admin_read_only: false,
-      global_auditor: false,
+      global_auditor: false
     }
 
     write_table = {
@@ -82,12 +82,12 @@ module VCAP::CloudController
       org_user: false,
       org_manager: false,
       org_auditor: false,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     restricted_write_table = write_table.clone.merge({
-      space_developer: false,
-    })
+                                                       space_developer: false
+                                                     })
 
     it_behaves_like('an access control', :index, index_table)
     it_behaves_like('an access control', :read, read_table)

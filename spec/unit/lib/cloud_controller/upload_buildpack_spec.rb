@@ -63,9 +63,9 @@ module VCAP::CloudController
             end
 
             it 'returns an error and does not update stack' do
-              expect {
+              expect do
                 upload_buildpack.upload_buildpack(buildpack, zip_with_massive_manifest, filename)
-              }.to raise_error(CloudController::Errors::ApiError, /Buildpack zip error/)
+              end.to raise_error(CloudController::Errors::ApiError, /Buildpack zip error/)
               bp = Buildpack.find(name: buildpack.name)
               expect(bp).to_not be_nil
               expect(bp.stack).to eq('cider')
@@ -89,9 +89,9 @@ module VCAP::CloudController
             end
 
             it 'raises an error and does not update stack' do
-              expect {
+              expect do
                 upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-              }.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(latkes\) does not match cider/)
+              end.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(latkes\) does not match cider/)
               bp = Buildpack.find(name: buildpack.name)
               expect(bp).to_not be_nil
               expect(bp.stack).to eq('cider')
@@ -117,9 +117,9 @@ module VCAP::CloudController
               context 'buildpack with same name and stack exists' do
                 it 'raises an error' do
                   VCAP::CloudController::Buildpack.create(name: buildpack.name, stack: valid_zip_manifest_stack)
-                  expect {
+                  expect do
                     upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-                  }.to raise_error(CloudController::Errors::ApiError, /The buildpack name #{buildpack.name} is already in use for the stack #{valid_zip_manifest_stack}/)
+                  end.to raise_error(CloudController::Errors::ApiError, /The buildpack name #{buildpack.name} is already in use for the stack #{valid_zip_manifest_stack}/)
                 end
               end
             end
@@ -127,9 +127,9 @@ module VCAP::CloudController
             context "but the stack doesn't exist" do
               let(:valid_zip_manifest_stack) { 'new-and-unknown' }
               it 'raises an error' do
-                expect {
+                expect do
                   upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-                }.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(#{valid_zip_manifest_stack}\) does not exist/)
+                end.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(#{valid_zip_manifest_stack}\) does not exist/)
                 bp = Buildpack.find(name: buildpack.name)
                 expect(bp).to_not be_nil
                 expect(bp.filename).to be_nil
@@ -139,9 +139,9 @@ module VCAP::CloudController
         end
 
         it 'updates the buildpack filename' do
-          expect {
+          expect do
             upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-          }.to change {
+          end.to change {
             Buildpack.find(name: 'upload_binary_buildpack').filename
           }.from(nil).to(filename)
         end

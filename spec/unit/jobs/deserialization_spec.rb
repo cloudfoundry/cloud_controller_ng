@@ -8,11 +8,11 @@ module VCAP::CloudController
         let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@bommel.com', user_guid: user.guid, user_name: 'user-name') }
         let(:apply_manifest_action) { AppApplyManifest.new(user_audit_info) }
         let(:org) { Organization.make(guid: 'org-guid') }
-        let(:space) { Space.make(guid: 'space-guid', name: 'space-name', organization: org,) }
+        let(:space) { Space.make(guid: 'space-guid', name: 'space-name', organization: org) }
         let(:app) { AppModel.make(guid: 'app-guid', name: 'app-name', space: space) }
-        let(:app_manifest_message) {
+        let(:app_manifest_message) do
           AppManifestMessage.create_from_yml({ name: app.name, instances: 4, routes: [{ route: 'app.bommel' }], buildpack: 'ruby', stack: 'cflinuxfs4' })
-        }
+        end
         let(:app_guid_message_hash) { { app.guid => app_manifest_message } }
 
         before do

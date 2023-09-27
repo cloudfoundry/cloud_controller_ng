@@ -10,7 +10,7 @@ module VCAP::CloudController
         name: 'basic',
         apps: apps,
         services: services,
-        routes: routes,
+        routes: routes
       }
     end
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
         per_process_memory_in_mb: 1024,
         total_instances: 2,
         per_app_tasks: 4,
-        log_rate_limit_in_bytes_per_second: 2000,
+        log_rate_limit_in_bytes_per_second: 2000
       }
     end
 
@@ -28,14 +28,14 @@ module VCAP::CloudController
       {
         paid_services_allowed: true,
         total_service_instances: 17,
-        total_service_keys: 19,
+        total_service_keys: 19
       }
     end
 
     let(:routes) do
       {
         total_routes: 47,
-        total_reserved_ports: 28,
+        total_reserved_ports: 28
       }
     end
 
@@ -123,12 +123,12 @@ module VCAP::CloudController
 
       describe 'apps' do
         context 'value for apps is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: true,
+              apps: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -137,12 +137,12 @@ module VCAP::CloudController
         end
 
         context 'when apps is well-formed (a hash)' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: {},
+              apps: {}
             }
-          }
+          end
 
           before do
             quota_app_message = instance_double(QuotasAppsMessage)
@@ -160,12 +160,12 @@ module VCAP::CloudController
 
       describe 'services' do
         context 'value for services is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: true,
+              services: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -174,12 +174,12 @@ module VCAP::CloudController
         end
 
         context 'when the services validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: {},
+              services: {}
             }
-          }
+          end
 
           before do
             quota_services_message = instance_double(QuotasServicesMessage)
@@ -197,12 +197,12 @@ module VCAP::CloudController
 
       describe 'routes' do
         context 'value for routes is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: true,
+              routes: true
             }
-          }
+          end
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -211,12 +211,12 @@ module VCAP::CloudController
         end
 
         context 'when the routes validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: {},
+              routes: {}
             }
-          }
+          end
 
           before do
             quota_routes_message = instance_double(QuotasRoutesMessage)

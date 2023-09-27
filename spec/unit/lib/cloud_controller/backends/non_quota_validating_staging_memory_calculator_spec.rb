@@ -44,8 +44,8 @@ module VCAP::CloudController
       let(:expected_limit) { 99 }
       before do
         TestConfig.override(staging: {
-          minimum_staging_memory_mb: expected_limit
-        })
+                              minimum_staging_memory_mb: expected_limit
+                            })
       end
 
       it 'returns the configured value' do

@@ -6,9 +6,9 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
-          'order_by'  => 'created_at',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'created_at'
         }
       end
 
@@ -33,10 +33,10 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = SidecarsListMessage.from_params({
-          page:      1,
-          per_page:  5,
-          order_by:  'created_at',
-        })
+                                                    page: 1,
+                                                    per_page: 5,
+                                                    order_by: 'created_at'
+                                                  })
         expect(message).to be_valid
       end
 
@@ -54,8 +54,8 @@ module VCAP::CloudController
 
       it 'reject an invalid order_by field' do
         message = SidecarsListMessage.from_params({
-          order_by:  'fail!',
-        })
+                                                    order_by: 'fail!'
+                                                  })
         expect(message).not_to be_valid
       end
     end

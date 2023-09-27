@@ -27,7 +27,7 @@ module VCAP::CloudController
           URI::HTTPS.build(
             host: internal_service_hostname,
             port: tls_port,
-            path: "/internal/v4/droplets/#{guid}/#{droplet_checksum}/download",
+            path: "/internal/v4/droplets/#{guid}/#{droplet_checksum}/download"
           ).to_s
         end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
           URI::HTTP.build(
             host: internal_service_hostname,
             port: external_port,
-            path: "/internal/v2/droplets/#{guid}/#{droplet_checksum}/download",
+            path: "/internal/v2/droplets/#{guid}/#{droplet_checksum}/download"
           ).to_s
         end
       end

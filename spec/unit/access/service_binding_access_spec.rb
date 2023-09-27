@@ -9,15 +9,15 @@ module VCAP::CloudController
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app) { VCAP::CloudController::AppModel.make(space:) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
     let(:object) do
       service_instance.add_shared_space(app.space)
-      ServiceBinding.make(service_instance: service_instance, app: app)
+      ServiceBinding.make(service_instance:, app:)
     end
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     describe 'admin' do
       context 'readonly' do

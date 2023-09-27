@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     class BbsStagerClient
       ACCEPTABLE_DIEGO_ERRORS = [
-        ::Diego::Bbs::ErrorTypes::ResourceNotFound,
+        ::Diego::Bbs::ErrorTypes::ResourceNotFound
       ].freeze
 
       def initialize(client, config)
@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def stage(staging_guid, staging_details)
-        logger.info('stage.request', staging_guid: staging_guid)
+        logger.info('stage.request', staging_guid:)
 
         staging_message = task_recipe_builder.build_staging_task(@config, staging_details)
 
@@ -26,15 +26,13 @@ module VCAP::CloudController
 
         logger.info('stage.response', staging_guid: staging_guid, error: response.error)
 
-        if response.error
-          raise CloudController::Errors::ApiError.new_from_details('StagerError', "bbs stager client staging failed: #{response.error.message}")
-        end
+        raise CloudController::Errors::ApiError.new_from_details('StagerError', "bbs stager client staging failed: #{response.error.message}") if response.error
 
         nil
       end
 
       def stop_staging(staging_guid)
-        logger.info('stop.staging.request', staging_guid: staging_guid)
+        logger.info('stop.staging.request', staging_guid:)
 
         begin
           response = client.cancel_task(staging_guid)

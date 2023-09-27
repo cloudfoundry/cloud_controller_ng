@@ -42,7 +42,8 @@ module VCAP::CloudController
     def record_upload(package, user_audit_info)
       Repositories::PackageEventRepository.record_app_package_upload(
         package,
-        user_audit_info)
+        user_audit_info
+      )
     end
 
     def build_job(message, package)

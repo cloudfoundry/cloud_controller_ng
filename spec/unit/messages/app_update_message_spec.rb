@@ -44,14 +44,14 @@ module VCAP::CloudController
         context 'when lifecycle is provided' do
           let(:params) do
             {
-                name: 'some_name',
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpacks: ['java'],
-                        stack: 'cflinuxfs4'
-                    }
+              name: 'some_name',
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpacks: ['java'],
+                  stack: 'cflinuxfs4'
                 }
+              }
             }
           end
 
@@ -64,13 +64,13 @@ module VCAP::CloudController
         context 'when lifecycle data is provided' do
           let(:params) do
             {
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpacks: [123],
-                        stack: 324
-                    }
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpacks: [123],
+                  stack: 324
                 }
+              }
             }
           end
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
         context 'when lifecycle is not provided' do
           let(:params) do
             {
-                name: 'some_name',
+              name: 'some_name'
             }
           end
 
@@ -116,9 +116,9 @@ module VCAP::CloudController
         context 'when lifecycle data is empty' do
           let(:params) do
             {
-                lifecycle: {
-                    data: {}
-                }
+              lifecycle: {
+                data: {}
+              }
             }
           end
 
@@ -133,7 +133,7 @@ module VCAP::CloudController
             {
               lifecycle: {
                 data: {
-                  buildpacks: ['java'],
+                  buildpacks: ['java']
                 }
               }
             }
@@ -148,10 +148,10 @@ module VCAP::CloudController
         context 'when lifecycle data is not an object' do
           let(:params) do
             {
-                lifecycle: {
-                    type: 'buildpack',
-                    data: 'potato'
-                }
+              lifecycle: {
+                type: 'buildpack',
+                data: 'potato'
+              }
             }
           end
 
@@ -167,11 +167,11 @@ module VCAP::CloudController
         it 'can parse labels' do
           params =
             {
-                metadata: {
-                    labels: {
-                        potato: 'mashed'
-                    }
+              metadata: {
+                labels: {
+                  potato: 'mashed'
                 }
+              }
             }
           message = AppUpdateMessage.new(params)
           expect(message).to be_valid
@@ -180,9 +180,9 @@ module VCAP::CloudController
 
         it 'validates labels' do
           params = {
-              metadata: {
-                  labels: 'potato',
-              }
+            metadata: {
+              labels: 'potato'
+            }
           }
           message = AppUpdateMessage.new(params)
           expect(message).not_to be_valid
@@ -194,7 +194,7 @@ module VCAP::CloudController
               metadata: {
                 annotations: {
                   potato: 'mashed',
-                  delete: nil,
+                  delete: nil
                 }
               }
             }
@@ -207,7 +207,7 @@ module VCAP::CloudController
         it 'validates annotations' do
           params = {
             metadata: {
-              annotations: 'potato',
+              annotations: 'potato'
             }
           }
           message = AppUpdateMessage.new(params)

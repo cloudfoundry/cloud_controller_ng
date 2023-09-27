@@ -3,9 +3,9 @@ require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
   class ServiceBrokersListMessage < MetadataListMessage
-    register_allowed_keys [
-      :space_guids,
-      :names
+    register_allowed_keys %i[
+      space_guids
+      names
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(names space_guids))
+      super(params, %w[names space_guids])
     end
   end
 end

@@ -8,7 +8,7 @@ module VCAP::CloudController
 
             {
               buildpacks: app.lifecycle_data.buildpacks.presence,
-              stack: app.lifecycle_data.stack,
+              stack: app.lifecycle_data.stack
             }
           end
         end

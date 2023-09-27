@@ -2,12 +2,12 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogService
     include CatalogValidationHelper
 
-    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding', 'volume_mount'].freeze
+    SUPPORTED_REQUIRES_VALUES = %w[syslog_drain route_forwarding volume_mount].freeze
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :plans, :requires, :dashboard_client,
-      :errors, :plan_updateable, :bindings_retrievable, :instances_retrievable,
-      :allow_context_updates
+                :description, :bindable, :tags, :plans, :requires, :dashboard_client,
+                :errors, :plan_updateable, :bindings_retrievable, :instances_retrievable,
+                :allow_context_updates
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -82,11 +82,11 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_plans
-      validate_dependently_in_order([
-        :validate_at_least_one_plan_present!,
-        :validate_plans_format,
-        :validate_plans_data,
-        :validate_uniqueness_constraints
+      validate_dependently_in_order(%i[
+        validate_at_least_one_plan_present!
+        validate_plans_format
+        validate_plans_data
+        validate_uniqueness_constraints
       ])
     end
 
@@ -129,19 +129,19 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_all_plan_ids_are_unique!
       duplicate_plans = find_duplicate_plans :broker_provided_id
-      if duplicate_plans
-        duplicate_plans.each do |plan|
-          errors.add("Plan ids must be unique. Service #{name} already has a plan with id '#{plan}'")
-        end
+      return unless duplicate_plans
+
+      duplicate_plans.each do |plan|
+        errors.add("Plan ids must be unique. Service #{name} already has a plan with id '#{plan}'")
       end
     end
 
     def validate_all_plan_names_are_unique!
       duplicate_plans = find_duplicate_plans :name
-      if duplicate_plans.present?
-        duplicate_plans.each do |plan|
-          errors.add("Plan names must be unique within a service. Service #{name} already has a plan named #{plan}")
-        end
+      return unless duplicate_plans.present?
+
+      duplicate_plans.each do |plan|
+        errors.add("Plan names must be unique within a service. Service #{name} already has a plan named #{plan}")
       end
     end
 
@@ -154,9 +154,9 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_dashboard_client!
       return unless dashboard_client
 
-      validate_dependently_in_order([
-        :validate_dashboard_client_is_a_hash!,
-        :validate_dashboard_client_attributes!
+      validate_dependently_in_order(%i[
+        validate_dashboard_client_is_a_hash!
+        validate_dashboard_client_attributes!
       ])
     end
 
@@ -188,7 +188,7 @@ module VCAP::Services::ServiceBrokers::V2
         dashboard_client_redirect_uri: 'Service dashboard client redirect_uri',
         bindings_retrievable: 'Service "bindings_retrievable" field',
         instances_retrievable: 'Service "instances_retrievable" field',
-        allow_context_updates: 'Service "allow_context_updates" field',
+        allow_context_updates: 'Service "allow_context_updates" field'
       }.fetch(name) { raise NotImplementedError }
     end
   end

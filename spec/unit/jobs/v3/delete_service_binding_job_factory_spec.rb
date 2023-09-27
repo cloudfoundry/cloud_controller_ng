@@ -56,9 +56,9 @@ module VCAP::CloudController
         end
 
         it 'raises on invalid input' do
-          expect {
+          expect do
             described_class.type_of(ServiceInstance.make)
-          }.to raise_error(described_class::InvalidType)
+          end.to raise_error(described_class::InvalidType)
         end
       end
     end

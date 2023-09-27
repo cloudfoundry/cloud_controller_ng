@@ -12,8 +12,8 @@ RSpec.describe 'CORS', type: :integration do
   let(:authed_headers) do
     {
       'Authorization' => "bearer #{admin_token}",
-      'Accept'        => 'application/json',
-      'Content-Type'  => 'application/json'
+      'Accept' => 'application/json',
+      'Content-Type' => 'application/json'
     }
   end
 
@@ -121,7 +121,7 @@ RSpec.describe 'CORS', type: :integration do
             it 'allows custom headers to be returned' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Expose-Headers'].split(',')).
-                to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', ::VCAP::Request::HEADER_NAME.downcase)
+                to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', VCAP::Request::HEADER_NAME.downcase)
             end
 
             it 'allows needed request headers to be included' do
@@ -200,7 +200,7 @@ RSpec.describe 'CORS', type: :integration do
             response = make_get_request(test_path, authed_headers.merge({ 'Origin' => 'http://foo.inblue.net' }))
             expect(response.code).to eq('200')
             expect(response['Access-Control-Expose-Headers'].split(',')).
-              to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', ::VCAP::Request::HEADER_NAME.downcase)
+              to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', VCAP::Request::HEADER_NAME.downcase)
           end
         end
       end
@@ -311,7 +311,7 @@ RSpec.describe 'CORS', type: :integration do
             it 'allows custom headers to be returned' do
               response = make_preflight_request_with_origin 'http://bar.baz.inblue.net', 'PUT', authed_headers
               expect(response['Access-Control-Expose-Headers'].split(',')).
-                to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', ::VCAP::Request::HEADER_NAME.downcase)
+                to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', VCAP::Request::HEADER_NAME.downcase)
             end
 
             it 'allows needed request headers to be included' do
@@ -390,7 +390,7 @@ RSpec.describe 'CORS', type: :integration do
             response = make_get_request(test_path, authed_headers.merge({ 'Origin' => 'http://foo.inblue.net' }))
             expect(response.code).to eq('200')
             expect(response['Access-Control-Expose-Headers'].split(',')).
-              to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', ::VCAP::Request::HEADER_NAME.downcase)
+              to contain_exactly('x-cf-warnings', 'x-app-staging-log', 'range', 'location', VCAP::Request::HEADER_NAME.downcase)
           end
         end
       end

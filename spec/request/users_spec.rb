@@ -7,7 +7,7 @@ RSpec.describe 'Users Request' do
   let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
-  let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+  let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
   let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
   let(:actee_guid) { 'actee-guid' }
 
@@ -17,26 +17,26 @@ RSpec.describe 'Users Request' do
     allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(actee.guid, client.guid, user.guid)).and_return(
       {
         user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' }
       }
     )
 
     allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(actee.guid, user.guid)).and_return(
       {
         user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' }
       }
     )
 
     allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
       {
-        user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+        user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
       }
     )
     allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
     allow(uaa_client).to receive(:users_for_ids).with([actee.guid]).and_return(
       {
-        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+        actee.guid => { 'username' => 'lola', 'origin' => 'uaa' }
       }
     )
     allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
@@ -56,7 +56,7 @@ RSpec.describe 'Users Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user.guid}} }
         }
       }
     end
@@ -74,7 +74,7 @@ RSpec.describe 'Users Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{client.guid}} }
         }
       }
     end
@@ -92,7 +92,7 @@ RSpec.describe 'Users Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{actee.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{actee.guid}} }
         }
       }
     end
@@ -110,15 +110,15 @@ RSpec.describe 'Users Request' do
 
         let(:params) do
           {
-            guids: ['foo', 'bar'],
-            usernames: ['foo', 'bar'],
-            origins: ['foo', 'bar'],
-            page:   '2',
-            per_page:   '10',
-            order_by:   'updated_at',
-            label_selector:   'foo,bar',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            guids: %w[foo bar],
+            usernames: %w[foo bar],
+            origins: %w[foo bar],
+            page: '2',
+            per_page: '10',
+            order_by: 'updated_at',
+            label_selector: 'foo,bar',
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
       end
@@ -136,15 +136,15 @@ RSpec.describe 'Users Request' do
 
           let(:params) do
             {
-              guids: ['foo', 'bar'],
-              partial_usernames: ['foo', 'bar'],
-              origins: ['foo', 'bar'],
-              page:   '2',
-              per_page:   '10',
-              order_by:   'updated_at',
-              label_selector:   'foo,bar',
-              created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-              updated_ats: { gt: Time.now.utc.iso8601 },
+              guids: %w[foo bar],
+              partial_usernames: %w[foo bar],
+              origins: %w[foo bar],
+              page: '2',
+              per_page: '10',
+              order_by: 'updated_at',
+              label_selector: 'foo,bar',
+              created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+              updated_ats: { gt: Time.now.utc.iso8601 }
             }
           end
         end
@@ -152,7 +152,7 @@ RSpec.describe 'Users Request' do
     end
 
     describe 'without filters' do
-      let(:api_call) { lambda { |user_headers| get '/v3/users', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/users', nil, user_headers } }
 
       context 'when there are no other users in your space or org' do
         let(:expected_codes_and_responses) do
@@ -198,7 +198,7 @@ RSpec.describe 'Users Request' do
           space.add_developer(actee)
         end
 
-        let(:api_call) { lambda { |user_headers| get '/v3/users', nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get '/v3/users', nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -248,7 +248,7 @@ RSpec.describe 'Users Request' do
     describe 'with filters' do
       context 'when filtering by guid' do
         let(:endpoint) { "/v3/users?guids=#{user.guid}" }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -267,7 +267,7 @@ RSpec.describe 'Users Request' do
         let(:user_in_different_origin) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
         let(:user_with_different_username) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
         let(:endpoint) { '/v3/users?usernames=bob-mcjames&origins=Okta' }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:user_in_different_origin_json) do
           {
             guid: user_in_different_origin.guid,
@@ -281,7 +281,7 @@ RSpec.describe 'Users Request' do
               annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user.guid}} }
             }
           }
         end
@@ -290,7 +290,7 @@ RSpec.describe 'Users Request' do
           h = Hash.new(
             code: 200,
             response_objects: [
-              current_user_json,
+              current_user_json
             ]
           )
           h
@@ -303,7 +303,7 @@ RSpec.describe 'Users Request' do
           allow(uaa_client).to receive(:users_for_ids).with(contain_exactly('user', 'user_in_different_origin')).and_return(
             {
               user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-              user_in_different_origin.guid => { 'username' => 'bob-mcjames', 'origin' => 'uaa' },
+              user_in_different_origin.guid => { 'username' => 'bob-mcjames', 'origin' => 'uaa' }
             }
           )
         end
@@ -313,12 +313,12 @@ RSpec.describe 'Users Request' do
 
       context 'when filtering by usernames' do
         let(:endpoint) { '/v3/users?usernames=bob-mcjames' }
-        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
             response_objects: [
-              current_user_json,
+              current_user_json
             ]
           )
           h
@@ -328,7 +328,7 @@ RSpec.describe 'Users Request' do
           allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['bob-mcjames'], nil).and_return([user.guid])
           allow(uaa_client).to receive(:users_for_ids).with(contain_exactly('user')).and_return(
             {
-              user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+              user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
             }
           )
         end
@@ -354,7 +354,8 @@ RSpec.describe 'Users Request' do
           get '/v3/users', 'origins=uaa', admin_header
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq(
-            'Origins filter cannot be provided without usernames or partial_usernames filter.')
+            'Origins filter cannot be provided without usernames or partial_usernames filter.'
+          )
         end
       end
 
@@ -439,7 +440,7 @@ RSpec.describe 'Users Request' do
   end
 
   describe 'GET /v3/users/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/users/#{actee.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/users/#{actee.guid}", nil, user_headers } }
 
     let(:client_json) do
       {
@@ -454,7 +455,7 @@ RSpec.describe 'Users Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{actee.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{actee.guid}} }
         }
       }
     end
@@ -462,7 +463,7 @@ RSpec.describe 'Users Request' do
     context 'when the actee is not in an org or space' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 404,
+          code: 404
         )
         h['admin'] = {
           code: 200,
@@ -510,7 +511,7 @@ RSpec.describe 'Users Request' do
     end
 
     context 'when the user is logged in' do
-      let(:user_header) { headers_for(user, scopes: %w(cloud_controller.read)) }
+      let(:user_header) { headers_for(user, scopes: %w[cloud_controller.read]) }
 
       it 'returns 200 when showing current user' do
         get "/v3/users/#{user.guid}", nil, user_header
@@ -546,7 +547,7 @@ RSpec.describe 'Users Request' do
   describe 'POST /v3/users' do
     let(:params) do
       {
-        guid: 'new-user-guid',
+        guid: 'new-user-guid'
       }
     end
 
@@ -556,7 +557,7 @@ RSpec.describe 'Users Request' do
           {
             'new-user-guid' => {
               'username' => 'my-new-user',
-              'origin' => 'uaa',
+              'origin' => 'uaa'
             }
           }
         )
@@ -573,15 +574,15 @@ RSpec.describe 'Users Request' do
           metadata: {
             labels: {
               potato: 'yam',
-              style: 'casserole',
+              style: 'casserole'
             },
             annotations: {
               potato: 'russet',
-              style: 'french',
-            },
+              style: 'french'
+            }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
           }
         }
       end
@@ -593,11 +594,11 @@ RSpec.describe 'Users Request' do
             metadata: {
               labels: {
                 potato: 'yam',
-                style: 'casserole',
+                style: 'casserole'
               },
               annotations: {
                 potato: 'russet',
-                style: 'french',
+                style: 'french'
               }
             }
           }.to_json, admin_header
@@ -628,7 +629,7 @@ RSpec.describe 'Users Request' do
         allow(uaa_client).to receive(:users_for_ids).and_return({})
       end
 
-      let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
 
       let(:user_json) do
         {
@@ -643,14 +644,14 @@ RSpec.describe 'Users Request' do
             annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
           }
         }
       end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
         h['admin'] = {
           code: 201,
@@ -669,13 +670,13 @@ RSpec.describe 'Users Request' do
             {
               'new-user-guid' => {
                 'username' => 'my-new-user',
-                'origin' => 'uaa',
+                'origin' => 'uaa'
               }
             }
           )
         end
 
-        let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
 
         let(:user_json) do
           {
@@ -690,14 +691,14 @@ RSpec.describe 'Users Request' do
               annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
             }
           }
         end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 201,
@@ -712,7 +713,7 @@ RSpec.describe 'Users Request' do
       context "it's a UAA client" do
         let(:params) do
           {
-            guid: uaa_client_id,
+            guid: uaa_client_id
           }
         end
         let(:uaa_client_id) { 'cc_routing' }
@@ -722,7 +723,7 @@ RSpec.describe 'Users Request' do
           allow(uaa_client).to receive(:get_clients).and_return([{ client_id: uaa_client_id }])
         end
 
-        let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
 
         let(:user_json) do
           {
@@ -737,14 +738,14 @@ RSpec.describe 'Users Request' do
               annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{uaa_client_id}} }
             }
           }
         end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 201,
@@ -789,7 +790,7 @@ RSpec.describe 'Users Request' do
           expect(last_response).to have_status_code(422)
 
           expected_err = [
-            'Guid must be a string, Guid must be between 1 and 200 characters',
+            'Guid must be a string, Guid must be between 1 and 200 characters'
           ]
           expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
         end
@@ -800,7 +801,7 @@ RSpec.describe 'Users Request' do
 
         let(:params) do
           {
-            guid: existing_user.guid,
+            guid: existing_user.guid
           }
         end
 
@@ -817,21 +818,21 @@ RSpec.describe 'Users Request' do
 
   describe 'PATCH /v3/users/:guid' do
     let(:api_call) do
-      lambda {
-        |user_headers| patch "/v3/users/#{actee.guid}",
-        {
-          metadata: {
-            labels: {
-              potato: 'yam',
-              style: 'casserole',
-            },
-            annotations: {
-              potato: 'russet',
-              style: 'french',
-            }
-          }
-        }.to_json,
-        user_headers
+      lambda { |user_headers|
+        patch "/v3/users/#{actee.guid}",
+              {
+                metadata: {
+                  labels: {
+                    potato: 'yam',
+                    style: 'casserole'
+                  },
+                  annotations: {
+                    potato: 'russet',
+                    style: 'french'
+                  }
+                }
+              }.to_json,
+              user_headers
       }
     end
     describe 'metadata' do
@@ -846,15 +847,15 @@ RSpec.describe 'Users Request' do
           metadata: {
             labels: {
               potato: 'yam',
-              style: 'casserole',
+              style: 'casserole'
             },
             annotations: {
               potato: 'russet',
-              style: 'french',
+              style: 'french'
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{actee.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{actee.guid}} }
           }
         }
       end
@@ -862,7 +863,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee is not associated with any org or space' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404,
+            code: 404
           )
           h['admin'] = {
             code: 200,
@@ -873,7 +874,7 @@ RSpec.describe 'Users Request' do
             response_object: client_json
           }
           h['global_auditor'] = {
-            code: 403,
+            code: 403
           }
           h
         end
@@ -884,7 +885,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee has an org or space role' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 200,
@@ -922,10 +923,10 @@ RSpec.describe 'Users Request' do
 
   describe 'DELETE /v3/users/:guid' do
     let(:user_to_delete) { VCAP::CloudController::User.make }
-    let(:api_call) { lambda { |user_headers| delete "/v3/users/#{user_to_delete.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/users/#{user_to_delete.guid}", nil, user_headers } }
     let(:db_check) do
       lambda do
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get "/v3/users/#{user_to_delete.guid}", {}, admin_headers
@@ -979,7 +980,7 @@ RSpec.describe 'Users Request' do
 
     context 'when the user is logged in' do
       context 'when the current non-admin user tries to delete themselves' do
-        let(:user_header) { headers_for(user_to_delete, scopes: %w(cloud_controller.write)) }
+        let(:user_header) { headers_for(user_to_delete, scopes: %w[cloud_controller.write]) }
         before do
           set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user_to_delete)
         end
@@ -991,7 +992,7 @@ RSpec.describe 'Users Request' do
       end
 
       context 'when the user is admin_read_only and has cloud_controller.write scope' do
-        let(:user_header) { headers_for(user, scopes: %w(cloud_controller.admin_read_only cloud_controller.write)) }
+        let(:user_header) { headers_for(user, scopes: %w[cloud_controller.admin_read_only cloud_controller.write]) }
 
         it 'returns 403' do
           delete "/v3/users/#{user_to_delete.guid}", nil, user_header
@@ -1000,7 +1001,7 @@ RSpec.describe 'Users Request' do
       end
 
       context 'when the user is not found' do
-        let(:user_header) { headers_for(user_to_delete, scopes: %w(cloud_controller.write)) }
+        let(:user_header) { headers_for(user_to_delete, scopes: %w[cloud_controller.write]) }
 
         before do
           set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user_to_delete)

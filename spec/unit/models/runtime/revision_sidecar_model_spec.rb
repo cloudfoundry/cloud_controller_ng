@@ -18,10 +18,10 @@ module VCAP::CloudController
 
       it 'returns a hash of attributes' do
         expect(revision_sidecar.to_hash).to eq({
-            name: 'sleepy',
-            command: 'sleep forever',
-            types: ['web', 'worker']
-        })
+                                                 name: 'sleepy',
+                                                 command: 'sleep forever',
+                                                 types: %w[web worker]
+                                               })
       end
     end
   end

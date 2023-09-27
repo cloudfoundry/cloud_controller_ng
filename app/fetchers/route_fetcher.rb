@@ -20,26 +20,18 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:hosts)
-          dataset = dataset.where(host: message.hosts)
-        end
+        dataset = dataset.where(host: message.hosts) if message.requested?(:hosts)
 
-        if message.requested?(:paths)
-          dataset = dataset.where(path: message.paths)
-        end
+        dataset = dataset.where(path: message.paths) if message.requested?(:paths)
 
-        if message.requested?(:ports)
-          dataset = dataset.where(port: message.ports)
-        end
+        dataset = dataset.where(port: message.ports) if message.requested?(:ports)
 
         if message.requested?(:organization_guids)
           space_ids = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:id)
           dataset = dataset.where(space_id: space_ids)
         end
 
-        if message.requested?(:domain_guids)
-          dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id))
-        end
+        dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id)) if message.requested?(:domain_guids)
 
         if message.requested?(:app_guids)
           destinations_route_guids = RouteMappingModel.where(app_guid: message.app_guids).select(:route_guid)
@@ -60,7 +52,7 @@ module VCAP::CloudController
             label_klass: RouteLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: Route,
+            resource_klass: Route
           )
         end
 

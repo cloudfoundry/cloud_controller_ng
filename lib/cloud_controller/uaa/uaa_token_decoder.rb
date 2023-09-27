@@ -16,10 +16,10 @@ module VCAP::CloudController
 
       @alternate_reference_time = alternate_reference_time
       @grace_period_in_seconds = grace_period_in_seconds
-      if grace_period_in_seconds < 0
-        @grace_period_in_seconds = 0
-        @logger.warn("negative grace period interval '#{grace_period_in_seconds}' is invalid, changed to 0")
-      end
+      return unless grace_period_in_seconds < 0
+
+      @grace_period_in_seconds = 0
+      @logger.warn("negative grace period interval '#{grace_period_in_seconds}' is invalid, changed to 0")
     end
 
     def decode_token(auth_token)
@@ -84,9 +84,7 @@ module VCAP::CloudController
       options         = { audience_ids: config[:resource_id] }.merge(options)
       token           = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, time - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
-      if expiration_time && expiration_time < time
-        @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
-      end
+      @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds") if expiration_time && expiration_time < time
 
       raise BadToken.new('Incorrect token') unless access_token?(token)
 
@@ -132,17 +130,15 @@ module VCAP::CloudController
       uaa_ca                        = config[:ca_file]
       client                        = HTTPClient.new(base_url: uaa_target)
       client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      if !uaa_ca.nil? && !uaa_ca.empty?
-        client.ssl_config.set_trust_ca(uaa_ca)
-      end
+      client.ssl_config.set_trust_ca(uaa_ca) if !uaa_ca.nil? && !uaa_ca.empty?
 
       client
     end
 
-    def with_request_error_handling(&blk)
+    def with_request_error_handling
       tries ||= 3
       yield
-    rescue
+    rescue StandardError
       retry unless (tries -= 1).zero?
       raise
     end

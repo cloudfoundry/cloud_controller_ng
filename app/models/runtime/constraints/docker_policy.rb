@@ -8,14 +8,12 @@ class DockerPolicy
   end
 
   def validate
-    if @process.docker_image
-      if @process.buildpack_specified?
-        @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
-      end
+    return unless @process.docker_image
 
-      if VCAP::CloudController::FeatureFlag.disabled?(:diego_docker)
-        @errors.add(:docker, :docker_disabled) if @process.being_started?
-      end
-    end
+    @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG) if @process.buildpack_specified?
+
+    return unless VCAP::CloudController::FeatureFlag.disabled?(:diego_docker)
+
+    @errors.add(:docker, :docker_disabled) if @process.being_started?
   end
 end

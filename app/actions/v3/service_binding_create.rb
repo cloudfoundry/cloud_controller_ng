@@ -30,7 +30,7 @@ module VCAP::CloudController
         else
           complete_binding_and_save(binding, details[:binding], { state: 'succeeded' })
         end
-      rescue => e
+      rescue StandardError => e
         save_failed_state(binding, e)
 
         raise e
@@ -44,7 +44,7 @@ module VCAP::CloudController
         when 'succeeded'
           params = client.fetch_service_binding(binding, user_guid: @user_audit_info.user_guid)
           complete_binding_and_save(binding, params, details[:last_operation])
-          return PollingFinished
+          PollingFinished
         when 'in progress'
           save_last_operation(binding, details)
           ContinuePolling.call(details[:retry_after])
@@ -54,7 +54,7 @@ module VCAP::CloudController
         end
       rescue LastOperationFailedState => e
         raise e
-      rescue => e
+      rescue StandardError => e
         save_failed_state(binding, e)
         raise e
       end
@@ -69,7 +69,7 @@ module VCAP::CloudController
           {
             type: 'create',
             state: 'failed',
-            description: e.message,
+            description: e.message
           }
         )
       end
@@ -80,7 +80,7 @@ module VCAP::CloudController
           {
             type: 'create',
             state: last_operation[:state],
-            description: last_operation[:description],
+            description: last_operation[:description]
           }
         )
 

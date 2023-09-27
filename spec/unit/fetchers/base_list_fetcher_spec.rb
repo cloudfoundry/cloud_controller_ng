@@ -12,7 +12,7 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:app_model) { AppModel.make(space: space) }
+      let(:app_model) { AppModel.make(space:) }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -23,7 +23,7 @@ module VCAP::CloudController
         let!(:event_2) { Event.make(guid: '2') }
 
         let(:filters) do
-          { guids: ['1', '3'] }
+          { guids: %w[1 3] }
         end
 
         it 'returns records with matching guids' do

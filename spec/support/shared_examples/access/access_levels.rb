@@ -46,7 +46,7 @@ end
 
 shared_context :admin_setup do
   before do
-    token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
+    token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
     VCAP::CloudController::SecurityContext.set(user, token)
   end
 
@@ -55,7 +55,7 @@ end
 
 shared_context :global_auditor_setup do
   before do
-    token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_GLOBAL_AUDITOR] }
+    token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_GLOBAL_AUDITOR] }
     VCAP::CloudController::SecurityContext.set(user, token)
   end
 
@@ -64,7 +64,7 @@ end
 
 shared_context :admin_read_only_setup do
   before do
-    token = { 'scope' => [::VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE] }
+    token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE] }
     VCAP::CloudController::SecurityContext.set(user, token)
   end
 

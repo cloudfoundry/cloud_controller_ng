@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         it 'updates the feature flag enabled field' do
           message = FeatureFlagsUpdateMessage.new(
-            enabled: false,
+            enabled: false
           )
           FeatureFlagUpdate.new.update(feature_flag1, message)
 

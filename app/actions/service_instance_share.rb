@@ -40,17 +40,17 @@ module VCAP::CloudController
     end
 
     def validate_plan_is_active!(service_instance)
-      if !service_instance.service_plan.active?
-        error_msg = "The service instance could not be shared as the #{service_instance.service_plan.name} plan is inactive."
-        error!(error_msg)
-      end
+      return if service_instance.service_plan.active?
+
+      error_msg = "The service instance could not be shared as the #{service_instance.service_plan.name} plan is inactive."
+      error!(error_msg)
     end
 
     def validate_plan_visibility!(service_instance, space)
-      unless service_instance.service_plan.visible_in_space?(space)
-        error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not enabled in #{space.organization.name}/#{space.name}."
-        error!(error_msg)
-      end
+      return if service_instance.service_plan.visible_in_space?(space)
+
+      error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not enabled in #{space.organization.name}/#{space.name}."
+      error!(error_msg)
     end
 
     def validate_name_uniqueness!(service_instance, space)
@@ -59,34 +59,32 @@ module VCAP::CloudController
         error!(error_msg)
       end
 
-      if space.service_instances_shared_from_other_spaces.map(&:name).include?(service_instance.name)
-        error_msg = "A service instance called #{service_instance.name} has already been shared with #{space.name}."
-        error!(error_msg)
-      end
+      return unless space.service_instances_shared_from_other_spaces.map(&:name).include?(service_instance.name)
+
+      error_msg = "A service instance called #{service_instance.name} has already been shared with #{space.name}."
+      error!(error_msg)
     end
 
     def validate_not_sharing_to_self!(service_instance, spaces)
-      if spaces.include?(service_instance.space)
-        error!("Unable to share service instance '#{service_instance.name}' with space '#{service_instance.space.guid}'. "\
-        'Service instances cannot be shared into the space where they were created.')
-      end
+      return unless spaces.include?(service_instance.space)
+
+      error!("Unable to share service instance '#{service_instance.name}' with space '#{service_instance.space.guid}'. " \
+             'Service instances cannot be shared into the space where they were created.')
     end
 
     def validate_supported_service_type!(service_instance)
-      if service_instance.route_service?
-        error!('Route services cannot be shared.')
-      end
+      error!('Route services cannot be shared.') if service_instance.route_service?
 
-      unless service_instance.managed_instance?
-        error!('User-provided services cannot be shared.')
-      end
+      return if service_instance.managed_instance?
+
+      error!('User-provided services cannot be shared.')
     end
 
     def validate_service_instance_is_shareable!(service_instance)
-      unless service_instance.shareable?
-        error_msg = "The #{service_instance.service.label} service does not support service instance sharing."
-        error!(error_msg)
-      end
+      return if service_instance.shareable?
+
+      error_msg = "The #{service_instance.service.label} service does not support service instance sharing."
+      error!(error_msg)
     end
 
     def validate_service_instance_state!(service_instance)

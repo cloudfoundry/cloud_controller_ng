@@ -15,7 +15,8 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
         updated_at: Time.now - 60,
         resource_guid: '123',
         key: 'mylegacyprefix/mykey',
-        value: 'some_value')
+        value: 'some_value'
+      )
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')

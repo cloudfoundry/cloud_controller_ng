@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:environment_json) { { 'RIZ' => 'shirt' } }
 
       before do
-        VCAP::CloudController::EnvironmentVariableGroup.running.update(environment_json: environment_json)
+        VCAP::CloudController::EnvironmentVariableGroup.running.update(environment_json:)
         task_environment = instance_double(VCAP::CloudController::Diego::TaskEnvironment)
         allow(task_environment).to receive(:build).and_return(
           { 'VCAP_APPLICATION' => { greg: 'pants' }, 'MEMORY_LIMIT' => '256m', 'VCAP_SERVICES' => {}, 'VCAP_PLATFORM_OPTIONS' => { credhuburi: 'credhub.place:port' } }

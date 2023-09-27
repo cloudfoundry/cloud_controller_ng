@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Security Groups', type: [:api, :legacy_api] do
+RSpec.resource 'Security Groups', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:security_group) { VCAP::CloudController::SecurityGroup.first }
   let(:guid) { security_group.guid }
@@ -25,14 +25,14 @@ RSpec.resource 'Security Groups', type: [:api, :legacy_api] do
 
     field :name, 'The name of the security group.', required: opts[:required], example_values: ['my_super_sec_group']
     field :rules, rules_description,
-      default: [],
-      render_example_pre_tag: true,
-      example_values: [JSON.pretty_generate([
-        { protocol: 'icmp', destination: '0.0.0.0/0', type: 0, code: 1 },
-        { protocol: 'tcp', destination: '0.0.0.0/0', ports: '2048-3000', log: true },
-        { protocol: 'udp', destination: '0.0.0.0/0', ports: '53, 5353' },
-        { protocol: 'all', destination: '0.0.0.0/0', description: 'This rule allows access to all ips and protocols' },
-      ])]
+          default: [],
+          render_example_pre_tag: true,
+          example_values: [JSON.pretty_generate([
+            { protocol: 'icmp', destination: '0.0.0.0/0', type: 0, code: 1 },
+            { protocol: 'tcp', destination: '0.0.0.0/0', ports: '2048-3000', log: true },
+            { protocol: 'udp', destination: '0.0.0.0/0', ports: '53, 5353' },
+            { protocol: 'all', destination: '0.0.0.0/0', description: 'This rule allows access to all ips and protocols' }
+          ])]
     field :space_guids, 'The list of associated spaces.', default: []
   end
 

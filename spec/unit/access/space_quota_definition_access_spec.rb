@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:space) { Space.make(organization: org) }
     let(:object) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     it_behaves_like :admin_full_access
     it_behaves_like :admin_read_only_access

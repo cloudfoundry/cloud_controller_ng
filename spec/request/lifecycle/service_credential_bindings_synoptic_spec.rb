@@ -5,27 +5,27 @@ require 'cloud_controller'
 RSpec.describe 'V3 service credential bindings synoptic' do
   before do
     stub_request(:get, 'http://example.org/amazing-service-broker/v2/catalog').
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: catalog, headers: {})
 
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 201, body: {}.to_json, headers: {})
 
     stub_request(:get, 'https://main.default.svc.cluster-domain.example/apis/networking.cloudfoundry.org/v1alpha1').
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: '', headers: {})
 
     stub_request(:get, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: { parameters: { key1: 'value1', key2: 'value2' } }.to_json, headers: {})
 
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 201, body: {}.to_json, headers: {})
 
     stub_request(:delete, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 410, body: '', headers: {})
     VCAP::CloudController::Config.config.set(:kubernetes, nil)
 

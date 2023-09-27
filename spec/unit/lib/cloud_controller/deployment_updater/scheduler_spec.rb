@@ -10,14 +10,14 @@ module VCAP::CloudController
         deployment_updater: {
           update_frequency_in_seconds: update_frequency,
           lock_key: 'lock_key',
-          lock_owner: 'lock_owner',
+          lock_owner: 'lock_owner'
         },
         locket: {
           host: 'host',
           port: 'port',
           ca_file: 'ca_file',
           key_file: 'key_file',
-          cert_file: 'cert_file',
+          cert_file: 'cert_file'
         }
       )
     end
@@ -53,7 +53,7 @@ module VCAP::CloudController
           port: TestConfig.config_instance.get(:locket, :port),
           client_ca_path: TestConfig.config_instance.get(:locket, :ca_file),
           client_key_path: TestConfig.config_instance.get(:locket, :key_file),
-          client_cert_path: TestConfig.config_instance.get(:locket, :cert_file),
+          client_cert_path: TestConfig.config_instance.get(:locket, :cert_file)
         )
 
         expect(Locket::LockWorker).to have_received(:new).with(lock_runner)
@@ -63,7 +63,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(
             deployment_updater: {
-              update_frequency_in_seconds: update_frequency,
+              update_frequency_in_seconds: update_frequency
             },
             locket: nil
           )
@@ -152,7 +152,7 @@ module VCAP::CloudController
             'cc.deployment_updater',
             error: error.class.name,
             error_message: error.message,
-            backtrace: anything,
+            backtrace: anything
           )
         end
       end

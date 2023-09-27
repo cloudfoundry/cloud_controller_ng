@@ -16,11 +16,11 @@ module DocsHelpers
     headings = []
     page.css('h1,h2,h3').each do |heading|
       headings.push({
-        id: heading.attribute('id').to_s,
-        text: heading.content,
-        level: heading.name[1].to_i,
-        children: []
-      })
+                      id: heading.attribute('id').to_s,
+                      text: heading.content,
+                      level: heading.name[1].to_i,
+                      children: []
+                    })
     end
 
     [3, 2].each do |heading_level|
@@ -40,23 +40,23 @@ module DocsHelpers
 
     headings.each do |h1|
       output += "<ul class='toc-header'>"
-      output += "<li class='toc-item'><a class='toc-link' href='\##{h1[:id]}'>#{h1[:text]}</a></li>"
+      output += "<li class='toc-item'><a class='toc-link' href='##{h1[:id]}'>#{h1[:text]}</a></li>"
 
       if h1[:children].any?
         output += "<ul class='toc-subheader'>"
 
         h1[:children].each do |h2|
-          output += "<li class='toc-item'><a class='toc-link' href='\##{h2[:id]}'>#{h2[:text]}</a></li>"
+          output += "<li class='toc-item'><a class='toc-link' href='##{h2[:id]}'>#{h2[:text]}</a></li>"
 
-          if h2[:children].any?
-            output += "<ul class='toc-subheader'>"
+          next unless h2[:children].any?
 
-            h2[:children].each do |h3|
-              output += "<li class='toc-item'><a class='toc-link' href='\##{h3[:id]}'>#{h3[:text]}</a></li>"
-            end
+          output += "<ul class='toc-subheader'>"
 
-            output += '</ul>'
+          h2[:children].each do |h3|
+            output += "<li class='toc-item'><a class='toc-link' href='##{h3[:id]}'>#{h3[:text]}</a></li>"
           end
+
+          output += '</ul>'
         end
       end
 

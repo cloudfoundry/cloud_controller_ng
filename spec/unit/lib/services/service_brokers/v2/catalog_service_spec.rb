@@ -205,7 +205,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @metadata is a hash' do
-        attrs = build_valid_service_attrs(metadata: ['list', 'of', 'strings'])
+        attrs = build_valid_service_attrs(metadata: %w[list of strings])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -254,7 +254,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that the plans list is an array of hashes' do
-        attrs = build_valid_service_attrs(plans: ['list', 'of', 'strings'])
+        attrs = build_valid_service_attrs(plans: %w[list of strings])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -276,7 +276,7 @@ module VCAP::Services::ServiceBrokers::V2
           build_valid_plan_attrs(name: 'same-name'),
           build_valid_plan_attrs(name: 'other-name')
         ]
-        attrs = build_valid_service_attrs(plans: plans)
+        attrs = build_valid_service_attrs(plans:)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -314,9 +314,9 @@ module VCAP::Services::ServiceBrokers::V2
             build_valid_plan_attrs(name: 'dup-name-1'),
             build_valid_plan_attrs(name: 'dup-name-2'),
             build_valid_plan_attrs(name: 'dup-name-2'),
-            build_valid_plan_attrs(name: 'unique-name'),
+            build_valid_plan_attrs(name: 'unique-name')
           ]
-          attrs = build_valid_service_attrs(plans: plans)
+          attrs = build_valid_service_attrs(plans:)
           service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
           expect(service).not_to be_valid
 
@@ -452,12 +452,11 @@ module VCAP::Services::ServiceBrokers::V2
       let(:broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
         CatalogService.new(service_broker,
-          'id' => broker_provided_id,
-          'name' => 'service-name',
-          'description' => 'service description',
-          'bindable' => true,
-          'plans' => [build_valid_plan_attrs]
-        )
+                           'id' => broker_provided_id,
+                           'name' => 'service-name',
+                           'description' => 'service description',
+                           'bindable' => true,
+                           'plans' => [build_valid_plan_attrs])
       end
 
       context 'when a Service exists with the same service broker and broker provided id' do

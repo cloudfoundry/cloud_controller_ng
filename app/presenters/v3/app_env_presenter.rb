@@ -7,7 +7,7 @@ module VCAP::CloudController
         attr_reader :app
 
         def initialize(app, show_secrets)
-          super(app, show_secrets: show_secrets)
+          super(app, show_secrets:)
           @app = app
         end
 
@@ -23,10 +23,10 @@ module VCAP::CloudController
 
           {
             environment_variables: app.environment_variables,
-            staging_env_json:      EnvironmentVariableGroup.staging.environment_json,
-            running_env_json:      EnvironmentVariableGroup.running.environment_json,
-            system_env_json:       redact_hash(SystemEnvPresenter.new(app.service_bindings).system_env),
-            application_env_json:  vcap_application
+            staging_env_json: EnvironmentVariableGroup.staging.environment_json,
+            running_env_json: EnvironmentVariableGroup.running.environment_json,
+            system_env_json: redact_hash(SystemEnvPresenter.new(app.service_bindings).system_env),
+            application_env_json: vcap_application
           }
         end
       end

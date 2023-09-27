@@ -20,24 +20,18 @@ module VCAP::CloudController::RestController
         ['order-direction',        String],
         ['orphan-relations',       Integer],
         ['exclude-relations',      String],
-        ['include-relations',      String],
+        ['include-relations',      String]
       ].each do |key, klass|
         val = params[key]
         res[key.underscore.to_sym] = Object.send(klass.name, val) if val
       end
 
-      if res[:q] && query_string && query_string.count('q=') > 1
-        res[:q] = CGI.parse(query_string)['q']
-      end
+      res[:q] = CGI.parse(query_string)['q'] if res[:q] && query_string && query_string.count('q=') > 1
 
       # relationship names should be specified as a comma separated list
-      if res[:exclude_relations]
-        res[:exclude_relations] = res[:exclude_relations].split(',')
-      end
+      res[:exclude_relations] = res[:exclude_relations].split(',') if res[:exclude_relations]
 
-      if res[:include_relations]
-        res[:include_relations] = res[:include_relations].split(',')
-      end
+      res[:include_relations] = res[:include_relations].split(',') if res[:include_relations]
 
       res
     end

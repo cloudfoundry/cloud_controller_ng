@@ -3,7 +3,7 @@ module VCAP::CloudController
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
       NO_ERRORS = [].freeze
 
-      attr_reader :resource_guid
+      attr_reader :resource_guid, :resource_type
 
       def initialize(model_class, resource_guid, delete_action, resource_type=nil)
         @model_class    = model_class
@@ -43,10 +43,6 @@ module VCAP::CloudController
         else
           CloudController::Errors::ApiError.new_from_details('JobTimeout')
         end
-      end
-
-      def resource_type
-        @resource_type
       end
 
       def display_name

@@ -126,7 +126,7 @@ module VCAP::CloudController
             end
 
             it 'records the failure' do
-              expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
+              expect(Delayed::Job.last.last_error).to match(/Something Terrible Happened/)
             end
 
             context 'retrying' do
@@ -139,9 +139,9 @@ module VCAP::CloudController
               it 'it deletes the file' do
                 worker.work_off 1
 
-                expect {
+                expect do
                   worker.work_off 1
-                }.to change {
+                end.to change {
                   File.exist?(local_file.path)
                 }.from(true).to(false)
               end
@@ -155,7 +155,7 @@ module VCAP::CloudController
             end
 
             it 'receives an error' do
-              expect(Delayed::Job.last.last_error).to match /No such file or directory/
+              expect(Delayed::Job.last.last_error).to match(/No such file or directory/)
             end
 
             it 'does not retry' do

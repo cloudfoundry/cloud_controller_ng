@@ -41,7 +41,7 @@ module VCAP::CloudController::RestController
         controller,
         opts[:default_visibility_filter] || default_visibility_filter,
         opts[:additional_visibility_filters] || {},
-        inline_relations_depth,
+        inline_relations_depth
       )
 
       eager_loaded_object = eager_loaded_objects.where(id: obj.id).all.first
@@ -61,7 +61,7 @@ module VCAP::CloudController::RestController
       hash = @serializer.serialize(
         controller,
         eager_loaded_object,
-        opts.merge(export_attrs: export_attributes),
+        opts.merge(export_attrs: export_attributes)
       )
 
       MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))

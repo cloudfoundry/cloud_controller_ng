@@ -3,18 +3,20 @@ require 'presenters/v3/isolation_segment_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe IsolationSegmentPresenter do
-    let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(
-      key_name: 'vegetable',
-      value: 'asparagus',
-      resource_guid: isolation_segment.guid,
-    )
-    }
-    let!(:label) { VCAP::CloudController::IsolationSegmentLabelModel.make(
-      key_name: 'release',
-      value: 'stable',
-      resource_guid: isolation_segment.guid,
-    )
-    }
+    let!(:annotation) do
+      VCAP::CloudController::IsolationSegmentAnnotationModel.make(
+        key_name: 'vegetable',
+        value: 'asparagus',
+        resource_guid: isolation_segment.guid
+      )
+    end
+    let!(:label) do
+      VCAP::CloudController::IsolationSegmentLabelModel.make(
+        key_name: 'release',
+        value: 'stable',
+        resource_guid: isolation_segment.guid
+      )
+    end
 
     let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
 
@@ -24,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the isolation_segment as json' do
         links = {
           self: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
-          organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" },
+          organizations: { href: "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}/organizations" }
         }
 
         expect(result[:guid]).to eq(isolation_segment.guid)

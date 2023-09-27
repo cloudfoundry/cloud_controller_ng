@@ -18,8 +18,8 @@ RSpec.shared_examples 'metadata update for service binding' do |audit_name|
     expect(event.actee).to eq(binding.guid)
     expect(event.actee_name).to eq(binding_name)
     expect(event.data).to include({
-      'request' => update_request_body.with_indifferent_access
-    })
+                                    'request' => update_request_body.with_indifferent_access
+                                  })
   end
 
   context 'when some labels are invalid' do

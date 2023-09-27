@@ -2,13 +2,15 @@ require 'spec_helper'
 
 RSpec.describe BoshErrandEnvironment do
   let(:stdout_sink_enabled) { true }
-  let(:config) { VCAP::CloudController::Config.new(
-    {
-      db: DbConfig.new.config,
-      logging: { level: 'fatal', stdout_sink_enabled: stdout_sink_enabled }
-    },
-    context: :rotate_database_key)
-  }
+  let(:config) do
+    VCAP::CloudController::Config.new(
+      {
+        db: DbConfig.new.config,
+        logging: { level: 'fatal', stdout_sink_enabled: stdout_sink_enabled }
+      },
+      context: :rotate_database_key
+    )
+  end
 
   subject(:bosh_errand_environment) { BoshErrandEnvironment.new(config) }
 

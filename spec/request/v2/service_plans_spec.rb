@@ -8,7 +8,7 @@ RSpec.describe 'ServicePlans' do
   let!(:service_plan) do
     VCAP::CloudController::ServicePlan.make(
       service: service,
-      maintenance_info: { version: '2.0', description: 'Test description' },
+      maintenance_info: { version: '2.0', description: 'Test description' }
     )
   end
 
@@ -52,19 +52,19 @@ RSpec.describe 'ServicePlans' do
                 'plan_updateable' => nil,
                 'public' => true,
                 'schemas' => {
-                   'service_instance' => {
-                      'create' => {
-                         'parameters' => {}
-                      },
-                      'update' => {
-                         'parameters' => {}
-                      }
-                   },
-                   'service_binding' => {
-                      'create' => {
-                         'parameters' => {}
-                      }
-                   }
+                  'service_instance' => {
+                    'create' => {
+                      'parameters' => {}
+                    },
+                    'update' => {
+                      'parameters' => {}
+                    }
+                  },
+                  'service_binding' => {
+                    'create' => {
+                      'parameters' => {}
+                    }
+                  }
                 },
                 'service_guid' => service.guid,
                 'service_instances_url' => "/v2/service_plans/#{service_plan.guid}/service_instances",
@@ -107,26 +107,26 @@ RSpec.describe 'ServicePlans' do
             'plan_updateable' => nil,
             'public' => true,
             'schemas' => {
-               'service_instance' => {
-                  'create' => {
-                     'parameters' => {}
-                  },
-                  'update' => {
-                     'parameters' => {}
-                  }
-               },
-               'service_binding' => {
-                  'create' => {
-                     'parameters' => {}
-                  }
-               }
+              'service_instance' => {
+                'create' => {
+                  'parameters' => {}
+                },
+                'update' => {
+                  'parameters' => {}
+                }
+              },
+              'service_binding' => {
+                'create' => {
+                  'parameters' => {}
+                }
+              }
             },
             'service_guid' => service.guid,
             'service_instances_url' => "/v2/service_plans/#{service_plan.guid}/service_instances",
             'service_url' => "/v2/services/#{service.guid}",
             'unique_id' => service_plan.unique_id
           }
-        },
+        }
       )
     end
   end

@@ -97,7 +97,7 @@ module VCAP::CloudController::Metrics
         total                   = expected_local_length + expected_generic_length
 
         pending_job_count_by_queue = {
-          cc_local:   expected_local_length,
+          cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
@@ -121,7 +121,7 @@ module VCAP::CloudController::Metrics
         total                   = expected_local_length + expected_generic_length
 
         failed_jobs_by_queue = {
-          cc_local:   expected_local_length,
+          cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
@@ -141,18 +141,18 @@ module VCAP::CloudController::Metrics
     describe '#update_thread_info' do
       it 'should contain EventMachine data' do
         thread_info = {
-          thread_count:  5,
+          thread_count: 5,
           event_machine: {
             connection_count: 10,
-            threadqueue:      {
-              size:        19,
-              num_waiting: 2,
+            threadqueue: {
+              size: 19,
+              num_waiting: 2
             },
             resultqueue: {
-              size:        8,
-              num_waiting: 1,
-            },
-          },
+              size: 8,
+              num_waiting: 1
+            }
+          }
         }
 
         updater.update_thread_info(thread_info)
@@ -180,13 +180,13 @@ module VCAP::CloudController::Metrics
     describe '#update_vitals' do
       it 'updates vitals' do
         vitals = {
-          uptime:         33,
-          cpu_load_avg:   0.5,
+          uptime: 33,
+          cpu_load_avg: 0.5,
           mem_used_bytes: 542,
           mem_free_bytes: 927,
-          mem_bytes:      1,
-          cpu:            2.0,
-          num_cores:      4,
+          mem_bytes: 1,
+          cpu: 2.0,
+          num_cores: 4
         }
 
         updater.update_vitals(vitals)
@@ -217,15 +217,15 @@ module VCAP::CloudController::Metrics
     describe '#update_log_counts' do
       it 'updates log counts' do
         counts = {
-          off:    1,
-          fatal:  2,
-          error:  3,
-          warn:   4,
-          info:   5,
-          debug:  6,
+          off: 1,
+          fatal: 2,
+          error: 3,
+          warn: 4,
+          info: 5,
+          debug: 6,
           debug1: 7,
           debug2: 8,
-          all:    9
+          all: 9
         }
 
         updater.update_log_counts(counts)
@@ -303,7 +303,7 @@ module VCAP::CloudController::Metrics
 
         metric = prom_client.metrics.find { |m| m.name == :cc_staging_succeeded_duration }
         # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20000, '+Inf' => 1 })
+        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20_000, '+Inf' => 1 })
       end
     end
 
@@ -317,7 +317,7 @@ module VCAP::CloudController::Metrics
 
         metric = prom_client.metrics.find { |m| m.name == :cc_staging_failed_duration }
         # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20000, '+Inf' => 1 })
+        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20_000, '+Inf' => 1 })
       end
     end
 
@@ -327,7 +327,7 @@ module VCAP::CloudController::Metrics
 
         updater.report_diego_cell_sync_duration(duration_ns)
         metric = prom_client.metrics.find { |m| m.name == :cc_diego_sync_duration }
-        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20000000000.0 })
+        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20_000_000_000.0 })
 
         metric = prom_client.metrics.find { |m| m.name == :cc_diego_sync_duration_gauge }
         expect(metric.get).to eq duration_ns
@@ -340,7 +340,7 @@ module VCAP::CloudController::Metrics
 
         updater.report_deployment_duration(duration_ns)
         metric = prom_client.metrics.find { |m| m.name == :cc_deployments_update_duration }
-        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20000000000.0 })
+        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20_000_000_000.0 })
 
         metric = prom_client.metrics.find { |m| m.name == :cc_deployments_update_duration_gauge }
         expect(metric.get).to eq duration_ns

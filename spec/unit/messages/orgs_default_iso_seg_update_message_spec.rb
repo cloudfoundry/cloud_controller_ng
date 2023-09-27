@@ -36,11 +36,11 @@ module VCAP::CloudController
       end
 
       context 'when unexpected keys are requested' do
-        let(:symbolized_body) {
+        let(:symbolized_body) do
           {
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
@@ -50,11 +50,11 @@ module VCAP::CloudController
         end
 
         context 'when there are unexpected keys inside data hash' do
-          let(:symbolized_body) {
+          let(:symbolized_body) do
             {
-              data: { blah: 'awesome-guid' },
+              data: { blah: 'awesome-guid' }
             }
-          }
+          end
 
           it 'is not valid' do
             message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
@@ -65,11 +65,11 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple keys inside data hash' do
-          let(:symbolized_body) {
+          let(:symbolized_body) do
             {
-              data: { blah: 'awesome-guid', glob: 'super-guid' },
+              data: { blah: 'awesome-guid', glob: 'super-guid' }
             }
-          }
+          end
 
           it 'is not valid' do
             message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)

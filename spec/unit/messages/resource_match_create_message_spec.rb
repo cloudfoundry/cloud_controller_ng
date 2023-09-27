@@ -136,13 +136,13 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         [true, 'x', 5.1, { size: 4 }].each do |size|
           it "has the correct error message when size is #{size}" do
             message = described_class.new({
-              resources: [
-                {
-                  checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
-                  size_in_bytes: size
-                }
-              ]
-            })
+                                            resources: [
+                                              {
+                                                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                                                size_in_bytes: size
+                                              }
+                                            ]
+                                          })
 
             expect(message).to be_invalid
             expect(message.errors[:resources]).to include('array contains at least one resource with a non-integer size_in_bytes')
@@ -153,13 +153,13 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
       context 'when the v3 resource size is negative' do
         it 'is invalid' do
           message = described_class.new({
-            resources: [
-              {
-                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
-                size_in_bytes: -1
-              }
-            ]
-          })
+                                          resources: [
+                                            {
+                                              checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                                              size_in_bytes: -1
+                                            }
+                                          ]
+                                        })
 
           expect(message).to be_invalid
           expect(message.errors[:resources]).to include('array contains at least one resource with a negative size_in_bytes')

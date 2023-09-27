@@ -5,10 +5,11 @@ module VCAP::CloudController
   RSpec.describe Clock, job_context: :clock do
     subject(:clock) { Clock.new }
 
-    let(:some_job_class) { Class.new {
-      def initialize(*args); end
-    }
-    }
+    let(:some_job_class) do
+      Class.new do
+        def initialize(*args); end
+      end
+    end
     let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil, run_inline: nil) }
 
     before do
@@ -27,14 +28,14 @@ module VCAP::CloudController
 
         expect(scheduler).to receive(:schedule_periodic_job).with(
           interval: 1.day,
-          name:     job_name,
-          at:       time,
-          fudge:    Clock::DAILY_FUDGE_FACTOR,
+          name: job_name,
+          at: time,
+          fudge: Clock::DAILY_FUDGE_FACTOR
         ).and_yield
 
         clock_opts = {
-          name:     job_name,
-          at:       time,
+          name: job_name,
+          at: time,
           priority: priority
         }
         clock.schedule_daily_job(**clock_opts) { some_job_class.new }
@@ -56,14 +57,14 @@ module VCAP::CloudController
 
           expect(scheduler).to receive(:schedule_periodic_job).with(
             interval: 1.day,
-            name:     job_name,
-            at:       time,
-            fudge:    Clock::DAILY_FUDGE_FACTOR,
+            name: job_name,
+            at: time,
+            fudge: Clock::DAILY_FUDGE_FACTOR
           ).and_yield
 
           clock_opts = {
-            name:     job_name,
-            at:       time,
+            name: job_name,
+            at: time,
             priority: priority
           }
           clock.schedule_daily_job(**clock_opts) { some_job_class.new }
@@ -85,13 +86,13 @@ module VCAP::CloudController
 
         expect(scheduler).to receive(:schedule_periodic_job).with(
           interval: interval,
-          name:     job_name,
-          fudge:    Clock::FREQUENT_FUDGE_FACTOR,
+          name: job_name,
+          fudge: Clock::FREQUENT_FUDGE_FACTOR
         ).and_yield
 
         clock_opts = {
-          name:     job_name,
-          interval: interval,
+          name: job_name,
+          interval: interval
         }
         clock.schedule_frequent_worker_job(**clock_opts) { some_job_class.new }
 
@@ -112,16 +113,16 @@ module VCAP::CloudController
 
         expect(scheduler).to receive(:schedule_periodic_job).with(
           interval: interval,
-          name:     job_name,
-          fudge:    Clock::FREQUENT_FUDGE_FACTOR,
-          thread:   true,
-          timeout:  timeout,
+          name: job_name,
+          fudge: Clock::FREQUENT_FUDGE_FACTOR,
+          thread: true,
+          timeout: timeout
         ).and_yield
 
         clock_opts = {
-          name:     job_name,
+          name: job_name,
           interval: interval,
-          timeout:  timeout,
+          timeout: timeout
         }
         clock.schedule_frequent_inline_job(**clock_opts) { some_job_class.new }
 

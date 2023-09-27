@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user_guid) { 'some-guid' }
     let(:user_email) { '1@2.3' }
     let(:config) { nil }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
     describe '.restart' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
@@ -14,20 +14,20 @@ module VCAP::CloudController
       let(:app) do
         AppModel.make(
           :docker,
-          desired_state:         desired_state,
-          environment_variables: environment_variables
+          desired_state:,
+          environment_variables:
         )
       end
 
       let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
-      let!(:droplet) { DropletModel.make(app: app) }
+      let!(:droplet) { DropletModel.make(app:) }
       let!(:process1) { ProcessModel.make(:process, state: desired_state, app: app) }
       let!(:process2) { ProcessModel.make(:process, state: desired_state, app: app) }
       let(:runner) { instance_double(VCAP::CloudController::Diego::Runner) }
 
       before do
-        app.update(droplet: droplet)
+        app.update(droplet:)
 
         allow(runner).to receive(:stop)
         allow(runner).to receive(:start)
@@ -37,15 +37,15 @@ module VCAP::CloudController
 
       it 'does NOT invoke the ProcessObserver after the transaction commits', isolation: :truncation do
         expect(ProcessObserver).not_to receive(:updated)
-        AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+        AppRestart.restart(app:, config:, user_audit_info:)
       end
 
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_restart).with(
           app,
-          user_audit_info,
+          user_audit_info
         )
-        AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+        AppRestart.restart(app:, config:, user_audit_info:)
       end
 
       context 'when the app is STARTED' do
@@ -61,19 +61,19 @@ module VCAP::CloudController
         end
 
         it 'keeps the app state as STARTED' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
           expect(app.reload.desired_state).to eq('STARTED')
         end
 
         it 'keeps process states to STARTED' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
 
           expect(process1.reload.state).to eq('STARTED')
           expect(process2.reload.state).to eq('STARTED')
         end
 
         it 'invokes the ProcessRestart action for each process' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
 
           expect(ProcessRestart).
             to have_received(:restart).
@@ -86,16 +86,16 @@ module VCAP::CloudController
         context 'when we need to make a new revision' do
           before do
             app.update(revisions_enabled: true)
-            app.update(droplet: DropletModel.make(app: app))
+            app.update(droplet: DropletModel.make(app:))
 
             allow(ProcessRestart).to receive(:restart).and_call_original
             allow(ProcessRestart).to receive(:restart).and_call_original
           end
 
           it 'creates a revision and associates it to the processes' do
-            expect {
-              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-            }.to change { RevisionModel.count }.by(1)
+            expect do
+              AppRestart.restart(app:, config:, user_audit_info:)
+            end.to change { RevisionModel.count }.by(1)
 
             expect(app.reload.desired_state).to eq('STARTED')
             expect(app.reload.latest_revision).not_to be_nil
@@ -110,15 +110,15 @@ module VCAP::CloudController
         end
 
         it 'generates a STOP usage event' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(2)
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(2)
         end
 
         it 'generates a START usage event' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
         end
       end
 
@@ -137,18 +137,18 @@ module VCAP::CloudController
         end
 
         it 'changes the app state to STARTED' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
           expect(app.reload.desired_state).to eq('STARTED')
         end
 
         it 'changes the process states to STARTED' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
           expect(process1.reload.reload.state).to eq('STARTED')
           expect(process2.reload.reload.state).to eq('STARTED')
         end
 
         it 'invokes the ProcessRestart action for each process' do
-          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+          AppRestart.restart(app:, config:, user_audit_info:)
 
           expect(ProcessRestart).
             to have_received(:restart).
@@ -159,15 +159,15 @@ module VCAP::CloudController
         end
 
         it 'generates a START usage event' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
         end
 
         it 'does not generate a STOP usage event' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to_not change { AppUsageEvent.where(state: 'STOPPED').count }
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to_not(change { AppUsageEvent.where(state: 'STOPPED').count })
         end
       end
 
@@ -177,18 +177,18 @@ module VCAP::CloudController
         end
 
         it 'raises an error and keeps the existing STARTED state' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to raise_error('some-diego-error')
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to raise_error('some-diego-error')
 
           expect(app.reload.desired_state).to eq('STARTED')
         end
 
         it 'does not generate any additional usage events' do
           original_app_usage_event_count = AppUsageEvent.count
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to raise_error('some-diego-error')
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to raise_error('some-diego-error')
 
           expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
         end
@@ -200,9 +200,9 @@ module VCAP::CloudController
         end
 
         it 'raises an AppRestart::Error' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to raise_error(AppRestart::Error, 'apps busted')
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to raise_error(AppRestart::Error, 'apps busted')
         end
       end
 
@@ -212,9 +212,9 @@ module VCAP::CloudController
         end
 
         it 'raises an AppRestart::Error' do
-          expect {
-            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
-          }.to raise_error(AppRestart::Error, 'your process is real bad')
+          expect do
+            AppRestart.restart(app:, config:, user_audit_info:)
+          end.to raise_error(AppRestart::Error, 'your process is real bad')
         end
       end
     end

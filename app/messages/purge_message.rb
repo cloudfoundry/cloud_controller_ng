@@ -3,7 +3,7 @@ require 'messages/base_message'
 module VCAP::CloudController
   class PurgeMessage < BaseMessage
     register_allowed_keys [
-      :purge,
+      :purge
     ]
 
     validates_with NoAdditionalParamsValidator

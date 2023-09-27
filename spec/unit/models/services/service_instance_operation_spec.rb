@@ -11,8 +11,8 @@ module VCAP::CloudController
         type: 'create',
         proposed_changes: {
           name: 'pizza',
-          service_plan_guid: '1800-pizza',
-        },
+          service_plan_guid: '1800-pizza'
+        }
       }
     end
 
@@ -25,10 +25,10 @@ module VCAP::CloudController
     describe '#to_hash' do
       it 'includes the type, state, description, and updated at' do
         expect(operation.to_hash).to include({
-          'state' => 'in progress',
-          'description' => '50% all the time',
-          'type' => 'create'
-        })
+                                               'state' => 'in progress',
+                                               'description' => '50% all the time',
+                                               'type' => 'create'
+                                             })
 
         expect(operation.to_hash['updated_at'].to_i).to eq(updated_at_time.to_i)
         expect(operation.to_hash['created_at'].to_i).to eq(created_at_time.to_i)
@@ -58,9 +58,9 @@ module VCAP::CloudController
         before { ServiceInstanceOperation.make(service_instance_id: service_instance.id) }
 
         it 'raises an exception when creating another ServiceInstanceOperation' do
-          expect {
+          expect do
             ServiceInstanceOperation.make(service_instance_id: service_instance.id)
-          }.to raise_error(Sequel::UniqueConstraintViolation)
+          end.to raise_error(Sequel::UniqueConstraintViolation)
         end
       end
     end

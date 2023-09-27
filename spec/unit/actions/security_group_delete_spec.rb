@@ -9,9 +9,9 @@ module VCAP::CloudController
       let!(:security_group) { SecurityGroup.make(name: 'test-security-group') }
 
       it 'deletes the security group record' do
-        expect {
+        expect do
           security_group_delete.delete([security_group])
-        }.to change { SecurityGroup.count }.by(-1)
+        end.to change { SecurityGroup.count }.by(-1)
         expect { security_group.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -24,9 +24,9 @@ module VCAP::CloudController
         end
 
         it 'deletes associated running spaces roles' do
-          expect {
+          expect do
             security_group_delete.delete([security_group])
-          }.to change { space.reload.security_groups.count }.by(-1)
+          end.to change { space.reload.security_groups.count }.by(-1)
         end
 
         it 'updates the latest security group update table' do
@@ -35,9 +35,9 @@ module VCAP::CloudController
         end
 
         it 'deletes associated staging spaces roles' do
-          expect {
+          expect do
             security_group_delete.delete([security_group])
-          }.to change { space.reload.staging_security_groups.count }.by(-1)
+          end.to change { space.reload.staging_security_groups.count }.by(-1)
         end
       end
     end

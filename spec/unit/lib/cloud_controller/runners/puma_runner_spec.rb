@@ -23,12 +23,12 @@ module VCAP::CloudController
       TestConfig.override(
         external_host: 'some_local_ip',
         nginx: {
-          use_nginx:  use_nginx,
+          use_nginx: use_nginx,
           instance_socket: unix_socket
         },
         puma: {
           workers: 3,
-          max_threads: 4,
+          max_threads: 4
         }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)

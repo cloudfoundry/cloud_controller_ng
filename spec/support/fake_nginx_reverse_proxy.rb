@@ -28,7 +28,7 @@ class FakeNginxReverseProxy
   private
 
   def multipart?(env)
-    return false unless ['PUT', 'POST'].include?(env['REQUEST_METHOD'])
+    return false unless %w[PUT POST].include?(env['REQUEST_METHOD'])
 
     env['CONTENT_TYPE'].downcase.start_with?('multipart/form-data; boundary')
   end
@@ -58,7 +58,7 @@ class FakeNginxReverseProxy
         "#{key}_path" => File.join(tmpdir, File.basename(v[:tempfile].path)),
         # keeps the uploaded file to trick the multipart encoder, but
         # obfuscates the form field name so we're not likely gonna use it
-        sprintf('%06x', rand(0x1000000)) => Rack::Multipart::UploadedFile.new(v[:tempfile].path),
+        sprintf('%06x', rand(0x1000000)) => Rack::Multipart::UploadedFile.new(v[:tempfile].path)
       }
     )
     v[:tempfile].unlink
@@ -67,13 +67,13 @@ class FakeNginxReverseProxy
 
   # similar to +offload_files!+, but only replaces upload[droplet] to droplet_path
   def offload_staging!(form_hash, tmpdir)
-    if form_hash['upload']
-      upload_form = replace_form_field(
-        form_hash.delete('upload'),
-        'droplet',
-        tmpdir
-      ).except('droplet_name')
-      form_hash.update(upload_form)
-    end
+    return unless form_hash['upload']
+
+    upload_form = replace_form_field(
+      form_hash.delete('upload'),
+      'droplet',
+      tmpdir
+    ).except('droplet_name')
+    form_hash.update(upload_form)
   end
 end

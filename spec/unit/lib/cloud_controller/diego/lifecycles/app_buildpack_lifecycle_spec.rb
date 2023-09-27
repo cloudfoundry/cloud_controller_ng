@@ -15,9 +15,9 @@ module VCAP::CloudController
       let!(:app) { AppModel.make }
 
       it 'creates BuildpackLifecycleDataModel' do
-        expect {
+        expect do
           lifecycle.create_lifecycle_data_model(app)
-        }.to change { BuildpackLifecycleDataModel.count }.by(1)
+        end.to change { BuildpackLifecycleDataModel.count }.by(1)
       end
 
       describe 'defaults' do

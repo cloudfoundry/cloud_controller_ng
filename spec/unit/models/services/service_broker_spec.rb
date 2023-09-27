@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
 
-    let(:broker) { ServiceBroker.new(name: name, broker_url: broker_url, auth_username: auth_username, auth_password: auth_password) }
+    let(:broker) { ServiceBroker.new(name:, broker_url:, auth_username:, auth_password:) }
 
     it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :auth_password }
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       it 'has associated service_plans' do
         service = Service.make(:v2)
-        service_plan = ServicePlan.make(service: service)
+        service_plan = ServicePlan.make(service:)
         service_broker = service.service_broker
         expect(service_broker.service_plans).to include(service_plan)
       end
@@ -126,8 +126,8 @@ module VCAP::CloudController
       let(:service_broker) { ServiceBroker.make }
 
       it 'destroys all resources associated with the broker' do
-        service = Service.make(service_broker: service_broker)
-        service_plan = ServicePlan.make(service: service)
+        service = Service.make(service_broker:)
+        service_plan = ServicePlan.make(service:)
         label = ServiceBrokerLabelModel.make(resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
         annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key_name: 'alpha', value: 'beta')
 
@@ -142,17 +142,15 @@ module VCAP::CloudController
 
       context 'when a service instance exists' do
         it 'does not allow the broker to be destroyed' do
-          service = Service.make(service_broker: service_broker)
-          service_plan = ServicePlan.make(service: service)
-          ManagedServiceInstance.make(service_plan: service_plan)
-          expect {
-            begin
-              service_broker.destroy
-            rescue Sequel::ForeignKeyConstraintViolation
-            end
-          }.to_not change {
+          service = Service.make(service_broker:)
+          service_plan = ServicePlan.make(service:)
+          ManagedServiceInstance.make(service_plan:)
+          expect do
+            service_broker.destroy
+          rescue Sequel::ForeignKeyConstraintViolation
+          end.to_not(change do
             Service.where(id: service.id).count
-          }
+          end)
         end
       end
 
@@ -200,12 +198,12 @@ module VCAP::CloudController
 
     describe 'has_service_instances?' do
       let(:service_broker) { ServiceBroker.make }
-      let(:service) { Service.make(service_broker: service_broker) }
-      let!(:service_plan) { ServicePlan.make(service: service) }
+      let(:service) { Service.make(service_broker:) }
+      let!(:service_plan) { ServicePlan.make(service:) }
 
       context 'when there are service instances' do
         before do
-          ManagedServiceInstance.make(service_plan: service_plan)
+          ManagedServiceInstance.make(service_plan:)
         end
 
         it 'returns true' do

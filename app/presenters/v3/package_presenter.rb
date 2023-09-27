@@ -14,23 +14,23 @@ module VCAP::CloudController
           censored_message: Censorship::REDACTED_CREDENTIAL
         )
 
-          super(resource, show_secrets: show_secrets, censored_message: censored_message)
+          super(resource, show_secrets:, censored_message:)
         end
 
         def to_hash
           {
-            guid:       package.guid,
+            guid: package.guid,
             created_at: package.created_at,
             updated_at: package.updated_at,
-            type:       package.type,
-            data:       build_data,
-            state:      package.state,
+            type: package.type,
+            data: build_data,
+            state: package.state,
             relationships: { app: { data: { guid: package.app_guid } } },
             metadata: {
               labels: hashified_labels(package.labels),
-              annotations: hashified_annotations(package.annotations),
+              annotations: hashified_annotations(package.annotations)
             },
-            links:      build_links,
+            links: build_links
           }
         end
 
@@ -48,14 +48,14 @@ module VCAP::CloudController
           {
             image: package.image,
             username: package.docker_username,
-            password: package.docker_username && Censorship::REDACTED_CREDENTIAL,
+            password: package.docker_username && Censorship::REDACTED_CREDENTIAL
           }
         end
 
         def buildpack_data
           {
             error: package.error,
-            checksum:  package.checksum_info,
+            checksum: package.checksum_info
           }
         end
 
@@ -69,10 +69,10 @@ module VCAP::CloudController
           end
 
           links = {
-            self:     { href: url_builder.build_url(path: "/v3/packages/#{package.guid}") },
-            upload:   upload_link,
+            self: { href: url_builder.build_url(path: "/v3/packages/#{package.guid}") },
+            upload: upload_link,
             download: download_link,
-            app:      { href: url_builder.build_url(path: "/v3/apps/#{package.app_guid}") },
+            app: { href: url_builder.build_url(path: "/v3/apps/#{package.app_guid}") }
           }
 
           links.delete_if { |_, v| v.nil? }

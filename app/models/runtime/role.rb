@@ -113,7 +113,7 @@ module VCAP::CloudController
     def where(*cond)
       return super if block_given?
 
-      filters_per_role = self.cache_get(:filters_per_role) || init_filters([])
+      filters_per_role = cache_get(:filters_per_role) || init_filters([])
 
       Array.wrap(cond).each do |condition|
         filters = case condition
@@ -128,7 +128,7 @@ module VCAP::CloudController
         append_filters(filters_per_role, filters)
       end
 
-      dataset = self.from(RoleDataset.build(filters_per_role))
+      dataset = from(RoleDataset.build(filters_per_role))
       dataset.cache_set(:filters_per_role, filters_per_role)
       dataset
     end
@@ -188,7 +188,7 @@ module VCAP::CloudController
           adapt_boolean_expression(arg)
         when Sequel::SQL::QualifiedIdentifier
           column_name = adapt_identifier(arg)
-          raise "Unsupported column: #{column_name}" unless [:created_at, :updated_at].include?(column_name)
+          raise "Unsupported column: #{column_name}" unless %i[created_at updated_at].include?(column_name)
 
           Sequel::SQL::Identifier.new(column_name)
         else

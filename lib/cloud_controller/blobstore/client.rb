@@ -12,21 +12,21 @@ module CloudController
       end
 
       def_delegators :@wrapped_client,
-      :local?,
-      :exists?,
-      :download_from_blobstore,
-      :cp_to_blobstore,
-      :cp_r_to_blobstore,
-      :cp_file_between_keys,
-      :delete_all,
-      :delete_all_in_path,
-      :delete,
-      :delete_blob,
-      :download_uri,
-      :blob,
-      :files_for,
-      :root_dir,
-      :ensure_bucket_exists
+                     :local?,
+                     :exists?,
+                     :download_from_blobstore,
+                     :cp_to_blobstore,
+                     :cp_r_to_blobstore,
+                     :cp_file_between_keys,
+                     :delete_all,
+                     :delete_all_in_path,
+                     :delete,
+                     :delete_blob,
+                     :download_uri,
+                     :blob,
+                     :files_for,
+                     :root_dir,
+                     :ensure_bucket_exists
     end
   end
 end

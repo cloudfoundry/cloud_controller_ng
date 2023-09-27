@@ -7,11 +7,11 @@ module VCAP::CloudController
 
         metadata = {
           package_guid: package.guid,
-          request:      request_attrs
+          request: request_attrs
         }
         type = 'audit.app.package.create'
 
-        self.create_event(package, type, user_audit_info, metadata)
+        create_event(package, type, user_audit_info, metadata)
       end
 
       def self.record_app_package_copy(package, user_audit_info, source_package_guid)
@@ -19,8 +19,8 @@ module VCAP::CloudController
         VCAP::AppLogEmitter.emit(app.guid, "Adding app package for app with guid #{app.guid} copied from package with guid #{source_package_guid}")
         metadata = {
           package_guid: package.guid,
-          request:      {
-            source_package_guid: source_package_guid
+          request: {
+            source_package_guid:
           }
         }
         type = 'audit.app.package.create'
@@ -63,17 +63,17 @@ module VCAP::CloudController
       def self.create_event(package, type, user_audit_info, metadata)
         app = package.app
         Event.create(
-          space:          package.space,
-          type:           type,
-          timestamp:      Sequel::CURRENT_TIMESTAMP,
-          actee:          app.guid,
-          actee_type:     'app',
-          actee_name:     app.name,
-          actor:          user_audit_info.user_guid,
-          actor_type:     'user',
-          actor_name:     user_audit_info.user_email,
+          space: package.space,
+          type: type,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          actee: app.guid,
+          actee_type: 'app',
+          actee_name: app.name,
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       metadata
+          metadata: metadata
         )
       end
     end

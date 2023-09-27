@@ -23,7 +23,7 @@ RSpec.describe 'Roles Request' do
   end
 
   describe 'POST /v3/roles' do
-    let(:api_call) { lambda { |user_headers| post '/v3/roles', params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/roles', params.to_json, user_headers } }
 
     context 'creating a space role' do
       let(:params) do
@@ -58,9 +58,9 @@ RSpec.describe 'Roles Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
           }
         }
       end
@@ -195,9 +195,9 @@ RSpec.describe 'Roles Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
           }
         }
       end
@@ -304,9 +304,9 @@ RSpec.describe 'Roles Request' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-              user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+              user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_unaffiliated.guid}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
@@ -365,9 +365,9 @@ RSpec.describe 'Roles Request' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-              user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+              user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
             }
           }
         end
@@ -400,7 +400,7 @@ RSpec.describe 'Roles Request' do
 
       context 'when there are multiple users with the same username' do
         before do
-          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w(uaa ldap okta))
+          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w[uaa ldap okta])
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
         end
 
@@ -496,9 +496,9 @@ RSpec.describe 'Roles Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
           }
         }
       end
@@ -666,16 +666,16 @@ RSpec.describe 'Roles Request' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-              user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+              user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_unaffiliated.guid}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 201,
@@ -728,9 +728,9 @@ RSpec.describe 'Roles Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/a-new-user-guid) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/a-new-user-guid} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
           }
         }
       end
@@ -819,14 +819,14 @@ RSpec.describe 'Roles Request' do
   end
 
   describe 'GET /v3/roles' do
-    let(:api_call) { lambda { |user_headers| get '/v3/roles', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/roles', nil, user_headers } }
     let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user-guid') }
 
     let!(:space_auditor) do
       VCAP::CloudController::SpaceAuditor.make(
         space: space,
         user: other_user,
-        created_at: Time.now - 5.minutes,
+        created_at: Time.now - 5.minutes
       )
     end
 
@@ -834,7 +834,7 @@ RSpec.describe 'Roles Request' do
       VCAP::CloudController::OrganizationAuditor.make(
         organization: org,
         user: other_user,
-        created_at: Time.now,
+        created_at: Time.now
       )
     end
 
@@ -856,9 +856,9 @@ RSpec.describe 'Roles Request' do
           }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+          user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{other_user.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
         }
       }
     end
@@ -881,9 +881,9 @@ RSpec.describe 'Roles Request' do
           }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
-          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+          user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{other_user.guid}} },
+          organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
         }
       }
     end
@@ -906,9 +906,9 @@ RSpec.describe 'Roles Request' do
           }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
-          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+          user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user.guid}} },
+          organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
         }
       }
     end
@@ -931,9 +931,9 @@ RSpec.describe 'Roles Request' do
           }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+          user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
         }
       }
     end
@@ -949,17 +949,17 @@ RSpec.describe 'Roles Request' do
         let(:user_header) { headers_for(user) }
         let(:params) do
           {
-            guids: ['foo', 'bar'],
-            organization_guids: ['foo', 'bar'],
-            space_guids: ['foo', 'bar'],
-            user_guids: ['foo', 'bar'],
-            types: ['foo', 'bar'],
+            guids: %w[foo bar],
+            organization_guids: %w[foo bar],
+            space_guids: %w[foo bar],
+            user_guids: %w[foo bar],
+            types: %w[foo bar],
             per_page: '10',
             page: 2,
             order_by: 'updated_at',
             include: 'user, space',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
       end
@@ -970,7 +970,7 @@ RSpec.describe 'Roles Request' do
         expect(VCAP::CloudController::RoleListFetcher).to receive(:fetch).with(
           anything,
           anything,
-          hash_including(eager_loaded_associations: [:user, :space, :organization])
+          hash_including(eager_loaded_associations: %i[user space organization])
         ).and_call_original
 
         get '/v3/roles', nil, admin_header
@@ -1066,26 +1066,27 @@ RSpec.describe 'Roles Request' do
 
     context 'listing roles with filters' do
       let(:too_late_org_role) { OrganizationAuditor.make(user: other_user, organization: org, created_at: '2028-05-26T18:47:01Z') }
-      let(:api_call) { lambda { |user_headers|
-                         get "/v3/roles?user_guids=#{other_user.guid}&
+      let(:api_call) do
+        lambda { |user_headers|
+          get "/v3/roles?user_guids=#{other_user.guid}&
 order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_auditor.guid},#{space_auditor.guid}",
-                                                 nil,
-                                                 user_headers
-                       }
-      }
+              nil,
+              user_headers
+        }
+      end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: [org_auditor_response_object, space_auditor_response_object])
         h['org_auditor'] = {
           code: 200,
           response_objects: contain_exactly(
-            org_auditor_response_object,
+            org_auditor_response_object
           )
         }
         h['org_billing_manager'] = {
           code: 200,
           response_objects: contain_exactly(
-            org_auditor_response_object,
+            org_auditor_response_object
           )
         }
         h['no_role'] = { code: 200, response_objects: [] }
@@ -1121,10 +1122,10 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           origin: 'uaa',
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{other_user.guid}} }
           }
         }
       end
@@ -1143,13 +1144,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           },
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains) },
-            default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains/default) },
-            quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{org.quota_definition.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            domains: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/domains} },
+            default_domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/domains/default} },
+            quota: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{org.quota_definition.guid}} }
           }
         }
       end
@@ -1170,13 +1171,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           },
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features) },
-            apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/actions/apply_manifest), method: 'POST' }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            features: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}/features} },
+            apply_manifest: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}/actions/apply_manifest}, method: 'POST' }
           }
         }
       end
@@ -1212,10 +1213,10 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             origin: 'uaa',
             metadata: {
               labels: {},
-              annotations: {},
+              annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{another_user.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{another_user.guid}} }
             }
           }
         end
@@ -1236,13 +1237,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             },
             metadata: {
               labels: {},
-              annotations: {},
+              annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}) },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_space.organization.guid}) },
-              features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}\/features) },
-              apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}/actions/apply_manifest), method: 'POST' }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{another_space.guid}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{another_space.organization.guid}} },
+              features: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{another_space.guid}/features} },
+              apply_manifest: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{another_space.guid}/actions/apply_manifest}, method: 'POST' }
             }
           }
         end
@@ -1261,13 +1262,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             },
             metadata: {
               labels: {},
-              annotations: {},
+              annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}) },
-              domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}\/domains) },
-              default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_org.guid}\/domains/default) },
-              quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{another_org.quota_definition.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{another_org.guid}} },
+              domains: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{another_org.guid}/domains} },
+              default_domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{another_org.guid}/domains/default} },
+              quota: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{another_org.quota_definition.guid}} }
             }
           }
         end
@@ -1277,7 +1278,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             guid: 'organization_billing_manager-guid',
             organization: org,
             user: another_user,
-            created_at: Time.now - 3.minutes,
+            created_at: Time.now - 3.minutes
           )
         end
 
@@ -1337,7 +1338,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
   end
 
   describe 'GET /v3/roles/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/roles/#{role.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/roles/#{role.guid}", nil, user_headers } }
 
     context 'when getting a space role' do
       let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
@@ -1360,9 +1361,9 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{role.guid}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{role.guid}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} }
           }
         }
       end
@@ -1403,9 +1404,9 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{role.guid}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{role.guid}} },
+            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
           }
         }
       end
@@ -1451,10 +1452,10 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           origin: 'uaa',
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} }
           }
         }
       end
@@ -1473,13 +1474,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           },
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            domains: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains) },
-            default_domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/domains/default) },
-            quota: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{org.quota_definition.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            domains: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/domains} },
+            default_domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/domains/default} },
+            quota: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{org.quota_definition.guid}} }
           }
         }
       end
@@ -1500,13 +1501,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           },
           metadata: {
             labels: {},
-            annotations: {},
+            annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features) },
-            apply_manifest: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/actions/apply_manifest), method: 'POST' }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+            features: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}/features} },
+            apply_manifest: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}/actions/apply_manifest}, method: 'POST' }
           }
         }
       end
@@ -1544,10 +1545,10 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
   end
 
   describe 'DELETE /v3/roles/:guid' do
-    let(:api_call) { lambda { |headers| delete "/v3/roles/#{role.guid}", nil, headers } }
+    let(:api_call) { ->(headers) { delete "/v3/roles/#{role.guid}", nil, headers } }
     let(:db_check) do
       lambda do
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         job_guid = last_response.headers['Location'].gsub("#{link_prefix}/v3/jobs/", '')
         get "/v3/jobs/#{job_guid}", {}, admin_headers
@@ -1650,7 +1651,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'when the requested role does not exist' do
-      let(:headers) { headers_for(user, scopes: %w(cloud_controller.write)) }
+      let(:headers) { headers_for(user, scopes: %w[cloud_controller.write]) }
 
       before do
         set_current_user_as_role(role: 'org_manager', org: org, space: space, user: user)

@@ -34,19 +34,19 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       it 'returns a Sequel::Dataset' do
-        results = fetcher.fetch_all(message: message)
+        results = fetcher.fetch_all(message:)
         expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'returns all of the tasks' do
-        results = fetcher.fetch_all(message: message).all
+        results = fetcher.fetch_all(message:).all
 
         expect(results).to match_array([task_in_space1, task_for_app2, task2_in_space1, task_in_space2, failed_task_in_space2, task_in_org2])
       end
 
       describe 'filtering on message' do
         before do
-          results = fetcher.fetch_all(message: message).all
+          results = fetcher.fetch_all(message:).all
         end
 
         context 'when task names are provided' do
@@ -194,17 +194,17 @@ module VCAP::CloudController
       let(:filters) { { app_guid: app_in_space1.guid } }
 
       it 'returns a Sequel::Dataset' do
-        _app, results = fetcher.fetch_for_app(message: message)
+        _app, results = fetcher.fetch_for_app(message:)
         expect(results).to be_a(Sequel::Dataset)
       end
 
       it 'only returns tasks for that app' do
-        _app, results = fetcher.fetch_for_app(message: message)
+        _app, results = fetcher.fetch_for_app(message:)
         expect(results.all).to match_array([task_in_space1, task2_in_space1])
       end
 
       it 'returns the app' do
-        returned_app, results = fetcher.fetch_for_app(message: message)
+        returned_app, results = fetcher.fetch_for_app(message:)
         expect(returned_app.guid).to eq(app_in_space1.guid)
       end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
         let(:filters) { { app_guid: 'made up' } }
 
         it 'returns nil' do
-          returned_app, results = fetcher.fetch_for_app(message: message)
+          returned_app, results = fetcher.fetch_for_app(message:)
           expect(returned_app).to be_nil
           expect(results).to be_nil
         end
@@ -220,7 +220,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         before do
-          _app, results = fetcher.fetch_for_app(message: message)
+          _app, results = fetcher.fetch_for_app(message:)
         end
 
         context 'when task names are provided' do

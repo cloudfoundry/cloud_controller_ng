@@ -16,26 +16,26 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
 
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'space_developer'     => 200,
-        'admin_read_only'     => 200,
-        'global_auditor'      => 200,
-        'space_manager'       => 200,
-        'space_auditor'       => 200,
-        'org_manager'         => 200,
-        'org_auditor'         => 404,
-        'org_billing_manager' => 404,
+        'admin' => 200,
+        'space_developer' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role:, org:, space:, user:)
 
             get :show, params: { guid: space.guid }
 
             expect(response.status).to eq(expected_return_value),
-              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+                                       "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
             if expected_return_value == 200
               expect(parsed_body['guid']).to eq(space.guid)
               expect(parsed_body['name']).to eq('Cat')
@@ -57,21 +57,21 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:org1_space) { VCAP::CloudController::Space.make(name: 'Alpaca', organization: org1) }
     let!(:org1_other_space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
     let!(:org2_space) { VCAP::CloudController::Space.make(name: 'Horse', organization: org2) }
-    names_in_associated_org    = %w/Alpaca Lamb/
-    names_in_associated_space  = %w/Alpaca/
-    names_in_nonassociated_org = %w/Horse/
+    names_in_associated_org    = %w[Alpaca Lamb]
+    names_in_associated_space  = %w[Alpaca]
+    names_in_nonassociated_org = %w[Horse]
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'admin'               => names_in_associated_org + names_in_nonassociated_org,
-        'admin_read_only'     => names_in_associated_org + names_in_nonassociated_org,
-        'global_auditor'      => names_in_associated_org + names_in_nonassociated_org,
-        'org_manager'         => names_in_associated_org,
-        'org_auditor'         => [],
+        'admin' => names_in_associated_org + names_in_nonassociated_org,
+        'admin_read_only' => names_in_associated_org + names_in_nonassociated_org,
+        'global_auditor' => names_in_associated_org + names_in_nonassociated_org,
+        'org_manager' => names_in_associated_org,
+        'org_auditor' => [],
         'org_billing_manager' => [],
-        'space_manager'       => names_in_associated_space,
-        'space_auditor'       => names_in_associated_space,
-        'space_developer'     => names_in_associated_space,
+        'space_manager' => names_in_associated_space,
+        'space_auditor' => names_in_associated_space,
+        'space_developer' => names_in_associated_space
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -99,7 +99,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'name' } }
 
         it 'paginates the response' do
-          get :index, params: params
+          get(:index, params:)
 
           parsed_response = parsed_body
           expect(parsed_response['pagination']['total_results']).to eq(3)
@@ -177,13 +177,13 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         expect(response.status).to eq(200)
         expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
-          org1_space.name, org1_other_space.name, org2_space.name,
+          org1_space.name, org1_other_space.name, org2_space.name
         ])
       end
 
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::SpaceListFetcher).to receive(:fetch).with(
-          hash_including(eager_loaded_associations: [:labels, :annotations, :organization])
+          hash_including(eager_loaded_associations: %i[labels annotations organization])
         ).and_call_original
 
         get :index
@@ -203,8 +203,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
             get :index, params: { names: 'Alpaca,Horse' }
 
             expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
-              'Alpaca', 'Horse',
+            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array(%w[
+              Alpaca Horse
             ])
           end
         end
@@ -261,7 +261,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
             expect(response.status).to eq(200)
             expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
-              'Alpaca',
+              'Alpaca'
             ])
           end
 
@@ -319,8 +319,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
-            'Alpaca', 'Dog', 'Horse', 'Lamb'
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+            Alpaca Dog Horse Lamb
           ])
         end
 
@@ -341,8 +341,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
-            'Lamb', 'Horse', 'Dog', 'Alpaca'
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+            Lamb Horse Dog Alpaca
           ])
         end
 
@@ -362,8 +362,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
-            'Horse', 'Lamb', 'Alpaca', 'Dog'
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+            Horse Lamb Alpaca Dog
           ])
         end
 
@@ -383,8 +383,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
-            'Dog', 'Alpaca', 'Lamb', 'Horse'
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+            Dog Alpaca Lamb Horse
           ])
         end
 
@@ -441,7 +441,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let(:org_guid) { org.guid }
     let(:req_body) do
       {
-        name:          name,
+        name: name,
         relationships: {
           organization: {
             data: { guid: org_guid }
@@ -451,23 +451,23 @@ RSpec.describe SpacesV3Controller, type: :controller do
     end
 
     before do
-      set_current_user_as_admin(user: user)
+      set_current_user_as_admin(user:)
     end
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'admin'               => 201,
-        'org_manager'         => 201,
-        'admin_read_only'     => 403,
-        'org_auditor'         => 403,
+        'admin' => 201,
+        'org_manager' => 201,
+        'admin_read_only' => 403,
+        'org_auditor' => 403,
         'org_billing_manager' => 403,
-        'org_user'            => 403,
+        'org_user' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, user: user)
+            set_current_user_as_role(role:, org:, user:)
 
             post :create, params: req_body, as: :json
 
@@ -543,7 +543,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when there is an invalid annotation' do
       let(:request_body) do
         {
-          name:          name,
+          name: name,
           relationships: {
             organization: {
               data: { guid: org_guid }
@@ -567,7 +567,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when there are too many annotations' do
       let(:request_body) do
         {
-          name:          name,
+          name: name,
           relationships: {
             organization: {
               data: { guid: org_guid }
@@ -607,7 +607,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let(:annotations) do
       {
         potato: 'yellow',
-        beet: 'golden',
+        beet: 'golden'
       }
     end
     let!(:update_message) do
@@ -619,8 +619,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           annotations: {
             potato: 'purple'
           }
-        }
-      }
+        } }
     end
     before do
       VCAP::CloudController::LabelsUpdate.update(space, labels, VCAP::CloudController::SpaceLabelModel)
@@ -818,10 +817,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 200,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: space.guid }.merge(update_message), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: space.guid }.merge(update_message), as: :json } }
       end
     end
   end

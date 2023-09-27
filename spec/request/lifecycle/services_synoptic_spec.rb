@@ -9,15 +9,15 @@ require 'messages/service_broker_update_message'
 RSpec.describe 'V3 services synoptic' do
   before do
     stub_request(:get, 'http://example.org/amazing-service-broker/v2/catalog').
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: catalog, headers: {})
 
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 201, body: {}.to_json, headers: {})
 
     stub_request(:delete, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: {}.to_json, headers: {})
 
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
@@ -25,15 +25,15 @@ RSpec.describe 'V3 services synoptic' do
       to_return(status: 200, body: "{ token_type: 'Bearer', access_token: 'dXNlcm5hbWVfbG9va3VwX2NsaWVudF9uYW1lOnVzZXJuYW1lX2xvb2t1cF9zZWNyZXQ=' }", headers: {})
 
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 201, body: {}.to_json, headers: {})
 
     stub_request(:delete, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 202, body: {}.to_json, headers: {})
 
     stub_request(:get, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+/last_operation.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 410, body: {}.to_json, headers: {})
   end
 

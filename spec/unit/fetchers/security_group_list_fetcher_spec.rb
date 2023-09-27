@@ -23,7 +23,7 @@ module VCAP::CloudController
         security_group_1.add_space(associated_space)
         security_group_1.add_staging_space(associated_space)
         associations = security_groups.where(guid: security_group_1.guid).all.first.associations
-        [:spaces, :staging_spaces].each do |key|
+        %i[spaces staging_spaces].each do |key|
           expect(associations[key].length).to eq(1)
           expect(associations[key].first.keys).to contain_exactly(:guid)
         end

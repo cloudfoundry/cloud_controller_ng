@@ -51,7 +51,7 @@ class RoutesController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/routes',
       message: message,
-      decorators: decorators,
+      decorators: decorators
     )
   end
 
@@ -66,7 +66,7 @@ class RoutesController < ApplicationController
 
     render status: :ok, json: Presenters::V3::RoutePresenter.new(
       route,
-      decorators: decorators,
+      decorators:
     )
   end
 
@@ -85,7 +85,7 @@ class RoutesController < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
     unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
-    route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
+    route = RouteCreate.new(user_audit_info).create(message:, space:, domain:)
 
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
   rescue RoutingApi::UaaUnavailable, UaaUnavailable
@@ -105,7 +105,7 @@ class RoutesController < ApplicationController
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space_id)
     suspended! unless permission_queryer.is_space_active?(route.space_id)
 
-    VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
+    VCAP::CloudController::RouteUpdate.new.update(route:, message:)
 
     render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
   end
@@ -140,7 +140,8 @@ class RoutesController < ApplicationController
     share.create(route, target_spaces, user_audit_info)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
-      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
+      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false
+    )
   rescue VCAP::CloudController::RouteShare::Error => e
     unprocessable!(e.message)
   end
@@ -168,7 +169,8 @@ class RoutesController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:route_sharing)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
-      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false)
+      "routes/#{route.guid}", route.shared_spaces, 'shared_spaces', build_related: false
+    )
   end
 
   def transfer_owner
@@ -184,7 +186,7 @@ class RoutesController < ApplicationController
     target_space_error = check_if_space_is_accessible(target_space)
     unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. #{target_space_error}") unless target_space_error.nil?
 
-    if !route.domain.usable_by_organization?(target_space.organization)
+    unless route.domain.usable_by_organization?(target_space.organization)
       unprocessable!("Unable to transfer owner of route '#{route.uri}' to space '#{message.space_guid}'. Target space does not have access to route's domain")
     end
 
@@ -199,9 +201,9 @@ class RoutesController < ApplicationController
 
     destinations_message = RouteDestinationsListMessage.from_params(query_params)
     unprocessable!(destinations_message.errors.full_messages) unless destinations_message.valid?
-    route_mappings = RouteDestinationsListFetcher.new(message: destinations_message).fetch_for_route(route: route)
+    route_mappings = RouteDestinationsListFetcher.new(message: destinations_message).fetch_for_route(route:)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route_mappings, route: route)
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route_mappings, route:)
   end
 
   def insert_destinations
@@ -213,7 +215,7 @@ class RoutesController < ApplicationController
 
     UpdateRouteDestinations.add(message.destinations_array, route, apps_hash(message), user_audit_info)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route:)
   rescue UpdateRouteDestinations::Error => e
     unprocessable!(e.message)
   end
@@ -227,7 +229,7 @@ class RoutesController < ApplicationController
 
     UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash(message), user_audit_info)
 
-    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route: route)
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route.route_mappings, route:)
   rescue UpdateRouteDestinations::DuplicateDestinationError => e
     unprocessable!(e.message)
   end
@@ -313,7 +315,7 @@ class RoutesController < ApplicationController
       presenter: Presenters::V3::RoutePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/apps/#{app.guid}/routes",
-      message: message,
+      message: message
     )
   end
 
@@ -353,16 +355,16 @@ class RoutesController < ApplicationController
     not_existing_app_guids = desired_app_guids - existing_app_guids
     unprocessable!("App(s) with guid(s) \"#{not_existing_app_guids.join('", "')}\" do not exist.") unless not_existing_app_guids.empty?
 
-    unless permission_queryer.can_read_globally?
-      unauthorized_app_guids = desired_app_guids - permission_queryer.readable_app_guids
-      unprocessable!("App(s) with guid(s) \"#{unauthorized_app_guids.join('", "')}\" you do not have access.") unless unauthorized_app_guids.empty?
-    end
+    return if permission_queryer.can_read_globally?
+
+    unauthorized_app_guids = desired_app_guids - permission_queryer.readable_app_guids
+    unprocessable!("App(s) with guid(s) \"#{unauthorized_app_guids.join('", "')}\" you do not have access.") unless unauthorized_app_guids.empty?
   end
 
   def validate_app_spaces!(apps_hash, route)
-    if apps_hash.values.any? { |app| app.space != route.space && !route.shared_spaces.include?(app.space) }
-      unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
-    end
+    return unless apps_hash.values.any? { |app| app.space != route.space && !route.shared_spaces.include?(app.space) }
+
+    unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
   end
 
   def app_not_found!
@@ -389,31 +391,31 @@ class RoutesController < ApplicationController
     unreadable_space_guids = not_found_space_guids + unreadable_spaces.map(&:guid)
     unwriteable_space_guids = unwriteable_spaces.map(&:guid)
 
-    if unreadable_space_guids.any? || unwriteable_space_guids.any?
-      unreadable_error = unreadable_error_message(route.uri, unreadable_space_guids)
-      unwriteable_error = unwriteable_error_message(route.uri, unwriteable_space_guids)
+    return unless unreadable_space_guids.any? || unwriteable_space_guids.any?
 
-      error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
+    unreadable_error = unreadable_error_message(route.uri, unreadable_space_guids)
+    unwriteable_error = unwriteable_error_message(route.uri, unwriteable_space_guids)
 
-      unprocessable!(error_msg)
-    end
+    error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
+
+    unprocessable!(error_msg)
   end
 
   def unreadable_error_message(uri, unreadable_space_guids)
-    if unreadable_space_guids.any?
-      unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+    return unless unreadable_space_guids.any?
 
-      "Unable to share route #{uri} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
-    end
+    unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+
+    "Unable to share route #{uri} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
   end
 
   def unwriteable_error_message(uri, unwriteable_space_guids)
-    if unwriteable_space_guids.any?
-      unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+    return unless unwriteable_space_guids.any?
 
-      "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. "\
+    unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+
+    "Unable to share route #{uri} with spaces [#{unwriteable_guid_list}]. " \
       'Write permission is required in order to share a route with a space and the containing organization must not be suspended.'
-    end
   end
 
   def check_if_space_is_accessible(space)

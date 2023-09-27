@@ -8,7 +8,7 @@ module VCAP::CloudController
         @statsd_updater = statsd_updater
       end
 
-      def send_stage_request(config, staging_details)
+      def send_stage_request(_config, staging_details)
         logger.info('staging.begin', package_guid: staging_details.package.guid)
 
         staging_guid = staging_details.staging_guid
@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       def send_stop_staging_request(staging_guid)
-        logger.info('staging.stop', staging_guid: staging_guid)
+        logger.info('staging.stop', staging_guid:)
 
         bbs_stager_client.stop_staging(staging_guid)
       end

@@ -10,24 +10,23 @@ RSpec.describe 'Apps' do
     space.organization.add_user(user)
     space.add_developer(user)
     TestConfig.override(kubernetes: {})
-    allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+    allow_any_instance_of(Diego::Client).to receive(:build_client).and_return(build_client)
   end
 
   describe 'GET /v2/apps' do
     let(:shared_app_model) do
       VCAP::CloudController::AppModel.make(
-        space:                 space,
+        space: space,
         environment_variables: { 'RAILS_ENV' => 'staging' }
       )
     end
     let!(:process) do
       VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-        app: shared_app_model,
-        command:                    'hello_world',
-        health_check_type:          'http',
-        health_check_http_endpoint: '/health',
-        created_at: 7.days.ago
-      )
+                                                      app: shared_app_model,
+                                                      command: 'hello_world',
+                                                      health_check_type: 'http',
+                                                      health_check_http_endpoint: '/health',
+                                                      created_at: 7.days.ago)
     end
 
     it 'lists all apps' do
@@ -39,57 +38,57 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [{
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [{
             'metadata' => {
-              'guid'       => process.guid,
-              'url'        => "/v2/apps/#{process.guid}",
+              'guid' => process.guid,
+              'url' => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
               'updated_at' => iso8601
             },
             'entity' => {
-              'name'                       => process.name,
-              'production'                 => false,
-              'space_guid'                 => space.guid,
-              'stack_guid'                 => process.stack.guid,
-              'buildpack'                  => nil,
-              'detected_buildpack'         => nil,
-              'detected_buildpack_guid'    => nil,
-              'environment_json'           => { 'RAILS_ENV' => 'staging' },
-              'memory'                     => 1024,
-              'instances'                  => 1,
-              'disk_quota'                 => 1024,
-              'log_rate_limit'             => 1_048_576,
-              'state'                      => 'STOPPED',
-              'version'                    => process.version,
-              'command'                    => 'hello_world',
-              'console'                    => false,
-              'debug'                      => nil,
-              'staging_task_id'            => process.latest_build.guid,
-              'package_state'              => 'STAGED',
-              'health_check_type'          => 'http',
-              'health_check_timeout'       => nil,
+              'name' => process.name,
+              'production' => false,
+              'space_guid' => space.guid,
+              'stack_guid' => process.stack.guid,
+              'buildpack' => nil,
+              'detected_buildpack' => nil,
+              'detected_buildpack_guid' => nil,
+              'environment_json' => { 'RAILS_ENV' => 'staging' },
+              'memory' => 1024,
+              'instances' => 1,
+              'disk_quota' => 1024,
+              'log_rate_limit' => 1_048_576,
+              'state' => 'STOPPED',
+              'version' => process.version,
+              'command' => 'hello_world',
+              'console' => false,
+              'debug' => nil,
+              'staging_task_id' => process.latest_build.guid,
+              'package_state' => 'STAGED',
+              'health_check_type' => 'http',
+              'health_check_timeout' => nil,
               'health_check_http_endpoint' => '/health',
-              'staging_failed_reason'      => nil,
+              'staging_failed_reason' => nil,
               'staging_failed_description' => nil,
-              'diego'                      => true,
-              'docker_image'               => nil,
-              'docker_credentials'         => {
+              'diego' => true,
+              'docker_image' => nil,
+              'docker_credentials' => {
                 'username' => nil,
                 'password' => nil
               },
-              'package_updated_at'         => iso8601,
-              'detected_start_command'     => '$HOME/boot.sh',
-              'enable_ssh'                 => true,
-              'ports'                      => [8080],
-              'space_url'                  => "/v2/spaces/#{space.guid}",
-              'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-              'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-              'events_url'                 => "/v2/apps/#{process.guid}/events",
-              'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-              'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+              'package_updated_at' => iso8601,
+              'detected_start_command' => '$HOME/boot.sh',
+              'enable_ssh' => true,
+              'ports' => [8080],
+              'space_url' => "/v2/spaces/#{space.guid}",
+              'stack_url' => "/v2/stacks/#{process.stack.guid}",
+              'routes_url' => "/v2/apps/#{process.guid}/routes",
+              'events_url' => "/v2/apps/#{process.guid}/events",
+              'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+              'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
             }
           }]
         }
@@ -128,15 +127,14 @@ RSpec.describe 'Apps' do
       end
       let!(:web_process_for_different_app) do
         VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-          app:                        VCAP::CloudController::AppModel.make(
-            space:                 space,
-            environment_variables: { 'RAILS_ENV' => 'staging' }
-          ),
-          command:                    'hello_world',
-          health_check_type:          'http',
-          health_check_http_endpoint: '/health',
-          created_at: 1.day.ago
-        )
+                                                        app: VCAP::CloudController::AppModel.make(
+                                                          space: space,
+                                                          environment_variables: { 'RAILS_ENV' => 'staging' }
+                                                        ),
+                                                        command: 'hello_world',
+                                                        health_check_type: 'http',
+                                                        health_check_http_endpoint: '/health',
+                                                        created_at: 1.day.ago)
       end
 
       it 'only lists the newest web process for each app' do
@@ -150,19 +148,18 @@ RSpec.describe 'Apps' do
       end
 
       context 'pagination' do
-        let!(:another_new_process) {
+        let!(:another_new_process) do
           VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-                                                          app:                        VCAP::CloudController::AppModel.make(
-                                                            space:                 space,
+                                                          app: VCAP::CloudController::AppModel.make(
+                                                            space: space,
                                                             environment_variables: { 'RAILS_ENV' => 'staging' }
                                                           ),
                                                           guid: 'another_new_process-guid',
-                                                          command:                    'hello_world',
-                                                          health_check_type:          'http',
+                                                          command: 'hello_world',
+                                                          health_check_type: 'http',
                                                           health_check_http_endpoint: '/health',
-                                                          created_at: 1.day.ago
-          )
-        }
+                                                          created_at: 1.day.ago)
+        end
 
         it 'paginates page 1 correctly including only the newest web process for an app' do
           get '/v2/apps?results-per-page=2&order-direction=desc&page=1', nil, headers_for(user)
@@ -196,9 +193,9 @@ RSpec.describe 'Apps' do
 
     context 'with inline-relations-depth' do
       it 'includes related records' do
-        route = VCAP::CloudController::Route.make(space: space)
+        route = VCAP::CloudController::Route.make(space:)
         VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-        service_binding = VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: space))
+        service_binding = VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space:))
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
@@ -207,146 +204,146 @@ RSpec.describe 'Apps' do
         expect(parsed_response).to be_a_response_like(
           {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'prev_url'      => nil,
-            'next_url'      => nil,
-            'resources'     => [{
+            'total_pages' => 1,
+            'prev_url' => nil,
+            'next_url' => nil,
+            'resources' => [{
               'metadata' => {
-                'guid'       => process.guid,
-                'url'        => "/v2/apps/#{process.guid}",
+                'guid' => process.guid,
+                'url' => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
-                'updated_at' => iso8601,
+                'updated_at' => iso8601
               },
               'entity' => {
-                'name'                       => process.name,
-                'production'                 => false,
-                'space_guid'                 => space.guid,
-                'stack_guid'                 => process.stack.guid,
-                'buildpack'                  => nil,
-                'detected_buildpack'         => nil,
-                'detected_buildpack_guid'    => nil,
-                'environment_json'           => { 'RAILS_ENV' => 'staging' },
-                'memory'                     => 1024,
-                'instances'                  => 1,
-                'disk_quota'                 => 1024,
-                'log_rate_limit'             => 1_048_576,
-                'state'                      => 'STOPPED',
-                'version'                    => process.version,
-                'command'                    => 'hello_world',
-                'console'                    => false,
-                'debug'                      => nil,
-                'staging_task_id'            => process.latest_build.guid,
-                'package_state'              => 'STAGED',
-                'health_check_type'          => 'http',
-                'health_check_timeout'       => nil,
+                'name' => process.name,
+                'production' => false,
+                'space_guid' => space.guid,
+                'stack_guid' => process.stack.guid,
+                'buildpack' => nil,
+                'detected_buildpack' => nil,
+                'detected_buildpack_guid' => nil,
+                'environment_json' => { 'RAILS_ENV' => 'staging' },
+                'memory' => 1024,
+                'instances' => 1,
+                'disk_quota' => 1024,
+                'log_rate_limit' => 1_048_576,
+                'state' => 'STOPPED',
+                'version' => process.version,
+                'command' => 'hello_world',
+                'console' => false,
+                'debug' => nil,
+                'staging_task_id' => process.latest_build.guid,
+                'package_state' => 'STAGED',
+                'health_check_type' => 'http',
+                'health_check_timeout' => nil,
                 'health_check_http_endpoint' => '/health',
-                'staging_failed_reason'      => nil,
+                'staging_failed_reason' => nil,
                 'staging_failed_description' => nil,
-                'diego'                      => true,
-                'docker_image'               => nil,
-                'docker_credentials'         => {
+                'diego' => true,
+                'docker_image' => nil,
+                'docker_credentials' => {
                   'username' => nil,
                   'password' => nil
                 },
-                'package_updated_at'         => iso8601,
-                'detected_start_command'     => '$HOME/boot.sh',
-                'enable_ssh'                 => true,
-                'ports'                      => [8080],
-                'space_url'                  => "/v2/spaces/#{space.guid}",
-                'space'                      => {
+                'package_updated_at' => iso8601,
+                'detected_start_command' => '$HOME/boot.sh',
+                'enable_ssh' => true,
+                'ports' => [8080],
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'space' => {
                   'metadata' => {
-                    'guid'       => space.guid,
-                    'url'        => "/v2/spaces/#{space.guid}",
+                    'guid' => space.guid,
+                    'url' => "/v2/spaces/#{space.guid}",
                     'created_at' => iso8601,
                     'updated_at' => iso8601
                   },
                   'entity' => {
-                    'name'                        => space.name,
-                    'organization_guid'           => space.organization_guid,
+                    'name' => space.name,
+                    'organization_guid' => space.organization_guid,
                     'space_quota_definition_guid' => nil,
-                    'isolation_segment_guid'      => nil,
-                    'allow_ssh'                   => true,
-                    'organization_url'            => "/v2/organizations/#{space.organization_guid}",
-                    'developers_url'              => "/v2/spaces/#{space.guid}/developers",
-                    'managers_url'                => "/v2/spaces/#{space.guid}/managers",
-                    'auditors_url'                => "/v2/spaces/#{space.guid}/auditors",
-                    'apps_url'                    => "/v2/spaces/#{space.guid}/apps",
-                    'routes_url'                  => "/v2/spaces/#{space.guid}/routes",
-                    'domains_url'                 => "/v2/spaces/#{space.guid}/domains",
-                    'service_instances_url'       => "/v2/spaces/#{space.guid}/service_instances",
-                    'app_events_url'              => "/v2/spaces/#{space.guid}/app_events",
-                    'events_url'                  => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url'         => "/v2/spaces/#{space.guid}/security_groups",
+                    'isolation_segment_guid' => nil,
+                    'allow_ssh' => true,
+                    'organization_url' => "/v2/organizations/#{space.organization_guid}",
+                    'developers_url' => "/v2/spaces/#{space.guid}/developers",
+                    'managers_url' => "/v2/spaces/#{space.guid}/managers",
+                    'auditors_url' => "/v2/spaces/#{space.guid}/auditors",
+                    'apps_url' => "/v2/spaces/#{space.guid}/apps",
+                    'routes_url' => "/v2/spaces/#{space.guid}/routes",
+                    'domains_url' => "/v2/spaces/#{space.guid}/domains",
+                    'service_instances_url' => "/v2/spaces/#{space.guid}/service_instances",
+                    'app_events_url' => "/v2/spaces/#{space.guid}/app_events",
+                    'events_url' => "/v2/spaces/#{space.guid}/events",
+                    'security_groups_url' => "/v2/spaces/#{space.guid}/security_groups",
                     'staging_security_groups_url' => "/v2/spaces/#{space.guid}/staging_security_groups"
                   }
                 },
-                'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-                'stack'                      => {
+                'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                'stack' => {
                   'metadata' => {
-                    'guid'       => process.stack.guid,
-                    'url'        => "/v2/stacks/#{process.stack.guid}",
+                    'guid' => process.stack.guid,
+                    'url' => "/v2/stacks/#{process.stack.guid}",
                     'created_at' => iso8601,
                     'updated_at' => iso8601
                   },
                   'entity' => {
-                    'name'        => process.stack.name,
+                    'name' => process.stack.name,
                     'description' => process.stack.description,
                     'build_rootfs_image' => process.stack.name,
-                    'run_rootfs_image' => process.stack.name,
+                    'run_rootfs_image' => process.stack.name
                   }
                 },
-                'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-                'routes'                     => [
+                'routes_url' => "/v2/apps/#{process.guid}/routes",
+                'routes' => [
                   {
                     'metadata' => {
-                      'guid'       => route.guid,
-                      'url'        => "/v2/routes/#{route.guid}",
+                      'guid' => route.guid,
+                      'url' => "/v2/routes/#{route.guid}",
                       'created_at' => iso8601,
                       'updated_at' => iso8601
                     },
                     'entity' => {
-                      'host'                  => route.host,
-                      'path'                  => '',
-                      'domain_guid'           => route.domain.guid,
-                      'space_guid'            => space.guid,
+                      'host' => route.host,
+                      'path' => '',
+                      'domain_guid' => route.domain.guid,
+                      'space_guid' => space.guid,
                       'service_instance_guid' => nil,
-                      'port'                  => nil,
-                      'domain_url'            => "/v2/private_domains/#{route.domain.guid}",
-                      'space_url'             => "/v2/spaces/#{space.guid}",
-                      'apps_url'              => "/v2/routes/#{route.guid}/apps",
-                      'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+                      'port' => nil,
+                      'domain_url' => "/v2/private_domains/#{route.domain.guid}",
+                      'space_url' => "/v2/spaces/#{space.guid}",
+                      'apps_url' => "/v2/routes/#{route.guid}/apps",
+                      'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
                     }
                   }
                 ],
-                'events_url'                 => "/v2/apps/#{process.guid}/events",
-                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-                'service_bindings'           => [
+                'events_url' => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+                'service_bindings' => [
                   {
                     'metadata' => {
-                      'guid'       => service_binding.guid,
-                      'url'        => "/v2/service_bindings/#{service_binding.guid}",
+                      'guid' => service_binding.guid,
+                      'url' => "/v2/service_bindings/#{service_binding.guid}",
                       'created_at' => iso8601,
                       'updated_at' => iso8601
                     },
                     'entity' => {
-                      'app_guid'              => process.guid,
+                      'app_guid' => process.guid,
                       'service_instance_guid' => service_binding.service_instance.guid,
-                      'credentials'           => service_binding.credentials,
-                      'name'                  => nil,
-                      'binding_options'       => {},
-                      'gateway_data'          => nil,
-                      'gateway_name'          => '',
-                      'syslog_drain_url'      => nil,
-                      'volume_mounts'         => [],
+                      'credentials' => service_binding.credentials,
+                      'name' => nil,
+                      'binding_options' => {},
+                      'gateway_data' => nil,
+                      'gateway_name' => '',
+                      'syslog_drain_url' => nil,
+                      'volume_mounts' => [],
                       'last_operation' => {
                         'type' => 'create',
                         'state' => 'succeeded',
                         'description' => '',
                         'updated_at' => iso8601,
-                        'created_at' => iso8601,
+                        'created_at' => iso8601
                       },
-                      'app_url'               => "/v2/apps/#{process.guid}",
-                      'service_instance_url'  => "/v2/service_instances/#{service_binding.service_instance.guid}",
+                      'app_url' => "/v2/apps/#{process.guid}",
+                      'service_instance_url' => "/v2/service_instances/#{service_binding.service_instance.guid}",
                       'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
                     }
                   }
@@ -420,8 +417,8 @@ RSpec.describe 'Apps' do
   describe 'GET /v2/apps/:guid' do
     let!(:process) do
       VCAP::CloudController::ProcessModelFactory.make(
-        space:   space,
-        name:    'app-name',
+        space: space,
+        name: 'app-name',
         command: 'app-command'
       )
     end
@@ -434,52 +431,52 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => process.guid,
-            'url'        => "/v2/apps/#{process.guid}",
+            'guid' => process.guid,
+            'url' => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
           'entity' => {
-            'name'                       => 'app-name',
-            'production'                 => false,
-            'space_guid'                 => process.space.guid,
-            'stack_guid'                 => process.stack.guid,
-            'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
-            'detected_buildpack_guid'    => nil,
-            'environment_json'           => nil,
-            'memory'                     => 1024,
-            'instances'                  => 1,
-            'disk_quota'                 => 1024,
-            'log_rate_limit'             => 1_048_576,
-            'state'                      => 'STOPPED',
-            'version'                    => process.version,
-            'command'                    => 'app-command',
-            'console'                    => false,
-            'debug'                      => nil,
-            'staging_task_id'            => process.latest_build.guid,
-            'package_state'              => 'STAGED',
-            'health_check_type'          => 'port',
-            'health_check_timeout'       => nil,
+            'name' => 'app-name',
+            'production' => false,
+            'space_guid' => process.space.guid,
+            'stack_guid' => process.stack.guid,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => nil,
+            'memory' => 1024,
+            'instances' => 1,
+            'disk_quota' => 1024,
+            'log_rate_limit' => 1_048_576,
+            'state' => 'STOPPED',
+            'version' => process.version,
+            'command' => 'app-command',
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => process.latest_build.guid,
+            'package_state' => 'STAGED',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
             'health_check_http_endpoint' => nil,
-            'staging_failed_reason'      => nil,
+            'staging_failed_reason' => nil,
             'staging_failed_description' => nil,
-            'diego'                      => true,
-            'docker_image'               => nil,
-            'docker_credentials'         => {
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
               'username' => nil,
               'password' => nil
             },
-            'package_updated_at'         => iso8601,
-            'detected_start_command'     => '$HOME/boot.sh',
-            'enable_ssh'                 => true,
-            'ports'                      => [8080],
-            'space_url'                  => "/v2/spaces/#{process.space.guid}",
-            'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-            'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-            'events_url'                 => "/v2/apps/#{process.guid}/events",
-            'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-            'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+            'package_updated_at' => iso8601,
+            'detected_start_command' => '$HOME/boot.sh',
+            'enable_ssh' => true,
+            'ports' => [8080],
+            'space_url' => "/v2/spaces/#{process.space.guid}",
+            'stack_url' => "/v2/stacks/#{process.stack.guid}",
+            'routes_url' => "/v2/apps/#{process.guid}/routes",
+            'events_url' => "/v2/apps/#{process.guid}/events",
+            'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+            'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
           }
         }
       )
@@ -497,11 +494,11 @@ RSpec.describe 'Apps' do
     it 'creates an app' do
       stack       = VCAP::CloudController::Stack.make
       post_params = MultiJson.dump({
-        name:             'maria',
-        space_guid:       space.guid,
-        stack_guid:       stack.guid,
-        environment_json: { 'KEY' => 'val' },
-      })
+                                     name: 'maria',
+                                     space_guid: space.guid,
+                                     stack_guid: stack.guid,
+                                     environment_json: { 'KEY' => 'val' }
+                                   })
 
       post '/v2/apps', post_params, headers_for(user)
 
@@ -510,52 +507,52 @@ RSpec.describe 'Apps' do
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => process.guid,
-            'url'        => "/v2/apps/#{process.guid}",
+            'guid' => process.guid,
+            'url' => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
           'entity' => {
-            'name'                       => 'maria',
-            'production'                 => false,
-            'space_guid'                 => space.guid,
-            'stack_guid'                 => stack.guid,
-            'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
-            'detected_buildpack_guid'    => nil,
-            'environment_json'           => { 'KEY' => 'val' },
-            'memory'                     => 1024,
-            'instances'                  => 1,
-            'disk_quota'                 => 1024,
-            'log_rate_limit'             => 1_048_576,
-            'state'                      => 'STOPPED',
-            'version'                    => process.version,
-            'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
-            'staging_task_id'            => nil,
-            'package_state'              => 'PENDING',
-            'health_check_type'          => 'port',
-            'health_check_timeout'       => nil,
+            'name' => 'maria',
+            'production' => false,
+            'space_guid' => space.guid,
+            'stack_guid' => stack.guid,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => { 'KEY' => 'val' },
+            'memory' => 1024,
+            'instances' => 1,
+            'disk_quota' => 1024,
+            'log_rate_limit' => 1_048_576,
+            'state' => 'STOPPED',
+            'version' => process.version,
+            'command' => nil,
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => nil,
+            'package_state' => 'PENDING',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
             'health_check_http_endpoint' => nil,
-            'staging_failed_reason'      => nil,
+            'staging_failed_reason' => nil,
             'staging_failed_description' => nil,
-            'diego'                      => true,
-            'docker_image'               => nil,
-            'docker_credentials'         => {
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
               'username' => nil,
               'password' => nil
             },
-            'package_updated_at'         => nil,
-            'detected_start_command'     => '',
-            'enable_ssh'                 => true,
-            'ports'                      => [8080],
-            'space_url'                  => "/v2/spaces/#{space.guid}",
-            'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-            'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-            'events_url'                 => "/v2/apps/#{process.guid}/events",
-            'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-            'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+            'package_updated_at' => nil,
+            'detected_start_command' => '',
+            'enable_ssh' => true,
+            'ports' => [8080],
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'stack_url' => "/v2/stacks/#{process.stack.guid}",
+            'routes_url' => "/v2/apps/#{process.guid}/routes",
+            'events_url' => "/v2/apps/#{process.guid}/events",
+            'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+            'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
           }
         }
       )
@@ -564,8 +561,8 @@ RSpec.describe 'Apps' do
     context 'cc.default_app_lifecycle' do
       let(:create_request) do
         {
-          name:             'maria',
-          space_guid:       space.guid,
+          name: 'maria',
+          space_guid: space.guid
         }
       end
 
@@ -595,10 +592,10 @@ RSpec.describe 'Apps' do
       let(:post_params) do
         stack = VCAP::CloudController::Stack.make
         {
-          name:             'maria',
-          space_guid:       space.guid,
-          stack_guid:       stack.guid,
-          environment_json: { 'KEY' => 'val' },
+          name: 'maria',
+          space_guid: space.guid,
+          stack_guid: stack.guid,
+          environment_json: { 'KEY' => 'val' }
         }
       end
 
@@ -615,7 +612,7 @@ RSpec.describe 'Apps' do
             'create-app' => {
               'api-version' => 'v2',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
           expect(last_response.status).to eq(201), last_response.body
@@ -627,12 +624,12 @@ RSpec.describe 'Apps' do
     describe 'docker apps' do
       it 'creates the app' do
         post_params = MultiJson.dump({
-          name:               'maria',
-          space_guid:         space.guid,
-          docker_image:       'cloudfoundry/diego-docker-app:latest',
-          docker_credentials: { 'username' => 'bob', 'password' => 'password' },
-          environment_json:   { 'KEY' => 'val' },
-        })
+                                       name: 'maria',
+                                       space_guid: space.guid,
+                                       docker_image: 'cloudfoundry/diego-docker-app:latest',
+                                       docker_credentials: { 'username' => 'bob', 'password' => 'password' },
+                                       environment_json: { 'KEY' => 'val' }
+                                     })
 
         post '/v2/apps', post_params, headers_for(user)
 
@@ -641,52 +638,52 @@ RSpec.describe 'Apps' do
         expect(MultiJson.load(last_response.body)).to be_a_response_like(
           {
             'metadata' => {
-              'guid'       => process.guid,
-              'url'        => "/v2/apps/#{process.guid}",
+              'guid' => process.guid,
+              'url' => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
               'updated_at' => iso8601
             },
             'entity' => {
-              'name'                       => 'maria',
-              'production'                 => false,
-              'space_guid'                 => space.guid,
-              'stack_guid'                 => VCAP::CloudController::Stack.default.guid,
-              'buildpack'                  => nil,
-              'detected_buildpack'         => nil,
-              'detected_buildpack_guid'    => nil,
-              'environment_json'           => { 'KEY' => 'val' },
-              'memory'                     => 1024,
-              'instances'                  => 1,
-              'disk_quota'                 => 1024,
-              'log_rate_limit'             => 1_048_576,
-              'state'                      => 'STOPPED',
-              'version'                    => process.version,
-              'command'                    => nil,
-              'console'                    => false,
-              'debug'                      => nil,
-              'staging_task_id'            => nil,
-              'package_state'              => 'PENDING',
-              'health_check_type'          => 'port',
-              'health_check_timeout'       => nil,
+              'name' => 'maria',
+              'production' => false,
+              'space_guid' => space.guid,
+              'stack_guid' => VCAP::CloudController::Stack.default.guid,
+              'buildpack' => nil,
+              'detected_buildpack' => nil,
+              'detected_buildpack_guid' => nil,
+              'environment_json' => { 'KEY' => 'val' },
+              'memory' => 1024,
+              'instances' => 1,
+              'disk_quota' => 1024,
+              'log_rate_limit' => 1_048_576,
+              'state' => 'STOPPED',
+              'version' => process.version,
+              'command' => nil,
+              'console' => false,
+              'debug' => nil,
+              'staging_task_id' => nil,
+              'package_state' => 'PENDING',
+              'health_check_type' => 'port',
+              'health_check_timeout' => nil,
               'health_check_http_endpoint' => nil,
-              'staging_failed_reason'      => nil,
+              'staging_failed_reason' => nil,
               'staging_failed_description' => nil,
-              'diego'                      => true,
-              'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
-              'docker_credentials'         => {
+              'diego' => true,
+              'docker_image' => 'cloudfoundry/diego-docker-app:latest',
+              'docker_credentials' => {
                 'username' => 'bob',
                 'password' => '***'
               },
-              'package_updated_at'         => iso8601,
-              'detected_start_command'     => '',
-              'enable_ssh'                 => true,
-              'ports'                      => [8080],
-              'space_url'                  => "/v2/spaces/#{space.guid}",
-              'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-              'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-              'events_url'                 => "/v2/apps/#{process.guid}/events",
-              'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-              'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+              'package_updated_at' => iso8601,
+              'detected_start_command' => '',
+              'enable_ssh' => true,
+              'ports' => [8080],
+              'space_url' => "/v2/spaces/#{space.guid}",
+              'stack_url' => "/v2/stacks/#{process.stack.guid}",
+              'routes_url' => "/v2/apps/#{process.guid}/routes",
+              'events_url' => "/v2/apps/#{process.guid}/events",
+              'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+              'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
             }
           }
         )
@@ -695,21 +692,21 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v2/apps/:guid' do
-    let!(:process) {
+    let!(:process) do
       VCAP::CloudController::ProcessModelFactory.make(
-        space:            space,
-        name:             'mario',
+        space: space,
+        name: 'mario',
         environment_json: { 'RAILS_ENV' => 'staging' },
-        command:          'hello_world',
+        command: 'hello_world'
       )
-    }
+    end
     let(:update_params) do
       MultiJson.dump({
-        name:                   'maria',
-        environment_json:       { 'RAILS_ENV' => 'production' },
-        state:                  'STARTED',
-        detected_start_command: 'argh'
-      })
+                       name: 'maria',
+                       environment_json: { 'RAILS_ENV' => 'production' },
+                       state: 'STARTED',
+                       detected_start_command: 'argh'
+                     })
     end
 
     it 'updates an app' do
@@ -720,54 +717,54 @@ RSpec.describe 'Apps' do
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => process.guid,
-            'url'        => "/v2/apps/#{process.guid}",
+            'guid' => process.guid,
+            'url' => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
           'entity' => {
-            'name'                       => 'maria',
-            'production'                 => false,
-            'space_guid'                 => space.guid,
-            'stack_guid'                 => process.stack.guid,
-            'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
-            'detected_buildpack_guid'    => nil,
-            'environment_json'           => {
+            'name' => 'maria',
+            'production' => false,
+            'space_guid' => space.guid,
+            'stack_guid' => process.stack.guid,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => {
               'RAILS_ENV' => 'production'
             },
-            'memory'                     => 1024,
-            'instances'                  => 1,
-            'log_rate_limit'             => 1_048_576,
-            'disk_quota'                 => 1024,
-            'state'                      => 'STARTED',
-            'version'                    => process.version,
-            'command'                    => 'hello_world',
-            'console'                    => false,
-            'debug'                      => nil,
-            'staging_task_id'            => process.latest_build.guid,
-            'package_state'              => 'STAGED',
-            'health_check_type'          => 'port',
-            'health_check_timeout'       => nil,
+            'memory' => 1024,
+            'instances' => 1,
+            'log_rate_limit' => 1_048_576,
+            'disk_quota' => 1024,
+            'state' => 'STARTED',
+            'version' => process.version,
+            'command' => 'hello_world',
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => process.latest_build.guid,
+            'package_state' => 'STAGED',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
             'health_check_http_endpoint' => nil,
-            'staging_failed_reason'      => nil,
+            'staging_failed_reason' => nil,
             'staging_failed_description' => nil,
-            'diego'                      => true,
-            'docker_image'               => nil,
-            'docker_credentials'         => {
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
               'username' => nil,
               'password' => nil
             },
-            'package_updated_at'         => iso8601,
-            'detected_start_command'     => '$HOME/boot.sh',
-            'enable_ssh'                 => true,
-            'ports'                      => [8080],
-            'space_url'                  => "/v2/spaces/#{space.guid}",
-            'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-            'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-            'events_url'                 => "/v2/apps/#{process.guid}/events",
-            'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-            'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+            'package_updated_at' => iso8601,
+            'detected_start_command' => '$HOME/boot.sh',
+            'enable_ssh' => true,
+            'ports' => [8080],
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'stack_url' => "/v2/stacks/#{process.stack.guid}",
+            'routes_url' => "/v2/apps/#{process.guid}/routes",
+            'events_url' => "/v2/apps/#{process.guid}/events",
+            'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+            'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
           }
         }
       )
@@ -783,7 +780,7 @@ RSpec.describe 'Apps' do
               'update-app' => {
                 'api-version' => 'v2',
                 'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
             # start-app telemetry will be logged because of the 'state:STARTED' update param. skip checking this.
@@ -804,15 +801,15 @@ RSpec.describe 'Apps' do
         let(:expected_scale_json) do
           {
             'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
             'scale-app' => {
-              'api-version'    => 'v2',
+              'api-version' => 'v2',
               'instance-count' => instances,
-              'memory-in-mb'   => memory,
-              'disk-in-mb'     => disk_quota,
-              'process-type'   => 'web',
-              'app-id'         => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-              'user-id'        => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'memory-in-mb' => memory,
+              'disk-in-mb' => disk_quota,
+              'process-type' => 'web',
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
         end
@@ -820,7 +817,7 @@ RSpec.describe 'Apps' do
         context 'scaling instances' do
           let(:instances) { 5 }
           let(:update_params) do
-            MultiJson.dump({ instances: instances })
+            MultiJson.dump({ instances: })
           end
 
           it 'should log the required fields' do
@@ -838,7 +835,7 @@ RSpec.describe 'Apps' do
         context 'scaling memory' do
           let(:memory) { 532 }
           let(:update_params) do
-            MultiJson.dump({ memory: memory })
+            MultiJson.dump({ memory: })
           end
 
           it 'should log the required fields' do
@@ -856,7 +853,7 @@ RSpec.describe 'Apps' do
         context 'scaling disk' do
           let(:disk_quota) { 1010 }
           let(:update_params) do
-            MultiJson.dump({ disk_quota: disk_quota })
+            MultiJson.dump({ disk_quota: })
           end
 
           it 'should log the required fields' do
@@ -876,11 +873,11 @@ RSpec.describe 'Apps' do
         let(:expected_start_json) do
           {
             'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
             'start-app' => {
-              'api-version'    => 'v2',
-              'app-id'         => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-              'user-id'        => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'api-version' => 'v2',
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
         end
@@ -904,11 +901,11 @@ RSpec.describe 'Apps' do
         let(:expected_stop_json) do
           {
             'telemetry-source' => 'cloud_controller_ng',
-            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
             'stop-app' => {
-              'api-version'    => 'v2',
-              'app-id'         => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-              'user-id'        => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'api-version' => 'v2',
+              'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
         end
@@ -930,15 +927,15 @@ RSpec.describe 'Apps' do
     end
 
     context 'when process memory is being decreased and the new memory allocation is lower than memory of associated sidecars' do
-      let!(:process) {
+      let!(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
-          space:            space,
-          name:             'mario',
+          space: space,
+          name: 'mario',
           environment_json: { 'RAILS_ENV' => 'staging' },
-          command:          'hello_world',
-          memory:           400
+          command: 'hello_world',
+          memory: 400
         )
-      }
+      end
       let(:sidecar1) { VCAP::CloudController::SidecarModel.make(app: process.app, memory: 20) }
       before do
         VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
@@ -946,8 +943,8 @@ RSpec.describe 'Apps' do
 
       it 'throws an error' do
         update_params = MultiJson.dump({
-          memory: 10
-        })
+                                         memory: 10
+                                       })
 
         put "/v2/apps/#{process.guid}", update_params, headers_for(user)
 
@@ -959,12 +956,12 @@ RSpec.describe 'Apps' do
 
     describe 'docker apps' do
       let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
-      let!(:process) {
+      let!(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
-          app:          app_model,
+          app: app_model,
           docker_image: 'cloudfoundry/diego-docker-app:latest'
         )
-      }
+      end
 
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
@@ -974,10 +971,10 @@ RSpec.describe 'Apps' do
 
       it 'updates an app' do
         update_params = MultiJson.dump({
-          name:             'maria',
-          environment_json: { 'RAILS_ENV' => 'production' },
-          state:            'STARTED',
-        })
+                                         name: 'maria',
+                                         environment_json: { 'RAILS_ENV' => 'production' },
+                                         state: 'STARTED'
+                                       })
 
         put "/v2/apps/#{process.guid}", update_params, headers_for(user)
 
@@ -986,54 +983,54 @@ RSpec.describe 'Apps' do
         expect(MultiJson.load(last_response.body)).to be_a_response_like(
           {
             'metadata' => {
-              'guid'       => process.guid,
-              'url'        => "/v2/apps/#{process.guid}",
+              'guid' => process.guid,
+              'url' => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
               'updated_at' => iso8601
             },
             'entity' => {
-              'name'                       => 'maria',
-              'production'                 => false,
-              'space_guid'                 => space.guid,
-              'stack_guid'                 => process.stack.guid,
-              'buildpack'                  => nil,
-              'detected_buildpack'         => nil,
-              'detected_buildpack_guid'    => nil,
-              'environment_json'           => {
+              'name' => 'maria',
+              'production' => false,
+              'space_guid' => space.guid,
+              'stack_guid' => process.stack.guid,
+              'buildpack' => nil,
+              'detected_buildpack' => nil,
+              'detected_buildpack_guid' => nil,
+              'environment_json' => {
                 'RAILS_ENV' => 'production'
               },
-              'memory'                     => 1024,
-              'instances'                  => 1,
-              'disk_quota'                 => 1024,
-              'log_rate_limit'             => 1_048_576,
-              'state'                      => 'STARTED',
-              'version'                    => process.version,
-              'command'                    => nil,
-              'console'                    => false,
-              'debug'                      => nil,
-              'staging_task_id'            => process.latest_build.guid,
-              'package_state'              => 'STAGED',
-              'health_check_type'          => 'port',
-              'health_check_timeout'       => nil,
+              'memory' => 1024,
+              'instances' => 1,
+              'disk_quota' => 1024,
+              'log_rate_limit' => 1_048_576,
+              'state' => 'STARTED',
+              'version' => process.version,
+              'command' => nil,
+              'console' => false,
+              'debug' => nil,
+              'staging_task_id' => process.latest_build.guid,
+              'package_state' => 'STAGED',
+              'health_check_type' => 'port',
+              'health_check_timeout' => nil,
               'health_check_http_endpoint' => nil,
-              'staging_failed_reason'      => nil,
+              'staging_failed_reason' => nil,
               'staging_failed_description' => nil,
-              'diego'                      => true,
-              'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
-              'docker_credentials'         => {
+              'diego' => true,
+              'docker_image' => 'cloudfoundry/diego-docker-app:latest',
+              'docker_credentials' => {
                 'username' => 'bob',
                 'password' => '***'
               },
-              'package_updated_at'         => iso8601,
-              'detected_start_command'     => '$HOME/boot.sh',
-              'enable_ssh'                 => true,
-              'ports'                      => [8080],
-              'space_url'                  => "/v2/spaces/#{space.guid}",
-              'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-              'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-              'events_url'                 => "/v2/apps/#{process.guid}/events",
-              'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-              'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+              'package_updated_at' => iso8601,
+              'detected_start_command' => '$HOME/boot.sh',
+              'enable_ssh' => true,
+              'ports' => [8080],
+              'space_url' => "/v2/spaces/#{space.guid}",
+              'stack_url' => "/v2/stacks/#{process.stack.guid}",
+              'routes_url' => "/v2/apps/#{process.guid}/routes",
+              'events_url' => "/v2/apps/#{process.guid}/events",
+              'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+              'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
             }
           }
         )
@@ -1042,15 +1039,15 @@ RSpec.describe 'Apps' do
       context 'when updating docker data' do
         let(:update_params) do
           MultiJson.dump({
-            name:               'maria',
-            environment_json:   { 'RAILS_ENV' => 'production' },
-            state:              'STARTED',
-            docker_image:       'cloudfoundry/diego-docker-app:even-more-latest',
-            docker_credentials: {
-              'username' => 'somedude',
-              'password' => 'secretfromdude',
-            },
-          })
+                           name: 'maria',
+                           environment_json: { 'RAILS_ENV' => 'production' },
+                           state: 'STARTED',
+                           docker_image: 'cloudfoundry/diego-docker-app:even-more-latest',
+                           docker_credentials: {
+                             'username' => 'somedude',
+                             'password' => 'secretfromdude'
+                           }
+                         })
         end
 
         it 'updates the app with docker data' do
@@ -1064,54 +1061,54 @@ RSpec.describe 'Apps' do
           expect(MultiJson.load(last_response.body)).to be_a_response_like(
             {
               'metadata' => {
-                'guid'       => process.guid,
-                'url'        => "/v2/apps/#{process.guid}",
+                'guid' => process.guid,
+                'url' => "/v2/apps/#{process.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'                       => 'maria',
-                'production'                 => false,
-                'space_guid'                 => space.guid,
-                'stack_guid'                 => process.stack.guid,
-                'buildpack'                  => nil,
-                'detected_buildpack'         => nil,
-                'detected_buildpack_guid'    => nil,
-                'environment_json'           => {
+                'name' => 'maria',
+                'production' => false,
+                'space_guid' => space.guid,
+                'stack_guid' => process.stack.guid,
+                'buildpack' => nil,
+                'detected_buildpack' => nil,
+                'detected_buildpack_guid' => nil,
+                'environment_json' => {
                   'RAILS_ENV' => 'production'
                 },
-                'memory'                     => 1024,
-                'instances'                  => 1,
-                'disk_quota'                 => 1024,
-                'log_rate_limit'             => 1_048_576,
-                'state'                      => 'STARTED',
-                'version'                    => process.version,
-                'command'                    => nil,
-                'console'                    => false,
-                'debug'                      => nil,
-                'staging_task_id'            => process.latest_build.guid,
-                'package_state'              => 'PENDING',
-                'health_check_type'          => 'port',
-                'health_check_timeout'       => nil,
+                'memory' => 1024,
+                'instances' => 1,
+                'disk_quota' => 1024,
+                'log_rate_limit' => 1_048_576,
+                'state' => 'STARTED',
+                'version' => process.version,
+                'command' => nil,
+                'console' => false,
+                'debug' => nil,
+                'staging_task_id' => process.latest_build.guid,
+                'package_state' => 'PENDING',
+                'health_check_type' => 'port',
+                'health_check_timeout' => nil,
                 'health_check_http_endpoint' => nil,
-                'staging_failed_reason'      => nil,
+                'staging_failed_reason' => nil,
                 'staging_failed_description' => nil,
-                'diego'                      => true,
-                'docker_image'               => 'cloudfoundry/diego-docker-app:even-more-latest',
-                'docker_credentials'         => {
+                'diego' => true,
+                'docker_image' => 'cloudfoundry/diego-docker-app:even-more-latest',
+                'docker_credentials' => {
                   'username' => 'somedude',
                   'password' => '***'
                 },
-                'package_updated_at'         => iso8601,
-                'detected_start_command'     => '',
-                'enable_ssh'                 => true,
-                'ports'                      => [8080],
-                'space_url'                  => "/v2/spaces/#{space.guid}",
-                'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-                'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-                'events_url'                 => "/v2/apps/#{process.guid}/events",
-                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-                'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+                'package_updated_at' => iso8601,
+                'detected_start_command' => '',
+                'enable_ssh' => true,
+                'ports' => [8080],
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                'routes_url' => "/v2/apps/#{process.guid}/routes",
+                'events_url' => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+                'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
               }
             }
           )
@@ -1121,7 +1118,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v2/apps/:guid' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     it 'deletes the specified app' do
       delete "/v2/apps/#{process.guid}", nil, headers_for(user)
@@ -1143,7 +1140,7 @@ RSpec.describe 'Apps' do
             'delete-app' => {
               'api-version' => 'v2',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -1156,7 +1153,7 @@ RSpec.describe 'Apps' do
     end
 
     describe 'docker apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
       let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app_model, docker_image: 'cloudfoundry/diego-docker-app:latest') }
 
       it 'deletes the specified app' do
@@ -1178,12 +1175,11 @@ RSpec.describe 'Apps' do
     it 'gives a summary of the specified app' do
       private_domains = process.space.organization.private_domains
       shared_domains  = VCAP::CloudController::SharedDomain.all.collect do |domain|
-        { 'guid'              => domain.guid,
-          'name'              => domain.name,
+        { 'guid' => domain.guid,
+          'name' => domain.name,
           'internal' => domain.internal,
           'router_group_guid' => domain.router_group_guid,
-          'router_group_type' => domain.router_group_type,
-        }
+          'router_group_type' => domain.router_group_type }
       end
       avail_domains = private_domains + shared_domains
 
@@ -1192,54 +1188,55 @@ RSpec.describe 'Apps' do
       expect(last_response.status).to eq(200), last_response.body
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
-          'guid'                       => process.guid,
-          'name'                       => 'woo',
-          'routes'                     => [],
-          'running_instances'          => 0,
-          'services'                   => [],
-          'available_domains'          => avail_domains,
-          'production'                 => false,
-          'space_guid'                 => space.guid,
-          'stack_guid'                 => process.stack.guid,
-          'buildpack'                  => nil,
-          'detected_buildpack'         => nil,
-          'detected_buildpack_guid'    => nil,
-          'environment_json'           => nil,
-          'memory'                     => 1024,
-          'instances'                  => 1,
-          'log_rate_limit'             => 1_048_576,
-          'disk_quota'                 => 1024,
-          'state'                      => 'STOPPED',
-          'version'                    => process.version,
-          'command'                    => nil,
-          'console'                    => false,
-          'debug'                      => nil,
-          'staging_task_id'            => process.latest_build.guid,
-          'package_state'              => 'STAGED',
-          'health_check_type'          => 'port',
-          'health_check_timeout'       => nil,
+          'guid' => process.guid,
+          'name' => 'woo',
+          'routes' => [],
+          'running_instances' => 0,
+          'services' => [],
+          'available_domains' => avail_domains,
+          'production' => false,
+          'space_guid' => space.guid,
+          'stack_guid' => process.stack.guid,
+          'buildpack' => nil,
+          'detected_buildpack' => nil,
+          'detected_buildpack_guid' => nil,
+          'environment_json' => nil,
+          'memory' => 1024,
+          'instances' => 1,
+          'log_rate_limit' => 1_048_576,
+          'disk_quota' => 1024,
+          'state' => 'STOPPED',
+          'version' => process.version,
+          'command' => nil,
+          'console' => false,
+          'debug' => nil,
+          'staging_task_id' => process.latest_build.guid,
+          'package_state' => 'STAGED',
+          'health_check_type' => 'port',
+          'health_check_timeout' => nil,
           'health_check_http_endpoint' => nil,
-          'staging_failed_reason'      => nil,
+          'staging_failed_reason' => nil,
           'staging_failed_description' => nil,
-          'diego'                      => true,
-          'docker_image'               => nil,
-          'package_updated_at'         => iso8601,
-          'detected_start_command'     => '$HOME/boot.sh',
-          'enable_ssh'                 => true,
-          'ports'                      => nil
-        })
+          'diego' => true,
+          'docker_image' => nil,
+          'package_updated_at' => iso8601,
+          'detected_start_command' => '$HOME/boot.sh',
+          'enable_ssh' => true,
+          'ports' => nil
+        }
+      )
     end
   end
 
   describe 'GET /v2/apps/:guid/env' do
     let(:process) do
       VCAP::CloudController::ProcessModelFactory.make(
-        space:              space,
-        name:               'potato',
+        space: space,
+        name: 'potato',
         detected_buildpack: 'buildpack-name',
-        environment_json:   { env_var: 'env_val' },
-        memory:             1024,
-        disk_quota:         1024,
+        environment_json: { env_var: 'env_val' },
+        memory: 1024,
+        disk_quota: 1024
       )
     end
 
@@ -1252,9 +1249,9 @@ RSpec.describe 'Apps' do
 
     before do
       VCAP::CloudController::RouteMappingModel.make(
-        app:          process.app,
+        app: process.app,
         process_type: process.type,
-        route:        VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
+        route: VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
       )
 
       process.revision_guid = revision.guid
@@ -1275,29 +1272,29 @@ RSpec.describe 'Apps' do
 
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
-          'staging_env_json'     => { 'STAGING_ENV' => 'staging_value' },
-          'running_env_json'     => { 'RUNNING_ENV' => 'running_value' },
-          'environment_json'     => { 'env_var' => 'env_val' },
-          'system_env_json'      => { 'VCAP_SERVICES' => {} },
+          'staging_env_json' => { 'STAGING_ENV' => 'staging_value' },
+          'running_env_json' => { 'RUNNING_ENV' => 'running_value' },
+          'environment_json' => { 'env_var' => 'env_val' },
+          'system_env_json' => { 'VCAP_SERVICES' => {} },
           'application_env_json' => {
             'VCAP_APPLICATION' => {
-              'cf_api'              => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-              'limits'              => {
-                'fds'  => 16384,
-                'mem'  => 1024,
+              'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+              'limits' => {
+                'fds' => 16_384,
+                'mem' => 1024,
                 'disk' => 1024
               },
-              'application_name'    => 'potato',
-              'application_uris'    => ["potato.#{VCAP::CloudController::SharedDomain.first.name}"],
-              'name'                => 'potato',
-              'space_name'          => space.name,
-              'space_id'            => space.guid,
-              'uris'                => ["potato.#{VCAP::CloudController::SharedDomain.first.name}"],
-              'users'               => nil,
-              'application_id'      => process.app_guid,
-              'version'             => process.version,
+              'application_name' => 'potato',
+              'application_uris' => ["potato.#{VCAP::CloudController::SharedDomain.first.name}"],
+              'name' => 'potato',
+              'space_name' => space.name,
+              'space_id' => space.guid,
+              'uris' => ["potato.#{VCAP::CloudController::SharedDomain.first.name}"],
+              'users' => nil,
+              'application_id' => process.app_guid,
+              'version' => process.version,
               'application_version' => process.version,
-              'organization_id'     => space.organization_guid,
+              'organization_id' => space.organization_guid,
               'organization_name' => space.organization.name,
               'process_id' => process.guid,
               'process_type' => process.type
@@ -1318,32 +1315,32 @@ RSpec.describe 'Apps' do
         0 => {
           state: 'RUNNING',
           stats: {
-            usage:      {
-              disk: 66392064,
-              mem:  29880320,
-              cpu:  0.13511219703079957,
+            usage: {
+              disk: 66_392_064,
+              mem: 29_880_320,
+              cpu: 0.13511219703079957,
               time: '2014-06-19 22:37:58 +0000'
             },
-            name:       'app_name',
-            uris:       [
+            name: 'app_name',
+            uris: [
               'app_name.example.com'
             ],
-            host:       '10.0.0.1',
-            port:       61035,
-            uptime:     65007,
-            mem_quota:  536870912,
-            disk_quota: 1073741824,
-            fds_quota:  16384,
-            net_info:   {
+            host: '10.0.0.1',
+            port: 61_035,
+            uptime: 65_007,
+            mem_quota: 536_870_912,
+            disk_quota: 1_073_741_824,
+            fds_quota: 16_384,
+            net_info: {
               address: '10.244.16.10',
-              ports:   [
+              ports: [
                 {
                   container_port: 8080,
-                  host_port:      60002
+                  host_port: 60_002
                 },
                 {
                   container_port: 2222,
-                  host_port:      60003
+                  host_port: 60_003
                 }
               ]
             }
@@ -1367,19 +1364,19 @@ RSpec.describe 'Apps' do
           '0' => {
             'state' => 'RUNNING',
             'stats' => {
-              'name'       => 'app_name',
-              'uris'       => ['app_name.example.com'],
-              'host'       => '10.0.0.1',
-              'port'       => 61035,
-              'uptime'     => 65007,
-              'mem_quota'  => 536870912,
-              'disk_quota' => 1073741824,
-              'fds_quota'  => 16384,
-              'usage'      => {
+              'name' => 'app_name',
+              'uris' => ['app_name.example.com'],
+              'host' => '10.0.0.1',
+              'port' => 61_035,
+              'uptime' => 65_007,
+              'mem_quota' => 536_870_912,
+              'disk_quota' => 1_073_741_824,
+              'fds_quota' => 16_384,
+              'usage' => {
                 'time' => '2014-06-19 22:37:58 +0000',
-                'cpu'  => 0.1351121970307996,
-                'mem'  => 29880320,
-                'disk' => 66392064
+                'cpu' => 0.1351121970307996,
+                'mem' => 29_880_320,
+                'disk' => 66_392_064
               }
             }
           }
@@ -1390,12 +1387,12 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/instances' do
     def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
-      ::Diego::Bbs::Models::ActualLRP.new(
-        actual_lrp_key:          ::Diego::Bbs::Models::ActualLRPKey.new(index: index),
-        actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid),
-        state:                   state,
-        placement_error:         error,
-        since:                   since,
+      Diego::Bbs::Models::ActualLRP.new(
+        actual_lrp_key: Diego::Bbs::Models::ActualLRPKey.new(index:),
+        actual_lrp_instance_key: Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid:),
+        state: state,
+        placement_error: error,
+        since: since
       )
     end
 
@@ -1406,8 +1403,8 @@ RSpec.describe 'Apps' do
     let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
     let(:bbs_instances_response) do
       [
-        make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
-        make_actual_lrp(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
+        make_actual_lrp(instance_guid: 'instance-a', index: 0, state: Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
+        make_actual_lrp(instance_guid: 'instance-b', index: 1, state: Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns)
       ]
     end
 
@@ -1469,46 +1466,46 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => process.guid,
-            'url'        => "/v2/apps/#{process.guid}",
+            'guid' => process.guid,
+            'url' => "/v2/apps/#{process.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
           'entity' => {
-            'name'                       => 'maria',
-            'production'                 => false,
-            'space_guid'                 => space.guid,
-            'stack_guid'                 => process.stack.guid,
-            'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
-            'detected_buildpack_guid'    => nil,
-            'environment_json'           => nil,
-            'memory'                     => 1024,
-            'instances'                  => 1,
-            'disk_quota'                 => 1024,
-            'log_rate_limit'             => 1_048_576,
-            'state'                      => 'STARTED',
-            'version'                    => process.version,
-            'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
-            'staging_task_id'            => process.latest_build.guid,
-            'package_state'              => 'PENDING',
-            'health_check_type'          => 'port',
-            'health_check_timeout'       => nil,
+            'name' => 'maria',
+            'production' => false,
+            'space_guid' => space.guid,
+            'stack_guid' => process.stack.guid,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => nil,
+            'memory' => 1024,
+            'instances' => 1,
+            'disk_quota' => 1024,
+            'log_rate_limit' => 1_048_576,
+            'state' => 'STARTED',
+            'version' => process.version,
+            'command' => nil,
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => process.latest_build.guid,
+            'package_state' => 'PENDING',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
             'health_check_http_endpoint' => nil,
-            'staging_failed_reason'      => nil,
+            'staging_failed_reason' => nil,
             'staging_failed_description' => nil,
-            'diego'                      => true,
-            'docker_image'               => nil,
-            'docker_credentials'         => {
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
               'username' => nil,
               'password' => nil
             },
-            'package_updated_at'         => iso8601,
-            'detected_start_command'     => '',
-            'enable_ssh'                 => true,
-            'ports'                      => [8080]
+            'package_updated_at' => iso8601,
+            'detected_start_command' => '',
+            'enable_ssh' => true,
+            'ports' => [8080]
           }
         }
       )
@@ -1526,7 +1523,7 @@ RSpec.describe 'Apps' do
               'buildpacks' => process.app.buildpack_lifecycle_data.buildpacks,
               'stack' => process.app.buildpack_lifecycle_data.stack,
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
@@ -1552,7 +1549,7 @@ RSpec.describe 'Apps' do
                 'buildpacks' => [],
                 'stack' => nil,
                 'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
@@ -1566,7 +1563,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v2/apps/:guid/bits' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:tmpdir) { Dir.mktmpdir }
     let(:valid_zip) do
       zip_name = File.join(tmpdir, 'file.zip')
@@ -1582,10 +1579,10 @@ RSpec.describe 'Apps' do
     let(:upload_params) do
       {
         application: valid_zip,
-        resources:   [
+        resources: [
           { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
           { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
-        ].to_json,
+        ].to_json
       }
     end
 
@@ -1602,11 +1599,11 @@ RSpec.describe 'Apps' do
       let(:expected_json) do
         {
           'telemetry-source' => 'cloud_controller_ng',
-          'telemetry-time'   => Time.now.to_datetime.rfc3339,
+          'telemetry-time' => Time.now.to_datetime.rfc3339,
           'upload-package' => {
-            'api-version'    => 'v2',
-            'app-id'         => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-            'user-id'        => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+            'api-version' => 'v2',
+            'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+            'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
           }
         }
       end
@@ -1623,8 +1620,8 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v2/apps/:guid/copy_bits' do
-    let!(:source_process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let!(:destination_process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:source_process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
+    let!(:destination_process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     it 'queues a job to copy the bits' do
       post "/v2/apps/#{destination_process.guid}/copy_bits", MultiJson.dump({ source_app_guid: source_process.guid }), headers_for(user)
@@ -1636,7 +1633,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/download' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:tmpdir) { Dir.mktmpdir }
     let(:valid_zip) do
       zip_name = File.join(tmpdir, 'file.zip')
@@ -1649,7 +1646,7 @@ RSpec.describe 'Apps' do
       TestConfig.config[:directories][:tmpdir] = File.dirname(valid_zip.path)
       upload_params = {
         application: valid_zip,
-        resources:   [{ fn: 'a/b/c', size: 1, sha1: 'sha' }].to_json
+        resources: [{ fn: 'a/b/c', size: 1, sha1: 'sha' }].to_json
       }
       put "/v2/apps/#{process.guid}/bits", upload_params, headers_for(user)
     end
@@ -1663,7 +1660,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/droplet/download' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     before do
       droplet_file = Tempfile.new(process.guid)
@@ -1681,13 +1678,13 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/service_bindings' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
     let!(:service_binding) do
       VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
-        app:              process.app,
-        credentials:      { 'creds-key' => 'creds-val' }
+        app: process.app,
+        credentials: { 'creds-key' => 'creds-val' }
       )
     end
 
@@ -1704,36 +1701,36 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => service_binding.guid,
-                'url'        => "/v2/service_bindings/#{service_binding.guid}",
+                'guid' => service_binding.guid,
+                'url' => "/v2/service_bindings/#{service_binding.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_guid'              => process.guid,
+                'app_guid' => process.guid,
                 'service_instance_guid' => service_instance.guid,
-                'credentials'           => { 'creds-key' => 'creds-val' },
-                'name'                  => nil,
-                'binding_options'       => {},
-                'gateway_data'          => nil,
-                'gateway_name'          => '',
-                'syslog_drain_url'      => nil,
-                'volume_mounts'         => [],
+                'credentials' => { 'creds-key' => 'creds-val' },
+                'name' => nil,
+                'binding_options' => {},
+                'gateway_data' => nil,
+                'gateway_name' => '',
+                'syslog_drain_url' => nil,
+                'volume_mounts' => [],
                 'last_operation' => {
                   'type' => 'create',
                   'state' => 'succeeded',
                   'description' => '',
                   'updated_at' => iso8601,
-                  'created_at' => iso8601,
+                  'created_at' => iso8601
                 },
-                'app_url'               => "/v2/apps/#{process.guid}",
-                'service_instance_url'  => "/v2/service_instances/#{service_instance.guid}",
+                'app_url' => "/v2/apps/#{process.guid}",
+                'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                 'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
               }
             }
@@ -1744,7 +1741,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v2/apps/:guid/service_binding/:guid' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
     let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app) }
 
@@ -1757,7 +1754,8 @@ RSpec.describe 'Apps' do
       broker_auth    = [service_broker.auth_username, service_broker.auth_password]
       stub_request(
         :delete,
-        %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}).
+        %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}
+      ).
         with(basic_auth: broker_auth).
         to_return(status: 200, body: '{}')
     end
@@ -1771,7 +1769,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/routes' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:route) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
@@ -1782,28 +1780,28 @@ RSpec.describe 'Apps' do
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => route.guid,
-                'url'        => "/v2/routes/#{route.guid}",
+                'guid' => route.guid,
+                'url' => "/v2/routes/#{route.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'host'                  => 'youdontknowme',
-                'path'                  => '',
-                'domain_guid'           => route.domain_guid,
-                'space_guid'            => space.guid,
+                'host' => 'youdontknowme',
+                'path' => '',
+                'domain_guid' => route.domain_guid,
+                'space_guid' => space.guid,
                 'service_instance_guid' => nil,
-                'port'                  => nil,
-                'domain_url'            => "/v2/private_domains/#{route.domain_guid}",
-                'space_url'             => "/v2/spaces/#{space.guid}",
-                'apps_url'              => "/v2/routes/#{route.guid}/apps",
-                'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+                'port' => nil,
+                'domain_url' => "/v2/private_domains/#{route.domain_guid}",
+                'space_url' => "/v2/spaces/#{space.guid}",
+                'apps_url' => "/v2/routes/#{route.guid}/apps",
+                'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
               }
             }
           ]
@@ -1813,8 +1811,8 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v2/apps/:guid/routes/:route_guid' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let!(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
+    let!(:route) { VCAP::CloudController::Route.make(space:) }
 
     it 'associates an app and a route' do
       put "/v2/apps/#{process.guid}/routes/#{route.guid}", nil, headers_for(user)
@@ -1825,52 +1823,51 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' =>
-            { 'guid'       => process.guid,
-              'url'        => "/v2/apps/#{process.guid}",
+            { 'guid' => process.guid,
+              'url' => "/v2/apps/#{process.guid}",
               'created_at' => iso8601,
-              'updated_at' => iso8601,
-            },
-          'entity'   => {
-            'name'                       => process.name,
-            'production'                 => false,
-            'space_guid'                 => space.guid,
-            'stack_guid'                 => process.stack.guid,
-            'buildpack'                  => nil,
-            'detected_buildpack'         => nil,
-            'detected_buildpack_guid'    => nil,
-            'environment_json'           => nil,
-            'memory'                     => 1024,
-            'instances'                  => 1,
-            'disk_quota'                 => 1024,
-            'log_rate_limit'             => 1_048_576,
-            'state'                      => 'STOPPED',
-            'version'                    => process.version,
-            'command'                    => nil,
-            'console'                    => false,
-            'debug'                      => nil,
-            'staging_task_id'            => process.latest_build.guid,
-            'package_state'              => 'STAGED',
-            'health_check_type'          => 'port',
-            'health_check_timeout'       => nil,
+              'updated_at' => iso8601 },
+          'entity' => {
+            'name' => process.name,
+            'production' => false,
+            'space_guid' => space.guid,
+            'stack_guid' => process.stack.guid,
+            'buildpack' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'environment_json' => nil,
+            'memory' => 1024,
+            'instances' => 1,
+            'disk_quota' => 1024,
+            'log_rate_limit' => 1_048_576,
+            'state' => 'STOPPED',
+            'version' => process.version,
+            'command' => nil,
+            'console' => false,
+            'debug' => nil,
+            'staging_task_id' => process.latest_build.guid,
+            'package_state' => 'STAGED',
+            'health_check_type' => 'port',
+            'health_check_timeout' => nil,
             'health_check_http_endpoint' => nil,
-            'staging_failed_reason'      => nil,
+            'staging_failed_reason' => nil,
             'staging_failed_description' => nil,
-            'diego'                      => true,
-            'docker_image'               => nil,
-            'docker_credentials'         => {
+            'diego' => true,
+            'docker_image' => nil,
+            'docker_credentials' => {
               'username' => nil,
               'password' => nil
             },
-            'package_updated_at'         => iso8601,
-            'detected_start_command'     => '$HOME/boot.sh',
-            'enable_ssh'                 => true,
-            'ports'                      => [8080],
-            'space_url'                  => "/v2/spaces/#{space.guid}",
-            'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
-            'routes_url'                 => "/v2/apps/#{process.guid}/routes",
-            'events_url'                 => "/v2/apps/#{process.guid}/events",
-            'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
-            'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+            'package_updated_at' => iso8601,
+            'detected_start_command' => '$HOME/boot.sh',
+            'enable_ssh' => true,
+            'ports' => [8080],
+            'space_url' => "/v2/spaces/#{space.guid}",
+            'stack_url' => "/v2/stacks/#{process.stack.guid}",
+            'routes_url' => "/v2/apps/#{process.guid}/routes",
+            'events_url' => "/v2/apps/#{process.guid}/events",
+            'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
+            'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
           }
         }
       )
@@ -1882,7 +1879,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v2/apps/:guid/routes/:guid' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:route1) { VCAP::CloudController::Route.make(space: space, host: 'youdontknowme') }
     let!(:route2) { VCAP::CloudController::Route.make(space: space, host: 'andyouneverwill') }
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route1) }
@@ -1901,8 +1898,8 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/route_mappings' do
-    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let!(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
+    let!(:route) { VCAP::CloudController::Route.make(space:) }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
     it 'lists associated route_mappings' do
@@ -1913,23 +1910,23 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => route_mapping.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping.guid}",
+                'guid' => route_mapping.guid,
+                'url' => "/v2/route_mappings/#{route_mapping.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process.guid,
+                'app_port' => nil,
+                'app_guid' => process.guid,
                 'route_guid' => route.guid,
-                'app_url'    => "/v2/apps/#{process.guid}",
-                'route_url'  => "/v2/routes/#{route.guid}"
+                'app_url' => "/v2/apps/#{process.guid}",
+                'route_url' => "/v2/routes/#{route.guid}"
               }
             }
           ]
@@ -1939,7 +1936,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v2/apps/:guid/droplet/upload' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:tmpdir) { Dir.mktmpdir }
     let(:valid_zip) do
       zip_name = File.join(tmpdir, 'file.zip')
@@ -1963,12 +1960,12 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => job.guid,
+            'guid' => job.guid,
             'created_at' => iso8601,
-            'url'        => "/v2/jobs/#{job.guid}"
+            'url' => "/v2/jobs/#{job.guid}"
           },
-          'entity'   => {
-            'guid'   => job.guid,
+          'entity' => {
+            'guid' => job.guid,
             'status' => 'queued'
           }
         }
@@ -1986,7 +1983,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/permissions' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     context 'when the scope is cloud_controller.read' do
       it 'shows permissions' do
@@ -1996,7 +1993,7 @@ RSpec.describe 'Apps' do
         expect(parsed_response).to be_a_response_like(
           {
             'read_sensitive_data' => true,
-            'read_basic_data'     => true
+            'read_basic_data' => true
           }
         )
       end
@@ -2010,7 +2007,7 @@ RSpec.describe 'Apps' do
         expect(parsed_response).to be_a_response_like(
           {
             'read_sensitive_data' => true,
-            'read_basic_data'     => true
+            'read_basic_data' => true
           }
         )
       end

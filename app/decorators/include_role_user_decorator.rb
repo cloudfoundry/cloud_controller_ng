@@ -12,7 +12,7 @@ module VCAP::CloudController
                 eager(Presenters::V3::UserPresenter.associated_resources).all
         uaa_users = User.uaa_users_info(user_guids)
 
-        hash[:included][:users] = users.map { |user| Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users).to_hash }
+        hash[:included][:users] = users.map { |user| Presenters::V3::UserPresenter.new(user, uaa_users:).to_hash }
         hash
       end
     end

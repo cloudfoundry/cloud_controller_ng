@@ -5,15 +5,15 @@
 NUM_ORGS = 20
 NUM_SPACES = 10
 
-org_roles = %w/manager auditor billing_manager/
-space_roles = %w/developer manager auditor/
+org_roles = %w[manager auditor billing_manager]
+space_roles = %w[developer manager auditor]
 
 user = User.find_or_create(guid: 'seed-role-user')
 
 NUM_ORGS.times do |i|
   org = VCAP::CloudController::Organization.find_or_create(
     name: "seed-role-org-#{i}",
-    status: Organization::ACTIVE,
+    status: Organization::ACTIVE
   )
   org_roles.each do |org_role|
     org.add_user(user)

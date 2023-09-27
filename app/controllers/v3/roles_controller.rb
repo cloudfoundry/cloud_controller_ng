@@ -39,7 +39,7 @@ class RolesController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(roles, message.try(:pagination_options)),
       path: '/v3/roles',
       message: message,
-      decorators: decorators,
+      decorators: decorators
     )
   end
 
@@ -55,7 +55,7 @@ class RolesController < ApplicationController
     role = readable_roles.where(guid: hashed_params[:guid]).first
     resource_not_found!(:role) unless role
 
-    render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators: decorators)
+    render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators:)
   end
 
   def destroy
@@ -134,7 +134,7 @@ class RolesController < ApplicationController
 
   def create_cc_user(user_guid)
     message = UserCreateMessage.new(guid: user_guid)
-    UserCreate.new.create(message: message)
+    UserCreate.new.create(message:)
   end
 
   def readable_users
@@ -183,14 +183,14 @@ class RolesController < ApplicationController
 
       if origins.length > 1
         unprocessable!(
-          "Ambiguous user. User with username '#{username}' exists in the following origins: "\
+          "Ambiguous user. User with username '#{username}' exists in the following origins: " \
           "#{origins.join(', ')}. Specify an origin to disambiguate."
         )
       end
       origin = origins[0]
     end
 
-    guid = uaa_client.id_for_username(username, origin: origin)
+    guid = uaa_client.id_for_username(username, origin:)
     return guid if guid
 
     unprocessable_space_user! if creating_space_role

@@ -10,12 +10,12 @@ module CloudController
           route = obj
 
           entity = {
-            'host'                  => route.host,
-            'path'                  => route.path,
-            'domain_guid'           => route.domain_guid,
-            'space_guid'            => route.space_guid,
+            'host' => route.host,
+            'path' => route.path,
+            'domain_guid' => route.domain_guid,
+            'space_guid' => route.space_guid,
             'service_instance_guid' => route.service_instance_guid,
-            'port'                  => route.port,
+            'port' => route.port
           }
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, obj, opts, depth, parents, orphans))

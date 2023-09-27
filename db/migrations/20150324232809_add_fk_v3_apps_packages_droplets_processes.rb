@@ -19,7 +19,7 @@ Sequel.migration do
     end
 
     if self.class.name.match?(/mysql/i)
-      ['packages', 'v3_droplets'].each do |table_name|
+      %w[packages v3_droplets].each do |table_name|
         run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
       end
     end

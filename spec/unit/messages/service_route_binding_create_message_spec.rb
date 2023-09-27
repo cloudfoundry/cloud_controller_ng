@@ -93,7 +93,7 @@ module VCAP::CloudController
           expect(message).to_not be_valid
           expect(message.errors[:relationships]).to include(
             "Route can't be blank",
-            /Route must be structured like this.*/,
+            /Route must be structured like this.*/
           )
           expect(message.errors[:relationships].count).to eq(2)
         end
@@ -108,9 +108,9 @@ module VCAP::CloudController
       end
 
       describe 'metadata' do
-        let(:body_extra) {
+        let(:body_extra) do
           { metadata: { labels: 1, annotations: { '' => 'stop', '*this*' => 'stuff' } } }
-        }
+        end
         it 'fails when not in the right format' do
           expect(message).to be_invalid
           expect(message.errors[:metadata]).to contain_exactly(

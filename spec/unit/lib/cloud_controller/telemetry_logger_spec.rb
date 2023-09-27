@@ -14,12 +14,12 @@ module VCAP::CloudController
       class DisabledTelemetryLogger < TelemetryLogger; end
 
       it 'still allows emit to be called without failing' do
-        expect {
+        expect do
           DisabledTelemetryLogger.internal_emit(
             'some-event',
-            { 'key' => 'value' },
+            { 'key' => 'value' }
           )
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
@@ -30,31 +30,31 @@ module VCAP::CloudController
       )
 
       expect(JSON.parse(file.read)).to match({
-        'telemetry-source' => 'cloud_controller_ng',
-        'telemetry-time' => rfc3339,
-        'some-event' => {
-          'api-version' => 'v3',
-          'bogus_key' => OpenSSL::Digest.hexdigest('SHA256', 'bogus_value')
-        }
-      })
+                                               'telemetry-source' => 'cloud_controller_ng',
+                                               'telemetry-time' => rfc3339,
+                                               'some-event' => {
+                                                 'api-version' => 'v3',
+                                                 'bogus_key' => OpenSSL::Digest.hexdigest('SHA256', 'bogus_value')
+                                               }
+                                             })
     end
 
     it 'does not anonymize raw keys' do
       TelemetryLogger.v3_emit(
         'some-event',
-         { 'anonymize_key' => 'anonymize_value' },
-         { 'safe_key' => 'safe-value' }
+        { 'anonymize_key' => 'anonymize_value' },
+        { 'safe_key' => 'safe-value' }
       )
 
       expect(JSON.parse(file.read)).to match({
-        'telemetry-source' => 'cloud_controller_ng',
-        'telemetry-time' => rfc3339,
-        'some-event' => {
-          'api-version' => 'v3',
-          'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
-          'safe_key' => 'safe-value',
-        }
-      })
+                                               'telemetry-source' => 'cloud_controller_ng',
+                                               'telemetry-time' => rfc3339,
+                                               'some-event' => {
+                                                 'api-version' => 'v3',
+                                                 'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
+                                                 'safe_key' => 'safe-value'
+                                               }
+                                             })
     end
 
     it 'converts specified raw fields to int' do
@@ -65,64 +65,64 @@ module VCAP::CloudController
       )
 
       expect(JSON.parse(file.read)).to match({
-        'telemetry-source' => 'cloud_controller_ng',
-        'telemetry-time' => rfc3339,
-        'some-event' => {
-          'api-version' => 'v3',
-          'memory-in-mb' => 1234
-        }
-      })
+                                               'telemetry-source' => 'cloud_controller_ng',
+                                               'telemetry-time' => rfc3339,
+                                               'some-event' => {
+                                                 'api-version' => 'v3',
+                                                 'memory-in-mb' => 1234
+                                               }
+                                             })
     end
 
     describe 'v2 emit' do
       it 'logs v2 api version' do
         TelemetryLogger.v2_emit(
           'some-event',
-          { 'key' => 'value' },
+          { 'key' => 'value' }
         )
 
         expect(JSON.parse(file.read)).to match({
-          'telemetry-source' => 'cloud_controller_ng',
-          'telemetry-time' => rfc3339,
-          'some-event' => {
-            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-            'api-version' => 'v2',
-          }
-        })
+                                                 'telemetry-source' => 'cloud_controller_ng',
+                                                 'telemetry-time' => rfc3339,
+                                                 'some-event' => {
+                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                   'api-version' => 'v2'
+                                                 }
+                                               })
       end
     end
     describe 'v3 emit' do
       it 'logs v3 api version' do
         TelemetryLogger.v3_emit(
           'some-event',
-          { 'key' => 'value' },
+          { 'key' => 'value' }
         )
 
         expect(JSON.parse(file.read)).to match({
-          'telemetry-source' => 'cloud_controller_ng',
-          'telemetry-time' => rfc3339,
-          'some-event' => {
-            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-            'api-version' => 'v3',
-          }
-        })
+                                                 'telemetry-source' => 'cloud_controller_ng',
+                                                 'telemetry-time' => rfc3339,
+                                                 'some-event' => {
+                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                   'api-version' => 'v3'
+                                                 }
+                                               })
       end
     end
     describe 'internal emit' do
       it 'logs version as internal api' do
         TelemetryLogger.internal_emit(
           'some-event',
-          { 'key' => 'value' },
+          { 'key' => 'value' }
         )
 
         expect(JSON.parse(file.read)).to match({
-          'telemetry-source' => 'cloud_controller_ng',
-          'telemetry-time' => rfc3339,
-          'some-event' => {
-            'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-            'api-version' => 'internal',
-          }
-        })
+                                                 'telemetry-source' => 'cloud_controller_ng',
+                                                 'telemetry-time' => rfc3339,
+                                                 'some-event' => {
+                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                   'api-version' => 'internal'
+                                                 }
+                                               })
       end
     end
   end

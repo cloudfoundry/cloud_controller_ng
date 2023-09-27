@@ -13,9 +13,7 @@ module VCAP::CloudController
     private
 
     def ensure_parameters_are_retrievable(service_binding)
-      unless binding_retrievable?(service_binding)
-        raise NotSupportedError.new
-      end
+      raise NotSupportedError.new unless binding_retrievable?(service_binding)
 
       raise_if_binding_locked(service_binding)
     end

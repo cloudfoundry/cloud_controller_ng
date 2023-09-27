@@ -18,21 +18,21 @@ module VCAP
             )
           end
 
-          let!(:label) {
+          let!(:label) do
             ServiceBrokerLabelModel.create(
               service_broker: broker,
               key_name: 'potato',
               value: 'yam'
             )
-          }
+          end
 
-          let!(:annotation) {
+          let!(:annotation) do
             ServiceBrokerAnnotationModel.create(
               service_broker: broker,
               key_name: 'style',
               value: 'mashed'
             )
-          }
+          end
 
           let(:update_broker_request) do
             ServiceBrokerUpdateRequest.create(
@@ -43,21 +43,21 @@ module VCAP
             )
           end
 
-          let!(:update_broker_label_request) {
+          let!(:update_broker_label_request) do
             ServiceBrokerUpdateRequestLabelModel.create(
               service_broker_update_request: update_broker_request,
               key_name: 'potato',
               value: 'sweet'
             )
-          }
+          end
 
-          let!(:update_broker_annotation_request) {
+          let!(:update_broker_annotation_request) do
             ServiceBrokerUpdateRequestAnnotationModel.create(
               service_broker_update_request: update_broker_request,
               key_name: 'style',
               value: 'baked'
             )
-          }
+          end
 
           let(:service_manager_factory) { Services::ServiceBrokers::ServiceManager }
 
@@ -66,14 +66,14 @@ module VCAP
           let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
 
           subject(:job) do
-            UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
+            UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info:)
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
-              with(broker: broker).
+              with(broker:).
               and_return(broker_client)
 
             broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
@@ -119,8 +119,8 @@ module VCAP
 
             let!(:updater_stub) do
               instance_double(VCAP::CloudController::V3::ServiceBrokerCatalogUpdater, {
-                refresh: nil
-              })
+                                refresh: nil
+                              })
             end
 
             before do
@@ -129,7 +129,7 @@ module VCAP
 
             it 'updates the name without refreshing the catalog' do
               update_broker_request = ServiceBrokerUpdateRequest.create(name: 'new-name', service_broker_id: broker.id)
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info:)
 
               job.perform
 
@@ -147,7 +147,7 @@ module VCAP
                 broker_url: 'http://example.org/new-broker-url',
                 service_broker_id: broker.id
               )
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info:)
 
               job.perform
 
@@ -165,7 +165,7 @@ module VCAP
                 authentication: '{"credentials":{"username":"new-admin","password":"welcome"}}',
                 service_broker_id: broker.id
               )
-              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info: user_audit_info)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info:)
 
               job.perform
 
@@ -183,18 +183,16 @@ module VCAP
             before do
               allow_any_instance_of(ServiceBroker).to receive(:validate) do |record|
                 # Make setting the name to 'new-name' fail, but nothing else
-                if record.name == 'new-name'
-                  record.errors.add(:something, 'is not right')
-                end
+                record.errors.add(:something, 'is not right') if record.name == 'new-name'
               end
             end
 
             let(:previous_state) { ServiceBrokerStateEnum::DELETE_FAILED }
 
             it 'fails to update and raises InvalidServiceBroker' do
-              expect {
+              expect do
                 job.perform
-              }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, 'something is not right')
+              end.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, 'something is not right')
 
               broker.reload
               expect(broker.state).to eq(ServiceBrokerStateEnum::DELETE_FAILED)
@@ -210,9 +208,9 @@ module VCAP
             end
 
             it 'fails to update and raises InvalidServiceBroker' do
-              expect {
+              expect do
                 job.perform
-              }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker) { |error|
+              end.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker) { |error|
                 expect(error.message).to include('auth_username presence')
                 expect(error.message).to include('auth_password presence')
               }
@@ -231,13 +229,13 @@ module VCAP
 
             it 'errors when there are validation errors' do
               job.perform
-              fail('expected error to be raised')
+              raise('expected error to be raised')
             rescue ::CloudController::Errors::ApiError => e
               expect(e.message).to include(
                 'Service broker catalog is invalid',
-                  'Service dashboard_client id must be unique',
-                  'Service service-name',
-                  'nested-error'
+                'Service dashboard_client id must be unique',
+                'Service service-name',
+                'nested-error'
               )
             end
 
@@ -264,12 +262,12 @@ module VCAP
 
             it 'errors when there are validation errors' do
               job.perform
-              fail('expected error to be raised')
+              raise('expected error to be raised')
             rescue ::CloudController::Errors::ApiError => e
               expect(e.message).to include(
                 'Service broker catalog is incompatible',
-                  'Service 2 is declared to be a route service but support for route services is disabled.',
-                  'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
+                'Service 2 is declared to be a route service but support for route services is disabled.',
+                'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
               )
             end
 
@@ -303,12 +301,12 @@ module VCAP
 
               it 'errors when there are uaa synchronization errors' do
                 job.perform
-                fail('expected error to be raised')
+                raise('expected error to be raised')
               rescue ::CloudController::Errors::ApiError => e
                 expect(e.message).to include(
                   'Service broker catalog is invalid',
-                    'Service service_name',
-                    'Service dashboard client id must be unique'
+                  'Service service_name',
+                  'Service dashboard client id must be unique'
                 )
               end
 
@@ -455,7 +453,7 @@ module VCAP
 
               expect { job.perform }.to raise_error(
                 ::CloudController::Errors::V3::ApiError,
-                  'The service broker was removed before the synchronization completed'
+                'The service broker was removed before the synchronization completed'
               )
             end
           end
@@ -471,7 +469,7 @@ module VCAP
 
             validation_errors.add_nested(
               double('double-name', name: 'service-name'),
-                Services::ValidationErrors.new.add('nested-error')
+              Services::ValidationErrors.new.add('nested-error')
             )
 
             allow(catalog).to receive(:valid?).and_return(false)
@@ -480,7 +478,7 @@ module VCAP
 
           def uaa_conflicting_catalog
             allow(Services::ServiceClientProvider).to receive(:provide).
-              with(broker: broker).
+              with(broker:).
               and_return(FakeServiceBrokerV2Client::WithConflictingUAAClient.new)
           end
 

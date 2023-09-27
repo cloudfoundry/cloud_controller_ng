@@ -57,18 +57,15 @@ module VCAP::CloudController
             build.lock!
             build.fail_to_stage!(payload[:error][:id], payload[:error][:message])
 
-            if with_start
-              V2::AppStop.stop(build.app, StagingCancel.new(stagers))
-            end
+            V2::AppStop.stop(build.app, StagingCancel.new(stagers)) if with_start
           end
-        rescue => e
+        rescue StandardError => e
           logger.error(logger_prefix + 'saving-staging-result-failed',
-            staging_guid: build.guid,
-            response:     payload,
-            error:        e.message,
-            build:        build.inspect,
-            droplet:      droplet.inspect
-          )
+                       staging_guid: build.guid,
+                       response: payload,
+                       error: e.message,
+                       build: build.inspect,
+                       droplet: droplet.inspect)
         end
 
         VCAP::AppLogEmitter.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
@@ -105,14 +102,13 @@ module VCAP::CloudController
         else
           begin
             save_staging_result(payload)
-          rescue => e
+          rescue StandardError => e
             logger.error(logger_prefix + 'saving-staging-result-failed',
-              staging_guid: build.guid,
-              response:     payload,
-              error:        e.message,
-              build:        build.inspect,
-              droplet:      droplet.inspect
-            )
+                         staging_guid: build.guid,
+                         response: payload,
+                         error: e.message,
+                         build: build.inspect,
+                         droplet: droplet.inspect)
             return
           end
 
@@ -126,7 +122,7 @@ module VCAP::CloudController
             payload[:error] = { message: e.message, id: DEFAULT_STAGING_ERROR }
             handle_failure(payload, with_start)
             return
-          rescue => e
+          rescue StandardError => e
             logger.error(logger_prefix + 'starting-process-failed', staging_guid: build.guid, response: payload, error: e.message)
             return
           end
@@ -149,13 +145,13 @@ module VCAP::CloudController
         app.db.transaction do
           app.lock!
 
-          app.update(droplet: droplet)
+          app.update(droplet:)
           SidecarSynchronizeFromAppDroplet.synchronize(app)
           revision = RevisionResolver.update_app_revision(app, nil)
 
           app.processes.each do |process|
             process.lock!
-            process.update(revision: revision) if revision
+            process.update(revision:) if revision
             Repositories::AppUsageEventRepository.new.create_from_process(process, 'BUILDPACK_SET')
           end
         end
@@ -166,9 +162,9 @@ module VCAP::CloudController
         @error_parser ||= Membrane::SchemaParser.parse do
           {
             error: {
-              id:      String,
-              message: String,
-            },
+              id: String,
+              message: String
+            }
           }
         end
       end

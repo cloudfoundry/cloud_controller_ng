@@ -26,13 +26,13 @@ RSpec.describe HttpResponseError do
     it 'produces the correct hash' do
       exception = HttpResponseError.new('message', 'PUT', response)
       expect(exception.to_h).to include({
-        'description' => 'message',
-        'http' => {
-          'method' => 'PUT',
-          'status' => 500,
-        },
-        'source' => response_hash,
-      })
+                                          'description' => 'message',
+                                          'http' => {
+                                            'method' => 'PUT',
+                                            'status' => 500
+                                          },
+                                          'source' => response_hash
+                                        })
     end
   end
 
@@ -43,13 +43,13 @@ RSpec.describe HttpResponseError do
     it 'produces the correct hash' do
       exception = HttpResponseError.new('message', 'PUT', response)
       expect(exception.to_h).to include({
-        'description' => 'message',
-        'http' => {
-          'method' => 'PUT',
-          'status' => 500,
-        },
-        'source' => response_string,
-      })
+                                          'description' => 'message',
+                                          'http' => {
+                                            'method' => 'PUT',
+                                            'status' => 500
+                                          },
+                                          'source' => response_string
+                                        })
     end
   end
 end

@@ -10,20 +10,19 @@ module VCAP::CloudController
     let(:diego) { false }
     let(:process) do
       instance_double(ProcessModel,
-        package_hash: package_hash,
-        guid: 'process-guid',
-        previous_changes: previous_changes,
-        started?: process_started,
-        needs_staging?: process_needs_staging,
-        active?: process_active,
-        # TODO: why did we remove `buildpack_cache_key: key`?
-        diego: diego,
-        staging?: staging?,
-        desired_droplet: nil,
-        memory: 12,
-        disk_quota: 34,
-        revisions_enabled?: false,
-      )
+                      package_hash: package_hash,
+                      guid: 'process-guid',
+                      previous_changes: previous_changes,
+                      started?: process_started,
+                      needs_staging?: process_needs_staging,
+                      active?: process_active,
+                      # TODO: why did we remove `buildpack_cache_key: key`?
+                      diego: diego,
+                      staging?: staging?,
+                      desired_droplet: nil,
+                      memory: 12,
+                      disk_quota: 34,
+                      revisions_enabled?: false)
     end
     let(:process_started) { false }
     let(:process_needs_staging) { false }
@@ -112,7 +111,7 @@ module VCAP::CloudController
             context 'when revisions are enabled' do
               let(:process) { ProcessModel.make }
               let(:app) { process.app }
-              let!(:revision) { RevisionModel.make(app: app) }
+              let!(:revision) { RevisionModel.make(app:) }
 
               before do
                 app.update(revisions_enabled: true)

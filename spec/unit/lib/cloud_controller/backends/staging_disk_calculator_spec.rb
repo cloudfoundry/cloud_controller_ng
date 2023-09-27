@@ -42,9 +42,9 @@ module VCAP::CloudController
         let(:requested_limit) { maximum_limit + 1 }
 
         it 'raises StagingDiskCalculator::LimitExceeded' do
-          expect {
+          expect do
             calculator.get_limit(requested_limit)
-          }.to raise_error(StagingDiskCalculator::LimitExceeded)
+          end.to raise_error(StagingDiskCalculator::LimitExceeded)
         end
       end
 

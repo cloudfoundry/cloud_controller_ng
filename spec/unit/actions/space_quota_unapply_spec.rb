@@ -13,9 +13,9 @@ module VCAP::CloudController
       context 'when removing a quota from a space' do
         it 'disassociates the given space from the quota' do
           expect(space_quota.spaces[0].guid).to eq(space.guid)
-          expect {
+          expect do
             subject.unapply(space_quota, space)
-          }.to change { space_quota.spaces.count }.by(-1)
+          end.to change { space_quota.spaces.count }.by(-1)
 
           expect(space_quota.spaces.count).to eq(0)
         end
@@ -27,9 +27,9 @@ module VCAP::CloudController
           errors.add(:blork, 'is busted')
           expect(space_quota).to receive(:remove_space).and_raise(Sequel::ValidationFailed.new(errors))
 
-          expect {
+          expect do
             subject.unapply(space_quota, space)
-          }.to raise_error(SpaceQuotaUnapply::Error, 'blork is busted')
+          end.to raise_error(SpaceQuotaUnapply::Error, 'blork is busted')
         end
       end
     end

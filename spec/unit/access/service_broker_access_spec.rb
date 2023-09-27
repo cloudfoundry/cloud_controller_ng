@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:object) { VCAP::CloudController::ServiceBroker.make }
-    let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
+    let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: }
 
     before { set_current_user(user) }
 

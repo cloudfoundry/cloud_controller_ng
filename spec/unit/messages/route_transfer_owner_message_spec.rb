@@ -74,11 +74,11 @@ module VCAP::CloudController
         end
 
         context 'when there are unexpected keys inside data hash' do
-          let(:symbolized_body) {
+          let(:symbolized_body) do
             {
-              data: { blah: 'awesome-guid' },
+              data: { blah: 'awesome-guid' }
             }
-          }
+          end
 
           it 'is not valid' do
             message = RouteTransferOwnerMessage.new(symbolized_body)

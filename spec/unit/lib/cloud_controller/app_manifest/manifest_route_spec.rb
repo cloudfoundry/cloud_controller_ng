@@ -114,51 +114,51 @@ module VCAP::CloudController
         route = ManifestRoute.parse('http://host.sub.some-domain.com/path')
 
         expect(route.to_hash).to eq({
-          candidate_host_domain_pairs: [
-            { host: '', domain: 'host.sub.some-domain.com' },
-            { host: 'host', domain: 'sub.some-domain.com' },
-          ],
-          port: nil,
-          path: '/path'
-        })
+                                      candidate_host_domain_pairs: [
+                                        { host: '', domain: 'host.sub.some-domain.com' },
+                                        { host: 'host', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: nil,
+                                      path: '/path'
+                                    })
       end
 
       it 'parses a wildcard url into route components' do
         route = ManifestRoute.parse('http://*.sub.some-domain.com/path')
 
         expect(route.to_hash).to eq({
-          candidate_host_domain_pairs: [
-            { host: '*', domain: 'sub.some-domain.com' },
-          ],
-          port: nil,
-          path: '/path'
-        })
+                                      candidate_host_domain_pairs: [
+                                        { host: '*', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: nil,
+                                      path: '/path'
+                                    })
       end
 
       it 'parses a url without protocol into route components' do
         route = ManifestRoute.parse('potato.sub.some-domain.com/path')
 
         expect(route.to_hash).to eq({
-          candidate_host_domain_pairs: [
-            { host: '', domain: 'potato.sub.some-domain.com' },
-            { host: 'potato', domain: 'sub.some-domain.com' },
-          ],
-          port: nil,
-          path: '/path'
-        })
+                                      candidate_host_domain_pairs: [
+                                        { host: '', domain: 'potato.sub.some-domain.com' },
+                                        { host: 'potato', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: nil,
+                                      path: '/path'
+                                    })
       end
 
       it 'parses a tcp route with port into route components' do
         route = ManifestRoute.parse('potato.sub.some-domain.com:1234')
 
         expect(route.to_hash).to eq({
-          candidate_host_domain_pairs: [
-            { host: '', domain: 'potato.sub.some-domain.com' },
-            { host: 'potato', domain: 'sub.some-domain.com' },
-          ],
-          port: 1234,
-          path: '',
-        })
+                                      candidate_host_domain_pairs: [
+                                        { host: '', domain: 'potato.sub.some-domain.com' },
+                                        { host: 'potato', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: 1234,
+                                      path: ''
+                                    })
       end
     end
 

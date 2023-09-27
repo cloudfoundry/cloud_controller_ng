@@ -11,19 +11,19 @@ module CloudFoundry
       let(:fake_request) do
         instance_double(
           ActionDispatch::Request,
-          method:        'request_method',
-          ip:            'ip',
+          method: 'request_method',
+          ip: 'ip',
           filtered_path: 'filtered_path',
-          path:          'plain_path',
-          headers:       headers,
+          path: 'plain_path',
+          headers: headers,
           authorization: true
         )
       end
       let(:env) do
         {
-          'cf.request_id'      => 'ID',
-          'cf.user_guid'       => 'some-guid',
-          'cf.user_name'       => 'zach-loves-cake',
+          'cf.request_id' => 'ID',
+          'cf.user_guid' => 'some-guid',
+          'cf.user_name' => 'zach-loves-cake',
           'HTTP_AUTHORIZATION' => 'bearer stubbed-user-and-id-token'
         }
       end
@@ -71,9 +71,9 @@ module CloudFoundry
           let(:headers) { ActionDispatch::Http::Headers.from_hash({}) }
 
           it 'uses request.ip for src' do
-            expect {
+            expect do
               middleware.call(env)
-            }.not_to raise_error
+            end.not_to raise_error
 
             expect(logger).to have_received(:info).with(/src=ip/)
           end
@@ -81,12 +81,12 @@ module CloudFoundry
           context 'when request.ip is an RFC1918 address' do
             let(:env) do
               {
-                'cf.request_id'      => 'ID',
-                'cf.user_guid'       => 'some-guid',
-                'cf.user_name'       => 'zach-loves-cake',
+                'cf.request_id' => 'ID',
+                'cf.user_guid' => 'some-guid',
+                'cf.user_name' => 'zach-loves-cake',
                 'HTTP_AUTHORIZATION' => 'bearer stubbed-user-and-id-token',
-                'REMOTE_ADDR'        => '10.0.0.1',
-                'REQUEST_METHOD'     => 'GET',
+                'REMOTE_ADDR' => '10.0.0.1',
+                'REQUEST_METHOD' => 'GET'
               }
             end
             let!(:fake_request) do
@@ -116,8 +116,8 @@ module CloudFoundry
         context 'when using bearer auth' do
           let(:env) do
             {
-              'cf.user_guid'       => 'some-guid',
-              'cf.user_name'       => 'zach-loves-cake',
+              'cf.user_guid' => 'some-guid',
+              'cf.user_name' => 'zach-loves-cake',
               'HTTP_AUTHORIZATION' => 'bearer stubbed-user-and-id-token'
             }
           end

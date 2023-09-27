@@ -2,17 +2,17 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class RoutesListMessage < ListMessage
-    register_allowed_keys [
-      :hosts,
-      :space_guids,
-      :organization_guids,
-      :domain_guids,
-      :paths,
-      :app_guids,
-      :include,
-      :label_selector,
-      :ports,
-      :service_instance_guids,
+    register_allowed_keys %i[
+      hosts
+      space_guids
+      organization_guids
+      domain_guids
+      paths
+      app_guids
+      include
+      label_selector
+      ports
+      service_instance_guids
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -28,7 +28,7 @@ module VCAP::CloudController
     validates :service_instance_guids, allow_nil: true, array: true
 
     def self.from_params(params)
-      super(params, %w(hosts space_guids organization_guids domain_guids app_guids paths ports include service_instance_guids))
+      super(params, %w[hosts space_guids organization_guids domain_guids app_guids paths ports include service_instance_guids])
     end
   end
 end

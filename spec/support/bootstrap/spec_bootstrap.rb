@@ -17,9 +17,7 @@ module VCAP::CloudController
 
       log_filename = File.join(Paths::ARTIFACTS, 'spec.log')
       max_log_file_size_in_bytes = 100_000_000
-      if File.exist?(log_filename) && File.size(log_filename) > max_log_file_size_in_bytes
-        FileUtils.rm_f(log_filename)
-      end
+      FileUtils.rm_f(log_filename) if File.exist?(log_filename) && File.size(log_filename) > max_log_file_size_in_bytes
       logger = ActiveSupport::Logger.new(File.join(Paths::ARTIFACTS, 'telemetry_spec.log'))
       TelemetryLogger.init(logger)
 

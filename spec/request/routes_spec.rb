@@ -33,7 +33,7 @@ RSpec.describe 'Routes Request' do
 
   describe 'GET /v3/routes' do
     let(:other_space) { VCAP::CloudController::Space.make(name: 'b-space') }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let!(:route_in_org) do
       VCAP::CloudController::Route.make(space: space, domain: domain, host: 'host-1', path: '/path1', guid: 'route-in-org-guid')
@@ -43,7 +43,7 @@ RSpec.describe 'Routes Request' do
     end
     let!(:route_in_org_dest_web) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_in_org, process_type: 'web') }
     let!(:route_in_org_dest_worker) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_in_org, process_type: 'worker') }
-    let(:api_call) { lambda { |user_headers| get '/v3/routes', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/routes', nil, user_headers } }
     let(:route_in_org_json) do
       {
         guid: route_in_org.guid,
@@ -93,10 +93,10 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_org.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_org.space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_org.guid}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_org.domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route_in_org.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route_in_org.space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route_in_org.guid}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route_in_org.domain.guid}} }
         }
       }
     end
@@ -125,10 +125,10 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_other_org.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_other_org.space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_other_org.guid}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_other_org.domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route_in_other_org.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route_in_other_org.space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route_in_other_org.guid}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route_in_other_org.domain.guid}} }
         }
       }
     end
@@ -136,7 +136,7 @@ RSpec.describe 'Routes Request' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::Route }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/routes?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/routes?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
@@ -152,19 +152,19 @@ RSpec.describe 'Routes Request' do
             page: '2',
             per_page: '10',
             order_by: 'updated_at',
-            space_guids: ['foo', 'bar'],
-            service_instance_guids: ['baz', 'qux'],
-            organization_guids: ['foo', 'bar'],
-            domain_guids: ['foo', 'bar'],
-            app_guids: ['foo', 'bar'],
-            guids: ['foo', 'bar'],
-            paths: ['foo', 'bar'],
+            space_guids: %w[foo bar],
+            service_instance_guids: %w[baz qux],
+            organization_guids: %w[foo bar],
+            domain_guids: %w[foo bar],
+            app_guids: %w[foo bar],
+            guids: %w[foo bar],
+            paths: %w[foo bar],
             hosts: 'foo',
             ports: 636,
             include: 'domain',
             label_selector: 'foo,bar',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
       end
@@ -215,7 +215,7 @@ RSpec.describe 'Routes Request' do
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{domain1.guid}" },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain1.guid}/route_reservations) }
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain1.guid}/route_reservations} }
             }
           }
         end
@@ -244,7 +244,7 @@ RSpec.describe 'Routes Request' do
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{domain1.guid}" },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain1.guid}/route_reservations) }
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain1.guid}/route_reservations} }
             }
           }
         end
@@ -273,7 +273,7 @@ RSpec.describe 'Routes Request' do
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{domain2.guid}" },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain2.guid}/route_reservations) }
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain2.guid}/route_reservations} }
             }
           }
         end
@@ -311,7 +311,7 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: "http://api2.vcap.me/v3/routes/#{route1_domain1.guid}" },
               space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route1_domain1.guid}\/destinations) },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route1_domain1.guid}/destinations} },
               domain: { href: "http://api2.vcap.me/v3/domains/#{domain1.guid}" }
             }
           }
@@ -328,12 +328,12 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?include=domain', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources'],
-            included: parsed_response['included']
-          }).to match_json_response({
-            resources: [route_in_org_json, route_in_other_org_json, route1_domain1_json],
-            included: { 'domains' => [domain1_json, domain2_json] }
-          })
+                   resources: parsed_response['resources'],
+                   included: parsed_response['included']
+                 }).to match_json_response({
+                                             resources: [route_in_org_json, route_in_other_org_json, route1_domain1_json],
+                                             included: { 'domains' => [domain1_json, domain2_json] }
+                                           })
         end
       end
 
@@ -342,21 +342,21 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?include=space,space.organization', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources'],
-            included: parsed_response['included']
-          }).to match_json_response({
-            resources: [route_in_org_json, route_in_other_org_json],
-            included: {
-              'spaces' => [
-                space_json_generator.call(space),
-                space_json_generator.call(other_space)
-              ],
-              'organizations' => [
-                org_json_generator.call(org),
-                org_json_generator.call(other_space.organization)
-              ]
-            }
-          })
+                   resources: parsed_response['resources'],
+                   included: parsed_response['included']
+                 }).to match_json_response({
+                                             resources: [route_in_org_json, route_in_other_org_json],
+                                             included: {
+                                               'spaces' => [
+                                                 space_json_generator.call(space),
+                                                 space_json_generator.call(other_space)
+                                               ],
+                                               'organizations' => [
+                                                 org_json_generator.call(org),
+                                                 org_json_generator.call(other_space.organization)
+                                               ]
+                                             }
+                                           })
         end
       end
     end
@@ -398,7 +398,7 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: 'http://api2.vcap.me/v3/routes/route-without-host' },
             space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-host\/destinations) },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-host/destinations} },
             domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
@@ -433,7 +433,7 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: 'http://api2.vcap.me/v3/routes/route-without-host2' },
             space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-host2\/destinations) },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-host2/destinations} },
             domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
@@ -471,7 +471,7 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: 'http://api2.vcap.me/v3/routes/route-without-path' },
             space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-path\/destinations) },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-path/destinations} },
             domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
@@ -482,20 +482,20 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?hosts=host-1', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_in_org_json, route_without_path_and_with_host_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_in_org_json, route_without_path_and_with_host_json]
+                                           })
         end
 
         it 'returns route with no host if one exists when filtering by empty host' do
           get '/v3/routes?hosts=', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_without_host_and_with_path_json, route_without_host_and_with_path2_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_without_host_and_with_path_json, route_without_host_and_with_path2_json]
+                                           })
         end
       end
 
@@ -504,20 +504,20 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?paths=%2Fpath1', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_in_org_json, route_without_host_and_with_path_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_in_org_json, route_without_host_and_with_path_json]
+                                           })
         end
 
         it 'returns route with no path when filtering by empty path' do
           get '/v3/routes?paths=', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_without_path_and_with_host_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_without_path_and_with_host_json]
+                                           })
         end
       end
 
@@ -526,10 +526,10 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?paths=%2Fpath1&hosts=', nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_without_host_and_with_path_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_without_host_and_with_path_json]
+                                           })
         end
       end
 
@@ -538,10 +538,10 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?organization_guids=#{other_space.organization.guid}", nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_in_other_org_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_in_other_org_json]
+                                           })
         end
       end
 
@@ -550,10 +550,10 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?space_guids=#{other_space.guid}", nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_in_other_org_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_in_other_org_json]
+                                           })
         end
       end
 
@@ -562,10 +562,10 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header
           expect(last_response).to have_status_code(200)
           expect({
-            resources: parsed_response['resources']
-          }).to match_json_response({
-            resources: [route_in_other_org_json]
-          })
+                   resources: parsed_response['resources']
+                 }).to match_json_response({
+                                             resources: [route_in_other_org_json]
+                                           })
         end
       end
 
@@ -906,7 +906,7 @@ RSpec.describe 'Routes Request' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
           anything,
-          hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
+          hash_including(eager_loaded_associations: %i[domain space route_mappings labels annotations])
         ).and_call_original
 
         get '/v3/routes', nil, admin_header
@@ -932,8 +932,8 @@ RSpec.describe 'Routes Request' do
 
   describe 'GET /v3/routes/:guid' do
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
-    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
-    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}", nil, user_headers } }
+    let(:route) { VCAP::CloudController::Route.make(space:, domain:) }
+    let(:api_call) { ->(user_headers) { get "/v3/routes/#{route.guid}", nil, user_headers } }
     let(:route_json) do
       {
         guid: route.guid,
@@ -958,10 +958,10 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route.space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route.domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route.space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route.domain.guid}} }
         }
       }
     end
@@ -1013,9 +1013,9 @@ RSpec.describe 'Routes Request' do
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3/organizations/#{domain.owning_organization.guid}) },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain.guid}/route_reservations) },
-              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{domain.guid}/relationships/shared_organizations) },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{domain.owning_organization.guid}} },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/route_reservations} },
+              shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}/relationships/shared_organizations} }
             }
           }
         end
@@ -1043,10 +1043,10 @@ RSpec.describe 'Routes Request' do
               annotations: {}
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route.space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route.domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route.space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route.domain.guid}} }
             },
             included: { domains: [domain_json] }
           }
@@ -1065,11 +1065,12 @@ RSpec.describe 'Routes Request' do
           expect(last_response).to have_status_code(200)
           expect(parsed_response['included']).to match_json_response(
             'spaces' => [
-              space_json_generator.call(space),
+              space_json_generator.call(space)
             ],
             'organizations' => [
-              org_json_generator.call(org),
-            ])
+              org_json_generator.call(org)
+            ]
+          )
         end
       end
     end
@@ -1096,7 +1097,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1118,7 +1119,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1143,7 +1144,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1165,27 +1166,27 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
               annotations: {}
-            },
+            }
           }
         end
 
         describe 'valid routes' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+          let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 403,
+              code: 403
             )
             h['admin'] = {
               code: 201,
@@ -1217,7 +1218,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             metadata: {
               labels: { potato: 'yam' },
@@ -1243,13 +1244,13 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: { potato: 'yam' },
@@ -1260,11 +1261,11 @@ RSpec.describe 'Routes Request' do
 
         describe 'valid routes' do
           it_behaves_like 'permissions for single object endpoint', ['admin'] do
-            let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+            let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
             let(:expected_codes_and_responses) do
               h = Hash.new(
-                code: 403,
+                code: 403
               )
               h['admin'] = {
                 code: 201,
@@ -1289,7 +1290,7 @@ RSpec.describe 'Routes Request' do
                 actee_name: 'some-host',
                 metadata: { request: params }.to_json,
                 space_guid: space.guid,
-                organization_guid: org.guid,
+                organization_guid: org.guid
               }
             end
           end
@@ -1306,7 +1307,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1328,27 +1329,27 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
               annotations: {}
-            },
+            }
           }
         end
 
         describe 'valid routes' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+          let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 403,
+              code: 403
             )
             h['admin'] = {
               code: 201,
@@ -1382,7 +1383,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1404,7 +1405,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1426,27 +1427,27 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
               annotations: {}
-            },
+            }
           }
         end
 
         describe 'valid routes' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+          let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 403,
+              code: 403
             )
             h['admin'] = {
               code: 201,
@@ -1477,7 +1478,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1499,37 +1500,37 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
               annotations: {}
-            },
+            }
           }
         end
 
         describe 'valid routes' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+          let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 403,
+              code: 403
             )
             h['admin'] = {
               code: 201,
               response_object: route_json
             }
             h['space_developer'] = {
-              code: 422,
+              code: 422
             }
             h['space_supporter'] = {
-              code: 422,
+              code: 422
             }
             h
           end
@@ -1547,7 +1548,7 @@ RSpec.describe 'Routes Request' do
           TestConfig.override(
             kubernetes: { host_url: nil },
             external_domain: 'api2.vcap.me',
-            external_protocol: 'https',
+            external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           allow(routing_api_client).to receive(:enabled?).and_return(true)
@@ -1563,12 +1564,12 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
 
-        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
         let(:route_json) do
           {
@@ -1587,24 +1588,24 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
               annotations: {}
-            },
+            }
           }
         end
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403,
+            code: 403
           )
           h['admin'] = {
             code: 201,
@@ -1655,7 +1656,7 @@ RSpec.describe 'Routes Request' do
                 },
                 domain: {
                   data: { guid: domain.guid }
-                },
+                }
               }
             }
           end
@@ -1674,7 +1675,7 @@ RSpec.describe 'Routes Request' do
                   },
                   domain: {
                     data: { guid: domain.guid }
-                  },
+                  }
                 }
               }
             end
@@ -1705,7 +1706,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -1727,23 +1728,23 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           },
           metadata: {
             labels: {},
             annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+            domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
           }
         }
       end
 
       describe 'valid routes' do
-        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -1772,7 +1773,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1795,7 +1796,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1817,7 +1818,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1839,13 +1840,13 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+              space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+              destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+              domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
             },
             metadata: {
               labels: {},
@@ -1855,11 +1856,11 @@ RSpec.describe 'Routes Request' do
         end
 
         describe 'valid routes' do
-          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+          let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 403,
+              code: 403
             )
             h['admin'] = {
               code: 201,
@@ -1893,7 +1894,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: inaccessible_domain.guid }
-            },
+            }
           }
         }
       end
@@ -1917,7 +1918,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -1944,7 +1945,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1970,7 +1971,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -1996,7 +1997,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -2020,7 +2021,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -2039,7 +2040,7 @@ RSpec.describe 'Routes Request' do
 
     context 'when using a non-reserved hostname with the system domain' do
       let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
-      let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
       let(:params) do
         {
@@ -2050,7 +2051,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -2079,17 +2080,17 @@ RSpec.describe 'Routes Request' do
             annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+            domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
           }
         }
       end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
         h['admin'] = {
           code: 201,
@@ -2127,7 +2128,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain.guid }
-              },
+              }
             }
           }
         end
@@ -2155,7 +2156,7 @@ RSpec.describe 'Routes Request' do
               },
               domain: {
                 data: { guid: domain_in_org_with_quota.guid }
-              },
+              }
             }
           }
         end
@@ -2181,7 +2182,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -2233,7 +2234,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           }
         }
       end
@@ -2254,7 +2255,7 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: 'invalid-domain' }
-            },
+            }
           }
         }
       end
@@ -2273,14 +2274,14 @@ RSpec.describe 'Routes Request' do
       let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
       let(:params) do
         {
-            relationships: {
-                space: {
-                    data: { guid: space.guid }
-                },
-                domain: {
-                    data: { guid: domain_tcp.guid }
-                },
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain_tcp.guid }
             }
+          }
         }
       end
 
@@ -2348,7 +2349,7 @@ RSpec.describe 'Routes Request' do
   describe 'PATCH /v3/routes/:guid' do
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: '') }
-    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}", params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}", params.to_json, user_headers } }
     let(:params) do
       {
         metadata: {
@@ -2381,13 +2382,13 @@ RSpec.describe 'Routes Request' do
           },
           domain: {
             data: { guid: domain.guid }
-          },
+          }
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
         },
         metadata: {
           labels: {
@@ -2452,13 +2453,13 @@ RSpec.describe 'Routes Request' do
             },
             domain: {
               data: { guid: domain.guid }
-            },
+            }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{other_space.guid}) },
-            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}} },
+            space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{other_space.guid}} },
+            destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{UUID_REGEX}/destinations} },
+            domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{domain.guid}} }
           },
           metadata: {
             labels: {
@@ -2519,7 +2520,7 @@ RSpec.describe 'Routes Request' do
           metadata: {
             labels: {
               "": 'mashed',
-              "/potato": '.value.'
+              '/potato': '.value.'
             }
           }
         }
@@ -2543,11 +2544,11 @@ RSpec.describe 'Routes Request' do
 
   describe 'DELETE /v3/routes/:guid' do
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
-    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
-    let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{route.guid}", nil, user_headers } }
+    let(:route) { VCAP::CloudController::Route.make(space:, domain:) }
+    let(:api_call) { ->(user_headers) { delete "/v3/routes/#{route.guid}", nil, user_headers } }
     let(:db_check) do
       lambda do
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get "/v3/routes/#{route.guid}", {}, admin_headers
@@ -2584,7 +2585,7 @@ RSpec.describe 'Routes Request' do
             actee_name: route.host,
             metadata: { request: { recursive: true } }.to_json,
             space_guid: space.guid,
-            organization_guid: org.guid,
+            organization_guid: org.guid
           }
         end
       end
@@ -2613,13 +2614,13 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'GET /v3/routes/:guid/relationships/shared_spaces' do
-    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{guid}/relationships/shared_spaces", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/routes/#{guid}/relationships/shared_spaces", nil, user_headers } }
     let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
-    let(:route) {
-      route = VCAP::CloudController::Route.make(space: space)
+    let(:route) do
+      route = VCAP::CloudController::Route.make(space:)
       route.add_shared_space(target_space_1)
       route
-    }
+    end
     let(:guid) { route.guid }
     let(:space_dev_headers) do
       org.add_user(user)
@@ -2639,15 +2640,15 @@ RSpec.describe 'Routes Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 200, response_object: {
-            data: [
-              {
-                guid: target_space_1.guid
-              }
-            ],
-            links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/relationships\/shared_spaces) },
-            }
-          })
+                         data: [
+                           {
+                             guid: target_space_1.guid
+                           }
+                         ],
+                         links: {
+                           self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/relationships/shared_spaces} }
+                         }
+                       })
 
           h['org_billing_manager'] = { code: 404 }
           h['no_role'] = { code: 404 }
@@ -2671,8 +2672,9 @@ RSpec.describe 'Routes Request' do
             {
               'detail' => 'Feature Disabled: route_sharing',
               'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
+              'code' => 330_002
+            }
+          )
         )
       end
     end
@@ -2686,13 +2688,14 @@ RSpec.describe 'Routes Request' do
           {
             'detail' => 'Route not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
   end
 
   describe 'POST /v3/routes/:guid/relationships/shared_spaces' do
-    let(:api_call) { lambda { |user_headers| post "/v3/routes/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post "/v3/routes/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
     let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
     let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
@@ -2703,7 +2706,7 @@ RSpec.describe 'Routes Request' do
         ]
       }
     end
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
     let(:guid) { route.guid }
     let(:space_dev_headers) do
       org.add_user(user)
@@ -2774,13 +2777,13 @@ RSpec.describe 'Routes Request' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.route.share',
-        actor: user.guid,
-        actee_type: 'route',
-        actee_name: route.host,
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.route.share',
+                                        actor: user.guid,
+                                        actee_type: 'route',
+                                        actee_name: route.host,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['target_space_guids']).to include(target_space_1.guid, target_space_2.guid)
 
       route.reload
@@ -2817,8 +2820,9 @@ RSpec.describe 'Routes Request' do
             {
               'detail' => 'Feature Disabled: route_sharing',
               'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
+              'code' => 330_002
+            }
+          )
         )
       end
     end
@@ -2832,7 +2836,8 @@ RSpec.describe 'Routes Request' do
           {
             'detail' => 'Route not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
 
@@ -2853,7 +2858,8 @@ RSpec.describe 'Routes Request' do
               {
                 'detail' => 'Data must be an array',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -2877,7 +2883,8 @@ RSpec.describe 'Routes Request' do
               {
                 'detail' => "Unknown field(s): 'fake-key'",
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -2904,7 +2911,8 @@ RSpec.describe 'Routes Request' do
                 'detail' => "Unable to share route #{route.uri} with spaces ['#{target_space_guid}']. " \
                             'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -2927,10 +2935,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share route #{route.uri} with spaces ['#{no_access_target_space.guid}']. "\
+                'detail' => "Unable to share route #{route.uri} with spaces ['#{no_access_target_space.guid}']. " \
                             'Ensure the spaces exist and that you have access to them.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
 
           route.reload
@@ -2955,10 +2964,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to share route '#{route.uri}' with space '#{space.guid}'. "\
+                'detail' => "Unable to share route '#{route.uri}' with space '#{space.guid}'. " \
                             'Routes cannot be shared into the space where they were created.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
 
           route.reload
@@ -2973,7 +2983,7 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'DELETE /v3/routes/:guid/relationships/shared_spaces/:space_guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{guid}/relationships/shared_spaces/#{unshared_space_guid}", request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/routes/#{guid}/relationships/shared_spaces/#{unshared_space_guid}", request_body.to_json, user_headers } }
     let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
     let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
     let(:target_space_3) { VCAP::CloudController::Space.make(organization: org) }
@@ -2981,13 +2991,13 @@ RSpec.describe 'Routes Request' do
     let(:space_to_unshare) { target_space_2 }
     let(:unshared_space_guid) { space_to_unshare.guid }
     let(:request_body) { {} }
-    let(:route) {
-      route = VCAP::CloudController::Route.make(space: space)
+    let(:route) do
+      route = VCAP::CloudController::Route.make(space:)
       route.add_shared_space(target_space_1)
       route.add_shared_space(target_space_2)
       route.add_shared_space(target_space_3)
       route
-    }
+    end
     let(:guid) { route.guid }
     let(:space_dev_headers) do
       org.add_user(user)
@@ -3045,16 +3055,16 @@ RSpec.describe 'Routes Request' do
 
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_developer space_supporter].each { |r|
+          %w[space_developer space_supporter].each do |r|
             h[r] = {
               code: 422,
               errors: [{
                 detail: "Unable to unshare route '#{route.uri}' from space '#{space_to_unshare.guid}'. The target organization is suspended.",
                 title: 'CF-UnprocessableEntity',
-                code: 10008
+                code: 10_008
               }]
             }
-          }
+          end
           h
         end
 
@@ -3071,13 +3081,13 @@ RSpec.describe 'Routes Request' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.route.unshare',
-        actor: user.guid,
-        actee_type: 'route',
-        actee_name: route.host,
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.route.unshare',
+                                        actor: user.guid,
+                                        actee_type: 'route',
+                                        actee_name: route.host,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['target_space_guid']).to eq(unshared_space_guid)
 
       route.reload
@@ -3099,8 +3109,9 @@ RSpec.describe 'Routes Request' do
             {
               'detail' => 'Feature Disabled: route_sharing',
               'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
+              'code' => 330_002
+            }
+          )
         )
       end
     end
@@ -3120,7 +3131,8 @@ RSpec.describe 'Routes Request' do
           {
             'detail' => 'Route not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
 
@@ -3133,10 +3145,11 @@ RSpec.describe 'Routes Request' do
         expect(parsed_response['errors']).to include(
           include(
             {
-              'detail' => "Unable to unshare route '#{route.uri}' from space "\
-                           "'#{space.guid}'. Routes cannot be removed from the space that owns them.",
+              'detail' => "Unable to unshare route '#{route.uri}' from space " \
+                          "'#{space.guid}'. Routes cannot be removed from the space that owns them.",
               'title' => 'CF-UnprocessableEntity'
-            })
+            }
+          )
         )
 
         route.reload
@@ -3158,7 +3171,8 @@ RSpec.describe 'Routes Request' do
                 'detail' => "Unable to unshare route '#{route.uri}' from space '#{unshared_space_guid}'. " \
                             'Ensure the space exists and that you have access to it.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3173,10 +3187,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to unshare route '#{route.uri}' from space '#{unshared_space_guid}'. "\
+                'detail' => "Unable to unshare route '#{route.uri}' from space '#{unshared_space_guid}'. " \
                             'Ensure the space exists and that you have access to it.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3196,10 +3211,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to unshare route '#{route.uri}' from space '#{no_write_access_target_space.guid}'. "\
-                "You don't have write permission for the target space.",
+                'detail' => "Unable to unshare route '#{route.uri}' from space '#{no_write_access_target_space.guid}'. " \
+                            "You don't have write permission for the target space.",
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3209,7 +3225,7 @@ RSpec.describe 'Routes Request' do
   describe 'PATCH /v3/routes/:guid/relationships/space' do
     let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
     let(:route) { VCAP::CloudController::Route.make(space: space, domain: shared_domain) }
-    let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/relationships/space", request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/relationships/space", request_body.to_json, user_headers } }
     let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
     let(:request_body) do
       {
@@ -3266,16 +3282,16 @@ RSpec.describe 'Routes Request' do
 
         let(:expected_codes_and_responses) do
           h = super()
-          %w[space_developer].each { |r|
+          %w[space_developer].each do |r|
             h[r] = {
               code: 422,
               errors: [{
                 detail: "Unable to transfer owner of route '#{route.uri}' to space '#{suspended_space.guid}'. The target organization is suspended.",
                 title: 'CF-UnprocessableEntity',
-                code: 10008
+                code: 10_008
               }]
             }
-          }
+          end
           h
         end
 
@@ -3296,13 +3312,13 @@ RSpec.describe 'Routes Request' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.route.transfer-owner',
-        actor: user.guid,
-        actee_type: 'route',
-        actee_name: route.host,
-        space_guid: space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.route.transfer-owner',
+                                        actor: user.guid,
+                                        actee_type: 'route',
+                                        actee_name: route.host,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)
 
       route.reload
@@ -3334,10 +3350,11 @@ RSpec.describe 'Routes Request' do
         expect(parsed_response['errors']).to include(
           include(
             {
-              'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{another_space.guid}'. "\
+              'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{another_space.guid}'. " \
                           "Target space does not have access to route's domain",
               'title' => 'CF-UnprocessableEntity'
-            })
+            }
+          )
         )
       end
     end
@@ -3361,7 +3378,8 @@ RSpec.describe 'Routes Request' do
                 'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{target_space_guid}'. " \
                             'Ensure the space exists and that you have access to it.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3381,10 +3399,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_access_target_space.guid}'. "\
+                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_access_target_space.guid}'. " \
                             'Ensure the space exists and that you have access to it.',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3407,10 +3426,11 @@ RSpec.describe 'Routes Request' do
           expect(parsed_response['errors']).to include(
             include(
               {
-                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_write_access_target_space.guid}'. "\
-                "You don't have write permission for the target space.",
+                'detail' => "Unable to transfer owner of route '#{route.uri}' to space '#{no_write_access_target_space.guid}'. " \
+                            "You don't have write permission for the target space.",
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3425,7 +3445,8 @@ RSpec.describe 'Routes Request' do
           {
             'detail' => 'Route not found',
             'title' => 'CF-ResourceNotFound'
-          })
+          }
+        )
       )
     end
 
@@ -3447,7 +3468,8 @@ RSpec.describe 'Routes Request' do
               {
                 'detail' => "Unknown field(s): 'fake-key'",
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3467,7 +3489,8 @@ RSpec.describe 'Routes Request' do
               {
                 'detail' => 'Data must be an object',
                 'title' => 'CF-UnprocessableEntity'
-              })
+              }
+            )
           )
         end
       end
@@ -3488,21 +3511,22 @@ RSpec.describe 'Routes Request' do
             {
               'detail' => 'Feature Disabled: route_sharing',
               'title' => 'CF-FeatureDisabled',
-              'code' => 330002,
-            })
+              'code' => 330_002
+            }
+          )
         )
       end
     end
   end
 
   describe 'GET /v3/apps/:app_guid/routes' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:route1) { VCAP::CloudController::Route.make(space: space) }
-    let(:route2) { VCAP::CloudController::Route.make(space: space) }
-    let!(:route3) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:route1) { VCAP::CloudController::Route.make(space:) }
+    let(:route2) { VCAP::CloudController::Route.make(space:) }
+    let!(:route3) { VCAP::CloudController::Route.make(space:) }
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route2, process_type: 'admin') }
-    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/routes", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/routes", nil, user_headers } }
 
     let(:route1_json) do
       {
@@ -3526,7 +3550,7 @@ RSpec.describe 'Routes Request' do
             weight: route_mapping1.weight,
             port: route_mapping1.presented_port,
             protocol: 'http1'
-          },
+          }
         ]),
         relationships: {
           space: {
@@ -3541,10 +3565,10 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route1.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route1.space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route1.guid}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route1.domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route1.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route1.space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route1.guid}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route1.domain.guid}} }
         }
       }
     end
@@ -3571,7 +3595,7 @@ RSpec.describe 'Routes Request' do
             weight: route_mapping2.weight,
             port: route_mapping2.presented_port,
             protocol: 'http1'
-          },
+          }
         ]),
         relationships: {
           space: {
@@ -3586,10 +3610,10 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route2.guid}) },
-          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route2.space.guid}) },
-          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route2.guid}\/destinations) },
-          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route2.domain.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route2.guid}} },
+          space: { href: %r{#{Regexp.escape(link_prefix)}/v3/spaces/#{route2.space.guid}} },
+          destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route2.guid}/destinations} },
+          domain: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{route2.domain.guid}} }
         }
       }
     end
@@ -3649,7 +3673,7 @@ RSpec.describe 'Routes Request' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
           anything,
-          hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
+          hash_including(eager_loaded_associations: %i[domain space route_mappings labels annotations])
         ).and_call_original
 
         get "/v3/apps/#{app_model.guid}/routes", nil, admin_header

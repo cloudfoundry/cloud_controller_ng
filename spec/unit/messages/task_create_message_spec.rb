@@ -12,7 +12,7 @@ module VCAP::CloudController
         'memory_in_mb' => 2048,
         'template' => {
           'process' => {
-            'guid' => process_guid,
+            'guid' => process_guid
           }
         },
         'metadata' => {
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'must be a valid guid' do
-          body['droplet_guid'] = 32913
+          body['droplet_guid'] = 32_913
 
           message = TaskCreateMessage.new(body)
 
@@ -254,7 +254,7 @@ module VCAP::CloudController
         end
 
         it 'must contain a process has with a valid guid' do
-          body['template'] = { 'process' => { 'guid' => 32913 } }
+          body['template'] = { 'process' => { 'guid' => 32_913 } }
 
           message = TaskCreateMessage.new(body)
 

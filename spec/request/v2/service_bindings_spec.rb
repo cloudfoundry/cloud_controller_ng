@@ -10,9 +10,9 @@ RSpec.describe 'ServiceBindings' do
   end
 
   describe 'GET /v2/service_bindings' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
-    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space:) }
+    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
@@ -55,7 +55,7 @@ RSpec.describe 'ServiceBindings' do
                   'state' => 'succeeded',
                   'description' => '',
                   'updated_at' => iso8601,
-                  'created_at' => iso8601,
+                  'created_at' => iso8601
                 },
                 'app_url' => "/v2/apps/#{process1.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -84,7 +84,7 @@ RSpec.describe 'ServiceBindings' do
                   'state' => 'succeeded',
                   'description' => '',
                   'updated_at' => iso8601,
-                  'created_at' => iso8601,
+                  'created_at' => iso8601
                 },
                 'app_url' => "/v2/apps/#{process2.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -144,7 +144,7 @@ RSpec.describe 'ServiceBindings' do
                     'state' => 'succeeded',
                     'description' => '',
                     'updated_at' => iso8601,
-                    'created_at' => iso8601,
+                    'created_at' => iso8601
                   },
                   'app_url' => "/v2/apps/#{process1.guid}",
                   'app' => {
@@ -166,7 +166,7 @@ RSpec.describe 'ServiceBindings' do
                       'memory' => 1024,
                       'instances' => 1,
                       'disk_quota' => 1024,
-                      'log_rate_limit' => 1048576,
+                      'log_rate_limit' => 1_048_576,
                       'state' => 'STOPPED',
                       'version' => process1.version,
                       'command' => nil,
@@ -183,7 +183,7 @@ RSpec.describe 'ServiceBindings' do
                       'docker_image' => nil,
                       'docker_credentials' => {
                         'username' => nil,
-                        'password' => nil,
+                        'password' => nil
                       },
                       'package_updated_at' => iso8601,
                       'detected_start_command' => '$HOME/boot.sh',
@@ -226,7 +226,7 @@ RSpec.describe 'ServiceBindings' do
                       'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
                       'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
                       'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
-                      'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                      'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters"
                     }
                   }
                 }
@@ -247,7 +247,7 @@ RSpec.describe 'ServiceBindings' do
       end
 
       it 'filters by service_instance_guid' do
-        filtered_service_instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+        filtered_service_instance = VCAP::CloudController::ManagedServiceInstance.make(space:)
         filtered_service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: filtered_service_instance, app: process1.app)
 
         get "/v2/service_bindings?q=service_instance_guid:#{filtered_service_instance.guid}", nil, headers_for(user)
@@ -260,8 +260,8 @@ RSpec.describe 'ServiceBindings' do
   end
 
   describe 'GET /v2/service_bindings/:guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
@@ -294,7 +294,7 @@ RSpec.describe 'ServiceBindings' do
               'state' => 'succeeded',
               'description' => '',
               'updated_at' => iso8601,
-              'created_at' => iso8601,
+              'created_at' => iso8601
             },
             'app_url' => "/v2/apps/#{process1.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -314,8 +314,8 @@ RSpec.describe 'ServiceBindings' do
   end
 
   describe 'POST /v2/service_bindings' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -363,7 +363,7 @@ RSpec.describe 'ServiceBindings' do
               'state' => 'succeeded',
               'description' => '',
               'updated_at' => iso8601,
-              'created_at' => iso8601,
+              'created_at' => iso8601
             },
             'app_url' => "/v2/apps/#{process.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
@@ -377,26 +377,26 @@ RSpec.describe 'ServiceBindings' do
       expect(event.actee).to eq(service_binding.guid)
       expect(event.actee_type).to eq('service_binding')
       expect(event.metadata).to match({
-        'request' => {
-          'type' => 'app',
-          'relationships' => {
-            'app' => {
-              'data' => { 'guid' => process.guid }
-            },
-            'service_instance' => {
-              'data' => { 'guid' => service_instance.guid }
-            },
-          },
-          'name' => nil,
-          'data' => '[PRIVATE DATA HIDDEN]'
-        }
-      })
+                                        'request' => {
+                                          'type' => 'app',
+                                          'relationships' => {
+                                            'app' => {
+                                              'data' => { 'guid' => process.guid }
+                                            },
+                                            'service_instance' => {
+                                              'data' => { 'guid' => service_instance.guid }
+                                            }
+                                          },
+                                          'name' => nil,
+                                          'data' => '[PRIVATE DATA HIDDEN]'
+                                        }
+                                      })
     end
   end
 
   describe 'DELETE /v2/service_bindings/:guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance:) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -417,7 +417,7 @@ RSpec.describe 'ServiceBindings' do
         {
           'request' => {
             'app_guid' => service_binding.app_guid,
-            'service_instance_guid' => service_binding.service_instance_guid,
+            'service_instance_guid' => service_binding.service_instance_guid
           }
         }
       )
@@ -426,9 +426,9 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'GET /v2/service_bindings/:guid/parameters' do
     let(:service) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app)
     end
@@ -439,9 +439,9 @@ RSpec.describe 'ServiceBindings' do
         fb.parameters = {
           parameters: {
             top_level_param: {
-              nested_param: true,
+              nested_param: true
             },
-            another_param: 'some-value',
+            another_param: 'some-value'
           }
         }
         fb
@@ -456,9 +456,9 @@ RSpec.describe 'ServiceBindings' do
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
-            'nested_param' => true,
+            'nested_param' => true
           },
-          'another_param' => 'some-value',
+          'another_param' => 'some-value'
         }
       )
     end

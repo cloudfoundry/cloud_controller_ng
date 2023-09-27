@@ -55,15 +55,15 @@ RSpec.describe 'String :name' do
     end
 
     it 'should not allow create with different case due to sequel validations' do
-      expect {
+      expect do
         @c.create(str: 'ABC')
-      }.to raise_error(Sequel::ValidationFailed)
+      end.to raise_error(Sequel::ValidationFailed)
     end
 
     it 'should not allow create with different case due to db constraints' do
-      expect {
+      expect do
         @c.new(str: 'ABC').save(validate: false)
-      }.to raise_error(Sequel::DatabaseError)
+      end.to raise_error(Sequel::DatabaseError)
     end
 
     it 'should perform case sensitive search' do

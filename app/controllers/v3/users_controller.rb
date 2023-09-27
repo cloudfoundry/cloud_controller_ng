@@ -22,7 +22,7 @@ class UsersController < ApplicationController
       paginated_result: paginated_result,
       path: '/v3/users',
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
@@ -33,7 +33,7 @@ class UsersController < ApplicationController
 
     message = UserCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-    user = UserCreate.new.create(message: message)
+    user = UserCreate.new.create(message:)
 
     render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
   rescue UserCreate::Error => e
@@ -69,7 +69,7 @@ class UsersController < ApplicationController
     message = UserUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    user = UserUpdate.new.update(user: user, message: message)
+    user = UserUpdate.new.update(user:, message:)
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([hashed_params[:guid]]))
   end

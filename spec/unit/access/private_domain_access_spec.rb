@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:object) { VCAP::CloudController::PrivateDomain.make owning_organization: org }
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     it_behaves_like :admin_read_only_access
 

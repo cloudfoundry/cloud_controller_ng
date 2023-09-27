@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:object) { VCAP::CloudController::QuotaDefinition.make }
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     it_behaves_like :admin_full_access
     it_behaves_like :admin_read_only_access

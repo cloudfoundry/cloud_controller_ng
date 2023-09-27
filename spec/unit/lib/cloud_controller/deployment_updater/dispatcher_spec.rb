@@ -16,7 +16,7 @@ module VCAP::CloudController
       expect(logger).to have_received(:warn).with(
         'finalized-degenerate-deployment',
         deployment: deployment.guid,
-        app: deployment.app.guid,
+        app: deployment.app.guid
       )
       expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
       expect(deployment.status_reason).to eq(DeploymentModel::DEGENERATE_STATUS_REASON)

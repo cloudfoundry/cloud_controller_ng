@@ -22,7 +22,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :service_plan }
       it { is_expected.to have_associated :space }
       it do
-        is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
+        is_expected.to have_associated :service_bindings, associated_instance: lambda { |service_instance|
           app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
@@ -38,35 +38,35 @@ module VCAP::CloudController
       let(:max_tags) { ['a' * 1024, 'b' * 1024] }
 
       it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
-        expect {
+        expect do
           ManagedServiceInstance.make tags: max_tags
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
-        expect {
+        expect do
           ManagedServiceInstance.make tags: max_tags[0..50]
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'does not accept user-provided tags with combined length of over 2048 characters' do
-        expect {
+        expect do
           ManagedServiceInstance.make tags: max_tags + ['z']
-        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+        end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'does not accept a single user-provided tag of length greater than 2048 characters' do
-        expect {
+        expect do
           ManagedServiceInstance.make tags: ['a' * 2049]
-        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+        end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'should not bind an app and a service instance from different app spaces' do
         ProcessModelFactory.make(space: service_instance.space)
         service_binding = ServiceBinding.make
-        expect {
+        expect do
           service_instance.add_service_binding(service_binding)
-        }.to raise_error ServiceInstance::InvalidServiceBinding
+        end.to raise_error ServiceInstance::InvalidServiceBinding
       end
 
       it 'validates org and space quotas using MaxServiceInstancePolicy' do
@@ -99,11 +99,12 @@ module VCAP::CloudController
       end
       let(:org) { Organization.make(quota_definition: free_quota) }
       let(:space) { Space.make(organization: org) }
-      let(:service_instance) { ManagedServiceInstance.make(
-        space: space,
-        service_plan: original_plan
-      )
-      }
+      let(:service_instance) do
+        ManagedServiceInstance.make(
+          space: space,
+          service_plan: original_plan
+        )
+      end
 
       context 'for valid requested plans' do
         let(:new_plan) { ServicePlan.make(free: true) }
@@ -292,37 +293,37 @@ module VCAP::CloudController
         last_operation = ServiceInstanceOperation.make(
           state: 'in progress',
           description: '50% all the time',
-          type: 'create',
+          type: 'create'
         )
         service_instance.service_instance_operation = last_operation
 
         service_instance.dashboard_url = 'http://dashboard.example.com'
 
         expect(service_instance.as_summary_json).to include({
-          'guid' => subject.guid,
-          'name' => subject.name,
-          'bound_app_count' => 0,
-          'dashboard_url' => 'http://dashboard.example.com',
-          'service_broker_name' => service_broker.name,
-          'maintenance_info' => {},
-          'service_plan' => {
-            'guid' => '12763abc',
-            'name' => 'Gold Plan',
-            'maintenance_info' => {},
-            'service' => {
-              'guid' => '9876XZ',
-              'label' => 'YourSQL',
-              'provider' => nil,
-              'version' => nil,
-            }
-          }
-        })
+                                                              'guid' => subject.guid,
+                                                              'name' => subject.name,
+                                                              'bound_app_count' => 0,
+                                                              'dashboard_url' => 'http://dashboard.example.com',
+                                                              'service_broker_name' => service_broker.name,
+                                                              'maintenance_info' => {},
+                                                              'service_plan' => {
+                                                                'guid' => '12763abc',
+                                                                'name' => 'Gold Plan',
+                                                                'maintenance_info' => {},
+                                                                'service' => {
+                                                                  'guid' => '9876XZ',
+                                                                  'label' => 'YourSQL',
+                                                                  'provider' => nil,
+                                                                  'version' => nil
+                                                                }
+                                                              }
+                                                            })
 
         expect(service_instance.as_summary_json['last_operation']).to include(
           {
             'state' => 'in progress',
             'description' => '50% all the time',
-            'type' => 'create',
+            'type' => 'create'
           }
         )
       end
@@ -493,10 +494,10 @@ module VCAP::CloudController
     end
 
     describe 'tags' do
-      let(:instance_tags) { %w(a b c) }
-      let(:service_tags) { %w(relational mysql) }
+      let(:instance_tags) { %w[a b c] }
+      let(:service_tags) { %w[relational mysql] }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, tags: instance_tags) }
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_plan) { ServicePlan.make(service:) }
       let(:service) { Service.make(tags: service_tags) }
 
       describe '#tags' do
@@ -518,7 +519,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance tags are not set' do
-          let(:service_instance) { ManagedServiceInstance.make service_plan: service_plan }
+          let(:service_instance) { ManagedServiceInstance.make service_plan: }
 
           it 'returns only the service tags' do
             expect(service_instance.merged_tags).to eq(service_tags)
@@ -543,26 +544,26 @@ module VCAP::CloudController
         end
 
         context 'when there are duplicate service tags' do
-          let(:service_tags) { %w(relational mysql mysql) }
+          let(:service_tags) { %w[relational mysql mysql] }
 
           it 'does not display duplicate tags' do
-            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+            expect(service_instance.merged_tags).to match_array(%w[a b c relational mysql])
           end
         end
 
         context 'when there are duplicate instance tags' do
-          let(:instance_tags) { %w(a a b c) }
+          let(:instance_tags) { %w[a a b c] }
 
           it 'does not display duplicate tags' do
-            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+            expect(service_instance.merged_tags).to match_array(%w[a b c relational mysql])
           end
         end
 
         context 'when there are instance tags which are duplicates of a service tag' do
-          let(:instance_tags) { %w(mysql a b c) }
+          let(:instance_tags) { %w[mysql a b c] }
 
           it 'does not display duplicate tags' do
-            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+            expect(service_instance.merged_tags).to match_array(%w[a b c relational mysql])
           end
         end
       end
@@ -584,10 +585,10 @@ module VCAP::CloudController
 
         service_instance.service_instance_operation = last_operation
         expect(service_instance.to_hash['last_operation']).to include({
-          'state' => 'in progress',
-          'description' => '50% all the time',
-          'type' => 'create',
-        })
+                                                                        'state' => 'in progress',
+                                                                        'description' => '50% all the time',
+                                                                        'type' => 'create'
+                                                                      })
 
         expect(service_instance.to_hash['last_operation']['updated_at']).to be
       end

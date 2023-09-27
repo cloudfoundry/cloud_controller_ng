@@ -41,7 +41,7 @@ module VCAP::CloudController
           },
           space: {
             data: space_data
-          },
+          }
         }
       }
     end
@@ -55,7 +55,7 @@ module VCAP::CloudController
           },
           organization: {
             data: org_data
-          },
+          }
         }
       }
     end
@@ -80,7 +80,7 @@ module VCAP::CloudController
 
     context 'when creating a space role by username' do
       let(:type) { space_type }
-      let(:user_data) { { username: username } }
+      let(:user_data) { { username: } }
 
       it 'is valid' do
         message = subject.new(space_params)
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
     context 'when creating an org role by username' do
       let(:type) { org_type }
-      let(:user_data) { { username: username } }
+      let(:user_data) { { username: } }
 
       it 'is valid' do
         message = subject.new(org_params)
@@ -281,7 +281,7 @@ module VCAP::CloudController
             relationships: {
               space: {
                 data: space_data
-              },
+              }
             }
           }
         end
@@ -399,7 +399,7 @@ module VCAP::CloudController
           let(:user_data) do
             {
               guid: user_guid,
-              username: username,
+              username: username
             }
           end
 
@@ -531,7 +531,7 @@ module VCAP::CloudController
             },
             organization: {
               data: { guid: org_guid }
-            },
+            }
           }
         }
       end

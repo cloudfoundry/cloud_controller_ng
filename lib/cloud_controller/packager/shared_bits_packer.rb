@@ -12,9 +12,9 @@ module CloudController
       def validate_size!(app_packager)
         return unless max_package_size
 
-        if app_packager.size > max_package_size
-          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
-        end
+        return unless app_packager.size > max_package_size
+
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
       end
 
       def copy_uploaded_package(uploaded_package_zip, app_packager)
@@ -43,7 +43,7 @@ module CloudController
 
         FileUtils.mkdir(cached_resources_dir)
         matched_resources.each do |local_destination, file_sha, mode|
-          global_app_bits_cache.download_from_blobstore(file_sha, File.join(cached_resources_dir, local_destination), mode: mode)
+          global_app_bits_cache.download_from_blobstore(file_sha, File.join(cached_resources_dir, local_destination), mode:)
         end
         app_packager.append_dir_contents(cached_resources_dir)
       end

@@ -25,12 +25,13 @@ module VCAP::CloudController
 
         service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
         expect(Repositories::ServiceInstanceShareEventRepository).to have_received(:record_unshare_event).with(
-          service_instance, target_space.guid, user_audit_info)
+          service_instance, target_space.guid, user_audit_info
+        )
       end
 
       context 'when the service plan is inactive' do
         let(:service_plan) { ServicePlan.make(active: false) }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
 
         it 'unshares successfully' do
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
@@ -41,7 +42,7 @@ module VCAP::CloudController
       context 'when bindings exist in the target space' do
         let(:app) { AppModel.make(space: target_space, name: 'myapp') }
         let(:delete_binding_action) { instance_double(V3::ServiceCredentialBindingDelete) }
-        let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+        let(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
         before do
           allow(V3::ServiceCredentialBindingDelete).to receive(:new).with(:credential, user_audit_info) { delete_binding_action }
@@ -79,8 +80,8 @@ module VCAP::CloudController
           it 'fails to unshare' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.
               to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error) do |err|
-              expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name}" \
-                                             " in space #{target_space.name} is being deleted asynchronously.")
+              expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name} " \
+                                             "in space #{target_space.name} is being deleted asynchronously.")
             end
 
             expect(service_instance.shared_spaces).to include(target_space)
@@ -105,8 +106,8 @@ module VCAP::CloudController
           it 'returns only the error from delete action' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.to raise_error do |err|
               expect(err.message).to include('some-error')
-              expect(err.message).not_to include("The binding between an application and service instance #{service_instance.name}" \
-                                             " in space #{target_space.name} is being deleted asynchronously.")
+              expect(err.message).not_to include("The binding between an application and service instance #{service_instance.name} " \
+                                                 "in space #{target_space.name} is being deleted asynchronously.")
             end
           end
         end
@@ -116,7 +117,7 @@ module VCAP::CloudController
     context 'when bindings exist in the source space' do
       let(:app) { AppModel.make(space: service_instance.space, name: 'myapp') }
       let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
-      let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+      let(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
       it 'unshares without deleting the binding' do
         allow(ServiceBindingDelete).to receive(:new).with(user_audit_info, accepts_incomplete) { delete_binding_action }

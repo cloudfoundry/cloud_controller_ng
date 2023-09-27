@@ -9,7 +9,7 @@ module VCAP::CloudController
           'names' => 'name1,name2',
           'default' => 'true',
           'page' => 1,
-          'per_page' => 5,
+          'per_page' => 5
         }
       end
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
         message = StacksListMessage.from_params(params)
 
         expect(message).to be_a(StacksListMessage)
-        expect(message.names).to eq(%w(name1 name2))
+        expect(message.names).to eq(%w[name1 name2])
         expect(message.default).to eq('true')
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
@@ -36,27 +36,27 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: %w(name1 name2),
+          names: %w[name1 name2],
           default: 'true',
           page: 1,
-          per_page: 5,
+          per_page: 5
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :default]
+        expected_params = %i[names default]
         expect(StacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           StacksListMessage.from_params({
-            names: [],
-            default: true,
-          })
-        }.not_to raise_error
+                                          names: [],
+                                          default: true
+                                        })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do

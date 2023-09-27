@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
+RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:domain) { VCAP::CloudController::SharedDomain.make }
   let(:guid) { domain.guid }
@@ -24,10 +24,10 @@ RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
           client.post '/v2/domains', fields_json, headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :shared_domain,
-            expected_values: {
-              name:                     'example.com',
-              owning_organization_guid: nil
-            }
+                                   expected_values: {
+                                     name: 'example.com',
+                                     owning_organization_guid: nil
+                                   }
         end
       end
 
@@ -36,19 +36,20 @@ RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
           org_guid = VCAP::CloudController::Organization.make.guid
           payload = MultiJson.dump(
             {
-              name:                     'exmaple.com',
-              wildcard:                 true,
+              name: 'exmaple.com',
+              wildcard: true,
               owning_organization_guid: org_guid
-            }, pretty: true)
+            }, pretty: true
+          )
 
           client.post '/v2/domains', payload, headers
 
           expect(status).to eq 201
           standard_entity_response parsed_response, :private_domain,
-            expected_values: {
-              name:                     'exmaple.com',
-              owning_organization_guid: org_guid
-            }
+                                   expected_values: {
+                                     name: 'exmaple.com',
+                                     owning_organization_guid: org_guid
+                                   }
         end
       end
     end

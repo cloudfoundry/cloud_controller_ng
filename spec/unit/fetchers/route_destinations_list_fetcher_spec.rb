@@ -4,7 +4,7 @@ require 'messages/route_destinations_list_message'
 
 module VCAP::CloudController
   RSpec.describe RouteDestinationsListFetcher do
-    subject(:fetcher) { RouteDestinationsListFetcher.new(message: message) }
+    subject(:fetcher) { RouteDestinationsListFetcher.new(message:) }
     let(:message) { RouteDestinationsListMessage.from_params(filters) }
     let(:filters) { {} }
 
@@ -30,8 +30,8 @@ module VCAP::CloudController
       context 'filter' do
         context 'app_guids' do
           let(:space) { Space.make }
-          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space: space), route: route1) }
-          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space: space), route: route1) }
+          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
+          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
           let(:filters) { { app_guids: [destination1.app.guid] } }
 
           it 'only returns destinations for the requested app guids' do
@@ -43,9 +43,9 @@ module VCAP::CloudController
 
         context 'guids' do
           let(:space) { Space.make }
-          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space: space), route: route1) }
-          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space: space), route: route1) }
-          let!(:destination3) { RouteMappingModel.make(app: AppModel.make(space: space), route: route1) }
+          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
+          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
+          let!(:destination3) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
           let(:filters) { { guids: [destination1.guid, destination2.guid] } }
 
           it 'only returns destinations for the requested destination guids' do

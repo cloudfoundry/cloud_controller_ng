@@ -18,7 +18,7 @@ class ProcessesController < ApplicationController
   include AppSubResource
 
   before_action :find_process_and_space, except: :index
-  before_action :ensure_can_write, only: %i(update terminate scale)
+  before_action :ensure_can_write, only: %i[update terminate scale]
 
   def index
     message = ProcessesListMessage.from_params(subresource_query_params)

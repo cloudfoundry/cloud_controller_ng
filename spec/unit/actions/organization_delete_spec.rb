@@ -18,13 +18,13 @@ module VCAP::CloudController
       let!(:space_3) { Space.make(organization: org_3) }
       let!(:app) { AppModel.make(space_guid: space.guid) }
       let!(:app_2) { AppModel.make(space_guid: space_3.guid) }
-      let!(:service_instance) { ManagedServiceInstance.make(space: space) }
+      let!(:service_instance) { ManagedServiceInstance.make(space:) }
       let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
       let!(:private_domain_1) { PrivateDomain.make(owning_organization: org_1) }
       let!(:private_domain_2) { PrivateDomain.make(owning_organization: org_2) }
       let!(:service_broker) { ServiceBroker.make }
-      let!(:service) { Service.make(service_broker: service_broker) }
-      let!(:service_plan) { ServicePlan.make(service: service) }
+      let!(:service) { Service.make(service_broker:) }
+      let!(:service_plan) { ServicePlan.make(service:) }
       let!(:service_plan_visibility) do
         ServicePlanVisibility.make(organization_guid: org_1.guid, service_plan_guid: service_plan.guid)
       end
@@ -59,9 +59,9 @@ module VCAP::CloudController
 
       context 'when the org exists' do
         it 'deletes the org record' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { Organization.count }.by(-2)
+          end.to change { Organization.count }.by(-2)
           expect { org_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { org_2.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -75,30 +75,30 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes any spaces in the org' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { Space.count }.by(-2)
+          end.to change { Space.count }.by(-2)
           expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes associated apps' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { AppModel.count }.by(-1)
+          end.to change { AppModel.count }.by(-1)
           expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes associated service instances' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { ServiceInstance.count }.by(-2)
+          end.to change { ServiceInstance.count }.by(-2)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes owned private domains' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { PrivateDomain.count }.by(-2)
+          end.to change { PrivateDomain.count }.by(-2)
           expect { private_domain_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { private_domain_2.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -114,16 +114,16 @@ module VCAP::CloudController
         end
 
         it 'deletes service plan visibilities' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { ServicePlanVisibility.count }.by(-1)
+          end.to change { ServicePlanVisibility.count }.by(-1)
           expect { service_plan_visibility.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes owned space quota definitions' do
-          expect {
+          expect do
             org_delete.delete(org_dataset)
-          }.to change { SpaceQuotaDefinition.count }.by(-1)
+          end.to change { SpaceQuotaDefinition.count }.by(-1)
           expect { space_quota_definition.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
@@ -195,14 +195,14 @@ module VCAP::CloudController
           expect(app_delete_event.values).to include(
             type: 'audit.app.delete-request',
             actee: app_2.guid,
-            actee_type: 'app',
+            actee_type: 'app'
           )
 
           space_delete_event = VCAP::CloudController::Event.where(type: 'audit.space.delete-request').last
           expect(space_delete_event.values).to include(
             type: 'audit.space.delete-request',
             actee: space_3.guid,
-            actee_type: 'space',
+            actee_type: 'space'
           )
         end
 
@@ -215,9 +215,9 @@ module VCAP::CloudController
 
           it 'returns a helpful error and does not delete the org' do
             errors = []
-            expect {
+            expect do
               errors = org_delete.delete([org_1])
-            }.not_to change { Organization.count }
+            end.not_to(change { Organization.count })
 
             expect(errors.length).to eq(1)
             expect(errors[0].message).to match("Domain '#{private_domain_1.name}' is shared with other organizations. Unshare before deleting.")

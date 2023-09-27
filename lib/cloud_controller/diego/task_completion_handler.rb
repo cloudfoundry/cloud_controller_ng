@@ -21,7 +21,7 @@ module VCAP::CloudController
 
           task.save_changes(raise_on_save_failure: true)
         end
-      rescue => e
+      rescue StandardError => e
         logger.error('diego.tasks.saving-failed', task_guid: task.guid, payload: payload, error: e.message)
       end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
         Membrane::SchemaParser.parse do
           {
             failed: bool,
-            failure_reason: String,
+            failure_reason: String
           }
         end
       end

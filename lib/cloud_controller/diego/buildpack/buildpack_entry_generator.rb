@@ -34,11 +34,11 @@ module VCAP::CloudController
 
         def admin_buildpack_entry(buildpack)
           {
-            name:   buildpack.name,
-            key:    buildpack.key,
+            name: buildpack.name,
+            key: buildpack.key,
             sha256: buildpack.sha256_checksum,
-            url:    @blobstore_url_generator.admin_buildpack_download_url(buildpack),
-            skip_detect: false,
+            url: @blobstore_url_generator.admin_buildpack_download_url(buildpack),
+            skip_detect: false
           }
         end
       end

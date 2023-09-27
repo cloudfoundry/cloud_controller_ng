@@ -18,24 +18,24 @@ module VCAP::CloudController
 
         let(:message) do
           VCAP::CloudController::SpaceQuotaUpdateMessage.new({
-            name: 'don-quixote',
-            apps: {
-              total_memory_in_mb: 5120,
-              per_process_memory_in_mb: 1024,
-              total_instances: 8,
-              per_app_tasks: nil,
-              log_rate_limit_in_bytes_per_second: 2000,
-            },
-            services: {
-              paid_services_allowed: false,
-              total_service_instances: 10,
-              total_service_keys: 20,
-            },
-            routes: {
-              total_routes: 8,
-              total_reserved_ports: 1
-            }
-          })
+                                                               name: 'don-quixote',
+                                                               apps: {
+                                                                 total_memory_in_mb: 5120,
+                                                                 per_process_memory_in_mb: 1024,
+                                                                 total_instances: 8,
+                                                                 per_app_tasks: nil,
+                                                                 log_rate_limit_in_bytes_per_second: 2000
+                                                               },
+                                                               services: {
+                                                                 paid_services_allowed: false,
+                                                                 total_service_instances: 10,
+                                                                 total_service_keys: 20
+                                                               },
+                                                               routes: {
+                                                                 total_routes: 8,
+                                                                 total_reserved_ports: 1
+                                                               }
+                                                             })
         end
 
         let(:minimum_message) do
@@ -75,20 +75,20 @@ module VCAP::CloudController
             expect(space_quota).to receive(:save).and_raise(Sequel::ValidationFailed.new(errors))
 
             message = VCAP::CloudController::SpaceQuotaUpdateMessage.new(name: 'foobar')
-            expect {
+            expect do
               SpaceQuotaUpdate.update(space_quota, message)
-            }.to raise_error(SpaceQuotaUpdate::Error, 'blork is busted')
+            end.to raise_error(SpaceQuotaUpdate::Error, 'blork is busted')
           end
 
           context 'when it is a uniqueness error' do
             let(:name) { 'victoria_space_quota' }
             let!(:victoria_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(name: name, organization: org) }
-            let(:update_message) { VCAP::CloudController::SpaceQuotaUpdateMessage.new(name: name) }
+            let(:update_message) { VCAP::CloudController::SpaceQuotaUpdateMessage.new(name:) }
 
             it 'raises a human-friendly error' do
-              expect {
+              expect do
                 SpaceQuotaUpdate.update(space_quota, update_message)
-              }.to raise_error(SpaceQuotaUpdate::Error, "Space Quota '#{name}' already exists.")
+              end.to raise_error(SpaceQuotaUpdate::Error, "Space Quota '#{name}' already exists.")
             end
           end
         end
@@ -110,7 +110,7 @@ module VCAP::CloudController
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
-                                 "'space-name-1' which contains apps running with an unlimited log rate limit.")
+                                                          "'space-name-1' which contains apps running with an unlimited log rate limit.")
             end
           end
 
@@ -122,7 +122,7 @@ module VCAP::CloudController
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
-                                 "'space-name-1', 'space-name-2' which contain apps running with an unlimited log rate limit.")
+                                                          "'space-name-1', 'space-name-2' which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -134,7 +134,7 @@ module VCAP::CloudController
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
-                                 "'space-name-1', 'space-name-2' and 3 other spaces which contain apps running with an unlimited log rate limit.")
+                                                          "'space-name-1', 'space-name-2' and 3 other spaces which contain apps running with an unlimited log rate limit.")
             end
           end
 
@@ -149,7 +149,7 @@ module VCAP::CloudController
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
-                                 "'space-name' which contains apps running with an unlimited log rate limit.")
+                                                          "'space-name' which contains apps running with an unlimited log rate limit.")
             end
           end
         end

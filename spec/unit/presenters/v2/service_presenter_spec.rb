@@ -19,7 +19,7 @@ module CloudController::Presenters::V2
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'broker-1') }
       let(:service) do
-        VCAP::CloudController::Service.make(service_broker: service_broker)
+        VCAP::CloudController::Service.make(service_broker:)
       end
 
       before do
@@ -29,27 +29,27 @@ module CloudController::Presenters::V2
       it 'returns the service binding entity' do
         expect(subject.entity_hash(controller, service, opts, depth, parents, orphans)).to eq(
           {
-            'label'                 => service.label,
-            'provider'              => service.provider,
-            'url'                   => service.url,
-            'description'           => service.description,
-            'long_description'      => service.long_description,
-            'version'               => service.version,
-            'info_url'              => service.info_url,
-            'active'                => service.active,
-            'bindable'              => service.bindable,
-            'unique_id'             => service.unique_id,
-            'extra'                 => service.extra,
-            'tags'                  => service.tags,
-            'requires'              => service.requires,
-            'documentation_url'     => service.documentation_url,
-            'service_broker_guid'   => service.service_broker_guid,
-            'service_broker_name'   => service.service_broker.name,
-            'plan_updateable'       => service.plan_updateable,
-            'bindings_retrievable'  => service.bindings_retrievable,
+            'label' => service.label,
+            'provider' => service.provider,
+            'url' => service.url,
+            'description' => service.description,
+            'long_description' => service.long_description,
+            'version' => service.version,
+            'info_url' => service.info_url,
+            'active' => service.active,
+            'bindable' => service.bindable,
+            'unique_id' => service.unique_id,
+            'extra' => service.extra,
+            'tags' => service.tags,
+            'requires' => service.requires,
+            'documentation_url' => service.documentation_url,
+            'service_broker_guid' => service.service_broker_guid,
+            'service_broker_name' => service.service_broker.name,
+            'plan_updateable' => service.plan_updateable,
+            'bindings_retrievable' => service.bindings_retrievable,
             'instances_retrievable' => service.instances_retrievable,
             'allow_context_updates' => service.allow_context_updates,
-            'relationship_url'      => 'http://relationship.example.com'
+            'relationship_url' => 'http://relationship.example.com'
           }
         )
       end
@@ -60,27 +60,27 @@ module CloudController::Presenters::V2
         it 'returns the service binding entity' do
           expect(subject.entity_hash(controller, service, opts, depth, parents, orphans)).to eq(
             {
-              'label'                 => service.label,
-              'provider'              => service.provider,
-              'url'                   => service.url,
-              'description'           => service.description,
-              'long_description'      => service.long_description,
-              'version'               => service.version,
-              'info_url'              => service.info_url,
-              'active'                => service.active,
-              'bindable'              => service.bindable,
-              'unique_id'             => service.unique_id,
-              'extra'                 => service.extra,
-              'tags'                  => service.tags,
-              'requires'              => service.requires,
-              'documentation_url'     => service.documentation_url,
-              'service_broker_guid'   => nil,
-              'service_broker_name'   => nil,
-              'plan_updateable'       => service.plan_updateable,
-              'bindings_retrievable'  => service.bindings_retrievable,
+              'label' => service.label,
+              'provider' => service.provider,
+              'url' => service.url,
+              'description' => service.description,
+              'long_description' => service.long_description,
+              'version' => service.version,
+              'info_url' => service.info_url,
+              'active' => service.active,
+              'bindable' => service.bindable,
+              'unique_id' => service.unique_id,
+              'extra' => service.extra,
+              'tags' => service.tags,
+              'requires' => service.requires,
+              'documentation_url' => service.documentation_url,
+              'service_broker_guid' => nil,
+              'service_broker_name' => nil,
+              'plan_updateable' => service.plan_updateable,
+              'bindings_retrievable' => service.bindings_retrievable,
               'instances_retrievable' => service.instances_retrievable,
               'allow_context_updates' => service.allow_context_updates,
-              'relationship_url'      => 'http://relationship.example.com'
+              'relationship_url' => 'http://relationship.example.com'
             }
           )
         end

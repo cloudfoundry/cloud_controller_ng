@@ -30,7 +30,7 @@ class RevisionsController < ApplicationController
   private
 
   def fetch_revision(guid, needs_write_permissions: false, needs_secrets_read_permission: false)
-    revision = RevisionModel.find(guid: guid)
+    revision = RevisionModel.find(guid:)
     resource_not_found!(:revision) unless revision
 
     app = revision.app

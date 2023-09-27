@@ -108,15 +108,13 @@ module VCAP::CloudController
     end
 
     def space_validation_error!(type, error, user, space)
-      if error.errors.on([:space_id, :user_id])&.any? { |e| [:unique].include?(e) }
-        error!("User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
-      end
+      error!("User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.") if error.errors.on(%i[space_id user_id])&.any? { |e| [:unique].include?(e) }
 
       error!(error.message)
     end
 
     def organization_validation_error!(type, error, user, organization)
-      if error.errors.on([:organization_id, :user_id])&.any? { |e| [:unique].include?(e) }
+      if error.errors.on(%i[organization_id user_id])&.any? { |e| [:unique].include?(e) }
         error!("User '#{user.presentation_name}' already has '#{type}' role in organization '#{organization.name}'.")
       end
 

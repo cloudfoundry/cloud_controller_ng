@@ -3,7 +3,7 @@ module VCAP::CloudController
     module Queues
       def self.local(config)
         if config.get(:name).blank?
-          "cc-#{ENV['HOSTNAME']}"
+          "cc-#{ENV.fetch('HOSTNAME', nil)}"
         else
           "cc-#{config.get(:name)}-#{config.get(:index)}"
         end

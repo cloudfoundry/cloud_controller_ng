@@ -10,26 +10,26 @@ module VCAP::CloudController
         let!(:stack) { Stack.make }
 
         it 'deletes the stack record' do
-          expect {
+          expect do
             stack_delete.delete(stack)
-          }.to change { Stack.count }.by(-1)
+          end.to change { Stack.count }.by(-1)
           expect { stack.refresh }.to raise_error(Sequel::Error, 'Record not found')
         end
 
         it 'deletes associated labels' do
           label = StackLabelModel.make(resource_guid: stack.guid)
-          expect {
+          expect do
             stack_delete.delete(stack)
-          }.to change { StackLabelModel.count }.by(-1)
+          end.to change { StackLabelModel.count }.by(-1)
           expect(label.exists?).to be_falsey
           expect(stack.exists?).to be_falsey
         end
 
         it 'deletes associated annotations' do
           annotation = StackAnnotationModel.make(resource_guid: stack.guid)
-          expect {
+          expect do
             stack_delete.delete(stack)
-          }.to change { StackAnnotationModel.count }.by(-1)
+          end.to change { StackAnnotationModel.count }.by(-1)
           expect(annotation.exists?).to be_falsey
           expect(stack.exists?).to be_falsey
         end
@@ -42,9 +42,9 @@ module VCAP::CloudController
           end
 
           it 'does not delete the stack and raises an error' do
-            expect {
+            expect do
               stack_delete.delete(stack)
-            }.to raise_error(Stack::AppsStillPresentError)
+            end.to raise_error(Stack::AppsStillPresentError)
             expect(stack.exists?).to be_truthy
           end
         end

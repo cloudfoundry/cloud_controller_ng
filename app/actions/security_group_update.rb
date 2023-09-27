@@ -31,9 +31,7 @@ module VCAP::CloudController
       private
 
       def validation_error!(error, message)
-        if error.errors.on(:name)&.include?(:unique)
-          error!("Security group with name '#{message.name}' already exists.")
-        end
+        error!("Security group with name '#{message.name}' already exists.") if error.errors.on(:name)&.include?(:unique)
 
         error!(error.message)
       end

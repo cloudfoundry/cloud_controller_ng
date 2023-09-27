@@ -45,9 +45,7 @@ module VCAP::CloudController
         actor.display_name
       end
 
-      def resource_guid
-        @resource_guid
-      end
+      attr_reader :resource_guid
 
       def resource_type
         actor.resource_type
@@ -69,20 +67,16 @@ module VCAP::CloudController
 
         polling_status = action.poll(resource)
 
-        if polling_status[:finished]
-          finish
-        end
+        finish if polling_status[:finished]
 
-        if polling_status[:retry_after].present?
-          self.polling_interval_seconds = polling_status[:retry_after]
-        end
+        self.polling_interval_seconds = polling_status[:retry_after] if polling_status[:retry_after].present?
       rescue OperationCancelled => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
       rescue BindingNotFound => e
         raise e
       rescue ServiceBindingCreate::BindingNotRetrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
-      rescue => e
+      rescue StandardError => e
         save_failure(e.message)
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'bind', e.message)
       end
@@ -93,7 +87,7 @@ module VCAP::CloudController
           {
             type: operation_type,
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time.",
+            description: "Service Broker failed to #{operation} within the required time."
           }
         )
       end
@@ -122,16 +116,16 @@ module VCAP::CloudController
       end
 
       def save_failure(error_message)
-        if resource.reload.last_operation.state != 'failed'
-          resource.save_with_attributes_and_new_operation(
-            {},
-            {
-              type: operation_type,
-              state: 'failed',
-              description: error_message,
-            }
-          )
-        end
+        return unless resource.reload.last_operation.state != 'failed'
+
+        resource.save_with_attributes_and_new_operation(
+          {},
+          {
+            type: operation_type,
+            state: 'failed',
+            description: error_message
+          }
+        )
       end
     end
   end

@@ -128,9 +128,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(AppUpdate::InvalidApp, 'invalid app')
+              end.to raise_error(AppUpdate::InvalidApp, 'invalid app')
             end
           end
         end
@@ -164,9 +164,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(AppUpdate::InvalidApp, 'invalid app')
+              end.to raise_error(AppUpdate::InvalidApp, 'invalid app')
             end
           end
         end
@@ -200,9 +200,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(AppPatchEnvironmentVariables::InvalidApp, 'invalid app')
+              end.to raise_error(AppPatchEnvironmentVariables::InvalidApp, 'invalid app')
             end
           end
         end
@@ -236,21 +236,22 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+              end.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
             end
           end
         end
 
         describe 'updating multiple process attributes' do
-          let(:message) { AppManifestMessage.create_from_yml({
-            processes: [
-              { type: 'web', command: 'web-command', instances: 2 },
-              { type: 'worker', command: 'worker-command', instances: 3 },
-            ] }
-          )
-          }
+          let(:message) do
+            AppManifestMessage.create_from_yml({
+                                                 processes: [
+                                                   { type: 'web', command: 'web-command', instances: 2 },
+                                                   { type: 'worker', command: 'worker-command', instances: 3 }
+                                                 ]
+                                               })
+          end
           let!(:process1) { ProcessModel.make(type: 'web') }
           let!(:app) { process1.app }
           let!(:process2) { ProcessModel.make(app: app, type: 'worker') }
@@ -291,9 +292,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+              end.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
             end
           end
         end
@@ -301,10 +302,10 @@ module VCAP::CloudController
         describe 'creating a new process' do
           let(:message) do
             AppManifestMessage.create_from_yml({
-              processes: [
-                { type: 'potato', command: 'potato-command', instances: 3 },
-              ] }
-            )
+                                                 processes: [
+                                                   { type: 'potato', command: 'potato-command', instances: 3 }
+                                                 ]
+                                               })
           end
 
           let!(:app) { AppModel.make }
@@ -337,10 +338,10 @@ module VCAP::CloudController
             context 'when there is no command specified in the manifest' do
               let(:message) do
                 AppManifestMessage.create_from_yml({
-                  processes: [
-                    { type: 'potato', instances: 3 },
-                  ] }
-                )
+                                                     processes: [
+                                                       { type: 'potato', instances: 3 }
+                                                     ]
+                                                   })
               end
 
               it 'sets the command to nil' do
@@ -367,9 +368,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+              end.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
             end
           end
 
@@ -403,9 +404,9 @@ module VCAP::CloudController
             end
 
             it 'bubbles up the error' do
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+              end.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
             end
           end
 
@@ -448,22 +449,22 @@ module VCAP::CloudController
         describe 'updating sidecars' do
           let(:app) { AppModel.make }
           let!(:sidecar) { SidecarModel.make(name: 'existing-sidecar', app: app) }
-          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah',
-            'sidecars' => [
-              {
-                'process_types' => ['web'],
-                'name' => 'new-sidecar',
-                'command' => 'rackup',
-                'memory' => '2G',
-              },
-              {
-                'process_types' => ['web'],
-                'name' => 'existing-sidecar',
-                'command' => 'rackup',
-              }
-            ]
-          })
-          }
+          let(:message) do
+            AppManifestMessage.create_from_yml({ name: 'blah',
+                                                 'sidecars' => [
+                                                   {
+                                                     'process_types' => ['web'],
+                                                     'name' => 'new-sidecar',
+                                                     'command' => 'rackup',
+                                                     'memory' => '2G'
+                                                   },
+                                                   {
+                                                     'process_types' => ['web'],
+                                                     'name' => 'existing-sidecar',
+                                                     'command' => 'rackup'
+                                                   }
+                                                 ] })
+          end
 
           it 'returns the app' do
             expect(
@@ -534,9 +535,9 @@ module VCAP::CloudController
               end
 
               it 'fails with a NoDefaultDomain error' do
-                expect {
+                expect do
                   app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
+                end.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
               end
             end
           end
@@ -552,9 +553,10 @@ module VCAP::CloudController
           end
 
           context 'when the message specifies routes' do
-            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', random_route: true,
-                                                                 routes: [{ route: 'billy.tabasco.com' }] })
-            }
+            let(:message) do
+              AppManifestMessage.create_from_yml({ name: 'blah', random_route: true,
+                                                   routes: [{ route: 'billy.tabasco.com' }] })
+            end
 
             it 'ignores the random_route but uses the routes' do
               app_apply_manifest.apply(app.guid, message)
@@ -563,9 +565,10 @@ module VCAP::CloudController
           end
 
           context 'when the message specifies an empty list of routes' do
-            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', random_route: true,
-                                                                 routes: [] })
-            }
+            let(:message) do
+              AppManifestMessage.create_from_yml({ name: 'blah', random_route: true,
+                                                   routes: [] })
+            end
 
             it 'ignores the random_route' do
               app_apply_manifest.apply(app.guid, message)
@@ -594,10 +597,10 @@ module VCAP::CloudController
               let(:message) { AppManifestMessage.create_from_yml({ name: 'blah!@#', default_route: true }) }
               let(:app_model) { AppModel.make(name: 'blah!@#') }
               it 'fails with a useful error message' do
-                expect {
+                expect do
                   app_apply_manifest.apply(app_model.guid, message)
-                }.to raise_error(AppApplyManifest::Error,
-                  /Failed to create default route from app name: Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
+                end.to raise_error(AppApplyManifest::Error,
+                                   /Failed to create default route from app name: Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
               end
             end
 
@@ -606,9 +609,9 @@ module VCAP::CloudController
               let(:message) { AppManifestMessage.create_from_yml({ name: app_name, default_route: true }) }
               let(:app_model) { AppModel.make(name: app_name) }
               it 'fails with a useful error' do
-                expect {
+                expect do
                   app_apply_manifest.apply(app_model.guid, message)
-                }.to raise_error(AppApplyManifest::Error, 'Failed to create default route from app name: Host cannot exceed 63 characters')
+                end.to raise_error(AppApplyManifest::Error, 'Failed to create default route from app name: Host cannot exceed 63 characters')
               end
             end
 
@@ -636,9 +639,9 @@ module VCAP::CloudController
               end
 
               it 'fails with a NoDefaultDomain error' do
-                expect {
+                expect do
                   app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
+                end.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
               end
             end
           end
@@ -654,9 +657,10 @@ module VCAP::CloudController
           end
 
           context 'when the message specifies routes' do
-            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
-              routes: [{ route: 'billy.tabasco.com' }] })
-            }
+            let(:message) do
+              AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
+                                                   routes: [{ route: 'billy.tabasco.com' }] })
+            end
 
             it 'ignores the default_route but uses the routes' do
               app_apply_manifest.apply(app.guid, message)
@@ -665,9 +669,10 @@ module VCAP::CloudController
           end
 
           context 'when the message specifies an empty list of routes' do
-            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
-              routes: [] })
-            }
+            let(:message) do
+              AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
+                                                   routes: [] })
+            end
 
             it 'ignores the default_route' do
               app_apply_manifest.apply(app.guid, message)
@@ -728,7 +733,7 @@ module VCAP::CloudController
 
         describe 'creating service bindings' do
           let(:space) { Space.make }
-          let(:app) { AppModel.make(space: space) }
+          let(:app) { AppModel.make(space:) }
 
           before do
             TestConfig.override(volume_services_enabled: false)
@@ -738,10 +743,10 @@ module VCAP::CloudController
             let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
             let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
             let(:binding_name) { Sham.name }
-            let(:message) {
+            let(:message) do
               AppManifestMessage.create_from_yml({ services: [service_instance.name,
                                                               { 'name' => service_instance_2.name, parameters: { 'foo' => 'bar' }, binding_name: binding_name }] })
-            }
+            end
 
             let(:service_binding_create_message_1) { instance_double(ServiceCredentialAppBindingCreateMessage) }
             let(:service_binding_create_message_2) { instance_double(ServiceCredentialAppBindingCreateMessage) }
@@ -816,7 +821,7 @@ module VCAP::CloudController
 
               allow(service_cred_binding_create).to receive(:precursor).and_return(
                 service_binding_1,
-                service_binding_2,
+                service_binding_2
               )
 
               app_apply_manifest.apply(app.guid, message)
@@ -828,14 +833,14 @@ module VCAP::CloudController
             it 'wraps the error when precursor errors' do
               allow(service_cred_binding_create).to receive(:precursor).and_raise('fake binding error')
 
-              expect {
+              expect do
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
+              end.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
             end
 
             context 'service binding already exists' do
               let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name] }) }
-              let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+              let!(:binding) { ServiceBinding.make(service_instance:, app:) }
 
               it 'does not create the binding' do
                 app_apply_manifest.apply(app.guid, message)
@@ -880,10 +885,10 @@ module VCAP::CloudController
                   end
 
                   it 'raises an error' do
-                    expect {
+                    expect do
                       app_apply_manifest.apply(app.guid, message)
-                    }.to raise_error(AppApplyManifest::ServiceBindingError,
-/For service 'si-name': The service broker responded asynchronously when a synchronous bind was requested./)
+                    end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                       /For service 'si-name': The service broker responded asynchronously when a synchronous bind was requested./)
                   end
                 end
               end
@@ -891,7 +896,7 @@ module VCAP::CloudController
 
             context 'service broker support sync or async bindings' do
               context 'action prefers sync binding' do
-                let(:binding1) { ServiceBinding.make(service_instance: service_instance, app: app) }
+                let(:binding1) { ServiceBinding.make(service_instance:, app:) }
                 let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
 
                 before do
@@ -931,7 +936,7 @@ module VCAP::CloudController
 
             context 'broker only supports async bindings' do
               context 'action starts async binding' do
-                let(:binding1) { ServiceBinding.make(service_instance: service_instance, app: app) }
+                let(:binding1) { ServiceBinding.make(service_instance:, app:) }
                 let(:binding2) { ServiceBinding.make(service_instance: service_instance_2, app: app) }
 
                 before do
@@ -1018,7 +1023,7 @@ module VCAP::CloudController
                 end
 
                 context 'async binding fails' do
-                  let(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+                  let(:binding) { ServiceBinding.make(service_instance:, app:) }
 
                   before do
                     allow(service_cred_binding_create).to receive(:precursor) { binding }
@@ -1031,20 +1036,18 @@ module VCAP::CloudController
                     count = 0
                     allow(service_cred_binding_create).to receive(:poll) do
                       count += 1
-                      if count < 3
-                        V3::ServiceBindingCreate::ContinuePolling.call(1.second)
-                      else
-                        raise V3::LastOperationFailedState
-                      end
+                      raise V3::LastOperationFailedState unless count < 3
+
+                      V3::ServiceBindingCreate::ContinuePolling.call(1.second)
                     end
                   end
 
                   it 'polls service bindings until they are in a terminal state' do
                     expect(service_cred_binding_create).to receive(:poll).exactly(3).times
                     expect(app_apply_manifest).to receive(:sleep).with(1).exactly(2).times
-                    expect {
+                    expect do
                       app_apply_manifest.apply(app.guid, message)
-                    }.to raise_error(AppApplyManifest::ServiceBindingError)
+                    end.to raise_error(AppApplyManifest::ServiceBindingError)
                   end
                 end
               end
@@ -1056,10 +1059,10 @@ module VCAP::CloudController
                 end
 
                 it 'fails with async error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-                                   /For service 'si-name': The broker responded asynchronously but does not support fetching binding data./)
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     /For service 'si-name': The broker responded asynchronously but does not support fetching binding data./)
                 end
               end
             end
@@ -1071,52 +1074,52 @@ module VCAP::CloudController
                 end
 
                 it 'decorates the error with the name of the service instance' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
+                  end.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
                 end
               end
 
               context 'when a create is in progress for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding = ServiceBinding.make(service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
                   binding
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being created. Retry this operation later./)
+                  end.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being created. Retry this operation later./)
                 end
               end
 
               context 'when a delete is in progress for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding = ServiceBinding.make(service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
                   binding
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being deleted. Retry this operation later./)
+                  end.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': A binding is being deleted. Retry this operation later./)
                 end
               end
 
               context 'when a delete failed for the same binding' do
                 let!(:binding) do
-                  binding = ServiceBinding.make(service_instance: service_instance, app: app)
+                  binding = ServiceBinding.make(service_instance:, app:)
                   binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
                   binding
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-/For service 'si-name': A binding failed to be deleted. Resolve the issue with this binding before retrying this operation./)
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     /For service 'si-name': A binding failed to be deleted. Resolve the issue with this binding before retrying this operation./)
                 end
               end
             end
@@ -1126,14 +1129,14 @@ module VCAP::CloudController
                 before do
                   service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
                   allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
-'There is an operation in progress for the service instance')
+                                                                                      'There is an operation in progress for the service instance')
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
                 end
               end
 
@@ -1148,8 +1151,8 @@ module VCAP::CloudController
 
                   allow(service_cred_binding_create).to receive(:precursor).and_return(
                     service_binding_1,
-                    service_binding_2,
-                    )
+                    service_binding_2
+                  )
 
                   app_apply_manifest.apply(app.guid, message)
 
@@ -1165,10 +1168,10 @@ module VCAP::CloudController
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-                     "For service '#{service_instance.name}': Service instance not found")
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     "For service '#{service_instance.name}': Service instance not found")
                 end
               end
 
@@ -1176,14 +1179,14 @@ module VCAP::CloudController
                 before do
                   service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
                   allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
-'There is an operation in progress for the service instance')
+                                                                                      'There is an operation in progress for the service instance')
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
                 end
               end
 
@@ -1198,8 +1201,8 @@ module VCAP::CloudController
 
                   allow(service_cred_binding_create).to receive(:precursor).and_return(
                     service_binding_1,
-                    service_binding_2,
-                    )
+                    service_binding_2
+                  )
 
                   app_apply_manifest.apply(app.guid, message)
 
@@ -1219,8 +1222,8 @@ module VCAP::CloudController
 
                   allow(service_cred_binding_create).to receive(:precursor).and_return(
                     service_binding_1,
-                    service_binding_2,
-                    )
+                    service_binding_2
+                  )
 
                   app_apply_manifest.apply(app.guid, message)
 
@@ -1233,14 +1236,14 @@ module VCAP::CloudController
                 before do
                   service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
                   allow(service_cred_binding_create).to receive(:precursor).and_raise(V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
-'There is an operation in progress for the service instance')
+                                                                                      'There is an operation in progress for the service instance')
                 end
 
                 it 'fails with a service binding error' do
-                  expect {
+                  expect do
                     app_apply_manifest.apply(app.guid, message)
-                  }.to raise_error(AppApplyManifest::ServiceBindingError,
-                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
+                  end.to raise_error(AppApplyManifest::ServiceBindingError,
+                                     "For service '#{service_instance.name}': There is an operation in progress for the service instance")
                 end
               end
 
@@ -1255,8 +1258,8 @@ module VCAP::CloudController
 
                   allow(service_cred_binding_create).to receive(:precursor).and_return(
                     service_binding_1,
-                    service_binding_2,
-                    )
+                    service_binding_2
+                  )
 
                   app_apply_manifest.apply(app.guid, message)
 
@@ -1272,9 +1275,9 @@ module VCAP::CloudController
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }) }
           let(:app_guid) { 'fake-guid' }
           it 'raises a NotFound error' do
-            expect {
+            expect do
               app_apply_manifest.apply(app_guid, message)
-            }.to raise_error(CloudController::Errors::NotFound, "App with guid '#{app_guid}' not found")
+            end.to raise_error(CloudController::Errors::NotFound, "App with guid '#{app_guid}' not found")
           end
         end
       end

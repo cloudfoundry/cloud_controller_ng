@@ -31,12 +31,12 @@ module VCAP::CloudController
       context 'for plans belonging to private brokers' do
         it 'does not allow the plan to be public' do
           space = Space.make
-          private_broker = ServiceBroker.make space: space
+          private_broker = ServiceBroker.make(space:)
           service = Service.make service_broker: private_broker
 
-          expect {
+          expect do
             ServicePlan.make service: service, public: true
-          }.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
+          end.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
         end
       end
     end
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
           expect(ServicePlan.make(service: service, public: false).public).to be(false)
           expect(ServicePlan.make(service: service, public: true).public).to be(true)
-          expect(ServicePlan.make(service: service).public).to be(true)
+          expect(ServicePlan.make(service:).public).to be(true)
         end
 
         it 'defaults to false if a value is not supplied but a private broker is' do
@@ -94,7 +94,7 @@ module VCAP::CloudController
           service = Service.make service_broker: private_broker
 
           expect(ServicePlan.make(service: service, public: false).public).to be(false)
-          expect(ServicePlan.make(service: service).public).to be(false)
+          expect(ServicePlan.make(service:).public).to be(false)
         end
       end
 
@@ -136,15 +136,17 @@ module VCAP::CloudController
           before { plan.unique_id = nil }
 
           it 'does not generate a unique_id' do
-            expect {
-              plan.save rescue nil
-            }.to_not change(plan, :unique_id)
+            expect do
+              plan.save
+            rescue StandardError
+              nil
+            end.to_not change(plan, :unique_id)
           end
 
           it 'raises a validation error' do
-            expect {
+            expect do
               plan.save
-            }.to raise_error(Sequel::ValidationFailed)
+            end.to raise_error(Sequel::ValidationFailed)
           end
         end
       end
@@ -154,7 +156,7 @@ module VCAP::CloudController
       let(:service_plan) { ServicePlan.make }
 
       it 'destroys associated dependencies' do
-        service_plan_visibility = ServicePlanVisibility.make(service_plan: service_plan)
+        service_plan_visibility = ServicePlanVisibility.make(service_plan:)
         service_plan_label = ServicePlanLabelModel.make(resource_guid: service_plan.guid, key_name: 'flavor', value: 'pear')
         service_plan_annotation = ServicePlanAnnotationModel.make(resource_guid: service_plan.guid, key_name: 'colour', value: 'purple')
 
@@ -167,10 +169,10 @@ module VCAP::CloudController
 
       it 'cannot be destroyed if associated service_instances exist' do
         service_plan = ServicePlan.make
-        ManagedServiceInstance.make(service_plan: service_plan)
-        expect {
+        ManagedServiceInstance.make(service_plan:)
+        expect do
           service_plan.destroy
-        }.to raise_error Sequel::DatabaseError, /foreign key/
+        end.to raise_error Sequel::DatabaseError, /foreign key/
       end
     end
 
@@ -208,8 +210,8 @@ module VCAP::CloudController
     describe '.plan_ids_for_visible_service_instances' do
       context 'when the service plans have service instances associated with them' do
         let(:organization) { Organization.make }
-        let(:space) { Space.make(organization: organization) }
-        let(:other_space) { Space.make(organization: organization) }
+        let(:space) { Space.make(organization:) }
+        let(:other_space) { Space.make(organization:) }
         let(:user) { User.make }
         let(:broker) { ServiceBroker.make }
         let(:service) { Service.make(service_broker: broker) }
@@ -217,10 +219,10 @@ module VCAP::CloudController
         let(:non_public_plan) { ServicePlan.make(service: service, public: false, active: true) }
         let(:inactive_plan) { ServicePlan.make(service: service, public: true, active: false) }
         let(:other_plan) { ServicePlan.make(service: service, public: true, active: true) }
-        let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+        let!(:service_instance) { ManagedServiceInstance.make(service_plan:, space:) }
         let!(:service_instance2) { ManagedServiceInstance.make(service_plan: non_public_plan, space: space) }
         let!(:service_instance3) { ManagedServiceInstance.make(service_plan: inactive_plan, space: space) }
-        let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+        let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
         let!(:other_service_instance) { ManagedServiceInstance.make(service_plan: other_plan, space: other_space) }
 
         before do
@@ -269,10 +271,10 @@ module VCAP::CloudController
         inactive_public_plan = ServicePlan.make(public: true, active: false)
 
         organization = Organization.make
-        space = Space.make(organization: organization)
+        space = Space.make(organization:)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
-        space_scoped_broker1 = ServiceBroker.make(space: space)
+        space_scoped_broker1 = ServiceBroker.make(space:)
         space_scoped_broker1_service = Service.make(service_broker: space_scoped_broker1)
         space_scoped_broker1_plan = ServicePlan.make(service: space_scoped_broker1_service)
         space_scoped_broker1_plan_inactive = ServicePlan.make(service: space_scoped_broker1_service, active: false)
@@ -298,7 +300,7 @@ module VCAP::CloudController
         visible_private_plan = ServicePlan.make(public: false)
 
         organization = Organization.make
-        space = Space.make(organization: organization)
+        space = Space.make(organization:)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.space_visible(space).all
@@ -309,7 +311,7 @@ module VCAP::CloudController
       it 'returns false when not included in .space_visible set' do
         hidden_private_plan = ServicePlan.make(public: false)
         organization = Organization.make
-        space = Space.make(organization: organization)
+        space = Space.make(organization:)
 
         visible = ServicePlan.space_visible(space).all
         expect(visible).to_not include(hidden_private_plan)
@@ -364,7 +366,7 @@ module VCAP::CloudController
     end
 
     describe '#plan_updateable?' do
-      let(:service_plan) { ServicePlan.make(service: service, plan_updateable: plan_updateable) }
+      let(:service_plan) { ServicePlan.make(service:, plan_updateable:) }
 
       context 'when the plan does not specify if it is updateable' do
         let(:plan_updateable) { nil }
@@ -421,9 +423,9 @@ module VCAP::CloudController
     describe '#broker_space_scoped?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
         space = Space.make
-        broker = ServiceBroker.make space: space
+        broker = ServiceBroker.make(space:)
         service = Service.make service_broker: broker
-        plan = ServicePlan.make service: service
+        plan = ServicePlan.make(service:)
 
         expect(plan.broker_space_scoped?).to be_truthy
       end

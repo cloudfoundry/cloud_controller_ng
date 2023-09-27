@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     def self.find_by_delayed_job_guid(delayed_job_guid)
-      pollable_job = PollableJobModel.find(delayed_job_guid: delayed_job_guid)
+      pollable_job = PollableJobModel.find(delayed_job_guid:)
 
       raise "No pollable job found for delayed_job '#{delayed_job_guid}'" if pollable_job.nil?
 

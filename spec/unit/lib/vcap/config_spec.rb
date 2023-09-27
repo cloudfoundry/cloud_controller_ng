@@ -25,8 +25,8 @@ RSpec.describe VCAP::Config do
               parent: String,
               shared: {
                 parent: String,
-                optional(:parent_optional) => String,
-              },
+                optional(:parent_optional) => String
+              }
             }
           end
         end
@@ -42,8 +42,8 @@ RSpec.describe VCAP::Config do
               child: String,
               shared: {
                 child: String,
-                optional(:child_optional) => String,
-              },
+                optional(:child_optional) => String
+              }
             }
           end
         end
@@ -73,37 +73,36 @@ RSpec.describe VCAP::Config do
             :nums => [Integer],
             optional(:not_needed) => {
               float: Float
-            }
-          }
+            } }
         end
       end
     end
 
-    let(:valid_config) {
+    let(:valid_config) do
       {
         name: 'test_config',
         nums: [1, 2, 3],
-        not_needed: { float: 1.1 },
+        not_needed: { float: 1.1 }
       }
-    }
+    end
 
-    let(:invalid_config) {
+    let(:invalid_config) do
       {
         name: 'test_config',
-        nums: [1.1],
+        nums: [1.1]
       }
-    }
+    end
 
     it 'raises no errors when the config is valid' do
-      expect {
+      expect do
         test_schema.validate(valid_config)
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it 'raises an error when the config is invalid' do
-      expect {
+      expect do
         test_schema.validate(invalid_config)
-      }.to raise_error(Membrane::SchemaValidationError)
+      end.to raise_error(Membrane::SchemaValidationError)
     end
 
     context 'when a parent_schema is set' do
@@ -127,45 +126,45 @@ RSpec.describe VCAP::Config do
       end
 
       context 'when the config is valid against both schemas' do
-        let(:config) {
+        let(:config) do
           {
             parent: 'Homer',
-            child: 'Bart',
+            child: 'Bart'
           }
-        }
+        end
 
         it 'raises no errors' do
-          expect {
+          expect do
             child_schema.validate(config)
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
       context 'when the config is invalid against the child schema' do
-        let(:config) {
+        let(:config) do
           {
-            parent: 'Homer',
+            parent: 'Homer'
           }
-        }
+        end
 
         it 'raises an error when the config is invalid' do
-          expect {
+          expect do
             child_schema.validate(config)
-          }.to raise_error(Membrane::SchemaValidationError)
+          end.to raise_error(Membrane::SchemaValidationError)
         end
       end
 
       context 'when the config is invalid against the parent schema' do
-        let(:config) {
+        let(:config) do
           {
-            child: 'Bart',
+            child: 'Bart'
           }
-        }
+        end
 
         it 'raises an error when the config is invalid' do
-          expect {
+          expect do
             child_schema.validate(config)
-          }.to raise_error(Membrane::SchemaValidationError)
+          end.to raise_error(Membrane::SchemaValidationError)
         end
       end
     end

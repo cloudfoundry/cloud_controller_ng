@@ -31,13 +31,13 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     it 'logs that it is attempting to orphan mitigate' do
       subject.attempt_deprovision_instance(service_instance)
 
-      expect(logger).to have_received(:info).with /Attempting.*service instance #{service_instance_guid}/
+      expect(logger).to have_received(:info).with(/Attempting.*service instance #{service_instance_guid}/)
     end
 
     it 'logs when successful' do
       subject.attempt_deprovision_instance(service_instance)
 
-      expect(logger).to have_received(:info).with /Success.*service instance #{service_instance_guid}/
+      expect(logger).to have_received(:info).with(/Success.*service instance #{service_instance_guid}/)
     end
 
     context 'when the orphan mitigation fails' do
@@ -48,7 +48,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
       it 'logs that it failed' do
         subject.attempt_deprovision_instance(service_instance)
 
-        expect(logger).to have_received(:error).with /Unable.*service instance #{service_instance_guid}/
+        expect(logger).to have_received(:error).with(/Unable.*service instance #{service_instance_guid}/)
       end
     end
   end
@@ -76,13 +76,13 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     it 'logs that it is attempting to orphan mitigate' do
       subject.attempt_unbind(service_binding)
 
-      expect(logger).to have_received(:info).with /Attempting.*service binding #{service_binding_guid}/
+      expect(logger).to have_received(:info).with(/Attempting.*service binding #{service_binding_guid}/)
     end
 
     it 'logs when successful' do
       subject.attempt_unbind(service_binding)
 
-      expect(logger).to have_received(:info).with /Success.*service binding #{service_binding_guid}/
+      expect(logger).to have_received(:info).with(/Success.*service binding #{service_binding_guid}/)
     end
 
     context 'when the orphan mitigation fails' do
@@ -93,7 +93,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
       it 'logs that it failed' do
         subject.attempt_unbind(service_binding)
 
-        expect(logger).to have_received(:error).with /Unable.*service binding #{service_binding_guid}/
+        expect(logger).to have_received(:error).with(/Unable.*service binding #{service_binding_guid}/)
       end
     end
   end
@@ -121,13 +121,13 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     it 'logs that it is attempting to orphan mitigate' do
       subject.attempt_delete_key(service_key)
 
-      expect(logger).to have_received(:info).with /Attempting.*service key #{service_key_guid}/
+      expect(logger).to have_received(:info).with(/Attempting.*service key #{service_key_guid}/)
     end
 
     it 'logs when successful' do
       subject.attempt_delete_key(service_key)
 
-      expect(logger).to have_received(:info).with /Success.*service key #{service_key_guid}/
+      expect(logger).to have_received(:info).with(/Success.*service key #{service_key_guid}/)
     end
 
     context 'when the orphan mitigation fails' do
@@ -138,7 +138,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
       it 'logs that it failed' do
         subject.attempt_delete_key(service_key)
 
-        expect(logger).to have_received(:error).with /Unable.*service key #{service_key_guid}/
+        expect(logger).to have_received(:error).with(/Unable.*service key #{service_key_guid}/)
       end
     end
   end

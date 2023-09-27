@@ -25,7 +25,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :app }
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid], message: 'The app is already bound to the service.' }
+      it { is_expected.to validate_uniqueness %i[app_guid service_instance_guid], message: 'The app is already bound to the service.' }
       it { is_expected.to validate_presence [:type] }
 
       it 'validates max length of name' do
@@ -49,7 +49,7 @@ module VCAP::CloudController
       context 'validates name characters' do
         it 'does not allow non-word non-dash characters' do
           ['git://github.com', '$abc', 'foobar!'].each do |name|
-            service_binding = ServiceBinding.new(name: name)
+            service_binding = ServiceBinding.new(name:)
             expect(service_binding).not_to be_valid
             expect(service_binding.errors.on(:name)).to be_present
             expect(service_binding.errors.on(:name)).to include('The binding name is invalid. Valid characters are alphanumeric, underscore, and dash.')
@@ -58,7 +58,7 @@ module VCAP::CloudController
 
         it 'allows word, underscore, and dash characters' do
           ['name', 'name-with-dash', '-name-', '_squ1d_'].each do |name|
-            service_binding = ServiceBinding.new(name: name)
+            service_binding = ServiceBinding.new(name:)
             service_binding.validate
             expect(service_binding.errors.on(:name)).not_to be_present
           end
@@ -66,7 +66,7 @@ module VCAP::CloudController
       end
 
       context 'when the syslog_drain_url is longer than 10,000 characters' do
-        let(:overly_long_url) { "syslog://example.com/#{'s' * 10000}" }
+        let(:overly_long_url) { "syslog://example.com/#{'s' * 10_000}" }
 
         it 'refuses to save this service binding' do
           binding = ServiceBinding.make
@@ -141,8 +141,9 @@ module VCAP::CloudController
           let(:service_instance) { ManagedServiceInstance.make }
           context 'when the service instance has not been shared into the app space' do
             it 'is not valid' do
-              expect { ServiceBinding.make(service_instance: service_instance, app: app)
-              }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
+              expect do
+                ServiceBinding.make(service_instance:, app:)
+              end.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
             end
           end
 
@@ -152,7 +153,7 @@ module VCAP::CloudController
             end
 
             it 'is valid' do
-              expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
+              expect(ServiceBinding.make(service_instance:, app:)).to be_valid
             end
           end
         end
@@ -161,7 +162,7 @@ module VCAP::CloudController
           let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
 
           it 'is valid' do
-            expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
+            expect(ServiceBinding.make(service_instance:, app:)).to be_valid
           end
         end
       end
@@ -232,7 +233,7 @@ module VCAP::CloudController
 
     describe 'logging service bindings' do
       let(:service) { Service.make }
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_plan) { ServicePlan.make(service:) }
       let(:service_instance) do
         ManagedServiceInstance.make(
           service_plan: service_plan,
@@ -244,19 +245,19 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: []) }
 
         it 'should allow a non syslog_drain with a nil syslog drain url' do
-          expect {
-            service_binding = ServiceBinding.make(service_instance: service_instance)
+          expect do
+            service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = nil
             service_binding.save
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it 'should allow a non syslog_drain with an empty syslog drain url' do
-          expect {
-            service_binding = ServiceBinding.make(service_instance: service_instance)
+          expect do
+            service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = ''
             service_binding.save
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -264,11 +265,11 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: ['syslog_drain']) }
 
         it 'should allow a syslog_drain with a syslog drain url' do
-          expect {
-            service_binding = ServiceBinding.make(service_instance: service_instance)
+          expect do
+            service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = 'http://syslogurl.com'
             service_binding.save
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
     end
@@ -360,15 +361,15 @@ module VCAP::CloudController
     describe '#save_with_new_operation' do
       let(:service_instance) { ServiceInstance.make }
       let(:app) { AppModel.make(space: service_instance.space) }
-      let(:binding) {
+      let(:binding) do
         ServiceBinding.new(
           service_instance: service_instance,
           app: app,
           credentials: {},
           type: 'app',
-          name: 'foo',
+          name: 'foo'
         )
-      }
+      end
 
       it 'creates a new last_operation object and associates it with the binding' do
         last_operation = {
@@ -411,29 +412,31 @@ module VCAP::CloudController
       context 'when attributes are passed in' do
         let(:credentials) { { password: 'rice' } }
         let(:syslog_drain_url) { 'http://foo.example.com/bar' }
-        let(:volume_mounts) { [{
-          container_dir: '/var/vcap/data/153e3c4b-1151-4cf7-b311-948dd77fce64',
-          device_type: 'shared',
-          mode: 'rw'
-        }.with_indifferent_access]
-        }
-        let(:attributes) {
+        let(:volume_mounts) do
+          [{
+            container_dir: '/var/vcap/data/153e3c4b-1151-4cf7-b311-948dd77fce64',
+            device_type: 'shared',
+            mode: 'rw'
+          }.with_indifferent_access]
+        end
+        let(:attributes) do
           {
             name: 'gohan',
             credentials: credentials,
             syslog_drain_url: syslog_drain_url,
             volume_mounts: volume_mounts
           }
-        }
-        let(:last_operation) { {
-          state: 'in progress',
-          type: 'create',
-          description: '10%'
-        }
-        }
+        end
+        let(:last_operation) do
+          {
+            state: 'in progress',
+            type: 'create',
+            description: '10%'
+          }
+        end
 
         it 'updates the attributes' do
-          binding.save_with_new_operation(last_operation, attributes: attributes)
+          binding.save_with_new_operation(last_operation, attributes:)
           binding.reload
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.description).to eq '10%'
@@ -446,7 +449,7 @@ module VCAP::CloudController
         end
 
         it 'only saves permitted attributes' do
-          expect {
+          expect do
             binding.save_with_new_operation(last_operation, attributes: attributes.merge(
               parameters: {
                 foo: 'bar',
@@ -455,7 +458,7 @@ module VCAP::CloudController
               endpoints: [{ host: 'mysqlhost', ports: ['3306'] }],
               route_services_url: 'http://route.example.com'
             ))
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
     end

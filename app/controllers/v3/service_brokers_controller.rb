@@ -14,7 +14,7 @@ class ServiceBrokersController < ApplicationController
     dataset = if permission_queryer.can_read_globally?
                 ServiceBrokerListFetcher.fetch(
                   message: message,
-                  eager_loaded_associations: Presenters::V3::ServiceBrokerPresenter.associated_resources,
+                  eager_loaded_associations: Presenters::V3::ServiceBrokerPresenter.associated_resources
                 )
               else
                 ServiceBrokerListFetcher.fetch(
@@ -28,7 +28,7 @@ class ServiceBrokersController < ApplicationController
       presenter: Presenters::V3::ServiceBrokerPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       message: message,
-      path: '/v3/service_brokers',
+      path: '/v3/service_brokers'
     )
 
     render status: :ok, json: presenter.to_json

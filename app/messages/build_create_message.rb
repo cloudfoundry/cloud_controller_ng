@@ -4,7 +4,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class BuildCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :staging_log_rate_limit_bytes_per_second, :environment_variables, :lifecycle, :package]
+    register_allowed_keys %i[staging_memory_in_mb staging_disk_in_mb staging_log_rate_limit_bytes_per_second environment_variables lifecycle package]
 
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
@@ -18,19 +18,19 @@ module VCAP::CloudController
     validates_with LifecycleValidator, if: lifecycle_requested?
 
     validates :package_guid,
-      presence: true,
-      allow_nil: false,
-      guid: true
+              presence: true,
+              allow_nil: false,
+              guid: true
 
     validates :lifecycle_type,
-      string: true,
-      allow_nil: false,
-      if: lifecycle_requested?
+              string: true,
+              allow_nil: false,
+              if: lifecycle_requested?
 
     validates :lifecycle_data,
-      hash: true,
-      allow_nil: false,
-      if: lifecycle_requested?
+              hash: true,
+              allow_nil: false,
+              if: lifecycle_requested?
 
     def package_guid
       HashUtils.dig(package, :guid)

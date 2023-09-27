@@ -10,7 +10,8 @@ RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
     let(:mysql_options) do
       VCAP::CloudController::DbConnection::MysqlOptionsFactory.build(
         database: {
-          adapter: 'mysql2' },
+          adapter: 'mysql2'
+        },
         ca_cert_path: ca_cert_path,
         ssl_verify_hostname: ssl_verify_hostname
       )

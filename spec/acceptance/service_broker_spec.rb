@@ -119,16 +119,16 @@ RSpec.describe 'Service Broker' do
     context 'when a service has no plans' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'MySQL',
-              description: 'A MySQL service, duh!',
-              bindable: true,
-              plans: []
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'MySQL',
+                                 description: 'A MySQL service, duh!',
+                                 bindable: true,
+                                 plans: []
+                               }
+                             ]
+                           })
       end
 
       it 'notifies the operator of the problem' do
@@ -140,7 +140,7 @@ RSpec.describe 'Service Broker' do
         }.to_json, admin_headers)
 
         expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['code']).to eql(270_012)
         expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  At least one plan is required\n")
       end
     end
@@ -148,103 +148,103 @@ RSpec.describe 'Service Broker' do
     context 'when there are multiple validation problems in the catalog' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: 12345,
-              name: 'service-1',
-              description: 'A' * 10_001,
-              bindable: true,
-              bindings_retrievable: 'not-a-bool',
-              instances_retrievable: 'not-a-bool',
-              allow_context_updates: 'not-a-bool',
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'small',
-                  description: 'B' * 10_001,
-                  schemas: {
-                    service_instance: {
-                      create: {
-                        parameters: { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true }
-                      }
-                    }
-                  }
-                }, {
-                  id: 'plan-2',
-                  name: 'large',
-                  description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
-                }
-              ]
-            },
-            {
-              id: '67890',
-              name: 'service-2',
-              description: 'Another service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-b',
-                  name: 'small',
-                  description: 'A small shared database with 100mb storage quota and 10 connections'
-                }, {
-                  id: 'plan-b',
-                  name: 'large',
-                  description: ''
-                }
-              ]
-            },
-            {
-              id: '67890',
-              name: 'service-3',
-              description: 'Yet another service, duh!',
-              bindable: true,
-              dashboard_client: {
-                id: 'client-1'
-              },
-              plans: [
-                {
-                  id: 123,
-                  name: 'tiny',
-                  description: 'A small shared database with 100mb storage quota and 10 connections'
-                }, {
-                  id: '456',
-                  name: 'tiny',
-                  description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
-                }
-              ]
-            },
-            {
-              id: '987654',
-              name: 'service-4',
-              description: 'Yet another service, duh!',
-              bindable: true,
-              dashboard_client: {
-                id: 'client-1',
-                secret: 'no-one-knows',
-                redirect_uri: 'http://example.com/client-1'
-              },
-              plans: []
-            },
-            {
-              id: '888444',
-              name: 'service-4',
-              description: 'Yet another service, duh!',
-              bindable: true,
-              dashboard_client: {
-                id: 'client-9',
-                secret: 'some-secret',
-                redirect_uri: 'http://example.com/client-1'
-              },
-              plans: [
-                {
-                  id: '999',
-                  name: 'micro',
-                  description: 'The smallest plan in the world'
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: 12_345,
+                                 name: 'service-1',
+                                 description: 'A' * 10_001,
+                                 bindable: true,
+                                 bindings_retrievable: 'not-a-bool',
+                                 instances_retrievable: 'not-a-bool',
+                                 allow_context_updates: 'not-a-bool',
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'small',
+                                     description: 'B' * 10_001,
+                                     schemas: {
+                                       service_instance: {
+                                         create: {
+                                           parameters: { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true }
+                                         }
+                                       }
+                                     }
+                                   }, {
+                                     id: 'plan-2',
+                                     name: 'large',
+                                     description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '67890',
+                                 name: 'service-2',
+                                 description: 'Another service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-b',
+                                     name: 'small',
+                                     description: 'A small shared database with 100mb storage quota and 10 connections'
+                                   }, {
+                                     id: 'plan-b',
+                                     name: 'large',
+                                     description: ''
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '67890',
+                                 name: 'service-3',
+                                 description: 'Yet another service, duh!',
+                                 bindable: true,
+                                 dashboard_client: {
+                                   id: 'client-1'
+                                 },
+                                 plans: [
+                                   {
+                                     id: 123,
+                                     name: 'tiny',
+                                     description: 'A small shared database with 100mb storage quota and 10 connections'
+                                   }, {
+                                     id: '456',
+                                     name: 'tiny',
+                                     description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '987654',
+                                 name: 'service-4',
+                                 description: 'Yet another service, duh!',
+                                 bindable: true,
+                                 dashboard_client: {
+                                   id: 'client-1',
+                                   secret: 'no-one-knows',
+                                   redirect_uri: 'http://example.com/client-1'
+                                 },
+                                 plans: []
+                               },
+                               {
+                                 id: '888444',
+                                 name: 'service-4',
+                                 description: 'Yet another service, duh!',
+                                 bindable: true,
+                                 dashboard_client: {
+                                   id: 'client-9',
+                                   secret: 'some-secret',
+                                   redirect_uri: 'http://example.com/client-1'
+                                 },
+                                 plans: [
+                                   {
+                                     id: '999',
+                                     name: 'micro',
+                                     description: 'The smallest plan in the world'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
       end
 
       it 'notifies the operator of the problem' do
@@ -256,7 +256,7 @@ RSpec.describe 'Service Broker' do
         }.to_json, admin_headers)
 
         expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['code']).to eql(270_012)
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" \
           "Service ids must be unique\n" \
@@ -265,59 +265,59 @@ RSpec.describe 'Service Broker' do
           "service name 'service-2') because it uses the same id as another plan in the catalog " \
           "(plan name 'small', service name 'service-2')\n" \
           "Service dashboard_client id must be unique\n" \
-          "Service service-1\n" \
-          "  Service id must be a string, but has value 12345\n" \
-          "  Service description may not have more than 10000 characters\n" \
-          "  Service \"bindings_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
-          "  Service \"instances_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
-          "  Service \"allow_context_updates\" field must be a boolean, but has value \"not-a-bool\"\n" \
-          "  Plan small\n" \
-          "    Plan description may not have more than 10000 characters\n" \
-          "    Schemas\n" \
-          '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): '\
-          "The property '#/properties' of type boolean did not match the following type: object in schema "\
+          "Service service-1\n  " \
+          "Service id must be a string, but has value 12345\n  " \
+          "Service description may not have more than 10000 characters\n  " \
+          "Service \"bindings_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n  " \
+          "Service \"instances_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n  " \
+          "Service \"allow_context_updates\" field must be a boolean, but has value \"not-a-bool\"\n  " \
+          "Plan small\n    " \
+          "Plan description may not have more than 10000 characters\n    " \
+          "Schemas\n      " \
+          'Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+          "The property '#/properties' of type boolean did not match the following type: object in schema " \
           "http://json-schema.org/draft-04/schema#\n" \
-          "Service service-2\n" \
-          "  Plan ids must be unique. Service service-2 already has a plan with id 'plan-b'\n" \
-          "  Plan large\n" \
-          "    Plan description is required\n" \
-          "Service service-3\n" \
-          "  Service dashboard client secret is required\n" \
-          "  Service dashboard client redirect_uri is required\n" \
-          "  Plan names must be unique within a service. Service service-3 already has a plan named tiny\n" \
-          "  Plan tiny\n" \
-          "    Plan id must be a string, but has value 123\n" \
-          "Service service-4\n" \
-          "  At least one plan is required\n"
-                                                   )
+          "Service service-2\n  " \
+          "Plan ids must be unique. Service service-2 already has a plan with id 'plan-b'\n  " \
+          "Plan large\n    " \
+          "Plan description is required\n" \
+          "Service service-3\n  " \
+          "Service dashboard client secret is required\n  " \
+          "Service dashboard client redirect_uri is required\n  " \
+          "Plan names must be unique within a service. Service service-3 already has a plan named tiny\n  " \
+          "Plan tiny\n    " \
+          "Plan id must be a string, but has value 123\n" \
+          "Service service-4\n  " \
+          "At least one plan is required\n"
+        )
       end
     end
 
     context 'when a plan has a free field in the catalog' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'service-1',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'not-free-plan',
-                  description: 'A not free plan',
-                  free: false
-                }, {
-                  id: 'plan-2',
-                  name: 'free-plan',
-                  description: 'A free plan',
-                  free: true
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'service-1',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'not-free-plan',
+                                     description: 'A not free plan',
+                                     free: false
+                                   }, {
+                                     id: 'plan-2',
+                                     name: 'free-plan',
+                                     description: 'A free plan',
+                                     free: true
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         post('/v2/service_brokers', {
           name: 'some-guid',
@@ -374,15 +374,15 @@ RSpec.describe 'Service Broker' do
 
     context 'when a schema' do
       [
-        { type: 'service_instance', actions: ['create', 'update'] },
-        { type: 'service_binding', actions: ['create'] },
+        { type: 'service_instance', actions: %w[create update] },
+        { type: 'service_binding', actions: ['create'] }
       ].each do |test|
         test[:actions].each do |schema_action|
           context "of type #{test[:type]} and action #{schema_action} is not present" do
             {
               "#{schema_action} is nil": { test[:type] => { schema_action => nil } },
               "#{schema_action} is nil": { test[:type] => { schema_action => { 'parameters' => nil } } },
-              "#{schema_action} is empty object": { test[:type] => { schema_action => {} } },
+              "#{schema_action} is empty object": { test[:type] => { schema_action => {} } }
             }.each do |desc, schema|
               context "#{desc} #{schema}" do
                 before do
@@ -424,7 +424,7 @@ RSpec.describe 'Service Broker' do
           context "of type #{test[:type]} and action #{schema_action} is not a JSON object" do
             {
               "#{test[:type]}.#{schema_action}": { (test[:type]).to_s => { schema_action => true } },
-              "#{test[:type]}.#{schema_action}.parameters": { (test[:type]).to_s => { schema_action => { 'parameters' => true } } },
+              "#{test[:type]}.#{schema_action}.parameters": { (test[:type]).to_s => { schema_action => { 'parameters' => true } } }
             }.each do |path, schema|
               context "operator receives an error about #{path} #{schema}" do
                 before do
@@ -439,13 +439,14 @@ RSpec.describe 'Service Broker' do
                   }.to_json, admin_headers)
 
                   expect(last_response.status).to eql(502)
-                  expect(decoded_response['code']).to eql(270012)
+                  expect(decoded_response['code']).to eql(270_012)
                   expect(decoded_response['description']).to eql(
                     "Service broker catalog is invalid: \n" \
-                    "Service MySQL\n" \
-                    "  Plan small\n" \
-                    "    Schemas\n" \
-                    "      Schemas #{path} must be a hash, but has value true\n")
+                    "Service MySQL\n  " \
+                    "Plan small\n    " \
+                    "Schemas\n      " \
+                    "Schemas #{path} must be a hash, but has value true\n"
+                  )
                 end
               end
             end
@@ -468,31 +469,33 @@ RSpec.describe 'Service Broker' do
               }.to_json, admin_headers)
 
               expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['code']).to eql(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
-                "Service MySQL\n" \
-                "  Plan small\n" \
-                "    Schemas\n" \
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
-                "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n")
+                "Service MySQL\n  " \
+                "Plan small\n    " \
+                "Schemas\n      " \
+                "Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
+                "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n"
+              )
             end
           end
 
           context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions) with multiple problems" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) {
+            let(:schema) do
               {
                 (test[:type]).to_s => {
                   schema_action => {
                     'parameters' => {
                       '$schema': 'http://json-schema.org/draft-04/schema#',
                       properties: true,
-                      anyOf: true }
+                      anyOf: true
+                    }
                   }
                 }
               }
-            }
+            end
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -506,16 +509,17 @@ RSpec.describe 'Service Broker' do
               }.to_json, admin_headers)
 
               expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['code']).to eql(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
-                "Service MySQL\n" \
-                "  Plan small\n" \
-                "    Schemas\n" \
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
-                "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n"\
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/anyOf' " \
-                "of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#\n")
+                "Service MySQL\n  " \
+                "Plan small\n    " \
+                "Schemas\n      " \
+                "Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
+                "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n      " \
+                "Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/anyOf' " \
+                "of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#\n"
+              )
             end
           end
 
@@ -536,20 +540,20 @@ RSpec.describe 'Service Broker' do
               }.to_json, admin_headers)
 
               expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['code']).to eql(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
-                "Service MySQL\n" \
-                "  Plan small\n" \
-                "    Schemas\n" \
-                "      Schema #{path} is not valid. Custom meta schemas are not supported.\n"
-                                                         )
+                "Service MySQL\n  " \
+                "Plan small\n    " \
+                "Schemas\n      " \
+                "Schema #{path} is not valid. Custom meta schemas are not supported.\n"
+              )
             end
           end
 
           context "of type #{test[:type]} and action #{schema_action} has an external uri reference" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) {
+            let(:schema) do
               {
                 (test[:type]).to_s => {
                   schema_action => {
@@ -560,7 +564,7 @@ RSpec.describe 'Service Broker' do
                   }
                 }
               }
-            }
+            end
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -574,14 +578,14 @@ RSpec.describe 'Service Broker' do
               }.to_json, admin_headers)
 
               expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['code']).to eql(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
-                "Service MySQL\n" \
-                "  Plan small\n" \
-                "    Schemas\n" \
-                "      Schema #{path} is not valid. No external references are allowed: Read of URI at http://example.com/ref refused\n"
-                                                         )
+                "Service MySQL\n  " \
+                "Plan small\n    " \
+                "Schemas\n      " \
+                "Schema #{path} is not valid. No external references are allowed: Read of URI at http://example.com/ref refused\n"
+              )
             end
           end
 
@@ -602,14 +606,14 @@ RSpec.describe 'Service Broker' do
               }.to_json, admin_headers)
 
               expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['code']).to eql(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
-                "Service MySQL\n" \
-                "  Plan small\n" \
-                "    Schemas\n" \
-                "      Schema #{path} is not valid. Schema must have $schema key but was not present\n"
-                                                         )
+                "Service MySQL\n  " \
+                "Plan small\n    " \
+                "Schemas\n      " \
+                "Schema #{path} is not valid. Schema must have $schema key but was not present\n"
+              )
             end
           end
         end
@@ -617,17 +621,17 @@ RSpec.describe 'Service Broker' do
     end
 
     context 'when multiple schemas have validation issues' do
-      let(:schema) {
+      let(:schema) do
         {
           'service_instance' => {
             'create' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/create' } },
             'update' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/update' } }
           },
           'service_binding' => {
-            'create' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/binding' } },
+            'create' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/binding' } }
           }
         }
-      }
+      end
 
       before do
         stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -642,31 +646,31 @@ RSpec.describe 'Service Broker' do
         }.to_json, admin_headers)
 
         expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['code']).to eql(270_012)
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" \
-          "Service MySQL\n" \
-          "  Plan small\n" \
-          "    Schemas\n" \
-          "      Schema service_instance.create.parameters is not valid. No external references are allowed: Read of URI at http://example.com/create refused\n" \
-          "      Schema service_instance.update.parameters is not valid. No external references are allowed: Read of URI at http://example.com/update refused\n" \
-          "      Schema service_binding.create.parameters is not valid. No external references are allowed: Read of URI at http://example.com/binding refused\n"
-                                                   )
+          "Service MySQL\n  " \
+          "Plan small\n    " \
+          "Schemas\n      " \
+          "Schema service_instance.create.parameters is not valid. No external references are allowed: Read of URI at http://example.com/create refused\n      " \
+          "Schema service_instance.update.parameters is not valid. No external references are allowed: Read of URI at http://example.com/update refused\n      " \
+          "Schema service_binding.create.parameters is not valid. No external references are allowed: Read of URI at http://example.com/binding refused\n"
+        )
       end
     end
 
     context 'when multiple schemas appear in multiple plans for multiple services' do
-      let(:schema) {
+      let(:schema) do
         {
           'service_instance' => {
             'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } },
             'update' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } }
           },
           'service_binding' => {
-            'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } },
+            'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } }
           }
         }
-      }
+      end
 
       let(:catalog_with_two_services_two_plans_schemas) do
         {
@@ -754,7 +758,7 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
         expect(last_response.status).to eql(400)
-        expect(decoded_response['code']).to eql(270002)
+        expect(decoded_response['code']).to eql(270_002)
         expect(decoded_response['description']).to eql('The service broker name is taken')
       end
 
@@ -801,7 +805,7 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
         expect(last_response).to have_status_code(400)
-        expect(decoded_response['code']).to eql(270002)
+        expect(decoded_response['code']).to eql(270_002)
         expect(decoded_response['description']).to eql('The service broker name is taken')
       end
     end
@@ -825,20 +829,21 @@ RSpec.describe 'Service Broker' do
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body: { client_id: 'client-1' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
 
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'MySQL',
-              description: 'A MySQL service, duh!',
-              bindable: true,
-              plans: [small_plan],
-              dashboard_client: { id: 'client-1', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' }
-            }
-          ]
-        }, 'some-other-broker-url')
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'MySQL',
+                                 description: 'A MySQL service, duh!',
+                                 bindable: true,
+                                 plans: [small_plan],
+                                 dashboard_client: { id: 'client-1', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' }
+                               }
+                             ]
+                           }, 'some-other-broker-url')
 
         post('/v2/service_brokers', {
           name: 'some-other-broker',
@@ -848,7 +853,7 @@ RSpec.describe 'Service Broker' do
         }.to_json, admin_headers)
 
         expect(last_response).to have_status_code(502)
-        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['code']).to eql(270_012)
         expect(decoded_response['description']).to match('Service dashboard client id must be unique')
       end
     end
@@ -877,8 +882,7 @@ RSpec.describe 'Service Broker' do
                auth_username: stubbed_broker_username,
                auth_password: stubbed_broker_password
              }.to_json,
-             admin_headers
-        )
+             admin_headers)
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
 
@@ -889,23 +893,28 @@ RSpec.describe 'Service Broker' do
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body: { client_id: 'client-1' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body: { client_id: 'client-2' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-3}).to_return(
           body: { client_id: 'client-3' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-5}).to_return(
           body: { client_id: 'client-5' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-6}).to_return(
           body: { client_id: 'client-6' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
 
         # delete client
         service_1.delete(:dashboard_client)
@@ -1019,28 +1028,28 @@ RSpec.describe 'Service Broker' do
     context 'when the free field for a plan has changed' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'service-1',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'not-free-plan',
-                  description: 'A not free plan',
-                  free: false
-                }, {
-                  id: 'plan-2',
-                  name: 'free-plan',
-                  description: 'A free plan',
-                  free: true
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'service-1',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'not-free-plan',
+                                     description: 'A not free plan',
+                                     free: false
+                                   }, {
+                                     id: 'plan-2',
+                                     name: 'free-plan',
+                                     description: 'A free plan',
+                                     free: true
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         post('/v2/service_brokers', {
           name: 'some-guid',
@@ -1052,28 +1061,28 @@ RSpec.describe 'Service Broker' do
         guid = VCAP::CloudController::ServiceBroker.first.guid
 
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'service-1',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'not-free-plan',
-                  description: 'A not free plan',
-                  free: true
-                }, {
-                  id: 'plan-2',
-                  name: 'free-plan',
-                  description: 'A free plan',
-                  free: false
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'service-1',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'not-free-plan',
+                                     description: 'A not free plan',
+                                     free: true
+                                   }, {
+                                     id: 'plan-2',
+                                     name: 'free-plan',
+                                     description: 'A free plan',
+                                     free: false
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         put("/v2/service_brokers/#{guid}", {
           name: 'some-guid',
@@ -1098,52 +1107,52 @@ RSpec.describe 'Service Broker' do
     context 'when the allow_context_updates field for a service has changed' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'allow-context-updates-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              allow_context_updates: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '123456',
-              name: 'not-allow-context-updates-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: false,
-              allow_context_updates: false,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'allow-context-updates-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              allow_context_updates: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'allow-context-updates-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 allow_context_updates: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '123456',
+                                 name: 'not-allow-context-updates-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: false,
+                                 allow_context_updates: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'allow-context-updates-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 allow_context_updates: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         post('/v2/service_brokers', {
           name: 'some-guid',
@@ -1155,50 +1164,51 @@ RSpec.describe 'Service Broker' do
         guid = VCAP::CloudController::ServiceBroker.first.guid
 
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'allow-context-updates-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: false,
-              allow_context_updates: false,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            },
-            {
-              id: '123456',
-              name: 'not-allow-context-updates-service',
-              description: 'a service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              allow_context_updates: true,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'a not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'allow-context-updates-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'allow-context-updates-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: false,
+                                 allow_context_updates: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '123456',
+                                 name: 'not-allow-context-updates-service',
+                                 description: 'a service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 allow_context_updates: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'a not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'allow-context-updates-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         put("/v2/service_brokers/#{guid}", {
           name: 'some-guid',
@@ -1227,49 +1237,49 @@ RSpec.describe 'Service Broker' do
     context 'when the bindings_retrievable field for a service has changed' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'bindings-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '123456',
-              name: 'bindings-not-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: false,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'bindings-retrievable-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'bindings-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '123456',
+                                 name: 'bindings-not-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'bindings-retrievable-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         post('/v2/service_brokers', {
           name: 'some-guid',
@@ -1281,48 +1291,49 @@ RSpec.describe 'Service Broker' do
         guid = VCAP::CloudController::ServiceBroker.first.guid
 
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'bindings-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              bindings_retrievable: false,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            },
-            {
-              id: '123456',
-              name: 'bindings-not-retrievable-service',
-              description: 'a service, duh!',
-              bindable: true,
-              bindings_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'a not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'bindings-retrievable-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'bindings-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '123456',
+                                 name: 'bindings-not-retrievable-service',
+                                 description: 'a service, duh!',
+                                 bindable: true,
+                                 bindings_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'a not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'bindings-retrievable-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         put("/v2/service_brokers/#{guid}", {
           name: 'some-guid',
@@ -1350,49 +1361,49 @@ RSpec.describe 'Service Broker' do
     context 'when the instances_retrievable field for a service has changed' do
       before do
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'instances-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              instances_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '123456',
-              name: 'instances-not-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              instances_retrievable: false,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'instances-retrievable-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              instances_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'instances-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 instances_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '123456',
+                                 name: 'instances-not-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 instances_retrievable: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'instances-retrievable-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 instances_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         post('/v2/service_brokers', {
           name: 'some-guid',
@@ -1404,49 +1415,49 @@ RSpec.describe 'Service Broker' do
         guid = VCAP::CloudController::ServiceBroker.first.guid
 
         stub_catalog_fetch(200, {
-          services: [
-            {
-              id: '12345',
-              name: 'instances-retrievable-service',
-              description: 'A service, duh!',
-              bindable: true,
-              instances_retrievable: false,
-              plans: [
-                {
-                  id: 'plan-1',
-                  name: 'random-name-1',
-                  description: 'A not free plan',
-                }
-              ]
-            },
-            {
-              id: '123456',
-              name: 'instances-not-retrievable-service',
-              description: 'a service, duh!',
-              bindable: true,
-              instances_retrievable: true,
-              plans: [
-                {
-                  id: 'plan-2',
-                  name: 'random-name-2',
-                  description: 'a not free plan',
-                }
-              ]
-            }, {
-              id: '1234567',
-              name: 'instances-retrievable-service-will-be-unset',
-              description: 'A service, duh!',
-              bindable: true,
-              plans: [
-                {
-                  id: 'plan-3',
-                  name: 'random-name-2',
-                  description: 'A not free plan',
-                }
-              ]
-            }
-          ]
-        })
+                             services: [
+                               {
+                                 id: '12345',
+                                 name: 'instances-retrievable-service',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 instances_retrievable: false,
+                                 plans: [
+                                   {
+                                     id: 'plan-1',
+                                     name: 'random-name-1',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               },
+                               {
+                                 id: '123456',
+                                 name: 'instances-not-retrievable-service',
+                                 description: 'a service, duh!',
+                                 bindable: true,
+                                 instances_retrievable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-2',
+                                     name: 'random-name-2',
+                                     description: 'a not free plan'
+                                   }
+                                 ]
+                               }, {
+                                 id: '1234567',
+                                 name: 'instances-retrievable-service-will-be-unset',
+                                 description: 'A service, duh!',
+                                 bindable: true,
+                                 plans: [
+                                   {
+                                     id: 'plan-3',
+                                     name: 'random-name-2',
+                                     description: 'A not free plan'
+                                   }
+                                 ]
+                               }
+                             ]
+                           })
 
         put("/v2/service_brokers/#{guid}", {
           name: 'some-guid',
@@ -1575,7 +1586,7 @@ RSpec.describe 'Service Broker' do
                   description: 'A small shared database with 100mb storage quota and 10 connections'
                 }
               ]
-            },
+            }
           ]
         }
       end
@@ -1670,19 +1681,20 @@ RSpec.describe 'Service Broker' do
                auth_username: stubbed_broker_username,
                auth_password: stubbed_broker_password
              }.to_json,
-             admin_headers
-        )
+             admin_headers)
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
 
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body: { client_id: 'client-1' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
         stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body: { client_id: 'client-2' }.to_json,
           status: 200,
-          headers: { 'content-type' => 'application/json' })
+          headers: { 'content-type' => 'application/json' }
+        )
 
         stub_request(:post, %r{https://uaa.service.cf.internal/oauth/clients/tx/modify}).
           to_return(
@@ -1721,7 +1733,8 @@ RSpec.describe 'Service Broker' do
           a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
             with(
               body: expected_json_body
-            )).to have_been_made
+            )
+        ).to have_been_made
       end
     end
 

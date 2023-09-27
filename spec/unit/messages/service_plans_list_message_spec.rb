@@ -17,7 +17,7 @@ module VCAP::CloudController
         'service_offering_guids' => 'offering_guid_1,offering_guid_2',
         'service_offering_names' => 'offering_name_1,offering_name_2',
         'space_guids' => 'space_guid_1,space_guid_2',
-        'fields' => { 'service_offering.service_broker' => 'guid,name' },
+        'fields' => { 'service_offering.service_broker' => 'guid,name' }
       }.with_indifferent_access
     end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
         expect(message.service_offering_guids).to contain_exactly('offering_guid_1', 'offering_guid_2')
         expect(message.service_offering_names).to contain_exactly('offering_name_1', 'offering_name_2')
         expect(message.space_guids).to contain_exactly('space_guid_1', 'space_guid_2')
-        expect(message.fields).to match({ 'service_offering.service_broker': ['guid', 'name'] })
+        expect(message.fields).to match({ 'service_offering.service_broker': %w[guid name] })
       end
 
       it 'converts requested keys to symbols' do

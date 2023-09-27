@@ -6,20 +6,19 @@ module VCAP::CloudController
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:body) do
-          { 'state'     => 'PROCESSING_UPLOAD',
+          { 'state' => 'PROCESSING_UPLOAD',
             'checksums' => [
               {
-                'type'  => 'sha1',
+                'type' => 'sha1',
                 'value' => 'potato'
               },
               {
-                'type'  => 'sha256',
+                'type' => 'sha256',
                 'value' => 'potatoest'
               }
             ],
-            'error'     => 'something bad happened',
-            'extra'     => 'some-key'
-          }
+            'error' => 'something bad happened',
+            'extra' => 'some-key' }
         end
 
         it 'is not valid' do
@@ -32,19 +31,18 @@ module VCAP::CloudController
 
       describe 'state' do
         let(:body) do
-          { 'state'     => state,
+          { 'state' => state,
             'checksums' => [
               {
-                'type'  => 'sha1',
+                'type' => 'sha1',
                 'value' => 'potato'
               },
               {
-                'type'  => 'sha256',
+                'type' => 'sha256',
                 'value' => 'potatoest'
               }
             ],
-            'error' => 'something bad happened'
-          }
+            'error' => 'something bad happened' }
         end
 
         context 'when state is PROCESSING_UPLOAD' do
@@ -126,11 +124,11 @@ module VCAP::CloudController
         let(:checksums) do
           [
             {
-              'type'  => 'sha1',
+              'type' => 'sha1',
               'value' => 'potato'
             },
             {
-              'type'  => 'sha256',
+              'type' => 'sha256',
               'value' => 'potatoest'
             }
           ]
@@ -138,7 +136,7 @@ module VCAP::CloudController
 
         let(:body) do
           {
-            'state'     => 'READY',
+            'state' => 'READY',
             'checksums' => checksums
           }
         end
@@ -148,12 +146,12 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato',
                   'extra' => 'something'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -171,11 +169,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 }
               ]
@@ -193,11 +191,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 }
               ]
@@ -215,15 +213,15 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 }
               ]
@@ -240,7 +238,7 @@ module VCAP::CloudController
           context 'when no checksums are provided' do
             let(:body) do
               {
-                'state' => 'FAILED',
+                'state' => 'FAILED'
               }
             end
 
@@ -265,11 +263,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'bogus',
+                  'type' => 'bogus',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -289,11 +287,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => ''
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -311,11 +309,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'a' * 501
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -333,11 +331,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'a'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]

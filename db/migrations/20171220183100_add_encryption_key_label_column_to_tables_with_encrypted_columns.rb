@@ -1,5 +1,5 @@
 Sequel.migration do
-  tables_to_alter = %i(
+  tables_to_alter = %i[
     env_groups
     service_brokers
     service_bindings
@@ -11,7 +11,7 @@ Sequel.migration do
     droplets
     packages
     tasks
-  )
+  ]
   up do
     tables_to_alter.each do |table|
       alter_table(table) do

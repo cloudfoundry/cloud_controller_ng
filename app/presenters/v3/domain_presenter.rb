@@ -15,7 +15,7 @@ module VCAP::CloudController::Presenters::V3
       @visible_org_guids_query = visible_org_guids_query
       @all_orgs_visible = all_orgs_visible
 
-      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      super(resource, show_secrets:, censored_message:)
     end
 
     def to_hash
@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
         },
         metadata: {
           labels: hashified_labels(domain.labels),
-          annotations: hashified_annotations(domain.annotations),
+          annotations: hashified_annotations(domain.annotations)
         },
         links: build_links
       }

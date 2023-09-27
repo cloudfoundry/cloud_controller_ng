@@ -13,9 +13,9 @@ module VCAP::CloudController
       let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 
       it 'deletes the tasks' do
-        expect {
+        expect do
           task_delete.delete(task_dataset)
-        }.to change { TaskModel.count }.by(-2)
+        end.to change { TaskModel.count }.by(-2)
         expect(task1.exists?).to be_falsey
         expect(task2.exists?).to be_falsey
       end
@@ -91,9 +91,9 @@ module VCAP::CloudController
         label1 = TaskLabelModel.make(task: task1)
         label2 = TaskLabelModel.make(task: task2)
 
-        expect {
+        expect do
           task_delete.delete(task_dataset)
-        }.to change { TaskLabelModel.count }.by(-2)
+        end.to change { TaskLabelModel.count }.by(-2)
         expect(label1.exists?).to be_falsey
         expect(task1.exists?).to be_falsey
         expect(label2.exists?).to be_falsey
@@ -104,9 +104,9 @@ module VCAP::CloudController
         annotation1 = TaskAnnotationModel.make(task: task1)
         annotation2 = TaskAnnotationModel.make(task: task2)
 
-        expect {
+        expect do
           task_delete.delete(task_dataset)
-        }.to change { TaskAnnotationModel.count }.by(-2)
+        end.to change { TaskAnnotationModel.count }.by(-2)
         expect(annotation1.exists?).to be_falsey
         expect(annotation2.exists?).to be_falsey
       end

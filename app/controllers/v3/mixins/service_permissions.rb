@@ -8,7 +8,7 @@ module VCAP::CloudController
     end
 
     def visible_in_readable_orgs?(service_plans)
-      return false if !current_user
+      return false unless current_user
 
       ServicePlanVisibilityFetcher.new(permission_queryer).any_orgs?(
         service_plan_guids: service_plans.map(&:guid)

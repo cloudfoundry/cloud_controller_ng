@@ -27,13 +27,11 @@ module VCAP::CloudController
 
       begin
         service_instance.save_with_new_operation(service_instance_attributes, broker_response[:last_operation])
-      rescue => e
+      rescue StandardError => e
         cleanup_instance_without_db(e, service_instance)
       end
 
-      if service_instance.operation_in_progress?
-        setup_async_job(request_attrs, service_instance)
-      end
+      setup_async_job(request_attrs, service_instance) if service_instance.operation_in_progress?
 
       if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
         @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
@@ -47,7 +45,7 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.guid,
         @services_event_repository.user_audit_info,
-        request_attrs,
+        request_attrs
       )
       enqueuer = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic)
       enqueuer.enqueue

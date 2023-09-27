@@ -191,8 +191,8 @@ Rails.application.routes.draw do
 
   # service_credential_bindings
   resources :service_credential_bindings,
-    param: :guid,
-    only: [:create, :show, :index, :update, :destroy] do
+            param: :guid,
+            only: %i[create show index update destroy] do
     member do
       get :details
       get :parameters
@@ -201,8 +201,8 @@ Rails.application.routes.draw do
 
   # service_route_bindings
   resources :service_route_bindings,
-    param: :guid,
-    only: [:create, :show, :index, :update, :destroy] do
+            param: :guid,
+            only: %i[create show index update destroy] do
     member do
       get :parameters
     end

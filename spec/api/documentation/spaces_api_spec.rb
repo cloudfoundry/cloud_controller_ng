@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Spaces', type: [:api, :legacy_api] do
+RSpec.resource 'Spaces', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:space) { VCAP::CloudController::Space.make }
   let(:guid) { space.guid }
@@ -14,7 +14,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
   describe 'Standard endpoints' do
     shared_context 'createable_fields' do |opts|
-      field :name, 'The name of the space', required: opts[:required], example_values: %w(development demo production)
+      field :name, 'The name of the space', required: opts[:required], example_values: %w[development demo production]
       field :organization_guid, 'The guid of the associated organization', required: opts[:required], example_values: [Sham.guid]
       field :developer_guids, 'The list of the associated developers'
       field :manager_guids, 'The list of the associated managers'
@@ -26,8 +26,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
-    shared_context 'updatable_fields' do |opts|
-      field :name, 'The name of the space', example_values: %w(development demo production)
+    shared_context 'updatable_fields' do |_opts|
+      field :name, 'The name of the space', example_values: %w[development demo production]
       field :organization_guid, 'The guid of the associated organization', example_values: [Sham.guid]
       field :developer_guids, 'The list of the associated developers'
       field :manager_guids, 'The list of the associated managers'
@@ -39,7 +39,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     standard_model_list :space, VCAP::CloudController::SpacesController do
-      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: %w[name id]
     end
     standard_model_get :space, nested_associations: [:organization]
     standard_model_delete :space do
@@ -55,7 +55,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       include_context 'createable_fields', required: true
       example 'Creating a Space' do
         organization_guid = VCAP::CloudController::Organization.make.guid
-        client.post '/v2/spaces', MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
+        client.post '/v2/spaces', MultiJson.dump(required_fields.merge(organization_guid:), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :space
@@ -73,8 +73,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
       example 'Update a Space' do
         client.put "/v2/spaces/#{guid}",
-          MultiJson.dump({ name: new_name }, pretty: true),
-          headers
+                   MultiJson.dump({ name: new_name }, pretty: true),
+                   headers
 
         expect(status).to eq 201
         standard_entity_response parsed_response, :space, expected_values: { name: new_name }
@@ -99,7 +99,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     describe 'Routes' do
       before do
         domain = VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization)
-        VCAP::CloudController::Route.make(domain: domain, space: space)
+        VCAP::CloudController::Route.make(domain:, space:)
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
@@ -307,7 +307,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Apps' do
       before do
-        VCAP::CloudController::ProcessModelFactory.make(space: space)
+        VCAP::CloudController::ProcessModelFactory.make(space:)
       end
 
       standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: :app, outer_model: :space
@@ -319,7 +319,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Service Instances' do
       before do
-        VCAP::CloudController::ManagedServiceInstance.make(space: space)
+        VCAP::CloudController::ManagedServiceInstance.make(space:)
       end
 
       request_parameter :return_user_provided_service_instances, "When 'true', include user provided service instances."

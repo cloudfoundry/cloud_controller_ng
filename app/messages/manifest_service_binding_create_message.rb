@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def has_valid_hash_keys(service)
-      valid_service_binding_keys = [:name, :parameters, :binding_name]
+      valid_service_binding_keys = %i[name parameters binding_name]
       return false unless service.is_a?(Hash)
       return false unless service.length <= valid_service_binding_keys.length && service.keys.all? { |key| valid_service_binding_keys.include?(key) }
       return false unless service.key?(:name)

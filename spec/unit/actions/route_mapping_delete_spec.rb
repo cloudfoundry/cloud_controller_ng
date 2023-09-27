@@ -8,10 +8,10 @@ module VCAP::CloudController
     let(:user_email) { 'user_email' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:space) { Space.make }
-    let(:app) { AppModel.make(space: space) }
+    let(:app) { AppModel.make(space:) }
     let(:process1) { ProcessModel.make(app: app, type: 'other') }
     let(:process2) { ProcessModel.make(app: app, type: 'other') }
-    let(:route) { Route.make(space: space) }
+    let(:route) { Route.make(space:) }
     let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other', guid: 'go wild') }
     let(:process1_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
@@ -23,7 +23,7 @@ module VCAP::CloudController
       allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
       allow(event_repository).to receive(:record_unmap_route)
       TestConfig.override(
-        kubernetes: {},
+        kubernetes: {}
       )
     end
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'can delete multiple route mappings' do
-          route_mapping_2 = RouteMappingModel.make app: app
+          route_mapping_2 = RouteMappingModel.make(app:)
           route_mapping_delete.delete([route_mapping, route_mapping_2])
           expect(route_mapping.exists?).to be_falsey
           expect(route_mapping_2.exists?).to be_falsey
@@ -89,7 +89,7 @@ module VCAP::CloudController
         end
 
         it 'deletes only present route mappings' do
-          route_mapping_2 = RouteMappingModel.make app: app
+          route_mapping_2 = RouteMappingModel.make(app:)
           expect { route_mapping_delete.delete([route_mapping, route_mapping_2]) }.not_to raise_error
           expect(route_mapping_2.exists?).to be_falsey
         end

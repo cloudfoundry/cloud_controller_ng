@@ -28,7 +28,7 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:params) do
           {
-            unexpected: 'meow',
+            unexpected: 'meow'
           }
         end
 

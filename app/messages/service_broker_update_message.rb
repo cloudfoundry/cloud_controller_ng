@@ -10,7 +10,7 @@ module VCAP::CloudController
   class ServiceBrokerUpdateMessage < MetadataBaseMessage
     include AuthenticationMessageMixin
 
-    register_allowed_keys [:name, :url, :authentication]
+    register_allowed_keys %i[name url authentication]
 
     validates :name, string: true, allow_nil: true
     validate :validate_name
@@ -23,9 +23,9 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     def validate_name
-      if name == ''
-        errors.add(:name, 'must not be empty string')
-      end
+      return unless name == ''
+
+      errors.add(:name, 'must not be empty string')
     end
   end
 

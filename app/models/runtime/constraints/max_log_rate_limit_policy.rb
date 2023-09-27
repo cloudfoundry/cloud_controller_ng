@@ -12,7 +12,7 @@ class BaseMaxLogRateLimitPolicy
     return unless additional_checks
 
     if requested_log_rate_limit == VCAP::CloudController::QuotaDefinition::UNLIMITED &&
-      policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
+       policy_target.log_rate_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED
 
       policy_target_type = if policy_target.respond_to?(:organization_guid)
                              'space'
@@ -23,9 +23,9 @@ class BaseMaxLogRateLimitPolicy
       resource.errors.add(field, "cannot be unlimited in #{policy_target_type} '#{policy_target.name}'.")
     end
 
-    unless policy_target.has_remaining_log_rate_limit(requested_log_rate_limit)
-      resource.errors.add(field, error_name)
-    end
+    return if policy_target.has_remaining_log_rate_limit(requested_log_rate_limit)
+
+    resource.errors.add(field, error_name)
   end
 
   private
@@ -63,7 +63,7 @@ class TaskMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   IGNORED_STATES = [
     VCAP::CloudController::TaskModel::CANCELING_STATE,
     VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
-    VCAP::CloudController::TaskModel::FAILED_STATE,
+    VCAP::CloudController::TaskModel::FAILED_STATE
   ].freeze
 
   private

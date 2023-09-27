@@ -10,7 +10,7 @@ RSpec.describe AppPackager do
   end
 
   let(:logger) { instance_double(Steno::Logger, error: nil) }
-  subject(:app_packager) { AppPackager.new(input_zip, logger: logger) }
+  subject(:app_packager) { AppPackager.new(input_zip, logger:) }
 
   describe '#size' do
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
@@ -36,17 +36,17 @@ RSpec.describe AppPackager do
       let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'broken-file-symlink.zip') }
 
       it 'successfully unzips' do
-        expect {
+        expect do
           app_packager.unzip(@tmpdir)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
     context 'when the zip destination does not exist' do
       it 'raises an exception' do
-        expect {
+        expect do
           app_packager.unzip(File.join(@tmpdir, 'blahblah'))
-        }.to raise_exception(CloudController::Errors::ApiError, /destination does not exist/i)
+        end.to raise_exception(CloudController::Errors::ApiError, /destination does not exist/i)
       end
     end
 
@@ -54,9 +54,9 @@ RSpec.describe AppPackager do
       let(:input_zip) { File.join(Paths::FIXTURES, 'empty.zip') }
 
       it 'raises an exception' do
-        expect {
+        expect do
           app_packager.unzip(@tmpdir)
-        }.to raise_exception(CloudController::Errors::ApiError, /Invalid zip archive/)
+        end.to raise_exception(CloudController::Errors::ApiError, /Invalid zip archive/)
       end
     end
 
@@ -101,9 +101,9 @@ RSpec.describe AppPackager do
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             app_packager.unzip(@tmpdir)
-          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (end-of-central-directory signature not found).')
+          end.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (end-of-central-directory signature not found).')
         end
       end
 
@@ -115,9 +115,9 @@ RSpec.describe AppPackager do
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             app_packager.unzip(@tmpdir)
-          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (zipfile is empty).')
+          end.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (zipfile is empty).')
         end
       end
 
@@ -132,9 +132,9 @@ RSpec.describe AppPackager do
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             app_packager.unzip(@tmpdir)
-          }.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (mismatching local filename).')
+          end.to raise_error(CloudController::Errors::ApiError, 'The app upload is invalid: Invalid zip archive (mismatching local filename).')
         end
       end
     end
@@ -154,7 +154,7 @@ RSpec.describe AppPackager do
       expect(output).not_to include './'
       expect(output).not_to include 'fake_package'
 
-      expect(output).to match /^l.+coming_from_inside$/
+      expect(output).to match(/^l.+coming_from_inside$/)
       expect(output).to include 'here.txt'
       expect(output).to include 'subdir/'
       expect(output).to include 'subdir/there.txt'
@@ -198,9 +198,9 @@ RSpec.describe AppPackager do
     context 'when there is an error zipping' do
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
-        expect {
+        expect do
           app_packager.append_dir_contents(additional_files_path)
-        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error appending additional resources to package/)
+        end.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error appending additional resources to package/)
       end
     end
   end
@@ -229,7 +229,7 @@ RSpec.describe AppPackager do
 
       it 'successfully removes and re-adds them' do
         app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
-        expect(`zipinfo #{input_zip}`).to match %r(special_character_names/&&hello::\?\?/)
+        expect(`zipinfo #{input_zip}`).to match %r{special_character_names/&&hello::\?\?/}
       end
     end
 
@@ -264,9 +264,9 @@ RSpec.describe AppPackager do
 
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
-        expect {
+        expect do
           app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
-        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error removing zip directories./)
+        end.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error removing zip directories./)
       end
     end
 
@@ -275,9 +275,9 @@ RSpec.describe AppPackager do
 
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
-        expect {
+        expect do
           app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
-        }.to raise_error(CloudController::Errors::ApiError, /The app upload is invalid: Invalid zip archive./)
+        end.to raise_error(CloudController::Errors::ApiError, /The app upload is invalid: Invalid zip archive./)
       end
     end
   end

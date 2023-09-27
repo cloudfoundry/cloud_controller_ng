@@ -22,7 +22,7 @@ module VCAP::CloudController
     context 'when password is missing from credentials' do
       let(:request_body) do
         {
-          username: 'user',
+          username: 'user'
         }
       end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
     context 'when username is missing from credentials' do
       let(:request_body) do
         {
-          password: 'password1',
+          password: 'password1'
         }
       end
 

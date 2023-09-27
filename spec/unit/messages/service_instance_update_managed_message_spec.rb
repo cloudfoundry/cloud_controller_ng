@@ -7,7 +7,7 @@ module VCAP::CloudController
       {
         name: 'my-service-instance',
         parameters: { foo: 'bar' },
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         maintenance_info: {
           version: '1.3.3'
         },
@@ -55,10 +55,10 @@ module VCAP::CloudController
 
     it 'can build an updates hash' do
       expect(message.updates).to eq({
-        name: 'my-service-instance',
-        service_plan_guid: 'service-plan-guid',
-        tags: %w(foo bar baz)
-      })
+                                      name: 'my-service-instance',
+                                      service_plan_guid: 'service-plan-guid',
+                                      tags: %w[foo bar baz]
+                                    })
 
       expect(described_class.new({}).updates).to eq({})
     end

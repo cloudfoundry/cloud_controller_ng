@@ -10,11 +10,11 @@ module VCAP
       attr_reader :schema
       attr_accessor :parent_schema
 
-      def define_schema(&blk)
-        @schema = Membrane::SchemaParser.parse(&blk)
-        if parent_schema
-          @schema = deep_merge_schemas(parent_schema.schema, @schema)
-        end
+      def define_schema(&)
+        @schema = Membrane::SchemaParser.parse(&)
+        return unless parent_schema
+
+        @schema = deep_merge_schemas(parent_schema.schema, @schema)
       end
 
       def validate(config_hash)

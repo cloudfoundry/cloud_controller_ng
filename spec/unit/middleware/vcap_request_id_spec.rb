@@ -100,7 +100,7 @@ module CloudFoundry
       describe 'the response' do
         context 'when the request id is passed in' do
           it 'is returned in the response' do
-            _, response_headers, _ = middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')
+            _, response_headers, = middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')
 
             expect(response_headers['X-VCAP-Request-ID']).to match(/^request-id::#{uuid_regex}$/)
           end
@@ -108,7 +108,7 @@ module CloudFoundry
 
         context 'when the request id is NOT passed in' do
           it 'returns a generated id in the response' do
-            _, response_headers, _ = middleware.call({})
+            _, response_headers, = middleware.call({})
 
             expect(response_headers['X-VCAP-Request-ID']).to match(/^#{uuid_regex}$/)
           end

@@ -44,7 +44,7 @@ module VCAP::CloudController
           end
 
           it 'updates updated_at since we do not update through the model' do
-            expect { cleanup_job.perform }.to change { droplet1.reload.updated_at }
+            expect { cleanup_job.perform }.to(change { droplet1.reload.updated_at })
           end
         end
 
@@ -60,11 +60,11 @@ module VCAP::CloudController
           end
 
           it 'does NOT fail them' do
-            expect {
+            expect do
               cleanup_job.perform
-            }.not_to change {
+            end.not_to(change do
               [droplet1.reload.updated_at, droplet2.reload.updated_at, droplet3.reload.updated_at]
-            }
+            end)
 
             expect(droplet1.reload.failed?).to be_falsey
             expect(droplet2.reload.failed?).to be_falsey

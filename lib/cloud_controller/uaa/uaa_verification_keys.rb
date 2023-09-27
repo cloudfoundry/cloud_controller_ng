@@ -5,9 +5,7 @@ module VCAP::CloudController
     end
 
     def value
-      if @uaa_keys.nil? || invalid_keys?
-        @uaa_keys = update_keys(@uaa_keys)
-      end
+      @uaa_keys = update_keys(@uaa_keys) if @uaa_keys.nil? || invalid_keys?
       @uaa_keys[:keys]
     end
 
@@ -20,7 +18,7 @@ module VCAP::CloudController
     def update_keys(last_fetched_keys)
       validation_hash = fetch_from_uaa
 
-      if !(validation_hash.present? || last_fetched_keys)
+      unless validation_hash.present? || last_fetched_keys
         logger.error('Fetching uaa verification keys failed')
         raise VCAP::CloudController::UaaUnavailable
       end
@@ -51,7 +49,7 @@ module VCAP::CloudController
       while retries > 0 && !validation_hash.present?
         begin
           validation_hash = @info.validation_keys_hash
-        rescue => e
+        rescue StandardError => e
           logger.error('fetch-verification-keys-retry', error: e.message, remaining_retries: retries - 1)
         end
         retries -= 1
@@ -60,7 +58,7 @@ module VCAP::CloudController
     end
 
     def invalid_keys?
-      return true unless Time.now - @uaa_keys[:requested_time] < 30
+      true unless Time.now - @uaa_keys[:requested_time] < 30
     end
 
     def logger

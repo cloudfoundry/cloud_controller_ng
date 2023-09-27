@@ -35,7 +35,8 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include(
-              'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+              'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
           end
         end
 
@@ -447,8 +448,8 @@ module VCAP::CloudController
               env: {
                 "": 'null-key',
                 VCAP_BAD_KEY: 1,
-                VMC_BAD_KEY: %w/hey it's an array/,
-                PORT: 5,
+                VMC_BAD_KEY: %w[hey it's an array],
+                PORT: 5
               }
             }
           end
@@ -460,7 +461,8 @@ module VCAP::CloudController
               'Env cannot set PORT',
               'Env cannot start with VCAP_',
               'Env cannot start with VMC_',
-              'Env key must be a minimum length of 1'])
+              'Env key must be a minimum length of 1'
+            ])
           end
         end
       end
@@ -472,7 +474,7 @@ module VCAP::CloudController
               name: 'eugene',
               routes: [
                 { route: 'existing.example.com', protocol: 'http2' },
-                { route: 'new.example.com' },
+                { route: 'new.example.com' }
               ]
             }
           end
@@ -492,7 +494,7 @@ module VCAP::CloudController
               [
                 { route: 'blah' },
                 { route: 'anotherblah' },
-                { route: 'http://example.com' },
+                { route: 'http://example.com' }
               ]
             }
           end
@@ -778,17 +780,17 @@ module VCAP::CloudController
                 'Process "type2": Health check invocation timeout is not a number',
                 'Process "type2": Readiness health check invocation timeout is not a number',
                 'Process "type2": Health check interval must be greater than or equal to 1',
-                'Process "type2": Readiness health check interval must be greater than or equal to 1',
+                'Process "type2": Readiness health check interval must be greater than or equal to 1'
               ])
             end
           end
         end
 
         context 'when there is more than one process with the same type' do
-          let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'instances' => 3 }, { 'type' => 'foo', 'instances' => 1 },
-                                                                 { 'type' => 'bob', 'instances' => 5 }, { 'type' => 'bob', 'instances' => 1 }
-          ] }
-          }
+          let(:params_from_yaml) do
+            { name: 'eugene', processes: [{ 'type' => 'foo', 'instances' => 3 }, { 'type' => 'foo', 'instances' => 1 },
+                                          { 'type' => 'bob', 'instances' => 5 }, { 'type' => 'bob', 'instances' => 1 }] }
+          end
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
@@ -837,7 +839,7 @@ module VCAP::CloudController
         context 'when sidecars name is empty string' do
           let(:params_from_yaml) do
             {
-               name: 'eugene',
+              name: 'eugene',
               sidecars: [{ name: '', command: 'rackup', process_types: ['web'] }]
             }
           end
@@ -853,7 +855,7 @@ module VCAP::CloudController
         context 'when sidecars command is empty string' do
           let(:params_from_yaml) do
             {
-               name: 'eugene',
+              name: 'eugene',
               sidecars: [{ name: 'my_sidecar', command: '', process_types: ['web'] }]
             }
           end
@@ -869,7 +871,7 @@ module VCAP::CloudController
         context 'when sidecars name is not supplied' do
           let(:params_from_yaml) do
             {
-               name: 'eugene',
+              name: 'eugene',
               sidecars: [{ command: 'rackup', process_types: ['web'] }]
             }
           end
@@ -886,7 +888,7 @@ module VCAP::CloudController
         context 'when sidecars memory is not numeric' do
           let(:params_from_yaml) do
             {
-               name: 'eugene',
+              name: 'eugene',
               sidecars: [{ command: 'rackup', process_types: ['web'], name: 'sylvester', memory: 'selective' }]
             }
           end
@@ -902,10 +904,9 @@ module VCAP::CloudController
         context 'when the sidecars are valid' do
           let(:params_from_yaml) do
             {
-               name: 'eugene',
+              name: 'eugene',
               sidecars: [{ command: 'rackup', process_types: ['web'], name: 'sylvester', memory: '38M' },
-                         { command: 'rackup', process_types: ['web'], name: 'cookie', memory: '2G' },
-                         ]
+                         { command: 'rackup', process_types: ['web'], name: 'cookie', memory: '2G' }]
             }
           end
 
@@ -964,7 +965,7 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors).to have(1).items
             expect(message.errors_on(:metadata)).to match_array([
-              'label key error: key cannot be empty string',
+              'label key error: key cannot be empty string'
             ])
           end
         end
@@ -975,7 +976,7 @@ module VCAP::CloudController
               name: 'eugene',
               metadata: {
                 labels: {
-                  'k1' => 'no spaces or ! allowed',
+                  'k1' => 'no spaces or ! allowed'
                 }
               }
             }
@@ -985,7 +986,7 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors).to have(1).items
             expect(message.errors_on(:metadata)).to match_array([
-              "label value error: 'no spaces or ! allowed' contains invalid characters",
+              "label value error: 'no spaces or ! allowed' contains invalid characters"
             ])
           end
         end
@@ -1021,7 +1022,7 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors).to have(1).items
             expect(message.errors_on(:metadata)).to match_array([
-              "annotation key error: 'xxxxxxxx...' is greater than 63 characters",
+              "annotation key error: 'xxxxxxxx...' is greater than 63 characters"
             ])
           end
         end
@@ -1032,7 +1033,7 @@ module VCAP::CloudController
               name: 'eugene',
               metadata: {
                 annotations: {
-                  'too-large-value' => 'oversize-' + 'x' * 5000
+                  'too-large-value' => 'oversize-' + ('x' * 5000)
                 }
               }
             }
@@ -1094,7 +1095,7 @@ module VCAP::CloudController
             disk_quota: '-120KB',
             buildpack: 99,
             stack: 42,
-            env: %w/not an object/
+            env: %w[not an object]
           }
         end
 
@@ -1108,7 +1109,7 @@ module VCAP::CloudController
             'Process "web": Disk quota must be greater than 0MB',
             'Buildpack must be a string',
             'Stack must be a string',
-            'Env must be an object of keys and values',
+            'Env must be an object of keys and values'
           ])
         end
       end
@@ -1155,7 +1156,7 @@ module VCAP::CloudController
             readiness_health_check_invocation_timeout: 2,
             readiness_health_check_interval: 3,
             readiness_health_check_http_endpoint: '/potato-potahto',
-            disk_quota: '23M',
+            disk_quota: '23M'
           }
         )
       end
@@ -1164,7 +1165,7 @@ module VCAP::CloudController
         let(:parsed_yaml) do
           {
             'name' => 'eugene', name: 'blah', processes: [
-              { type: 'web', 'health-check-type': 'port', 'health-check-interval': 4, disk_quota: '23M', },
+              { type: 'web', 'health-check-type': 'port', 'health-check-interval': 4, disk_quota: '23M' },
               { type: 'worker', 'health-check-type': 'port', disk_quota: '23M' },
               {
                 type: 'song',
@@ -1173,9 +1174,10 @@ module VCAP::CloudController
                 'readiness-health-check-interval': 3,
                 'readiness-health-check-http-endpoint': '/potato-potahto',
                 disk_quota: '23M'
-              },
+              }
 
-            ] }
+            ]
+          }
         end
 
         it 'converts the processes keys into snake case for all processes' do
@@ -1185,18 +1187,17 @@ module VCAP::CloudController
                 { type: 'web',
                   health_check_type: 'port',
                   health_check_interval: 4,
-                  disk_quota: '23M', },
+                  disk_quota: '23M' },
                 { type: 'worker',
                   health_check_type: 'port',
-                  disk_quota: '23M', },
+                  disk_quota: '23M' },
                 { type: 'song',
                   readiness_health_check_type: 'http',
                   readiness_health_check_invocation_timeout: 2,
                   readiness_health_check_interval: 3,
                   readiness_health_check_http_endpoint: '/potato-potahto',
-                  disk_quota: '23M', },
-              ]
-            }
+                  disk_quota: '23M' }
+              ] }
           )
         end
       end
@@ -1206,8 +1207,9 @@ module VCAP::CloudController
           {
             'name' => 'eugene', name: 'blah', env: { ':ENV_VAR' => 'hunter1' }, processes: [
               { type: 'web', env: { ':ENV_VAR' => 'hunter2' } },
-              { type: 'worker', env: { ':ENV_VAR' => 'hunter3' } },
-            ] }
+              { type: 'worker', env: { ':ENV_VAR' => 'hunter3' } }
+            ]
+          }
         end
 
         it 'does NOT try to underscore them (so they do NOT get lowercased)' do
@@ -1216,11 +1218,10 @@ module VCAP::CloudController
               env: { ':ENV_VAR' => 'hunter1' },
               processes: [
                 { type: 'web',
-                  env: { ':ENV_VAR' => 'hunter2' }, },
+                  env: { ':ENV_VAR' => 'hunter2' } },
                 { type: 'worker',
-                  env: { ':ENV_VAR' => 'hunter3' }, },
-              ]
-            }
+                  env: { ':ENV_VAR' => 'hunter3' } }
+              ] }
           )
         end
       end
@@ -1230,8 +1231,9 @@ module VCAP::CloudController
           {
             'name' => 'eugene', name: 'blah', services: ['hadoop'], processes: [
               { type: 'web', services: ['greenplumbdb'] },
-              { type: 'worker', services: ['riak'] },
-            ] }
+              { type: 'worker', services: ['riak'] }
+            ]
+          }
         end
 
         it 'does NOT try to underscore the service names (they are strings not hashes)' do
@@ -1240,11 +1242,10 @@ module VCAP::CloudController
               services: ['hadoop'],
               processes: [
                 { type: 'web',
-                  services: ['greenplumbdb'], },
+                  services: ['greenplumbdb'] },
                 { type: 'worker',
-                  services: ['riak'], },
-              ]
-            }
+                  services: ['riak'] }
+              ] }
           )
         end
       end
@@ -1258,8 +1259,7 @@ module VCAP::CloudController
           it 'does NOT raise an error' do
             expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
               { name: 'blah',
-                processes: nil
-              }
+                processes: nil }
             )
           end
         end
@@ -1272,8 +1272,7 @@ module VCAP::CloudController
           it 'does NOT raise an error, but does not underscore anything' do
             expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
               { name: 'blah',
-                processes: { web: { 'woop-de': 'doop' } }
-              }
+                processes: { web: { 'woop-de': 'doop' } } }
             )
           end
         end
@@ -1286,8 +1285,7 @@ module VCAP::CloudController
           it 'does NOT raise an error' do
             expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
               { name: 'blah',
-                processes: 'i am process'
-              }
+                processes: 'i am process' }
             )
           end
         end
@@ -1305,7 +1303,7 @@ module VCAP::CloudController
           'health-check-http-endpoint' => '/health',
           'routes' => [
             { 'route' => 'existing.example.com' },
-            { 'route' => 'another.example.com' },
+            { 'route' => 'another.example.com' }
           ],
           'processes' => [{
             'type' => 'type',
@@ -1314,7 +1312,7 @@ module VCAP::CloudController
             'health-check-http-endpoint' => '/healthier',
             'readiness-health-check-type' => 'port',
             'readiness-health-check-invocation-timeout' => 2,
-            'readiness-health-check-http-endpoint' => '/potato-potahto',
+            'readiness-health-check-http-endpoint' => '/potato-potahto'
           }]
         }
       end
@@ -1331,7 +1329,7 @@ module VCAP::CloudController
           'health-check-http-endpoint' => '/health',
           'routes' => [
             { 'route' => 'existing.example.com' },
-            { 'route' => 'another.example.com' },
+            { 'route' => 'another.example.com' }
           ],
           'processes' => [{
             'type' => 'type',
@@ -1340,8 +1338,8 @@ module VCAP::CloudController
             'health-check-http-endpoint' => '/healthier',
             'readiness-health-check-type' => 'port',
             'readiness-health-check-invocation-timeout' => 2,
-            'readiness-health-check-http-endpoint' => '/potato-potahto',
-          }],
+            'readiness-health-check-http-endpoint' => '/potato-potahto'
+          }]
         }
 
         expect(message.audit_hash).to eq(expected_hash)
@@ -1350,7 +1348,7 @@ module VCAP::CloudController
       context 'when "env" variables are present' do
         let(:parsed_yaml) do
           {
-            'env' => { 'foo' => 'bar' },
+            'env' => { 'foo' => 'bar' }
           }
         end
 
@@ -1358,7 +1356,7 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
 
           expected_hash = {
-            'env' => '[PRIVATE DATA HIDDEN]',
+            'env' => '[PRIVATE DATA HIDDEN]'
           }
 
           expect(message.audit_hash).to eq(expected_hash)
@@ -1368,7 +1366,7 @@ module VCAP::CloudController
       context 'when "env" variables are not present' do
         let(:parsed_yaml) do
           {
-            'memory' => '50T',
+            'memory' => '50T'
           }
         end
 
@@ -1376,7 +1374,7 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
 
           expected_hash = {
-            'memory' => '50T',
+            'memory' => '50T'
           }
 
           expect(message.audit_hash).to eq(expected_hash)
@@ -1394,8 +1392,8 @@ module VCAP::CloudController
           expect(message).to be_valid
           expect(message.manifest_process_scale_messages.length).to eq(1)
           expect(message.manifest_process_scale_messages.first.instances).to eq(5)
-          expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
-          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+          expect(message.manifest_process_scale_messages.first.memory).to eq(204_800)
+          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1_024_000)
           expect(message.manifest_process_scale_messages.first.type).to eq('web')
         end
 
@@ -1437,7 +1435,8 @@ module VCAP::CloudController
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to match_array([
               'Process "web": Memory must be greater than 0MB',
-              'Process "web": Disk quota must be greater than 0MB'])
+              'Process "web": Disk quota must be greater than 0MB'
+            ])
           end
         end
 
@@ -1461,8 +1460,8 @@ module VCAP::CloudController
           expect(message).to be_valid
           expect(message.manifest_process_scale_messages.length).to eq(1)
           expect(message.manifest_process_scale_messages.first.instances).to eq(5)
-          expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
-          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+          expect(message.manifest_process_scale_messages.first.memory).to eq(204_800)
+          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1_024_000)
           expect(message.manifest_process_scale_messages.first.type).to eq('web')
         end
 
@@ -1504,19 +1503,22 @@ module VCAP::CloudController
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to match_array([
               'Process "web": Memory must be greater than 0MB',
-              'Process "web": Disk quota must be greater than 0MB'])
+              'Process "web": Disk quota must be greater than 0MB'
+            ])
           end
         end
 
         context 'when processes and app-level process properties are specified' do
           context 'there is a web process type on the process level' do
-            let(:parsed_yaml) { {
-              'name' => 'eugene',
-              'memory' => '5GB',
-              'instances' => 1,
-              'disk_quota' => '30GB',
-              'processes' => [{ 'type' => 'web', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }] }
-            }
+            let(:parsed_yaml) do
+              {
+                'name' => 'eugene',
+                'memory' => '5GB',
+                'instances' => 1,
+                'disk_quota' => '30GB',
+                'processes' => [{ 'type' => 'web', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }]
+              }
+            end
 
             it 'uses the values from the web process and ignores the app-level process properties' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1524,20 +1526,22 @@ module VCAP::CloudController
               expect(message).to be_valid
               expect(message.manifest_process_scale_messages.length).to eq(1)
               expect(message.manifest_process_scale_messages.first.instances).to eq(5)
-              expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
-              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+              expect(message.manifest_process_scale_messages.first.memory).to eq(204_800)
+              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1_024_000)
               expect(message.manifest_process_scale_messages.first.type).to eq('web')
             end
           end
 
           context 'there is not a web process type on the process level' do
-            let(:parsed_yaml) { {
-              'name' => 'eugene',
-              'memory' => '5GB',
-              'instances' => 1,
-              'disk_quota' => '30GB',
-              'processes' => [{ 'type' => 'worker', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }] }
-            }
+            let(:parsed_yaml) do
+              {
+                'name' => 'eugene',
+                'memory' => '5GB',
+                'instances' => 1,
+                'disk_quota' => '30GB',
+                'processes' => [{ 'type' => 'worker', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }]
+              }
+            end
 
             it 'uses the values from the app-level process for the web process' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1547,13 +1551,13 @@ module VCAP::CloudController
 
               expect(message.manifest_process_scale_messages.first.instances).to eq(1)
               expect(message.manifest_process_scale_messages.first.memory).to eq(5120)
-              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(30720)
+              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(30_720)
               expect(message.manifest_process_scale_messages.first.type).to eq('web')
 
               expect(message.manifest_process_scale_messages.last.type).to eq('worker')
               expect(message.manifest_process_scale_messages.last.instances).to eq(5)
-              expect(message.manifest_process_scale_messages.last.memory).to eq(204800)
-              expect(message.manifest_process_scale_messages.last.disk_quota).to eq(1024000)
+              expect(message.manifest_process_scale_messages.last.memory).to eq(204_800)
+              expect(message.manifest_process_scale_messages.last.disk_quota).to eq(1_024_000)
             end
           end
         end
@@ -1612,9 +1616,9 @@ module VCAP::CloudController
             let(:parsed_yaml) do
               {
                 'name' => 'eugene',
-                "readiness-health-check-type": 'http',
-                "readiness-health-check-invocation-timeout": 2,
-                "readiness-health-check-http-endpoint": '/potato-potahto',
+                'readiness-health-check-type': 'http',
+                'readiness-health-check-invocation-timeout': 2,
+                'readiness-health-check-http-endpoint': '/potato-potahto'
               }
             end
 
@@ -1631,7 +1635,7 @@ module VCAP::CloudController
 
         context 'health checks' do
           context 'deprecated health check type none' do
-            let(:parsed_yaml) { { 'name' => 'eugene', "health-check-type": 'none' } }
+            let(:parsed_yaml) { { 'name' => 'eugene', 'health-check-type': 'none' } }
 
             it 'is converted to process' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1792,7 +1796,7 @@ module VCAP::CloudController
 
         context 'health checks' do
           context 'deprecated health check type none' do
-            let(:parsed_yaml) { { name: 'eugene', "health-check-type": 'none' } }
+            let(:parsed_yaml) { { name: 'eugene', 'health-check-type': 'none' } }
 
             it 'is converted to process' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1875,14 +1879,16 @@ module VCAP::CloudController
 
           context 'when processes and app-level process properties are specified' do
             context 'there is a web process type on the process level' do
-              let(:parsed_yaml) { {
-                'name' => 'eugene',
-                'command' => 'ignoreme',
-                'health_check_http_endpoint' => '/not-here',
-                'health_check_type' => 'http',
-                'timeout' => 5,
-                'processes' => [{ 'type' => 'web', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }] }
-              }
+              let(:parsed_yaml) do
+                {
+                  'name' => 'eugene',
+                  'command' => 'ignoreme',
+                  'health_check_http_endpoint' => '/not-here',
+                  'health_check_type' => 'http',
+                  'timeout' => 5,
+                  'processes' => [{ 'type' => 'web', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }]
+                }
+              end
 
               it 'uses the values from the web process and ignores the app-level process properties' do
                 message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1898,14 +1904,16 @@ module VCAP::CloudController
             end
 
             context 'there is not a web process type on the process level' do
-              let(:parsed_yaml) { {
-                'name' => 'eugene',
-                'command' => 'ignoreme',
-                'health_check_http_endpoint' => '/not-here',
-                'health_check_type' => 'http',
-                'timeout' => 5,
-                'processes' => [{ 'type' => 'worker', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }] }
-              }
+              let(:parsed_yaml) do
+                {
+                  'name' => 'eugene',
+                  'command' => 'ignoreme',
+                  'health_check_http_endpoint' => '/not-here',
+                  'health_check_type' => 'http',
+                  'timeout' => 5,
+                  'processes' => [{ 'type' => 'worker', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }]
+                }
+              end
 
               it 'uses the values from the app-level process for the web process' do
                 message = AppManifestMessage.create_from_yml(parsed_yaml)
@@ -1939,12 +1947,12 @@ module VCAP::CloudController
             'sidecars' => [{
               'name' => 'my_sidecar',
               'command' => 'rackup sidecar',
-              'process_types' => ['web'],
+              'process_types' => ['web']
             },
                            {
                              'name' => 'my_second_sidecar',
                              'command' => 'rackup sidecar',
-                             'process_types' => ['web'],
+                             'process_types' => ['web']
                            }]
           }
         end
@@ -1953,7 +1961,7 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.sidecar_create_messages.length).to eq(2)
-          expect(message.sidecar_create_messages.map(&:name)).to eq(['my_sidecar', 'my_second_sidecar'])
+          expect(message.sidecar_create_messages.map(&:name)).to eq(%w[my_sidecar my_second_sidecar])
         end
       end
 

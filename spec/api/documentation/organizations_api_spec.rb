@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Organizations', type: [:api, :legacy_api] do
+RSpec.resource 'Organizations', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
@@ -23,7 +23,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
     end
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController do
-      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: %w[name id]
     end
     standard_model_get :organization, nested_associations: [:quota_definition]
     standard_model_delete :organization do
@@ -61,7 +61,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
     let(:username_map) do
       {
         everything_user.guid => 'everything@example.com',
-        user_user.guid       => 'user@example.com',
+        user_user.guid => 'user@example.com'
       }
     end
 
@@ -93,7 +93,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Spaces' do
       before do
-        VCAP::CloudController::Space.make(organization: organization)
+        VCAP::CloudController::Space.make(organization:)
       end
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :organization
@@ -101,7 +101,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Space Quota Definitions' do
       before do
-        VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization)
+        VCAP::CloudController::SpaceQuotaDefinition.make(organization:)
       end
 
       standard_model_list :space_quota_definition, VCAP::CloudController::SpaceQuotaDefinitionsController, outer_model: :organization
@@ -356,7 +356,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       before do
         some_service = VCAP::CloudController::Service.make(active: true)
         VCAP::CloudController::ServicePlan.make(service: some_service, public: false)
-        space = VCAP::CloudController::Space.make(organization: organization)
+        space = VCAP::CloudController::Space.make(organization:)
         VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
@@ -380,7 +380,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
           explanation "This endpoint returns a count of started app instances under an organization.
             Note that crashing apps are included in this count."
 
-          space = VCAP::CloudController::Space.make(organization: organization)
+          space = VCAP::CloudController::Space.make(organization:)
           VCAP::CloudController::ProcessModelFactory.make(space: space, state: 'STARTED', instances: 3)
 
           client.get "/v2/organizations/#{guid}/instance_usage", {}, headers

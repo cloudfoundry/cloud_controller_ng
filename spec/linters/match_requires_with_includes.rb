@@ -1,12 +1,10 @@
-require 'set'
-
 module RuboCop
   module Cop
     class MatchRequiresWithIncludes < RuboCop::Cop::Cop
       REQ_FOR_INCLUDES = {
         'VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers' =>
           'presenters/mixins/metadata_presentation_helpers',
-        'SubResource' => 'controllers/v3/mixins/sub_resource',
+        'SubResource' => 'controllers/v3/mixins/sub_resource'
       }.freeze
 
       def initialize(*args)
@@ -25,9 +23,9 @@ module RuboCop
 
         included_module = extract_values(node.child_nodes[0]).join('::')
         req = REQ_FOR_INCLUDES[included_module]
-        if req && !@requires.member?(req)
-          add_offense(node, location: :expression, message: "Included '#{included_module}' but need to require '#{req}'")
-        end
+        return unless req && !@requires.member?(req)
+
+        add_offense(node, location: :expression, message: "Included '#{included_module}' but need to require '#{req}'")
       end
 
       private

@@ -11,7 +11,7 @@ RSpec.describe SpaceRoutes do
     end
 
     context 'when there are multiple routes' do
-      before { 2.times { VCAP::CloudController::Route.make(space: space) } }
+      before { 2.times { VCAP::CloudController::Route.make(space:) } }
       its(:count) { should eq 2 }
     end
 

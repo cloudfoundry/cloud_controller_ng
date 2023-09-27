@@ -10,13 +10,12 @@ class PortsPolicy
     return @errors.add('Ports', 'must be integers.') unless all_ports_are_integers?
     return @errors.add('Ports', 'must be in the 1024-65535 range.') unless all_ports_are_in_range?
 
-    unless verify_ports
-      @errors.add('App ports',
-        'may not be removed while routes are mapped to them. '\
-        'To change the app port a route is mapped to add the new ports to your app, '\
-        'change the app port the route is mapped to, then remove unused app ports.'
-      )
-    end
+    return if verify_ports
+
+    @errors.add('App ports',
+                'may not be removed while routes are mapped to them. ' \
+                'To change the app port a route is mapped to add the new ports to your app, ' \
+                'change the app port the route is mapped to, then remove unused app ports.')
   end
 
   private
@@ -37,7 +36,7 @@ class PortsPolicy
 
   def all_ports_are_in_range?
     @process.ports.all? do |port|
-      port > 1023 && port <= 65535
+      port > 1023 && port <= 65_535
     end
   end
 

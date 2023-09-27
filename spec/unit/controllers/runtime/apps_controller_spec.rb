@@ -55,57 +55,59 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::AppsController).to have_creatable_attributes(
           {
-            enable_ssh:                 { type: 'bool' },
-            buildpack:                  { type: 'string' },
-            command:                    { type: 'string' },
-            console:                    { type: 'bool', default: false },
-            debug:                      { type: 'string' },
-            disk_quota:                 { type: 'integer' },
-            log_rate_limit:                  { type: 'integer' },
-            environment_json:           { type: 'hash', default: {} },
+            enable_ssh: { type: 'bool' },
+            buildpack: { type: 'string' },
+            command: { type: 'string' },
+            console: { type: 'bool', default: false },
+            debug: { type: 'string' },
+            disk_quota: { type: 'integer' },
+            log_rate_limit: { type: 'integer' },
+            environment_json: { type: 'hash', default: {} },
             health_check_http_endpoint: { type: 'string' },
-            health_check_timeout:       { type: 'integer' },
-            health_check_type:          { type: 'string', default: 'port' },
-            instances:                  { type: 'integer', default: 1 },
-            memory:                     { type: 'integer' },
-            name:                       { type: 'string', required: true },
-            production:                 { type: 'bool', default: false },
-            state:                      { type: 'string', default: 'STOPPED' },
-            space_guid:                 { type: 'string', required: true },
-            stack_guid:                 { type: 'string' },
-            diego:                      { type: 'bool' },
-            docker_image:               { type: 'string', required: false },
-            docker_credentials:         { type: 'hash', default: {} },
-            ports:                      { type: '[integer]', default: nil }
-          })
+            health_check_timeout: { type: 'integer' },
+            health_check_type: { type: 'string', default: 'port' },
+            instances: { type: 'integer', default: 1 },
+            memory: { type: 'integer' },
+            name: { type: 'string', required: true },
+            production: { type: 'bool', default: false },
+            state: { type: 'string', default: 'STOPPED' },
+            space_guid: { type: 'string', required: true },
+            stack_guid: { type: 'string' },
+            diego: { type: 'bool' },
+            docker_image: { type: 'string', required: false },
+            docker_credentials: { type: 'hash', default: {} },
+            ports: { type: '[integer]', default: nil }
+          }
+        )
       end
 
       it do
         expect(VCAP::CloudController::AppsController).to have_updatable_attributes(
           {
-            enable_ssh:                 { type: 'bool' },
-            buildpack:                  { type: 'string' },
-            command:                    { type: 'string' },
-            console:                    { type: 'bool' },
-            debug:                      { type: 'string' },
-            disk_quota:                 { type: 'integer' },
-            log_rate_limit:                  { type: 'integer' },
-            environment_json:           { type: 'hash' },
+            enable_ssh: { type: 'bool' },
+            buildpack: { type: 'string' },
+            command: { type: 'string' },
+            console: { type: 'bool' },
+            debug: { type: 'string' },
+            disk_quota: { type: 'integer' },
+            log_rate_limit: { type: 'integer' },
+            environment_json: { type: 'hash' },
             health_check_http_endpoint: { type: 'string' },
-            health_check_timeout:       { type: 'integer' },
-            health_check_type:          { type: 'string' },
-            instances:                  { type: 'integer' },
-            memory:                     { type: 'integer' },
-            name:                       { type: 'string' },
-            production:                 { type: 'bool' },
-            state:                      { type: 'string' },
-            space_guid:                 { type: 'string' },
-            stack_guid:                 { type: 'string' },
-            diego:                      { type: 'bool' },
-            docker_image:               { type: 'string' },
-            docker_credentials:         { type: 'hash' },
-            ports:                      { type: '[integer]' }
-          })
+            health_check_timeout: { type: 'integer' },
+            health_check_type: { type: 'string' },
+            instances: { type: 'integer' },
+            memory: { type: 'integer' },
+            name: { type: 'string' },
+            production: { type: 'bool' },
+            state: { type: 'string' },
+            space_guid: { type: 'string' },
+            stack_guid: { type: 'string' },
+            diego: { type: 'bool' },
+            docker_image: { type: 'string' },
+            docker_credentials: { type: 'hash' },
+            ports: { type: '[integer]' }
+          }
+        )
       end
     end
 
@@ -113,11 +115,12 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::AppsController).to have_nested_routes(
           {
-            events:           [:get, :put, :delete],
+            events: %i[get put delete],
             service_bindings: [:get],
-            routes:           [:get],
-            route_mappings:   [:get],
-          })
+            routes: [:get],
+            route_mappings: [:get]
+          }
+        )
       end
 
       describe 'events associations (via AppEvents)' do
@@ -144,7 +147,7 @@ module VCAP::CloudController
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
-          name:       'maria',
+          name: 'maria',
           space_guid: space_guid
         }
       end
@@ -305,12 +308,12 @@ module VCAP::CloudController
 
       it 'creates the app' do
         request = {
-          name:                       'maria',
-          space_guid:                 space.guid,
-          environment_json:           { 'KEY' => 'val' },
-          buildpack:                  'http://example.com/buildpack',
+          name: 'maria',
+          space_guid: space.guid,
+          environment_json: { 'KEY' => 'val' },
+          buildpack: 'http://example.com/buildpack',
           health_check_http_endpoint: '/healthz',
-          health_check_type:          'http',
+          health_check_type: 'http'
         }
 
         set_current_user(admin_user, admin: true)
@@ -324,10 +327,10 @@ module VCAP::CloudController
 
       it 'creates the app' do
         request = {
-          name:             'maria',
-          space_guid:       space.guid,
+          name: 'maria',
+          space_guid: space.guid,
           environment_json: { 'KEY' => 'val' },
-          buildpack:        'http://example.com/buildpack'
+          buildpack: 'http://example.com/buildpack'
         }
 
         set_current_user(admin_user, admin: true)
@@ -357,10 +360,10 @@ module VCAP::CloudController
         it 'creates the app correctly' do
           stack   = Stack.make(name: 'stack-name')
           request = {
-            name:       'maria',
+            name: 'maria',
             space_guid: space.guid,
             stack_guid: stack.guid,
-            buildpack:  'http://example.com/buildpack'
+            buildpack: 'http://example.com/buildpack'
           }
 
           set_current_user(admin_user, admin: true)
@@ -380,8 +383,8 @@ module VCAP::CloudController
 
           let(:request) do
             {
-              name:       'maria',
-              space_guid: space.guid,
+              name: 'maria',
+              space_guid: space.guid
             }
           end
 
@@ -425,9 +428,9 @@ module VCAP::CloudController
       context 'creating a docker app' do
         it 'creates the app correctly' do
           request = {
-            name:         'maria',
-            space_guid:   space.guid,
-            docker_image: 'some-image:latest',
+            name: 'maria',
+            space_guid: space.guid,
+            docker_image: 'some-image:latest'
           }
 
           set_current_user(admin_user, admin: true)
@@ -450,9 +453,9 @@ module VCAP::CloudController
 
           it 'returns an UnprocessableEntity error' do
             request = {
-              name:         'maria',
-              space_guid:   space.guid,
-              docker_image: 'some-image:latest',
+              name: 'maria',
+              space_guid: space.guid,
+              docker_image: 'some-image:latest'
             }
 
             set_current_user(admin_user, admin: true)
@@ -460,8 +463,8 @@ module VCAP::CloudController
             post '/v2/apps', MultiJson.dump(request)
 
             expect(last_response.status).to eq(422)
-            expect(last_response.body).to match /UnprocessableEntity/
-            expect(last_response.body).to match /oops/
+            expect(last_response.body).to match(/UnprocessableEntity/)
+            expect(last_response.body).to match(/oops/)
           end
         end
       end
@@ -469,9 +472,9 @@ module VCAP::CloudController
       context 'when starting an app without a package' do
         it 'raises an error' do
           request = {
-            name:       'maria',
+            name: 'maria',
             space_guid: space.guid,
-            state:      'STARTED'
+            state: 'STARTED'
           }
 
           set_current_user(admin_user, admin: true)
@@ -498,7 +501,7 @@ module VCAP::CloudController
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
-          name:       'maria',
+          name: 'maria',
           space_guid: space_guid
         }
       end
@@ -509,7 +512,7 @@ module VCAP::CloudController
       let(:docker_credentials) do
         {
           username: user,
-          password: password,
+          password: password
         }
       end
       let(:body) do
@@ -575,52 +578,52 @@ module VCAP::CloudController
       it 'returns the app in question' do
         get "/v2/apps/#{app_guid}"
         expect(decoded_response['metadata']).to include({
-          'guid' => app_guid.to_s,
-          'url' => "/v2/apps/#{app_guid}",
-          'created_at' => anything,
-          'updated_at' => anything
-        })
+                                                          'guid' => app_guid.to_s,
+                                                          'url' => "/v2/apps/#{app_guid}",
+                                                          'created_at' => anything,
+                                                          'updated_at' => anything
+                                                        })
         expect(decoded_response['entity']).to include({
-          'name' => process.app.name,
-          'production' => false,
-          'space_guid' => process.space.guid.to_s,
-          'stack_guid' => process.stack.guid.to_s,
-          'buildpack' => nil,
-          'detected_buildpack' => nil,
-          'detected_buildpack_guid' => nil,
-          'environment_json' => nil,
-          'memory' => 1024,
-          'instances' => 1,
-          'disk_quota' => 1024,
-          'state' => 'STOPPED',
-          'version' => anything,
-          'command' => nil,
-          'console' => false,
-          'debug' => nil,
-          'staging_task_id' => anything,
-          'package_state' => 'STAGED',
-          'health_check_type' => 'port',
-          'health_check_timeout' => nil,
-          'health_check_http_endpoint' => nil,
-          'staging_failed_reason' => nil,
-          'staging_failed_description' => nil,
-          'diego' => true,
-          'docker_image' => nil,
-          'docker_credentials' => {
-            'username' => nil,
-            'password' => nil
-          },
-          'package_updated_at' => anything,
-          'detected_start_command' => '$HOME/boot.sh',
-          'enable_ssh' => true,
-          'ports' => [8080],
-          'space_url' => "/v2/spaces/#{process.space.guid}",
-          'stack_url' => "/v2/stacks/#{process.stack.guid}",
-          'routes_url' => "/v2/apps/#{app_guid}/routes",
-          'events_url' => "/v2/apps/#{app_guid}/events",
-          'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
-          'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
-        })
+                                                        'name' => process.app.name,
+                                                        'production' => false,
+                                                        'space_guid' => process.space.guid.to_s,
+                                                        'stack_guid' => process.stack.guid.to_s,
+                                                        'buildpack' => nil,
+                                                        'detected_buildpack' => nil,
+                                                        'detected_buildpack_guid' => nil,
+                                                        'environment_json' => nil,
+                                                        'memory' => 1024,
+                                                        'instances' => 1,
+                                                        'disk_quota' => 1024,
+                                                        'state' => 'STOPPED',
+                                                        'version' => anything,
+                                                        'command' => nil,
+                                                        'console' => false,
+                                                        'debug' => nil,
+                                                        'staging_task_id' => anything,
+                                                        'package_state' => 'STAGED',
+                                                        'health_check_type' => 'port',
+                                                        'health_check_timeout' => nil,
+                                                        'health_check_http_endpoint' => nil,
+                                                        'staging_failed_reason' => nil,
+                                                        'staging_failed_description' => nil,
+                                                        'diego' => true,
+                                                        'docker_image' => nil,
+                                                        'docker_credentials' => {
+                                                          'username' => nil,
+                                                          'password' => nil
+                                                        },
+                                                        'package_updated_at' => anything,
+                                                        'detected_start_command' => '$HOME/boot.sh',
+                                                        'enable_ssh' => true,
+                                                        'ports' => [8080],
+                                                        'space_url' => "/v2/spaces/#{process.space.guid}",
+                                                        'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                                                        'routes_url' => "/v2/apps/#{app_guid}/routes",
+                                                        'events_url' => "/v2/apps/#{app_guid}/events",
+                                                        'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
+                                                        'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
+                                                      })
       end
 
       context 'when the app has rolled to a new web process' do
@@ -635,52 +638,52 @@ module VCAP::CloudController
 
           get "/v2/apps/#{app_guid}"
           expect(decoded_response['metadata']).to include({
-            'guid' => app_guid.to_s,
-            'url' => "/v2/apps/#{app_guid}",
-            'created_at' => anything,
-            'updated_at' => anything
-          })
+                                                            'guid' => app_guid.to_s,
+                                                            'url' => "/v2/apps/#{app_guid}",
+                                                            'created_at' => anything,
+                                                            'updated_at' => anything
+                                                          })
           expect(decoded_response['entity']).to include({
-            'name' => process.app.name,
-            'production' => false,
-            'space_guid' => process.space.guid.to_s,
-            'stack_guid' => process.stack.guid.to_s,
-            'buildpack' => nil,
-            'detected_buildpack' => nil,
-            'detected_buildpack_guid' => nil,
-            'environment_json' => nil,
-            'memory' => 1024,
-            'instances' => 1,
-            'disk_quota' => 1024,
-            'state' => 'STOPPED',
-            'version' => anything,
-            'command' => nil,
-            'console' => false,
-            'debug' => nil,
-            'staging_task_id' => anything,
-            'package_state' => 'STAGED',
-            'health_check_type' => 'port',
-            'health_check_timeout' => nil,
-            'health_check_http_endpoint' => nil,
-            'staging_failed_reason' => nil,
-            'staging_failed_description' => nil,
-            'diego' => true,
-            'docker_image' => nil,
-            'docker_credentials' => {
-              'username' => nil,
-              'password' => nil
-            },
-            'package_updated_at' => anything,
-            'detected_start_command' => '$HOME/boot.sh',
-            'enable_ssh' => true,
-            'ports' => [8080],
-            'space_url' => "/v2/spaces/#{process.space.guid}",
-            'stack_url' => "/v2/stacks/#{process.stack.guid}",
-            'routes_url' => "/v2/apps/#{app_guid}/routes",
-            'events_url' => "/v2/apps/#{app_guid}/events",
-            'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
-            'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
-          })
+                                                          'name' => process.app.name,
+                                                          'production' => false,
+                                                          'space_guid' => process.space.guid.to_s,
+                                                          'stack_guid' => process.stack.guid.to_s,
+                                                          'buildpack' => nil,
+                                                          'detected_buildpack' => nil,
+                                                          'detected_buildpack_guid' => nil,
+                                                          'environment_json' => nil,
+                                                          'memory' => 1024,
+                                                          'instances' => 1,
+                                                          'disk_quota' => 1024,
+                                                          'state' => 'STOPPED',
+                                                          'version' => anything,
+                                                          'command' => nil,
+                                                          'console' => false,
+                                                          'debug' => nil,
+                                                          'staging_task_id' => anything,
+                                                          'package_state' => 'STAGED',
+                                                          'health_check_type' => 'port',
+                                                          'health_check_timeout' => nil,
+                                                          'health_check_http_endpoint' => nil,
+                                                          'staging_failed_reason' => nil,
+                                                          'staging_failed_description' => nil,
+                                                          'diego' => true,
+                                                          'docker_image' => nil,
+                                                          'docker_credentials' => {
+                                                            'username' => nil,
+                                                            'password' => nil
+                                                          },
+                                                          'package_updated_at' => anything,
+                                                          'detected_start_command' => '$HOME/boot.sh',
+                                                          'enable_ssh' => true,
+                                                          'ports' => [8080],
+                                                          'space_url' => "/v2/spaces/#{process.space.guid}",
+                                                          'stack_url' => "/v2/stacks/#{process.stack.guid}",
+                                                          'routes_url' => "/v2/apps/#{app_guid}/routes",
+                                                          'events_url' => "/v2/apps/#{app_guid}/events",
+                                                          'service_bindings_url' => "/v2/apps/#{app_guid}/service_bindings",
+                                                          'route_mappings_url' => "/v2/apps/#{app_guid}/route_mappings"
+                                                        })
         end
       end
     end
@@ -811,7 +814,7 @@ module VCAP::CloudController
             allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
-            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user_audit_info, attributes|
+            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, _recorded_space, user_audit_info, attributes|
               expect(recorded_app.guid).to eq(process.app.guid)
               expect(recorded_app.instances).to eq(2)
               expect(user_audit_info.user_guid).to eq(SecurityContext.current_user.guid)
@@ -830,9 +833,9 @@ module VCAP::CloudController
           end
 
           it 'does not record app update' do
-            expect {
+            expect do
               put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
-            }.to raise_error RuntimeError, /Error saving/
+            end.to raise_error RuntimeError, /Error saving/
 
             expect(app_event_repository).to_not have_received(:record_app_update)
           end
@@ -845,10 +848,10 @@ module VCAP::CloudController
         stack  = Stack.make(name: 'stack-name')
 
         request = {
-          name:             'maria',
+          name: 'maria',
           environment_json: { 'KEY' => 'val' },
-          stack_guid:       stack.guid,
-          buildpack:        'http://example.com/buildpack',
+          stack_guid: stack.guid,
+          buildpack: 'http://example.com/buildpack'
         }
 
         set_current_user(admin_user, admin: true)
@@ -936,7 +939,8 @@ module VCAP::CloudController
           let(:process) do
             ProcessModelFactory.make(
               instances: 1,
-              state:     'STARTED')
+              state: 'STARTED'
+            )
           end
 
           it 'marks the app for re-staging' do
@@ -1034,9 +1038,9 @@ module VCAP::CloudController
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
           expect(parsed_response['entity']['docker_credentials']).to eq({
-            'username' => nil,
-            'password' => nil
-          })
+                                                                          'username' => nil,
+                                                                          'password' => nil
+                                                                        })
           expect(process.reload.docker_image).to eq('repo/new-image')
           expect(process.latest_package).not_to eq(original_package)
         end
@@ -1058,9 +1062,9 @@ module VCAP::CloudController
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
             expect(parsed_response['entity']['docker_credentials']).to eq({
-              'username' => 'fred',
-              'password' => '***'
-            })
+                                                                            'username' => 'fred',
+                                                                            'password' => '***'
+                                                                          })
             expect(process.reload.docker_image).to eq('repo/new-image')
             expect(process.latest_package).not_to eq(original_package)
           end
@@ -1079,8 +1083,8 @@ module VCAP::CloudController
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
             expect(last_response.status).to eq(422)
-            expect(last_response.body).to match /UnprocessableEntity/
-            expect(last_response.body).to match /oops/
+            expect(last_response.body).to match(/UnprocessableEntity/)
+            expect(last_response.body).to match(/oops/)
           end
         end
       end
@@ -1259,8 +1263,9 @@ module VCAP::CloudController
           broker_url     = uri.host + uri.path
           stub_request(
             :delete,
-            %r{https://#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-            with(basic_auth: basic_auth(service_broker: service_broker)).
+            %r{https://#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+          ).
+            with(basic_auth: basic_auth(service_broker:)).
             to_return(status: broker_response_code, body: '{}')
         end
 
@@ -1293,7 +1298,7 @@ module VCAP::CloudController
               expect(body['error_code']).to include 'CF-AppRecursiveDeleteFailed'
 
               err_msg = body['description']
-              expect(err_msg).to match "^Deletion of app #{process.app.name} failed because one or more associated resources could not be deleted\.\n\n"
+              expect(err_msg).to match "^Deletion of app #{process.app.name} failed because one or more associated resources could not be deleted.\n\n"
             end
           end
 
@@ -1345,9 +1350,9 @@ module VCAP::CloudController
 
         it 'does not record when the destroy fails' do
           allow_any_instance_of(ProcessModel).to receive(:destroy).and_raise('Error saving')
-          expect {
+          expect do
             delete_app
-          }.to raise_error RuntimeError, /Error saving/
+          end.to raise_error RuntimeError, /Error saving/
 
           expect(Event.where(type: 'audit.app.delete-request').count).to eq(0)
         end
@@ -1444,29 +1449,29 @@ module VCAP::CloudController
 
             expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
             expect(decoded_response['application_env_json']).to match({
-              'VCAP_APPLICATION' => {
-                'cf_api'              => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-                'limits'              => {
-                  'mem'  => process.memory,
-                  'disk' => process.disk_quota,
-                  'fds'  => 16384
-                },
-                'application_id'      => process.app.guid,
-                'application_name'    => process.name,
-                'name'                => process.name,
-                'application_uris'    => [],
-                'uris'                => [],
-                'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-                'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-                'space_name'          => process.space.name,
-                'space_id'            => process.space.guid,
-                'organization_id' => process.organization.guid,
-                'organization_name' => process.organization.name,
-                'process_id' => process.guid,
-                'process_type' => process.type,
-                'users' => nil
-              }
-            })
+                                                                        'VCAP_APPLICATION' => {
+                                                                          'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+                                                                          'limits' => {
+                                                                            'mem' => process.memory,
+                                                                            'disk' => process.disk_quota,
+                                                                            'fds' => 16_384
+                                                                          },
+                                                                          'application_id' => process.app.guid,
+                                                                          'application_name' => process.name,
+                                                                          'name' => process.name,
+                                                                          'application_uris' => [],
+                                                                          'uris' => [],
+                                                                          'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                                                                          'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                                                                          'space_name' => process.space.name,
+                                                                          'space_id' => process.space.guid,
+                                                                          'organization_id' => process.organization.guid,
+                                                                          'organization_name' => process.organization.name,
+                                                                          'process_id' => process.guid,
+                                                                          'process_type' => process.type,
+                                                                          'users' => nil
+                                                                        }
+                                                                      })
           end
         end
 
@@ -1562,7 +1567,7 @@ module VCAP::CloudController
         let!(:process) do
           ProcessModelFactory.make(
             detected_buildpack: 'buildpack-name',
-            app:                parent_app
+            app: parent_app
           )
         end
         let!(:service_instance) { ManagedServiceInstance.make(space: process.space) }
@@ -1709,29 +1714,29 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
           expect(decoded_response['application_env_json']).to match({
-            'VCAP_APPLICATION' => {
-              'cf_api'              => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-              'limits'              => {
-                'mem'  => process.memory,
-                'disk' => process.disk_quota,
-                'fds'  => 16384
-              },
-              'application_id'      => process.app.guid,
-              'application_name'    => process.name,
-              'name'                => process.name,
-              'application_uris'    => [],
-              'uris'                => [],
-              'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-              'space_name'          => process.space.name,
-              'space_id'            => process.space.guid,
-              'organization_id'     => process.organization.guid,
-              'organization_name' =>   process.organization.name,
-              'process_id' => process.guid,
-              'process_type' => process.type,
-              'users' => nil
-            }
-          })
+                                                                      'VCAP_APPLICATION' => {
+                                                                        'cf_api' => "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+                                                                        'limits' => {
+                                                                          'mem' => process.memory,
+                                                                          'disk' => process.disk_quota,
+                                                                          'fds' => 16_384
+                                                                        },
+                                                                        'application_id' => process.app.guid,
+                                                                        'application_name' => process.name,
+                                                                        'name' => process.name,
+                                                                        'application_uris' => [],
+                                                                        'uris' => [],
+                                                                        'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                                                                        'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                                                                        'space_name' => process.space.name,
+                                                                        'space_id' => process.space.guid,
+                                                                        'organization_id' => process.organization.guid,
+                                                                        'organization_name' => process.organization.name,
+                                                                        'process_id' => process.guid,
+                                                                        'process_type' => process.type,
+                                                                        'users' => nil
+                                                                      }
+                                                                    })
         end
 
         context 'when the space_developer_env_var_visibility feature flag is disabled' do
@@ -1870,10 +1875,10 @@ module VCAP::CloudController
 
           it 'creates a delayed job' do
             set_current_user(user)
-            expect {
+            expect do
               put "/v2/apps/#{process.app.guid}/droplet/upload", req_body
               expect(last_response.status).to eq 201
-            }.to change {
+            end.to change {
               Delayed::Job.count
             }.by(1)
 
@@ -1907,8 +1912,8 @@ module VCAP::CloudController
 
       it 'creates a route mapping when we add one url through PUT /v2/apps/:guid' do
         route = domain.add_route(
-          host:  'app',
-          space: space,
+          host: 'app',
+          space: space
         )
 
         fake_route_mapping_create = instance_double(V2::RouteMappingCreate)
@@ -1925,9 +1930,9 @@ module VCAP::CloudController
         let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
         let(:docker_process) do
           ProcessModelFactory.make(
-            state:        'STARTED',
-            diego:        true,
-            docker_image: 'some-image',
+            state: 'STARTED',
+            diego: true,
+            docker_image: 'some-image'
           )
         end
 
@@ -1983,12 +1988,12 @@ module VCAP::CloudController
       end
 
       context 'when docker is disabled' do
-        let!(:stopped_process) {
+        let!(:stopped_process) do
           ProcessModelFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image', type: 'web')
-        }
-        let!(:started_process) {
+        end
+        let!(:started_process) do
           ProcessModelFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image', type: 'web')
-        }
+        end
 
         before do
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
@@ -2000,8 +2005,8 @@ module VCAP::CloudController
           put "/v2/apps/#{stopped_process.app.guid}", MultiJson.dump(state: 'STARTED')
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /Docker support has not been enabled/
-          expect(decoded_response['code']).to eq(320003)
+          expect(last_response.body).to match(/Docker support has not been enabled/)
+          expect(decoded_response['code']).to eq(320_003)
         end
 
         it 'does not return docker disabled message on stop' do
@@ -2028,9 +2033,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 1
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 1
         end
 
         describe 'OrgUser' do
@@ -2038,9 +2043,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 0
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 0
         end
 
         describe 'BillingManager' do
@@ -2048,9 +2053,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 0
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 0
         end
 
         describe 'Auditor' do
@@ -2058,9 +2063,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples 'permission enumeration', 'Auditor',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 0
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 0
         end
       end
 
@@ -2070,9 +2075,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 1
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 1
         end
 
         describe 'Developer' do
@@ -2080,9 +2085,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 1
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
@@ -2090,9 +2095,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-            name:      'app',
-            path:      '/v2/apps',
-            enumerate: 1
+                           name: 'app',
+                           path: '/v2/apps',
+                           enumerate: 1
         end
       end
     end
@@ -2106,11 +2111,11 @@ module VCAP::CloudController
       end
 
       it 'returns duplicate app name message correctly' do
-        existing_process = ProcessModel.make(app: AppModel.make(space: space))
+        existing_process = ProcessModel.make(app: AppModel.make(space:))
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(name: existing_process.name)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100002)
+        expect(decoded_response['code']).to eq(100_002)
       end
 
       it 'returns organization quota memory exceeded message correctly' do
@@ -2120,7 +2125,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100005)
+        expect(decoded_response['code']).to eq(100_005)
       end
 
       it 'returns space quota memory exceeded message correctly' do
@@ -2130,7 +2135,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(310003)
+        expect(decoded_response['code']).to eq(310_003)
       end
 
       it 'validates space quota memory limit before organization quotas' do
@@ -2142,14 +2147,14 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(310003)
+        expect(decoded_response['code']).to eq(310_003)
       end
 
       it 'returns memory invalid message correctly' do
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 0)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100006)
+        expect(decoded_response['code']).to eq(100_006)
       end
 
       it 'returns instance memory limit exceeded error correctly' do
@@ -2159,7 +2164,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100007)
+        expect(decoded_response['code']).to eq(100_007)
       end
 
       it 'returns space instance memory limit exceeded error correctly' do
@@ -2169,7 +2174,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(310004)
+        expect(decoded_response['code']).to eq(310_004)
       end
 
       it 'returns app instance limit exceeded error correctly' do
@@ -2179,7 +2184,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 5)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(100008)
+        expect(decoded_response['code']).to eq(100_008)
       end
 
       it 'validates space quota instance memory limit before organization quotas' do
@@ -2191,23 +2196,23 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(310004)
+        expect(decoded_response['code']).to eq(310_004)
       end
 
       it 'returns instances invalid message correctly' do
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: -1)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /instances less than 0/
-        expect(decoded_response['code']).to eq(100001)
+        expect(last_response.body).to match(/instances less than 0/)
+        expect(decoded_response['code']).to eq(100_001)
       end
 
       it 'returns state invalid message correctly' do
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(state: 'mississippi')
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /Invalid app state provided/
-        expect(decoded_response['code']).to eq(100001)
+        expect(last_response.body).to match(/Invalid app state provided/)
+        expect(decoded_response['code']).to eq(100_001)
       end
 
       it 'validates space quota app instance limit' do
@@ -2217,7 +2222,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 3)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(310008)
+        expect(decoded_response['code']).to eq(310_008)
       end
     end
 
@@ -2238,8 +2243,8 @@ module VCAP::CloudController
 
     describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
       let(:space) { Space.make }
-      let(:process) { ProcessModelFactory.make(space: space) }
-      let(:route) { Route.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space:) }
+      let(:route) { Route.make(space:) }
       let(:developer) { make_developer_for_space(space) }
 
       before do
@@ -2309,7 +2314,8 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('InvalidRelation')
           expect(decoded_response['description']).to include(
-            'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space')
+            'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space'
+          )
 
           expect(process.reload.routes).to be_empty
         end
@@ -2330,7 +2336,7 @@ module VCAP::CloudController
       describe 'routes from tcp router groups' do
         let(:domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'router-group-guid') }
         let(:route) { Route.make(space: process.space, domain: domain, port: 9090, host: '') }
-        let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+        let(:routing_api_client) { double('routing_api_client', router_group:) }
         let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
         before do
@@ -2368,8 +2374,8 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/apps/:app_guid/routes/:route_guid' do
       let(:space) { Space.make }
-      let(:process) { ProcessModelFactory.make(space: space) }
-      let(:route) { Route.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space:) }
+      let(:route) { Route.make(space:) }
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
       let(:developer) { make_developer_for_space(space) }
 
@@ -2429,7 +2435,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/apps/:app_guid/service_bindings' do
       let(:space) { Space.make }
-      let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
+      let(:managed_service_instance) { ManagedServiceInstance.make(space:) }
       let(:developer) { make_developer_for_space(space) }
       let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
       let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
@@ -2474,8 +2480,8 @@ module VCAP::CloudController
       # These tests show we can have at most one hit per name in the
       # apps/APPGUID/service_bindings endpoint.
       context 'when there are multiple services' do
-        let(:si1) { ManagedServiceInstance.make(space: space) }
-        let(:si2) { ManagedServiceInstance.make(space: space) }
+        let(:si1) { ManagedServiceInstance.make(space:) }
+        let(:si2) { ManagedServiceInstance.make(space:) }
         let(:developer) { make_developer_for_space(space) }
         let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
         let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
@@ -2487,15 +2493,15 @@ module VCAP::CloudController
         end
 
         it 'binding si2 to process1 with a name in use by process1 is not ok' do
-          expect {
+          expect do
             ServiceBinding.make(service_instance: si2, app: process1.app, name: 'out')
-          }.to raise_error(Sequel::ValidationFailed, /App binding names must be unique\./)
+          end.to raise_error(Sequel::ValidationFailed, /App binding names must be unique\./)
         end
 
         it 'binding si1 to process1 with a new name is not ok' do
-          expect {
+          expect do
             ServiceBinding.make(service_instance: si1, app: process1.app, name: 'gravy')
-          }.to raise_error(Sequel::ValidationFailed, 'The app is already bound to the service.')
+          end.to raise_error(Sequel::ValidationFailed, 'The app is already bound to the service.')
         end
 
         it 'binding si2 to process1 with a name in use by process2 is ok' do
@@ -2508,8 +2514,8 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
       let(:space) { Space.make }
-      let(:process) { ProcessModelFactory.make(space: space) }
-      let(:instance) { ManagedServiceInstance.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space:) }
+      let(:instance) { ManagedServiceInstance.make(space:) }
       let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: instance) }
       let(:developer) { make_developer_for_space(space) }
 
@@ -2561,7 +2567,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/apps/:guid/permissions' do
-      let(:process) { ProcessModelFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space:) }
       let(:space) { Space.make }
       let(:user) { User.make }
 
@@ -2606,7 +2612,7 @@ module VCAP::CloudController
         it 'fails with a 403' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
           expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
           expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end
@@ -2621,7 +2627,7 @@ module VCAP::CloudController
         it 'fails with a 403' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
           expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
           expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end
@@ -2705,7 +2711,7 @@ module VCAP::CloudController
         it 'returns 403' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(403)
-          expect(decoded_response['code']).to eq(10003)
+          expect(decoded_response['code']).to eq(10_003)
           expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
           expect(decoded_response['description']).to include('You are not authorized to perform the requested action')
         end

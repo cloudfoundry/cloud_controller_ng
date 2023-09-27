@@ -6,7 +6,7 @@ module ServiceBrokerHelpers
     if block
       stub_request(:put, url).to_return(&block)
     else
-      stub_request(:put, url).to_return(status: status, body: body)
+      stub_request(:put, url).to_return(status:, body:)
     end
   end
 
@@ -14,11 +14,11 @@ module ServiceBrokerHelpers
     status = opts[:status] || 200
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
-    url = update_url_for_broker(service_instance.service_broker, accepts_incomplete: accepts_incomplete)
+    url = update_url_for_broker(service_instance.service_broker, accepts_incomplete:)
     if block
       stub_request(:patch, url).to_return(&block)
     else
-      stub_request(:patch, url).to_return(status: status, body: body)
+      stub_request(:patch, url).to_return(status:, body:)
     end
   end
 
@@ -27,13 +27,13 @@ module ServiceBrokerHelpers
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
 
-    url = deprovision_url(service_instance, accepts_incomplete: accepts_incomplete)
+    url = deprovision_url(service_instance, accepts_incomplete:)
 
     if block
       stub_request(:delete, url).to_return(&block)
     else
       stub_request(:delete, url).
-        to_return(status: status, body: body)
+        to_return(status:, body:)
     end
   end
 
@@ -48,7 +48,7 @@ module ServiceBrokerHelpers
         to_return(&block)
     else
       stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
-        to_return(status: status, body: body)
+        to_return(status:, body:)
     end
   end
 
@@ -70,9 +70,9 @@ module ServiceBrokerHelpers
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete] || nil
 
-    stub_request(:delete, unbind_url(service_binding, accepts_incomplete: accepts_incomplete)).
-      with(basic_auth: basic_auth(service_binding: service_binding)).
-      to_return(status: status, body: body)
+    stub_request(:delete, unbind_url(service_binding, accepts_incomplete:)).
+      with(basic_auth: basic_auth(service_binding:)).
+      to_return(status:, body:)
   end
 
   def stub_unbind_for_instance(service_instance, opts={})
@@ -82,7 +82,7 @@ module ServiceBrokerHelpers
     fake_service_binding = VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
 
     stub_request(:delete, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
-      to_return(status: status, body: body)
+      to_return(status:, body:)
   end
 
   def stub_delete(broker, opts={})
@@ -91,12 +91,12 @@ module ServiceBrokerHelpers
 
     stub_request(:delete, delete_broker_url(broker)).
       with(basic_auth: basic_auth(service_broker: broker)).
-      to_return(status: status, body: body)
+      to_return(status:, body:)
   end
 
   def provision_url_for_broker(broker, accepts_incomplete: nil)
     path = "/v2/service_instances/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(broker)}#{path}#{query_params}/
@@ -104,7 +104,7 @@ module ServiceBrokerHelpers
 
   def update_url_for_broker(broker, accepts_incomplete: nil)
     path = "/v2/service_instances/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(broker)}#{path}#{query_params}/
@@ -117,7 +117,7 @@ module ServiceBrokerHelpers
 
   def bind_url(service_instance, accepts_incomplete: nil)
     path = "/v2/service_instances/#{service_instance.guid}/service_bindings/#{guid_pattern}"
-    async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
+    async_query = "accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
     query_params = async_query ? "\\?#{async_query}" : ''
 
     /#{build_broker_url(service_instance.service_broker)}#{path}#{query_params}/

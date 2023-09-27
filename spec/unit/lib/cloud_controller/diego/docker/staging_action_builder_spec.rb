@@ -8,18 +8,18 @@ module VCAP::CloudController
 
         let(:config) do
           Config.new({
-            diego:   {
-              docker_staging_stack:          'docker-staging-stack',
-              lifecycle_bundles:             {
-                docker: 'the-docker-bundle'
-              },
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-              insecure_docker_registry_list: []
-            },
-            staging: {
-              minimum_staging_file_descriptor_limit: 4
-            }
-          })
+                       diego: {
+                         docker_staging_stack: 'docker-staging-stack',
+                         lifecycle_bundles: {
+                           docker: 'the-docker-bundle'
+                         },
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads,
+                         insecure_docker_registry_list: []
+                       },
+                       staging: {
+                         minimum_staging_file_descriptor_limit: 4
+                       }
+                     })
         end
         let(:staging_details) do
           StagingDetails.new.tap do |details|
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
           context 'when there are insecure docker registries' do
             before do
-              config.set(:diego, config.get(:diego).deep_merge(insecure_docker_registry_list: ['registry-1', 'registry-2']))
+              config.set(:diego, config.get(:diego).deep_merge(insecure_docker_registry_list: %w[registry-1 registry-2]))
             end
 
             it 'includes them in the run action args' do
@@ -72,7 +72,7 @@ module VCAP::CloudController
                 details.package = PackageModel.new(
                   docker_image: 'the-docker-image',
                   docker_username: 'dockerusername',
-                  docker_password: 'dockerpassword',
+                  docker_password: 'dockerpassword'
                 )
                 details.environment_variables = env
               end
@@ -124,7 +124,7 @@ module VCAP::CloudController
                   url: 'generated-uri',
                   destination_path: '/tmp/lifecycle',
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                 )
               )
             end

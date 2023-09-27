@@ -93,9 +93,9 @@ module VCAP::CloudController
 
           context 'and the job is in progress' do
             before do
-              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {
+              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) do
                 Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
-              }
+              end
             end
 
             it 'does not execute the block' do

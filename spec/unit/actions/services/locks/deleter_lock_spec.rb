@@ -40,14 +40,14 @@ module VCAP::CloudController
         let(:operation) do
           ServiceInstanceOperation.make(
             state: 'in progress',
-            type: 'NOT create',
+            type: 'NOT create'
           )
         end
 
         it 'does not let you lock again' do
-          expect {
+          expect do
             DeleterLock.new(service_instance).lock!
-          }.to raise_error(CloudController::Errors::ApiError)
+          end.to raise_error(CloudController::Errors::ApiError)
         end
       end
 
@@ -55,14 +55,14 @@ module VCAP::CloudController
         let(:operation) do
           ServiceInstanceOperation.make(
             state: 'in progress',
-            type: 'create',
+            type: 'create'
           )
         end
 
         it 'lets you lock again' do
-          expect {
+          expect do
             DeleterLock.new(service_instance).lock!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -70,14 +70,14 @@ module VCAP::CloudController
         let(:operation) do
           ServiceInstanceOperation.make(
             state: 'NOT in progress',
-            type: 'create',
+            type: 'create'
           )
         end
 
         it 'lets you lock again' do
-          expect {
+          expect do
             DeleterLock.new(service_instance).lock!
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
     end
@@ -107,7 +107,7 @@ module VCAP::CloudController
           let(:operation) do
             ServiceInstanceOperation.make(
               state: 'NOT in progress',
-              type: 'create',
+              type: 'create'
             )
           end
 

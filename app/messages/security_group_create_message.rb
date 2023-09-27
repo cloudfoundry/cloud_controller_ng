@@ -4,7 +4,7 @@ require 'messages/validators/security_group_rule_validator'
 module VCAP::CloudController
   class SecurityGroupCreateMessage < BaseMessage
     MAX_SECURITY_GROUP_NAME_LENGTH = 250
-    register_allowed_keys [:name, :globally_enabled, :relationships, :rules]
+    register_allowed_keys %i[name globally_enabled relationships rules]
 
     def self.key_requested?(key)
       proc { |a| a.requested?(key) }
@@ -19,9 +19,9 @@ module VCAP::CloudController
     validates_with RulesValidator, if: key_requested?(:rules)
 
     validates :name,
-      presence: true,
-      string: true,
-      length: { maximum: MAX_SECURITY_GROUP_NAME_LENGTH }
+              presence: true,
+              string: true,
+              length: { maximum: MAX_SECURITY_GROUP_NAME_LENGTH }
 
     validate :validate_globally_enabled
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       if !globally_enabled.is_a? Hash
         errors.add(:globally_enabled, 'must be an object')
-      elsif (globally_enabled.keys - [:running, :staging]).any?
+      elsif (globally_enabled.keys - %i[running staging]).any?
         errors.add(:globally_enabled, "only allows keys 'running' or 'staging'")
       elsif globally_enabled.values.any? { |value| [true, false].exclude? value }
         errors.add(:globally_enabled, 'values must be booleans')
@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      register_allowed_keys [:running_spaces, :staging_spaces]
+      register_allowed_keys %i[running_spaces staging_spaces]
 
       validates :running_spaces, allow_nil: true, to_many_relationship: true
       validates :staging_spaces, allow_nil: true, to_many_relationship: true

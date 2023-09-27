@@ -20,11 +20,11 @@ module VCAP::CloudController::RestController
       end
 
       it 'treats exclude-relations as a String Array and symbolizes the key' do
-        expect(common_params.parse({ 'exclude-relations' => 'name1,name2' })).to eq({ exclude_relations: ['name1', 'name2'] })
+        expect(common_params.parse({ 'exclude-relations' => 'name1,name2' })).to eq({ exclude_relations: %w[name1 name2] })
       end
 
       it 'treats include-relations as a String Array and symbolizes the key' do
-        expect(common_params.parse({ 'include-relations' => 'name1,name2' })).to eq({ include_relations: ['name1', 'name2'] })
+        expect(common_params.parse({ 'include-relations' => 'name1,name2' })).to eq({ include_relations: %w[name1 name2] })
       end
 
       it 'treats page as an Integer and symbolizes the key' do
@@ -47,7 +47,7 @@ module VCAP::CloudController::RestController
       end
 
       it 'handles multiple q params' do
-        expect(common_params.parse({ 'q' => 'a' }, 'q=a&q=b')).to eq({ q: ['a', 'b'] })
+        expect(common_params.parse({ 'q' => 'a' }, 'q=a&q=b')).to eq({ q: %w[a b] })
       end
     end
   end

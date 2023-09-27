@@ -12,9 +12,10 @@ module VCAP::CloudController::Logs
     let(:env) { { 'cf.user_guid' => 'user-guid' } }
     let(:status) { 200 }
 
-    let(:additional_fields) { { request_method: 'request_method',
-                                request_fullpath: 'filtered_path' }
-    }
+    let(:additional_fields) do
+      { request_method: 'request_method',
+        request_fullpath: 'filtered_path' }
+    end
 
     describe 'logging' do
       before do

@@ -14,19 +14,19 @@ module VCAP::CloudController
         allow(Clockwork).to receive(:run)
         TestConfig.override(
           jobs: {
-            global: { timeout_in_seconds: global_timeout },
+            global: { timeout_in_seconds: global_timeout }
           },
-          app_usage_events: { cutoff_age_in_days: 1, },
-          audit_events: { cutoff_age_in_days: 3, },
+          app_usage_events: { cutoff_age_in_days: 1 },
+          audit_events: { cutoff_age_in_days: 3 },
           failed_jobs: { frequency_in_seconds: 400, cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10 },
-          service_usage_events: { cutoff_age_in_days: 5, },
-          completed_tasks: { cutoff_age_in_days: 6, },
+          service_usage_events: { cutoff_age_in_days: 5 },
+          completed_tasks: { cutoff_age_in_days: 6 },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
           pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
           diego_sync: { frequency_in_seconds: 30 },
           max_retained_deployments_per_app: 15,
           max_retained_builds_per_app: 15,
-          max_retained_revisions_per_app: 15,
+          max_retained_revisions_per_app: 15
         )
       end
 
@@ -38,9 +38,9 @@ module VCAP::CloudController
         error = StandardError.new 'Boom!'
         allow(Clockwork).to receive(:error_handler).and_yield(error)
         expect_any_instance_of(Steno::Logger).to receive(:error).with("#{error} (#{error.class.name})")
-        expect {
+        expect do
           schedule.start
-        }.to raise_error(StandardError, 'Boom!')
+        end.to raise_error(StandardError, 'Boom!')
       end
 
       it 'runs Clockwork' do
@@ -171,7 +171,7 @@ module VCAP::CloudController
       context 'when the diego sync frequency is zero' do
         before do
           TestConfig.override(
-            diego_sync: { frequency_in_seconds: 0 },
+            diego_sync: { frequency_in_seconds: 0 }
           )
         end
 

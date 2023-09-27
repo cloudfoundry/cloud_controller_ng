@@ -4,8 +4,8 @@ require 'actions/services/service_instance_read'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceRead do
     let(:service) { Service.make }
-    let(:service_plan) { ServicePlan.make(service: service) }
-    let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+    let(:service_plan) { ServicePlan.make(service:) }
+    let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
 
     describe '#fetch_parameters' do
       context 'when the service supports fetching instance parameters' do
@@ -91,7 +91,7 @@ module VCAP::CloudController
             action = ServiceInstanceRead.new
             begin
               action.fetch_parameters(service_instance)
-            rescue
+            rescue StandardError
               # tested elsewhere
             end
           end
@@ -111,7 +111,7 @@ module VCAP::CloudController
             action = ServiceInstanceRead.new
             begin
               action.fetch_parameters(service_instance)
-            rescue
+            rescue StandardError
               # tested elsewhere
             end
           end

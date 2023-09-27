@@ -1,6 +1,6 @@
 module SpaceRestrictedResponseGenerators
   def self.default_permitted_roles
-    %w(
+    %w[
       admin
       admin_read_only
       global_auditor
@@ -9,33 +9,33 @@ module SpaceRestrictedResponseGenerators
       space_auditor
       space_supporter
       org_manager
-    )
+    ]
   end
 
   def self.default_write_permitted_roles
-    %w(
+    %w[
       admin
       space_developer
-    )
+    ]
   end
 
   def self.org_suspended_permitted_roles
-    %w(
+    %w[
       admin
-    )
+    ]
   end
 
   def self.default_suspended_roles
-    %w(
+    %w[
       space_developer
-    )
+    ]
   end
 
   def self.forbidden_response
     [{
       'detail' => 'You are not authorized to perform the requested action',
       'title' => 'CF-NotAuthorized',
-      'code' => 10003,
+      'code' => 10_003
     }]
   end
 
@@ -43,7 +43,7 @@ module SpaceRestrictedResponseGenerators
     [{
       'detail' => 'The organization is suspended',
       'title' => 'CF-OrgSuspended',
-      'code' => 10017,
+      'code' => 10_017
     }]
   end
 

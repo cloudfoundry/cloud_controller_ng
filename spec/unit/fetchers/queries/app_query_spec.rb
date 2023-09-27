@@ -3,7 +3,7 @@ require 'fetchers/queries/app_query'
 
 module VCAP::RestAPI
   RSpec.describe AppQuery do
-    let(:queryable_attributes) { %w(organization_guid stack_guid name) }
+    let(:queryable_attributes) { %w[organization_guid stack_guid name] }
 
     describe 'filtering by organization_guid' do
       it 'works for equals' do

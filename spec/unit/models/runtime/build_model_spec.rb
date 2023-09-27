@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe BuildModel do
     let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
-    let(:build_model) { BuildModel.make(package: package) }
+    let(:build_model) { BuildModel.make(package:) }
     let!(:lifecycle_data) do
       BuildpackLifecycleDataModel.make(
         build: build_model,
@@ -19,17 +19,17 @@ module VCAP::CloudController
     describe 'associations' do
       it 'has a foreign key to app' do
         app = AppModel.make
-        BuildModel.make(app: app)
-        expect {
+        BuildModel.make(app:)
+        expect do
           app.delete
-        }.to raise_error Sequel::ForeignKeyConstraintViolation
+        end.to raise_error Sequel::ForeignKeyConstraintViolation
       end
 
       describe 'space' do
         it 'gets its space from the containing app' do
           space = Space.make
-          app = AppModel.make(space: space)
-          build = BuildModel.make(app: app)
+          app = AppModel.make(space:)
+          build = BuildModel.make(app:)
           expect(build.space).to eq(space)
         end
       end
@@ -56,7 +56,7 @@ module VCAP::CloudController
       context 'kpack' do
         let(:kpack_lifecycle_data) do
           KpackLifecycleDataModel.make(
-            build: build_model,
+            build: build_model
           )
         end
 
@@ -84,9 +84,9 @@ module VCAP::CloudController
 
       context 'buildpack dependencies' do
         it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
-          expect {
+          expect do
             build_model.destroy
-          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
+          end.to change { BuildpackLifecycleDataModel.count }.by(-1).
             and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
         end
       end
@@ -95,9 +95,9 @@ module VCAP::CloudController
         let!(:lifecycle_data) { KpackLifecycleDataModel.make(build: build_model) }
 
         it 'deletes the dependent kpack_lifecycle_data_models when a build is deleted' do
-          expect {
+          expect do
             build_model.destroy
-          }.to change { KpackLifecycleDataModel.count }.by(-1)
+          end.to change { KpackLifecycleDataModel.count }.by(-1)
         end
       end
     end
@@ -147,9 +147,9 @@ module VCAP::CloudController
 
       context 'when the state is not in the FAILED state' do
         it 'creates an app usage event for STAGING_STOPPED' do
-          expect {
+          expect do
             build_model.fail_to_stage!
-          }.to change {
+          end.to change {
             AppUsageEvent.count
           }.by(1)
 
@@ -163,9 +163,9 @@ module VCAP::CloudController
         let(:previously_failed_build) { BuildModel.make(package: package, state: BuildModel::FAILED_STATE) }
 
         it 'creates an app usage event for STAGING_STOPPED' do
-          expect {
+          expect do
             previously_failed_build.fail_to_stage!
-          }.to change {
+          end.to change {
             AppUsageEvent.count
           }.by(0)
 
@@ -177,47 +177,47 @@ module VCAP::CloudController
       context 'when a valid reason is specified' do
         BuildModel::STAGING_FAILED_REASONS.each do |reason|
           it 'sets the requested staging failed reason' do
-            expect {
+            expect do
               build_model.fail_to_stage!(reason)
-            }.to change { build_model.error_id }.to(reason)
+            end.to change { build_model.error_id }.to(reason)
           end
         end
       end
 
       context 'when an unexpected reason is specifed' do
         it 'should use the default, generic reason' do
-          expect {
+          expect do
             build_model.fail_to_stage!('bogus')
-          }.to change { build_model.error_id }.to('StagingError')
+          end.to change { build_model.error_id }.to('StagingError')
         end
       end
 
       context 'when a reason is not specified' do
         it 'should use the default, generic reason' do
-          expect {
+          expect do
             build_model.fail_to_stage!
-          }.to change { build_model.error_id }.to('StagingError')
+          end.to change { build_model.error_id }.to('StagingError')
         end
       end
 
       describe 'setting staging_failed_description' do
         it 'sets the staging_failed_description to the v2.yml description of the error type' do
-          expect {
+          expect do
             build_model.fail_to_stage!('NoAppDetectedError')
-          }.to change { build_model.error_description }.to('An app was not successfully detected by any available buildpack')
+          end.to change { build_model.error_description }.to('An app was not successfully detected by any available buildpack')
         end
 
         it 'provides a string for interpolation on errors that require it' do
-          expect {
+          expect do
             build_model.fail_to_stage!('StagingError')
-          }.to change { build_model.error_description }.to('Staging error: staging failed')
+          end.to change { build_model.error_description }.to('Staging error: staging failed')
         end
 
         BuildModel::STAGING_FAILED_REASONS.each do |reason|
           it "successfully sets staging_failed_description for reason: #{reason}" do
-            expect {
+            expect do
               build_model.fail_to_stage!(reason)
-            }.to_not raise_error
+            end.to_not raise_error
           end
         end
       end
@@ -231,9 +231,9 @@ module VCAP::CloudController
       end
 
       it 'creates an app usage event for STAGING_STOPPED' do
-        expect {
+        expect do
           build_model.mark_as_staged
-        }.to change {
+        end.to change {
           AppUsageEvent.count
         }.by(1)
 
@@ -247,9 +247,9 @@ module VCAP::CloudController
       before { build_model.update(state: BuildModel::STAGING_STATE) }
 
       it 'creates an app usage event for STAGING_STOPPED' do
-        expect {
+        expect do
           build_model.record_staging_stopped
-        }.to change {
+        end.to change {
           AppUsageEvent.count
         }.by(1)
 
@@ -292,9 +292,9 @@ module VCAP::CloudController
         end
 
         it 'complains when we delete the build without deleting associated metadata' do
-          expect {
+          expect do
             build_model.delete
-          }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+          end.to raise_error(Sequel::ForeignKeyConstraintViolation)
         end
       end
     end

@@ -17,7 +17,7 @@ module VCAP::CloudController
                                        map(&:app_guid)
 
           guids_for_apps_with_builds.each do |app_guid|
-            builds_dataset = BuildModel.where(app_guid: app_guid)
+            builds_dataset = BuildModel.where(app_guid:)
 
             builds_to_keep = builds_dataset.
                              order(Sequel.desc(:created_at)).

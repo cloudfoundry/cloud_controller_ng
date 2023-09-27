@@ -20,14 +20,14 @@ module VCAP::CloudController
 
         let(:lifecycle_payload) do
           {
-            app_bits_download_uri:              'app_bits_download',
+            app_bits_download_uri: 'app_bits_download',
             build_artifacts_cache_download_uri: 'build_artifact_download',
-            build_artifacts_cache_upload_uri:   'build_artifact_upload',
-            droplet_upload_uri:                 'droplet_upload',
-            buildpacks:                         [],
-            stack:                              'stack',
-            buildpack_cache_checksum:           'bp-cache-checksum',
-            app_bits_checksum:                  { type: 'sha256', value: 'package-checksum' },
+            build_artifacts_cache_upload_uri: 'build_artifact_upload',
+            droplet_upload_uri: 'droplet_upload',
+            buildpacks: [],
+            stack: 'stack',
+            buildpack_cache_checksum: 'bp-cache-checksum',
+            app_bits_checksum: { type: 'sha256', value: 'package-checksum' }
           }
         end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         describe 'validation' do
-          let(:optional_keys) { [:build_artifacts_cache_download_uri, :buildpack_cache_checksum] }
+          let(:optional_keys) { %i[build_artifacts_cache_download_uri buildpack_cache_checksum] }
 
           context 'when build artifacts cache download uri is missing' do
             before do
@@ -44,9 +44,9 @@ module VCAP::CloudController
             end
 
             it 'does not raise an error' do
-              expect {
+              expect do
                 lifecycle_data.message
-              }.to_not raise_error
+              end.to_not raise_error
             end
 
             it 'omits buildpack artifacts cache download uri from the message' do
@@ -60,9 +60,9 @@ module VCAP::CloudController
             end
 
             it 'does not raise an error' do
-              expect {
+              expect do
                 lifecycle_data.message
-              }.to_not raise_error
+              end.to_not raise_error
             end
 
             it 'omits buildpack_cache_checksum from the message' do
@@ -77,9 +77,9 @@ module VCAP::CloudController
               required_keys.each do |key|
                 data = lifecycle_data.clone
                 data.public_send("#{key}=", nil)
-                expect {
+                expect do
                   data.message
-                }.to raise_error(
+                end.to raise_error(
                   Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array|Hash), given an instance of NilClass }/
                 )
               end

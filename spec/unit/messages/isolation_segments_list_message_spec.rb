@@ -6,15 +6,15 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'names'              => 'name1,name2',
-          'guids'              => 'guid1,guid2',
+          'names' => 'name1,name2',
+          'guids' => 'guid1,guid2',
           'organization_guids' => 'o-guid1,o-guid2',
-          'label_selector'     => 'foo=bar',
-          'page'               => 1,
-          'per_page'           => 5,
-          'order_by'           => 'created_at',
-          'created_ats'        => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          'updated_ats'        => { gt: Time.now.utc.iso8601 }
+          'label_selector' => 'foo=bar',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'created_at',
+          'created_ats' => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          'updated_ats' => { gt: Time.now.utc.iso8601 }
         }
       end
 
@@ -22,9 +22,9 @@ module VCAP::CloudController
         message = IsolationSegmentsListMessage.from_params(params)
 
         expect(message).to be_a(IsolationSegmentsListMessage)
-        expect(message.names).to eq(['name1', 'name2'])
-        expect(message.guids).to eq(['guid1', 'guid2'])
-        expect(message.organization_guids).to eq(['o-guid1', 'o-guid2'])
+        expect(message.names).to eq(%w[name1 name2])
+        expect(message.guids).to eq(%w[guid1 guid2])
+        expect(message.organization_guids).to eq(%w[o-guid1 o-guid2])
         expect(message.label_selector).to eq('foo=bar')
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
@@ -49,26 +49,26 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:opts) do
         {
-            names:              ['name1', 'name2'],
-            guids:              ['guid1', 'guid2'],
-            organization_guids:  ['o-guid1', 'o-guid2'],
-            label_selector:     'foo=bar',
-            page:               1,
-            per_page:           5,
-            order_by:           'created_at',
-            created_ats:        [Time.now.utc.iso8601, Time.now.utc.iso8601],
-            updated_ats:        { gt: Time.now.utc.iso8601 }
+          names: %w[name1 name2],
+          guids: %w[guid1 guid2],
+          organization_guids: %w[o-guid1 o-guid2],
+          label_selector: 'foo=bar',
+          page: 1,
+          per_page: 5,
+          order_by: 'created_at',
+          created_ats: [Time.now.utc.iso8601, Time.now.utc.iso8601],
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [
-          :names,
-          :guids,
-          :organization_guids,
-          :label_selector,
-          :created_ats,
-          :updated_ats,
+        expected_params = %i[
+          names
+          guids
+          organization_guids
+          label_selector
+          created_ats
+          updated_ats
         ]
         expect(IsolationSegmentsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
@@ -76,17 +76,17 @@ module VCAP::CloudController
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           IsolationSegmentsListMessage.from_params({
-              names:              [],
-              guids:              [],
-              organization_guids: [],
-              label_selector:     '',
-              page:               1,
-              per_page:           5,
-              order_by:           'created_at',
-            })
-        }.not_to raise_error
+                                                     names: [],
+                                                     guids: [],
+                                                     organization_guids: [],
+                                                     label_selector: '',
+                                                     page: 1,
+                                                     per_page: 5,
+                                                     order_by: 'created_at'
+                                                   })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do

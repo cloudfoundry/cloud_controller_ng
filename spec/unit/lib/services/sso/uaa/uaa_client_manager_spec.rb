@@ -4,8 +4,8 @@ module VCAP::Services::SSO::UAA
   RSpec.describe UaaClientManager do
     let(:dashboard_client_hash) do
       {
-        'id'           => 'client-id',
-        'secret'       => 'client-secret',
+        'id' => 'client-id',
+        'secret' => 'client-secret',
         'redirect_uri' => 'http://redirect.com'
       }
     end
@@ -14,7 +14,7 @@ module VCAP::Services::SSO::UAA
       let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
-      let(:token_info) { double('info', auth_header: auth_header) }
+      let(:token_info) { double('info', auth_header:) }
       let(:token_issuer) { double('issuer', client_credentials_grant: token_info) }
 
       before do
@@ -39,30 +39,31 @@ module VCAP::Services::SSO::UAA
 
         expected_json_body = [
           {
-            client_id:              nil,
-            client_secret:          nil,
-            redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
-            authorities:            ['uaa.resource'],
+            client_id: nil,
+            client_secret: nil,
+            redirect_uri: nil,
+            scope: ['openid', 'cloud_controller_service_permissions.read'],
+            authorities: ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
-            action:                 'add'
+            action: 'add'
           },
           {
-            client_id:              nil,
-            client_secret:          nil,
-            redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
-            authorities:            ['uaa.resource'],
+            client_id: nil,
+            client_secret: nil,
+            redirect_uri: nil,
+            scope: ['openid', 'cloud_controller_service_permissions.read'],
+            authorities: ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
-            action:                 'update' },
+            action: 'update'
+          },
           {
-            client_id:              'delete-this-client',
-            client_secret:          nil,
-            redirect_uri:           nil,
-            scope:                  ['openid', 'cloud_controller_service_permissions.read'],
-            authorities:            ['uaa.resource'],
+            client_id: 'delete-this-client',
+            client_secret: nil,
+            redirect_uri: nil,
+            scope: ['openid', 'cloud_controller_service_permissions.read'],
+            authorities: ['uaa.resource'],
             authorized_grant_types: ['authorization_code'],
-            action:                 'delete'
+            action: 'delete'
           }
         ].to_json
 
@@ -70,13 +71,14 @@ module VCAP::Services::SSO::UAA
         client_manager.modify_transaction(changeset)
 
         expect(a_request(:post, tx_url).with(
-                 body:    expected_json_body,
-                 headers: { 'Authorization' => auth_header })).to have_been_made
+                 body: expected_json_body,
+                 headers: { 'Authorization' => auth_header }
+               )).to have_been_made
       end
 
       it 'logs a sanitized version of the request' do
         changeset = [
-          double('update_command', uaa_command: { client_id: 'id', client_secret: 'secret' }, client_attrs: {}),
+          double('update_command', uaa_command: { client_id: 'id', client_secret: 'secret' }, client_attrs: {})
         ]
 
         logger = double('logger')
@@ -84,8 +86,8 @@ module VCAP::Services::SSO::UAA
         allow(logger).to receive(:info)
 
         expect(logger).to receive(:info) do |arg|
-          expect(arg).to match /POST UAA transaction: #{tx_url}/
-          expect(arg).to_not match /client_secret/
+          expect(arg).to match(/POST UAA transaction: #{tx_url}/)
+          expect(arg).to_not match(/client_secret/)
         end
 
         client_manager = UaaClientManager.new
@@ -113,16 +115,17 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceNotFound)
+          end.to raise_error(VCAP::CloudController::UaaResourceNotFound)
         end
       end
 
       context 'when the CF router returns a 404' do
         before do
           stub_request(:post, tx_url).to_return(
-            status: 404, headers: { 'X-Cf-Routererror' => 'unknown_route' })
+            status: 404, headers: { 'X-Cf-Routererror' => 'unknown_route' }
+          )
         end
 
         it 'raises a UaaUnavailable error' do
@@ -132,9 +135,9 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnavailable)
+          end.to raise_error(VCAP::CloudController::UaaUnavailable)
         end
       end
 
@@ -150,9 +153,9 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceAlreadyExists)
+          end.to raise_error(VCAP::CloudController::UaaResourceAlreadyExists)
         end
       end
 
@@ -168,9 +171,9 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaResourceInvalid)
+          end.to raise_error(VCAP::CloudController::UaaResourceInvalid)
         end
       end
 
@@ -186,9 +189,9 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnexpectedResponse)
+          end.to raise_error(VCAP::CloudController::UaaUnexpectedResponse)
         end
       end
 
@@ -204,9 +207,9 @@ module VCAP::Services::SSO::UAA
 
           client_manager = UaaClientManager.new
 
-          expect {
+          expect do
             client_manager.modify_transaction(changeset)
-          }.to raise_error(VCAP::CloudController::UaaUnavailable)
+          end.to raise_error(VCAP::CloudController::UaaUnavailable)
         end
       end
 
@@ -228,7 +231,7 @@ module VCAP::Services::SSO::UAA
 
         it 'sets use_ssl to true' do
           changeset = [
-            double('command', uaa_command: {}, client_attrs: {}),
+            double('command', uaa_command: {}, client_attrs: {})
           ]
 
           client_manager = UaaClientManager.new
@@ -240,7 +243,7 @@ module VCAP::Services::SSO::UAA
 
         it 'sets verify_mode to verify_peer' do
           changeset = [
-            double('command', uaa_command: {}, client_attrs: {}),
+            double('command', uaa_command: {}, client_attrs: {})
           ]
 
           client_manager = UaaClientManager.new
@@ -254,7 +257,7 @@ module VCAP::Services::SSO::UAA
 
         it 'sets the ca_file' do
           changeset = [
-            double('command', uaa_command: {}, client_attrs: {}),
+            double('command', uaa_command: {}, client_attrs: {})
           ]
 
           client_manager = UaaClientManager.new
@@ -265,22 +268,24 @@ module VCAP::Services::SSO::UAA
       end
 
       describe 'scope options' do
-        let(:changeset) { [
-          double('create_command', uaa_command: { action: 'add' }, client_attrs: {})
-        ]
-        }
-        let(:expected_json_body) { [
-          {
-            client_id:              nil,
-            client_secret:          nil,
-            redirect_uri:           nil,
-            scope:                  expected_scope,
-            authorities:            ['uaa.resource'],
-            authorized_grant_types: ['authorization_code'],
-            action:                 'add'
-          }
-        ].to_json
-        }
+        let(:changeset) do
+          [
+            double('create_command', uaa_command: { action: 'add' }, client_attrs: {})
+          ]
+        end
+        let(:expected_json_body) do
+          [
+            {
+              client_id: nil,
+              client_secret: nil,
+              redirect_uri: nil,
+              scope: expected_scope,
+              authorities: ['uaa.resource'],
+              authorized_grant_types: ['authorization_code'],
+              action: 'add'
+            }
+          ].to_json
+        end
         let(:client_manager) { UaaClientManager.new }
 
         before do
@@ -296,8 +301,9 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with minimal scope' do
             expect(a_request(:post, tx_url).with(
-                     body:    expected_json_body,
-                     headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header }
+                   )).to have_been_made
           end
         end
 
@@ -307,8 +313,9 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with extended scope' do
             expect(a_request(:post, tx_url).with(
-                     body:    expected_json_body,
-                     headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header }
+                   )).to have_been_made
           end
         end
 
@@ -318,8 +325,9 @@ module VCAP::Services::SSO::UAA
 
           it 'makes a request to UAA with extended scope' do
             expect(a_request(:post, tx_url).with(
-                     body:    expected_json_body,
-                     headers: { 'Authorization' => auth_header })).to have_been_made
+                     body: expected_json_body,
+                     headers: { 'Authorization' => auth_header }
+                   )).to have_been_made
           end
         end
       end

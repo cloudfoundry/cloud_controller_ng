@@ -199,11 +199,11 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'when the request is malformed' do
-        let(:request_body) {
+        let(:request_body) do
           {
-            bork: 'some-name',
+            bork: 'some-name'
           }
-        }
+        end
 
         it 'returns a 422' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
@@ -249,7 +249,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not an admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
@@ -311,7 +311,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not an admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
@@ -324,7 +324,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   describe '#create' do
     let(:request_body) do
       {
-        name: 'some-name',
+        name: 'some-name'
       }
     end
 
@@ -343,11 +343,11 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'when the request is malformed' do
-        let(:request_body) {
+        let(:request_body) do
           {
-            bork: 'some-name',
+            bork: 'some-name'
           }
-        }
+        end
         it 'returns a 422' do
           post :create, body: request_body
           expect(response.status).to eq 422
@@ -366,7 +366,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
@@ -492,7 +492,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context 'with invalid pagination params' do
           it 'returns 400 and the allowed param range' do
-            get :index, params: { per_page: 99999999999999999 }, as: :json
+            get :index, params: { per_page: 99_999_999_999_999_999 }, as: :json
 
             expect(response.status).to eq 400
             expect(response.body).to include 'BadQueryParameter'
@@ -511,7 +511,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           expect(response.status).to eq(200)
           response_names = parsed_body['resources'].map { |r| r['name'] }
           expect(response_names.length).to eq(3)
-          expect(response_names).to eq(['a-segment', 'b-segment', 'shared'])
+          expect(response_names).to eq(%w[a-segment b-segment shared])
         end
       end
     end
@@ -580,7 +580,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
@@ -612,7 +612,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           before do
             allow_any_instance_of(VCAP::CloudController::IsolationSegmentDelete).to receive(:delete).
               and_raise(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError.new(
-                          'Revoke the Organization entitlements for your Isolation Segment.'))
+                          'Revoke the Organization entitlements for your Isolation Segment.'
+                        ))
           end
 
           it 'returns a 422 UnprocessableEntity error' do
@@ -647,7 +648,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
@@ -666,7 +667,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     let(:request_body) do
       {
-        name: 'some-other-name',
+        name: 'some-other-name'
       }
     end
 

@@ -13,28 +13,28 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(UserProvidedServiceInstancesController).to have_creatable_attributes({
-              name:                  { type: 'string', required: true },
-              credentials:           { type: 'hash', default: {} },
-              syslog_drain_url:      { type: 'string', default: '' },
-              space_guid:            { type: 'string', required: true },
-              service_binding_guids: { type: '[string]' },
-              route_service_url:     { type: 'string', default: '' },
-              route_guids:           { type: '[string]' },
-              tags:                  { type: '[string]', default: [] },
-            })
+                                                                                      name: { type: 'string', required: true },
+                                                                                      credentials: { type: 'hash', default: {} },
+                                                                                      syslog_drain_url: { type: 'string', default: '' },
+                                                                                      space_guid: { type: 'string', required: true },
+                                                                                      service_binding_guids: { type: '[string]' },
+                                                                                      route_service_url: { type: 'string', default: '' },
+                                                                                      route_guids: { type: '[string]' },
+                                                                                      tags: { type: '[string]', default: [] }
+                                                                                    })
       end
 
       it do
         expect(UserProvidedServiceInstancesController).to have_updatable_attributes({
-              name:                  { type: 'string' },
-              credentials:           { type: 'hash' },
-              syslog_drain_url:      { type: 'string' },
-              space_guid:            { type: 'string' },
-              service_binding_guids: { type: '[string]' },
-              route_service_url:     { type: 'string' },
-              route_guids:           { type: '[string]' },
-              tags:                  { type: '[string]' },
-            })
+                                                                                      name: { type: 'string' },
+                                                                                      credentials: { type: 'hash' },
+                                                                                      syslog_drain_url: { type: 'string' },
+                                                                                      space_guid: { type: 'string' },
+                                                                                      service_binding_guids: { type: '[string]' },
+                                                                                      route_service_url: { type: 'string' },
+                                                                                      route_guids: { type: '[string]' },
+                                                                                      tags: { type: '[string]' }
+                                                                                    })
       end
     end
 
@@ -52,9 +52,9 @@ module VCAP::CloudController
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
           include_examples 'permission enumeration', user_role,
-            name:      'user provided service instance',
-            path:      '/v2/user_provided_service_instances',
-            enumerate: 0
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 0
         end
       end
 
@@ -68,9 +68,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name:      'user provided service instance',
-            path:      '/v2/user_provided_service_instances',
-            enumerate: 1
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
       end
 
@@ -80,9 +80,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-            name:      'user provided service instance',
-            path:      '/v2/user_provided_service_instances',
-            enumerate: 1
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
@@ -90,9 +90,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-            name:      'user provided service instance',
-            path:      '/v2/user_provided_service_instances',
-            enumerate: 1
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
 
         describe 'SpaceManager' do
@@ -100,9 +100,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name:      'user provided service instance',
-            path:      '/v2/user_provided_service_instances',
-            enumerate: 1
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
       end
     end
@@ -110,8 +110,8 @@ module VCAP::CloudController
     describe 'Associations' do
       it do
         expect(UserProvidedServiceInstancesController).to have_nested_routes(
-          service_bindings: [:get, :put, :delete],
-          routes: [:get, :put, :delete]
+          service_bindings: %i[get put delete],
+          routes: %i[get put delete]
         )
       end
     end
@@ -199,8 +199,7 @@ module VCAP::CloudController
                 [UserProvidedServiceInstance.make(name: 'instance-1', space: space1),
                  UserProvidedServiceInstance.make(name: 'instance-2', space: space1),
                  UserProvidedServiceInstance.make(name: 'instance-3', space: space1),
-                 UserProvidedServiceInstance.make(name: 'instance-4', space: space2),
-                ]
+                 UserProvidedServiceInstance.make(name: 'instance-4', space: space2)]
               end
 
               context 'at page 1' do
@@ -313,11 +312,11 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          'name'              => 'my-upsi',
-          'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-          'tags'              => ['tag-a', 'tag-b'],
-          'space_guid'        => space.guid,
-          'route_service_url' => 'https://route.url.com',
+          'name' => 'my-upsi',
+          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+          'tags' => %w[tag-a tag-b],
+          'space_guid' => space.guid,
+          'route_service_url' => 'https://route.url.com'
         }
       end
 
@@ -333,7 +332,7 @@ module VCAP::CloudController
         expect(service_instance.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
         expect(service_instance.space.guid).to eq space.guid
         expect(service_instance.route_service_url).to eq 'https://route.url.com'
-        expect(service_instance.tags).to eq ['tag-a', 'tag-b']
+        expect(service_instance.tags).to eq %w[tag-a tag-b]
       end
 
       context 'when the new service instance name is taken' do
@@ -342,8 +341,8 @@ module VCAP::CloudController
 
         let(:req_dup) do
           {
-          'name'              => service_instance.name,
-          'space_guid'        => service_instance.space.guid
+            'name' => service_instance.name,
+            'space_guid' => service_instance.space.guid
           }
         end
 
@@ -351,7 +350,7 @@ module VCAP::CloudController
           post '/v2/user_provided_service_instances', req_dup.to_json
 
           expect(last_response).to have_status_code(400)
-          expect(decoded_response['code']).to eq(60002)
+          expect(decoded_response['code']).to eq(60_002)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTaken')
         end
       end
@@ -362,12 +361,12 @@ module VCAP::CloudController
         it 'returns an error if the service instance name is over 255 characters' do
           post '/v2/user_provided_service_instances', {
             name: very_long_name,
-            space_guid: space.guid,
+            space_guid: space.guid
           }.to_json
 
           expect(last_response.status).to eq(400)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
-          expect(decoded_response['code']).to eq 60009
+          expect(decoded_response['code']).to eq 60_009
         end
       end
 
@@ -390,7 +389,7 @@ module VCAP::CloudController
       end
 
       it 'records a create event' do
-        set_current_user(developer, email: email)
+        set_current_user(developer, email:)
         post '/v2/user_provided_service_instances', req.to_json
 
         event            = Event.first(type: 'audit.user_provided_service_instance.create')
@@ -404,24 +403,24 @@ module VCAP::CloudController
         expect(event.actee_name).to eq service_instance.name
         expect(event.space_guid).to eq space.guid
         expect(event.metadata).to include({
-              'request' => {
-                'name'              => 'my-upsi',
-                'credentials'       => '[REDACTED]',
-                'space_guid'        => space.guid,
-                'syslog_drain_url'  => '',
-                'route_service_url' => 'https://route.url.com',
-                'tags'              => ['tag-a', 'tag-b'],
-              }
-            })
+                                            'request' => {
+                                              'name' => 'my-upsi',
+                                              'credentials' => '[REDACTED]',
+                                              'space_guid' => space.guid,
+                                              'syslog_drain_url' => '',
+                                              'route_service_url' => 'https://route.url.com',
+                                              'tags' => %w[tag-a tag-b]
+                                            }
+                                          })
       end
 
       context 'when the route_service_url is invalid' do
         context 'when the route service url scheme is http' do
           let(:req) do
             {
-              'name'              => 'my-upsi',
-              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-              'space_guid'        => space.guid,
+              'name' => 'my-upsi',
+              'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid' => space.guid,
               'route_service_url' => 'http://route.url.com'
             }
           end
@@ -438,9 +437,9 @@ module VCAP::CloudController
         context 'when the route service url format is missing a /' do
           let(:req) do
             {
-              'name'              => 'my-upsi',
-              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-              'space_guid'        => space.guid,
+              'name' => 'my-upsi',
+              'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid' => space.guid,
               'route_service_url' => 'https:/route.com'
             }
           end
@@ -457,9 +456,9 @@ module VCAP::CloudController
         context 'when the route service url format is invalid' do
           let(:req) do
             {
-              'name'              => 'my-upsi',
-              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-              'space_guid'        => space.guid,
+              'name' => 'my-upsi',
+              'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid' => space.guid,
               'route_service_url' => 'https://.com'
             }
           end
@@ -488,15 +487,15 @@ module VCAP::CloudController
             escaped_warning = last_response.headers['X-Cf-Warnings']
             expect(escaped_warning).to_not be_nil
             warning = CGI.unescape(escaped_warning)
-            expect(warning).to match /Support for route services is disabled. This service instance cannot be bound to a route./
+            expect(warning).to match(/Support for route services is disabled. This service instance cannot be bound to a route./)
           end
 
           context 'when the service is not a route service' do
             let(:req) do
               {
-                  'name'              => 'my-upsi',
-                  'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-                  'space_guid'        => space.guid
+                'name' => 'my-upsi',
+                'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+                'space_guid' => space.guid
               }
             end
 
@@ -534,7 +533,7 @@ module VCAP::CloudController
           post '/v2/user_provided_service_instances', req.to_json
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['code']).to eq(60015)
+          expect(decoded_response['code']).to eq(60_015)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
         end
       end
@@ -546,13 +545,13 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          'name'        => 'my-upsi',
+          'name' => 'my-upsi',
           'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
-          'tags'        => ['tag-a', 'tag-b'],
+          'tags' => %w[tag-a tag-b]
         }
       end
 
-      let!(:service_instance) { UserProvidedServiceInstance.make(space: space) }
+      let!(:service_instance) { UserProvidedServiceInstance.make(space:) }
 
       before { set_current_user(developer) }
 
@@ -564,12 +563,12 @@ module VCAP::CloudController
         service_instance = UserProvidedServiceInstance.first
         expect(service_instance.name).to eq 'my-upsi'
         expect(service_instance.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
-        expect(service_instance.tags).to eq(['tag-a', 'tag-b'])
+        expect(service_instance.tags).to eq(%w[tag-a tag-b])
         expect(service_instance.space.guid).to eq space.guid
       end
 
       it 'records a update event' do
-        set_current_user(developer, email: email)
+        set_current_user(developer, email:)
         put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
 
         service_instance = UserProvidedServiceInstance.first
@@ -583,12 +582,12 @@ module VCAP::CloudController
         expect(event.actee_name).to eq service_instance.name
         expect(event.space_guid).to eq space.guid
         expect(event.metadata).to include({
-              'request' => {
-                'name'        => 'my-upsi',
-                'credentials' => '[REDACTED]',
-                'tags'        => ['tag-a', 'tag-b'],
-              }
-            })
+                                            'request' => {
+                                              'name' => 'my-upsi',
+                                              'credentials' => '[REDACTED]',
+                                              'tags' => %w[tag-a tag-b]
+                                            }
+                                          })
       end
 
       context 'when the updated service instance name is taken' do
@@ -599,10 +598,10 @@ module VCAP::CloudController
 
         it 'fails and returns service instance name is taken' do
           put "/v2/user_provided_service_instances/#{service_instance_foo.guid}",
-            MultiJson.dump(name: service_instance_bar.name)
+              MultiJson.dump(name: service_instance_bar.name)
 
           expect(last_response).to have_status_code(400)
-          expect(decoded_response['code']).to eq(60002)
+          expect(decoded_response['code']).to eq(60_002)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTaken')
         end
       end
@@ -614,7 +613,7 @@ module VCAP::CloudController
           put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['code']).to eq(60015)
+          expect(decoded_response['code']).to eq(60_015)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
         end
       end
@@ -623,20 +622,20 @@ module VCAP::CloudController
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
         let(:developer) { make_developer_for_space(space) }
-        let(:instance) { UserProvidedServiceInstance.make(space: space) }
+        let(:instance) { UserProvidedServiceInstance.make(space:) }
 
         it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
           space2 = Space.make(organization: org)
           space2.add_developer(developer)
 
           move_req = MultiJson.dump(
-            space_guid: space2.guid,
+            space_guid: space2.guid
           )
 
           put "/v2/user_provided_service_instances/#{instance.guid}", move_req
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match /cannot change space for service instance/
+          expect(decoded_response['description']).to match(/cannot change space for service instance/)
         end
 
         it 'succeeds when the space_guid does not change' do
@@ -652,7 +651,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance has a binding' do
-        let!(:binding) { ServiceBinding.make service_instance: service_instance }
+        let!(:binding) { ServiceBinding.make service_instance: }
 
         it 'propagates the updated credentials to the binding' do
           put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
@@ -666,9 +665,9 @@ module VCAP::CloudController
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
       let(:space) { Space.make }
-      let!(:service_instance) { UserProvidedServiceInstance.make(space: space) }
+      let!(:service_instance) { UserProvidedServiceInstance.make(space:) }
 
-      before { set_current_user(developer, email: email) }
+      before { set_current_user(developer, email:) }
 
       it 'deletes the user provided service instance' do
         expect(UserProvidedServiceInstance.all.count).to eq 1
@@ -698,9 +697,9 @@ module VCAP::CloudController
     describe 'PUT', '/v2/user_provided_service_instances/:guid/routes/:route_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space:) }
       let(:opts) { {} }
-      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
+      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space:) }
 
       before do
         TestConfig.config[:route_services_enabled] = true
@@ -787,11 +786,11 @@ module VCAP::CloudController
 
       context 'when the route has an associated service instance' do
         before do
-          RouteBinding.make service_instance: service_instance, route: route
+          RouteBinding.make service_instance:, route:
         end
 
         it 'raises RouteAlreadyBoundToServiceInstance' do
-          new_service_instance = UserProvidedServiceInstance.make(:routing, space: space)
+          new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(0)
@@ -826,10 +825,10 @@ module VCAP::CloudController
 
       context 'when the route is internal' do
         let(:domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-        let(:route) { Route.make(domain: domain, space: space) }
+        let(:route) { Route.make(domain:, space:) }
 
         it 'raises RouteServiceCannotBeBoundToInternalRoute' do
-          new_service_instance = UserProvidedServiceInstance.make(:routing, space: space)
+          new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
           put "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400), last_response.body
           expect(JSON.parse(last_response.body)['description']).
@@ -839,7 +838,7 @@ module VCAP::CloudController
 
       context 'when attempting to bind to a service with no route_service_url' do
         before do
-          service_instance = UserProvidedServiceInstance.make(space: space)
+          service_instance = UserProvidedServiceInstance.make(space:)
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
         end
 
@@ -882,13 +881,13 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/user_provided_service_instances/:service_instance_guid/routes/:route_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
-      let(:route) { Route.make(space: space) }
+      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space:) }
+      let(:route) { Route.make(space:) }
 
       before { set_current_user(developer) }
 
       context 'when a service has an associated route' do
-        let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
+        let!(:route_binding) { RouteBinding.make(route:, service_instance:) }
 
         it 'deletes the association between the route and the service instance' do
           set_current_user(developer, email: 'developer@example.com')

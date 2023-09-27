@@ -29,7 +29,7 @@ class ServicePlansController < ApplicationController
     decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
     decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
 
-    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators: decorators)
+    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators:)
     render status: :ok, json: presenter.to_json
   end
 
@@ -107,11 +107,11 @@ class ServicePlansController < ApplicationController
   private
 
   def enforce_authentication?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def enforce_read_scope?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def service_plan_not_found!

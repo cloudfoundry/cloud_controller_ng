@@ -14,7 +14,7 @@ module VCAP::CloudController
     describe '.from_params' do
       it 'returns the correct ServiceCredentialBindingsShowMessage' do
         expect(message).to be_a(ServiceCredentialBindingShowMessage)
-        expect(message.include).to match_array(['app', 'service_instance'])
+        expect(message.include).to match_array(%w[app service_instance])
       end
 
       it 'converts requested keys to symbols' do

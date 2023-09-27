@@ -4,9 +4,9 @@ module VCAP::CloudController
   RSpec.describe RouteDelete do
     subject(:route_delete_action) do
       RouteDelete.new(
-        app_event_repository: app_event_repository,
-        route_event_repository: route_event_repository,
-        user_audit_info: user_audit_info
+        app_event_repository:,
+        route_event_repository:,
+        user_audit_info:
       )
     end
 
@@ -18,23 +18,23 @@ module VCAP::CloudController
 
     describe 'delete_unmapped_route' do
       it 'deletes the route' do
-        route_delete_action.delete_unmapped_route(route: route)
+        route_delete_action.delete_unmapped_route(route:)
 
         expect(route.exists?).to eq(false)
       end
 
       it 'creates a route delete audit event' do
-        route_delete_action.delete_unmapped_route(route: route)
+        route_delete_action.delete_unmapped_route(route:)
 
         expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user_audit_info, false)
       end
 
       context 'when there are route mappings' do
         it 'does not deletes the mappings or route' do
-          route_mapping = RouteMappingModel.make(route: route)
-          route_mapping_2 = RouteMappingModel.make(route: route)
+          route_mapping = RouteMappingModel.make(route:)
+          route_mapping_2 = RouteMappingModel.make(route:)
 
-          route_delete_action.delete_unmapped_route(route: route)
+          route_delete_action.delete_unmapped_route(route:)
 
           expect(route.exists?).to eq(true)
           expect(route_mapping.exists?).to eq(true)
@@ -47,7 +47,7 @@ module VCAP::CloudController
         let(:route) { route_binding.route }
 
         it 'does not delete the route' do
-          route_delete_action.delete_unmapped_route(route: route)
+          route_delete_action.delete_unmapped_route(route:)
 
           expect(route.exists?).to eq(true)
           expect(route_binding.exists?).to eq(true)
@@ -60,7 +60,7 @@ module VCAP::CloudController
         end
 
         it 'does not delete the route' do
-          route_delete_action.delete_unmapped_route(route: route)
+          route_delete_action.delete_unmapped_route(route:)
           expect(route.exists?).to eq(true)
         end
       end
@@ -68,30 +68,30 @@ module VCAP::CloudController
 
     describe 'delete_sync' do
       it 'deletes the route' do
-        route_delete_action.delete_sync(route: route, recursive: recursive)
+        route_delete_action.delete_sync(route:, recursive:)
 
         expect(route.exists?).to be_falsey
       end
 
       it 'creates a route delete audit event' do
-        route_delete_action.delete_sync(route: route, recursive: recursive)
+        route_delete_action.delete_sync(route:, recursive:)
 
         expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user_audit_info, false)
       end
 
       context 'when there are route mappings' do
-        let!(:route_mapping) { RouteMappingModel.make route: route }
-        let!(:route_mapping_2) { RouteMappingModel.make route: route }
+        let!(:route_mapping) { RouteMappingModel.make route: }
+        let!(:route_mapping_2) { RouteMappingModel.make route: }
 
         it 'deletes the mappings' do
-          route_delete_action.delete_sync(route: route, recursive: recursive)
+          route_delete_action.delete_sync(route:, recursive:)
 
           expect(route_mapping.exists?).to be_falsey
           expect(route_mapping_2.exists?).to be_falsey
         end
 
         it 'creates an unmap-route audit event for each mapping' do
-          route_delete_action.delete_sync(route: route, recursive: recursive)
+          route_delete_action.delete_sync(route:, recursive:)
 
           expect(app_event_repository).to have_received(:record_unmap_route).with(user_audit_info, route_mapping).once
           expect(app_event_repository).to have_received(:record_unmap_route).with(user_audit_info, route_mapping_2).once
@@ -110,7 +110,7 @@ module VCAP::CloudController
           end
 
           it 'deletes the route and associated binding' do
-            route_delete_action.delete_sync(route: route, recursive: recursive)
+            route_delete_action.delete_sync(route:, recursive:)
 
             expect(Route.find(guid: route.guid)).not_to be
             expect(RouteBinding.find(guid: route_binding.guid)).not_to be
@@ -119,9 +119,9 @@ module VCAP::CloudController
 
         context 'and it is not a recursive delete' do
           it 'raises an error and does not delete anything' do
-            expect {
-              route_delete_action.delete_sync(route: route, recursive: recursive)
-            }.to raise_error(RouteDelete::ServiceInstanceAssociationError)
+            expect do
+              route_delete_action.delete_sync(route:, recursive:)
+            end.to raise_error(RouteDelete::ServiceInstanceAssociationError)
           end
         end
       end

@@ -15,8 +15,8 @@ module VCAP::CloudController
         message = RouteDestinationsListMessage.from_params(params)
 
         expect(message).to be_a(RouteDestinationsListMessage)
-        expect(message.guids).to match_array(['guid1', 'guid2'])
-        expect(message.app_guids).to match_array(['guid3', 'guid4'])
+        expect(message.guids).to match_array(%w[guid1 guid2])
+        expect(message.app_guids).to match_array(%w[guid3 guid4])
       end
 
       it 'converts requested keys to symbols' do
@@ -30,9 +30,9 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = RouteDestinationsListMessage.from_params({
-          guids:   'some-guid,other-guid',
-          app_guids: 'guid-a,guid-b'
-        })
+                                                             guids: 'some-guid,other-guid',
+                                                             app_guids: 'guid-a,guid-b'
+                                                           })
         expect(message).to be_valid
       end
 

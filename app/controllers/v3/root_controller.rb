@@ -39,7 +39,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:tasks))
     links.merge!(create_link(:users))
 
-    render :ok, json: MultiJson.dump({ links: links }, pretty: true)
+    render :ok, json: MultiJson.dump({ links: }, pretty: true)
   end
 
   private

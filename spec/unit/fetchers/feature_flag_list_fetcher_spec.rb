@@ -28,9 +28,9 @@ module VCAP::CloudController
       end
 
       context 'when filtering on updated_ats' do
-        let(:filters) {
+        let(:filters) do
           { updated_ats: { gt: '2020-05-26T18:47:02Z' } }
-        }
+        end
         it 'it only returns records that have been updated in the time range' do
           expect(subject.fetch_all(message).map(&:name)).to contain_exactly('unset_roles_by_username', 'user_org_creation')
         end

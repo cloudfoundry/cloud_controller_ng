@@ -18,17 +18,17 @@ module VCAP::CloudController
     end
 
     it 'does not overwrite other included fields' do
-      wreathless_hash = { foo: 'bar', included: { monkeys: ['zach', 'greg'] } }
+      wreathless_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
       hash = subject.decorate(wreathless_hash, apps)
       expect(hash[:foo]).to eq('bar')
       expect(hash[:included][:organizations]).to match_array([Presenters::V3::OrganizationPresenter.new(organization1).to_hash,
                                                               Presenters::V3::OrganizationPresenter.new(organization2).to_hash])
-      expect(hash[:included][:monkeys]).to match_array(['zach', 'greg'])
+      expect(hash[:included][:monkeys]).to match_array(%w[zach greg])
     end
 
     describe '.match?' do
       it 'matches include arrays containing "org"' do
-        expect(decorator.match?(['potato', 'org', 'turnip'])).to be_truthy
+        expect(decorator.match?(%w[potato org turnip])).to be_truthy
       end
 
       it 'matches include arrays containing "space.organization"' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       it 'does not match other include arrays' do
-        expect(decorator.match?(['potato', 'turnip'])).to be_falsey
+        expect(decorator.match?(%w[potato turnip])).to be_falsey
       end
     end
   end

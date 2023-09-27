@@ -61,8 +61,8 @@ module VCAP::CloudController
 
     describe '#fetch_parameters' do
       context 'managed service instance' do
-        let(:service_plan) { ServicePlan.make(service: service) }
-        let(:managed_service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+        let(:service_plan) { ServicePlan.make(service:) }
+        let(:managed_service_instance) { ManagedServiceInstance.make(service_plan:) }
 
         context 'an app binding' do
           let(:service_binding) { ServiceBinding.make(service_instance: managed_service_instance) }

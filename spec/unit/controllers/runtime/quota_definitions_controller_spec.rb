@@ -11,34 +11,34 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::QuotaDefinitionsController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          non_basic_services_allowed: { type: 'bool', required: true },
-          total_services: { type: 'integer', required: true },
-          total_service_keys: { type: 'integer', required: false, default: -1 },
-          total_routes: { type: 'integer', required: true },
-          total_private_domains: { type: 'integer', required: false, default: -1 },
-          memory_limit: { type: 'integer', required: true },
-          instance_memory_limit: { type: 'integer', required: false, default: -1 },
-          app_instance_limit: { type: 'integer', required: false, default: -1 },
-          total_reserved_route_ports: { type: 'integer', required: false, default: 0 },
-          app_task_limit: { type: 'integer', required: false, default: -1 }
-        })
+                                                                                                 name: { type: 'string', required: true },
+                                                                                                 non_basic_services_allowed: { type: 'bool', required: true },
+                                                                                                 total_services: { type: 'integer', required: true },
+                                                                                                 total_service_keys: { type: 'integer', required: false, default: -1 },
+                                                                                                 total_routes: { type: 'integer', required: true },
+                                                                                                 total_private_domains: { type: 'integer', required: false, default: -1 },
+                                                                                                 memory_limit: { type: 'integer', required: true },
+                                                                                                 instance_memory_limit: { type: 'integer', required: false, default: -1 },
+                                                                                                 app_instance_limit: { type: 'integer', required: false, default: -1 },
+                                                                                                 total_reserved_route_ports: { type: 'integer', required: false, default: 0 },
+                                                                                                 app_task_limit: { type: 'integer', required: false, default: -1 }
+                                                                                               })
       end
 
       it do
         expect(VCAP::CloudController::QuotaDefinitionsController).to have_updatable_attributes({
-          name: { type: 'string' },
-          non_basic_services_allowed: { type: 'bool' },
-          total_services: { type: 'integer' },
-          total_service_keys: { type: 'integer' },
-          total_routes: { type: 'integer' },
-          total_private_domains: { type: 'integer' },
-          memory_limit: { type: 'integer' },
-          instance_memory_limit: { type: 'integer' },
-          app_instance_limit: { type: 'integer' },
-          total_reserved_route_ports: { type: 'integer' },
-          app_task_limit: { type: 'integer' }
-        })
+                                                                                                 name: { type: 'string' },
+                                                                                                 non_basic_services_allowed: { type: 'bool' },
+                                                                                                 total_services: { type: 'integer' },
+                                                                                                 total_service_keys: { type: 'integer' },
+                                                                                                 total_routes: { type: 'integer' },
+                                                                                                 total_private_domains: { type: 'integer' },
+                                                                                                 memory_limit: { type: 'integer' },
+                                                                                                 instance_memory_limit: { type: 'integer' },
+                                                                                                 app_instance_limit: { type: 'integer' },
+                                                                                                 total_reserved_route_ports: { type: 'integer' },
+                                                                                                 app_task_limit: { type: 'integer' }
+                                                                                               })
       end
     end
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
         put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -2 })
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(240004)
+        expect(decoded_response['code']).to eq(240_004)
       end
     end
   end

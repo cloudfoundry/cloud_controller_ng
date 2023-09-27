@@ -11,13 +11,13 @@ module VCAP::CloudController
     one_to_many :organizations
 
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-      :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_rate_limit
+                      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                      :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                      :log_rate_limit
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-      :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-      :log_rate_limit
+                      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                      :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                      :log_rate_limit
 
     def validate
       validates_presence :name
@@ -38,9 +38,9 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      if organizations.present?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'organization', 'quota definition')
-      end
+      return unless organizations.present?
+
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'organization', 'quota definition')
     end
 
     def trial_db_allowed=(_); end
@@ -61,7 +61,7 @@ module VCAP::CloudController
       self[name: @default_quota_name]
     end
 
-    def self.user_visibility_filter(user)
+    def self.user_visibility_filter(_user)
       full_dataset_filter
     end
 
@@ -78,9 +78,9 @@ module VCAP::CloudController
       route_ports_out_of_range = total_reserved_route_ports < UNLIMITED
       more_ports_than_routes = total_reserved_route_ports > total_routes
 
-      if route_ports_out_of_range || (more_ports_than_routes && total_routes >= 0)
-        errors.add(:total_reserved_route_ports, err_msg)
-      end
+      return unless route_ports_out_of_range || (more_ports_than_routes && total_routes >= 0)
+
+      errors.add(:total_reserved_route_ports, err_msg)
     end
   end
 end

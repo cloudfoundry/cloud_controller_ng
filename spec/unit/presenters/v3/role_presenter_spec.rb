@@ -128,7 +128,7 @@ module VCAP::CloudController::Presenters::V3
 
       describe 'when the user guid is weird' do
         let(:user) { VCAP::CloudController::User.make(guid: ':---)') }
-        let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user) }
+        let(:role) { VCAP::CloudController::SpaceAuditor.make(user:) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do

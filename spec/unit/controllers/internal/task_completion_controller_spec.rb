@@ -55,7 +55,7 @@ module VCAP::CloudController
           post url, MultiJson.dump(task_response)
 
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match /NotFound/
+          expect(last_response.body).to match(/NotFound/)
         end
       end
 

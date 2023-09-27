@@ -7,7 +7,7 @@ module CloudController
         false
       end
 
-      def exists?(key)
+      def exists?(_key)
         false
       end
 
@@ -25,13 +25,13 @@ module CloudController
 
       def delete_blob(blob); end
 
-      def download_uri(key)
+      def download_uri(_key)
         'http://example.com/nullclient/download_uri'
       end
 
       def ensure_bucket_exists; end
 
-      def blob(key)
+      def blob(_key)
         Blob.new
       end
 

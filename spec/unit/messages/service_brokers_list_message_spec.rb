@@ -6,8 +6,8 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
+          'page' => 1,
+          'per_page' => 5,
           'space_guids' => 'space-guid-1,space-guid-2,space-guid-3',
           'names' => 'name-1,name-2'
         }
@@ -20,8 +20,8 @@ module VCAP::CloudController
 
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.space_guids).to eq(['space-guid-1', 'space-guid-2', 'space-guid-3'])
-        expect(message.names).to eq(['name-1', 'name-2'])
+        expect(message.space_guids).to eq(%w[space-guid-1 space-guid-2 space-guid-3])
+        expect(message.names).to eq(%w[name-1 name-2])
       end
 
       it 'converts requested keys to symbols' do
@@ -49,11 +49,11 @@ module VCAP::CloudController
 
       it 'accepts defined fields' do
         message = ServiceBrokersListMessage.from_params({
-            page: 1,
-            per_page: 5,
-            space_guids: ['space-guid-1', 'space-guid2'],
-            names: ['name-1', 'name-2']
-          })
+                                                          page: 1,
+                                                          per_page: 5,
+                                                          space_guids: %w[space-guid-1 space-guid2],
+                                                          names: %w[name-1 name-2]
+                                                        })
         expect(message).to be_valid
       end
 
@@ -66,16 +66,16 @@ module VCAP::CloudController
 
       it 'does not accept non-array values for space_guids' do
         message = ServiceBrokersListMessage.from_params({
-            space_guids: 'not-an-array'
-          })
+                                                          space_guids: 'not-an-array'
+                                                        })
         expect(message).not_to be_valid
         expect(message.errors_on(:space_guids)).to include('must be an array')
       end
 
       it 'does not accept non-array values for names' do
         message = ServiceBrokersListMessage.from_params({
-            names: 'not-an-array'
-          })
+                                                          names: 'not-an-array'
+                                                        })
         expect(message).not_to be_valid
         expect(message.errors_on(:names)).to include('must be an array')
       end

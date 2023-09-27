@@ -52,23 +52,15 @@ module VCAP::CloudController
 
         unless delete_in_progress?
           delete_result = action.delete(binding)
-          if delete_result[:finished]
-            return finish
-          end
+          return finish if delete_result[:finished]
         end
 
         polling_status = action.poll(binding)
-        if polling_status[:finished]
-          return finish
-        end
+        return finish if polling_status[:finished]
 
-        if polling_status[:retry_after].present?
-          self.polling_interval_seconds = polling_status[:retry_after]
-        end
-      rescue => e
-        if binding.reload.last_operation.state != 'failed' && !e.is_a?(V3::ServiceRouteBindingDelete::ConcurrencyError)
-          save_failure(e.message)
-        end
+        self.polling_interval_seconds = polling_status[:retry_after] if polling_status[:retry_after].present?
+      rescue StandardError => e
+        save_failure(e.message) if binding.reload.last_operation.state != 'failed' && !e.is_a?(V3::ServiceRouteBindingDelete::ConcurrencyError)
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'unbind', e.message)
       end
 
@@ -93,7 +85,7 @@ module VCAP::CloudController
           {
             type: operation_type,
             state: 'failed',
-            description: description,
+            description: description
           }
         )
       end

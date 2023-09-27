@@ -21,8 +21,8 @@ module VCAP::CloudController
               'space_id' => app.space_guid,
               'org_id' => app.organization.guid,
               'ports' => app.processes.map(&:open_ports).flatten.sort.uniq.join(','),
-              'container_workload' => container_workload,
-            },
+              'container_workload' => container_workload
+            }
           }
         end
 

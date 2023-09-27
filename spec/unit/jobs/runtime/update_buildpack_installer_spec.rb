@@ -94,9 +94,9 @@ module VCAP::CloudController
             let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: existing_stack.name) }
 
             it 'does not update any values on the buildpack and re-raises the error' do
-              expect {
+              expect do
                 job.perform
-              }.to raise_error(RuntimeError)
+              end.to raise_error(RuntimeError)
 
               expect(Buildpack.find(name: 'mybuildpack')).to eql(existing_buildpack)
             end

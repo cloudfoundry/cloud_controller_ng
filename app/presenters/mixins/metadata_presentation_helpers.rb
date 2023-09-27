@@ -6,9 +6,9 @@ module VCAP::CloudController::Presenters::Mixins
 
     class_methods do
       def associated_resources
-        [
-          :labels,
-          :annotations
+        %i[
+          labels
+          annotations
         ]
       end
     end

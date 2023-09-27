@@ -6,10 +6,10 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'states'    => 'state1,state2',
-          'page'      => 1,
-          'per_page'  => 5,
-          'order_by'  => 'created_at',
+          'states' => 'state1,state2',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'created_at'
         }
       end
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
         message = AppBuildsListMessage.from_params(params)
 
         expect(message).to be_a(AppBuildsListMessage)
-        expect(message.states).to eq(['state1', 'state2'])
+        expect(message.states).to eq(%w[state1 state2])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
@@ -36,11 +36,11 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = AppBuildsListMessage.from_params({
-          states:    [],
-          page:      1,
-          per_page:  5,
-          order_by:  'created_at',
-        })
+                                                     states: [],
+                                                     page: 1,
+                                                     per_page: 5,
+                                                     order_by: 'created_at'
+                                                   })
         expect(message).to be_valid
       end
 
@@ -58,15 +58,15 @@ module VCAP::CloudController
 
       it 'reject an invalid order_by field' do
         message = AppBuildsListMessage.from_params({
-          order_by:  'fail!',
-        })
+                                                     order_by: 'fail!'
+                                                   })
         expect(message).not_to be_valid
       end
 
       describe 'validations' do
         context 'when the request contains space_guids' do
           it 'is invalid' do
-            message = AppBuildsListMessage.from_params({ space_guids: ['app1', 'app2'] })
+            message = AppBuildsListMessage.from_params({ space_guids: %w[app1 app2] })
             expect(message).to_not be_valid
             expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
           end
@@ -74,7 +74,7 @@ module VCAP::CloudController
 
         context 'when the request contains organization_guids' do
           it 'is invalid' do
-            message = AppBuildsListMessage.from_params({ organization_guids: ['app1', 'app2'] })
+            message = AppBuildsListMessage.from_params({ organization_guids: %w[app1 app2] })
             expect(message).to_not be_valid
             expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
           end

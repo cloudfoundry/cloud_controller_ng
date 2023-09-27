@@ -2,17 +2,18 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'uri'
 
-RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
-  tags = %w(accounting mongodb)
+RSpec.resource 'Service Instances', type: %i[api legacy_api] do
+  tags = %w[accounting mongodb]
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-  let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+  let(:service) { VCAP::CloudController::Service.make(service_broker:) }
   let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
   let!(:service_instance) do
-    service_instance                            = VCAP::CloudController::ManagedServiceInstance.make(
-      service_plan: service_plan, tags: tags)
+    service_instance = VCAP::CloudController::ManagedServiceInstance.make(
+      service_plan:, tags:
+    )
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
-      state:       'succeeded',
+      state: 'succeeded',
       description: 'service broker-provided description'
     )
     service_instance
@@ -33,8 +34,8 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     before do
       broker_url = service_broker.broker_url
       stub_request(:delete,
-        %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}}).
-        with(basic_auth: basic_auth(service_broker: service_broker)).
+                   %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}}).
+        with(basic_auth: basic_auth(service_broker:)).
         to_return(status: 202, body: broker_response_body.to_json)
     end
 
@@ -44,15 +45,15 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
     response_field 'space_guid', 'The space GUID that this service instance belongs to.'
     response_field 'gateway_data', '',
-      deprecated: true
+                   deprecated: true
     response_field 'dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
     response_field 'type', 'The type of service instance.',
-      valid_values: ['managed_service_instance', 'user_provided_service_instance']
+                   valid_values: %w[managed_service_instance user_provided_service_instance]
     response_field 'last_operation', 'The status of the last operation requested on the service instance. May be null.'
     response_field 'last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance',
-      valid_values: ['create', 'update', 'delete']
+                   valid_values: %w[create update delete]
     response_field 'last_operation.state', 'The status of the last operation or current operation being performed on the service instance.',
-      valid_values: ['in progress', 'succeeded', 'failed']
+                   valid_values: ['in progress', 'succeeded', 'failed']
     response_field 'last_operation.description', 'The service broker-provided description of the operation. May be null.'
     response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.'
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
@@ -63,7 +64,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'tags', 'A list of tags for the service instance'
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
-    standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
+    standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: %i[space service_plan]
 
     post '/v2/service_instances/' do
       field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
@@ -72,7 +73,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
       field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
       field :tags, 'A list of tags for the service instance. Max characters: 2048',
-        required: false, example_values: [%w(db), tags], default: []
+            required: false, example_values: [%w[db], tags], default: []
 
       param_description = <<~EOF
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
@@ -83,19 +84,19 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
         uri = URI(service_broker.broker_url)
         uri.path += '/v2/service_instances/'
         stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
-          with(basic_auth: basic_auth(service_broker: service_broker))
+          with(basic_auth: basic_auth(service_broker:))
       end
 
       example 'Creating a Service Instance' do
         space_guid   = VCAP::CloudController::Space.make.guid
         request_hash = {
-          space_guid:        space_guid,
-          name:              'my-service-instance',
+          space_guid: space_guid,
+          name: 'my-service-instance',
           service_plan_guid: service_plan.guid,
-          parameters:        {
+          parameters: {
             the_service_broker: 'wants this object'
           },
-          tags:              tags
+          tags: tags
         }
 
         client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
@@ -106,15 +107,15 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     put '/v2/service_instances/:guid' do
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
       let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker, plan_updateable: true) }
-      let(:new_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-      let(:old_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:new_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+      let(:old_plan) { VCAP::CloudController::ServicePlan.make(service:) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
 
       field :name, 'The new name for the service instance', required: false, example_values: ['my-new-service-instance']
       field :service_plan_guid, 'The new plan guid for the service instance', required: false, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
       field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
       field :tags, 'A list of tags for the service instance. NOTE: Updating the tags will overwrite any old tags. Max characters: 2048.',
-        required: false, example_values: [['db'], ['accounting', 'mongodb']]
+            required: false, example_values: [['db'], %w[accounting mongodb]]
 
       param_description = <<~EOF
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
@@ -126,13 +127,13 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
         uri.path += "/v2/service_instances/#{service_instance.guid}"
         uri.query = 'accepts_incomplete=true'
         stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
-          with(basic_auth: basic_auth(service_broker: service_broker))
+          with(basic_auth: basic_auth(service_broker:))
       end
 
       example 'Update a Service Instance' do
         request_json = {
           service_plan_guid: new_plan.guid,
-          parameters:        {
+          parameters: {
             the_service_broker: 'wants this object'
           }
         }.to_json
@@ -167,7 +168,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
       before do
         uri = URI(service_broker.broker_url)
         uri.path += "/v2/service_instances/#{service_instance.guid}"
-        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).with(basic_auth: basic_auth(service_broker: service_broker))
+        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).with(basic_auth: basic_auth(service_broker:))
       end
 
       example 'Delete a Service Instance' do
@@ -182,19 +183,19 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
   describe 'Nested endpoints' do
     describe 'Service Bindings' do
       before do
-        VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
+        VCAP::CloudController::ServiceBinding.make(service_instance:)
       end
 
       standard_model_list :service_binding,
-        VCAP::CloudController::ServiceBindingsController,
-        outer_model:       :service_instance,
-        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+                          VCAP::CloudController::ServiceBindingsController,
+                          outer_model: :service_instance,
+                          export_attributes: %i[app_guid service_instance_guid credentials binding_options gateway_data gateway_name syslog_drain_url volume_mounts]
     end
 
     describe 'Routes' do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
       let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
-      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance) }
+      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance:) }
 
       put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do
@@ -221,7 +222,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
 
       delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do
-          binding = VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+          binding = VCAP::CloudController::RouteBinding.make(service_instance:, route:)
           stub_unbind(binding)
         end
 
@@ -251,9 +252,9 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
       expect(status).to eq(200)
 
       expect(parsed_response).to eql({
-        'manage' => true,
-        'read'   => true
-      })
+                                       'manage' => true,
+                                       'read' => true
+                                     })
     end
   end
 end

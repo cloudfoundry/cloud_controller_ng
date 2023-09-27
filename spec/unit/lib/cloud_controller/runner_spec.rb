@@ -63,7 +63,7 @@ module VCAP::CloudController
           config = YAMLConfig.safe_load_file(valid_config_file_path)
           config['fluent'] ||= {
             'host' => 'localhost',
-            'port' => 24224,
+            'port' => 24_224
           }
           file = Tempfile.new('config')
           file.write(YAML.dump(config))
@@ -209,7 +209,7 @@ module VCAP::CloudController
 
               it "should set ENV['NEW_RELIC_ENV'] to production" do
                 ENV.delete('NEW_RELIC_ENV')
-                expect { subject }.to change { ENV['NEW_RELIC_ENV'] }.from(nil).to('production')
+                expect { subject }.to change { ENV.fetch('NEW_RELIC_ENV', nil) }.from(nil).to('production')
               end
 
               it 'should set the configuration file' do

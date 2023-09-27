@@ -62,8 +62,7 @@ module VCAP::CloudController
       it 'denies shared bar.foo.com when private foo.com exists' do
         PrivateDomain.make name: 'foo.com'
         expect { SharedDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
-          %{The domain name "bar.foo.com" cannot be created because "foo.com" is already reserved by another domain}
-        )
+                                                                        %(The domain name "bar.foo.com" cannot be created because "foo.com" is already reserved by another domain))
       end
 
       it 'denies shared foo.com when private foo.com exists' do
@@ -183,13 +182,13 @@ module VCAP::CloudController
       context 'when an invalid domain name is requested' do
         it 're-raises original err types with an updated message' do
           expected_error = StandardError.new('original message')
-          expected_error.set_backtrace(['original', 'backtrace'])
+          expected_error.set_backtrace(%w[original backtrace])
           allow(SharedDomain).to receive(:new).and_raise(expected_error)
 
           expect { SharedDomain.find_or_create(name: 'invalid_domain') }.to raise_error do |e|
             expect(e).to be_a(StandardError)
             expect(e.message).to eq('Error for shared domain name invalid_domain: original message')
-            expect(e.backtrace).to eq(['original', 'backtrace'])
+            expect(e.backtrace).to eq(%w[original backtrace])
           end
         end
       end
@@ -249,9 +248,9 @@ module VCAP::CloudController
           it 'ignores trying to make the domain external' do
             before_updated_at = existing_domain.updated_at
 
-            expect {
+            expect do
               SharedDomain.find_or_create(**attrs.merge(internal: false))
-            }.not_to change { existing_domain.reload }
+            end.not_to(change { existing_domain.reload })
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
             expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -267,9 +266,9 @@ module VCAP::CloudController
           it 'ignores trying to make the domain internal' do
             before_updated_at = existing_domain.updated_at
 
-            expect {
+            expect do
               SharedDomain.find_or_create(**attrs.merge(internal: true))
-            }.not_to change { existing_domain.reload }
+            end.not_to(change { existing_domain.reload })
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
             expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -283,9 +282,9 @@ module VCAP::CloudController
         it 'ignores trying to change the router group guid' do
           before_updated_at = existing_domain.updated_at
 
-          expect {
+          expect do
             SharedDomain.find_or_create(**attrs.merge(router_group_guid: 'new rgg'))
-          }.not_to change { existing_domain.reload }
+          end.not_to(change { existing_domain.reload })
           expect(fake_logger).to have_received(:warn).
             with("Domain '#{domain_name}' already exists. Skipping updates of router_group_guid")
           expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -298,9 +297,9 @@ module VCAP::CloudController
         it 'ignores trying to update the existing domain' do
           before_updated_at = existing_domain.updated_at
 
-          expect {
+          expect do
             SharedDomain.find_or_create(**attrs)
-          }.not_to change { existing_domain.reload }
+          end.not_to(change { existing_domain.reload })
           expect(existing_domain.updated_at).to eq(before_updated_at)
           expect(fake_logger).to have_received(:info).with("reusing default serving domain: #{domain_name}")
           expect(fake_logger).not_to have_received(:info).with("creating shared serving domain: #{domain_name}")

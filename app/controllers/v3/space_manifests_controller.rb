@@ -55,7 +55,7 @@ class SpaceManifestsController < ApplicationController
 
     diff = SpaceDiffManifest.generate_diff(parsed_manifests, space)
 
-    render status: :created, json: { diff: diff }
+    render status: :created, json: { diff: }
   end
 
   private
@@ -86,10 +86,10 @@ class SpaceManifestsController < ApplicationController
   end
 
   def validate_content_type!
-    if !request_content_type_is_yaml?
-      logger.error("Content-type isn't yaml: #{request.content_type}")
-      bad_request!('Content-Type must be yaml')
-    end
+    return if request_content_type_is_yaml?
+
+    logger.error("Content-type isn't yaml: #{request.content_type}")
+    bad_request!('Content-Type must be yaml')
   end
 
   def request_content_type_is_yaml?

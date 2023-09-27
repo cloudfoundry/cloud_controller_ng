@@ -64,7 +64,7 @@ module VCAP::CloudController
         end
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_service_instances: 1000000000000000000000000 }
+            { total_service_instances: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
@@ -122,7 +122,7 @@ module VCAP::CloudController
         end
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_service_keys: 1000000000000000000000000 }
+            { total_service_keys: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do

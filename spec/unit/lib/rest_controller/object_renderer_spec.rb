@@ -18,9 +18,9 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 11) }
 
         it 'raises BadQueryParameter error' do
-          expect {
+          expect do
             subject.render_json(controller, instance, opts)
-          }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
+          end.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
         end
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController::RestController
       context 'service_plan renderer' do
         let(:user) { VCAP::CloudController::User.make }
         let(:organization) { VCAP::CloudController::Organization.make }
-        let(:space) { VCAP::CloudController::Space.make(organization: organization) }
+        let(:space) { VCAP::CloudController::Space.make(organization:) }
         let(:controller) { VCAP::CloudController::ServicePlansController }
         let(:opts) { {} }
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -80,7 +80,7 @@ module VCAP::CloudController::RestController
         end
 
         it 'renders a service plan accessible via user\'s service instance only' do
-          VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan)
+          VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:)
           set_current_user(user)
           result = MultiJson.load(subject.render_json_with_read_privileges(controller, service_plan, opts))
           expect(result['entity']['service_guid']).to eq(service.guid)

@@ -23,7 +23,7 @@ RSpec.describe BuildpacksController, type: :controller do
         'global_auditor' => 200,
         'org_auditor' => 200,
         'org_billing_manager' => 200,
-        'org_user' => 200,
+        'org_user' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -32,7 +32,7 @@ RSpec.describe BuildpacksController, type: :controller do
           let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role:, org:, space:, user:)
 
             get :index
 
@@ -90,7 +90,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::BuildpackListFetcher).to receive(:fetch_all).with(
-          anything, hash_including(eager_loaded_associations: [:labels, :annotations])
+          anything, hash_including(eager_loaded_associations: %i[labels annotations])
         ).and_call_original
 
         get :index
@@ -145,7 +145,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               delete :destroy, params: { guid: buildpack.guid }, as: :json
 
@@ -158,7 +158,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -168,10 +168,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               delete :destroy, params: { guid: 'non-existent' }, as: :json
 
@@ -190,14 +190,14 @@ RSpec.describe BuildpacksController, type: :controller do
 
     context 'as an admin user' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when the buildpack exists' do
         it 'creates a job to track the deletion and returns it in the location header' do
-          expect {
+          expect do
             delete :destroy, params: { guid: buildpack.guid }
-          }.to change {
+          end.to change {
             VCAP::CloudController::PollableJobModel.count
           }.by(1)
 
@@ -282,17 +282,17 @@ RSpec.describe BuildpacksController, type: :controller do
           locked: true,
           metadata: {
             labels: {
-              fruit: 'passionfruit',
+              fruit: 'passionfruit'
             },
             annotations: {
-              potato: 'adora',
-            },
-          },
+              potato: 'adora'
+            }
+          }
         }
       end
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when params are correct' do
@@ -320,7 +320,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
           it 'does not create the buildpack' do
             expect { post :create, params: params, as: :json }.
-              to_not change { VCAP::CloudController::Buildpack.count }
+              to_not(change { VCAP::CloudController::Buildpack.count })
           end
 
           it 'returns 422' do
@@ -351,7 +351,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
         it 'does not create the buildpack' do
           expect { post :create, params: params, as: :json }.
-            to_not change { VCAP::CloudController::Buildpack.count }
+            to_not(change { VCAP::CloudController::Buildpack.count })
         end
       end
     end
@@ -394,7 +394,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               patch :update, params: { guid: buildpack.guid }, as: :json
 
@@ -407,7 +407,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -417,10 +417,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               patch :update, params: { guid: 'non-existent' }, as: :json
 
@@ -446,7 +446,7 @@ RSpec.describe BuildpacksController, type: :controller do
       let(:headers) { headers_for(user) }
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when the request message has invalid parameters' do
@@ -480,8 +480,8 @@ RSpec.describe BuildpacksController, type: :controller do
           locked: !buildpack.locked,
           metadata: {
             labels: { key: 'value' },
-            annotations: { key2: 'value2' },
-          },
+            annotations: { key2: 'value2' }
+          }
         }
         patch :update, params: { guid: buildpack.guid }.merge(new_values), as: :json
 
@@ -549,7 +549,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               post :upload, params: params.merge({ guid: test_buildpack.guid }), as: :json
 
@@ -562,7 +562,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -572,10 +572,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               post :upload, params: params.merge({ guid: 'doesnt-exist' }), as: :json
 
@@ -596,13 +596,13 @@ RSpec.describe BuildpacksController, type: :controller do
       let(:params) { { guid: test_buildpack.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       it 'returns a 202, the buildpack, and the job location header' do
-        expect {
+        expect do
           post :upload, params: params.merge({}), as: :json
-        }.to change {
+        end.to change {
           VCAP::CloudController::PollableJobModel.count
         }.by(1)
 

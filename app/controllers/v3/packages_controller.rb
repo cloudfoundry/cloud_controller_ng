@@ -21,12 +21,12 @@ class PackagesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = PackageListFetcher.fetch_for_app(message: message)
+      app, dataset = PackageListFetcher.fetch_for_app(message:)
 
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     else
       dataset = if permission_queryer.can_read_globally?
-                  PackageListFetcher.fetch_all(message: message)
+                  PackageListFetcher.fetch_all(message:)
                 else
                   PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
                 end
@@ -165,7 +165,7 @@ class PackagesController < ApplicationController
       unprocessable_non_bits_package!
     end
 
-    PackageCreate.create(message: message, user_audit_info: user_audit_info)
+    PackageCreate.create(message:, user_audit_info:)
   end
 
   def create_copy

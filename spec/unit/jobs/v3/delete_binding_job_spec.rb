@@ -6,17 +6,17 @@ module VCAP::CloudController
   module V3
     RSpec.describe DeleteBindingJob do
       context 'route' do
-        let(:route) { VCAP::CloudController::Route.make(space: space) }
+        let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
-              service_instance: service_instance,
-              route: route,
+              service_instance:,
+              route:
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -32,12 +32,12 @@ module VCAP::CloudController
               app: AppModel.make(space: service_instance.space),
               credentials: {
                 test: 'secretPassword'
-              },
+              }
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
         described_class.new(
           :any,
           'foo',
-          user_audit_info: {},
+          user_audit_info: {}
         )
       end
 

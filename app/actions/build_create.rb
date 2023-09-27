@@ -28,10 +28,10 @@ module VCAP::CloudController
     attr_reader :staging_response
 
     def initialize(user_audit_info: UserAuditInfo.from_context(SecurityContext),
-      memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
-      disk_limit_calculator: StagingDiskCalculator.new,
-      log_rate_limit_calculator: QuotaValidatingStagingLogRateLimitCalculator.new,
-      environment_presenter: StagingEnvironmentBuilder.new)
+                   memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
+                   disk_limit_calculator: StagingDiskCalculator.new,
+                   log_rate_limit_calculator: QuotaValidatingStagingLogRateLimitCalculator.new,
+                   environment_presenter: StagingEnvironmentBuilder.new)
 
       @user_audit_info         = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
@@ -51,14 +51,14 @@ module VCAP::CloudController
       staging_details.start_after_staging = start_after_staging
 
       build = BuildModel.new(
-        state:                 BuildModel::STAGING_STATE,
-        package_guid:          package.guid,
-        app:                   package.app,
-        staging_memory_in_mb:  staging_details.staging_memory_in_mb,
-        staging_disk_in_mb:    staging_details.staging_disk_in_mb,
+        state: BuildModel::STAGING_STATE,
+        package_guid: package.guid,
+        app: package.app,
+        staging_memory_in_mb: staging_details.staging_memory_in_mb,
+        staging_disk_in_mb: staging_details.staging_disk_in_mb,
         staging_log_rate_limit: staging_details.staging_log_rate_limit_bytes_per_second,
-        created_by_user_guid:  @user_audit_info.user_guid,
-        created_by_user_name:  @user_audit_info.user_name,
+        created_by_user_guid: @user_audit_info.user_guid,
+        created_by_user_name: @user_audit_info.user_name,
         created_by_user_email: @user_audit_info.user_email
       )
 
@@ -76,10 +76,10 @@ module VCAP::CloudController
         Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
         app = package.app
         Repositories::BuildEventRepository.record_build_create(build,
-          @user_audit_info,
-          app.name,
-          app.space_guid,
-          app.organization_guid)
+                                                               @user_audit_info,
+                                                               app.name,
+                                                               app.space_guid,
+                                                               app.organization_guid)
       end
 
       logger.info("build created: #{build.guid}")
@@ -100,13 +100,13 @@ module VCAP::CloudController
       admin_buildpack_records = lifecycle.buildpack_infos.map(&:buildpack_record).compact
       disabled_buildpacks = admin_buildpack_records.reject(&:enabled)
 
-      if disabled_buildpacks.present?
-        names = disabled_buildpacks.map { |buildpack_record| "'#{buildpack_record.name}'" }.join(', ')
-        raise CloudController::Errors::ApiError.new_from_details(
-          'BuildpackInvalid',
-            "Requested buildpack(s) #{names} are disabled and cannot be used for staging"
-        )
-      end
+      return unless disabled_buildpacks.present?
+
+      names = disabled_buildpacks.map { |buildpack_record| "'#{buildpack_record.name}'" }.join(', ')
+      raise CloudController::Errors::ApiError.new_from_details(
+        'BuildpackInvalid',
+        "Requested buildpack(s) #{names} are disabled and cannot be used for staging"
+      )
     end
 
     def using_disabled_custom_buildpack?(build)
@@ -126,11 +126,11 @@ module VCAP::CloudController
       disk_limit            = get_disk_limit(lifecycle.staging_message.staging_disk_in_mb, app)
       log_rate_limit        = get_log_rate_limit(lifecycle.staging_message.staging_log_rate_limit_bytes_per_second, app, space, org)
       environment_variables = @environment_builder.build(app,
-        space,
-        lifecycle,
-        memory_limit,
-        disk_limit,
-        lifecycle.staging_message.environment_variables)
+                                                         space,
+                                                         lifecycle,
+                                                         memory_limit,
+                                                         disk_limit,
+                                                         lifecycle.staging_message.environment_variables)
 
       staging_details                       = Diego::StagingDetails.new
       staging_details.package               = package

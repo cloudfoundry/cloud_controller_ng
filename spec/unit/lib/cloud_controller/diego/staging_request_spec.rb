@@ -6,17 +6,17 @@ module VCAP::CloudController::Diego
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:process) do
       VCAP::CloudController::ProcessModelFactory.make(
-        stack:            VCAP::CloudController::Stack.default,
-        file_descriptors: 16384,
-        memory:           1024,
-        disk_quota:       1946,
+        stack: VCAP::CloudController::Stack.default,
+        file_descriptors: 16_384,
+        memory: 1024,
+        disk_quota: 1946
       )
     end
 
     let(:staging_payload) do
       {
         app_id: process.guid,
-        file_descriptors: 16384,
+        file_descriptors: 16_384,
         memory_mb: 1024,
         disk_mb: 1946,
         environment: Environment.new(process).as_json,
@@ -25,7 +25,7 @@ module VCAP::CloudController::Diego
         log_guid: process.guid,
         lifecycle: 'buildpack',
         lifecycle_data: {
-          whatever: 'we want',
+          whatever: 'we want'
         },
         completion_callback: 'http://awesome.done/baller'
       }
@@ -34,7 +34,7 @@ module VCAP::CloudController::Diego
     let(:staging_request) do
       request = StagingRequest.new
       request.app_id = process.guid
-      request.file_descriptors = 16384
+      request.file_descriptors = 16_384
       request.memory_mb = 1024
       request.disk_mb = 1946
       request.environment = Environment.new(process).as_json
@@ -43,7 +43,7 @@ module VCAP::CloudController::Diego
       request.log_guid = process.guid
       request.lifecycle = 'buildpack'
       request.lifecycle_data = {
-        whatever: 'we want',
+        whatever: 'we want'
       }
       request.completion_callback = 'http://awesome.done/baller'
       request
@@ -54,13 +54,13 @@ module VCAP::CloudController::Diego
     end
 
     describe 'validation' do
-      let(:optional_keys) { [:lifecycle_data, :egress_rules, :isolation_segment] }
+      let(:optional_keys) { %i[lifecycle_data egress_rules isolation_segment] }
 
       context "when the app's space is not associated with an isolation segment" do
         it 'does not raise an error' do
-          expect {
+          expect do
             staging_request.message
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'omits isolation_segment data from the message' do
@@ -84,9 +84,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             staging_request.message
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'omits lifecycle data from the message' do
@@ -100,9 +100,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'does not raise an error' do
-          expect {
+          expect do
             staging_request.message
-          }.to_not raise_error
+          end.to_not raise_error
         end
 
         it 'omits lifecycle data from the message' do
@@ -117,9 +117,9 @@ module VCAP::CloudController::Diego
           required_keys.each do |key|
             req = staging_request.clone
             req.public_send("#{key}=", nil)
-            expect {
+            expect do
               req.message
-            }.to raise_error(Membrane::SchemaValidationError)
+            end.to raise_error(Membrane::SchemaValidationError)
           end
         end
       end

@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:user_email) { 'user@example.com' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
       let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
-      subject(:org_create) { OrganizationCreate.new(user_audit_info: user_audit_info) }
+      subject(:org_create) { OrganizationCreate.new(user_audit_info:) }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
@@ -20,18 +20,18 @@ module VCAP::CloudController
       context 'when creating a non-suspended organization' do
         let(:message) do
           VCAP::CloudController::OrganizationUpdateMessage.new({
-            name: 'my-organization',
-            metadata: {
-              labels: {
-                release: 'stable',
-                'seriouseats.com/potato' => 'mashed'
-              },
-              annotations: {
-                tomorrow: 'land',
-                backstreet: 'boys'
-              }
-            }
-          })
+                                                                 name: 'my-organization',
+                                                                 metadata: {
+                                                                   labels: {
+                                                                     release: 'stable',
+                                                                     'seriouseats.com/potato' => 'mashed'
+                                                                   },
+                                                                   annotations: {
+                                                                     tomorrow: 'land',
+                                                                     backstreet: 'boys'
+                                                                   }
+                                                                 }
+                                                               })
         end
 
         it 'creates a organization' do
@@ -73,9 +73,9 @@ module VCAP::CloudController
 
       it 'creates a suspended organization' do
         message = VCAP::CloudController::OrganizationUpdateMessage.new({
-          name: 'my-organization',
-          suspended: true
-        })
+                                                                         name: 'my-organization',
+                                                                         suspended: true
+                                                                       })
         organization = org_create.create(message)
 
         expect(organization.name).to eq('my-organization')
@@ -90,23 +90,23 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = VCAP::CloudController::OrganizationUpdateMessage.new(name: 'foobar')
-          expect {
+          expect do
             org_create.create(message)
-          }.to raise_error(OrganizationCreate::Error, 'blork is busted')
+          end.to raise_error(OrganizationCreate::Error, 'blork is busted')
         end
 
         context 'when it is a uniqueness error' do
           let(:name) { 'Olsen' }
 
           before do
-            VCAP::CloudController::Organization.create(name: name)
+            VCAP::CloudController::Organization.create(name:)
           end
 
           it 'raises a human-friendly error' do
-            message = VCAP::CloudController::OrganizationUpdateMessage.new(name: name)
-            expect {
+            message = VCAP::CloudController::OrganizationUpdateMessage.new(name:)
+            expect do
               org_create.create(message)
-            }.to raise_error(OrganizationCreate::Error, "Organization '#{name}' already exists.")
+            end.to raise_error(OrganizationCreate::Error, "Organization '#{name}' already exists.")
           end
         end
       end

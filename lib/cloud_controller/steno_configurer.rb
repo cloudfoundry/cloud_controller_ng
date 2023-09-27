@@ -14,9 +14,7 @@ module VCAP::CloudController
       steno_config[:context] = Steno::Context::ThreadLocal.new
       steno_config[:codec] = Steno::Codec::JsonRFC3339.new unless @config.dig(:format, :timestamp) == 'deprecated'
 
-      if block_given?
-        yield steno_config
-      end
+      yield steno_config if block_given?
 
       Steno.init(Steno::Config.new(steno_config))
     end

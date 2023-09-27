@@ -50,7 +50,8 @@ module VCAP::CloudController
 
       it 'records a transfer event', isolation: :truncation do
         expect_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_transfer_owner).with(
-          route, user_audit_info, original_owning_space, target_space.guid)
+          route, user_audit_info, original_owning_space, target_space.guid
+        )
 
         RouteTransferOwner.transfer(route, target_space, user_audit_info)
       end
@@ -62,23 +63,25 @@ module VCAP::CloudController
 
         it 'does not change the owning space' do
           expect_any_instance_of(Repositories::RouteEventRepository).not_to receive(:record_route_transfer_owner).with(
-            route, user_audit_info, original_owning_space, target_space.guid)
+            route, user_audit_info, original_owning_space, target_space.guid
+          )
           expect(route.space.name).to eq original_owning_space.name
-          expect {
+          expect do
             RouteTransferOwner.transfer(route, target_space, user_audit_info)
-          }.to raise_error('db failure')
+          end.to raise_error('db failure')
           route.reload
           expect(route.space.name).to eq original_owning_space.name
         end
 
         it 'does not change the shared spaces' do
           expect_any_instance_of(Repositories::RouteEventRepository).not_to receive(:record_route_transfer_owner).with(
-            route, user_audit_info, original_owning_space, target_space.guid)
+            route, user_audit_info, original_owning_space, target_space.guid
+          )
           expect(route.shared_spaces.length).to eq 1
           expect(route.shared_spaces.map(&:name)).to include shared_space.name
-          expect {
+          expect do
             RouteTransferOwner.transfer(route, target_space, user_audit_info)
-          }.to raise_error('db failure')
+          end.to raise_error('db failure')
           route.reload
           expect(route.shared_spaces.map(&:name)).to include shared_space.name
           expect(route.shared_spaces.length).to eq 1

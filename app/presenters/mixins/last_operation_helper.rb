@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::Mixins
           state: 'succeeded',
           description: '',
           created_at: resource.try(:created_at),
-          updated_at: resource.try(:updated_at),
+          updated_at: resource.try(:updated_at)
         }
       end
     end

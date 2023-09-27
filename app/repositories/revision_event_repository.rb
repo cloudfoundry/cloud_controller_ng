@@ -26,7 +26,7 @@ module VCAP::CloudController
             revision_version: revision.version
           },
           space_guid: app.space_guid,
-          organization_guid: app.space.organization_guid,
+          organization_guid: app.space.organization_guid
         )
       end
 

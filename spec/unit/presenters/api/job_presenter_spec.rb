@@ -68,7 +68,7 @@ RSpec.describe JobPresenter do
     end
 
     context 'when the job has an error' do
-      let(:error_hash) { { code: 123456 } }
+      let(:error_hash) { { code: 123_456 } }
       let(:serialized_hash) { YAML.dump(error_hash) }
       let(:job) { Delayed::Job.enqueue double(:obj, perform: nil) }
 

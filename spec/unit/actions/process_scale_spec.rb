@@ -83,10 +83,10 @@ module VCAP::CloudController
             process,
             user_audit_info,
             {
-              'instances'    => 2,
+              'instances' => 2,
               'memory_in_mb' => 100,
-              'disk_in_mb'   => 200,
-              'log_rate_limit_in_bytes_per_second' => 409_600,
+              'disk_in_mb' => 200,
+              'log_rate_limit_in_bytes_per_second' => 409_600
             },
             manifest_triggered: false
           )
@@ -102,10 +102,10 @@ module VCAP::CloudController
               process,
               user_audit_info,
               {
-                'instances'    => 2,
+                'instances' => 2,
                 'memory_in_mb' => 100,
-                'disk_in_mb'   => 200,
-                'log_rate_limit_in_bytes_per_second' => 409_600,
+                'disk_in_mb' => 200,
+                'log_rate_limit_in_bytes_per_second' => 409_600
               },
               manifest_triggered: true
             )
@@ -121,9 +121,9 @@ module VCAP::CloudController
         end
 
         it 'raises an invalid error' do
-          expect {
+          expect do
             process_scale.scale
-          }.to raise_error(ProcessScale::InvalidProcess, 'the message')
+          end.to raise_error(ProcessScale::InvalidProcess, 'the message')
         end
       end
 

@@ -15,15 +15,15 @@ module VCAP::CloudController
       let(:config) { Config.new({ name: 'local', index: '1' }) }
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'utako.loves@cats.com' }
-      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+      let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
       it 'enqueues and returns an upload job' do
         expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
 
         returned_job = nil
-        expect {
-          returned_job = package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
-        }.to change { Delayed::Job.count }.by(1)
+        expect do
+          returned_job = package_upload.upload_async(message:, package:, config:, user_audit_info:)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       it 'changes the state to pending' do
-        package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
+        package_upload.upload_async(message:, package:, config:, user_audit_info:)
         expect(PackageModel.find(guid: package.guid).state).to eq(PackageModel::PENDING_STATE)
       end
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
           user_audit_info
         )
 
-        package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
+        package_upload.upload_async(message:, package:, config:, user_audit_info:)
       end
 
       context 'when the package is invalid' do
@@ -53,9 +53,9 @@ module VCAP::CloudController
         end
 
         it 'raises InvalidPackage' do
-          expect {
-            package_upload.upload_async(message: message, package: package, config: config, user_audit_info: user_audit_info)
-          }.to raise_error(PackageUpload::InvalidPackage)
+          expect do
+            package_upload.upload_async(message:, package:, config:, user_audit_info:)
+          end.to raise_error(PackageUpload::InvalidPackage)
         end
       end
     end
@@ -69,9 +69,9 @@ module VCAP::CloudController
         expect(SecureRandom).to receive(:alphanumeric).with(10).and_return('S8baxMJnPl')
 
         returned_job = nil
-        expect {
-          returned_job = package_upload.upload_async_without_event(message: message, package: package, config: config)
-        }.to change { Delayed::Job.count }.by(1)
+        expect do
+          returned_job = package_upload.upload_async_without_event(message:, package:, config:)
+        end.to change { Delayed::Job.count }.by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       it 'does not create an audit event' do
         expect(Repositories::PackageEventRepository).not_to receive(:record_app_package_upload)
-        package_upload.upload_async_without_event(message: message, package: package, config: config)
+        package_upload.upload_async_without_event(message:, package:, config:)
       end
     end
 
@@ -106,9 +106,9 @@ module VCAP::CloudController
         end
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_upload.upload_sync_without_event(message, package)
-          }.to raise_error(PackageUpload::InvalidPackage)
+          end.to raise_error(PackageUpload::InvalidPackage)
         end
       end
     end

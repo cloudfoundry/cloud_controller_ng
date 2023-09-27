@@ -6,7 +6,7 @@ RSpec.describe 'Stepper' do
   let(:random) { Random.new(1234) }
 
   let(:target) { Target.new }
-  subject(:stepper) { Stepper.new(self, random: random) }
+  subject(:stepper) { Stepper.new(self, random:) }
 
   context 'in isolation (#step is mocked out - too much complexity)' do
     before do
@@ -89,7 +89,7 @@ RSpec.describe 'Stepper' do
           'step 2',
           'step 3'
         ]) do
-          fail('should not run before #run is called')
+          raise('should not run before #run is called')
         end
 
         stepper.interleave_order
@@ -107,7 +107,7 @@ RSpec.describe 'Stepper' do
           'step 2a',
           'step 3a'
         ]) do
-          fail('should not run before #run is called')
+          raise('should not run before #run is called')
         end
 
         stepper.start_thread([
@@ -115,7 +115,7 @@ RSpec.describe 'Stepper' do
           'step 2b',
           'step 3b'
         ]) do
-          fail('should not run before #run is called')
+          raise('should not run before #run is called')
         end
 
         stepper.start_thread([
@@ -123,7 +123,7 @@ RSpec.describe 'Stepper' do
           'step 2c',
           'step 3c'
         ]) do
-          fail('should not run before #run is called')
+          raise('should not run before #run is called')
         end
 
         stepper.interleave_order
@@ -163,7 +163,7 @@ RSpec.describe 'Stepper' do
         expect(target.calls).to eq([
           [:stepper, :step, 'step 1'],
           [:method_one, '[0]'],
-          [:stepper, :step, 'step 2'],
+          [:stepper, :step, 'step 2']
         ])
         expect(stepper.aborted?).to eq(true)
         expect(stepper.errors).to eq([error])
@@ -189,8 +189,8 @@ RSpec.describe 'Stepper' do
           [:stepper, :step, 'step 1'],
           [:method_one, '[0]'],
           [:stepper, :step, 'step 2'],
-          [:method_two, [:arg1, :arg2], '[0]'],
-          [:stepper, :step, 'step 3'],
+          [:method_two, %i[arg1 arg2], '[0]'],
+          [:stepper, :step, 'step 3']
         ])
       end
 
@@ -224,14 +224,14 @@ RSpec.describe 'Stepper' do
         expect(target.calls.to_a.sort).to eq([
           [:method_one, '[0]'],
           [:method_one, '[1]'],
-          [:method_two, [:arg1, :arg2], '[0]'],
-          [:method_two, [:arg1, :arg2], '[1]'],
+          [:method_two, %i[arg1 arg2], '[0]'],
+          [:method_two, %i[arg1 arg2], '[1]'],
           [:stepper, :step, 'step 1'],
           [:stepper, :step, 'step 1'],
           [:stepper, :step, 'step 2'],
           [:stepper, :step, 'step 2'],
           [:stepper, :step, 'step 3'],
-          [:stepper, :step, 'step 3'],
+          [:stepper, :step, 'step 3']
         ])
         expect(stepper.errors).to be_empty
       end
@@ -300,11 +300,11 @@ RSpec.describe 'Stepper' do
           [:method_one, '[0]'],
 
           [:stepper, :step, 'step 3', '[1]'],
-          [:method_two, [:arg1, :arg2], '[1]'],
+          [:method_two, %i[arg1 arg2], '[1]'],
 
           [:stepper, :step, 'step 2', '[0]'],
           [:stepper, :step, 'step 3', '[0]'],
-          [:method_two, [:arg1, :arg2], '[0]'],
+          [:method_two, %i[arg1 arg2], '[0]'],
           [:stepper, :step, 'step 4', '[0]'],
 
           [:stepper, :step, 'step 4', '[1]']
@@ -331,20 +331,20 @@ RSpec.describe 'Stepper' do
     end
 
     def method_three(arg1, arg2, kwarg1:, kwarg2:)
-      record(:method_three, [arg1, arg2], { kwarg1: kwarg1, kwarg2: kwarg2 }, "[#{Thread.current.name}]")
+      record(:method_three, [arg1, arg2], { kwarg1:, kwarg2: }, "[#{Thread.current.name}]")
     end
 
     def method_four(arg1, arg2, kwarg1:, kwarg2:, &block)
-      record(:method_four, [arg1, arg2], { kwarg1: kwarg1, kwarg2: kwarg2 }, block, "[#{Thread.current.name}]")
+      record(:method_four, [arg1, arg2], { kwarg1:, kwarg2: }, block, "[#{Thread.current.name}]")
     end
 
     def record(*args, **kwargs)
       mutex.lock
-      if kwargs.empty?
-        calls << args
-      else
-        calls << args + [kwargs]
-      end
+      calls << if kwargs.empty?
+                 args
+               else
+                 (args + [kwargs])
+               end
       mutex.unlock
     end
 

@@ -29,16 +29,16 @@ module VCAP::CloudController
 
       let(:message) do
         VCAP::CloudController::DeploymentUpdateMessage.new({
-          metadata: {
-            labels: {
-              freaky: 'wednesday',
-              'indiana.edu/state' => nil,
-            },
-            annotations: {
-              reason: 'add some more annotations',
-            },
-          },
-        })
+                                                             metadata: {
+                                                               labels: {
+                                                                 freaky: 'wednesday',
+                                                                 'indiana.edu/state' => nil
+                                                               },
+                                                               annotations: {
+                                                                 reason: 'add some more annotations'
+                                                               }
+                                                             }
+                                                           })
       end
 
       it 'update the deployment record' do

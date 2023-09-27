@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:app_guid_message_hash) do
         {
           app1.guid => AppManifestMessage.create_from_yml({ name: app1.name, instances: 4, routes: [{ route: 'foo.example.com' }] }),
-          app2.guid => AppManifestMessage.create_from_yml({ name: app2.name, instances: 5 }),
+          app2.guid => AppManifestMessage.create_from_yml({ name: app2.name, instances: 5 })
         }
       end
 
@@ -58,16 +58,16 @@ module VCAP::CloudController
         AppApplyManifest::ServiceBindingError,
         SidecarCreate::InvalidSidecar,
         SidecarUpdate::InvalidSidecar,
-        ProcessScale::SidecarMemoryLessThanProcessMemory,
+        ProcessScale::SidecarMemoryLessThanProcessMemory
       ].each do |klass|
         it "wraps a #{klass} in an ApiError" do
           allow(apply_manifest_action).to receive(:apply).
             with(app2.guid, anything).
             and_raise(klass, 'base msg')
 
-          expect {
+          expect do
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /For application '#{app2.name}': base msg/)
+          end.to raise_error(CloudController::Errors::ApiError, /For application '#{app2.name}': base msg/)
         end
       end
 
@@ -76,9 +76,9 @@ module VCAP::CloudController
           with(app2.guid, anything).
           and_raise(StructuredError.new('base msg', 'source'))
 
-        expect {
+        expect do
           job.perform
-        }.to raise_error(StructuredError, /For application '#{app2.name}': base msg/)
+        end.to raise_error(StructuredError, /For application '#{app2.name}': base msg/)
       end
 
       context 'when a record goes missing' do
@@ -88,9 +88,9 @@ module VCAP::CloudController
         end
 
         it 'wraps the message of the error' do
-          expect {
+          expect do
             job.perform
-          }.to raise_error(CloudController::Errors::NotFound, /For application '#{app1.name}': something went missing/)
+          end.to raise_error(CloudController::Errors::NotFound, /For application '#{app1.name}': something went missing/)
         end
       end
 
@@ -103,9 +103,9 @@ module VCAP::CloudController
         end
 
         it 'wraps the message of the error' do
-          expect {
+          expect do
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /^something bad happened/)
+          end.to raise_error(CloudController::Errors::ApiError, /^something bad happened/)
         end
       end
 

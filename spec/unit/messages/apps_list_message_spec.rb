@@ -16,7 +16,7 @@ module VCAP::CloudController
           'order_by' => 'created_at',
           'include' => 'space,space.organization',
           'label_selector' => 'foo in (stuff,things)',
-          'lifecycle_type' => 'buildpack',
+          'lifecycle_type' => 'buildpack'
         }
       end
 
@@ -24,8 +24,8 @@ module VCAP::CloudController
         message = AppsListMessage.from_params(params)
 
         expect(message).to be_a(AppsListMessage)
-        expect(message.names).to eq(['name1', 'name2'])
-        expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.names).to eq(%w[name1 name2])
+        expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.organization_guids).to eq(['orgguid'])
         expect(message.space_guids).to eq(['spaceguid'])
         expect(message.stacks).to eq(['cflinxfs3'])
@@ -59,10 +59,10 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: ['name1', 'name2'],
-          guids: ['guid1', 'guid2'],
-          organization_guids: ['orgguid1', 'orgguid2'],
-          space_guids: ['spaceguid1', 'spaceguid2'],
+          names: %w[name1 name2],
+          guids: %w[guid1 guid2],
+          organization_guids: %w[orgguid1 orgguid2],
+          space_guids: %w[spaceguid1 spaceguid2],
           page: 1,
           per_page: 5,
           order_by: 'created_at',
@@ -73,27 +73,27 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids, :space_guids, :include, :label_selector, :lifecycle_type]
+        expected_params = %i[names guids organization_guids space_guids include label_selector lifecycle_type]
         expect(AppsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           AppsListMessage.from_params({
-                                names: [],
-                                guids: [],
-                                organization_guids: [],
-                                space_guids: [],
-                                page: 1,
-                                per_page: 5,
-                                order_by: 'created_at',
-                                include: ['space', 'space.organization'],
-                                label_selector: 'foo in (stuff,things)',
-                                lifecycle_type: 'buildpack',
-                              })
-        }.not_to raise_error
+                                        names: [],
+                                        guids: [],
+                                        organization_guids: [],
+                                        space_guids: [],
+                                        page: 1,
+                                        per_page: 5,
+                                        order_by: 'created_at',
+                                        include: ['space', 'space.organization'],
+                                        label_selector: 'foo in (stuff,things)',
+                                        lifecycle_type: 'buildpack'
+                                      })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do

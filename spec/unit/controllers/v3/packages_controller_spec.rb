@@ -15,7 +15,7 @@ RSpec.describe PackagesController, type: :controller do
     before do
       @request.env.merge!(form_headers)
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
       allow(File).to receive(:rename)
     end
 
@@ -35,7 +35,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'with unsupported options' do
         let(:new_options) do
           {
-            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }])
           }
         end
 
@@ -51,7 +51,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'with invalid json resources' do
         let(:new_options) do
           {
-            resources: '[abcddf]',
+            resources: '[abcddf]'
           }
         end
 
@@ -86,7 +86,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v2 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }]),
+              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }])
             }
           end
 
@@ -96,7 +96,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v3 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }]),
+              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }])
             }
           end
 
@@ -121,7 +121,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'admin user' do
-        before { set_current_user_as_admin(user: user) }
+        before { set_current_user_as_admin(user:) }
 
         it 'returns 200 and updates the package state' do
           post :upload, params: params.merge(guid: package.guid), as: :json
@@ -211,7 +211,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user cannot read the package' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404' do
@@ -225,7 +225,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'when the user can read but not write to the space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 403' do
@@ -249,7 +249,7 @@ RSpec.describe PackagesController, type: :controller do
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+      allow_user_secret_access(user, space:)
     end
 
     it 'returns 302 and the redirect' do
@@ -325,7 +325,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'user does not have package read permissions' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns 404' do
@@ -338,7 +338,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'user does not have package secrets permissions' do
         before do
-          disallow_user_secret_access(user, space: space)
+          disallow_user_secret_access(user, space:)
         end
 
         it 'returns 403' do
@@ -358,7 +358,7 @@ RSpec.describe PackagesController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      disallow_user_write_access(user, space: space)
+      disallow_user_write_access(user, space:)
     end
 
     it 'returns a 200 OK and the package' do
@@ -393,7 +393,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user can not read from the space' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 not found' do
@@ -422,7 +422,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let!(:update_message) do
@@ -613,10 +613,10 @@ RSpec.describe PackagesController, type: :controller do
             'space_supporter' => 403,
             'org_manager' => 403,
             'org_auditor' => 404,
-            'org_billing_manager' => 404,
+            'org_billing_manager' => 404
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: package.guid }.merge(update_message), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: package.guid }.merge(update_message), as: :json } }
       end
 
       context 'permissions' do
@@ -624,7 +624,7 @@ RSpec.describe PackagesController, type: :controller do
 
         context 'when the user cannot read the app' do
           before do
-            disallow_user_read_access(user, space: space)
+            disallow_user_read_access(user, space:)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -638,7 +638,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'when the user can read but cannot write to the app' do
           before do
             allow_user_read_access_for(user, spaces: [space])
-            disallow_user_write_access(user, space: space)
+            disallow_user_write_access(user, space:)
           end
 
           it 'raises ApiError NotAuthorized' do
@@ -660,7 +660,7 @@ RSpec.describe PackagesController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::PackageDelete).to receive(:new).and_return(package_delete_stub)
     end
@@ -690,7 +690,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user cannot read the package' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -704,7 +704,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'when the user can read but cannot write to the package' do
         before do
           allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'raises ApiError NotAuthorized' do
@@ -727,14 +727,14 @@ RSpec.describe PackagesController, type: :controller do
       expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
         VCAP::CloudController::PackageModel,
         package.guid,
-        package_delete_stub,
+        package_delete_stub
       )
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
-      expect {
+      expect do
         delete :destroy, params: { guid: package.guid }
-      }.to change {
+      end.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
@@ -786,7 +786,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
-        app = VCAP::CloudController::AppModel.make(space: space)
+        app = VCAP::CloudController::AppModel.make(space:)
         package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
         VCAP::CloudController::PackageModel.make
@@ -802,10 +802,10 @@ RSpec.describe PackagesController, type: :controller do
         app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
 
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
-          space_guids: user_spaces.map(&:guid).join(',') }
+                              space_guids: user_spaces.map(&:guid).join(',') }
 
         expect(response.status).to eq(400)
-        expect(response.body).to include("Unknown query parameter(s): \'space_guids\'")
+        expect(response.body).to include("Unknown query parameter(s): 'space_guids'")
       end
 
       it 'uses the app and pagination as query parameters' do
@@ -814,7 +814,7 @@ RSpec.describe PackagesController, type: :controller do
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
         VCAP::CloudController::PackageModel.make
 
-        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
+        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -837,7 +837,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user does not have permissions to read the app' do
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 Resource Not Found error' do
@@ -868,7 +868,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:params) { { 'page' => page, 'per_page' => per_page } }
 
       it 'paginates the response' do
-        get :index, params: params
+        get(:index, params:)
 
         parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
@@ -882,21 +882,21 @@ RSpec.describe PackagesController, type: :controller do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params: params
+          get(:index, params:)
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
           m = /Unknown query parameter\(s\): '(\w+)', '(\w+)'/.match(response.body)
           expect(m).not_to be_nil
-          expect([m[1], m[2]]).to match_array(%w/bad invalid/)
+          expect([m[1], m[2]]).to match_array(%w[bad invalid])
         end
       end
 
       context 'because there are invalid values in parameters' do
-        let(:params) { { 'per_page' => 9999999999 } }
+        let(:params) { { 'per_page' => 9_999_999_999 } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params: params
+          get(:index, params:)
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -944,7 +944,7 @@ RSpec.describe PackagesController, type: :controller do
 
       before do
         allow_user_read_access_for(user, spaces: [space])
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       context 'bits' do
@@ -1030,7 +1030,7 @@ RSpec.describe PackagesController, type: :controller do
 
           context 'when the user cannot read the app' do
             before do
-              disallow_user_read_access(user, space: space)
+              disallow_user_read_access(user, space:)
             end
 
             it 'returns a 422 UnprocessableEntity error' do
@@ -1043,7 +1043,7 @@ RSpec.describe PackagesController, type: :controller do
 
           context 'when the user can read but not write to the space' do
             before do
-              disallow_user_write_access(user, space: space)
+              disallow_user_write_access(user, space:)
             end
 
             it 'returns a 422 UnprocessableEntity error' do

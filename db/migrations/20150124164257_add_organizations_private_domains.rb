@@ -7,7 +7,7 @@ Sequel.migration do
       Integer :private_domain_id, null: false
       foreign_key [:private_domain_id], :domains, name: :fk_private_domain_id
 
-      index [:organization_id, :private_domain_id], unique: true, name: 'orgs_pd_ids'
+      index %i[organization_id private_domain_id], unique: true, name: 'orgs_pd_ids'
     end
   end
 end

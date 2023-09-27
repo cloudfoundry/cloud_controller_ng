@@ -7,12 +7,12 @@ module CloudFoundry
         RateLimiterV2API.new(
           app,
           {
-            logger:                    logger,
-            per_process_general_limit: per_process_general_limit,
-            global_general_limit:      global_general_limit,
-            per_process_admin_limit:   per_process_admin_limit,
-            global_admin_limit:        global_admin_limit,
-            interval:                  interval,
+            logger:,
+            per_process_general_limit:,
+            global_general_limit:,
+            per_process_admin_limit:,
+            global_admin_limit:,
+            interval:
           }
         )
       end
@@ -48,7 +48,7 @@ module CloudFoundry
       describe 'headers as regular user' do
         describe 'X-RateLimit-Limit-V2-API' do
           it 'shows the user the total request limit' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Limit-V2-API']).to eq(global_general_limit.to_s)
           end
         end
@@ -58,11 +58,11 @@ module CloudFoundry
           let(:user_2_env) { { 'cf.user_guid' => user_2_guid, 'PATH_INFO' => path_info } }
 
           it 'shows the user the number of remaining requests rounded down to nearest 10%' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
 
             allow(expiring_request_counter).to receive(:increment).and_return([11, expires_in])
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('80')
           end
 
@@ -70,31 +70,31 @@ module CloudFoundry
             expect(expiring_request_counter).to receive(:increment).with(user_1_guid, interval, logger).and_return([1, expires_in])
             expect(expiring_request_counter).to receive(:increment).with(user_2_guid, interval, logger).and_return([11, expires_in])
 
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
 
-            _, response_headers, _ = middleware.call(user_2_env)
+            _, response_headers, = middleware.call(user_2_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('80')
           end
         end
 
         describe 'X-RateLimit-Reset-V2-API' do
           it 'shows the user when the interval will expire' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in).to_s)
           end
         end
       end
 
       it 'increments the counter and allows the request to continue' do
-        _, _, _ = middleware.call(user_1_env)
+        middleware.call(user_1_env)
         expect(expiring_request_counter).to have_received(:increment).with(user_1_guid, interval, logger)
         expect(app).to have_received(:call)
       end
 
       it 'does not drop headers created in next middleware' do
         allow(app).to receive(:call).and_return([200, { 'from' => 'wrapped-app' }, 'a body'])
-        _, headers, _ = middleware.call(user_1_env)
+        _, headers, = middleware.call(user_1_env)
         expect(headers).to match(hash_including('from' => 'wrapped-app'))
       end
 
@@ -125,13 +125,13 @@ module CloudFoundry
           it 'identifies them by the "HTTP_X_FORWARDED_FOR" header' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             expect(expiring_request_counter).to receive(:increment).with(forwarded_ip, interval, logger).and_return([1, expires_in])
-            _, response_headers, _ = middleware.call(unauthenticated_env)
+            _, response_headers, = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in).to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
             expect(expiring_request_counter).to receive(:increment).with(forwarded_ip_2, interval, logger).and_return([3, expires_in_2])
-            _, response_headers, _ = middleware.call(unauthenticated_env)
+            _, response_headers, = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('160')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in_2).to_s)
           end
@@ -147,13 +147,13 @@ module CloudFoundry
           it 'identifies them by the request ip' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
             expect(expiring_request_counter).to receive(:increment).with(ip, interval, logger).and_return([1, expires_in])
-            _, response_headers, _ = middleware.call(unauthenticated_env)
+            _, response_headers, = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('180')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in).to_s)
 
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request_2)
             expect(expiring_request_counter).to receive(:increment).with(ip_2, interval, logger).and_return([3, expires_in_2])
-            _, response_headers, _ = middleware.call(unauthenticated_env)
+            _, response_headers, = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('160')
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in_2).to_s)
           end
@@ -167,25 +167,25 @@ module CloudFoundry
 
         describe 'X-RateLimit-Limit-V2-API' do
           it 'shows the user the total request limit' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Limit-V2-API']).to eq(global_admin_limit.to_s)
           end
         end
 
         describe 'X-RateLimit-Remaining-V2-API' do
           it 'shows the user the number of remaining requests rounded down to nearest 10%' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('900')
 
             allow(expiring_request_counter).to receive(:increment).and_return([11, expires_in])
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('800')
           end
         end
 
         describe 'X-RateLimit-Reset-V2-API' do
           it 'shows the user when the interval will expire' do
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Reset-V2-API']).to eq((frozen_epoch + expires_in).to_s)
           end
         end
@@ -226,7 +226,7 @@ module CloudFoundry
             it 'rate limits them' do
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               expect(expiring_request_counter).to receive(:increment).with('forwarded_ip', interval, logger).and_return([0, expires_in])
-              _, response_headers, _ = middleware.call(unauthenticated_env)
+              _, response_headers, = middleware.call(unauthenticated_env)
               expect(response_headers['X-RateLimit-Limit-V2-API']).to_not be_nil
               expect(response_headers['X-RateLimit-Remaining-V2-API']).to_not be_nil
               expect(response_headers['X-RateLimit-Reset-V2-API']).to_not be_nil
@@ -277,27 +277,27 @@ module CloudFoundry
         end
 
         it 'returns 429 response' do
-          status, _, _ = middleware.call(user_1_env)
+          status, = middleware.call(user_1_env)
           expect(status).to eq(429)
         end
 
         it 'prevents "X-RateLimit-Remaining-V2-API" from going lower than zero' do
           allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 100, expires_in])
-          _, response_headers, _ = middleware.call(user_1_env)
+          _, response_headers, = middleware.call(user_1_env)
           expect(response_headers['X-RateLimit-Remaining-V2-API']).to eq('0')
         end
 
         it 'contains the correct headers' do
           error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
           allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
-          _, response_headers, _ = middleware.call(user_1_env)
+          _, response_headers, = middleware.call(user_1_env)
           expect(response_headers['Retry-After']).to eq(expires_in.to_s)
           expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
           expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
         end
 
         it 'ends the request' do
-          _, _, _ = middleware.call(user_1_env)
+          middleware.call(user_1_env)
           expect(app).not_to have_received(:call)
         end
 
@@ -305,9 +305,9 @@ module CloudFoundry
           _, _, body = middleware.call(user_1_env)
           json_body = JSON.parse(body.first)
           expect(json_body).to include(
-            'code' => 10018,
+            'code' => 10_018,
             'description' => 'Rate Limit of V2 API Exceeded. Please consider using the V3 API',
-            'error_code' => 'CF-RateLimitV2APIExceeded',
+            'error_code' => 'CF-RateLimitV2APIExceeded'
           )
         end
 
@@ -321,7 +321,7 @@ module CloudFoundry
             error_presenter = instance_double(ErrorPresenter, to_hash: { foo: 'bar' })
             allow(ErrorPresenter).to receive(:new).and_return(error_presenter)
 
-            _, response_headers, _ = middleware.call(user_1_env)
+            _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['Retry-After']).to eq(expires_in.to_s)
             expect(response_headers['Content-Type']).to eq('text/plain; charset=utf-8')
             expect(response_headers['Content-Length']).to eq({ foo: 'bar' }.to_json.length.to_s)
@@ -334,7 +334,7 @@ module CloudFoundry
           end
 
           it 'returns 200 response' do
-            status, _, _ = middleware.call(user_1_env)
+            status, = middleware.call(user_1_env)
             expect(status).to eq(200)
           end
         end

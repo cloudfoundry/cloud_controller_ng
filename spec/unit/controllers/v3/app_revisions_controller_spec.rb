@@ -10,12 +10,12 @@ RSpec.describe AppRevisionsController, type: :controller do
   before do
     set_current_user(user)
     allow_user_read_access_for(user, spaces: [space])
-    allow_user_secret_access(user, space: space)
+    allow_user_secret_access(user, space:)
   end
 
   describe '#index' do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space:) }
     let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
     let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
@@ -70,7 +70,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         let(:space) { app_model.space }
 
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -85,7 +85,7 @@ RSpec.describe AppRevisionsController, type: :controller do
 
   describe '#deployed' do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space:) }
     let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
     let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
@@ -126,7 +126,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         let(:space) { app_model.space }
 
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do

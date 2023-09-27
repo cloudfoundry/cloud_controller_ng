@@ -25,7 +25,7 @@ module VCAP::CloudController
           build.save_changes
 
           app = build.app
-          app.update(droplet: droplet)
+          app.update(droplet:)
         end
       end
 

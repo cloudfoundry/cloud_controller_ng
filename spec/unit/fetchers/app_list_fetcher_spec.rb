@@ -14,16 +14,16 @@ module VCAP::CloudController
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:filters) { {} }
     let(:message) { AppsListMessage.from_params(filters) }
-    let!(:lifecycle_data_for_app) {
+    let!(:lifecycle_data_for_app) do
       BuildpackLifecycleDataModel.make(
         app: app,
         stack: stack.name,
         buildpacks: [Buildpack.make.name]
       )
-    }
-    let!(:lifecycle_data_for_sad_app) {
+    end
+    let!(:lifecycle_data_for_sad_app) do
       BuildpackLifecycleDataModel.make(app: sad_app, stack: nil)
-    }
+    end
 
     context '#fetch_all' do
       it 'eager loads the specified resources for all apps' do
@@ -152,12 +152,13 @@ module VCAP::CloudController
           end
 
           context 'labels and orgs and spaces' do
-            let(:filters) { {
-              space_guids: [happy_space.guid],
-              organization_guids: [happy_space.organization.guid],
-              'label_selector' => 'dog in (chihuahua,scooby-doo)'
-            }
-            }
+            let(:filters) do
+              {
+                space_guids: [happy_space.guid],
+                organization_guids: [happy_space.organization.guid],
+                'label_selector' => 'dog in (chihuahua,scooby-doo)'
+              }
+            end
 
             it 'returns the desired app' do
               expect(apps.all).to contain_exactly(happiest_app)

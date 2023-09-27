@@ -11,7 +11,7 @@ module VCAP::CloudController
       let(:plan_3) { ServicePlan.make(service: offering_2) }
 
       it 'decorates the given hash with service offerings from service plans' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         hash = described_class.decorate(undecorated_hash, [plan_1, plan_2, plan_3])
 
         expect(hash[:foo]).to eq('bar')
@@ -32,11 +32,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches arrays containing "service_offering"' do
-        expect(described_class.match?(['potato', 'service_offering', 'turnip'])).to be_truthy
+        expect(described_class.match?(%w[potato service_offering turnip])).to be_truthy
       end
 
       it 'does not match other arrays' do
-        expect(described_class.match?(['potato', 'turnip'])).to be_falsey
+        expect(described_class.match?(%w[potato turnip])).to be_falsey
       end
     end
   end

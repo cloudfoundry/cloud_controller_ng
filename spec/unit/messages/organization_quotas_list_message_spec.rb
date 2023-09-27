@@ -9,7 +9,7 @@ module VCAP::CloudController
           'per_page' => 5,
           'guids' => 'org-quota1-guid,org-quota2-guid',
           'names' => 'org-quota1-name,org-quota2-name',
-          'organization_guids' => 'org1-guid,org2-guid',
+          'organization_guids' => 'org1-guid,org2-guid'
         }
       end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
           {
             guids: nil,
             names: nil,
-            organization_guids: nil,
+            organization_guids: nil
           }
         end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
           {
             guids: 'a',
             names: { 'not' => 'an array' },
-            organization_guids: 3.14159,
+            organization_guids: 3.14159
           }
         end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
           {
             'page' => 1,
             'per_page' => 5,
-            'foobar' => 'pants',
+            'foobar' => 'pants'
           }
         end
 

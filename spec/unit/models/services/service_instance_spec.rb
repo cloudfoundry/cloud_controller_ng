@@ -17,16 +17,16 @@ module VCAP::CloudController
       describe 'service_plan_sti_eager_load' do
         it 'eager loads successfully' do
           service_plan = ServicePlan.make.reload
-          instance1 = ManagedServiceInstance.make(service_plan: service_plan)
+          instance1 = ManagedServiceInstance.make(service_plan:)
           instance2 = ManagedServiceInstance.make
           eager_loaded_instances = nil
-          expect {
+          expect do
             eager_loaded_instances = ServiceInstance.eager(:service_plan_sti_eager_load).all.to_a
-          }.to have_queried_db_times(/service_plans/i, 1)
+          end.to have_queried_db_times(/service_plans/i, 1)
 
-          expect {
+          expect do
             eager_loaded_instances.each(&:service_plan)
-          }.to have_queried_db_times(//i, 0)
+          end.to have_queried_db_times(//i, 0)
 
           found_instance1 = eager_loaded_instances.detect { |instance| instance.id == instance1.id }
           found_instance2 = eager_loaded_instances.detect { |instance| instance.id == instance2.id }
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       describe 'changing space' do
         it 'fails when existing service bindings are in a different space' do
-          service_instance.add_service_binding(ServiceBinding.make(service_instance: service_instance))
+          service_instance.add_service_binding(ServiceBinding.make(service_instance:))
           expect { service_instance.space = Space.make }.to raise_error ServiceInstance::InvalidServiceBinding
         end
       end
@@ -64,7 +64,7 @@ module VCAP::CloudController
       end
 
       context 'when the syslog_drain_url is longer than 10,000 characters' do
-        let(:overly_long_url) { "syslog://example.com/#{'s' * 10000}" }
+        let(:overly_long_url) { "syslog://example.com/#{'s' * 10_000}" }
 
         it 'refuses to create this service instance' do
           service_instance_attrs[:syslog_drain_url] = overly_long_url
@@ -82,10 +82,10 @@ module VCAP::CloudController
           let!(:service_instance_bar) { UserProvidedServiceInstance.create(service_instance_attrs_bar) }
 
           it 'raises an exception when renaming the service' do
-            expect {
+            expect do
               service_instance_foo.set(name: 'bar')
               service_instance_foo.save_changes
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
       end
@@ -95,58 +95,58 @@ module VCAP::CloudController
           before { UserProvidedServiceInstance.create(service_instance_attrs) }
 
           it 'raises an exception when creating another UserProvidedServiceInstance' do
-            expect {
+            expect do
               UserProvidedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
           it 'raises an exception when creating a ManagedServiceInstance' do
-            expect {
+            expect do
               ManagedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
 
         describe 'when a ManagedServiceInstance exists' do
           before do
             service_plan = ServicePlan.make.reload
-            ManagedServiceInstance.create(service_instance_attrs.merge(service_plan: service_plan))
+            ManagedServiceInstance.create(service_instance_attrs.merge(service_plan:))
           end
 
           it 'raises an exception when creating another ManagedServiceInstance' do
-            expect {
+            expect do
               ManagedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
           it 'raises an exception when creating a UserProvidedServiceInstance' do
-            expect {
+            expect do
               UserProvidedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
 
         describe 'when a ManagedServiceInstance has been shared' do
           let(:space) { Space.make }
           let(:originating_space) { Space.make }
-          let(:service_instance) {
+          let(:service_instance) do
             ManagedServiceInstance.make(name: 'shared-service', space: originating_space)
-          }
+          end
 
           before do
             service_instance.add_shared_space(space)
           end
 
           it 'raises an exception when creating another ManagedServiceInstance' do
-            expect {
+            expect do
               ManagedServiceInstance.make(name: 'shared-service', space: space)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
           it 'raises an exception when creating another UserProvidedServiceInstance' do
-            expect {
+            expect do
               UserProvidedServiceInstance.make(name: 'shared-service', space: space)
-            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+            end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
       end
@@ -194,9 +194,9 @@ module VCAP::CloudController
       end
 
       it 'creates a DELETED service usage event' do
-        expect {
+        expect do
           service_instance.destroy
-        }.to change { ServiceUsageEvent.count }.by(1)
+        end.to change { ServiceUsageEvent.count }.by(1)
         event = ServiceUsageEvent.last
         expect(event.state).to eq(Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
@@ -210,10 +210,10 @@ module VCAP::CloudController
         let!(:service_plan) { ServicePlan.make }
 
         it 'creates an UPDATE service usage event' do
-          expect {
-            service_instance.set(service_plan: service_plan)
+          expect do
+            service_instance.set(service_plan:)
             service_instance.save_changes
-          }.to change { ServiceUsageEvent.count }.by 1
+          end.to change { ServiceUsageEvent.count }.by 1
 
           event = ServiceUsageEvent.last
           expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
@@ -224,10 +224,10 @@ module VCAP::CloudController
       context 'updating the service instance name' do
         let(:new_name) { 'some-new-name' }
         it 'creates an UPDATE service usage event' do
-          expect {
+          expect do
             service_instance.set(name: new_name)
             service_instance.save_changes
-          }.to change { ServiceUsageEvent.count }.by 1
+          end.to change { ServiceUsageEvent.count }.by 1
 
           event = ServiceUsageEvent.last
           expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
@@ -238,18 +238,18 @@ module VCAP::CloudController
       context 'when a service binding exists' do
         let(:process) { ProcessModelFactory.make(space: service_instance.space) }
         let(:process2) { ProcessModelFactory.make(space: service_instance.space) }
-        let!(:service_binding) {
+        let!(:service_binding) do
           ServiceBinding.make(app_guid: process.app.guid, service_instance_guid: service_instance.guid)
-        }
-        let!(:service_binding2) {
+        end
+        let!(:service_binding2) do
           ServiceBinding.make(app_guid: process2.app.guid, service_instance_guid: service_instance.guid)
-        }
+        end
 
         context 'and syslog_drain_url changes' do
           it 'updates the service binding' do
-            expect {
+            expect do
               service_instance.update(syslog_drain_url: 'syslog-tls://logs.example.com')
-            }.to change {
+            end.to change {
               service_binding.reload.syslog_drain_url
             }.to('syslog-tls://logs.example.com')
             expect(service_binding2.reload.syslog_drain_url).to eq('syslog-tls://logs.example.com')
@@ -319,22 +319,22 @@ module VCAP::CloudController
       it 'contains name, guid, binding count and type' do
         instance = VCAP::CloudController::ServiceInstance.make(
           guid: 'ABCDEFG12',
-          name: 'Random-Number-Service',
+          name: 'Random-Number-Service'
         )
         VCAP::CloudController::ServiceBinding.make(service_instance: instance)
 
         expect(instance.as_summary_json).to eq({
-          'guid' => 'ABCDEFG12',
-          'name' => 'Random-Number-Service',
-          'bound_app_count' => 1,
-          'type' => 'service_instance',
-        })
+                                                 'guid' => 'ABCDEFG12',
+                                                 'name' => 'Random-Number-Service',
+                                                 'bound_app_count' => 1,
+                                                 'type' => 'service_instance'
+                                               })
       end
     end
 
     describe '#in_suspended_org?' do
       let(:space) { VCAP::CloudController::Space.make }
-      subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space: space) }
+      subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space:) }
 
       context 'when in a suspended organization' do
         before { allow(space).to receive(:in_suspended_org?).and_return(true) }
@@ -504,7 +504,7 @@ module VCAP::CloudController
 
     describe '#has_bindings?' do
       it 'returns true when there are bindings' do
-        ServiceBinding.make(service_instance: service_instance)
+        ServiceBinding.make(service_instance:)
         expect(service_instance).to have_bindings
       end
 
@@ -515,7 +515,7 @@ module VCAP::CloudController
 
     describe '#has_keys?' do
       it 'returns true when there are keys' do
-        ServiceKey.make(service_instance: service_instance)
+        ServiceKey.make(service_instance:)
         expect(service_instance).to have_keys
       end
 
@@ -538,8 +538,8 @@ module VCAP::CloudController
 
     describe 'metadata' do
       let(:service_instance) { ServiceInstance.make }
-      let(:annotation) { ServiceInstanceAnnotationModel.make(service_instance: service_instance) }
-      let(:label) { ServiceInstanceLabelModel.make(service_instance: service_instance) }
+      let(:annotation) { ServiceInstanceAnnotationModel.make(service_instance:) }
+      let(:label) { ServiceInstanceLabelModel.make(service_instance:) }
 
       it 'can access a service_instance from its metadata' do
         expect(annotation.resource_guid).to eq(service_instance.guid)

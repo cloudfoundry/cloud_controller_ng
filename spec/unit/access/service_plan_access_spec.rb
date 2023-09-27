@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { ServicePlanAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
     let(:service) { VCAP::CloudController::Service.make }
-    let(:object) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:object) { VCAP::CloudController::ServicePlan.make(service:) }
 
     before { set_current_user(user) }
 

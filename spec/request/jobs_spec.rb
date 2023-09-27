@@ -11,7 +11,7 @@ RSpec.describe 'Jobs' do
       job = VCAP::CloudController::PollableJobModel.make(
         resource_type: 'app',
         state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-        operation: operation,
+        operation: operation
       )
       job_guid = job.guid
 
@@ -41,7 +41,7 @@ RSpec.describe 'Jobs' do
       job = VCAP::CloudController::PollableJobModel.make(
         resource_type: 'organization_quota',
         state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-        operation: operation,
+        operation: operation
       )
       job_guid = job.guid
 
@@ -89,12 +89,12 @@ RSpec.describe 'Jobs' do
             'detail' => 'warning-one'
           },
           {
-              'detail' => 'warning-two'
-          },
+            'detail' => 'warning-two'
+          }
         ]),
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/jobs/#{job_guid}" },
-          'users' => { 'href' => "#{link_prefix}/v3/users/#{user.guid}" },
+          'users' => { 'href' => "#{link_prefix}/v3/users/#{user.guid}" }
         }
       }
 
@@ -144,12 +144,13 @@ RSpec.describe 'Jobs' do
   describe 'permissions' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:job) { VCAP::CloudController::PollableJobModel.make(
-      resource_type: 'app',
-      state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-      operation: 'app.delete',
+    let(:job) do
+      VCAP::CloudController::PollableJobModel.make(
+        resource_type: 'app',
+        state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+        operation: 'app.delete'
       )
-    }
+    end
 
     context 'when the user is not logged in' do
       it 'returns 401' do
@@ -168,7 +169,7 @@ RSpec.describe 'Jobs' do
     end
 
     context 'when the user has a global scope or a local role' do
-      let(:api_call) { lambda { |user_headers| get "/v3/jobs/#{job.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/jobs/#{job.guid}", nil, user_headers } }
       let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
       before do

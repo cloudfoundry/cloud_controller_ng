@@ -26,11 +26,11 @@ module VCAP::CloudController
           'description' => 'amazing plan'
         }
       end
-      let(:service_plan) { ServicePlan.make(maintenance_info: maintenance_info) }
+      let(:service_plan) { ServicePlan.make(maintenance_info:) }
       let(:plan_guid) { service_plan.guid }
       let(:name) { 'si-test-name' }
       let(:arbitrary_parameters) { { foo: 'bar' } }
-      let(:message) {
+      let(:message) do
         VCAP::CloudController::ServiceInstanceCreateManagedMessage.new(
           {
             type: 'managed',
@@ -44,7 +44,7 @@ module VCAP::CloudController
                 data: { guid: space_guid }
               }
             },
-            tags: %w(accounting mongodb),
+            tags: %w[accounting mongodb],
             metadata: {
               labels: {
                 release: 'stable'
@@ -55,7 +55,7 @@ module VCAP::CloudController
             }
           }
         )
-      }
+      end
 
       before do
         allow(Repositories::ServiceEventRepository).to receive(:new).and_return(event_repository)
@@ -63,12 +63,12 @@ module VCAP::CloudController
 
       describe '#precursor' do
         it 'returns a service instance precursor' do
-          instance = action.precursor(message: message, service_plan: service_plan)
+          instance = action.precursor(message:, service_plan:)
 
           expect(instance).to_not be_nil
           expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
           expect(instance.name).to eq(name)
-          expect(instance.tags).to eq(%w(accounting mongodb))
+          expect(instance.tags).to eq(%w[accounting mongodb])
           expect(instance.service_plan).to eq(service_plan)
           expect(instance.space).to eq(space)
           expect(instance.maintenance_info).to eq(maintenance_info)
@@ -86,7 +86,7 @@ module VCAP::CloudController
           let(:service_plan) { ServicePlan.make(service: offering, maintenance_info: maintenance_info) }
 
           it 'should raise' do
-            expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+            expect { action.precursor(message:, service_plan:) }.to raise_error(
               CloudController::Errors::ApiError,
               'The service instance cannot be created because there is an operation in progress for the service broker.'
             )
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'when service instance with the same name already exists' do
-          let(:instance) { ManagedServiceInstance.make(name: name, space: space) }
+          let(:instance) { ManagedServiceInstance.make(name:, space:) }
 
           context "when the last operation is in state 'create in progress'" do
             before do
@@ -102,10 +102,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -115,10 +115,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
             end
 
             it 'deletes the existing service instance and creates a new one' do
-              service_instance = action.precursor(message: message, service_plan: service_plan)
+              service_instance = action.precursor(message:, service_plan:)
 
               expect(service_instance.guid).to_not eq(instance.guid)
               expect(service_instance.last_operation.type).to eq('create')
@@ -142,10 +142,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -155,10 +155,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -168,10 +168,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -181,10 +181,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
 
@@ -194,10 +194,10 @@ module VCAP::CloudController
             end
 
             it 'should raise' do
-              expect { action.precursor(message: message, service_plan: service_plan) }.to raise_error(
+              expect { action.precursor(message:, service_plan:) }.to raise_error(
                 ServiceInstanceCreateManaged::InvalidManagedServiceInstance,
-                 'The service instance name is taken: si-test-name.'
-               )
+                'The service instance name is taken: si-test-name.'
+              )
             end
           end
         end
@@ -209,7 +209,7 @@ module VCAP::CloudController
             expect_any_instance_of(ManagedServiceInstance).to receive(:save_with_new_operation).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect { action.precursor(message: message, service_plan: service_plan) }.
+            expect { action.precursor(message:, service_plan:) }.
               to raise_error(ServiceInstanceCreateManaged::InvalidManagedServiceInstance, 'blork is busted')
           end
         end
@@ -219,13 +219,13 @@ module VCAP::CloudController
             before do
               quota = SpaceQuotaDefinition.make(total_services: 1, organization: org)
               quota.add_space(space)
-              ManagedServiceInstance.make(space: space)
+              ManagedServiceInstance.make(space:)
             end
 
             it 'raises' do
-              expect {
-                action.precursor(message: message, service_plan: service_plan)
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              expect do
+                action.precursor(message:, service_plan:)
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceSpaceQuotaExceeded')
               end
             end
@@ -235,13 +235,13 @@ module VCAP::CloudController
             before do
               quotas = QuotaDefinition.make(total_services: 1)
               quotas.add_organization(org)
-              ManagedServiceInstance.make(space: space)
+              ManagedServiceInstance.make(space:)
             end
 
             it 'raises' do
-              expect {
-                action.precursor(message: message, service_plan: service_plan)
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              expect do
+                action.precursor(message:, service_plan:)
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceQuotaExceeded')
               end
             end
@@ -256,9 +256,9 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              expect {
-                action.precursor(message: message, service_plan: service_plan)
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              expect do
+                action.precursor(message:, service_plan:)
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
               end
             end
@@ -273,9 +273,9 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              expect {
-                action.precursor(message: message, service_plan: service_plan)
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              expect do
+                action.precursor(message:, service_plan:)
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
               end
             end
@@ -288,16 +288,16 @@ module VCAP::CloudController
           {
             instance: {},
             last_operation: {
-              state: 'succeeded',
+              state: 'succeeded'
             }
           }
         end
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-            provision: provision_response,
-          })
+                            provision: provision_response
+                          })
         end
-        let(:precursor) { action.precursor(message: message, service_plan: service_plan) }
+        let(:precursor) { action.precursor(message:, service_plan:) }
 
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
@@ -324,7 +324,7 @@ module VCAP::CloudController
               },
               last_operation: {
                 type: 'create',
-                state: 'succeeded',
+                state: 'succeeded'
               }
             }
           end
@@ -336,7 +336,7 @@ module VCAP::CloudController
             expect(instance).to_not be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(name)
-            expect(instance.tags).to eq(%w(accounting mongodb))
+            expect(instance.tags).to eq(%w[accounting mongodb])
             expect(instance.service_plan).to eq(service_plan)
             expect(instance.space).to eq(space)
             expect(instance.maintenance_info).to eq(maintenance_info)
@@ -381,7 +381,7 @@ module VCAP::CloudController
             expect(instance).to_not be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(name)
-            expect(instance.tags).to eq(%w(accounting mongodb))
+            expect(instance.tags).to eq(%w[accounting mongodb])
             expect(instance.service_plan).to eq(service_plan)
             expect(instance.space).to eq(space)
             expect(instance.maintenance_info).to eq(maintenance_info)
@@ -412,8 +412,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error and records failure' do
-            expect { action.provision(precursor, parameters: arbitrary_parameters, accepts_incomplete: true)
-            }.to raise_error(
+            expect do
+              action.provision(precursor, parameters: arbitrary_parameters, accepts_incomplete: true)
+            end.to raise_error(
               StandardError,
               'boom'
             )
@@ -452,13 +453,14 @@ module VCAP::CloudController
             }
           }
         end
-        let(:fetch_instance_response) do {}
+        let(:fetch_instance_response) do
+          {}
         end
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-            fetch_service_instance_last_operation: poll_response,
-            fetch_service_instance: fetch_instance_response
-          })
+                            fetch_service_instance_last_operation: poll_response,
+                            fetch_service_instance: fetch_instance_response
+                          })
         end
 
         before do
@@ -470,7 +472,7 @@ module VCAP::CloudController
 
           expect(client).to have_received(:fetch_service_instance_last_operation).with(
             service_instance,
-            user_guid: user_guid
+            user_guid:
           )
         end
 
@@ -511,7 +513,7 @@ module VCAP::CloudController
               last_operation: {
                 state: 'succeeded',
                 description: description
-              },
+              }
             }
           end
 
@@ -542,10 +544,10 @@ module VCAP::CloudController
 
           context 'when http error is raised' do
             let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
-            let(:err) {
+            let(:err) do
               response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
               HttpResponseError.new('oops', 'GET', response)
-            }
+            end
             before do
               allow(Steno).to receive(:logger).and_return(fake_logger)
               allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
@@ -574,14 +576,14 @@ module VCAP::CloudController
 
             context 'when service instance is retrievable' do
               let(:service) { Service.make(instances_retrievable: true) }
-              let(:service_plan) { ServicePlan.make(service: service) }
+              let(:service_plan) { ServicePlan.make(service:) }
 
               it 'should fetch service instance' do
                 action.poll(service_instance)
 
                 expect(client).to have_received(:fetch_service_instance).with(
                   service_instance,
-                  user_guid: user_guid
+                  user_guid:
                 )
               end
 
@@ -649,14 +651,14 @@ module VCAP::CloudController
               last_operation: {
                 state: 'failed',
                 description: description
-              },
+              }
             }
           end
 
           it 'raises and updates the last operation description' do
-            expect {
+            expect do
               action.poll(service_instance)
-            }.to raise_error(VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState)
+            end.to raise_error(VCAP::CloudController::V3::ServiceInstanceCreateManaged::LastOperationFailedState)
 
             expect(ServiceInstance.first.last_operation.type).to eq('create')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')
@@ -671,9 +673,9 @@ module VCAP::CloudController
           end
 
           it 'updates the last operation description' do
-            expect {
+            expect do
               action.poll(service_instance)
-            }.to raise_error(
+            end.to raise_error(
               StandardError,
               'boom'
             )

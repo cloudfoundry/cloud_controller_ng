@@ -5,12 +5,10 @@ module CloudController
         url = blob.internal_download_url
         logger.debug "nginx redirect #{url}"
 
-        if controller.is_a?(ActionController::Base)
-          controller.response.headers['X-Accel-Redirect'] = url
-          controller.head :ok
-        else
-          return [200, { 'X-Accel-Redirect' => url }, '']
-        end
+        return [200, { 'X-Accel-Redirect' => url }, ''] unless controller.is_a?(ActionController::Base)
+
+        controller.response.headers['X-Accel-Redirect'] = url
+        controller.head :ok
       end
 
       def logger

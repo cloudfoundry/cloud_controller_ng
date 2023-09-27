@@ -17,9 +17,7 @@ class AppUsageEventsController < ApplicationController
 
     app_usage_events = AppUsageEvent.where(guid: [])
 
-    if permission_queryer.can_read_globally?
-      app_usage_events = AppUsageEventListFetcher.fetch_all(message, AppUsageEvent.dataset)
-    end
+    app_usage_events = AppUsageEventListFetcher.fetch_all(message, AppUsageEvent.dataset) if permission_queryer.can_read_globally?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::AppUsageEventPresenter,

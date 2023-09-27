@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def self.match?(fields)
-      fields.is_a?(Hash) && fields[:service_plan]&.to_set&.intersect?(self.allowed)
+      fields.is_a?(Hash) && fields[:service_plan]&.to_set&.intersect?(allowed)
     end
 
     def initialize(fields)

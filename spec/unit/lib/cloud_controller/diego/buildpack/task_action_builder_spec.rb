@@ -9,14 +9,14 @@ module VCAP::CloudController
         let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
-            diego: {
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-              lifecycle_bundles: {
-                'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
-              },
-              droplet_destinations: droplet_destinations,
-            }
-          })
+                       diego: {
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads,
+                         lifecycle_bundles: {
+                           'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
+                         },
+                         droplet_destinations: droplet_destinations
+                       }
+                     })
         end
         let(:droplet_destinations) do
           { stack.to_sym => '/value/from/config/based/on/stack' }
@@ -28,7 +28,7 @@ module VCAP::CloudController
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}')
           ]
         end
 
@@ -54,18 +54,18 @@ module VCAP::CloudController
               cache_key: '',
               user: 'vcap',
               checksum_algorithm: 'sha256',
-              checksum_value: task.droplet.sha256_checksum,
+              checksum_value: task.droplet.sha256_checksum
             )
           end
 
           let(:run_task_action) do
             ::Diego::Bbs::Models::RunAction.new(
-              path:            '/tmp/lifecycle/launcher',
-              args:            ['app', command, ''],
-              log_source:      'APP/TASK/my-task',
-              user:            'vcap',
+              path: '/tmp/lifecycle/launcher',
+              args: ['app', command, ''],
+              log_source: 'APP/TASK/my-task',
+              user: 'vcap',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env:             generated_environment,
+              env: generated_environment
             )
           end
 
@@ -88,7 +88,7 @@ module VCAP::CloudController
                 cache_key: '',
                 user: 'vcap',
                 checksum_algorithm: 'sha1',
-                checksum_value: task.droplet.droplet_hash,
+                checksum_value: task.droplet.droplet_hash
               )
             end
 
@@ -125,7 +125,7 @@ module VCAP::CloudController
                   cache_key: '',
                   user: 'vcap',
                   checksum_algorithm: 'sha1',
-                  checksum_value: task.droplet.droplet_hash,
+                  checksum_value: task.droplet.droplet_hash
                 )
               end
 
@@ -170,7 +170,7 @@ module VCAP::CloudController
                     url: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
                     destination_path: '/tmp/lifecycle',
                     layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                   )
                 ])
               end
@@ -183,7 +183,7 @@ module VCAP::CloudController
                   url: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
                   destination_path: '/tmp/lifecycle',
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                 )
               )
             end
@@ -197,7 +197,7 @@ module VCAP::CloudController
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
                   media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
                   digest_value: task.droplet.sha256_checksum,
-                  digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
                 )
               )
             end
@@ -206,9 +206,9 @@ module VCAP::CloudController
               let(:stack) { 'leek-stack' }
 
               it 'returns an error' do
-                expect {
+                expect do
                   builder.image_layers
-                }.to raise_error('no compiler defined for requested stack')
+                end.to raise_error('no compiler defined for requested stack')
               end
             end
 
@@ -219,9 +219,9 @@ module VCAP::CloudController
               end
 
               it 'returns an error' do
-                expect {
+                expect do
                   builder.image_layers
-                }.to raise_error("no droplet destination defined for requested stack 'leek-stack'")
+                end.to raise_error("no droplet destination defined for requested stack 'leek-stack'")
               end
             end
           end
@@ -247,9 +247,9 @@ module VCAP::CloudController
           context 'when the stack does not exist in the database' do
             let(:stack) { 'does-not-exist' }
             it 'raises an error' do
-              expect {
+              expect do
                 builder.stack
-              }.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
+              end.to raise_error CloudController::Errors::ApiError, /The stack could not be found/
             end
           end
 
@@ -266,9 +266,9 @@ module VCAP::CloudController
           it 'returns a cached dependency for the correct lifecycle given the stack' do
             expect(builder.cached_dependencies).to eq([
               ::Diego::Bbs::Models::CachedDependency.new(
-                from:      'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
-                to:        '/tmp/lifecycle',
-                cache_key: 'buildpack-potato-stack-lifecycle',
+                from: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+                to: '/tmp/lifecycle',
+                cache_key: 'buildpack-potato-stack-lifecycle'
               )
             ])
           end
@@ -285,9 +285,9 @@ module VCAP::CloudController
             let(:stack) { 'leek-stack' }
 
             it 'returns an error' do
-              expect {
+              expect do
                 builder.cached_dependencies
-              }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+              end.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
             end
           end
         end

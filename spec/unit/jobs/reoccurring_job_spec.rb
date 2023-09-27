@@ -200,7 +200,7 @@ module VCAP
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end
@@ -337,7 +337,7 @@ module VCAP
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end

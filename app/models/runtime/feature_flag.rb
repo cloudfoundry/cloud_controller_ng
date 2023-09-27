@@ -22,16 +22,16 @@ module VCAP::CloudController
       service_instance_sharing: false,
       hide_marketplace_from_unauthenticated_users: false,
       resource_matching: true,
-      route_sharing: false,
+      route_sharing: false
     }.freeze
 
-    ADMIN_SKIPPABLE = [
-      :app_bits_upload,
-      :app_scaling,
-      :set_roles_by_username,
-      :space_developer_env_var_visibility,
-      :task_creation,
-      :unset_roles_by_username,
+    ADMIN_SKIPPABLE = %i[
+      app_bits_upload
+      app_scaling
+      set_roles_by_username
+      space_developer_env_var_visibility
+      task_creation
+      unset_roles_by_username
     ].freeze
 
     ADMIN_READ_ONLY_SKIPPABLE = [:space_developer_env_var_visibility].freeze

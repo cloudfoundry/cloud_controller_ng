@@ -51,13 +51,13 @@ module VCAP::CloudController
         context 'when configuring a limit' do
           before do
             builder.build(TestConfig.override(rate_limiter: {
-              enabled: true,
-              reset_interval_in_minutes: 60,
-              per_process_general_limit: 123,
-              global_general_limit: 1230,
-              per_process_unauthenticated_limit: 1,
-              global_unauthenticated_limit: 10
-            }), request_metrics, request_logs).to_app
+                                                enabled: true,
+                                                reset_interval_in_minutes: 60,
+                                                per_process_general_limit: 123,
+                                                global_general_limit: 1230,
+                                                per_process_unauthenticated_limit: 1,
+                                                global_unauthenticated_limit: 10
+                                              }), request_metrics, request_logs).to_app
           end
 
           it 'enables the RateLimiter middleware' do
@@ -76,13 +76,13 @@ module VCAP::CloudController
         context 'when not configuring a limit' do
           before do
             builder.build(TestConfig.override(rate_limiter: {
-              enabled: false,
-              reset_interval_in_minutes: 60,
-              per_process_general_limit: 123,
-              global_general_limit: 1230,
-              per_process_unauthenticated_limit: 1,
-              global_unauthenticated_limit: 10
-            }), request_metrics, request_logs).to_app
+                                                enabled: false,
+                                                reset_interval_in_minutes: 60,
+                                                per_process_general_limit: 123,
+                                                global_general_limit: 1230,
+                                                per_process_unauthenticated_limit: 1,
+                                                global_unauthenticated_limit: 10
+                                              }), request_metrics, request_logs).to_app
           end
 
           it 'does not enable the RateLimiter middleware' do
@@ -130,13 +130,13 @@ module VCAP::CloudController
         context 'when configuring a limit' do
           before do
             builder.build(TestConfig.override(rate_limiter_v2_api: {
-              enabled: true,
-              reset_interval_in_minutes: 5,
-              per_process_general_limit: 10,
-              global_general_limit: 100,
-              per_process_admin_limit: 20,
-              global_admin_limit: 200,
-            }), request_metrics, request_logs).to_app
+                                                enabled: true,
+                                                reset_interval_in_minutes: 5,
+                                                per_process_general_limit: 10,
+                                                global_general_limit: 100,
+                                                per_process_admin_limit: 20,
+                                                global_admin_limit: 200
+                                              }), request_metrics, request_logs).to_app
           end
 
           it 'enables the RateLimiterV2API middleware' do
@@ -155,13 +155,13 @@ module VCAP::CloudController
         context 'when not configuring a limit' do
           before do
             builder.build(TestConfig.override(rate_limiter_v2_api: {
-              enabled: false,
-              per_process_general_limit: 10,
-              global_general_limit: 100,
-              per_process_admin_limit: 20,
-              global_admin_limit: 200,
-              reset_interval_in_minutes: 5,
-            }), request_metrics, request_logs).to_app
+                                                enabled: false,
+                                                per_process_general_limit: 10,
+                                                global_general_limit: 100,
+                                                per_process_admin_limit: 20,
+                                                global_admin_limit: 200,
+                                                reset_interval_in_minutes: 5
+                                              }), request_metrics, request_logs).to_app
           end
 
           it 'does not enable the ServiceBrokerRateLimiter middleware' do

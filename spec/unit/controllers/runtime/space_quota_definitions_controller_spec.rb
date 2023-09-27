@@ -9,34 +9,34 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::SpaceQuotaDefinitionsController).to have_creatable_attributes({
-          name:                       { type: 'string', required: true },
-          non_basic_services_allowed: { type: 'bool', required: true },
-          total_services:             { type: 'integer', required: true },
-          total_service_keys:         { type: 'integer', default: -1 },
-          total_routes:               { type: 'integer', required: true },
-          memory_limit:               { type: 'integer', required: true },
-          instance_memory_limit:      { type: 'integer' },
-          organization_guid:          { type: 'string', required: true },
-          app_instance_limit:         { type: 'integer' },
-          app_task_limit:             { type: 'integer', required: false, default: 5 },
-          total_reserved_route_ports: { type: 'integer', required: false, default: -1 }
-        })
+                                                                                                      name: { type: 'string', required: true },
+                                                                                                      non_basic_services_allowed: { type: 'bool', required: true },
+                                                                                                      total_services: { type: 'integer', required: true },
+                                                                                                      total_service_keys: { type: 'integer', default: -1 },
+                                                                                                      total_routes: { type: 'integer', required: true },
+                                                                                                      memory_limit: { type: 'integer', required: true },
+                                                                                                      instance_memory_limit: { type: 'integer' },
+                                                                                                      organization_guid: { type: 'string', required: true },
+                                                                                                      app_instance_limit: { type: 'integer' },
+                                                                                                      app_task_limit: { type: 'integer', required: false, default: 5 },
+                                                                                                      total_reserved_route_ports: { type: 'integer', required: false, default: -1 }
+                                                                                                    })
       end
 
       it do
         expect(VCAP::CloudController::SpaceQuotaDefinitionsController).to have_updatable_attributes({
-          name:                       { type: 'string' },
-          non_basic_services_allowed: { type: 'bool' },
-          total_services:             { type: 'integer' },
-          total_service_keys:         { type: 'integer' },
-          total_routes:               { type: 'integer' },
-          memory_limit:               { type: 'integer' },
-          app_instance_limit:         { type: 'integer' },
-          instance_memory_limit:      { type: 'integer' },
-          organization_guid:          { type: 'string' },
-          app_task_limit:             { type: 'integer' },
-          total_reserved_route_ports: { type: 'integer' }
-        })
+                                                                                                      name: { type: 'string' },
+                                                                                                      non_basic_services_allowed: { type: 'bool' },
+                                                                                                      total_services: { type: 'integer' },
+                                                                                                      total_service_keys: { type: 'integer' },
+                                                                                                      total_routes: { type: 'integer' },
+                                                                                                      memory_limit: { type: 'integer' },
+                                                                                                      app_instance_limit: { type: 'integer' },
+                                                                                                      instance_memory_limit: { type: 'integer' },
+                                                                                                      organization_guid: { type: 'string' },
+                                                                                                      app_task_limit: { type: 'integer' },
+                                                                                                      total_reserved_route_ports: { type: 'integer' }
+                                                                                                    })
       end
     end
 
@@ -59,9 +59,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 1
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 1
         end
 
         describe 'OrgManager of both' do
@@ -74,10 +74,10 @@ module VCAP::CloudController
           end
 
           include_examples 'permission enumeration', 'OrgManager',
-            permissions_overlap: true,
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 2
+                           permissions_overlap: true,
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 2
         end
 
         describe 'OrgUser' do
@@ -85,9 +85,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 0
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 0
         end
 
         describe 'BillingManager' do
@@ -95,9 +95,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 0
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 0
         end
 
         describe 'Auditor' do
@@ -105,9 +105,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples 'permission enumeration', 'Auditor',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 0
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 0
         end
       end
 
@@ -117,9 +117,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 1
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 1
         end
 
         describe 'Developer' do
@@ -127,9 +127,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 1
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
@@ -137,16 +137,16 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-            name: 'space_quota_definition',
-            path: '/v2/space_quota_definitions',
-            enumerate: 1
+                           name: 'space_quota_definition',
+                           path: '/v2/space_quota_definitions',
+                           enumerate: 1
         end
       end
     end
 
     describe 'Associations' do
       it do
-        expect(VCAP::CloudController::SpaceQuotaDefinitionsController).to have_nested_routes({ spaces: [:get, :put, :delete] })
+        expect(VCAP::CloudController::SpaceQuotaDefinitionsController).to have_nested_routes({ spaces: %i[get put delete] })
       end
     end
 

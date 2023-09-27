@@ -37,11 +37,11 @@ module VCAP::CloudController
         expect(message.service_plan_names).to match_array(['service-plan-1-name', 'service-plan-2-name', 'service-plan-3-name'])
         expect(message.service_offering_guids).to match_array(['service-offering-1-guid', 'service-offering-2-guid', 'service-offering-3-guid'])
         expect(message.service_offering_names).to match_array(['service-offering-1-name', 'service-offering-2-name', 'service-offering-3-name'])
-        expect(message.names).to match_array(['name1', 'name2'])
+        expect(message.names).to match_array(%w[name1 name2])
         expect(message.app_guids).to match_array(['app-1-guid', 'app-2-guid', 'app-3-guid'])
         expect(message.app_names).to match_array(['app-1-name', 'app-2-name', 'app-3-name'])
         expect(message.type).to eq('app')
-        expect(message.include).to match_array(['app', 'service_instance'])
+        expect(message.include).to match_array(%w[app service_instance])
       end
 
       it 'converts requested keys to symbols' do

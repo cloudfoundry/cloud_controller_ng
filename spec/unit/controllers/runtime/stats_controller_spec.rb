@@ -15,12 +15,12 @@ module VCAP::CloudController
           {
             0 => {
               state: 'RUNNING',
-              stats: {},
+              stats: {}
             },
             1 => {
-              state:   'DOWN',
+              state: 'DOWN',
               details: 'start-me',
-              since:   1,
+              since: 1
             }
           }
         end
@@ -45,12 +45,12 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'RUNNING',
-                'stats' => {},
+                'stats' => {}
               },
               '1' => {
-                'state'   => 'DOWN',
+                'state' => 'DOWN',
                 'details' => 'start-me',
-                'since'   => 1,
+                'since' => 1
               }
             }
 
@@ -60,7 +60,8 @@ module VCAP::CloudController
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(last_response.headers['X-Cf-Warnings']).to be_nil
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == process.app.guid })
+              satisfy { |requested_app| requested_app.guid == process.app.guid }
+            )
           end
         end
 
@@ -77,12 +78,12 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'RUNNING',
-                'stats' => {},
+                'stats' => {}
               },
               '1' => {
-                'state'   => 'DOWN',
+                'state' => 'DOWN',
                 'details' => 'start-me',
-                'since'   => 1,
+                'since' => 1
               }
             }
 
@@ -91,12 +92,13 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == process.app.guid })
+              satisfy { |requested_app| requested_app.guid == process.app.guid }
+            )
           end
         end
 
         context 'when the instances reporter returns warnings' do
-          let(:warnings) { ['s0mjgnbha', 'full_moon_with_s0mjgnbha'] }
+          let(:warnings) { %w[s0mjgnbha full_moon_with_s0mjgnbha] }
 
           it 'should return the stats with an X-Cf-Warnings header' do
             set_current_user(developer)
@@ -110,12 +112,12 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'RUNNING',
-                'stats' => {},
+                'stats' => {}
               },
               '1' => {
-                'state'   => 'DOWN',
+                'state' => 'DOWN',
                 'details' => 'start-me',
-                'since'   => 1,
+                'since' => 1
               }
             }
 
@@ -125,7 +127,8 @@ module VCAP::CloudController
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(last_response.headers['X-Cf-Warnings']).to eq('s0mjgnbha,full_moon_with_s0mjgnbha')
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == process.app.guid })
+              satisfy { |requested_app| requested_app.guid == process.app.guid }
+            )
           end
         end
 
@@ -138,9 +141,9 @@ module VCAP::CloudController
 
           it 'does not re-raise as a StatsError' do
             process.update(state: 'STARTED')
-            expect {
+            expect do
               get "/v2/apps/#{process.app.guid}/stats"
-            }.to raise_error(@error)
+            end.to raise_error(@error)
           end
         end
 
@@ -156,7 +159,7 @@ module VCAP::CloudController
             get "/v2/apps/#{process.app.guid}/stats"
 
             expect(last_response.status).to eq(400)
-            expect(MultiJson.load(last_response.body)['code']).to eq(200001)
+            expect(MultiJson.load(last_response.body)['code']).to eq(200_001)
           end
         end
 
@@ -180,20 +183,20 @@ module VCAP::CloudController
               '0' => {
                 state: 'RUNNING',
                 stats: {
-                  name:       'foo',
-                  uris:       'some-uris',
-                  host:       'my-host',
-                  port:       1234,
-                  net_info:   { 'foo' => 'bar' },
-                  uptime:     1,
-                  mem_quota:  1,
+                  name: 'foo',
+                  uris: 'some-uris',
+                  host: 'my-host',
+                  port: 1234,
+                  net_info: { 'foo' => 'bar' },
+                  uptime: 1,
+                  mem_quota: 1,
                   disk_quota: 2,
-                  fds_quota:  3,
-                  usage:      {
+                  fds_quota: 3,
+                  usage: {
                     time: 4,
-                    cpu:  5,
-                    mem:  6,
-                    disk: 7,
+                    cpu: 5,
+                    mem: 6,
+                    disk: 7
                   }
                 }
               }
@@ -220,7 +223,7 @@ module VCAP::CloudController
                       time: 4,
                       cpu: 5,
                       mem: 6,
-                      disk: 7,
+                      disk: 7
                     }
                   }
                 }
@@ -256,19 +259,19 @@ module VCAP::CloudController
               '0' => {
                 'state' => 'RUNNING',
                 'stats' => {
-                  'name'       => 'foo',
-                  'uris'       => 'some-uris',
-                  'host'       => 'my-host',
-                  'port'       => 1234,
-                  'uptime'     => 1,
-                  'mem_quota'  => 1,
+                  'name' => 'foo',
+                  'uris' => 'some-uris',
+                  'host' => 'my-host',
+                  'port' => 1234,
+                  'uptime' => 1,
+                  'mem_quota' => 1,
                   'disk_quota' => 2,
-                  'fds_quota'  => 3,
-                  'usage'      => {
+                  'fds_quota' => 3,
+                  'usage' => {
                     'time' => 4,
-                    'cpu'  => 5,
-                    'mem'  => 6,
-                    'disk' => 7,
+                    'cpu' => 5,
+                    'mem' => 6,
+                    'disk' => 7
                   }
                 }
               }
@@ -279,7 +282,8 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == process.app.guid })
+              satisfy { |requested_app| requested_app.guid == process.app.guid }
+            )
           end
         end
       end

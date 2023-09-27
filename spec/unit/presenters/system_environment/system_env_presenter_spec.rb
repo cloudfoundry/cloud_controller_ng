@@ -18,7 +18,7 @@ module VCAP::CloudController
         let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
         let(:service) { Service.make(label: 'elephantsql-n/a') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
-        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:service_plan) { ServicePlan.make(service:) }
         let(:service_plan_alt) { ServicePlan.make(service: service_alt) }
         let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
         let(:service_instance_same_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-2') }
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         context 'when a create service binding is in progress' do
           let(:service_binding_operation) { ServiceBindingOperation.make(type: 'create', state: 'in progress') }
-          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
         context 'when a service binding has successfully been asynchronously created' do
           let(:service_binding_operation) { ServiceBindingOperation.make(state: 'succeeded') }
-          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
         context 'when a delete service binding is in progress' do
           let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'in progress') }
-          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         context 'when a delete service binding failed' do
           let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'failed') }
-          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -103,24 +103,24 @@ module VCAP::CloudController
                 service_instance: service_instance,
                 syslog_drain_url: 'logs.go-here.com',
                 volume_mounts: [{
-                                    container_dir: '/data/images',
-                                    mode: 'r',
-                                    device_type: 'shared',
-                                    device: {
-                                        driver: 'cephfs',
-                                        volume_id: 'abc',
-                                        mount_config: {
-                                            key: 'value'
-                                        }
-                                    }
-                                }]
+                  container_dir: '/data/images',
+                  mode: 'r',
+                  device_type: 'shared',
+                  device: {
+                    driver: 'cephfs',
+                    volume_id: 'abc',
+                    mount_config: {
+                      key: 'value'
+                    }
+                  }
+                }]
               )
             end
 
             it 'includes only the public volume information' do
               expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym][0].to_hash[:volume_mounts]).to eq([{ 'container_dir' => '/data/images',
-                                                                                                                              'mode' => 'r',
-                                                                                                                              'device_type' => 'shared' }])
+                                                                                                                                'mode' => 'r',
+                                                                                                                                'device_type' => 'shared' }])
             end
           end
 

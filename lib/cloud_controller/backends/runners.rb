@@ -64,9 +64,7 @@ module VCAP::CloudController
 
       items.each do |item|
         c = current[item[:app_guid]]
-        if c.nil? || (item[:created_at] == c[:created_at] && item[:id] > c[:id])
-          current[item[:app_guid]] = item
-        end
+        current[item[:app_guid]] = item if c.nil? || (item[:created_at] == c[:created_at] && item[:id] > c[:id])
       end
 
       current

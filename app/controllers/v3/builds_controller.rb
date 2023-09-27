@@ -15,7 +15,7 @@ class BuildsController < ApplicationController
                 BuildListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               else
                 BuildListFetcher.fetch_for_spaces(message, space_guids: permission_queryer.readable_space_guids,
-                  eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
+                                                           eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -33,7 +33,7 @@ class BuildsController < ApplicationController
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).first
     unprocessable_package! unless package &&
-      permission_queryer.can_manage_apps_in_active_space?(package.space.id) && permission_queryer.is_space_active?(package.space.id)
+                                  permission_queryer.can_manage_apps_in_active_space?(package.space.id) && permission_queryer.is_space_active?(package.space.id)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 
@@ -47,12 +47,12 @@ class BuildsController < ApplicationController
       {
         'app-id' => package.app_guid,
         'build-id' => build.guid,
-        'user-id' => current_user.guid,
+        'user-id' => current_user.guid
       },
       {
         'lifecycle' => build.lifecycle_type,
         'buildpacks' => build.lifecycle_data&.buildpacks,
-        'stack' => build.lifecycle_data.try(:stack),
+        'stack' => build.lifecycle_data.try(:stack)
       }
     )
 

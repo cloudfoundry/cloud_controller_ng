@@ -13,18 +13,18 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(SharedDomainsController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          internal: { type: 'bool', required: false },
-          router_group_guid: { type: 'string', required: false },
-        })
+                                                                       name: { type: 'string', required: true },
+                                                                       internal: { type: 'bool', required: false },
+                                                                       router_group_guid: { type: 'string', required: false }
+                                                                     })
       end
 
       it 'cannot update its fields' do
         expect(SharedDomainsController).not_to have_updatable_attributes({
-          name: { type: 'string' },
-          internal: { type: 'bool' },
-          router_group_guid: { type: 'string' },
-        })
+                                                                           name: { type: 'string' },
+                                                                           internal: { type: 'bool' },
+                                                                           router_group_guid: { type: 'string' }
+                                                                         })
       end
     end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
         context 'when there is no router_group_guid' do
           let(:body) do
             {
-                name: 'shareddomain.com',
+              name: 'shareddomain.com'
             }.to_json
           end
 
@@ -62,8 +62,8 @@ module VCAP::CloudController
         context 'when the router_group_guid exists and is not nil' do
           let(:body) do
             {
-                name: 'shareddomain.com',
-                router_group_guid: 'router-group-guid1'
+              name: 'shareddomain.com',
+              router_group_guid: 'router-group-guid1'
             }.to_json
           end
 
@@ -148,7 +148,7 @@ module VCAP::CloudController
         let(:router_groups) do
           [
             RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }),
-            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'http' }),
+            RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'http' })
           ]
         end
         let!(:domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }

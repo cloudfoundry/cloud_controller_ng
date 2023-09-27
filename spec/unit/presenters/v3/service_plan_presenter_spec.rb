@@ -5,12 +5,12 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
   let(:guid) { service_plan.guid }
   let(:maintenance_info) do
     {
-    version: '1.0.0',
+      version: '1.0.0',
       description: 'best plan ever'
-  }
+    }
   end
   let(:service_plan) do
-    VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info)
+    VCAP::CloudController::ServicePlan.make(maintenance_info:)
   end
 
   let!(:potato_label) do
@@ -26,7 +26,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     VCAP::CloudController::ServicePlanAnnotationModel.make(
       key_name: 'altitude',
       value: '14,412',
-      resource_guid: service_plan.guid,
+      resource_guid: service_plan.guid
     )
   end
 
@@ -35,70 +35,70 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     it 'presents the service plan' do
       expect(result).to eq({
-        guid: guid,
-        created_at: service_plan.created_at,
-        updated_at: service_plan.updated_at,
-        visibility_type: 'public',
-        available: true,
-        name: service_plan.name,
-        free: false,
-        costs: [],
-        description: service_plan.description,
-        maintenance_info: {
-          version: '1.0.0',
-          description: 'best plan ever'
-        },
-        broker_catalog: {
-          metadata: {},
-          id: service_plan.unique_id,
-          maximum_polling_duration: nil,
-          features: {
-            bindable: true,
-            plan_updateable: false
-          }
-        },
-        schemas: {
-          service_instance: {
-            create: {
-              parameters: {}
-            },
-            update: {
-              parameters: {}
-            }
-          },
-          service_binding: {
-            create: {
-              parameters: {}
-            }
-          }
-        },
-        metadata: {
-          labels: {
-            'canberra.au/potato': 'mashed'
-          },
-          annotations: {
-            altitude: '14,412'
-          }
-        },
-        relationships: {
-          service_offering: {
-            data: {
-              guid: service_plan.service.guid
-            }
-          }
-        },
-        links: {
-          self: {
-            href: "#{link_prefix}/v3/service_plans/#{guid}"
-          },
-          service_offering: {
-            href: "#{link_prefix}/v3/service_offerings/#{service_plan.service.guid}"
-          },
-          visibility: {
-            href: "#{link_prefix}/v3/service_plans/#{service_plan.guid}/visibility"
-          }
-        }
-      })
+                             guid: guid,
+                             created_at: service_plan.created_at,
+                             updated_at: service_plan.updated_at,
+                             visibility_type: 'public',
+                             available: true,
+                             name: service_plan.name,
+                             free: false,
+                             costs: [],
+                             description: service_plan.description,
+                             maintenance_info: {
+                               version: '1.0.0',
+                               description: 'best plan ever'
+                             },
+                             broker_catalog: {
+                               metadata: {},
+                               id: service_plan.unique_id,
+                               maximum_polling_duration: nil,
+                               features: {
+                                 bindable: true,
+                                 plan_updateable: false
+                               }
+                             },
+                             schemas: {
+                               service_instance: {
+                                 create: {
+                                   parameters: {}
+                                 },
+                                 update: {
+                                   parameters: {}
+                                 }
+                               },
+                               service_binding: {
+                                 create: {
+                                   parameters: {}
+                                 }
+                               }
+                             },
+                             metadata: {
+                               labels: {
+                                 'canberra.au/potato': 'mashed'
+                               },
+                               annotations: {
+                                 altitude: '14,412'
+                               }
+                             },
+                             relationships: {
+                               service_offering: {
+                                 data: {
+                                   guid: service_plan.service.guid
+                                 }
+                               }
+                             },
+                             links: {
+                               self: {
+                                 href: "#{link_prefix}/v3/service_plans/#{guid}"
+                               },
+                               service_offering: {
+                                 href: "#{link_prefix}/v3/service_offerings/#{service_plan.service.guid}"
+                               },
+                               visibility: {
+                                 href: "#{link_prefix}/v3/service_plans/#{service_plan.guid}/visibility"
+                               }
+                             }
+                           })
     end
 
     context 'when `active` is false' do
@@ -241,8 +241,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 },
                 "unit": "MONTHLY"
               }
-           }'
-        ],
+           }'],
         ['amount missing',
          '{
             "costs": [
@@ -257,8 +256,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 "unit": "Weekly"
               }
             ]
-           }'
-        ],
+           }'],
         ['unit is missing',
          '{
             "costs": [
@@ -275,8 +273,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 }
               }
             ]
-           }'
-        ],
+           }'],
         ['amount is empty object',
          '{
             "costs": [
@@ -291,8 +288,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 "unit": "Daily"
               }
             ]
-           }'
-        ],
+           }'],
         ['amount is not a valid string:float key value pair',
          '{
             "costs": [
@@ -303,8 +299,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                 "unit": "Weekly"
               }
             ]
-           }'
-        ],
+           }'],
         ['currency is empty string',
          '{
              "costs": [
@@ -322,8 +317,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                   "unit": "Daily"
                 }
             ]
-          }'
-        ],
+          }'],
         ['unit is empty string',
          '{
              "costs": [
@@ -340,11 +334,10 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
                   "unit": ""
                 }
             ]
-          }'
-        ]
+          }']
       ].each do |scenario, extra|
         it "returns empty cost array when #{scenario}" do
-          service_plan = VCAP::CloudController::ServicePlan.make(extra: extra)
+          service_plan = VCAP::CloudController::ServicePlan.make(extra:)
 
           result = described_class.new(service_plan).to_hash.deep_symbolize_keys
 
@@ -364,7 +357,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     end
 
     context 'schemas' do
-      let(:schema) {
+      let(:schema) do
         '{
             "$schema": "http://json-schema.org/draft-04/schema#",
             "type": "object",
@@ -375,7 +368,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
               }
             }
           }'
-      }
+      end
 
       let(:parsed_schema) { JSON.parse(schema).deep_symbolize_keys }
 
@@ -418,19 +411,19 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when service plan is from a space-scoped broker' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
-      let(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
+      let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
 
       it 'includes a space relationship and link' do
         expect(result).to include({
-          relationships: include({
-            space: { data: { guid: space.guid } }
-          }),
-          links: include({
-            space: { href: "#{link_prefix}/v3/spaces/#{space.guid}" }
-          })
-        })
+                                    relationships: include({
+                                                             space: { data: { guid: space.guid } }
+                                                           }),
+                                    links: include({
+                                                     space: { href: "#{link_prefix}/v3/spaces/#{space.guid}" }
+                                                   })
+                                  })
       end
     end
 

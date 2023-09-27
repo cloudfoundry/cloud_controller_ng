@@ -12,13 +12,13 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'reader_and_writer' => 200,
+        'reader_and_writer' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             get :index
 
@@ -73,13 +73,13 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'reader_and_writer' => 200,
+        'reader_and_writer' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             get :index
 
@@ -128,19 +128,19 @@ RSpec.describe StacksController, type: :controller do
     end
 
     before do
-      set_current_user_as_admin(user: user)
+      set_current_user_as_admin(user:)
     end
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 201,
-        'reader_and_writer' => 403,
+        'reader_and_writer' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             post :create, params: req_body, as: :json
 
@@ -212,7 +212,7 @@ RSpec.describe StacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               delete :destroy, params: { guid: stack.guid }, as: :json
 
@@ -225,7 +225,7 @@ RSpec.describe StacksController, type: :controller do
       context 'permissions by role when the stack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -235,10 +235,10 @@ RSpec.describe StacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               delete :destroy, params: { guid: 'non-existent' }, as: :json
 
@@ -257,7 +257,7 @@ RSpec.describe StacksController, type: :controller do
 
     context 'when the user is logged in with sufficient permissions' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when stack is not found' do
@@ -270,7 +270,7 @@ RSpec.describe StacksController, type: :controller do
 
       context 'when stack has apps associated with it' do
         before do
-          VCAP::CloudController::ProcessModelFactory.make(stack: stack)
+          VCAP::CloudController::ProcessModelFactory.make(stack:)
         end
 
         it 'does not delete the stack' do
@@ -288,7 +288,7 @@ RSpec.describe StacksController, type: :controller do
         it 'returns 10008 UnprocessableEntity' do
           delete :destroy, params: { guid: stack.guid }
 
-          expect(parsed_body['errors'].first['code']).to eq 10008
+          expect(parsed_body['errors'].first['code']).to eq 10_008
         end
       end
     end
@@ -317,7 +317,7 @@ RSpec.describe StacksController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let!(:update_message) do
@@ -521,10 +521,10 @@ RSpec.describe StacksController, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 403,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: stack.guid }.merge(update_message), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: stack.guid }.merge(update_message), as: :json } }
       end
     end
   end

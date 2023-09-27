@@ -16,11 +16,11 @@ module VCAP::CloudController
 
       def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
         ::Diego::Bbs::Models::ActualLRP.new(
-          actual_lrp_key:          ::Diego::Bbs::Models::ActualLRPKey.new(index: index),
-          actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid),
-          state:                   state,
-          placement_error:         error,
-          since:                   since,
+          actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(index:),
+          actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid:),
+          state: state,
+          placement_error: error,
+          since: since
         )
       end
 
@@ -33,25 +33,25 @@ module VCAP::CloudController
         let(:bbs_desired_lrp_response) do
           ::Diego::Bbs::Models::DesiredLRP.new(
             PlacementTags: placement_tags,
-            metric_tags: metrics_tags,
+            metric_tags: metrics_tags
           )
         end
         let(:placement_tags) { ['isolation-segment-name'] }
-        let(:metrics_tags) {
+        let(:metrics_tags) do
           {
-             'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.app.guid),
-             'process_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
+            'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.app.guid),
+            'process_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid)
           }
-        }
+        end
         let(:formatted_current_time) { Time.now.to_datetime.rfc3339 }
 
         let(:lrp_1_net_info) do
           ::Diego::Bbs::Models::ActualLRPNetInfo.new(
             address: 'lrp-host',
-            ports:   [
+            ports: [
               ::Diego::Bbs::Models::PortMapping.new(container_port: DEFAULT_APP_PORT, host_port: 2222),
-              ::Diego::Bbs::Models::PortMapping.new(container_port: 1111),
-            ],
+              ::Diego::Bbs::Models::PortMapping.new(container_port: 1111)
+            ]
           )
         end
         let(:actual_lrp_1) do
@@ -68,7 +68,7 @@ module VCAP::CloudController
           container_metric_batch.memory_bytes = 564
           container_metric_batch.disk_bytes = 5000
           container_metric_batch.memory_bytes_quota = 1234
-          container_metric_batch.disk_bytes_quota = 10234
+          container_metric_batch.disk_bytes_quota = 10_234
           container_metric_batch.log_rate = 5
           container_metric_batch.log_rate_limit = 10
           [container_metric_batch]
@@ -77,29 +77,29 @@ module VCAP::CloudController
         let(:expected_stats_response) do
           {
             0 => {
-              state:   'RUNNING',
+              state: 'RUNNING',
               isolation_segment: 'isolation-segment-name',
-              stats:   {
-                name:       process.name,
-                uris:       process.uris,
-                host:       'lrp-host',
-                port:       2222,
-                net_info:   lrp_1_net_info.to_h,
-                uptime:     two_days_in_seconds,
-                mem_quota:  1234,
-                disk_quota: 10234,
+              stats: {
+                name: process.name,
+                uris: process.uris,
+                host: 'lrp-host',
+                port: 2222,
+                net_info: lrp_1_net_info.to_h,
+                uptime: two_days_in_seconds,
+                mem_quota: 1234,
+                disk_quota: 10_234,
                 log_rate_limit: 10,
-                fds_quota:  process.file_descriptors,
-                usage:      {
+                fds_quota: process.file_descriptors,
+                usage: {
                   time: formatted_current_time,
-                  cpu:  0.0392,
-                  mem:  564,
+                  cpu: 0.0392,
+                  mem: 564,
                   disk: 5000,
-                  log_rate: 5,
+                  log_rate: 5
                 }
               },
-              details: 'some-details',
-            },
+              details: 'some-details'
+            }
           }
         end
 
@@ -126,25 +126,25 @@ module VCAP::CloudController
           expected_envelope = Loggregator::V2::Envelope.new(
             source_id: process.app.guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-            }),
+                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                                                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12)
+                                              }),
             instance_id: '1',
             tags: {
-              'process_id' => process.guid,
+              'process_id' => process.guid
             }
           )
           other_envelope = Loggregator::V2::Envelope.new(
             source_id: process.app.guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-            }),
+                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+                                                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10)
+                                              }),
             instance_id: '1',
             tags: {
-              'process_id' => 'different-guid',
+              'process_id' => 'different-guid'
             }
           )
 
@@ -154,11 +154,11 @@ module VCAP::CloudController
         end
 
         context 'when the desired lrp does NOT have a process_id metric tag' do
-          let(:metrics_tags) {
+          let(:metrics_tags) do
             {
-              'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
+              'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid)
             }
-          }
+          end
           let(:log_cache_response) do
             container_metric_batch = ::Logcache::ContainerMetricBatch.new
             container_metric_batch.instance_index = 0
@@ -167,7 +167,7 @@ module VCAP::CloudController
             container_metric_batch.disk_bytes = 5000
             container_metric_batch.log_rate = 5
             container_metric_batch.memory_bytes_quota = 1234
-            container_metric_batch.disk_bytes_quota = 10234
+            container_metric_batch.disk_bytes_quota = 10_234
             container_metric_batch.log_rate_limit = 10
             [container_metric_batch]
           end
@@ -194,15 +194,15 @@ module VCAP::CloudController
           let(:lrp_1_net_info) do
             ::Diego::Bbs::Models::ActualLRPNetInfo.new(
               address: 'lrp-host',
-              ports:   [
+              ports: [
                 ::Diego::Bbs::Models::PortMapping.new(container_port: 1111),
-                ::Diego::Bbs::Models::PortMapping.new(container_port: 2222),
-              ],
+                ::Diego::Bbs::Models::PortMapping.new(container_port: 2222)
+              ]
             )
           end
 
           it 'sets "port" to 0' do
-            result, _ = instances_reporter.stats_for_app(process)
+            result, = instances_reporter.stats_for_app(process)
 
             expect(result[0][:stats][:port]).to eq(0)
           end
@@ -218,14 +218,14 @@ module VCAP::CloudController
           end
 
           it 'sets all the stats to zero' do
-            result, _ = instances_reporter.stats_for_app(process)
+            result, = instances_reporter.stats_for_app(process)
             expect(result[0][:stats][:usage]).to eq({
-              time: formatted_current_time,
-              cpu:  0,
-              mem:  0,
-              disk: 0,
-              log_rate: 0,
-            })
+                                                      time: formatted_current_time,
+                                                      cpu: 0,
+                                                      mem: 0,
+                                                      disk: 0,
+                                                      log_rate: 0
+                                                    })
           end
         end
 
@@ -234,9 +234,9 @@ module VCAP::CloudController
           let(:expected_stats_response) do
             {
               0 => {
-                state:  'DOWN',
-                uptime: 0,
-              },
+                state: 'DOWN',
+                uptime: 0
+              }
             }
           end
 
@@ -255,23 +255,23 @@ module VCAP::CloudController
           let(:expected_stats_response) do
             {
               0 => {
-                state:   'RUNNING',
+                state: 'RUNNING',
                 isolation_segment: 'isolation-segment-name',
-                stats:   {
-                  name:       process.name,
-                  uris:       process.uris,
-                  host:       'lrp-host',
-                  port:       2222,
-                  net_info:   lrp_1_net_info.to_h,
-                  uptime:     two_days_in_seconds,
-                  mem_quota:  nil,
+                stats: {
+                  name: process.name,
+                  uris: process.uris,
+                  host: 'lrp-host',
+                  port: 2222,
+                  net_info: lrp_1_net_info.to_h,
+                  uptime: two_days_in_seconds,
+                  mem_quota: nil,
                   disk_quota: nil,
                   log_rate_limit: nil,
-                  fds_quota:  process.file_descriptors,
-                  usage:      {}
+                  fds_quota: process.file_descriptors,
+                  usage: {}
                 },
-                details: 'some-details',
-              },
+                details: 'some-details'
+              }
             }
           end
 
@@ -292,9 +292,9 @@ module VCAP::CloudController
             let(:expected_stats_response) do
               {
                 0 => {
-                  state:  'DOWN',
-                  uptime: 0,
-                },
+                  state: 'DOWN',
+                  uptime: 0
+                }
               }
             end
 
@@ -316,15 +316,15 @@ module VCAP::CloudController
             let(:log_cache_response) { [] }
 
             it 'provides defaults for unreported instances' do
-              result, _ = instances_reporter.stats_for_app(process)
+              result, = instances_reporter.stats_for_app(process)
 
               expect(result[0][:stats][:usage]).to eq({
-                time: formatted_current_time,
-                cpu: 0,
-                mem: 0,
-                disk: 0,
-                log_rate: 0,
-              })
+                                                        time: formatted_current_time,
+                                                        cpu: 0,
+                                                        mem: 0,
+                                                        disk: 0,
+                                                        log_rate: 0
+                                                      })
             end
           end
 
@@ -381,23 +381,23 @@ module VCAP::CloudController
           let(:expected_stats_response) do
             {
               0 => {
-                state:   'RUNNING',
+                state: 'RUNNING',
                 isolation_segment: 'isolation-segment-name',
-                stats:   {
-                  name:       process.name,
-                  uris:       process.uris,
-                  host:       'lrp-host',
-                  port:       2222,
-                  net_info:   lrp_1_net_info.to_h,
-                  uptime:     two_days_in_seconds,
-                  mem_quota:  nil,
+                stats: {
+                  name: process.name,
+                  uris: process.uris,
+                  host: 'lrp-host',
+                  port: 2222,
+                  net_info: lrp_1_net_info.to_h,
+                  uptime: two_days_in_seconds,
+                  mem_quota: nil,
                   disk_quota: nil,
                   log_rate_limit: nil,
-                  fds_quota:  process.file_descriptors,
-                  usage:      {}
+                  fds_quota: process.file_descriptors,
+                  usage: {}
                 },
-                details: 'some-details',
-              },
+                details: 'some-details'
+              }
             }
           end
 

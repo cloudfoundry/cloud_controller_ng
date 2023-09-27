@@ -32,8 +32,8 @@ module VCAP::CloudController
 
       it 'requires a service instance to have route_forwarding enabled' do
         space = Space.make
-        binding.route = Route.make space: space
-        binding.service_instance = ManagedServiceInstance.make space: space
+        binding.route = Route.make(space:)
+        binding.service_instance = ManagedServiceInstance.make(space:)
 
         binding.valid?
         expect(binding.errors[:service_instance]).to eq [:route_binding_not_allowed]
@@ -43,7 +43,7 @@ module VCAP::CloudController
         space = Space.make
         other_space = Space.make
 
-        service_instance = ManagedServiceInstance.make(:routing, space: space)
+        service_instance = ManagedServiceInstance.make(:routing, space:)
         route = Route.make space: other_space
 
         binding.service_instance = service_instance
@@ -58,13 +58,13 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:service_offering) { Service.make(requires: ['route_forwarding']) }
       let(:service_plan) { ServicePlan.make(service: service_offering) }
-      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-      let(:route) { Route.make(space: space) }
+      let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+      let(:route) { Route.make(space:) }
       let(:route_service_url) { 'https://foo.com' }
       let(:route_binding) do
         RouteBinding.new(
-          service_instance: service_instance,
-          route: route,
+          service_instance:,
+          route:
         )
       end
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
           description: '10%'
         }
         attributes = {
-          route_service_url: route_service_url
+          route_service_url:
         }
         result = route_binding.save_with_new_operation(attributes, last_operation)
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
         it 'should rollback the binding' do
           invalid_new_operation = {
             state: 'will fail',
-            broker_provided_operation: 'too long' * 10000
+            broker_provided_operation: 'too long' * 10_000
           }
           expect { route_binding.save_with_new_operation({}, invalid_new_operation) }.to raise_error(Sequel::DatabaseError)
           expect(RouteBinding.count).to eq(0)

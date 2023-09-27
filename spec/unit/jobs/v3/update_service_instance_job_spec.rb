@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       let(:params) { { some_data: 'some_value' } }
       let(:maintenance_info) { { 'version' => '1.2.0' } }
-      let(:plan) { ServicePlan.make(maintenance_info: maintenance_info) }
+      let(:plan) { ServicePlan.make(maintenance_info:) }
       let(:service_instance) do
         si = ManagedServiceInstance.make(service_plan: plan)
         si.save_with_new_operation(
@@ -28,44 +28,45 @@ module VCAP::CloudController
         si
       end
       let(:user_guid) { Sham.uaa_id }
-      let(:user_info) { instance_double(UserAuditInfo, { user_guid: user_guid }) }
+      let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
       let(:audit_hash) { { request: 'some_value' } }
 
       let(:arbitrary_parameters) { { foo: 'bar' } }
-      let(:new_tags) { %w(bar quz) }
+      let(:new_tags) { %w[bar quz] }
       let(:new_plan) { ServicePlan.make }
 
-      let(:message) { ServiceInstanceUpdateManagedMessage.new({
-        name: 'new_name',
-        parameters: arbitrary_parameters,
-        tags: new_tags,
-        relationships: {
-          service_plan: {
-            data: {
-              guid: new_plan.guid
-            }
-          }
-        }
-      })
-      }
+      let(:message) do
+        ServiceInstanceUpdateManagedMessage.new({
+                                                  name: 'new_name',
+                                                  parameters: arbitrary_parameters,
+                                                  tags: new_tags,
+                                                  relationships: {
+                                                    service_plan: {
+                                                      data: {
+                                                        guid: new_plan.guid
+                                                      }
+                                                    }
+                                                  }
+                                                })
+      end
 
-      let(:job) {
+      let(:job) do
         described_class.new(
           service_instance.guid,
           message: message,
           user_audit_info: user_info,
           audit_hash: audit_hash
         )
-      }
+      end
 
       describe '#perform' do
         let(:update_response) {}
         let(:poll_response) { { finished: false } }
         let(:action) do
           double(VCAP::CloudController::V3::ServiceInstanceUpdateManaged, {
-            update: update_response,
-            poll: poll_response
-          })
+                   update: update_response,
+                   poll: poll_response
+                 })
         end
 
         before do
@@ -88,7 +89,7 @@ module VCAP::CloudController
 
           expect { job.perform }.to raise_error(
             CloudController::Errors::ApiError,
-            /The service instance could not be found: #{service_instance.guid}./,
+            /The service instance could not be found: #{service_instance.guid}./
           )
         end
 
@@ -113,7 +114,7 @@ module VCAP::CloudController
         context 'first time' do
           context 'runs compatibility checks' do
             context 'volume mount' do
-              let(:service_offering) { Service.make(requires: %w(volume_mount)) }
+              let(:service_offering) { Service.make(requires: %w[volume_mount]) }
               let(:plan) { ServicePlan.make(service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
@@ -130,7 +131,7 @@ module VCAP::CloudController
             end
 
             context 'route forwarding' do
-              let(:service_offering) { Service.make(requires: %w(route_forwarding)) }
+              let(:service_offering) { Service.make(requires: %w[route_forwarding]) }
               let(:plan) { ServicePlan.make(service: service_offering) }
 
               it 'adds to the warnings required but disabled' do
@@ -150,18 +151,18 @@ module VCAP::CloudController
           context 'computes the maximum duration' do
             before do
               TestConfig.override(
-                broker_client_max_async_poll_duration_minutes: 90009
+                broker_client_max_async_poll_duration_minutes: 90_009
               )
               job.perform
             end
 
             it 'sets to the default value' do
-              expect(job.maximum_duration_seconds).to eq(90009.minutes)
+              expect(job.maximum_duration_seconds).to eq(90_009.minutes)
             end
 
             context 'when the plan defines a duration' do
               let(:maximum_polling_duration) { 7465 }
-              let(:plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration) }
+              let(:plan) { ServicePlan.make(maximum_polling_duration:) }
 
               it 'sets to the plan value' do
                 expect(job.maximum_duration_seconds).to eq(7465)
@@ -178,7 +179,7 @@ module VCAP::CloudController
               job.perform
 
               expect(action).to have_received(:update).with(
-                accepts_incomplete: true,
+                accepts_incomplete: true
               )
 
               expect(job.finished).to be_truthy
@@ -196,7 +197,7 @@ module VCAP::CloudController
               job.perform
 
               expect(action).to have_received(:update).with(
-                accepts_incomplete: true,
+                accepts_incomplete: true
               )
 
               expect(action).to have_received(:poll)
@@ -211,7 +212,7 @@ module VCAP::CloudController
 
               expect { job.perform }.to raise_error(
                 CloudController::Errors::ApiError,
-                'update could not be completed: StandardError',
+                'update could not be completed: StandardError'
               )
 
               service_instance.reload
@@ -225,10 +226,10 @@ module VCAP::CloudController
         context 'subsequent times' do
           before do
             service_instance.save_with_new_operation({}, {
-              type: 'update',
-              state: 'in progress',
-              broker_provided_operation: Sham.guid,
-            })
+                                                       type: 'update',
+                                                       state: 'in progress',
+                                                       broker_provided_operation: Sham.guid
+                                                     })
             job.perform
           end
 
@@ -267,7 +268,7 @@ module VCAP::CloudController
 
           context 'the maximum duration' do
             it 'recomputes the value' do
-              job.maximum_duration_seconds = 90009
+              job.maximum_duration_seconds = 90_009
               TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
 
               job.perform
@@ -277,7 +278,7 @@ module VCAP::CloudController
 
             context 'when the plan value changes between calls' do
               before do
-                job.maximum_duration_seconds = 90009
+                job.maximum_duration_seconds = 90_009
                 plan.update(maximum_polling_duration: 5000)
 
                 job.perform
@@ -298,7 +299,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState,
-              'Something went wrong',
+              'Something went wrong'
             )
           end
 
@@ -309,7 +310,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              "An operation for service instance #{service_instance.name} is in progress.",
+              "An operation for service instance #{service_instance.name} is in progress."
             )
           end
 
@@ -318,7 +319,7 @@ module VCAP::CloudController
 
             expect { job.perform }.to raise_error(
               CloudController::Errors::ApiError,
-              'update could not be completed: bad thing',
+              'update could not be completed: bad thing'
             )
           end
         end

@@ -398,7 +398,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     let!(:middle) { middle_klass.create(guid: 'middle-guid') }
     let!(:other_middle) { middle_klass.create(guid: 'other_middle_guid') }
 
-    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle: middle) } }
+    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle:) } }
 
     context 'the default behaviour' do
       def initialize_relations
@@ -422,13 +422,13 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       it 'does not add a middle_guid accessor to bottom' do
         bottom = bottoms.first
 
-        expect {
+        expect do
           bottom.middle_guid
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
 
-        expect {
+        expect do
           bottom.middle_guid = 'hello'
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
       end
     end
 

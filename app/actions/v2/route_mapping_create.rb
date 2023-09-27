@@ -30,10 +30,10 @@ module VCAP::CloudController
         validate!
 
         route_mapping = RouteMappingModel.new(
-          app:          app,
-          route:        route,
+          app: app,
+          route: route,
           process_type: process.type,
-          app_port:     port_with_defaults
+          app_port: port_with_defaults
         )
 
         route_handler = ProcessRouteHandler.new(process)
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
         route_mapping
       rescue Sequel::ValidationFailed => e
-        if e.errors && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]) && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]).include?(:unique)
+        if e.errors && e.errors.on(%i[app_guid route_guid process_type app_port]) && e.errors.on(%i[app_guid route_guid process_type app_port]).include?(:unique)
           raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE)
         end
 
@@ -121,9 +121,9 @@ module VCAP::CloudController
       end
 
       def validate_routing_api_enabled!
-        if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
-          raise RoutingApiDisabledError.new('Routing API is disabled')
-        end
+        return unless Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
+
+        raise RoutingApiDisabledError.new('Routing API is disabled')
       end
     end
   end

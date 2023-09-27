@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::SpaceAnnotationModel.make(
         key_name: 'altitude',
         value: '14,411',
-        resource_guid: space.guid,
+        resource_guid: space.guid
       )
     end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::SpaceAnnotationModel.make(
         key_name: 'grass',
         value: 'yes',
-        resource_guid: space.guid,
+        resource_guid: space.guid
       )
     end
 

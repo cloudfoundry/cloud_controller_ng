@@ -49,7 +49,7 @@ module VCAP::CloudController
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
             revision_guid: revision&.guid,
             revision_version: revision&.version,
-            strategy: DeploymentModel::ROLLING_STRATEGY,
+            strategy: DeploymentModel::ROLLING_STRATEGY
           )
           MetadataUpdate.update(deployment, message)
 
@@ -116,21 +116,23 @@ module VCAP::CloudController
           readiness_health_check_interval: web_process.readiness_health_check_interval,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
-          revision: revision,
+          revision: revision
         ).tap do |p|
           web_process.labels.each do |label|
             ProcessLabelModel.create(
               key_prefix: label.key_prefix,
               key_name: label.key_name,
               value: label.value,
-              resource_guid: p.guid)
+              resource_guid: p.guid
+            )
           end
           web_process.annotations.each do |annotation|
             ProcessAnnotationModel.create(
               key_prefix: annotation.key_prefix,
               key_name: annotation.key_name,
               value: annotation.value,
-              resource_guid: p.guid)
+              resource_guid: p.guid
+            )
           end
         end
       end
@@ -140,13 +142,13 @@ module VCAP::CloudController
         type = message.revision_guid ? 'rollback' : nil
         Repositories::DeploymentEventRepository.record_create(
           deployment,
-            droplet,
-            user_audit_info,
-            app.name,
-            app.space_guid,
-            app.space.organization_guid,
-            message.audit_hash,
-            type
+          droplet,
+          user_audit_info,
+          app.name,
+          app.space_guid,
+          app.space.organization_guid,
+          message.audit_hash,
+          type
         )
       end
 
@@ -166,7 +168,7 @@ module VCAP::CloudController
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
           revision_guid: revision&.guid,
           revision_version: revision&.version,
-          strategy: DeploymentModel::ROLLING_STRATEGY,
+          strategy: DeploymentModel::ROLLING_STRATEGY
         )
 
         MetadataUpdate.update(deployment, message)
@@ -185,18 +187,18 @@ module VCAP::CloudController
       end
 
       def supersede_deployment(previous_deployment)
-        if previous_deployment
-          new_state = if previous_deployment.state == DeploymentModel::DEPLOYING_STATE
-                        DeploymentModel::DEPLOYED_STATE
-                      else
-                        DeploymentModel::CANCELED_STATE
-                      end
-          previous_deployment.update(
-            state: new_state,
-            status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-            status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
-          )
-        end
+        return unless previous_deployment
+
+        new_state = if previous_deployment.state == DeploymentModel::DEPLOYING_STATE
+                      DeploymentModel::DEPLOYED_STATE
+                    else
+                      DeploymentModel::CANCELED_STATE
+                    end
+        previous_deployment.update(
+          state: new_state,
+          status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+          status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
+        )
       end
 
       def log_rollback_event(app_guid, user_id, revision_id)
@@ -205,7 +207,7 @@ module VCAP::CloudController
           {
             'app-id' => app_guid,
             'user-id' => user_id,
-            'revision-id' => revision_id,
+            'revision-id' => revision_id
           },
           { 'strategy' => 'rolling' }
         )

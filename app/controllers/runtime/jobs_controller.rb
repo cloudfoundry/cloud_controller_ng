@@ -8,7 +8,7 @@ module VCAP::CloudController
     def read(guid)
       raise CloudController::Errors::ApiError.new_from_details('InsufficientScope') unless authenticated?
 
-      job = Delayed::Job[guid: guid]
+      job = Delayed::Job[guid:]
       JobPresenter.new(job).to_json
     end
 

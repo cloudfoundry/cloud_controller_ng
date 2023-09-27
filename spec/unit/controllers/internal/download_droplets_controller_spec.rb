@@ -9,19 +9,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }
@@ -29,7 +29,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { AppModel.make(droplet:) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 
@@ -126,19 +126,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }
@@ -146,7 +146,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { AppModel.make(droplet:) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
           v3_app.update(revisions_enabled: true)
           revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
-          process.update(revision: revision)
+          process.update(revision:)
 
           get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
           expect(last_response.status).to eq(200), last_response.body
@@ -264,7 +264,7 @@ module VCAP::CloudController
 
             v3_app.update(revisions_enabled: true)
             revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
-            process.update(revision: revision)
+            process.update(revision:)
 
             get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
 

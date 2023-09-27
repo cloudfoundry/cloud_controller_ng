@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       it 'validates bad image references' do
         params = {
-          image: { blah: 34234 }
+          image: { blah: 34_234 }
         }
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid

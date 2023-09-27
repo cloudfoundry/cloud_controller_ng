@@ -18,7 +18,7 @@ module VCAP::CloudController
             name: 'the-name',
             stack: 'the-stack',
             enabled: false,
-            locked: true,
+            locked: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -39,12 +39,12 @@ module VCAP::CloudController
             locked: true,
             metadata: {
               labels: {
-                fruit: 'passionfruit',
+                fruit: 'passionfruit'
               },
               annotations: {
-                potato: 'adora',
-              },
-            },
+                potato: 'adora'
+              }
+            }
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
           it 'creates a buildpack at the specified position and shifts subsequent buildpacks position' do
             message = BuildpackCreateMessage.new(
               name: 'the-name',
-              position: 2,
+              position: 2
             )
             buildpack = BuildpackCreate.new.create(message)
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
           it 'creates a buildpack with a position just after the greatest position' do
             message = BuildpackCreateMessage.new(
               name: 'the-name',
-              position: 42,
+              position: 42
             )
             buildpack = BuildpackCreate.new.create(message)
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
           message = BuildpackCreateMessage.new(
             name: 'the-name',
             stack: 'the-stack',
-            locked: true,
+            locked: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -105,7 +105,7 @@ module VCAP::CloudController
           message = BuildpackCreateMessage.new(
             name: 'the-name',
             stack: 'the-stack',
-            enabled: true,
+            enabled: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -121,9 +121,9 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = BuildpackCreateMessage.new(name: 'foobar')
-          expect {
+          expect do
             BuildpackCreate.new.create(message)
-          }.to raise_error(BuildpackCreate::Error, 'blork is busted')
+          end.to raise_error(BuildpackCreate::Error, 'blork is busted')
         end
       end
 
@@ -131,9 +131,9 @@ module VCAP::CloudController
         it 'raises a human-friendly error' do
           message = BuildpackCreateMessage.new(name: 'the-name', stack: 'does-not-exist')
 
-          expect {
+          expect do
             BuildpackCreate.new.create(message)
-          }.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
+          end.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
         end
       end
 
@@ -146,10 +146,10 @@ module VCAP::CloudController
           end
 
           it 'raises a human-friendly error' do
-            message = BuildpackCreateMessage.new(name: name)
-            expect {
+            message = BuildpackCreateMessage.new(name:)
+            expect do
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
           end
         end
 
@@ -160,9 +160,9 @@ module VCAP::CloudController
 
           it 'raises a human-friendly error' do
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
-            expect {
+            expect do
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
           end
         end
       end

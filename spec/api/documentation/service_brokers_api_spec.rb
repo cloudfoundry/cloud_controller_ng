@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
+RSpec.resource 'Service Brokers', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_brokers) { 3.times { VCAP::CloudController::ServiceBroker.make } }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.first }
@@ -11,14 +11,14 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
     {
       'services' => [
         {
-          'id'          => 'custom-service-1',
-          'name'        => 'custom-service',
+          'id' => 'custom-service-1',
+          'name' => 'custom-service',
           'description' => 'A description of My Custom Service',
-          'bindable'    => true,
-          'plans'       => [
+          'bindable' => true,
+          'plans' => [
             {
-              'id'          => 'custom-plan',
-              'name'        => 'free',
+              'id' => 'custom-plan',
+              'name' => 'free',
               'description' => 'Free plan!'
             }
           ]
@@ -34,18 +34,18 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
   end
 
   shared_context 'fields_for_creation' do
-    field :name, 'The name of the service broker.', required: true, example_values: %w(service-broker-name)
-    field :broker_url, 'The URL of the service broker.', required: true, example_values: %w(https://broker.example.com)
-    field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w(admin)
-    field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w(secretpassw0rd)
+    field :name, 'The name of the service broker.', required: true, example_values: %w[service-broker-name]
+    field :broker_url, 'The URL of the service broker.', required: true, example_values: %w[https://broker.example.com]
+    field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w[admin]
+    field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w[secretpassw0rd]
     field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false
   end
 
   shared_context 'updatable_fields' do
-    field :name, 'The name of the service broker.', example_values: %w(service-broker-name)
-    field :broker_url, 'The URL of the service broker.', example_values: %w(https://broker.example.com)
-    field :auth_username, 'The username with which to authenticate against the service broker.', example_values: %w(admin)
-    field :auth_password, 'The password with which to authenticate against the service broker.', example_values: %w(secretpassw0rd)
+    field :name, 'The name of the service broker.', example_values: %w[service-broker-name]
+    field :broker_url, 'The URL of the service broker.', example_values: %w[https://broker.example.com]
+    field :auth_username, 'The username with which to authenticate against the service broker.', example_values: %w[admin]
+    field :auth_password, 'The password with which to authenticate against the service broker.', example_values: %w[secretpassw0rd]
   end
 
   describe 'Standard endpoints' do
@@ -62,7 +62,7 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
       include_context 'fields_for_creation'
       before do
         stub_request(:get, 'https://broker.example.com:443/v2/catalog').
-          with(basic_auth: ['admin', 'secretpassw0rd']).
+          with(basic_auth: %w[admin secretpassw0rd]).
           with(headers: { 'Accept' => 'application/json' }).
           to_return(status: 200, body: broker_catalog, headers: {})
       end
@@ -92,7 +92,7 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
         {
           auth_username: auth_username,
           auth_password: auth_password,
-          broker_url: "https://#{broker_url}",
+          broker_url: "https://#{broker_url}"
         }
       end
 

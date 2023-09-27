@@ -16,7 +16,8 @@ module VCAP::CloudController
           [
             VCAP::CloudController::Metrics::StatsdUpdater.new,
             VCAP::CloudController::Metrics::PrometheusUpdater.new
-          ])
+          ]
+        )
         periodic_updater.update!
         [200, Prometheus::Client::Formats::Text.marshal(Prometheus::Client.registry)]
       end

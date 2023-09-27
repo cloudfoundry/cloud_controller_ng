@@ -75,21 +75,22 @@ module VCAP::CloudController
     def remove_from_broker(service_binding)
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
       client.unbind(service_binding, user_guid: @user_audit_info.user_guid, accepts_incomplete: @accepts_incomplete)
-    rescue => e
+    rescue StandardError => e
       logger.error("Failed unbinding #{service_binding.guid}: #{e.message}")
       raise_wrapped_error(service_binding, e)
     end
 
     def raise_wrapped_error(service_binding, err)
       raise err.exception(
-        "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: #{err.message}")
+        "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: #{err.message}"
+      )
     end
 
     def each_with_error_aggregation(list)
       errors = []
       list.each do |item|
         yield(item)
-      rescue => e
+      rescue StandardError => e
         errors << e
       end
       errors

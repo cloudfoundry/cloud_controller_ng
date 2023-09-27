@@ -34,7 +34,7 @@ module VCAP::CloudController
 
         describe 'allowed special characters' do
           it 'allows standard ascii characters' do
-            body = { name: "A -_- word 2!?()\'\"&+." }
+            body = { name: "A -_- word 2!?()'\"&+." }
             message = SpaceUpdateMessage.new(body)
             expect(message).to be_valid
           end

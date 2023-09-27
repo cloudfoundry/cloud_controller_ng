@@ -28,9 +28,7 @@ module VCAP::CloudController
       private
 
       def filter(dataset, message)
-        if message.requested?(:names)
-          dataset = dataset.where(service_instances__name: message.names)
-        end
+        dataset = dataset.where(service_instances__name: message.names) if message.requested?(:names)
 
         if message.requested?(:type)
           dataset = case message.type
@@ -59,20 +57,16 @@ module VCAP::CloudController
           end
         end
 
-        if message.requested?(:service_plan_guids)
-          dataset = dataset.where { Sequel[:service_plans][:guid] =~ message.service_plan_guids }
-        end
+        dataset = dataset.where { Sequel[:service_plans][:guid] =~ message.service_plan_guids } if message.requested?(:service_plan_guids)
 
-        if message.requested?(:service_plan_names)
-          dataset = dataset.where { Sequel[:service_plans][:name] =~ message.service_plan_names }
-        end
+        dataset = dataset.where { Sequel[:service_plans][:name] =~ message.service_plan_names } if message.requested?(:service_plan_names)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ServiceInstanceLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: ServiceInstance,
+            resource_klass: ServiceInstance
           )
         end
 

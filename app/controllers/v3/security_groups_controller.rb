@@ -92,7 +92,7 @@ class SecurityGroupsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/security_groups',
       message: message,
-      extra_presenter_args: presenter_args,
+      extra_presenter_args: presenter_args
     )
   end
 

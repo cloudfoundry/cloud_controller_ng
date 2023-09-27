@@ -18,12 +18,12 @@ module VCAP::CloudController
             relationships: {
               app: {
                 data: {
-                  guid: sidecar.app_guid,
-                },
-              },
+                  guid: sidecar.app_guid
+                }
+              }
             },
             created_at: sidecar.created_at,
-            updated_at: sidecar.updated_at,
+            updated_at: sidecar.updated_at
           }
         end
 

@@ -5,7 +5,7 @@ RSpec.shared_examples 'operation' do
     {
       state: 'in progress',
       description: '10%',
-      type: 'create',
+      type: 'create'
     }
   end
 
@@ -19,10 +19,10 @@ RSpec.shared_examples 'operation' do
   describe '#to_hash' do
     it 'includes the state, type, description, created_at and updated_at' do
       expect(operation.to_hash).to include({
-        'state' => 'in progress',
-        'type' => 'create',
-        'description' => '10%',
-      })
+                                             'state' => 'in progress',
+                                             'type' => 'create',
+                                             'description' => '10%'
+                                           })
 
       expect(operation.to_hash['updated_at']).to eq(updated_at_time)
       expect(operation.to_hash['created_at']).to eq(created_at_time)

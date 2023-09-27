@@ -11,9 +11,9 @@ module VCAP::CloudController
     let(:service) { VCAP::CloudController::Service.make }
     let(:service_plan_active) { true }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan:, space:) }
 
-    before { set_current_user(user, scopes: scopes) }
+    before { set_current_user(user, scopes:) }
 
     it_behaves_like :admin_read_only_access do
       let(:object) { service_instance }
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'user provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
         it 'does not delegate to the UserProvidedServiceInstanceAccess' do
           expect_any_instance_of(UserProvidedServiceInstanceAccess).not_to receive(:allowed?).with(service_instance)
@@ -425,7 +425,7 @@ module VCAP::CloudController
       end
 
       context 'user provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
         it 'delegates to the UserProvidedServiceInstanceAccess' do
           expect_any_instance_of(UserProvidedServiceInstanceAccess).to receive(:allowed?).with(service_instance)

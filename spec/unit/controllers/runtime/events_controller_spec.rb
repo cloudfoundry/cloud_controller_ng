@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     it 'can order by name and id when listing' do
-      expect(EventsController.sortable_parameters).to match_array([:timestamp, :id])
+      expect(EventsController.sortable_parameters).to match_array(%i[timestamp id])
     end
 
     describe 'GET /v2/events' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
           get '/v2/events'
           parsed_body = MultiJson.load(last_response.body)
           events = parsed_body['resources'].select { |r| r['entity']['type'] == type }.map { |r| r['entity']['actor'] }
-          expect(events).to eq(%w(earlier middle later))
+          expect(events).to eq(%w[earlier middle later])
         end
       end
 

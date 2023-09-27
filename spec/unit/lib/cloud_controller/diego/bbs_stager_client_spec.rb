@@ -39,9 +39,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stage(staging_guid, staging_details)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('StagerUnavailable')
           end
         end
@@ -52,15 +52,17 @@ module VCAP::CloudController::Diego
           allow(bbs_client).to receive(:desire_task).and_return(
             ::Diego::Bbs::Models::TaskLifecycleResponse.new(
               error: ::Diego::Bbs::Models::Error.new(
-                type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
+                type: ::Diego::Bbs::Models::Error::Type::InvalidRecord,
                 message: 'error message'
-              )))
+              )
+            )
+          )
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stage(staging_guid, staging_details)
-          }.to raise_error(CloudController::Errors::ApiError, /staging failed: error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /staging failed: error message/) do |e|
             expect(e.name).to eq('StagerError')
           end
         end
@@ -84,9 +86,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_staging(staging_guid)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('StagerUnavailable')
           end
         end
@@ -100,13 +102,15 @@ module VCAP::CloudController::Diego
               error: ::Diego::Bbs::Models::Error.new(
                 type: error_type,
                 message: 'error message'
-              )))
+              )
+            )
+          )
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.stop_staging(staging_guid)
-          }.to raise_error(CloudController::Errors::ApiError, /stop staging failed: error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /stop staging failed: error message/) do |e|
             expect(e.name).to eq('StagerError')
           end
         end
@@ -115,9 +119,9 @@ module VCAP::CloudController::Diego
           let(:error_type) { ::Diego::Bbs::Models::Error::Type::ResourceNotFound }
 
           it 'does not raise an error' do
-            expect {
+            expect do
               client.stop_staging(staging_guid)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end

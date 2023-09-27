@@ -11,11 +11,11 @@ module VCAP::CloudController
 
       let(:crashed_request) do
         {
-          'instance'         => Sham.guid,
-          'index'            => 3,
-          'exit_status'      => 137,
+          'instance' => Sham.guid,
+          'index' => 3,
+          'exit_status' => 137,
           'exit_description' => 'description',
-          'reason'           => 'CRASHED'
+          'reason' => 'CRASHED'
         }
       end
 
@@ -25,7 +25,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match /MessageParseError/
+            expect(last_response.body).to match(/MessageParseError/)
           end
         end
       end

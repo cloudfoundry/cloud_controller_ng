@@ -29,8 +29,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when schemas service_instance is not a hash' do
         let(:schema_data) do
-          { 'service_instance' => 'not a hash'
-          }
+          { 'service_instance' => 'not a hash' }
         end
 
         it 'should not build the service instance schema' do

@@ -158,7 +158,7 @@ module VCAP::CloudController
           'href' => expected_ssh_endpoint,
           'meta' => {
             'host_key_fingerprint' => expected_host_key_fingerprint,
-            'oauth_client' => expected_ssh_oauth_client,
+            'oauth_client' => expected_ssh_oauth_client
           }
         )
       end

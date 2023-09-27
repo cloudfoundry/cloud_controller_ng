@@ -35,13 +35,7 @@ module VCAP::CloudController
 
       def polling_interval_seconds=(interval)
         interval = interval.to_i if interval.is_a? String
-        @polling_interval = if interval < default_polling_interval_seconds
-                              default_polling_interval_seconds
-                            elsif interval > 24.hours
-                              24.hours
-                            else
-                              interval
-                            end
+        @polling_interval = interval.clamp(default_polling_interval_seconds, 24.hours)
       end
 
       private
@@ -65,7 +59,7 @@ module VCAP::CloudController
       end
 
       def next_execution_in
-        polling_interval_seconds * default_polling_exponential_backoff**retry_number
+        polling_interval_seconds * (default_polling_exponential_backoff**retry_number)
       end
 
       def next_enqueue_would_exceed_maximum_duration?
@@ -77,7 +71,7 @@ module VCAP::CloudController
       end
 
       def expire!
-        handle_timeout if self.respond_to?(:handle_timeout)
+        handle_timeout if respond_to?(:handle_timeout)
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 

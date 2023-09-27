@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_memory_in_mb: 1000000000000000000000000 }
+            { total_memory_in_mb: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { per_process_memory_in_mb: 1000000000000000000000000 }
+            { per_process_memory_in_mb: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
@@ -185,7 +185,7 @@ module VCAP::CloudController
 
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { total_instances: 1000000000000000000000000 }
+            { total_instances: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
@@ -247,7 +247,7 @@ module VCAP::CloudController
 
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
-            { per_app_tasks: 1000000000000000000000000 }
+            { per_app_tasks: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
