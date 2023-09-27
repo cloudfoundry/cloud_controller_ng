@@ -68,7 +68,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '+name', per_page: 2 }, as: :json
 
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[abel beale])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
@@ -79,7 +79,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { order_by: '-name', per_page: 2 }, as: :json
 
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[quartz rocky])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
@@ -89,7 +89,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'can get the first page descending' do
         get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[rocky quartz])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
@@ -100,7 +100,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'can get the first page descending with a leading dash' do
         get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[rocky quartz])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
@@ -111,7 +111,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'can get the second page descending' do
         get :index, params: { order_by: '-name', per_page: 2, page: 2 }, as: :json
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[clem beale])
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
@@ -124,7 +124,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'can get the final page' do
         get :index, params: { order_by: '-name', per_page: 2, page: 3 }, as: :json
         expect(response.status).to eq(200), response.body
-        response_names = parsed_body['resources'].map { |r| r['name'] }
+        response_names = parsed_body['resources'].pluck('name')
         expect(response_names).to match_array(%w[abel])
         expect(parsed_body['pagination']['next']).to be_nil
         expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
@@ -1466,7 +1466,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq(200)
       expect(parsed_body['resources'].size).to eq(2)
-      expect(parsed_body['resources'].map { |x| x['guid'] }).to match_array([build1.guid, build2.guid])
+      expect(parsed_body['resources'].pluck('guid')).to match_array([build1.guid, build2.guid])
     end
 
     it 'paginates with query parameters' do

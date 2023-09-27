@@ -1,4 +1,4 @@
-class RootController < ActionController::Base
+class RootController < ActionController::Base # rubocop:disable Rails/ApplicationController
   def v3_root
     links = {
       self: {

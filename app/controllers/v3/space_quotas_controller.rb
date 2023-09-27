@@ -11,6 +11,31 @@ require 'messages/space_quota_apply_message'
 require 'presenters/v3/space_quota_presenter'
 
 class SpaceQuotasController < ApplicationController
+  def index
+    message = VCAP::CloudController::SpaceQuotasListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    dataset = SpaceQuotaListFetcher.fetch(message:, readable_space_quota_guids:)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SpaceQuotaPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/space_quotas',
+      message: message,
+      extra_presenter_args: presenter_args
+    )
+  end
+
+  def show
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+    resource_not_found!(:space_quota) unless space_quota && readable_space_quota_guids.include?(space_quota.guid)
+
+    render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
+      space_quota,
+      **presenter_args
+    )
+  end
+
   def create
     message = VCAP::CloudController::SpaceQuotasCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -29,31 +54,6 @@ class SpaceQuotasController < ApplicationController
     )
   rescue SpaceQuotasCreate::Error => e
     unprocessable!(e.message)
-  end
-
-  def show
-    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
-    resource_not_found!(:space_quota) unless space_quota && readable_space_quota_guids.include?(space_quota.guid)
-
-    render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
-      space_quota,
-      **presenter_args
-    )
-  end
-
-  def index
-    message = VCAP::CloudController::SpaceQuotasListMessage.from_params(query_params)
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    dataset = SpaceQuotaListFetcher.fetch(message:, readable_space_quota_guids:)
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SpaceQuotaPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: '/v3/space_quotas',
-      message: message,
-      extra_presenter_args: presenter_args
-    )
   end
 
   def update

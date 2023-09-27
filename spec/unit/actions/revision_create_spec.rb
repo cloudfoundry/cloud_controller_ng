@@ -137,7 +137,7 @@ module VCAP::CloudController
           # ...
           RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
           RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
-          RevisionModel.make(app: app, version: 1, created_at: 1.days.ago)
+          RevisionModel.make(app: app, version: 1, created_at: 1.day.ago)
 
           RevisionCreate.create(
             app: app,

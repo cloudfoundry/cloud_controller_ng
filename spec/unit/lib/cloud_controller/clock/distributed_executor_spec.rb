@@ -46,12 +46,12 @@ module VCAP::CloudController
       context 'interval' do
         context 'when the interval for job has not elapsed' do
           before do
-            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {}
+            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) {}
           end
 
           it 'does NOT execute the block' do
             executed = false
-            DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes do
+            DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes do
               executed = true
             end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
         context 'when the interval for the job has elapsed' do
           before do
-            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) {}
+            DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) {}
             Timecop.travel(Time.now.utc + 1.minute)
           end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
           context 'and the job is in progress' do
             before do
-              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.second, timeout: 5.minutes) do
+              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 2.seconds, timeout: 5.minutes) do
                 Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
               end
             end

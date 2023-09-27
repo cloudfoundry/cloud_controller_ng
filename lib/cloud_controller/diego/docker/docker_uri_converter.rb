@@ -24,7 +24,7 @@ module VCAP::CloudController
         path = docker_uri
       end
 
-      path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && !path.include?('/')
+      path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
 
       path, tag = parse_docker_repository_tag(path)
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
     def missing_registry(name_parts)
       host = name_parts[0]
       name_parts.length == 1 ||
-        (!host.include?('.') && !host.include?(':') && host != 'localhost')
+        (host.exclude?('.') && host.exclude?(':') && host != 'localhost')
     end
 
     def parse_docker_repository_tag(path)

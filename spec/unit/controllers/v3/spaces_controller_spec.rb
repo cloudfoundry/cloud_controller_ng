@@ -82,7 +82,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
             get :index
 
             expect(response.status).to eq(200), response.body
-            expect(parsed_body['resources'].map { |h| h['name'] }).to match_array(expected_return_value)
+            expect(parsed_body['resources'].pluck('name')).to match_array(expected_return_value)
           end
         end
       end
@@ -141,7 +141,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         get :index
 
         expect(response.status).to eq(200)
-        expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([])
+        expect(parsed_body['resources'].pluck('name')).to match_array([])
       end
     end
 
@@ -157,7 +157,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         get :index
 
         expect(response.status).to eq(200)
-        expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
+        expect(parsed_body['resources'].pluck('name')).to match_array([
           org1_space.name
         ])
       end
@@ -176,7 +176,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         get :index
 
         expect(response.status).to eq(200)
-        expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
+        expect(parsed_body['resources'].pluck('name')).to match_array([
           org1_space.name, org1_other_space.name, org2_space.name
         ])
       end
@@ -203,7 +203,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
             get :index, params: { names: 'Alpaca,Horse' }
 
             expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array(%w[
+            expect(parsed_body['resources'].pluck('name')).to match_array(%w[
               Alpaca Horse
             ])
           end
@@ -214,7 +214,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
             get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
             expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+            expect(parsed_body['resources'].pluck('guid')).to match_array([
               org1_space.guid, org2_space.guid
             ])
           end
@@ -242,7 +242,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
               get :index, params: params3
 
               expect(response.status).to eq(200)
-              expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+              expect(parsed_body['resources'].pluck('guid')).to match_array([
                 org1_space.guid
               ])
             end
@@ -260,7 +260,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
             get :index, params: { names: 'Alpaca,Horse' }
 
             expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
+            expect(parsed_body['resources'].pluck('name')).to match_array([
               'Alpaca'
             ])
           end
@@ -270,7 +270,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
               get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
               expect(response.status).to eq(200)
-              expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+              expect(parsed_body['resources'].pluck('guid')).to match_array([
                 org1_space.guid
               ])
             end
@@ -319,7 +319,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+          expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Alpaca Dog Horse Lamb
           ])
         end
@@ -341,7 +341,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+          expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Lamb Horse Dog Alpaca
           ])
         end
@@ -362,7 +362,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+          expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Horse Lamb Alpaca Dog
           ])
         end
@@ -383,7 +383,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
 
-          expect(parsed_body['resources'].map { |s| s['name'] }).to eq(%w[
+          expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Dog Alpaca Lamb Horse
           ])
         end

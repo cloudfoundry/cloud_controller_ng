@@ -41,15 +41,11 @@ module VCAP::CloudController
         1
       end
 
-      def display_name
-        actor.display_name
-      end
+      delegate :display_name, to: :actor
 
       attr_reader :resource_guid
 
-      def resource_type
-        actor.resource_type
-      end
+      delegate :resource_type, to: :actor
 
       def perform
         not_found! unless resource

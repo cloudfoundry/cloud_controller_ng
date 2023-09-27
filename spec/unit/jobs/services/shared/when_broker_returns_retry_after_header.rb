@@ -51,7 +51,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
       end
 
       context 'when the interval is greater than the max value (24 hours)' do
-        let(:broker_polling_interval) { 24.hours.seconds + 1.minutes }
+        let(:broker_polling_interval) { 24.hours.seconds + 1.minute }
 
         it 'the polling interval should not exceed the max' do
           Timecop.freeze(Time.now)

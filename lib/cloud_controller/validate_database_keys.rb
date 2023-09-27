@@ -40,13 +40,13 @@ module VCAP::CloudController
 
       def validate_encryption_key_values_unchanged!(config)
         encryption_key_labels = config.get(:database_encryption, :keys)
-        return unless encryption_key_labels.present?
+        return if encryption_key_labels.blank?
 
         labels_with_changed_keys = []
         encryption_key_labels.each do |label, key_value|
           label_string = label.to_s
           sentinel_model = EncryptionKeySentinelModel.find(encryption_key_label: label_string)
-          raise EncryptionKeySentinelMissingError unless sentinel_model.present?
+          raise EncryptionKeySentinelMissingError if sentinel_model.blank?
 
           begin
             decrypted_value = Encryptor.decrypt_raw(
@@ -74,8 +74,8 @@ module VCAP::CloudController
 
       def missing_database_encryption_keys(defined_encryption_key_labels)
         used_encryption_key_labels = Set.new(Encryptor.encrypted_classes.map do |klass|
-          klass.constantize.select(:encryption_key_label).distinct.map(&:encryption_key_label)
-        end.flatten.reject(&:blank?).map(&:to_sym))
+          klass.constantize.distinct.pluck(:encryption_key_label)
+        end.flatten.compact_blank.map(&:to_sym))
         (used_encryption_key_labels - defined_encryption_key_labels).to_a
       end
 

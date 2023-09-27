@@ -17,14 +17,6 @@ require 'controllers/v3/mixins/app_sub_resource'
 class DropletsController < ApplicationController
   include AppSubResource
 
-  def create
-    droplet = hashed_params[:source_guid] ? create_copy : create_fresh
-
-    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
-  rescue DropletCopy::InvalidCopyError, DropletCreate::Error => e
-    unprocessable!(e.message)
-  end
-
   def index
     message = DropletsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -59,18 +51,12 @@ class DropletsController < ApplicationController
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets:)
   end
 
-  def destroy
-    droplet, space = DropletFetcher.new.fetch(hashed_params[:guid])
-    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+  def create
+    droplet = hashed_params[:source_guid] ? create_copy : create_fresh
 
-    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
-
-    delete_action = DropletDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
+  rescue DropletCopy::InvalidCopyError, DropletCreate::Error => e
+    unprocessable!(e.message)
   end
 
   def update
@@ -88,6 +74,20 @@ class DropletsController < ApplicationController
     droplet = VCAP::CloudController::DropletUpdate.new.update(droplet, message)
 
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
+  def destroy
+    droplet, space = DropletFetcher.new.fetch(hashed_params[:guid])
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+
+    unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
+
+    delete_action = DropletDelete.new(user_audit_info)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def create_copy

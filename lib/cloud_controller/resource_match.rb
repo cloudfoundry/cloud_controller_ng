@@ -18,8 +18,8 @@ module VCAP::CloudController
     def match_resources
       before_match_log
 
-      time_by_bucket = FILE_SIZE_GROUPS.keys.each_with_object({}) do |key, hash|
-        hash[key] = 0
+      time_by_bucket = FILE_SIZE_GROUPS.keys.index_with do |_key|
+        0
       end
 
       known_resources = []
@@ -37,8 +37,8 @@ module VCAP::CloudController
     def resource_count_by_filesize
       counted = resources_by_filesize.transform_values(&:count)
       # start with FILE_SIZE_GROUPS to preserve hash key ordering
-      FILE_SIZE_GROUPS.keys.each_with_object({}) do |key, hash|
-        hash[key] = counted[key] || 0
+      FILE_SIZE_GROUPS.keys.index_with do |key|
+        counted[key] || 0
       end
     end
 

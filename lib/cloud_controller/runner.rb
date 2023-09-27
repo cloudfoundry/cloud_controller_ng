@@ -61,12 +61,12 @@ module VCAP::CloudController
     end
 
     def deprecation_warning(message)
-      puts message
+      Rails.logger.warn message
     end
 
     def parse_options!
       options_parser.parse!(@argv)
-      raise 'Missing config' unless @config_file.present?
+      raise 'Missing config' if @config_file.blank?
     rescue StandardError
       raise options_parser.to_s
     end

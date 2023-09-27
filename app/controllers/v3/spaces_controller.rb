@@ -60,7 +60,7 @@ class SpacesV3Controller < ApplicationController
 
     space = SpaceCreate.new(user_audit_info:).create(org, message)
 
-    render status: 201, json: Presenters::V3::SpacePresenter.new(space)
+    render status: :created, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e
     unprocessable!(e.message)
   end

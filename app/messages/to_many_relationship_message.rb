@@ -23,7 +23,7 @@ module VCAP::CloudController
     validates_with DataParamGUIDValidator
 
     def guids
-      data.map { |val| val[:guid] }
+      data.pluck(:guid)
     end
   end
 end

@@ -104,7 +104,7 @@ class SpaceManifestsController < ApplicationController
   def parsed_app_manifests
     check_version_is_supported!
     parsed_applications = parsed_yaml['applications']
-    raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
+    raise unprocessable!("Cannot parse manifest with no 'applications' field.") if parsed_applications.blank?
 
     parsed_applications
   end

@@ -81,7 +81,7 @@ module UserHeaderHelpers
     current_user = user || VCAP::CloudController::User.make
 
     scope_roles = %w[admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader]
-    org.add_user(current_user) if org && !scope_roles.include?(role) && role.to_s != 'no_role'
+    org.add_user(current_user) if org && scope_roles.exclude?(role) && role.to_s != 'no_role'
 
     # rubocop:disable Lint/DuplicateBranch
     case role.to_s

@@ -81,13 +81,13 @@ module VCAP::CloudController
     end
 
     def credhub_link
-      return unless config.get(:credhub_api, :external_url).present?
+      return if config.get(:credhub_api, :external_url).blank?
 
       { href: config.get(:credhub_api, :external_url) }
     end
 
     def routing_link
-      return unless config.get(:routing_api).present?
+      return if config.get(:routing_api).blank?
 
       { href: config.get(:routing_api, :url) }
     end

@@ -9,9 +9,7 @@ module VCAP::CloudController
         @handler = handler
       end
 
-      def perform
-        handler.perform
-      end
+      delegate :perform, to: :handler
 
       def after(job)
         handler.after(job) if handler.respond_to?(:after)

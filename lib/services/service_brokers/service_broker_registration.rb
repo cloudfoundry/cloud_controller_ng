@@ -52,9 +52,7 @@ module VCAP::Services::ServiceBrokers
       self
     end
 
-    def errors
-      broker.errors
-    end
+    delegate :errors, to: :broker
 
     private
 

@@ -20,13 +20,6 @@ require 'presenters/v3/to_one_relationship_presenter'
 class OrganizationsV3Controller < ApplicationController
   include SubResource
 
-  def show
-    org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
-
-    render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
-  end
-
   def index
     message = OrgsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -43,6 +36,13 @@ class OrganizationsV3Controller < ApplicationController
       path: base_url(resource: 'organizations'),
       message: message
     )
+  end
+
+  def show
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
+
+    render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
   end
 
   def create

@@ -177,9 +177,7 @@ module VCAP::CloudController
       }
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
     def tcp?
       domain.shared? && domain.tcp? && port.present? && port > 0

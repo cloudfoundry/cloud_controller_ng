@@ -7,7 +7,7 @@ module VCAP::CloudController
     class NonNumericError < StandardError; end
 
     def convert_to_mb(human_readable_byte_value)
-      return nil unless human_readable_byte_value.present?
+      return nil if human_readable_byte_value.blank?
       raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
       PalmCivet.to_megabytes(human_readable_byte_value.to_s)
@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     def convert_to_b(human_readable_byte_value)
-      return nil unless human_readable_byte_value.present?
+      return nil if human_readable_byte_value.blank?
       raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
       PalmCivet.to_bytes(human_readable_byte_value.to_s)
@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     def human_readable_byte_value(bytes)
-      return nil unless bytes.present?
+      return nil if bytes.blank?
 
       raise InvalidBytesError unless bytes.is_a?(Integer)
 

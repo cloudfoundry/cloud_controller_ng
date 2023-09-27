@@ -99,33 +99,21 @@ module VCAP::CloudController
       VCAP::Services::Api::SynchronousHttpRequest
     end
 
-    def service
-      service_plan.service
-    end
+    delegate :service, to: :service_plan
 
-    def service_broker
-      service_plan.service_broker
-    end
+    delegate :service_broker, to: :service_plan
 
-    def route_service?
-      service.route_service?
-    end
+    delegate :route_service?, to: :service
 
-    def shareable?
-      service.shareable?
-    end
+    delegate :shareable?, to: :service
 
-    def volume_service?
-      service.volume_service?
-    end
+    delegate :volume_service?, to: :service
 
     def logger
       @logger ||= Steno.logger('cc.models.service_instance')
     end
 
-    def bindable?
-      service_plan.bindable?
-    end
+    delegate :bindable?, to: :service_plan
 
     def merged_tags
       (service.tags + tags).uniq

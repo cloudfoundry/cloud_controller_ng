@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     def guids
-      data.map { |val| val[:guid] }
+      data.pluck(:guid)
     end
   end
 end

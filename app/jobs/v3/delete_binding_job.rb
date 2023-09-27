@@ -33,17 +33,13 @@ module VCAP::CloudController
         1
       end
 
-      def display_name
-        actor.display_name
-      end
+      delegate :display_name, to: :actor
 
       def resource_guid
         @binding_guid
       end
 
-      def resource_type
-        actor.resource_type
-      end
+      delegate :resource_type, to: :actor
 
       def perform
         return finish if binding.nil?

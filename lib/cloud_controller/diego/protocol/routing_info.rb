@@ -13,8 +13,8 @@ module VCAP::CloudController
           tcp_info_obj  = tcp_info
 
           route_info                    = {}
-          route_info['http_routes']     = http_info_obj unless http_info_obj.blank?
-          route_info['tcp_routes']      = tcp_info_obj unless tcp_info_obj.blank?
+          route_info['http_routes']     = http_info_obj if http_info_obj.present?
+          route_info['tcp_routes']      = tcp_info_obj if tcp_info_obj.present?
           route_info['internal_routes'] = internal_routes
           route_info
         rescue RoutingApi::RoutingApiDisabled

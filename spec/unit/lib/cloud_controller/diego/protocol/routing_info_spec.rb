@@ -400,7 +400,7 @@ module VCAP::CloudController
 
               expect(ri.keys).to match_array %w[tcp_routes http_routes internal_routes]
               expect(ri['tcp_routes']).to match_array expected_tcp
-              http_ports = ri['http_routes'].map { |hr| hr['port'] }
+              http_ports = ri['http_routes'].pluck('port')
               expect(http_ports).to contain_exactly(8080, 9090)
             end
 

@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
 
-      add_warning("Route has been mapped to app port #{route_mapping.app_port}.") if !request_attrs.key?('app_port') && !process.ports.blank?
+      add_warning("Route has been mapped to app port #{route_mapping.app_port}.") if !request_attrs.key?('app_port') && process.ports.present?
 
       [
         HTTP::CREATED,
@@ -88,7 +88,7 @@ module VCAP::CloudController
     def get_app_port(process_guid, app_port)
       if app_port.blank?
         process = ProcessModel.find(guid: process_guid)
-        return process.ports[0] if !process.nil? && !process.ports.blank?
+        return process.ports[0] if !process.nil? && process.ports.present?
       end
 
       app_port
@@ -100,7 +100,7 @@ module VCAP::CloudController
       app_port     = get_app_port(process_guid, request_attrs['app_port'])
 
       error_message = "Route #{route_guid} is mapped to "
-      error_message += "port #{app_port} of " unless app_port.blank?
+      error_message += "port #{app_port} of " if app_port.present?
       error_message += "app #{process_guid}"
 
       error_message

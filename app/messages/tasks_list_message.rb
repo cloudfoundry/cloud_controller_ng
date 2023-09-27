@@ -20,7 +20,7 @@ module VCAP::CloudController
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
-    validate :non_app_nested_request, if: -> { !app_guid.present? }
+    validate :non_app_nested_request, if: -> { app_guid.blank? }
     validates :sequence_ids, array: true, allow_nil: true
 
     def to_param_hash

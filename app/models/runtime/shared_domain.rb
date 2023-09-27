@@ -92,7 +92,7 @@ module VCAP::CloudController
     private
 
     def validate_internal_domain
-      return unless router_group_guid.present?
+      return if router_group_guid.blank?
 
       errors.add(:router_group_guid, 'cannot be specified for internal domains')
     end

@@ -352,7 +352,7 @@ RSpec.describe 'Tasks' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([task1.guid])
+        expect(parsed_response['resources'].pluck('guid')).to eq([task1.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
@@ -939,7 +939,7 @@ RSpec.describe 'Tasks' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
+        expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
@@ -965,7 +965,7 @@ RSpec.describe 'Tasks' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
+        expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,
@@ -991,7 +991,7 @@ RSpec.describe 'Tasks' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to eq([expected_task.guid])
+        expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 1,

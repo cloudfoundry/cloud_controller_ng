@@ -74,7 +74,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
         it 'sorts the feature flags by name' do
           get :index
 
-          response_names = parsed_body['resources'].collect { |ff| ff['name'] }
+          response_names = parsed_body['resources'].pluck('name')
           expect(response_names).to eq(flag_names_sorted)
         end
       end

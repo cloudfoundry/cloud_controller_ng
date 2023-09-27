@@ -100,7 +100,7 @@ module VCAP::CloudController
       admin_buildpack_records = lifecycle.buildpack_infos.map(&:buildpack_record).compact
       disabled_buildpacks = admin_buildpack_records.reject(&:enabled)
 
-      return unless disabled_buildpacks.present?
+      return if disabled_buildpacks.blank?
 
       names = disabled_buildpacks.map { |buildpack_record| "'#{buildpack_record.name}'" }.join(', ')
       raise CloudController::Errors::ApiError.new_from_details(

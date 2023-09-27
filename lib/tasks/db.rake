@@ -3,7 +3,7 @@ require 'retryable'
 
 namespace :db do
   desc 'Create a Sequel migration in ./db/migrate'
-  task :create_migration do
+  task create_migration: :environment do
     RakeConfig.context = :migrate
 
     name = ENV.fetch('NAME', nil)
@@ -33,21 +33,21 @@ namespace :db do
   end
 
   desc 'Perform Sequel migration to database'
-  task :migrate do
+  task migrate: :environment do
     RakeConfig.context = :migrate
 
     migrate
   end
 
   desc 'Make up to 5 attempts to connect to the database. Succeed it one is successful, and fail otherwise.'
-  task :connect do
+  task connect: :environment do
     RakeConfig.context = :migrate
 
     connect
   end
 
   desc 'Rollback migrations to the database (one migration by default)'
-  task :rollback, [:number_to_rollback] do |_, args|
+  task :rollback, [:number_to_rollback] => :environment do |_, args|
     RakeConfig.context = :migrate
 
     number_to_rollback = (args[:number_to_rollback] || 1).to_i
@@ -55,7 +55,7 @@ namespace :db do
   end
 
   desc 'Randomly select between postgres and mysql'
-  task :pick do
+  task pick: :environment do
     unless ENV['DB_CONNECTION_STRING']
       ENV['DB'] ||= %w[mysql postgres].sample
       puts "Using #{ENV.fetch('DB', nil)}"
@@ -63,7 +63,7 @@ namespace :db do
   end
 
   desc 'Create the database set in spec/support/bootstrap/db_config'
-  task :create do
+  task create: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
@@ -83,7 +83,7 @@ namespace :db do
   end
 
   desc 'Drop the database set in spec/support/bootstrap/db_config'
-  task :drop do
+  task drop: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
@@ -104,7 +104,7 @@ namespace :db do
   task recreate: %w[drop create]
 
   desc 'Seed the database'
-  task :seed do
+  task seed: :environment do
     RakeConfig.context = :api
 
     require 'cloud_controller/seeds'
@@ -114,13 +114,13 @@ namespace :db do
   end
 
   desc 'Migrate and seed database'
-  task :setup_database do
+  task setup_database: :environment do
     Rake::Task['db:migrate'].invoke
     Rake::Task['db:seed'].invoke
   end
 
   desc 'Ensure migrations in DB match local migration files'
-  task :ensure_migrations_are_current do
+  task ensure_migrations_are_current: :environment do
     RakeConfig.context = :migrate
 
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
@@ -140,7 +140,7 @@ namespace :db do
   end
 
   desc 'Connect to the database set in spec/support/bootstrap/db_config'
-  task :connect do
+  task connect: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
@@ -158,14 +158,14 @@ namespace :db do
   end
 
   desc 'Terminate Istio sidecar for migration job (if one exists)'
-  task :terminate_istio_if_exists do
+  task terminate_istio_if_exists: :environment do
     puts 'Terminating Istio sidecar'
 
     terminate_istio_sidecar_if_exists
   end
 
   desc 'Validate Deployments are not missing encryption keys'
-  task :validate_encryption_keys do
+  task validate_encryption_keys: :environment do
     RakeConfig.context = :api
 
     require 'cloud_controller/validate_database_keys'
@@ -180,7 +180,7 @@ namespace :db do
 
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
-    task :migrate do
+    task migrate: :environment do
       RakeConfig.context = :migrate
 
       require_relative '../../spec/support/bootstrap/db_config'
@@ -189,7 +189,7 @@ namespace :db do
     end
 
     desc 'Rollback the database migration set in spec/support/bootstrap/db_config'
-    task :rollback, [:number_to_rollback] do |_, args|
+    task :rollback, [:number_to_rollback] => :environment do |_, args|
       RakeConfig.context = :migrate
 
       require_relative '../../spec/support/bootstrap/db_config'
@@ -198,7 +198,7 @@ namespace :db do
     end
 
     desc 'Dump schema to file'
-    task :dump_schema do
+    task dump_schema: :environment do
       require_relative '../../spec/support/bootstrap/db_config'
       require_relative '../../spec/support/bootstrap/table_recreator'
 

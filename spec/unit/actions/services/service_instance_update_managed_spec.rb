@@ -81,7 +81,7 @@ module VCAP::CloudController
 
           it 'should mark the service instance as failed' do
             expect do
-              Timeout.timeout(0.5.second) do
+              Timeout.timeout(0.5.seconds) do
                 service_instance_update.update_service_instance(service_instance, { 'parameters' => { 'foo' => 'bar' } })
               end
             end.to raise_error(Timeout::Error)

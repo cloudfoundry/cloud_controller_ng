@@ -28,6 +28,13 @@ class UsersController < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
+  def show
+    user = fetch_user_if_readable(hashed_params[:guid])
+    user_not_found! unless user
+
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -38,26 +45,6 @@ class UsersController < ApplicationController
     render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
   rescue UserCreate::Error => e
     unprocessable!(e)
-  end
-
-  def show
-    user = fetch_user_if_readable(hashed_params[:guid])
-    user_not_found! unless user
-
-    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
-  end
-
-  def destroy
-    user = fetch_user_if_readable(hashed_params[:guid])
-    user_not_found! unless user
-
-    unauthorized! unless permission_queryer.can_write_globally?
-
-    delete_action = UserDeleteAction.new
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(User, user.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def update
@@ -72,6 +59,19 @@ class UsersController < ApplicationController
     user = UserUpdate.new.update(user:, message:)
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([hashed_params[:guid]]))
+  end
+
+  def destroy
+    user = fetch_user_if_readable(hashed_params[:guid])
+    user_not_found! unless user
+
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    delete_action = UserDeleteAction.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(User, user.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

@@ -26,6 +26,14 @@ class BuildsController < ApplicationController
     )
   end
 
+  def show
+    build = BuildModel.find(guid: hashed_params[:guid])
+
+    build_not_found! unless build && permission_queryer.can_read_from_space?(build.app.space.id, build.app.space.organization_id)
+
+    render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
+  end
+
   def create
     message = BuildCreateMessage.new(JSON.parse(request.body))
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -77,7 +85,7 @@ class BuildsController < ApplicationController
 
   def update
     build = BuildModel.find(guid: hashed_params[:guid])
-    build_not_found! unless build.present?
+    build_not_found! if build.blank?
 
     space = build.space
     build_not_found! unless can_read_build?(space)
@@ -90,14 +98,6 @@ class BuildsController < ApplicationController
     end
 
     build = BuildUpdate.new.update(build, create_valid_update_message)
-
-    render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
-  end
-
-  def show
-    build = BuildModel.find(guid: hashed_params[:guid])
-
-    build_not_found! unless build && permission_queryer.can_read_from_space?(build.app.space.id, build.app.space.organization_id)
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end

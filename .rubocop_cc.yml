@@ -2,6 +2,7 @@
 
 require:
   - rubocop-sequel
+  - rubocop-rails
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -72,6 +73,22 @@ Sequel/ColumnDefault: # Exclude for old Migrations
     - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
     - spec/**/*
 
+Rails/CreateTableWithTimestamps: # Exclude for old Migrations
+  Exclude:
+    - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-2]|30[0-7]).+\.rb$/
+    - spec/**/*
+
+Rails/HttpPositionalArguments: # Brakes Code for specs as it`s not rails used there it`s a test framework(racktest)
+  Exclude:
+    - spec/**/*
+
+Rails/Blank: # Alters logic if NilOrEmpty is true
+  NilOrEmpty: false
+
+Rails/Present:  # Alters logic if NotNilAndNotEmpty is true
+  NotNilAndNotEmpty: false
+
 Naming/FileName:
   Exclude:
     - Guardfile
@@ -108,6 +125,17 @@ Style/ExpandPathArguments:
   Exclude:
     - 'db/migrations/20130911111938_encrypt_app_env_json.rb'
     - 'db/migrations/201805*'
+Rails/DangerousColumnNames: # Disabled for old migrations as we cannot change content of those
+  Enabled: true
+  Exclude:
+    - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
+    - db/migrations/20221125134500_add_request_count_table.rb
+Rails/SkipsModelValidations: # We don`t want any model at all in migrations and migration specs
+  Enabled: true
+  Exclude:
+    - db/migrations/*
+    - spec/migrations/*
 #### ENABLED SECTION
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: true
@@ -301,9 +329,123 @@ Style/SwapValues:
   Enabled: true
 Style/YAMLFileRead:
   Enabled: true
+Rails/ActionControllerFlashBeforeRender:
+  Enabled: true
+Rails/ActionControllerTestCase:
+  Enabled: true
+Rails/ActionOrder:
+  Enabled: true
+Rails/ActiveRecordCallbacksOrder:
+  Enabled: true
+Rails/ActiveSupportOnLoad:
+  Enabled: true
+Rails/AddColumnIndex:
+  Enabled: true
+Rails/AfterCommitOverride:
+  Enabled: true
+Rails/AttributeDefaultBlockValue:
+  Enabled: true
+Rails/CompactBlank:
+  Enabled: true
+Rails/DeprecatedActiveModelErrorsMethods:
+  Enabled: true
+Rails/DotSeparatedKeys:
+  Enabled: true
+Rails/DuplicateAssociation:
+  Enabled: true
+Rails/DuplicateScope:
+  Enabled: true
+Rails/DurationArithmetic:
+  Enabled: true
+Rails/EagerEvaluationLogMessage:
+  Enabled: true
+Rails/ExpandedDateRange:
+  Enabled: true
+Rails/FindById:
+  Enabled: true
+Rails/FreezeTime:
+  Enabled: true
+Rails/I18nLazyLookup:
+  Enabled: false
+Rails/I18nLocaleAssignment:
+  Enabled: false
+Rails/I18nLocaleTexts:
+  Enabled: false
+Rails/IgnoredColumnsAssignment:
+  Enabled: true
+Rails/Inquiry:
+  Enabled: true
+Rails/MailerName:
+  Enabled: true
+Rails/MatchRoute:
+  Enabled: true
+Rails/MigrationClassName:
+  Enabled: true
+Rails/NegateInclude:
+  Enabled: true
+Rails/Pluck:
+  Enabled: true
+Rails/PluckInWhere:
+  Enabled: true
+Rails/RedundantPresenceValidationOnBelongsTo:
+  Enabled: true
+Rails/RedundantTravelBack:
+  Enabled: true
+Rails/RenderInline:
+  Enabled: true
+Rails/RenderPlainText:
+  Enabled: true
+Rails/ResponseParsedBody:
+  Enabled: true
+Rails/RootJoinChain:
+  Enabled: true
+Rails/RootPathnameMethods:
+  Enabled: true
+Rails/RootPublicPath:
+  Enabled: true
+Rails/SelectMap:
+  Enabled: true
+Rails/ShortI18n:
+  Enabled: true
+Rails/SquishedSQLHeredocs:
+  Enabled: true
+Rails/StripHeredoc:
+  Enabled: true
+Rails/ThreeStateBooleanColumn:
+  Enabled: true
+Rails/TimeZoneAssignment:
+  Enabled: true
+Rails/ToFormattedS:
+  Enabled: true
+Rails/ToSWithArgument:
+  Enabled: true
+Rails/TopLevelHashWithIndifferentAccess:
+  Enabled: true
+Rails/TransactionExitStatement:
+  Enabled: true
+Rails/UnusedIgnoredColumns:
+  Enabled: true
+Rails/UnusedRenderContent:
+  Enabled: true
+Rails/WhereEquals:
+  Enabled: true
+Rails/WhereExists:
+  Enabled: true
+Rails/WhereMissing:
+  Enabled: true
+Rails/WhereNot:
+  Enabled: true
+Rails/WhereNotWithMultipleConditions:
+  Enabled: true
 
 ### Broken Cops that break code
 Lint/ShadowedException: # Brakes "bundle exec rake rubocop" if enabled
   Enabled: false
 Sequel/SaveChanges: # Brakes Code
+  Enabled: false
+Rails/DynamicFindBy: # Brakes Code
+  Enabled: false
+Rails/FindEach: # Brakes Code
+  Enabled: false
+Rails/RedundantActiveRecordAllMethod: # As we use Sequel this breaks code as it matches Sequel functions
   Enabled: false

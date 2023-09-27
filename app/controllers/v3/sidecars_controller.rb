@@ -46,7 +46,7 @@ class SidecarsController < ApplicationController
     app = sidecar.app
     resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
 
-    render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :ok, json: Presenters::V3::SidecarPresenter.new(sidecar)
   end
 
   def create
@@ -72,7 +72,7 @@ class SidecarsController < ApplicationController
         'process-types' => sidecar.process_types
       }
     )
-    render status: 201, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :created, json: Presenters::V3::SidecarPresenter.new(sidecar)
   rescue SidecarCreate::InvalidSidecar => e
     unprocessable!(e.message)
   end
@@ -91,7 +91,7 @@ class SidecarsController < ApplicationController
 
     sidecar = SidecarUpdate.update(sidecar, message)
 
-    render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :ok, json: Presenters::V3::SidecarPresenter.new(sidecar)
   rescue SidecarUpdate::InvalidSidecar => e
     unprocessable!(e.message)
   end

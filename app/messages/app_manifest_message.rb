@@ -307,7 +307,7 @@ module VCAP::CloudController
 
     def convert_to_bytes_per_second(human_readable_byte_value)
       human_readable_byte_value = human_readable_byte_value.to_s
-      return nil unless human_readable_byte_value.present?
+      return nil if human_readable_byte_value.blank?
       return -1 if human_readable_byte_value.to_s == '-1'
       return 0 if human_readable_byte_value.to_s == '0'
 

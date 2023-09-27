@@ -49,7 +49,7 @@ module VCAP::CloudController
 
     def error
       e = [error_id, error_description].compact.join(' - ')
-      e.blank? ? nil : e
+      e.presence
     end
 
     def validate

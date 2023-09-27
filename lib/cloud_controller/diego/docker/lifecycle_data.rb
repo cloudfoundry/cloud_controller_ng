@@ -11,7 +11,7 @@ module VCAP::CloudController
             docker_user:,
             docker_password:,
             docker_email:
-          }.delete_if { |_k, v| v.blank? }
+          }.compact_blank!
 
           schema.validate(message)
           message

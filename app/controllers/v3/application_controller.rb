@@ -152,7 +152,7 @@ class ApplicationController < ActionController::Base
   ###
 
   def enforce_authentication?
-    !ANONYMOUSLY_AVAILABLE.include?(action_name)
+    ANONYMOUSLY_AVAILABLE.exclude?(action_name)
   end
 
   def enforce_read_scope?
@@ -164,7 +164,7 @@ class ApplicationController < ActionController::Base
   def enforce_write_scope?
     return false if UNSCOPED_PAGES.include?(action_name)
 
-    !READ_SCOPE_HTTP_METHODS.include?(request.method)
+    READ_SCOPE_HTTP_METHODS.exclude?(request.method)
   end
 
   def read_scope

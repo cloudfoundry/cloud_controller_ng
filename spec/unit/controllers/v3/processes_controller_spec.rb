@@ -42,7 +42,7 @@ RSpec.describe ProcessesController, type: :controller do
           get(:index, params:)
 
           parsed_response = parsed_body
-          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          response_guids = parsed_response['resources'].pluck('guid')
           expect(parsed_response['pagination']['total_results']).to eq(2)
           expect(response_guids.length).to eq(per_page)
         end
@@ -95,7 +95,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns 200 and lists all processes' do
           get :index
 
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          response_guids = parsed_body['resources'].pluck('guid')
           expect(response.status).to eq(200)
           expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
         end

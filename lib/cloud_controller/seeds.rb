@@ -90,7 +90,7 @@ module VCAP::CloudController
             SharedDomain.find_or_create(**attrs.compact)
           end
 
-          if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })
+          if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.pluck('name'))
             Config.config.get(:system_hostnames).each do |hostnames|
               domains.each do |app_domain|
                 raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
@@ -167,7 +167,7 @@ module VCAP::CloudController
 
       def seed_encryption_key_sentinels(config)
         encryption_keys = config.get(:database_encryption, :keys)
-        return unless encryption_keys.present?
+        return if encryption_keys.blank?
 
         adjective_noun_generator = AdjectiveNounGenerator.new
         encryption_keys.each do |label, key|

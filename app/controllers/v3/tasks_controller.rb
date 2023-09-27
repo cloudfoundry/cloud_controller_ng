@@ -42,6 +42,13 @@ class TasksController < ApplicationController
     )
   end
 
+  def show
+    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && can_read_task?(space)
+
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(space))
+  end
+
   def create
     FeatureFlag.raise_unless_enabled!(:task_creation)
 
@@ -92,13 +99,6 @@ class TasksController < ApplicationController
 
     task = TaskUpdate.new.update(task, message)
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task)
-  end
-
-  def show
-    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && can_read_task?(space)
-
-    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(space))
   end
 
   private

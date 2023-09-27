@@ -25,7 +25,7 @@ default_tasks = [:rubocop_autocorrect, 'spec:all', :check_doc_links]
 
 task default: default_tasks
 
-task :rubocop_autocorrect do
+task rubocop_autocorrect: :environment do
   require 'rubocop'
   cli = RuboCop::CLI.new
   exit_code = cli.run(%w[--auto-correct --fail-level autocorrect])
@@ -33,7 +33,7 @@ task :rubocop_autocorrect do
 end
 
 desc 'Check docs for broken links'
-task :check_doc_links do
+task check_doc_links: :environment do
   require 'English'
   require 'rainbow'
 

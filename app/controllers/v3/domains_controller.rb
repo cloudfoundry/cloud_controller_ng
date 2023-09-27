@@ -29,6 +29,16 @@ class DomainsController < ApplicationController
     )
   end
 
+  def show
+    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
+    domain_not_found! unless domain
+
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
+  end
+
   def create
     message = DomainCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -65,16 +75,6 @@ class DomainsController < ApplicationController
     matching_route = true if dataset.any?
 
     render status: :ok, json: { matching_route: }
-  end
-
-  def show
-    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    domain = find_domain(message)
-    domain_not_found! unless domain
-
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
 
   def update

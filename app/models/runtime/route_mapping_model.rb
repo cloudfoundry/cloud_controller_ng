@@ -77,7 +77,7 @@ module VCAP::CloudController
     end
 
     def validate_weight
-      return unless weight.present?
+      return if weight.blank?
 
       errors.add(:weight, 'must be between 1 and 100') unless (1..100).member?(weight)
     end

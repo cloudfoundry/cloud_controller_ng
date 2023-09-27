@@ -118,7 +118,7 @@ module VCAP::CloudController
           it 'do not change their values' do
             entity = encrypted_models[klass]
             vals = entity.reload.values.except(*encrypted_columns(entity.class))
-            expect(vals.values.all? { |x| !x.blank? }).to be_truthy, "all fields of #{entity.class} need to have values"
+            expect(vals.values.all?(&:present?)).to be_truthy, "all fields of #{entity.class} need to have values"
 
             RotateDatabaseKey.perform(batch_size: 1)
 

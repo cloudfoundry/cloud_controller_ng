@@ -6,7 +6,7 @@ RSpec.describe Database::OldRecordCleanup do
     let!(:stale_event1) { VCAP::CloudController::Event.make(created_at: 1.day.ago - 1.minute) }
     let!(:stale_event2) { VCAP::CloudController::Event.make(created_at: 2.days.ago) }
 
-    let!(:fresh_event) { VCAP::CloudController::Event.make(created_at: 1.day.ago + 1.minutes) }
+    let!(:fresh_event) { VCAP::CloudController::Event.make(created_at: 1.day.ago + 1.minute) }
 
     it 'deletes records older than specified days' do
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)

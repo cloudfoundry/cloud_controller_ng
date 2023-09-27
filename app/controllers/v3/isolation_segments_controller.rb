@@ -18,25 +18,6 @@ require 'fetchers/isolation_segment_organizations_fetcher'
 require 'fetchers/isolation_segment_spaces_fetcher'
 
 class IsolationSegmentsController < ApplicationController
-  def create
-    unauthorized! unless roles.admin?
-
-    message = IsolationSegmentCreateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    isolation_segment = IsolationSegmentCreate.create(message)
-
-    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment)
-  rescue IsolationSegmentCreate::Error => e
-    unprocessable!(e.message)
-  end
-
-  def show
-    isolation_segment_model = find_readable_isolation_segment(hashed_params[:guid])
-
-    render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
-  end
-
   def index
     message = IsolationSegmentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -55,14 +36,22 @@ class IsolationSegmentsController < ApplicationController
     )
   end
 
-  def destroy
+  def show
+    isolation_segment_model = find_readable_isolation_segment(hashed_params[:guid])
+
+    render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
+  end
+
+  def create
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
-    IsolationSegmentDelete.new.delete(isolation_segment_model)
+    message = IsolationSegmentCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
-    head :no_content
-  rescue IsolationSegmentDelete::AssociationNotEmptyError => e
+    isolation_segment = IsolationSegmentCreate.create(message)
+
+    render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment)
+  rescue IsolationSegmentCreate::Error => e
     unprocessable!(e.message)
   end
 
@@ -80,6 +69,17 @@ class IsolationSegmentsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   rescue IsolationSegmentUpdate::InvalidIsolationSegment => e
+    unprocessable!(e.message)
+  end
+
+  def destroy
+    unauthorized! unless roles.admin?
+
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
+    IsolationSegmentDelete.new.delete(isolation_segment_model)
+
+    head :no_content
+  rescue IsolationSegmentDelete::AssociationNotEmptyError => e
     unprocessable!(e.message)
   end
 

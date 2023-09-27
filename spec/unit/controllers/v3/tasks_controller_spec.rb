@@ -440,7 +440,7 @@ RSpec.describe TasksController, type: :controller do
 
       get :index
 
-      response_guids = parsed_body['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].pluck('guid')
       expect(response.status).to eq(200)
       expect(response_guids).to match_array([task_1.guid, task_2.guid])
     end
@@ -481,7 +481,7 @@ RSpec.describe TasksController, type: :controller do
         get :index, params: { app_guid: app_model.guid }
 
         expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([task_1.guid, task_2.guid])
       end
 
@@ -554,7 +554,7 @@ RSpec.describe TasksController, type: :controller do
 
         get :index
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
       end

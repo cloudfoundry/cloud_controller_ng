@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         def ports
-          return @ports if @ports && !@ports.empty?
+          return @ports if @ports.present?
 
           [DEFAULT_APP_PORT]
         end

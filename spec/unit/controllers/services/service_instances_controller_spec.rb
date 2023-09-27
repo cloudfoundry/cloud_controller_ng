@@ -700,7 +700,7 @@ module VCAP::CloudController
             let!(:now) { Time.now }
             let(:max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
             let(:before_poll_timeout) { now + (max_poll_duration / 2).minutes }
-            let(:after_poll_timeout) { now + max_poll_duration.minutes + 1.minutes }
+            let(:after_poll_timeout) { now + max_poll_duration.minutes + 1.minute }
 
             before do
               stub_request(:get, service_broker_url_regex).
@@ -739,7 +739,7 @@ module VCAP::CloudController
             let!(:now) { Time.now }
             let(:max_poll_duration) { 300 }
             let(:before_poll_timeout) { now + (5 / 2).minutes }
-            let(:after_poll_timeout) { now + 5.minutes + 1.minutes }
+            let(:after_poll_timeout) { now + 5.minutes + 1.minute }
 
             before do
               plan.maximum_polling_duration = max_poll_duration
@@ -3203,7 +3203,7 @@ module VCAP::CloudController
                   description: 'Done!'
                 }.to_json)
 
-              Timecop.freeze Time.now + 2.minute do
+              Timecop.freeze Time.now + 2.minutes do
                 Delayed::Job.last.invoke_job
                 expect(Event.find(type: 'audit.service_instance.delete')).to be
               end

@@ -75,9 +75,7 @@ module VCAP::CloudController
     many_to_one :organization, key: :organization_id
     many_to_one :space, key: :space_id
 
-    def user_guid
-      user.guid
-    end
+    delegate :guid, to: :user, prefix: true
 
     def organization_guid
       return organization.guid unless organization_id == SPACE_OR_ORGANIZATION_NOT_SPECIFIED
@@ -139,8 +137,8 @@ module VCAP::CloudController
     EXCLUDE = { 1 => 0 }.freeze
 
     def init_filters(default)
-      RoleTypes::ALL_ROLES.each_with_object({}) do |role, filters|
-        filters[role] = default.dup
+      RoleTypes::ALL_ROLES.index_with do |_role|
+        default.dup
       end
     end
 
@@ -226,8 +224,8 @@ module VCAP::CloudController
     end
 
     def boolean_expression_to_filters(expression)
-      RoleTypes::ALL_ROLES.each_with_object({}) do |role, filters|
-        filters[role] = adapt_boolean_expression(expression)
+      RoleTypes::ALL_ROLES.index_with do |_role|
+        adapt_boolean_expression(expression)
       end
     end
   end

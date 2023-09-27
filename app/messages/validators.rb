@@ -84,7 +84,7 @@ module VCAP::CloudController::Validators
     def validate_each(record, attribute, value)
       if value.is_a?(Hash)
         value.each_key do |key|
-          if ![String, Symbol].include?(key.class)
+          if [String, Symbol].exclude?(key.class)
             record.errors.add(attribute, message: 'key must be a string')
           elsif key.empty?
             record.errors.add(attribute, message: 'key must be a minimum length of 1')
@@ -108,7 +108,7 @@ module VCAP::CloudController::Validators
     def validate_each(record, attribute, value)
       if value.is_a?(Hash)
         value.each do |key, inner_value|
-          if ![String, Symbol].include?(key.class)
+          if [String, Symbol].exclude?(key.class)
             record.errors.add(attribute, message: 'key must be a string')
           elsif key.empty?
             record.errors.add(attribute, message: 'key must be a minimum length of 1')
@@ -118,7 +118,7 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, message: 'cannot start with VMC_')
           elsif key.match?(/\APORT\z/i)
             record.errors.add(attribute, message: 'cannot set PORT')
-          elsif ![String, NilClass].include?(inner_value.class)
+          elsif [String, NilClass].exclude?(inner_value.class)
             stringified = inner_value.to_json
             record.errors.add(:base, message: "Non-string value in environment variable for key '#{key}', value '#{stringified}'")
           end

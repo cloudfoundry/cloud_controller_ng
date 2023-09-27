@@ -29,9 +29,7 @@ module VCAP::CloudController
         1
       end
 
-      def reschedule_at(time, attempts)
-        job.reschedule_at(time, attempts)
-      end
+      delegate :reschedule_at, to: :job
     end
   end
 end

@@ -58,7 +58,7 @@ module VCAP::CloudController
 
         def error
           e = [build.error_id, build.error_description].compact.join(' - ')
-          e.blank? ? nil : e
+          e.presence
         end
 
         def build_links

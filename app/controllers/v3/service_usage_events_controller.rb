@@ -3,14 +3,6 @@ require 'messages/service_usage_events_list_message'
 require 'fetchers/service_usage_event_list_fetcher'
 
 class ServiceUsageEventsController < ApplicationController
-  def show
-    service_usage_event_not_found! unless permission_queryer.can_read_globally?
-    service_usage_event = ServiceUsageEvent.first(guid: hashed_params[:guid])
-    service_usage_event_not_found! unless service_usage_event
-
-    render status: :ok, json: Presenters::V3::ServiceUsageEventPresenter.new(service_usage_event)
-  end
-
   def index
     message = ServiceUsageEventsListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -25,6 +17,14 @@ class ServiceUsageEventsController < ApplicationController
       path: '/v3/service_usage_events',
       message: message
     )
+  end
+
+  def show
+    service_usage_event_not_found! unless permission_queryer.can_read_globally?
+    service_usage_event = ServiceUsageEvent.first(guid: hashed_params[:guid])
+    service_usage_event_not_found! unless service_usage_event
+
+    render status: :ok, json: Presenters::V3::ServiceUsageEventPresenter.new(service_usage_event)
   end
 
   def destructively_purge_all_and_reseed

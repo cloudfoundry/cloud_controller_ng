@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     def read(guid)
       obj = find_guid(guid)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless obj.v2_app.present?
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) if obj.v2_app.blank?
 
       validate_access(:read, obj)
       object_renderer.render_json(self.class, obj, @opts)
@@ -118,7 +118,7 @@ module VCAP::CloudController
     get '/v2/service_bindings/:guid/parameters', :parameters
     def parameters(guid)
       binding = find_guid_and_validate_access(:read, guid)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) if binding.v2_app.blank?
 
       fetcher = ServiceBindingRead.new
       begin

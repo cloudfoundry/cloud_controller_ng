@@ -24,7 +24,7 @@ module VCAP::CloudController
             protocol: manifest_route_mapping[:protocol]
           }
 
-          raise InvalidRoute.new("No domains exist for route #{manifest_route_mapping[:route]}") unless route[:model].present?
+          raise InvalidRoute.new("No domains exist for route #{manifest_route_mapping[:route]}") if route[:model].blank?
 
           routes_to_map << route
         end

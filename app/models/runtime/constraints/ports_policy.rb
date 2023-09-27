@@ -24,7 +24,7 @@ class PortsPolicy
     @process.route_mappings.each do |mapping|
       if mapping.app_port.blank?
         return false unless @process.ports.include?(VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
-      elsif mapping.has_app_port_specified? && !@process.ports.include?(mapping.app_port)
+      elsif mapping.has_app_port_specified? && @process.ports.exclude?(mapping.app_port)
         return false
       end
     end

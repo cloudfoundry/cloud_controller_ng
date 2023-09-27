@@ -392,7 +392,7 @@ RSpec.describe 'IsolationSegmentModels' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[2].name, models[4].name])
+        expect(parsed_response['resources'].pluck('name')).to eq([models[2].name, models[4].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -411,7 +411,7 @@ RSpec.describe 'IsolationSegmentModels' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[3].name, models[5].name])
+        expect(parsed_response['resources'].pluck('name')).to eq([models[3].name, models[5].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -436,7 +436,7 @@ RSpec.describe 'IsolationSegmentModels' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['name'] }).to eq([models[1].name, models[2].name])
+          expect(parsed_response['resources'].pluck('name')).to eq([models[1].name, models[2].name])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -469,7 +469,7 @@ RSpec.describe 'IsolationSegmentModels' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(iso_segB.guid, iso_segC.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(iso_segB.guid, iso_segC.guid)
       end
     end
 

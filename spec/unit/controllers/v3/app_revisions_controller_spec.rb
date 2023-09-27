@@ -24,7 +24,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       get :index, params: { guid: app_model.guid }
 
       expect(response.status).to eq(200)
-      expect(parsed_body['resources'].map { |r| r['guid'] }).to contain_exactly(revision1.guid, revision2.guid)
+      expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision2.guid)
     end
 
     context 'filters' do
@@ -34,7 +34,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         get :index, params: { guid: app_model.guid, versions: '808,810' }
 
         expect(response.status).to eq(200)
-        expect(parsed_body['resources'].map { |r| r['guid'] }).to contain_exactly(revision1.guid, revision3.guid)
+        expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision3.guid)
       end
     end
 
@@ -98,7 +98,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       get :deployed, params: { guid: app_model.guid }
 
       expect(response.status).to eq(200)
-      expect(parsed_body['resources'].map { |r| r['guid'] }).to contain_exactly(revision1.guid, revision2.guid)
+      expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision2.guid)
     end
 
     it 'raises an ApiError with a 404 code when the app does not exist' do

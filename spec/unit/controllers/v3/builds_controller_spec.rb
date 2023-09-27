@@ -71,8 +71,8 @@ RSpec.describe BuildsController, type: :controller do
                 expect(resources.size).to eq(0), "role #{role}: expected 0, got: #{resources.size}"
               else
                 expect(resources.size).to eq(2), "role #{role}: expected 2, got: #{resources.size}"
-                expect(resources.map { |r| r['guid'] }).to match_array([build.guid, build2.guid])
-                expect(resources.map { |r| r['state'] }.all? { |state| state == 'STAGED' }).to be_truthy
+                expect(resources.pluck('guid')).to match_array([build.guid, build2.guid])
+                expect(resources.pluck('state').all? { |state| state == 'STAGED' }).to be_truthy
                 expect(resources.map { |r| r['package']['guid'] }).to match_array([package.guid, package2.guid])
               end
             end
@@ -154,7 +154,7 @@ RSpec.describe BuildsController, type: :controller do
       it 'lists the builds visible to the user' do
         get :index
 
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([build, build2].map(&:guid))
       end
 

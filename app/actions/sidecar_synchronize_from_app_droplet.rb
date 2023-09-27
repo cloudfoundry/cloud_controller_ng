@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       def raise_error_if_sidecar_names_conflict(app, sidecar_create_message)
-        return unless app.sidecars_dataset.where(name: sidecar_create_message.name, origin: SidecarModel::ORIGIN_USER).present?
+        return if app.sidecars_dataset.where(name: sidecar_create_message.name, origin: SidecarModel::ORIGIN_USER).blank?
 
         raise ConflictingSidecarsError.new(
           "Buildpack defined sidecar '#{sidecar_create_message.name}' " \

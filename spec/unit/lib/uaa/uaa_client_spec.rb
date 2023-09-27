@@ -373,7 +373,7 @@ module VCAP::CloudController
 
         it 'returns the list of users after making batch requests' do
           results = uaa_client.users_for_ids(user_ids)
-          expect(results).to eq(actual_users.map { |user| [user['id'], user] }.to_h)
+          expect(results).to eq(actual_users.index_by { |user| user['id'] })
         end
       end
 

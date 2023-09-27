@@ -75,7 +75,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def update
-    not_found! unless service_credential_binding.present?
+    not_found! if service_credential_binding.blank?
     unauthorized! unless can_write_to_active_space?(binding_space)
     suspended! unless is_space_active?(binding_space)
 
@@ -102,7 +102,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def destroy
-    not_found! unless service_credential_binding.present?
+    not_found! if service_credential_binding.blank?
     if service_credential_binding.is_a?(ServiceKey)
       unauthorized! unless can_write_to_active_space?(binding_space)
     else
@@ -277,7 +277,7 @@ class ServiceCredentialBindingsController < ApplicationController
   end
 
   def can_read_service_instance?(service_instance)
-    return unless service_instance.present?
+    return if service_instance.blank?
 
     readable_spaces = service_instance.shared_spaces + [service_instance.space]
 

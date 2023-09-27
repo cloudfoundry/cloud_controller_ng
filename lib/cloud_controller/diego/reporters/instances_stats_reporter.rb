@@ -104,12 +104,7 @@ module VCAP::CloudController
 
       def formatted_quota_stats(log_cache_data)
         log_cache_data.
-          map do |e|
-            [
-              e.instance_index,
-              e
-            ]
-          end.to_h
+          index_by(&:instance_index)
       end
 
       def envelopes(desired_lrp, process)

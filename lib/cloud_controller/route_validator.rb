@@ -75,7 +75,7 @@ module VCAP::CloudController
     end
 
     def validate_port_not_included
-      return unless route.port.present?
+      return if route.port.blank?
 
       route.errors.add(:port, :port_unsupported)
     end

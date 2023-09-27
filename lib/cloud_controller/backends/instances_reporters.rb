@@ -27,9 +27,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('StatsUnavailable', 'Stats server temporarily unavailable.')
     end
 
-    def number_of_starting_and_running_instances_for_processes(apps)
-      diego_reporter.number_of_starting_and_running_instances_for_processes(apps)
-    end
+    delegate :number_of_starting_and_running_instances_for_processes, to: :diego_reporter
 
     private
 

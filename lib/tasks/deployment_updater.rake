@@ -1,6 +1,6 @@
 namespace :deployment_updater do
   desc 'Start a recurring process to perform zero downtime deployments'
-  task :start do
+  task start: :environment do
     puts RUBY_DESCRIPTION
     require 'cloud_controller/deployment_updater/scheduler'
 

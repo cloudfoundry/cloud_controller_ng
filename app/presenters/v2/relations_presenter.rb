@@ -101,7 +101,7 @@ module CloudController
         def relationship_link_only?(association, associated_controller, relationship_name, opts, depth, parents)
           return true if association.link_only?
           return true if opts[:exclude_relations] && opts[:exclude_relations].include?(relationship_name.to_s)
-          return true if opts[:include_relations] && !opts[:include_relations].include?(relationship_name.to_s)
+          return true if opts[:include_relations] && opts[:include_relations].exclude?(relationship_name.to_s)
 
           depth >= opts[:inline_relations_depth] || parents.include?(associated_controller)
         end

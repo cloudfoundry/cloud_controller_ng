@@ -72,7 +72,7 @@ module VCAP::CloudController
 
         get "/v2/spaces/#{space.guid}/summary"
 
-        expect(decoded_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+        expect(decoded_response['services'].pluck('guid')).to include(service_instance.guid)
       end
 
       it 'does not return private services from other spaces' do
@@ -85,7 +85,7 @@ module VCAP::CloudController
         get "/v2/spaces/#{space.guid}/summary"
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to_not include service_instance2.guid
+        expect(parsed_response['services'].pluck('guid')).to_not include service_instance2.guid
       end
 
       it 'does not include sharing information for not-shared service instances' do
@@ -119,7 +119,7 @@ module VCAP::CloudController
         end
 
         it 'includes the shared service instance' do
-          expect(services_response.map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+          expect(services_response.pluck('guid')).to include(service_instance.guid)
         end
 
         it 'includes sharing information' do

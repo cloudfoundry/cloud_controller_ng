@@ -472,7 +472,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -491,7 +491,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -510,7 +510,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -529,7 +529,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -548,7 +548,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -567,7 +567,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -586,7 +586,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -605,7 +605,7 @@ RSpec.describe 'Domains Request' do
         }
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

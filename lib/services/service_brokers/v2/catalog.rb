@@ -51,7 +51,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def valid_dashboard_client_ids(clients)
-      clients.map { |client| client['id'] }.compact
+      clients.pluck('id').compact
     end
 
     def valid_dashboard_clients(services)

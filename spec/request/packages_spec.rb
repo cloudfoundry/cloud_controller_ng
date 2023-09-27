@@ -409,7 +409,7 @@ RSpec.describe 'Packages' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(3)
-        expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
+        expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -434,7 +434,7 @@ RSpec.describe 'Packages' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(2)
-        expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+        expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -457,7 +457,7 @@ RSpec.describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+        expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
@@ -604,7 +604,7 @@ RSpec.describe 'Packages' do
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
-          expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
+          expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -631,7 +631,7 @@ RSpec.describe 'Packages' do
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
-          expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+          expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -655,7 +655,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -679,7 +679,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -710,7 +710,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_on_space2.guid, package_on_space1.guid])
+          expect(parsed_response['resources'].pluck('guid')).to match_array([package_on_space2.guid, package_on_space1.guid])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -748,7 +748,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to match_array([package_in_org1.guid, package_in_org2.guid])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 

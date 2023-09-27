@@ -42,7 +42,7 @@ module VCAP::CloudController
 
         logger.info('stop.staging.response', staging_guid: staging_guid, error: response.error)
 
-        if response.error && !ACCEPTABLE_DIEGO_ERRORS.include?(response.error.type)
+        if response.error && ACCEPTABLE_DIEGO_ERRORS.exclude?(response.error.type)
           raise CloudController::Errors::ApiError.new_from_details('StagerError', "stop staging failed: #{response.error.message}")
         end
 

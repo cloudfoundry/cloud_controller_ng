@@ -213,7 +213,7 @@ RSpec.describe 'v3 service route bindings' do
         expect(last_response).to have_status_code(200)
 
         expect(parsed_response['included']['service_instances']).to have(2).items
-        guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+        guids = parsed_response['included']['service_instances'].pluck('guid')
         expect(guids).to contain_exactly(instance.guid, other_instance.guid)
       end
 
@@ -233,7 +233,7 @@ RSpec.describe 'v3 service route bindings' do
         expect(last_response).to have_status_code(200)
 
         expect(parsed_response['included']['routes']).to have(2).items
-        guids = parsed_response['included']['routes'].map { |x| x['guid'] }
+        guids = parsed_response['included']['routes'].pluck('guid')
         expect(guids).to contain_exactly(route.guid, other_route.guid)
       end
 
@@ -1806,7 +1806,7 @@ RSpec.describe 'v3 service route bindings' do
   end
 
   def expect_route_bindings(route_bindings)
-    response_guids = parsed_response['resources'].map { |x| x['guid'] }
+    response_guids = parsed_response['resources'].pluck('guid')
     expect(response_guids).to match_array(route_bindings.map(&:guid))
   end
 end

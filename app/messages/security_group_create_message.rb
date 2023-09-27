@@ -61,12 +61,12 @@ module VCAP::CloudController
 
       def staging_space_guids
         staging_data = HashUtils.dig(staging_spaces, :data)
-        staging_data ? staging_data.map { |space| space[:guid] } : []
+        staging_data ? staging_data.pluck(:guid) : []
       end
 
       def running_space_guids
         running_data = HashUtils.dig(running_spaces, :data)
-        running_data ? running_data.map { |space| space[:guid] } : []
+        running_data ? running_data.pluck(:guid) : []
       end
     end
   end

@@ -78,17 +78,11 @@ module VCAP::CloudController
       { guid: }
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
-    def space
-      app.space
-    end
+    delegate :space, to: :app
 
-    def service_instance_name
-      service_instance.name
-    end
+    delegate :name, to: :service_instance, prefix: true
 
     def after_initialize
       super

@@ -62,6 +62,29 @@ class ServiceRouteBindingsController < ApplicationController
     already_exists!
   end
 
+  def update
+    route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
+    unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
+    suspended! unless is_space_active?(@route_binding.route.space)
+
+    unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
+
+    message = MetadataUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
+
+    Repositories::ServiceGenericBindingEventRepository.
+      new(Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).
+      record_update(
+        @route_binding,
+        user_audit_info,
+        message.audit_hash
+      )
+
+    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
+  end
+
   def destroy
     route_binding_not_found! unless @route_binding && can_read_from_space?(@route_binding.route.space)
     unauthorized! unless can_bind_in_active_space?(@route_binding.route.space)
@@ -97,29 +120,6 @@ class ServiceRouteBindingsController < ApplicationController
     bad_request!('this service does not support fetching route bindings parameters.')
   rescue LockCheck::ServiceBindingLockedError
     unprocessable!('There is an operation in progress for the service route binding.')
-  end
-
-  def update
-    route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
-    unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
-    suspended! unless is_space_active?(@route_binding.route.space)
-
-    unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
-
-    message = MetadataUpdateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    updated_route_binding = TransactionalMetadataUpdate.update(@route_binding, message)
-
-    Repositories::ServiceGenericBindingEventRepository.
-      new(Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).
-      record_update(
-        @route_binding,
-        user_audit_info,
-        message.audit_hash
-      )
-
-    render status: :ok, json: Presenters::V3::ServiceRouteBindingPresenter.new(updated_route_binding)
   end
 
   private

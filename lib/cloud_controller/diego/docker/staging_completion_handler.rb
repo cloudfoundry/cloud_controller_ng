@@ -43,7 +43,7 @@ module VCAP::CloudController
             build.lock!
             droplet.process_types        = payload[:result][:process_types]
             droplet.execution_metadata   = payload[:result][:execution_metadata]
-            droplet.docker_receipt_image = docker_image unless docker_image.blank?
+            droplet.docker_receipt_image = docker_image if docker_image.present?
             droplet.mark_as_staged
             build.mark_as_staged
             build.save_changes(raise_on_save_failure: true)

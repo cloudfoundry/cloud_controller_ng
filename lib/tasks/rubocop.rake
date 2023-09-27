@@ -6,7 +6,7 @@ begin
 
   namespace :rubocop do
     desc 'Auto-correct changed files'
-    task :changed do
+    task changed: :environment do
       require 'rubocop'
       changelist = `git diff --name-only`.chomp.split("\n")
       changelist += `git diff --cached --name-only`.chomp.split("\n")
@@ -18,7 +18,7 @@ begin
     end
 
     desc 'Auto-correct files changed from origin'
-    task :local do
+    task local: :environment do
       require 'rubocop'
       current_branch = `git rev-parse --abbrev-ref HEAD`.chomp
       remote = `git remote -v | awk 'NR == 1 {print $1}'`.chomp
@@ -35,7 +35,7 @@ begin
 rescue LoadError
   dummy_task_message = 'rubocop/rake_task could not be loaded'
   desc "Dummy RuboCop task: #{dummy_task_message}"
-  task :rubocop do
+  task rubocop: :environment do
     puts "NoOp: #{dummy_task_message}"
   end
 end

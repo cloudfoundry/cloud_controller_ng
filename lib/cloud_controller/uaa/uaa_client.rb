@@ -76,7 +76,7 @@ module VCAP::CloudController
                   query(:user, filter: filter_string, attributes: 'id')
                 end
 
-      results['resources'].map { |r| r['id'] }
+      results['resources'].pluck('id')
     rescue CF::UAA::UAAError => e
       logger.error("Failed to retrieve user ids from UAA: #{e.inspect}")
       raise UaaUnavailable
@@ -94,7 +94,7 @@ module VCAP::CloudController
       filter_string = %(username eq "#{username}")
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
-      results['resources'].map { |resource| resource['origin'] }
+      results['resources'].pluck('origin')
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
       raise UaaUnavailable
@@ -126,7 +126,7 @@ module VCAP::CloudController
     end
 
     def fetch_users(user_ids)
-      return {} unless user_ids.present?
+      return {} if user_ids.blank?
 
       results_hash = {}
 

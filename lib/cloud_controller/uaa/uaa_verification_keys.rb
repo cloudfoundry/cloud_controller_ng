@@ -23,7 +23,7 @@ module VCAP::CloudController
         raise VCAP::CloudController::UaaUnavailable
       end
 
-      if !validation_hash.present? && last_fetched_keys
+      if validation_hash.blank? && last_fetched_keys
         last_fetched_keys
       else
         format_keys(validation_hash)
@@ -46,7 +46,7 @@ module VCAP::CloudController
       validation_hash = {}
       retries         = 3
 
-      while retries > 0 && !validation_hash.present?
+      while retries > 0 && validation_hash.blank?
         begin
           validation_hash = @info.validation_keys_hash
         rescue StandardError => e

@@ -442,7 +442,7 @@ module VCAP::Services
             service = VCAP::CloudController::Service.first(guid: @service_guid)
             parsed_response ||= MultiJson.load(response.body)
 
-            if !parsed_response['volume_mounts'].nil? && !service.requires.include?('volume_mount')
+            if !parsed_response['volume_mounts'].nil? && service.requires.exclude?('volume_mount')
               raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, not_required_error_description)
             end
 
@@ -506,7 +506,7 @@ module VCAP::Services
           def validate(method:, uri:, code:, response:, parsed_response: nil)
             service = VCAP::CloudController::Service.first(guid: @service_guid)
             parsed_response ||= MultiJson.load(response.body)
-            raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response) if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
+            raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response) if !parsed_response['syslog_drain_url'].nil? && service.requires.exclude?('syslog_drain')
 
             @validator.validate(method:, uri:, code:, response:, parsed_response:)
           end

@@ -9,34 +9,34 @@ module VCAP::CloudController
         resource_dir = generate_resources
 
         resource_timing = resource_match(resource_dir)
-        puts "resource match timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "resource match timing: #{resource_timing * 1000}ms" }
 
         zip_output_dir = Dir.mktmpdir
         zip_file = zip_resources(resource_dir, zip_output_dir)
 
         package_guid, resource_timing = upload_package(zip_file)
-        puts "package upload timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "package upload timing: #{resource_timing * 1000}ms" }
 
         resource_timing = download_package(package_guid, resource_dir)
-        puts "package download timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "package download timing: #{resource_timing * 1000}ms" }
 
         bytes_read, resource_timing = download_buildpacks(resource_dir)
-        puts "downloaded #{Buildpack.count} buildpacks, total #{bytes_read} bytes read"
-        puts "buildpack download timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "downloaded #{Buildpack.count} buildpacks, total #{bytes_read} bytes read" }
+        Rails.logger.debug { "buildpack download timing: #{resource_timing * 1000}ms" }
 
         droplet_guid, resource_timing = upload_droplet(zip_file)
-        puts "droplet upload timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "droplet upload timing: #{resource_timing * 1000}ms" }
 
         resource_timing = download_droplet(droplet_guid, resource_dir)
-        puts "droplet download timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "droplet download timing: #{resource_timing * 1000}ms" }
 
         big_droplet_file = Tempfile.new('big-droplet', resource_dir)
         big_droplet_file.write('abc' * 1024 * 1024 * 100)
         big_droplet_guid, resource_timing = upload_droplet(big_droplet_file.path)
-        puts "big droplet upload timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "big droplet upload timing: #{resource_timing * 1000}ms" }
 
         resource_timing = download_droplet(big_droplet_guid, resource_dir)
-        puts "big droplet download timing: #{resource_timing * 1000}ms"
+        Rails.logger.debug { "big droplet download timing: #{resource_timing * 1000}ms" }
       ensure
         FileUtils.remove_dir(resource_dir, true)
         FileUtils.remove_dir(zip_output_dir, true)

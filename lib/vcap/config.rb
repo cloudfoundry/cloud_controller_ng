@@ -17,9 +17,7 @@ module VCAP
         @schema = deep_merge_schemas(parent_schema.schema, @schema)
       end
 
-      def validate(config_hash)
-        schema.validate(config_hash)
-      end
+      delegate :validate, to: :schema
 
       private
 

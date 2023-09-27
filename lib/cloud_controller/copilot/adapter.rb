@@ -78,7 +78,7 @@ module VCAP::CloudController
         def with_guardrails(route: nil)
           return unless copilot_enabled?
 
-          return if route && !Config.config.get(:copilot, :temporary_istio_domains).include?(route.domain.name)
+          return if route && Config.config.get(:copilot, :temporary_istio_domains).exclude?(route.domain.name)
 
           yield
         rescue StandardError => e

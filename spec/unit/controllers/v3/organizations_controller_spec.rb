@@ -156,7 +156,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { names: 'Marmot,Beaver' }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to match_array(%w[
+          expect(parsed_body['resources'].pluck('name')).to match_array(%w[
             Marmot Beaver
           ])
         end
@@ -167,7 +167,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { order_by: 'name' }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to eql(%w[
+          expect(parsed_body['resources'].pluck('name')).to eql(%w[
             Beaver
             Capybara
             Marmot
@@ -181,7 +181,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { guids: "#{billing_manager_org.guid},#{member_org.guid}" }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
+          expect(parsed_body['resources'].pluck('guid')).to match_array([
             billing_manager_org.guid, member_org.guid
           ])
         end
@@ -190,7 +190,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { guids: "#{billing_manager_org.guid},#{member_org.guid},#{other_org.guid}" }, as: :json
 
           expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
+          expect(parsed_body['resources'].pluck('guid')).to match_array([
             billing_manager_org.guid, member_org.guid
           ])
         end
@@ -240,7 +240,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
 
         expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([org1.guid, org2.guid])
       end
 
@@ -259,7 +259,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: params, as: :json
 
           parsed_response = parsed_body
-          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          response_guids = parsed_response['resources'].pluck('guid')
           expect(parsed_response['pagination']['total_results']).to eq(2)
           expect(response_guids.length).to eq(per_page)
         end
@@ -299,7 +299,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
 
           expect(response.status).to eq 200
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
+          response_guids = parsed_body['resources'].pluck('guid')
           expect(response_guids).to match_array([org1.guid, org2.guid])
         end
       end

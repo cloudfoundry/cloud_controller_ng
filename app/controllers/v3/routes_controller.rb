@@ -265,7 +265,7 @@ class RoutesController < ApplicationController
     @apps_hash || begin
       desired_app_guids = update_message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
 
-      @apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app }
+      @apps_hash = AppModel.where(guid: desired_app_guids).index_by(&:guid)
       validate_app_guids!(@apps_hash, desired_app_guids)
       validate_app_spaces!(@apps_hash, route)
       @apps_hash
@@ -362,7 +362,7 @@ class RoutesController < ApplicationController
   end
 
   def validate_app_spaces!(apps_hash, route)
-    return unless apps_hash.values.any? { |app| app.space != route.space && !route.shared_spaces.include?(app.space) }
+    return unless apps_hash.values.any? { |app| app.space != route.space && route.shared_spaces.exclude?(app.space) }
 
     unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
   end

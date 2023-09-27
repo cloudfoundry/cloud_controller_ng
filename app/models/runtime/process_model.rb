@@ -348,9 +348,7 @@ module VCAP::CloudController
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
-    def enable_ssh
-      app.enable_ssh
-    end
+    delegate :enable_ssh, to: :app
 
     def set_new_version
       self.version = SecureRandom.uuid
@@ -360,9 +358,7 @@ module VCAP::CloudController
       started?
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
     def being_started?
       column_changed?(:state) && started?
@@ -448,13 +444,9 @@ module VCAP::CloudController
       self.metadata && self.metadata['debug']
     end
 
-    def name
-      app.name
-    end
+    delegate :name, to: :app
 
-    def docker?
-      app.docker?
-    end
+    delegate :docker?, to: :app
 
     def database_uri
       service_binding_uris = service_bindings.map do |binding|
@@ -562,7 +554,7 @@ module VCAP::CloudController
 
         open_ports += docker_ports if needs_docker_ports
 
-        open_ports += DEFAULT_PORTS if !docker_ports.present? && has_mapping_without_port
+        open_ports += DEFAULT_PORTS if docker_ports.blank? && has_mapping_without_port
       end
 
       open_ports += DEFAULT_PORTS if web? && open_ports.empty?

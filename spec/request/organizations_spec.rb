@@ -309,7 +309,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
 
           parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(orgB.guid, orgC.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(orgB.guid, orgC.guid)
         end
       end
 
@@ -671,7 +671,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -690,7 +690,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -709,7 +709,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -728,7 +728,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -747,7 +747,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -766,7 +766,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -785,7 +785,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -804,7 +804,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -1511,7 +1511,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1538,7 +1538,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(org_manager.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(org_manager.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1565,7 +1565,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(org_manager.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(org_manager.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1586,7 +1586,7 @@ module VCAP::CloudController
               'next' => nil,
               'previous' => nil
             }
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1608,7 +1608,7 @@ module VCAP::CloudController
             get "/v3/organizations/#{organization1.guid}/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid)
           end
         end
 
@@ -1636,7 +1636,7 @@ module VCAP::CloudController
             get "/v3/organizations/#{organization1.guid}/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid)
           end
         end
       end
@@ -1711,7 +1711,7 @@ module VCAP::CloudController
       created_at: iso8601,
       updated_at: iso8601,
       username: username,
-      presentation_name: username.present? ? username : guid,
+      presentation_name: (username.presence || guid),
       origin: origin,
       metadata: {
         labels: {},

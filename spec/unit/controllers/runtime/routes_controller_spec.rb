@@ -1164,7 +1164,7 @@ module VCAP::CloudController
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
 
       let!(:webproc1) { ProcessModel.make(app: myapp, type: 'web', created_at: 1.day.ago) }
-      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.day.ago) }
+      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.days.ago) }
 
       before { set_current_user_as_admin }
 

@@ -33,13 +33,9 @@ module VCAP::CloudController
       credentials.present? ? credentials['credhub-ref'] : nil
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
-    def space
-      service_instance.space
-    end
+    delegate :space, to: :service_instance
 
     def validate
       validates_presence :name

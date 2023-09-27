@@ -28,13 +28,13 @@ module VCAP
           private
 
           def validate_metaschema_provided
-            return unless errors.blank?
+            return if errors.present?
 
             add_schema_error_msg('Schema must have $schema key but was not present') unless @schema['$schema']
           end
 
           def validate_metaschema_conforms_to_json_draft
-            return unless errors.blank?
+            return if errors.present?
 
             JSON::Validator.schema_reader = JSON::Schema::Reader.new(accept_uri: false, accept_file: false)
             file = File.read(JSON::Validator.validator_for_name('draft4').metaschema)
@@ -54,7 +54,7 @@ module VCAP
           end
 
           def validate_open_service_broker_restrictions
-            return unless errors.blank?
+            return if errors.present?
 
             JSON::Validator.schema_reader = JSON::Schema::Reader.new(accept_uri: false, accept_file: false)
 

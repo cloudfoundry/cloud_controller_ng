@@ -10,19 +10,6 @@ require 'decorators/include_role_organization_decorator'
 require 'decorators/include_role_space_decorator'
 
 class RolesController < ApplicationController
-  def create
-    message = RoleCreateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    role = message.space_guid ? create_space_role(message) : create_org_role(message)
-
-    render status: :created, json: Presenters::V3::RolePresenter.new(role)
-  rescue RoleCreate::Error => e
-    unprocessable!(e)
-  rescue UaaUnavailable
-    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
-  end
-
   def index
     message = RolesListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -56,6 +43,19 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators:)
+  end
+
+  def create
+    message = RoleCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    role = message.space_guid ? create_space_role(message) : create_org_role(message)
+
+    render status: :created, json: Presenters::V3::RolePresenter.new(role)
+  rescue RoleCreate::Error => e
+    unprocessable!(e)
+  rescue UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def destroy

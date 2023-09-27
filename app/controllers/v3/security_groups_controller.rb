@@ -11,6 +11,35 @@ require 'presenters/v3/security_group_presenter'
 require 'fetchers/security_group_list_fetcher'
 
 class SecurityGroupsController < ApplicationController
+  def index
+    message = SecurityGroupListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    dataset = if permission_queryer.can_read_globally?
+                SecurityGroupListFetcher.fetch_all(message)
+              else
+                SecurityGroupListFetcher.fetch(message, permission_queryer.readable_security_group_guids_query)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SecurityGroupPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/security_groups',
+      message: message,
+      extra_presenter_args: presenter_args
+    )
+  end
+
+  def show
+    security_group = SecurityGroupFetcher.fetch(hashed_params[:guid], permission_queryer.readable_security_group_guids_query)
+    resource_not_found!(:security_group) unless security_group
+
+    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
+      security_group,
+      **presenter_args
+    )
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -65,35 +94,6 @@ class SecurityGroupsController < ApplicationController
     )
   rescue SecurityGroupApply::Error => e
     unprocessable!(e)
-  end
-
-  def show
-    security_group = SecurityGroupFetcher.fetch(hashed_params[:guid], permission_queryer.readable_security_group_guids_query)
-    resource_not_found!(:security_group) unless security_group
-
-    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
-      security_group,
-      **presenter_args
-    )
-  end
-
-  def index
-    message = SecurityGroupListMessage.from_params(query_params)
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    dataset = if permission_queryer.can_read_globally?
-                SecurityGroupListFetcher.fetch_all(message)
-              else
-                SecurityGroupListFetcher.fetch(message, permission_queryer.readable_security_group_guids_query)
-              end
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SecurityGroupPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: '/v3/security_groups',
-      message: message,
-      extra_presenter_args: presenter_args
-    )
   end
 
   def update

@@ -2,7 +2,7 @@ require 'delayed_job/quit_trap'
 
 namespace :jobs do
   desc 'Clear the delayed_job queue.'
-  task :clear do
+  task clear: :environment do
     RakeConfig.context = :worker
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment(RakeConfig.config.get(:readiness_port,
                                                                                             :cloud_controller_worker)) do
@@ -12,7 +12,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
 
-  task :local, [:name] do |_t, args|
+  task :local, [:name] => :environment do |_t, args|
     puts RUBY_DESCRIPTION
     queue = VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s
     args.with_defaults(name: queue)
@@ -24,7 +24,7 @@ namespace :jobs do
   end
 
   desc 'Start a delayed_job worker.'
-  task :generic, [:name] do |_t, args|
+  task :generic, [:name] => :environment do |_t, args|
     puts RUBY_DESCRIPTION
     args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
 

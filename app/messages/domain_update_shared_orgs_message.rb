@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     def shared_organizations_guids
-      data.map { |hsh| hsh[:guid] }
+      data.pluck(:guid)
     end
   end
 end

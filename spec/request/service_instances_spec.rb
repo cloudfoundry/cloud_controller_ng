@@ -3072,7 +3072,7 @@ RSpec.describe 'V3 service instances' do
                   execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
                 end
               end
-              Timecop.freeze(Time.now + 3.hour) do
+              Timecop.freeze(Time.now + 3.hours) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 1, jobs_to_execute: 1)
               end
             end

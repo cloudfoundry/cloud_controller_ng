@@ -38,9 +38,7 @@ module VCAP::Services::ServiceBrokers::V2
       @valid = errors.empty?
     end
 
-    def plans_present?
-      plans && !plans.empty?
-    end
+    delegate :present?, to: :plans, prefix: true
 
     def cc_service
       service_broker.services_dataset.where(unique_id: broker_provided_id).first
@@ -138,7 +136,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_all_plan_names_are_unique!
       duplicate_plans = find_duplicate_plans :name
-      return unless duplicate_plans.present?
+      return if duplicate_plans.blank?
 
       duplicate_plans.each do |plan|
         errors.add("Plan names must be unique within a service. Service #{name} already has a plan named #{plan}")
