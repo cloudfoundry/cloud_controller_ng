@@ -1,6 +1,7 @@
 # Cloud Controller Specific Rubocop Config
 
 require:
+  - rubocop-sequel
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -39,25 +40,38 @@ Layout/LineLength:
   Max: 180
 Metrics/MethodLength:
   Max: 60
-Migration/AddConstraintName:
+Migration/AddConstraintName: # Exclude for old Migrations
   Include:
     - 'db/migrations/**/*'
   Exclude:
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]).+\.rb$/
     - db/migrations/20221125134500_add_request_count_table.rb
 
-Migration/IncludeStringSize:
+Migration/IncludeStringSize: # Exclude for old Migrations
   Include:
     - 'db/migrations/**/*'
   Exclude:
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]|707[01]).+\.rb$/
     - db/migrations/20221125134500_add_request_count_table.rb
 
-Migration/RequirePrimaryKey:
+Migration/RequirePrimaryKey: # Exclude for old Migrations
   Include:
     - 'db/migrations/**/*'
   Exclude:
     - !ruby/regexp /db/migrations/201([0-7]|80[1-3]).+\.rb$/
+
+Sequel/ConcurrentIndex: # Exclude for old Migrations
+  Exclude:
+    - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-2]|30[0-7]).+\.rb$/
+    - spec/**/*
+
+Sequel/ColumnDefault: # Exclude for old Migrations
+  Exclude:
+    - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
+    - spec/**/*
+
 Naming/FileName:
   Exclude:
     - Guardfile
@@ -290,4 +304,6 @@ Style/YAMLFileRead:
 
 ### Broken Cops that break code
 Lint/ShadowedException: # Brakes "bundle exec rake rubocop" if enabled
+  Enabled: false
+Sequel/SaveChanges: # Brakes Code
   Enabled: false
