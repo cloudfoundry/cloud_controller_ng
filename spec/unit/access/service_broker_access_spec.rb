@@ -118,7 +118,7 @@ module VCAP::CloudController
       let(:user) { nil }
 
       it_behaves_like 'no access'
-      it { is_expected.to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
     end
   end
 end

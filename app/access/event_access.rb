@@ -30,9 +30,8 @@ module VCAP::CloudController
       admin_user?
     end
 
-    def index?(_object_class, _params=nil)
-      # This can return true because the index endpoints filter objects based on user visibilities
-      true
+    def index?(object_class, params=nil)
+      admin_user? || admin_read_only_user? || has_read_scope? || global_auditor?
     end
 
     # These methods should be called first to determine if the user's token has the appropriate scope for the operation
@@ -66,8 +65,7 @@ module VCAP::CloudController
     end
 
     def index_with_token?(_)
-      # This can return true because the index endpoints filter objects based on user visibilities
-      true
+      admin_user? || admin_read_only_user? || has_read_scope? || global_auditor?
     end
   end
 end
