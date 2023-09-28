@@ -9,7 +9,7 @@ class SpaceFeaturesController < ApplicationController
     resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     render status: :ok, json: {
-      resources: [Presenters::V3::SpaceSshFeaturePresenter.new(space)],
+      resources: [Presenters::V3::SpaceSshFeaturePresenter.new(space)]
     }
   end
 

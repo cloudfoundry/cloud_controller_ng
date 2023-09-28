@@ -11,12 +11,10 @@ module VCAP::CloudController
       end
 
       def filter(message, dataset)
-        if message.requested?(:names)
-          dataset = dataset.where(name: message.names)
-        end
+        dataset = dataset.where(name: message.names) if message.requested?(:names)
 
         if message.requested?(:default)
-          condition = { name: Stack.default.name }.yield_self do |c|
+          condition = { name: Stack.default.name }.then do |c|
             ActiveModel::Type::Boolean.new.cast(message.default) ? c : Sequel.~(c)
           end
           dataset = dataset.where(condition)
@@ -27,7 +25,7 @@ module VCAP::CloudController
             label_klass: StackLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: Stack,
+            resource_klass: Stack
           )
         end
 

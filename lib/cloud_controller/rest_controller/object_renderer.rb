@@ -33,7 +33,8 @@ module VCAP::CloudController::RestController
     def render_json(controller, obj, opts)
       inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
       if inline_relations_depth > @max_inline_relations_depth
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter',
+                                                                 "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
       eager_loaded_objects = @eager_loader.eager_load_dataset(
@@ -41,7 +42,7 @@ module VCAP::CloudController::RestController
         controller,
         opts[:default_visibility_filter] || default_visibility_filter,
         opts[:additional_visibility_filters] || {},
-        inline_relations_depth,
+        inline_relations_depth
       )
 
       eager_loaded_object = eager_loaded_objects.where(id: obj.id).all.first
@@ -61,7 +62,7 @@ module VCAP::CloudController::RestController
       hash = @serializer.serialize(
         controller,
         eager_loaded_object,
-        opts.merge(export_attrs: export_attributes),
+        opts.merge(export_attrs: export_attributes)
       )
 
       MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))

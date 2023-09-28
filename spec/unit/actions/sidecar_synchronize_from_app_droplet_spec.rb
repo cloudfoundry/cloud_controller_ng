@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:droplet) do
         DropletModel.make(
           state: DropletModel::STAGED_STATE,
-          sidecars: droplet_sidecars,
+          sidecars: droplet_sidecars
         )
       end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
           let(:droplet) do
             DropletModel.make(
               state: DropletModel::STAGED_STATE,
-              sidecars: nil,
+              sidecars: nil
             )
           end
 

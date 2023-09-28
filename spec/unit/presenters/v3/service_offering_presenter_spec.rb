@@ -13,8 +13,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:bindable) { false }
   let(:extra) { '{"foo": "bar", "baz": {"answer": 42}' }
   let(:id) { 'broker-id' }
-  let(:tags) { %w(foo bar) }
-  let(:requires) { %w(syslog_drain route_forwarding volume_mount) }
+  let(:tags) { %w[foo bar] }
+  let(:requires) { %w[syslog_drain route_forwarding volume_mount] }
   let(:updateable) { false }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
   let(:instances_retrievable) { false }
@@ -55,7 +55,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     VCAP::CloudController::ServiceOfferingAnnotationModel.make(
       key_name: 'altitude',
       value: '14,412',
-      resource_guid: service_offering.guid,
+      resource_guid: service_offering.guid
     )
   end
 
@@ -64,59 +64,59 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
 
     it 'presents the service offering as JSON' do
       expect(result).to match({
-        guid: guid,
-        name: name,
-        description: description,
-        available: available,
-        tags: tags,
-        requires: requires,
-        created_at: created_at,
-        updated_at: service_offering.updated_at,
-        shareable: false,
-        documentation_url: '',
-        broker_catalog: {
-          id: id,
-          metadata: {
-            foo: 'bar',
-            baz: {
-              answer: 42,
-            }
-          },
-          features: {
-            plan_updateable: updateable,
-            bindable: bindable,
-            instances_retrievable: instances_retrievable,
-            bindings_retrievable: bindings_retrievable,
-            allow_context_updates: allow_context_updates,
-          }
-        },
-        metadata: {
-          labels: {
-            'canberra.au/potato': 'mashed'
-          },
-          annotations: {
-            altitude: '14,412'
-          }
-        },
-        links: {
-          self: {
-            href: "#{link_prefix}/v3/service_offerings/#{guid}"
-          },
-          service_plans: {
-            href: "#{link_prefix}/v3/service_plans?service_offering_guids=#{guid}"
-          },
-          service_broker: {
-            href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}"
-          },
-        },
-        relationships: {
-          service_broker: {
-            data: {
-              guid: service_broker.guid
-            }
-          }
-        }
-      })
+                                guid: guid,
+                                name: name,
+                                description: description,
+                                available: available,
+                                tags: tags,
+                                requires: requires,
+                                created_at: created_at,
+                                updated_at: service_offering.updated_at,
+                                shareable: false,
+                                documentation_url: '',
+                                broker_catalog: {
+                                  id: id,
+                                  metadata: {
+                                    foo: 'bar',
+                                    baz: {
+                                      answer: 42
+                                    }
+                                  },
+                                  features: {
+                                    plan_updateable: updateable,
+                                    bindable: bindable,
+                                    instances_retrievable: instances_retrievable,
+                                    bindings_retrievable: bindings_retrievable,
+                                    allow_context_updates: allow_context_updates
+                                  }
+                                },
+                                metadata: {
+                                  labels: {
+                                    'canberra.au/potato': 'mashed'
+                                  },
+                                  annotations: {
+                                    altitude: '14,412'
+                                  }
+                                },
+                                links: {
+                                  self: {
+                                    href: "#{link_prefix}/v3/service_offerings/#{guid}"
+                                  },
+                                  service_plans: {
+                                    href: "#{link_prefix}/v3/service_plans?service_offering_guids=#{guid}"
+                                  },
+                                  service_broker: {
+                                    href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}"
+                                  }
+                                },
+                                relationships: {
+                                  service_broker: {
+                                    data: {
+                                      guid: service_broker.guid
+                                    }
+                                  }
+                                }
+                              })
     end
 
     context 'when `available` is true' do

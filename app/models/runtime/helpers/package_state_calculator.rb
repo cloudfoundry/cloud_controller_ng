@@ -11,8 +11,8 @@ module VCAP::CloudController
       if process_has_package || process_has_droplet
         return 'FAILED' if package_failed_upload || last_build_failed || last_droplet_failed
         return 'STAGED' if (process_has_droplet || process_has_build) &&
-          build_completed &&
-          latest_droplet_is_current
+                           build_completed &&
+                           latest_droplet_is_current
       end
       'PENDING'
     end
@@ -49,16 +49,16 @@ module VCAP::CloudController
 
     def newer_package_than_droplet
       !process_has_droplet ||
-        process_has_package &&
-        @desired_droplet.try(:package) != @latest_package &&
-        @latest_package.created_at >= @latest_droplet.created_at
+        (process_has_package &&
+          @desired_droplet.try(:package) != @latest_package &&
+          @latest_package.created_at >= @latest_droplet.created_at)
     end
 
     def package_failed_upload
       package_for_latest_droplet = @latest_package == @latest_droplet.try(:package)
-      if package_for_latest_droplet || newer_package_than_droplet
-        @latest_package.try(:state) == PackageModel::FAILED_STATE
-      end
+      return unless package_for_latest_droplet || newer_package_than_droplet
+
+      @latest_package.try(:state) == PackageModel::FAILED_STATE
     end
   end
 end

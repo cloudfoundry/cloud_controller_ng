@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ProcessScaleMessage < BaseMessage
-    register_allowed_keys [:instances, :memory_in_mb, :disk_in_mb, :log_rate_limit_in_bytes_per_second]
+    register_allowed_keys %i[instances memory_in_mb disk_in_mb log_rate_limit_in_bytes_per_second]
 
     validates_with NoAdditionalKeysValidator
 

@@ -12,13 +12,13 @@ module VCAP::CloudController
         # this is actually called everytime a worker is started
         # https://github.com/puma/puma/blob/5f3f489ee867317c47724d0fc5b1d906f1b23de6/lib/puma/dsl.rb#L607
         # we probably want to come up with a different way to do this.  Perhaps a singleton?
-        conf.after_worker_fork {
+        conf.after_worker_fork do
           Thread.new do
             EM.run do
               @periodic_updater.setup_updates
             end
           end
-        }
+        end
         if config.get(:nginx, :use_nginx)
           conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
         else
@@ -27,21 +27,21 @@ module VCAP::CloudController
         conf.threads(0, config.get(:puma, :max_threads)) if config.get(:puma, :max_threads)
         conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
         conf.app app
-        conf.before_fork {
+        conf.before_fork do
           Sequel::Model.db.disconnect
-        }
+        end
       end
       events = Puma::Events.new($stdout, $stderr)
       events.on_stopped do
         stop!
       end
 
-      @puma_launcher = Puma::Launcher.new(puma_config, events: events)
+      @puma_launcher = Puma::Launcher.new(puma_config, events:)
     end
 
     def start!
       @puma_launcher.run
-    rescue => e
+    rescue StandardError => e
       @logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
       raise e
     end

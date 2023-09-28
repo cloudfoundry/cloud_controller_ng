@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       to_one :space
       to_many :service_bindings
-      to_many :routes, route_for: [:get, :put, :delete]
+      to_many :routes, route_for: %i[get put delete]
     end
 
     query_parameters :name, :space_guid, :organization_guid
@@ -43,14 +43,14 @@ module VCAP::CloudController
         CloudController::Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       elsif service_instance_errors&.include?(:route_service_url_not_https)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
-                                                      'Scheme for route_service_url must be https.')
+                                                                 'Scheme for route_service_url must be https.')
       elsif service_instance_errors&.include?(:route_service_url_invalid)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
-                                                      'route_service_url is invalid.')
+                                                                 'route_service_url is invalid.')
       elsif service_instance_tags_errors.include?(:too_long)
-        return CloudController::Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong', attributes['name'])
       elsif service_instance_name_errors&.include?(:max_length)
-        return CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTooLong')
+        CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTooLong')
       else
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
@@ -93,7 +93,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_instance = UserProvidedServiceInstance.find(guid: guid)
+      service_instance = UserProvidedServiceInstance.find(guid:)
       raise_if_has_dependent_associations!(service_instance) unless recursive_delete?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
@@ -173,9 +173,9 @@ module VCAP::CloudController
     end
 
     def route_service_warning(service_instance)
-      if service_instance.route_service?
-        add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
-      end
+      return unless service_instance.route_service?
+
+      add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
     end
 
     def bind_route(route_guid, instance_guid)
@@ -238,9 +238,9 @@ module VCAP::CloudController
     end
 
     def validate_space_not_changed(request_attrs, service_instance)
-      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
-      end
+      return unless request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
+
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
     end
 
     def update_instance(request_attrs, service_instance)

@@ -23,7 +23,8 @@ module VCAP::CloudController
 
     context 'assigning a security group as a default' do
       before { set_current_user_as_admin }
-      it 'should set staging_default to true on the security group and return the security group' do
+
+      it 'sets staging_default to true on the security group and return the security group' do
         security_group = SecurityGroup.make(staging_default: false)
 
         put "/v2/config/staging_security_groups/#{security_group.guid}", {}
@@ -33,7 +34,7 @@ module VCAP::CloudController
         expect(decoded_response['metadata']['guid']).to eq(security_group.guid)
       end
 
-      it 'should return a 400 when the security group does not exist' do
+      it 'returns a 400 when the security group does not exist' do
         put '/v2/config/staging_security_groups/bogus', {}
 
         expect(last_response.status).to eq(400)
@@ -44,7 +45,8 @@ module VCAP::CloudController
 
     context 'removing a security group as a default' do
       before { set_current_user_as_admin }
-      it 'should set staging_default to false on the security group' do
+
+      it 'sets staging_default to false on the security group' do
         security_group = SecurityGroup.make(staging_default: true)
 
         delete "/v2/config/staging_security_groups/#{security_group.guid}"
@@ -53,7 +55,7 @@ module VCAP::CloudController
         expect(security_group.reload.staging_default).to be false
       end
 
-      it 'should return a 400 when the security group does not exist' do
+      it 'returns a 400 when the security group does not exist' do
         delete '/v2/config/staging_security_groups/bogus'
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/security group could not be found/)

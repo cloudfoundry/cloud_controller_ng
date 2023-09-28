@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :spaces }
-      it { is_expected.to have_associated :private_domains, associated_instance: ->(org) { PrivateDomain.make } }
+      it { is_expected.to have_associated :private_domains, associated_instance: ->(_org) { PrivateDomain.make } }
       it { is_expected.to have_associated :service_plan_visibilities }
       it { is_expected.to have_associated :quota_definition }
       it { is_expected.to have_associated :domains, class: SharedDomain }
@@ -35,7 +35,7 @@ module VCAP::CloudController
         org = app_model.space.organization
         app1 = ProcessModel.make(type: 'web', app: app_model)
         ProcessModel.make(type: 'other', app: app_model)
-        expect(org.apps).to match_array([app1])
+        expect(org.apps).to contain_exactly(app1)
       end
 
       it 'has associated app models' do
@@ -70,9 +70,7 @@ module VCAP::CloudController
           assigner.assign(iso_seg_2, [organization])
           assigner.assign(iso_seg_3, [organization])
 
-          expect(organization.isolation_segment_guids).to match_array([
-            iso_seg_1.guid, iso_seg_2.guid, iso_seg_3.guid
-          ])
+          expect(organization.isolation_segment_guids).to contain_exactly(iso_seg_1.guid, iso_seg_2.guid, iso_seg_3.guid)
         end
       end
     end
@@ -96,7 +94,7 @@ module VCAP::CloudController
           org.reload
 
           expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
-          expect(org.isolation_segment_models).to match_array([isolation_segment_model, isolation_segment_model2])
+          expect(org.isolation_segment_models).to contain_exactly(isolation_segment_model, isolation_segment_model2)
         end
 
         it 'removes the assignment records' do
@@ -131,39 +129,39 @@ module VCAP::CloudController
       it { is_expected.to strip_whitespace :name }
 
       describe 'name' do
-        it 'should allow standard ascii characters' do
-          org.name = "A -_- word 2!?()\'\"&+."
-          expect {
+        it 'allows standard ascii characters' do
+          org.name = "A -_- word 2!?()'\"&+."
+          expect do
             org.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           org.name = 'a\\word'
-          expect {
+          expect do
             org.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           org.name = '防御力¡'
-          expect {
+          expect do
             org.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           org.name = "one\ntwo"
-          expect {
+          expect do
             org.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           org.name = "a\e word"
-          expect {
+          expect do
             org.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -174,9 +172,9 @@ module VCAP::CloudController
 
         context 'when adding isolation segments to the allowed list' do
           it 'raises an ApiError' do
-            expect {
+            expect do
               org.add_isolation_segment_model(isolation_segment_model)
-            }.to raise_error(CloudController::Errors::ApiError)
+            end.to raise_error(CloudController::Errors::ApiError)
           end
         end
 
@@ -186,9 +184,9 @@ module VCAP::CloudController
           end
 
           it 'removing raises an ApiError' do
-            expect {
+            expect do
               org.remove_isolation_segment_model(isolation_segment_model)
-            }.to raise_error(CloudController::Errors::ApiError)
+            end.to raise_error(CloudController::Errors::ApiError)
           end
         end
       end
@@ -197,7 +195,7 @@ module VCAP::CloudController
         it 'adds when in this org' do
           quota = SpaceQuotaDefinition.make(organization: org)
 
-          expect { org.add_space_quota_definition(quota) }.to_not raise_error
+          expect { org.add_space_quota_definition(quota) }.not_to raise_error
         end
 
         it 'does not add when quota is in a different org' do
@@ -211,7 +209,7 @@ module VCAP::CloudController
         it 'allowed when the organization is not the owner' do
           domain = PrivateDomain.make
 
-          expect { org.add_private_domain(domain) }.to_not raise_error
+          expect { org.add_private_domain(domain) }.not_to raise_error
         end
 
         it 'does not add when the organization is the owner' do
@@ -226,7 +224,7 @@ module VCAP::CloudController
           domain = PrivateDomain.make
           org.add_private_domain(domain)
 
-          expect(org.private_domains).to match_array([owned_domain, domain])
+          expect(org.private_domains).to contain_exactly(owned_domain, domain)
         end
 
         it 'removes all associated routes when deleted' do
@@ -237,37 +235,37 @@ module VCAP::CloudController
           route = Route.make(space: space, domain: private_domain)
           TestConfig.override(kubernetes: {})
 
-          expect {
+          expect do
             org.remove_private_domain(private_domain)
-          }.to change {
+          end.to change {
             Route[route.id]
           }.from(route).to(nil)
         end
       end
 
       describe 'status' do
-        it "should allow 'active' and 'suspended'" do
-          ['active', 'suspended'].each do |status|
+        it "allows 'active' and 'suspended'" do
+          %w[active suspended].each do |status|
             org.status = status
-            expect {
+            expect do
               org.save
-            }.not_to raise_error
+            end.not_to raise_error
             expect(org.status).to eq(status)
           end
         end
 
-        it 'should not allow arbitrary status values' do
+        it 'does not allow arbitrary status values' do
           org.status = 'unknown'
-          expect {
+          expect do
             org.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow a nil status' do
+        it 'does not allow a nil status' do
           org.status = nil
-          expect {
+          expect do
             org.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -278,12 +276,12 @@ module VCAP::CloudController
         context 'assigning the default isolation segment' do
           context 'and the default is not in the allowed list' do
             it 'raises an InvalidRelation' do
-              expect {
+              expect do
                 org.update(default_isolation_segment_model: isolation_segment_model)
-              }.to raise_error(CloudController::Errors::ApiError, /Could not find Isolation Segment with guid: #{isolation_segment_model.guid}/)
+              end.to raise_error(CloudController::Errors::ApiError, /Could not find Isolation Segment with guid: #{isolation_segment_model.guid}/)
 
               org.reload
-              expect(org.default_isolation_segment_model).to eq(nil)
+              expect(org.default_isolation_segment_model).to be_nil
             end
           end
 
@@ -318,14 +316,14 @@ module VCAP::CloudController
 
                 context 'and a space has an app' do
                   before do
-                    AppModel.make(space: space)
+                    AppModel.make(space:)
                   end
 
                   it 'sets the default to the shared segment but does not affect running apps' do
-                    expect {
+                    expect do
                       assigner.assign(shared_segment, [org])
                       org.update(default_isolation_segment_model: shared_segment)
-                    }.to_not raise_error
+                    end.not_to raise_error
 
                     org.reload
                     expect(org.default_isolation_segment_model).to eq(shared_segment)
@@ -335,20 +333,20 @@ module VCAP::CloudController
 
               context 'and a space has an app' do
                 it 'sets the default but does not affect running apps' do
-                  AppModel.make(space: space)
-                  expect {
+                  AppModel.make(space:)
+                  expect do
                     org.update(default_isolation_segment_guid: isolation_segment_model.guid)
-                  }.to_not raise_error
+                  end.not_to raise_error
 
                   org.reload
                   expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
                 end
 
                 it 'sets the default when assigning the shared segment as the default' do
-                  AppModel.make(space: space)
-                  expect {
+                  AppModel.make(space:)
+                  expect do
                     assigner.assign(shared_segment, [org])
-                  }.to_not raise_error
+                  end.not_to raise_error
 
                   org.reload
                   expect(org.default_isolation_segment_model).to eq(shared_segment)
@@ -360,7 +358,7 @@ module VCAP::CloudController
                   before do
                     assigner.assign(isolation_segment_model2, [org])
                     space.update(isolation_segment_model: isolation_segment_model2)
-                    AppModel.make(space: space)
+                    AppModel.make(space:)
                   end
 
                   it 'sets the default Isolation Segment' do
@@ -401,13 +399,13 @@ module VCAP::CloudController
 
               context 'and the space has apps' do
                 before do
-                  AppModel.make(space: space)
+                  AppModel.make(space:)
                 end
 
                 it 'removes the default isolation segment but does not affect running apps' do
-                  expect {
+                  expect do
                     org.update(default_isolation_segment_model: nil)
-                  }.to_not raise_error
+                  end.not_to raise_error
 
                   org.reload
                   expect(org.default_isolation_segment_model).to be_nil
@@ -421,8 +419,10 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
-      it { is_expected.to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
-                                    :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
+
+      it {
+        expect(subject).to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
+                                             :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
       }
     end
 
@@ -441,8 +441,8 @@ module VCAP::CloudController
     end
 
     describe 'billing' do
-      it 'should not be enabled for billing when first created' do
-        expect(Organization.make.billing_enabled).to eq(false)
+      it 'is not enabled for billing when first created' do
+        expect(Organization.make.billing_enabled).to be(false)
       end
     end
 
@@ -451,24 +451,24 @@ module VCAP::CloudController
         QuotaDefinition.make(memory_limit: 500)
       end
 
-      it 'should return the memory available when no processes are running' do
+      it 'returns the memory available when no processes are running' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2)
 
-        expect(org.has_remaining_memory(500)).to eq(true)
-        expect(org.has_remaining_memory(501)).to eq(false)
+        expect(org.has_remaining_memory(500)).to be(true)
+        expect(org.has_remaining_memory(501)).to be(false)
       end
 
-      it 'should return the memory remaining when processes are consuming memory' do
+      it 'returns the memory remaining when processes are consuming memory' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
         ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
-        expect(org.has_remaining_memory(50)).to eq(true)
-        expect(org.has_remaining_memory(51)).to eq(false)
+        expect(org.has_remaining_memory(50)).to be(true)
+        expect(org.has_remaining_memory(51)).to be(false)
       end
 
       it 'includes RUNNING tasks when returning remaining memory' do
@@ -479,8 +479,8 @@ module VCAP::CloudController
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
 
-        expect(org.has_remaining_memory(200)).to eq(true)
-        expect(org.has_remaining_memory(201)).to eq(false)
+        expect(org.has_remaining_memory(200)).to be(true)
+        expect(org.has_remaining_memory(201)).to be(false)
       end
 
       context 'when memory quota is unlimited (-1)' do
@@ -491,7 +491,7 @@ module VCAP::CloudController
         it "indicates that there's more memory remaining" do
           org = Organization.make(quota_definition: quota)
 
-          expect(org.has_remaining_memory(1 << 63)).to eq(true) # a very big number
+          expect(org.has_remaining_memory(1 << 63)).to be(true) # a very big number
         end
       end
 
@@ -503,14 +503,14 @@ module VCAP::CloudController
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
 
-        expect(org.has_remaining_memory(250)).to eq(true)
-        expect(org.has_remaining_memory(251)).to eq(false)
+        expect(org.has_remaining_memory(250)).to be(true)
+        expect(org.has_remaining_memory(251)).to be(false)
       end
     end
 
     describe '#has_remaining_log_rate_limit' do
       let(:log_rate_limit) { 10 }
-      let(:quota) { QuotaDefinition.make(log_rate_limit: log_rate_limit) }
+      let(:quota) { QuotaDefinition.make(log_rate_limit:) }
       let(:org) { Organization.make(quota_definition: quota) }
       let(:org2) { Organization.make(quota_definition: quota) }
       let(:space) { Space.make(organization: org) }
@@ -657,7 +657,7 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: org) }
 
         before do
-          service_instance = ManagedServiceInstance.make(:v2, space: space)
+          service_instance = ManagedServiceInstance.make(:v2, space:)
           broker = service_instance.service_broker
           uri = URI(broker.broker_url)
           uri.user = broker.auth_username
@@ -678,9 +678,9 @@ module VCAP::CloudController
 
       it 'destroys all service plan visibilities' do
         service_plan_visibility = ServicePlanVisibility.make(organization: org)
-        expect {
+        expect do
           org.destroy
-        }.to change {
+        end.to change {
           ServicePlanVisibility.where(id: service_plan_visibility.id).any?
         }.to(false)
       end
@@ -688,9 +688,9 @@ module VCAP::CloudController
       it 'destroys owned private domains' do
         domain = PrivateDomain.make(owning_organization: org)
 
-        expect {
+        expect do
           org.destroy
-        }.to change {
+        end.to change {
           Domain[id: domain.id]
         }.from(domain).to(nil)
       end
@@ -699,9 +699,9 @@ module VCAP::CloudController
         domain = PrivateDomain.make
         org.add_private_domain(domain)
 
-        expect {
+        expect do
           org.destroy
-        }.to change {
+        end.to change {
           Domain[id: domain.id].shared_organizations
         }.from([org]).to([])
       end
@@ -711,13 +711,13 @@ module VCAP::CloudController
       it 'does not add domains to the organization if it is a shared domain' do
         shared_domain = SharedDomain.make
         org = Organization.make
-        expect { org.add_domain(shared_domain) }.not_to change { org.domains }
+        expect { org.add_domain(shared_domain) }.not_to(change { org.domains })
       end
 
       it 'does nothing if it is a private domain that belongs to the org' do
         org = Organization.make
         private_domain = PrivateDomain.make(owning_organization: org)
-        expect { org.add_domain(private_domain) }.not_to change { org.domains.collect(&:id) }
+        expect { org.add_domain(private_domain) }.not_to(change { org.domains.collect(&:id) })
       end
 
       it 'raises error if the private domain does not belongs to the organization' do
@@ -736,16 +736,16 @@ module VCAP::CloudController
         private_domain2 = PrivateDomain.make(owning_organization: org)
         shared_domain = SharedDomain.make
 
-        expect {
+        expect do
           @eager_loaded_org = Organization.eager(:domains).where(id: org.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
+        end.to have_queried_db_times(/domains/i, 1)
 
-        expect {
+        expect do
           @eager_loaded_domains = @eager_loaded_org.domains.to_a
-        }.to have_queried_db_times(//, 0)
+        end.to have_queried_db_times(//, 0)
 
         expect(@eager_loaded_org).to eql(org)
-        expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
+        expect(@eager_loaded_domains).to contain_exactly(private_domain1, private_domain2, shared_domain)
         expect(@eager_loaded_domains).to match_array(org.domains)
       end
 
@@ -757,14 +757,14 @@ module VCAP::CloudController
         private_domain2 = PrivateDomain.make(owning_organization: org2)
         shared_domain = SharedDomain.make
 
-        expect {
+        expect do
           @eager_loaded_orgs = Organization.eager(:domains).where(id: [org1.id, org2.id]).order_by(:id).all
-        }.to have_queried_db_times(/domains/i, 1)
+        end.to have_queried_db_times(/domains/i, 1)
 
-        expect {
-          expect(@eager_loaded_orgs[0].domains).to match_array([private_domain1, shared_domain])
-          expect(@eager_loaded_orgs[1].domains).to match_array([private_domain2, shared_domain])
-        }.to have_queried_db_times(//, 0)
+        expect do
+          expect(@eager_loaded_orgs[0].domains).to contain_exactly(private_domain1, shared_domain)
+          expect(@eager_loaded_orgs[1].domains).to contain_exactly(private_domain2, shared_domain)
+        end.to have_queried_db_times(//, 0)
       end
 
       it 'passes in dataset to be loaded to eager_block option' do
@@ -775,9 +775,9 @@ module VCAP::CloudController
 
         eager_block = proc { |ds| ds.where(id: private_domain1.id) }
 
-        expect {
+        expect do
           @eager_loaded_org = Organization.eager(domains: eager_block).where(id: org1.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
+        end.to have_queried_db_times(/domains/i, 1)
 
         expect(@eager_loaded_org.domains).to eql([private_domain1])
       end
@@ -792,14 +792,14 @@ module VCAP::CloudController
         route1 = Route.make(domain: domain1, space: space)
         route2 = Route.make(domain: domain2, space: space)
 
-        expect {
+        expect do
           @eager_loaded_org = Organization.eager(domains: :routes).where(id: org.id).all.first
-        }.to have_queried_db_times(/domains/i, 1)
+        end.to have_queried_db_times(/domains/i, 1)
 
-        expect {
+        expect do
           expect(@eager_loaded_org.domains[0].routes).to eql([route1])
           expect(@eager_loaded_org.domains[1].routes).to eql([route2])
-        }.to have_queried_db_times(//, 0)
+        end.to have_queried_db_times(//, 0)
       end
     end
 
@@ -815,28 +815,28 @@ module VCAP::CloudController
       end
 
       context 'without the recursive flag (#remove_user)' do
-        it "should raise an error if the user's developer space is associated with an organization's space" do
+        it "raises an error if the user's developer space is associated with an organization's space" do
           space_1.add_developer(user)
           space_1.refresh
           expect(user.spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
-        it "should raise an error if the user's managed space is associated with an organization's space" do
+        it "raises an error if the user's managed space is associated with an organization's space" do
           space_1.add_manager(user)
           space_1.refresh
           expect(user.managed_spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
-        it "should raise an error if the user's audited space is associated with an organization's space" do
+        it "raises an error if the user's audited space is associated with an organization's space" do
           space_1.add_auditor(user)
           space_1.refresh
           expect(user.audited_spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
-        it "should raise an error if any of the user's spaces are associated with any of the organization's spaces" do
+        it "raises an error if any of the user's spaces are associated with any of the organization's spaces" do
           org.add_space(space_2)
           space_2.add_manager(user)
           space_2.refresh
@@ -844,7 +844,7 @@ module VCAP::CloudController
           expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
-        it 'should remove the user from an organization if they are not associated with any spaces' do
+        it 'removes the user from an organization if they are not associated with any spaces' do
           expect { org.remove_user(user) }.to change { org.reload.user_guids }.from([user.guid]).to([])
         end
       end
@@ -858,33 +858,33 @@ module VCAP::CloudController
           [space_1, space_2].each(&:refresh)
         end
 
-        it 'should remove the space developer roles from the user' do
+        it 'removes the space developer roles from the user' do
           expect { org.remove_user_recursive(user) }.to change { user.spaces.length }.from(2).to(0)
         end
 
-        it 'should remove the space manager roles from the user' do
+        it 'removes the space manager roles from the user' do
           expect { org.remove_user_recursive(user) }.to change { user.managed_spaces.length }.from(2).to(0)
         end
 
-        it 'should remove the space audited roles from the user' do
+        it 'removes the space audited roles from the user' do
           expect { org.remove_user_recursive(user) }.to change { user.audited_spaces.length }.from(2).to(0)
         end
 
-        it 'should remove the user from each spaces developer role' do
+        it 'removes the user from each spaces developer role' do
           [space_1, space_2].each { |space| expect(space.developers).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each(&:refresh)
           [space_1, space_2].each { |space| expect(space.developers).not_to include(user) }
         end
 
-        it 'should remove the user from each spaces manager role' do
+        it 'removes the user from each spaces manager role' do
           [space_1, space_2].each { |space| expect(space.managers).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each(&:refresh)
           [space_1, space_2].each { |space| expect(space.managers).not_to include(user) }
         end
 
-        it 'should remove the user from each spaces auditor role' do
+        it 'removes the user from each spaces auditor role' do
           [space_1, space_2].each { |space| expect(space.auditors).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each(&:refresh)
@@ -898,52 +898,54 @@ module VCAP::CloudController
             org.refresh
           end
 
-          it 'should remove all org roles from the user' do
+          it 'removes all org roles from the user' do
             expect(org.users).to include(user)
             expect(org.managers).to include(user)
             expect(org.billing_managers).to include(user)
 
             org.remove_user_recursive(user)
 
-            expect(org.users).to_not include(user)
-            expect(org.managers).to_not include(user)
-            expect(org.billing_managers).to_not include(user)
-            expect(user.reload.organizations).to_not include(org)
+            expect(org.users).not_to include(user)
+            expect(org.managers).not_to include(user)
+            expect(org.billing_managers).not_to include(user)
+            expect(user.reload.organizations).not_to include(org)
           end
         end
 
         context 'when the user only has non-user org roles' do
           let(:user) { User.make }
+
           before do
             org.add_manager(user)
             org.add_auditor(user)
           end
 
-          it 'should remove all roles' do
+          it 'removes all roles' do
             expect(org.managers).to include(user)
             expect(org.auditors).to include(user)
 
             org.remove_user_recursive(user)
 
-            expect(org.managers).to_not include(user)
-            expect(org.auditors).to_not include(user)
-            expect(user.reload.organizations).to_not include(org)
+            expect(org.managers).not_to include(user)
+            expect(org.auditors).not_to include(user)
+            expect(user.reload.organizations).not_to include(org)
           end
         end
 
         context 'when the user only has an org-user role' do
           let(:user) { User.make }
+
           before do
             org.add_user(user)
           end
 
-          it 'should remove that role' do
+          it 'removes that role' do
             expect(org.users).to include(user)
 
             org.remove_user_recursive(user)
 
-            expect(org.users).to_not include(user)
-            expect(user.reload.organizations).to_not include(org)
+            expect(org.users).not_to include(user)
+            expect(user.reload.organizations).not_to include(org)
           end
         end
       end
@@ -987,9 +989,9 @@ module VCAP::CloudController
           let(:quota_definition_guid) { 'something-invalid' }
 
           it 'uses what is provided' do
-            expect {
+            expect do
               org.save
-            }.to raise_error(CloudController::Errors::ApiError, /Could not find QuotaDefinition with guid: #{quota_definition_guid}/)
+            end.to raise_error(CloudController::Errors::ApiError, /Could not find QuotaDefinition with guid: #{quota_definition_guid}/)
           end
         end
       end

@@ -14,25 +14,6 @@ require 'decorators/field_service_plan_service_broker_decorator'
 class ServicePlansController < ApplicationController
   include ServicePermissions
 
-  def show
-    not_authenticated! if user_cannot_see_marketplace?
-
-    message = ServicePlansShowMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
-    service_plan_not_found! if service_plan.nil?
-    service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
-
-    decorators = []
-    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
-    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
-    decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
-
-    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators: decorators)
-    render status: :ok, json: presenter.to_json
-  end
-
   def index
     not_authenticated! if user_cannot_see_marketplace?
 
@@ -75,6 +56,25 @@ class ServicePlansController < ApplicationController
     render status: :ok, json: presenter.to_json
   end
 
+  def show
+    not_authenticated! if user_cannot_see_marketplace?
+
+    message = ServicePlansShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
+    service_plan_not_found! if service_plan.nil?
+    service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
+
+    decorators = []
+    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
+    decorators << IncludeServicePlanServiceOfferingDecorator if IncludeServicePlanServiceOfferingDecorator.match?(message.include)
+    decorators << FieldServicePlanServiceBrokerDecorator.new(message.fields) if FieldServicePlanServiceBrokerDecorator.match?(message.fields)
+
+    presenter = Presenters::V3::ServicePlanPresenter.new(service_plan, decorators:)
+    render status: :ok, json: presenter.to_json
+  end
+
   def update
     service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
     service_plan_not_found! if service_plan.nil?
@@ -107,11 +107,11 @@ class ServicePlansController < ApplicationController
   private
 
   def enforce_authentication?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def enforce_read_scope?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def service_plan_not_found!

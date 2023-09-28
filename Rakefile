@@ -25,15 +25,15 @@ default_tasks = [:rubocop_autocorrect, 'spec:all', :check_doc_links]
 
 task default: default_tasks
 
-task :rubocop_autocorrect do
+task rubocop_autocorrect: :environment do
   require 'rubocop'
   cli = RuboCop::CLI.new
-  exit_code = cli.run(%w(--auto-correct --fail-level autocorrect))
+  exit_code = cli.run(%w[--auto-correct --fail-level autocorrect])
   exit(exit_code) if exit_code != 0
 end
 
 desc 'Check docs for broken links'
-task :check_doc_links do
+task check_doc_links: :environment do
   require 'English'
   require 'rainbow'
 
@@ -42,11 +42,9 @@ task :check_doc_links do
     Dir.chdir('docs/v3') do
       cmd = 'bundle install && npm install && npm run checkdocs'
       py2_path = '/usr/bin/python2.7'
-      if File.exist?(py2_path)
-        cmd = "npm config set python #{py2_path} #{cmd}"
-      end
+      cmd = "npm config set python #{py2_path} #{cmd}" if File.exist?(py2_path)
       status = system(cmd)
-      exit $CHILD_STATUS.exitstatus if !status
+      exit $CHILD_STATUS.exitstatus unless status
       puts Rainbow('check_doc_links OK').green
     end
   end

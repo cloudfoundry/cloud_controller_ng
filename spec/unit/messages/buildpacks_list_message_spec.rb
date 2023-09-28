@@ -10,7 +10,7 @@ module VCAP::CloudController
           'stacks' => 'stack1,stack2',
           'label_selector' => 'foo=bar',
           'page' => 1,
-          'per_page' => 5,
+          'per_page' => 5
         }
       end
 
@@ -19,8 +19,8 @@ module VCAP::CloudController
 
         expect(message).to be_a(BuildpacksListMessage)
 
-        expect(message.stacks).to eq(%w(stack1 stack2))
-        expect(message.names).to eq(%w(name1 name2))
+        expect(message.stacks).to eq(%w[stack1 stack2])
+        expect(message.names).to eq(%w[name1 name2])
         expect(message.label_selector).to eq('foo=bar')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.page).to eq(1)
@@ -30,40 +30,40 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = BuildpacksListMessage.from_params(params)
 
-        expect(message.requested?(:stacks)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
+        expect(message).to be_requested(:stacks)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:label_selector)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: %w(name1 name2),
-          stacks: %w(stack1 stack2),
-          label_selector:     'foo=bar',
+          names: %w[name1 name2],
+          stacks: %w[stack1 stack2],
+          label_selector: 'foo=bar',
           page: 1,
-          per_page: 5,
+          per_page: 5
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :stacks, :label_selector]
+        expected_params = %i[names stacks label_selector]
         expect(BuildpacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           BuildpacksListMessage.from_params({
-            names: [],
-            stacks: [],
-            label_selector:     '',
-          })
-        }.not_to raise_error
+                                              names: [],
+                                              stacks: [],
+                                              label_selector: ''
+                                            })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -82,13 +82,13 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates names is an array' do
         message = BuildpacksListMessage.from_params names: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates stacks is an array' do
         message = BuildpacksListMessage.from_params stacks: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:stacks].length).to eq 1
       end
 

@@ -15,30 +15,32 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin read only access'
 
     context 'an admin' do
-      include_context :admin_setup
-      it_behaves_like :full_access
+      include_context 'admin setup'
+      it_behaves_like 'full access'
       it { is_expected.to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
     end
 
     context 'a user that is not an admin (defensive)' do
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::AppUsageEvent }
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
     end
 
     context 'using a client without cloud_controller.read' do
       let(:token) { { 'scope' => [] } }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::AppUsageEvent }
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
     end
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::AppUsageEvent }
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
     end

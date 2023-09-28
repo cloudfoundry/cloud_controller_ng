@@ -15,7 +15,7 @@ module VCAP::CloudController
         {
           'guids' => 'guid5,guid6',
           'service_instance_types' => 'managed_service_instance',
-          'service_offering_guids' => 'guid3,guid4',
+          'service_offering_guids' => 'guid3,guid4'
         }
       end
 

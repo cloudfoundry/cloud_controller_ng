@@ -23,21 +23,21 @@ module CloudController::Packager
       end
 
       it 'sets the package_hash' do
-        expect {
+        expect do
           packer.pack
-        }.to change { package.refresh.package_hash }.to('expected-sha1')
+        end.to change { package.refresh.package_hash }.to('expected-sha1')
       end
 
       it 'sets the package sha256' do
-        expect {
+        expect do
           packer.pack
-        }.to change { package.refresh.sha256_checksum }.to('expected-sha256')
+        end.to change { package.refresh.sha256_checksum }.to('expected-sha256')
       end
 
       it 'sets the state of the package' do
-        expect {
+        expect do
           packer.pack
-        }.to change { package.refresh.state }.to(VCAP::CloudController::PackageModel::READY_STATE)
+        end.to change { package.refresh.state }.to(VCAP::CloudController::PackageModel::READY_STATE)
       end
 
       it 'removes the compressed path afterwards' do
@@ -66,32 +66,37 @@ module CloudController::Packager
 
         it 'succeeds and removes the compressed path' do
           expect(FileUtils).to receive(:rm_f).with(uploaded_files_path)
-          expect(packer.pack).to eq nil
+          expect(packer.pack).to be_nil
         end
       end
 
       context 'when sending the package to the blobstore fails' do
         let(:expected_error) { StandardError.new('failed to send') }
+
         before do
           allow(packer_implementation).to receive(:send_package_to_blobstore).and_raise(expected_error)
         end
 
         it 'sets the state of the package' do
-          expect {
-            packer.pack rescue StandardError
-          }.to change { package.refresh.state }.to(VCAP::CloudController::PackageModel::FAILED_STATE)
+          expect do
+            packer.pack
+          rescue StandardError
+            StandardError
+          end.to change { package.refresh.state }.to(VCAP::CloudController::PackageModel::FAILED_STATE)
         end
 
         it 'records the error on the package' do
-          expect {
-            packer.pack rescue StandardError
-          }.to change { package.refresh.error }.to('failed to send')
+          expect do
+            packer.pack
+          rescue StandardError
+            StandardError
+          end.to change { package.refresh.error }.to('failed to send')
         end
 
         it 're-raises the error' do
-          expect {
+          expect do
             packer.pack
-          }.to raise_error(expected_error)
+          end.to raise_error(expected_error)
         end
       end
     end

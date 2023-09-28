@@ -14,7 +14,7 @@ module VCAP::CloudController
       read_for_update?(object, params)
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -33,12 +33,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)
@@ -54,7 +54,7 @@ module VCAP::CloudController
       true
     end
 
-    def create?(service_instance, params=nil)
+    def create?(service_instance, _params=nil)
       return true if admin_user?
 
       FeatureFlag.raise_unless_enabled!(:service_instance_creation)
@@ -63,7 +63,7 @@ module VCAP::CloudController
       service_instance.space&.has_developer?(context.user) && allowed?(service_instance)
     end
 
-    def read_for_update?(service_instance, params=nil)
+    def read_for_update?(service_instance, _params=nil)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
   end
 
   class UserProvidedServiceInstanceAccess < ServiceInstanceAccess
-    def allowed?(service_instance)
+    def allowed?(_service_instance)
       true
     end
   end

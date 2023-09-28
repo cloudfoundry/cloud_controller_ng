@@ -51,19 +51,17 @@ module VCAP::CloudController
 
     def save_with_new_operation(attributes, new_operation)
       RouteBinding.db.transaction do
-        self.lock!
+        lock!
         set(attributes)
         save_changes
 
-        if self.last_operation
-          self.last_operation.destroy
-        end
+        last_operation.destroy if last_operation
 
         # it is important to create the service route binding operation with the service binding
         # instead of doing self.service_route_binding_operation = x
         # because mysql will deadlock when requests happen concurrently otherwise.
-        RouteBindingOperation.create(new_operation.merge(route_binding_id: self.id))
-        self.route_binding_operation(reload: true)
+        RouteBindingOperation.create(new_operation.merge(route_binding_id: id))
+        route_binding_operation(reload: true)
       end
 
       self
@@ -74,17 +72,17 @@ module VCAP::CloudController
     def validate_routing_service
       return unless service_instance
 
-      unless service_instance.route_service?
-        errors.add(:service_instance, :route_binding_not_allowed)
-      end
+      return if service_instance.route_service?
+
+      errors.add(:service_instance, :route_binding_not_allowed)
     end
 
     def validate_space_match
       return unless service_instance && route
 
-      unless service_instance.space == route.space
-        errors.add(:service_instance, :space_mismatch)
-      end
+      return if service_instance.space == route.space
+
+      errors.add(:service_instance, :space_mismatch)
     end
   end
 end

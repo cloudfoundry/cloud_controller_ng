@@ -21,8 +21,8 @@ class AppFeaturesController < ApplicationController
     resources = presented_app_features(app)
 
     render status: :ok, json: {
-      resources:  resources,
-      pagination: present_unpagination_hash(resources, base_url(resource: 'features')),
+      resources: resources,
+      pagination: present_unpagination_hash(resources, base_url(resource: 'features'))
     }
   end
 
@@ -68,12 +68,12 @@ class AppFeaturesController < ApplicationController
   def present_unpagination_hash(result, path)
     {
       total_results: result.length,
-      total_pages:   1,
+      total_pages: 1,
 
-      first:         { href: path },
-      last:          { href: path },
-      next:          nil,
-      previous:      nil
+      first: { href: path },
+      last: { href: path },
+      next: nil,
+      previous: nil
     }
   end
 
@@ -88,7 +88,7 @@ class AppFeaturesController < ApplicationController
   def presented_app_features(app)
     [
       Presenters::V3::AppSshFeaturePresenter.new(app),
-      Presenters::V3::AppRevisionsFeaturePresenter.new(app),
+      Presenters::V3::AppRevisionsFeaturePresenter.new(app)
     ]
   end
 end

@@ -6,7 +6,7 @@ module Credhub
     let(:credhub_url) { 'https://credhub.example.com:8844' }
     let(:uaa_token_auth_header) { 'bearer token' }
     let(:token_info) { instance_double(CF::UAA::TokenInfo, auth_header: uaa_token_auth_header) }
-    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient, token_info: token_info) }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient, token_info:) }
     let(:credhub_reference) { 'my-cred-reference' }
 
     subject { Credhub::Client.new(credhub_url, uaa_client) }
@@ -27,9 +27,9 @@ module Credhub
       before do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{credhub_reference}&current=true").
           with(headers: {
-            'Authorization' => uaa_token_auth_header,
-            'Content-Type'  => 'application/json'
-          }).to_return(status: status, body: credhub_response)
+                 'Authorization' => uaa_token_auth_header,
+                 'Content-Type' => 'application/json'
+               }).to_return(status: status, body: credhub_response)
       end
 
       context 'when the client can access the credential' do

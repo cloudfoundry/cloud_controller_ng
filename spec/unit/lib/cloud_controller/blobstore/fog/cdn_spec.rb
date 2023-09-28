@@ -21,9 +21,9 @@ module CloudController
 
       describe '.new' do
         it 'is private' do
-          expect {
+          expect do
             Cdn.new('foo')
-          }.to raise_error(/private method/)
+          end.to raise_error(/private method/)
         end
       end
 
@@ -39,9 +39,9 @@ module CloudController
 
           it 'tries 3 times' do
             allow(fake_client).to receive(:get).and_raise('nope')
-            expect {
+            expect do
               cdn.get(path_location)
-            }.to raise_error('nope')
+            end.to raise_error('nope')
             expect(fake_client).to have_received(:get).exactly(3).times
           end
         end
@@ -53,9 +53,9 @@ module CloudController
           end
 
           it 'yields' do
-            expect { |yielded|
+            expect do |yielded|
               cdn.get(path_location, &yielded)
-            }.to yield_control
+            end.to yield_control
           end
 
           it 'downloads the file' do

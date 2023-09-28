@@ -52,8 +52,8 @@ module VCAP::CloudController
         end
 
         {
-          id:      id,
-          message: message,
+          id:,
+          message:
         }
       end
     end

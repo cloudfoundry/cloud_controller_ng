@@ -46,7 +46,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
         expect(result[:updated_at]).to eq(buildpack.updated_at)
         expect(result[:name]).to eq(buildpack.name)
         expect(result[:state]).to eq(buildpack.state)
-        expect(result[:filename]).to eq(nil)
+        expect(result[:filename]).to be_nil
         expect(result[:position]).to eq(buildpack.position)
         expect(result[:enabled]).to eq(buildpack.enabled)
         expect(result[:locked]).to eq(buildpack.locked)

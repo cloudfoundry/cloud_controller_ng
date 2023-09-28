@@ -17,8 +17,8 @@ module VCAP::CloudController
           begin
             ## TODO: At some point in the future, start using a monotonic time source, rather than wall-clock time!
             start = Time.now
-            VCAP::CloudController::Diego::ProcessesSync.new(config: config).sync
-            VCAP::CloudController::Diego::TasksSync.new(config: config).sync
+            VCAP::CloudController::Diego::ProcessesSync.new(config:).sync
+            VCAP::CloudController::Diego::TasksSync.new(config:).sync
           ensure
             finish = Time.now
             ## NOTE: We're taking time in seconds and multiplying by 1000 because we don't have

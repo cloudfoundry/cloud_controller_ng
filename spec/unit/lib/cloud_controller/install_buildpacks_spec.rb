@@ -13,7 +13,7 @@ module VCAP::CloudController
             {
               'name' => 'buildpack1',
               'package' => 'mybuildpackpkg'
-            },
+            }
           ]
         }
       end
@@ -34,9 +34,9 @@ module VCAP::CloudController
           let(:install_buildpack_config) { { install_buildpacks: [] } }
 
           it 'does nothing and does not raise any errors' do
-            expect {
+            expect do
               installer.install(TestConfig.config_instance.get(:install_buildpacks))
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
             TestConfig.config[:install_buildpacks].concat [
               { 'name' => 'buildpack1', 'package' => 'myotherpkg' },
-              { 'name' => 'buildpack2', 'package' => 'myotherpkg2' },
+              { 'name' => 'buildpack2', 'package' => 'myotherpkg2' }
             ]
 
             allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file).with(buildpack1a_file).and_return('cflinuxfs11')
@@ -114,9 +114,9 @@ module VCAP::CloudController
 
               expect(Jobs::Enqueuer).not_to receive(:new)
 
-              expect {
+              expect do
                 installer.install(TestConfig.config_instance.get(:install_buildpacks))
-              }.to raise_error 'BOOM'
+              end.to raise_error 'BOOM'
             end
           end
         end
@@ -142,8 +142,8 @@ module VCAP::CloudController
               {
                 'name' => 'buildpack1',
                 'package' => 'mybuildpackpkg',
-                'file' => 'another.zip',
-              },
+                'file' => 'another.zip'
+              }
             ]
           }
         end
@@ -197,8 +197,8 @@ module VCAP::CloudController
                 'package' => 'mybuildpackpkg',
                 'enabled' => true,
                 'locked' => false,
-                'position' => 5,
-              },
+                'position' => 5
+              }
             ]
           }
         end
@@ -219,19 +219,18 @@ module VCAP::CloudController
 
           expect(job_factory).to receive(:plan).
             with('buildpack1',
-              [{ name: 'buildpack1',
-                 file: 'abuildpack.zip',
-                 stack: nil,
-                 options: {
-                  enabled: true,
-                  locked: false,
-                  position: 5
-                } }]
-            )
+                 [{ name: 'buildpack1',
+                    file: 'abuildpack.zip',
+                    stack: nil,
+                    options: {
+                      enabled: true,
+                      locked: false,
+                      position: 5
+                    } }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
 
-          expect(installer.logger).to_not have_received(:error)
+          expect(installer.logger).not_to have_received(:error)
         end
       end
     end

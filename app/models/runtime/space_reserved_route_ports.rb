@@ -4,9 +4,7 @@ module VCAP::CloudController
       @space = space
     end
 
-    def count
-      dataset.count
-    end
+    delegate :count, to: :dataset
 
     private
 

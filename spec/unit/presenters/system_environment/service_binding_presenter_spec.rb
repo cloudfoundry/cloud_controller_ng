@@ -8,16 +8,16 @@ module VCAP::CloudController
       let(:service_plan) { ServicePlan.make(name: Sham.name, service: service) }
       let(:service_instance) do
         ManagedServiceInstance.make(
-          name:         instance_name,
-          service_plan: service_plan,
+          name: instance_name,
+          service_plan: service_plan
         )
       end
       let(:instance_name) { Sham.name }
       let(:binding_options) { nil }
       let(:service_binding) do
         ServiceBinding.make(
-          name:             binding_name,
-          service_instance: service_instance,
+          name: binding_name,
+          service_instance: service_instance
         )
       end
       let(:binding_name) { nil }
@@ -90,7 +90,7 @@ module VCAP::CloudController
           end
 
           it 'sets the "binding_name" to null' do
-            expect(result[:binding_name]).to eq(nil)
+            expect(result[:binding_name]).to be_nil
           end
         end
       end
@@ -102,7 +102,7 @@ module VCAP::CloudController
       end
 
       let(:service_binding) do
-        ServiceBinding.make(service_instance: service_instance)
+        ServiceBinding.make(service_instance:)
       end
 
       describe '#to_hash' do

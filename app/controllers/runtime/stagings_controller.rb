@@ -7,8 +7,8 @@ require 'actions/droplet_create'
 module VCAP::CloudController
   class StagingsController < RestController::BaseController
     def self.dependencies
-      [:droplet_blobstore, :buildpack_cache_blobstore, :package_blobstore,
-       :blobstore_url_generator, :missing_blob_handler, :blob_sender, :config]
+      %i[droplet_blobstore buildpack_cache_blobstore package_blobstore
+         blobstore_url_generator missing_blob_handler blob_sender config]
     end
 
     include CloudController::Errors
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     get '/internal/v4/staging_jobs/:guid', :find_job_mtls
     def find_job_mtls(guid)
-      job = Delayed::Job[guid: guid]
+      job = Delayed::Job[guid:]
       StagingJobPresenter.new(job, 'https').to_json
     end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
     def download_package(guid)
       raise ApiError.new_from_details('BlobstoreNotLocal') unless package_blobstore.local?
 
-      package = PackageModel.find(guid: guid)
+      package = PackageModel.find(guid:)
       raise ApiError.new_from_details('NotFound', guid) if package.nil?
 
       blob = package_blobstore.blob(guid)
@@ -48,7 +48,7 @@ module VCAP::CloudController
     def download_v3_droplet(guid)
       raise ApiError.new_from_details('BlobstoreNotLocal') unless @blobstore.local?
 
-      droplet = DropletModel.find(guid: guid)
+      droplet = DropletModel.find(guid:)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if droplet.nil?
 
       blob = @blobstore.blob(droplet.blobstore_key)
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     post '/internal/v4/buildpack_cache/:stack_name/:guid/upload', :upload_v3_app_buildpack_cache
     def upload_v3_app_buildpack_cache(stack_name, guid)
-      app_model = AppModel.find(guid: guid)
+      app_model = AppModel.find(guid:)
 
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
@@ -81,7 +81,7 @@ module VCAP::CloudController
 
     get '/staging/v3/buildpack_cache/:stack/:guid/download', :download_v3_app_buildpack_cache
     def download_v3_app_buildpack_cache(stack_name, guid)
-      app_model = AppModel.find(guid: guid)
+      app_model = AppModel.find(guid:)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
 
       logger.info 'v3-droplet.begin-download', app_guid: guid, stack: stack_name
@@ -107,7 +107,7 @@ module VCAP::CloudController
     end
 
     def upload_droplet(guid)
-      build = BuildModel.find(guid: guid)
+      build = BuildModel.find(guid:)
 
       droplet = droplet_from_build(build, guid)
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
 
     def droplet_from_build(build, guid)
       if build.nil?
-        droplet = DropletModel.find(guid: guid)
+        droplet = DropletModel.find(guid:)
         raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
 
         droplet
@@ -157,9 +157,9 @@ module VCAP::CloudController
       file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
 
-      if header_md5.present? && file_md5 != header_md5
-        raise ApiError.new_from_details('StagingError', 'content md5 did not match')
-      end
+      return unless header_md5.present? && file_md5 != header_md5
+
+      raise ApiError.new_from_details('StagingError', 'content md5 did not match')
     end
   end
 end

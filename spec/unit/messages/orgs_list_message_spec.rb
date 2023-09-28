@@ -10,7 +10,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'name',
-          'guids' => 'one-guid,two-guid,three-guid',
+          'guids' => 'one-guid,two-guid,three-guid'
         }
       end
 
@@ -22,47 +22,47 @@ module VCAP::CloudController
         expect(message).to be_valid
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.names).to eq(['Case', 'Molly'])
-        expect(message.guids).to eq(['one-guid', 'two-guid', 'three-guid'])
+        expect(message.names).to eq(%w[Case Molly])
+        expect(message.guids).to eq(%w[one-guid two-guid three-guid])
       end
 
       it 'converts requested keys to symbols' do
         message = OrgsListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:order_by)
+        expect(message).to be_requested(:guids)
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: ['Case', 'Molly'],
+          names: %w[Case Molly],
           page: 1,
           per_page: 5,
           order_by: 'name',
-          guids: ['one-guid,two-guid,three-guid'],
+          guids: ['one-guid,two-guid,three-guid']
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids]
+        expected_params = %i[names guids]
         expect(OrgsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           OrgsListMessage.from_params({
-            names: [],
-            page: 1,
-            per_page: 5,
-          })
-        }.not_to raise_error
+                                        names: [],
+                                        page: 1,
+                                        per_page: 5
+                                      })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -80,19 +80,19 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates names is an array' do
           message = OrgsListMessage.from_params names: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
           message = OrgsListMessage.from_params guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates that order_by value is in the supported list' do
           message = OrgsListMessage.from_params order_by: 'invalid'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:order_by].length).to eq 1
         end
 

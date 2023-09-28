@@ -22,18 +22,18 @@ module CloudController::Presenters::V2
           name: 'george',
           billing_enabled: true,
           quota_definition_guid: quota_definition.guid,
-          status: 'active',
+          status: 'active'
         )
       end
 
       it 'returns the organization entity and associated urls' do
         expected_entity_hash = {
-          'name'                  => 'george',
-          'billing_enabled'       => true,
+          'name' => 'george',
+          'billing_enabled' => true,
           'quota_definition_guid' => quota_definition.guid,
-          'relationship_key'      => 'relationship_value',
-          'status'                => 'active',
-          'default_isolation_segment_guid' => nil,
+          'relationship_key' => 'relationship_value',
+          'status' => 'active',
+          'default_isolation_segment_guid' => nil
         }
 
         actual_entity_hash = org_presenter.entity_hash(controller, org, opts, depth, parents, orphans)

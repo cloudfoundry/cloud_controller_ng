@@ -7,7 +7,8 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
       it 'with a password containing no special characters' do
         parts = VCAP::CloudController::DatabasePartsParser.
                 database_parts_from_connection(
-                  'mysql://user:p4ssw0rd@example.com:1234/databasename')
+                  'mysql://user:p4ssw0rd@example.com:1234/databasename'
+                )
 
         expect(parts).to eq({
                               adapter: 'mysql',
@@ -22,7 +23,8 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
       it 'with an escaped password value' do
         parts = VCAP::CloudController::DatabasePartsParser.
                 database_parts_from_connection(
-                  'mysql://user:p4s%40sw0rd@example.com:1234/databasename')
+                  'mysql://user:p4s%40sw0rd@example.com:1234/databasename'
+                )
 
         expect(parts).to eq({
                               adapter: 'mysql',
@@ -36,9 +38,9 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
 
       it 'throws when parsing an unescaped password value' do
         uri = 'mysql://user:p4s sw0rd@example.com:1234/databasename'
-        expect {
+        expect do
           VCAP::CloudController::DatabasePartsParser.database_parts_from_connection(uri)
-        }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
+        end.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
       end
     end
   end
@@ -48,13 +50,13 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
       it 'with a password containing no special characters' do
         connection_string = VCAP::CloudController::DatabasePartsParser.
                             connection_from_database_parts({
-                                           adapter: 'mysql',
-                                           host: 'example.com',
-                                           port: 1234,
-                                           user: 'user',
-                                           password: 'p4ssw0rd',
-                                           database: 'databasename'
-                                         })
+                                                             adapter: 'mysql',
+                                                             host: 'example.com',
+                                                             port: 1234,
+                                                             user: 'user',
+                                                             password: 'p4ssw0rd',
+                                                             database: 'databasename'
+                                                           })
 
         expect(connection_string).to eq('mysql://user:p4ssw0rd@example.com:1234/databasename')
       end
@@ -62,13 +64,13 @@ RSpec.describe VCAP::CloudController::DatabasePartsParser do
       it 'with an escaped password value' do
         connection_string = VCAP::CloudController::DatabasePartsParser.
                             connection_from_database_parts({
-                                           adapter: 'mysql',
-                                           host: 'example.com',
-                                           port: 1234,
-                                           user: 'user',
-                                           password: 'p4s@sw0rd',
-                                           database: 'databasename'
-                                         })
+                                                             adapter: 'mysql',
+                                                             host: 'example.com',
+                                                             port: 1234,
+                                                             user: 'user',
+                                                             password: 'p4s@sw0rd',
+                                                             database: 'databasename'
+                                                           })
 
         expect(connection_string).to eq('mysql://user:p4s%40sw0rd@example.com:1234/databasename')
       end

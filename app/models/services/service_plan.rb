@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module VCAP::CloudController
   class ServicePlan < Sequel::Model
     many_to_one :service
@@ -77,7 +79,7 @@ module VCAP::CloudController
       validates_presence :free,                message: 'is required'
       validates_presence :service,             message: 'is required'
       validates_presence :unique_id,           message: 'is required'
-      validates_unique [:service_id, :name],   message: Sequel.lit("Plan names must be unique within a service. Service #{service.try(:label)} already has a plan named #{name}")
+      validates_unique %i[service_id name], message: Sequel.lit("Plan names must be unique within a service. Service #{service.try(:label)} already has a plan named #{name}")
       validate_private_broker_plan_not_public
     end
 
@@ -119,11 +121,11 @@ module VCAP::CloudController
         [:public, true],
         [:service_plans__id, ServicePlanVisibility.visible_private_plan_ids_for_user(user)],
         [:service_plans__id, plan_ids_from_private_brokers(user)]
-      ]).&(service_plans__active: true)
+      ]).&(service_plans__active: true) # rubocop:disable Style/OperatorMethodCall
     end
 
     def self.user_visibility_show_filter(user)
-      list_filter = self.user_visibility_list_filter(user)
+      list_filter = user_visibility_list_filter(user)
       Sequel.|(list_filter, { id: plan_ids_for_visible_service_instances(user) })
     end
 
@@ -136,7 +138,7 @@ module VCAP::CloudController
     end
 
     def self.plan_ids_for_space(space_id)
-      ServiceBroker.where(space_id: space_id).
+      ServiceBroker.where(space_id:).
         join(:services, service_broker_id: :id).
         join(:service_plans, service_id: :id).
         select(:service_plans__id).distinct
@@ -161,11 +163,11 @@ module VCAP::CloudController
     end
 
     def service_broker
-      service.service_broker if service
+      service&.service_broker
     end
 
     def broker_space_scoped?
-      service_broker.space_scoped? if service_broker
+      service_broker&.space_scoped?
     end
 
     def visible_in_space?(space)
@@ -180,14 +182,14 @@ module VCAP::CloudController
 
       return ServicePlanVisibilityTypes::ORGANIZATION unless service_plan_visibilities_dataset.empty?
 
-      return ServicePlanVisibilityTypes::ADMIN
+      ServicePlanVisibilityTypes::ADMIN
     end
 
     private
 
     def before_validation
       generate_unique_id if new?
-      self.public = !broker_space_scoped? if self.public.nil?
+      self.public = !broker_space_scoped? if public.nil?
       super
     end
 
@@ -196,16 +198,16 @@ module VCAP::CloudController
     end
 
     def validate_private_broker_plan_not_public
-      if broker_space_scoped? && self.public?
-        errors.add(:public, 'may not be true for plans belonging to private service brokers')
-      end
+      return unless broker_space_scoped? && public?
+
+      errors.add(:public, 'may not be true for plans belonging to private service brokers')
     end
   end
 
   class ServicePlanVisibilityTypes
-    PUBLIC = 'public'.freeze
-    ADMIN = 'admin'.freeze
-    SPACE = 'space'.freeze
-    ORGANIZATION = 'organization'.freeze
+    PUBLIC = 'public'
+    ADMIN = 'admin'
+    SPACE = 'space'
+    ORGANIZATION = 'organization'
   end
 end

@@ -28,7 +28,7 @@ class SpacesV3Controller < ApplicationController
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SpacePresenter,
-      paginated_result: SequelPaginator.new.get_page(readable_spaces(message: message), message.try(:pagination_options)),
+      paginated_result: SequelPaginator.new.get_page(readable_spaces(message:), message.try(:pagination_options)),
       path: '/v3/spaces',
       message: message,
       decorators: decorators
@@ -45,7 +45,7 @@ class SpacesV3Controller < ApplicationController
     decorators = []
     decorators << IncludeSpaceOrganizationDecorator if IncludeSpaceOrganizationDecorator.match?(message.include)
 
-    render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators: decorators)
+    render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators:)
   end
 
   def create
@@ -58,9 +58,9 @@ class SpacesV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
     suspended! unless permission_queryer.is_org_active?(org.id)
 
-    space = SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
+    space = SpaceCreate.new(user_audit_info:).create(org, message)
 
-    render status: 201, json: Presenters::V3::SpacePresenter.new(space)
+    render status: :created, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e
     unprocessable!(e.message)
   end
@@ -110,7 +110,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/spaces/#{space.guid}/running_security_groups",
       message: message,
-      extra_presenter_args: { visible_space_guids: space.guid },
+      extra_presenter_args: { visible_space_guids: space.guid }
     )
   end
 
@@ -129,7 +129,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/spaces/#{space.guid}/staging_security_groups",
       message: message,
-      extra_presenter_args: { visible_space_guids: space.guid },
+      extra_presenter_args: { visible_space_guids: space.guid }
     )
   end
 
@@ -205,7 +205,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: paginated_result,
       path: "/v3/spaces/#{space.guid}/users",
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
@@ -214,15 +214,15 @@ class SpacesV3Controller < ApplicationController
   private
 
   def fetch_organization(guid)
-    Organization.where(guid: guid).first
+    Organization.where(guid:).first
   end
 
   def fetch_space(guid)
-    Space.where(guid: guid).first
+    Space.where(guid:).first
   end
 
   def fetch_isolation_segment(guid)
-    IsolationSegmentModel.where(guid: guid).first
+    IsolationSegmentModel.where(guid:).first
   end
 
   def fetch_running_security_group_guids(space)

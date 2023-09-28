@@ -3,7 +3,7 @@ require 'actions/v2/services/service_binding_delete'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingDelete do
-    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email), accepts_incomplete) }
+    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid:, user_email:), accepts_incomplete) }
     let(:accepts_incomplete) { false }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       it 'deletes the service binding' do
         service_binding_delete.foreground_delete_request(service_binding)
-        expect(service_binding.exists?).to be_falsey
+        expect(service_binding).not_to exist
       end
 
       it 'creates an audit.service_binding.delete event' do
@@ -49,9 +49,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         it 'deletes the binding' do
           service_binding_delete.foreground_delete_request(service_binding)
-          expect(service_binding.exists?).to be_falsey
+          expect(service_binding).not_to exist
         end
       end
 
@@ -72,9 +72,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+          end.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
 
@@ -86,10 +86,11 @@ module VCAP::CloudController
         end
 
         it 'decorates the error with app name and service instance name' do
-          expect {
+          expect do
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(
-            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey")
+          end.to raise_error(
+            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey"
+          )
         end
       end
     end
@@ -107,7 +108,7 @@ module VCAP::CloudController
         expect(job).to be_a_fully_wrapped_job_of(Jobs::DeleteActionJob)
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        expect(service_binding.exists?).to be_falsey
+        expect(service_binding).not_to exist
       end
     end
 
@@ -139,18 +140,17 @@ module VCAP::CloudController
           let(:service_binding_operation) {}
 
           before do
-            allow(client).to receive(:unbind).and_return({ async: true, operation: '123' })
-            allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
+            allow(client).to receive_messages(unbind: { async: true, operation: '123' }, fetch_service_binding_last_operation: {})
             service_binding.service_binding_operation = service_binding_operation
           end
 
-          it 'should keep the service binding' do
+          it 'keeps the service binding' do
             service_binding_delete.foreground_delete_request(service_binding)
 
-            expect(service_binding.exists?).to be_truthy
+            expect(service_binding).to exist
           end
 
-          it 'should create an audit event' do
+          it 'creates an audit event' do
             service_binding_delete.foreground_delete_request(service_binding)
 
             event = Event.last
@@ -231,17 +231,16 @@ module VCAP::CloudController
           end
 
           before do
-            allow(client).to receive(:unbind).and_return({ async: true })
-            allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
+            allow(client).to receive_messages(unbind: { async: true }, fetch_service_binding_last_operation: {})
             service_binding.service_binding_operation = service_binding_operation
           end
 
-          it 'should immediately delete the binding' do
+          it 'immediatelies delete the binding' do
             service_binding_delete.delete(service_binding)
-            expect(service_binding.exists?).to be_falsey
+            expect(service_binding).not_to exist
           end
 
-          it 'should create an audit event' do
+          it 'creates an audit event' do
             service_binding_delete.delete(service_binding)
 
             event = Event.last
@@ -250,16 +249,16 @@ module VCAP::CloudController
             expect(event.actee_type).to eq('service_binding')
           end
 
-          it 'should respond with a warning' do
+          it 'responds with a warning' do
             errors, warnings = service_binding_delete.delete(service_binding)
-            expect(warnings).to match_array([expected_warning])
+            expect(warnings).to contain_exactly(expected_warning)
             expect(errors).to be_empty
           end
 
           context 'when delete is called with multiple bindings' do
-            it 'should return warnings for all bindings' do
+            it 'returns warnings for all bindings' do
               errors, warnings = service_binding_delete.delete([service_binding, ServiceBinding.make])
-              expect(warnings).to match_array([expected_warning, expected_warning])
+              expect(warnings).to contain_exactly(expected_warning, expected_warning)
               expect(errors).to be_empty
             end
           end
@@ -267,7 +266,7 @@ module VCAP::CloudController
       end
 
       context 'when accepts_incomplete is not provided as an argument' do
-        let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
+        let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid:, user_email:)) }
 
         it 'defaults to false and asks the broker to unbind the instance sync' do
           expect(client).to receive(:unbind).with(service_binding, user_guid: user_guid, accepts_incomplete: false)

@@ -9,12 +9,12 @@ module VCAP::CloudController
     include UaaOriginValidator
 
     def self.dependencies
-      [
-        :username_and_roles_populating_collection_renderer,
-        :uaa_client,
-        :services_event_repository,
-        :user_event_repository,
-        :organization_event_repository,
+      %i[
+        username_and_roles_populating_collection_renderer
+        uaa_client
+        services_event_repository
+        user_event_repository
+        organization_event_repository
       ]
     end
 
@@ -35,8 +35,8 @@ module VCAP::CloudController
 
       to_one :quota_definition, optional_in: :create
       to_many :spaces,           exclude_in: :create
-      to_many :domains,          exclude_in: [:create, :update], route_for: [:get, :delete]
-      to_many :private_domains,  exclude_in: [:create, :update]
+      to_many :domains,          exclude_in: %i[create update], route_for: %i[get delete]
+      to_many :private_domains,  exclude_in: %i[create update]
       to_many :users
       to_many :managers
       to_many :billing_managers
@@ -46,8 +46,8 @@ module VCAP::CloudController
     end
 
     query_parameters :name, :space_guid, :user_guid,
-      :manager_guid, :billing_manager_guid,
-      :auditor_guid, :status
+                     :manager_guid, :billing_manager_guid,
+                     :auditor_guid, :status
     sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"
@@ -65,12 +65,11 @@ module VCAP::CloudController
     end
 
     def before_update(org)
-      if request_attrs['default_isolation_segment_guid']
-        unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
-          raise CloudController::Errors::ApiError.new_from_details(
-            'ResourceNotFound',
-            'Could not find Isolation Segment to set as the default.')
-        end
+      if request_attrs['default_isolation_segment_guid'] && !IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
+        raise CloudController::Errors::ApiError.new_from_details(
+          'ResourceNotFound',
+          'Could not find Isolation Segment to set as the default.'
+        )
       end
 
       if request_attrs['quota_definition_guid']
@@ -80,7 +79,8 @@ module VCAP::CloudController
           unless affected_processes.where(log_rate_limit: ProcessModel::UNLIMITED_LOG_RATE).empty?
             raise CloudController::Errors::ApiError.new_from_details(
               'UnprocessableEntity',
-              'Current usage exceeds new quota values. This org currently contains apps running with an unlimited log rate limit.')
+              'Current usage exceeds new quota values. This org currently contains apps running with an unlimited log rate limit.'
+            )
           end
         end
       end
@@ -131,7 +131,7 @@ module VCAP::CloudController
         OrganizationUserRolesFetcher.fetch(org, user_guid: user_guid_parameter),
         associated_path,
         opts,
-        {},
+        {}
       )
     end
 
@@ -146,14 +146,14 @@ module VCAP::CloudController
         associated_model,
         associated_model.organization_visible(org),
         associated_controller.query_parameters,
-        @opts,
+        @opts
       )
 
       associated_path = "#{self.class.url_for_guid(guid)}/services"
 
       opts = @opts.merge(
         additional_visibility_filters: {
-          service_plans: proc { |ds| ds.organization_visible(org) },
+          service_plans: proc { |ds| ds.organization_visible(org) }
         }
       )
 
@@ -162,7 +162,7 @@ module VCAP::CloudController
         filtered_dataset,
         associated_path,
         opts,
-        {},
+        {}
       )
     end
 
@@ -265,9 +265,7 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:delete, guid)
       raise_if_has_dependent_associations!(org) unless recursive_delete?
 
-      if org.spaces_dataset.any? && !recursive_delete?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name) if org.spaces_dataset.any? && !recursive_delete?
 
       space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
       delete_action = V2::OrganizationDelete.new(space_delete_action)
@@ -348,7 +346,7 @@ module VCAP::CloudController
       user.username = '' unless user.username
 
       @user_event_repository.record_organization_role_remove(
-        Organization.first(guid: guid),
+        Organization.first(guid:),
         user,
         role.to_s,
         UserAuditInfo.from_context(SecurityContext),
@@ -399,11 +397,11 @@ module VCAP::CloudController
       VCAP::CloudController::Roles::ORG_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
-        if request_attrs[key]
-          current_role_guids[role] = []
-          org.send(role.pluralize.to_sym).each do |user|
-            current_role_guids[role] << user.guid
-          end
+        next unless request_attrs[key]
+
+        current_role_guids[role] = []
+        org.send(role.pluralize.to_sym).each do |user|
+          current_role_guids[role] << user.guid
         end
       end
 
@@ -418,39 +416,39 @@ module VCAP::CloudController
 
         user_guids_removed = []
 
-        if request_attrs[key]
-          user_guids_added = request_attrs[key]
+        next unless request_attrs[key]
 
-          if current_role_guids[role]
-            user_guids_added = request_attrs[key] - current_role_guids[role]
-            user_guids_removed = current_role_guids[role] - request_attrs[key]
-          end
+        user_guids_added = request_attrs[key]
 
-          user_guids_added.each do |user_id|
-            user = User.first(guid: user_id) || User.create(guid: user_id)
-            user.username = '' unless user.username
+        if current_role_guids[role]
+          user_guids_added = request_attrs[key] - current_role_guids[role]
+          user_guids_removed = current_role_guids[role] - request_attrs[key]
+        end
 
-            @user_event_repository.record_organization_role_add(
-              organization,
-                user,
-                role,
-                user_audit_info,
-                request_attrs
-            )
-          end
+        user_guids_added.each do |user_id|
+          user = User.first(guid: user_id) || User.create(guid: user_id)
+          user.username = '' unless user.username
 
-          user_guids_removed.each do |user_id|
-            user = User.first(guid: user_id)
-            user.username = '' unless user.username
+          @user_event_repository.record_organization_role_add(
+            organization,
+            user,
+            role,
+            user_audit_info,
+            request_attrs
+          )
+        end
 
-            @user_event_repository.record_organization_role_remove(
-              organization,
-                user,
-                role,
-                user_audit_info,
-                request_attrs
-            )
-          end
+        user_guids_removed.each do |user_id|
+          user = User.first(guid: user_id)
+          user.username = '' unless user.username
+
+          @user_event_repository.record_organization_role_remove(
+            organization,
+            user,
+            role,
+            user_audit_info,
+            request_attrs
+          )
         end
       end
     end

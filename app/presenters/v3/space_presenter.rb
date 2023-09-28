@@ -30,9 +30,9 @@ module VCAP::CloudController::Presenters::V3
         },
         metadata: {
           labels: hashified_labels(space.labels),
-          annotations: hashified_annotations(space.annotations),
+          annotations: hashified_annotations(space.annotations)
         },
-        links: build_links,
+        links: build_links
       }
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [space]) }

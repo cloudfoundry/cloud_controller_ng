@@ -14,7 +14,7 @@ module VCAP::CloudController
         it 'returns an error' do
           message = ToManyRelationshipMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include("can't be blank")
         end
       end
@@ -29,22 +29,22 @@ module VCAP::CloudController
         it 'returns an error' do
           message = ToManyRelationshipMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include('must be an array')
         end
       end
 
       context 'when unexpected keys are requested' do
-        let(:params) {
+        let(:params) do
           {
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = ToManyRelationshipMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:base]).to contain_exactly("Unknown field(s): 'unexpected'")
         end
       end
@@ -53,14 +53,14 @@ module VCAP::CloudController
         it 'is NOT valid and includes an error specifying the expected input format' do
           message = ToManyRelationshipMessage.new({ data: [{ guid: 32.77 }] })
 
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to contain_exactly('Invalid data type: Data[0] guid should be a string.')
         end
       end
     end
 
     context 'with guids provided as strings' do
-      it 'is valid ' do
+      it 'is valid' do
         message = ToManyRelationshipMessage.new({ data: [{ guid: 'some-guid' }] })
 
         expect(message).to be_valid

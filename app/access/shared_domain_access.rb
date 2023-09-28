@@ -1,10 +1,10 @@
 module VCAP::CloudController
   class SharedDomainAccess < BaseAccess
-    def create?(object, params=nil)
+    def create?(_object, _params=nil)
       admin_user?
     end
 
-    def read_for_update?(object, params=nil)
+    def read_for_update?(_object, _params=nil)
       admin_user?
     end
 
@@ -16,15 +16,15 @@ module VCAP::CloudController
       read_for_update?(object, params)
     end
 
-    def update?(object, params=nil)
+    def update?(_object, _params=nil)
       admin_user?
     end
 
-    def delete?(object)
+    def delete?(_object)
       admin_user?
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -43,12 +43,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)

@@ -7,13 +7,13 @@ require 'linters/migration/require_primary_key'
 RSpec.describe RuboCop::Cop::Migration::RequirePrimaryKey do
   include CopHelper
 
+  subject(:cop) { RuboCop::Cop::Migration::RequirePrimaryKey.new(RuboCop::Config.new({})) }
+
   let(:primary_key_message) do
     'Please include a call to primary_key when creating a table. This is to ensure compatibility with clustered databases.'
   end
 
-  subject(:cop) { RuboCop::Cop::Migration::RequirePrimaryKey.new(RuboCop::Config.new({})) }
-
-  it 'registers an offense if create_table is called without adding a primary key', focus: true do
+  it 'registers an offense if create_table is called without adding a primary key' do
     inspect_source(<<~RUBY)
       create_table :foobar do
         String :carly

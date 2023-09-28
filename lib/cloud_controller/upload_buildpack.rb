@@ -3,6 +3,7 @@ require 'vcap/digester'
 module VCAP::CloudController
   class UploadBuildpack
     attr_reader :buildpack_blobstore
+
     ONE_MEGABYTE = 1024 * 1024
 
     def initialize(blobstore)
@@ -19,9 +20,7 @@ module VCAP::CloudController
       return false if !new_bits?(buildpack, new_key) && !new_filename?(buildpack, new_filename) && !missing_bits
 
       # replace blob if new
-      if missing_bits || new_bits?(buildpack, new_key)
-        buildpack_blobstore.cp_to_blobstore(bits_file_path, new_key)
-      end
+      buildpack_blobstore.cp_to_blobstore(bits_file_path, new_key) if missing_bits || new_bits?(buildpack, new_key)
 
       old_buildpack_key = nil
 
@@ -56,15 +55,14 @@ module VCAP::CloudController
     private
 
     def raise_translated_api_error(buildpack)
-      if buildpack.errors.on([:name, :stack]).try(:include?, :unique)
-        raise CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', buildpack.name, buildpack.stack)
-      end
-      if buildpack.errors.on(:stack).try(:include?, :buildpack_cant_change_stacks)
-        raise CloudController::Errors::ApiError.new_from_details('BuildpackStacksDontMatch', buildpack.stack, buildpack.initial_value(:stack))
-      end
-      if buildpack.errors.on(:stack).try(:include?, :buildpack_stack_does_not_exist)
-        raise CloudController::Errors::ApiError.new_from_details('BuildpackStackDoesNotExist', buildpack.stack)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', buildpack.name, buildpack.stack) if buildpack.errors.on(%i[name stack]).try(:include?,
+                                                                                                                                                                      :unique)
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackStacksDontMatch', buildpack.stack, buildpack.initial_value(:stack)) if buildpack.errors.on(:stack).try(
+        :include?, :buildpack_cant_change_stacks
+      )
+      return unless buildpack.errors.on(:stack).try(:include?, :buildpack_stack_does_not_exist)
+
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackStackDoesNotExist', buildpack.stack)
     end
 
     def determine_new_stack(buildpack, bits_file_path)

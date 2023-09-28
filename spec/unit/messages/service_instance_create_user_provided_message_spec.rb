@@ -13,7 +13,7 @@ module VCAP::CloudController
         },
         syslog_drain_url: 'https://drain.com/foo',
         route_service_url: 'https://route.com/bar',
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         relationships: {
           space: {
             data: {
@@ -36,13 +36,13 @@ module VCAP::CloudController
 
     it 'accepts the allowed keys' do
       expect(message).to be_valid
-      expect(message.requested?(:type)).to be_truthy
-      expect(message.requested?(:name)).to be_truthy
-      expect(message.requested?(:relationships)).to be_truthy
-      expect(message.requested?(:credentials)).to be_truthy
-      expect(message.requested?(:syslog_drain_url)).to be_truthy
-      expect(message.requested?(:route_service_url)).to be_truthy
-      expect(message.requested?(:tags)).to be_truthy
+      expect(message).to be_requested(:type)
+      expect(message).to be_requested(:name)
+      expect(message).to be_requested(:relationships)
+      expect(message).to be_requested(:credentials)
+      expect(message).to be_requested(:syslog_drain_url)
+      expect(message).to be_requested(:route_service_url)
+      expect(message).to be_requested(:tags)
     end
 
     it 'builds the right message' do
@@ -59,16 +59,16 @@ module VCAP::CloudController
 
     it 'accepts the minimal request' do
       message = described_class.new({
-        type: 'user-provided',
-        name: 'my-service-instance',
-        relationships: {
-          space: {
-            data: {
-              guid: 'space-guid'
-            }
-          }
-        }
-      })
+                                      type: 'user-provided',
+                                      name: 'my-service-instance',
+                                      relationships: {
+                                        space: {
+                                          data: {
+                                            guid: 'space-guid'
+                                          }
+                                        }
+                                      }
+                                    })
       expect(message).to be_valid
     end
 
@@ -76,14 +76,14 @@ module VCAP::CloudController
       it 'is invalid when there are unknown keys' do
         body['bogus'] = 'field'
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
       describe 'type' do
         it 'must be `user-provided`' do
           body[:type] = 'managed'
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:type]).to include("must be 'user-provided'")
         end
       end
@@ -92,7 +92,7 @@ module VCAP::CloudController
         it 'is invalid when there are unknown relationships' do
           body[:relationships][:service_plan] = { data: { guid: 'plan-guid' } }
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'service_plan'")
         end
       end
@@ -148,7 +148,7 @@ module VCAP::CloudController
         let(:body_without_credentials) { body.without(:credentials) }
         let(:message) { described_class.new(body_without_credentials) }
 
-        it 'should not contain a credentials param' do
+        it 'does not contain a credentials param' do
           expected = body.without(:credentials)
           expect(message.audit_hash).to match(expected.with_indifferent_access)
         end

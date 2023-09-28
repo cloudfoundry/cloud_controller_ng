@@ -5,43 +5,43 @@ module VCAP::CloudController
     RSpec.describe WrappingJob, job_context: :worker do
       describe '#error' do
         context 'when the wrapped job does not have the error method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.error(job, 'foobar')
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end
 
       describe '#reschedule_at' do
         context 'when the wrapped job does not have the reschedule_at method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.reschedule_at(job, 'foobar')
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end
 
       describe '#before' do
         context 'when the wrapped job does not have the before method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.before(job)
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end
 
       describe '#after' do
         context 'when the wrapped job has the after method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = double('Job', after: 'after-called')
             job     = WrappingJob.new(handler)
 
@@ -51,36 +51,36 @@ module VCAP::CloudController
         end
 
         context 'when the wrapped job does not have the after method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.after(job)
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end
 
       describe '#success' do
         context 'when the wrapped job does not have the success method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.success(job)
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end
 
       describe '#failure' do
         context 'when the wrapped job does not have the failure method defined' do
-          it 'should no raise an exception' do
+          it 'noes raise an exception' do
             handler = Object.new
             job     = WrappingJob.new(handler)
-            expect {
+            expect do
               job.failure(job)
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
       end

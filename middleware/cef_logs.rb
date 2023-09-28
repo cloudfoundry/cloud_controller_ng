@@ -29,7 +29,7 @@ module CloudFoundry
           "rt=#{(Time.now.utc.to_f * 1000).to_i} " \
           "suser=#{escape_extension(user_name)} " \
           "suid=#{escape_extension(user_guid)} " \
-          "request=#{escape_extension(request.filtered_path)} "\
+          "request=#{escape_extension(request.filtered_path)} " \
           "requestMethod=#{escape_extension(request.method)} " \
           "src=#{escape_extension(client_ip(request))} dst=#{@external_ip} " \
           "cs1Label=userAuthenticationMechanism cs1=#{auth_method} " \

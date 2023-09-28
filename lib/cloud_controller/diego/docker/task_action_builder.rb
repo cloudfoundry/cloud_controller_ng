@@ -23,7 +23,7 @@ module VCAP::CloudController
               args: launcher_args,
               log_source: "APP/TASK/#{task.name}",
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env: task_environment_variables,
+              env: task_environment_variables
             )
           )
         end
@@ -33,10 +33,10 @@ module VCAP::CloudController
 
           [::Diego::Bbs::Models::ImageLayer.new(
             name: 'docker-lifecycle',
-            url:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
+            url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
           )]
         end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(bundle),
             to: '/tmp/lifecycle',
-            cache_key: 'docker-lifecycle',
+            cache_key: 'docker-lifecycle'
           )]
         end
 

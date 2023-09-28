@@ -32,7 +32,7 @@ module VCAP::CloudController
     def invalid_url?
       begin
         URI(route_service_url)
-      rescue
+      rescue StandardError
         return true
       end
 

@@ -7,11 +7,11 @@ module RuboCop
         # Postgres: `String` and `String, text: true` are `TEXT` and has a max size of ~1GB
         # This linter ensures we have a consistent size limit across all DBs which enables users to
         #   transfer from Postgres to MySQL without truncating tables.
-        COLUMN_ADDING_METHODS = %i{
+        COLUMN_ADDING_METHODS = %i[
           add_column set_column_type String
-        }.freeze
+        ].freeze
         STRING_SIZE_WARNING = 'Please specify an explicit size for String columns.' +
-          ' `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'.freeze
+                              ' `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'.freeze
         STRING_TEXT_WARNING = 'Considering using string with an appropriate size rather than `text: true`. The size of `text: true` depends on MySQL vs Postgres'.freeze
 
         def on_block(node)
@@ -38,11 +38,11 @@ module RuboCop
         private
 
         def node_has_hash_key?(node, name)
-          node.each_descendant(:hash).any? {
-            |hash| hash.each_pair.any? { |pair|
+          node.each_descendant(:hash).any? do |hash|
+            hash.each_pair.any? do |pair|
               pair.key.children[0] == name && (!block_given? || yield(pair.value))
-            }
-          }
+            end
+          end
         end
 
         def has_const_child(node, value)

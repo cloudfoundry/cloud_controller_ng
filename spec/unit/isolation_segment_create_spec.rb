@@ -6,18 +6,18 @@ module VCAP::CloudController
     describe 'create' do
       it 'creates a isolation segment' do
         message = VCAP::CloudController::IsolationSegmentCreateMessage.new({
-          name: 'my-iso-seg',
-          metadata: {
-            labels: {
-              release: 'stable',
-              'seriouseats.com/potato' => 'mashed'
-            },
-            annotations: {
-              tomorrow: 'land',
-              backstreet: 'boys'
-            }
-          }
-        })
+                                                                             name: 'my-iso-seg',
+                                                                             metadata: {
+                                                                               labels: {
+                                                                                 release: 'stable',
+                                                                                 'seriouseats.com/potato' => 'mashed'
+                                                                               },
+                                                                               annotations: {
+                                                                                 tomorrow: 'land',
+                                                                                 backstreet: 'boys'
+                                                                               }
+                                                                             }
+                                                                           })
         iso_seg = IsolationSegmentCreate.create(message)
 
         expect(iso_seg.name).to eq('my-iso-seg')
@@ -39,9 +39,9 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = VCAP::CloudController::IsolationSegmentCreateMessage.new(name: 'foobar')
-          expect {
+          expect do
             IsolationSegmentCreate.create(message)
-          }.to raise_error(IsolationSegmentCreate::Error, 'blork is busted')
+          end.to raise_error(IsolationSegmentCreate::Error, 'blork is busted')
         end
       end
     end

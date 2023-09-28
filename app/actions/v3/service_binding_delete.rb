@@ -33,11 +33,9 @@ module VCAP::CloudController
           update_last_operation(binding, operation: result[:operation])
         end
 
-        return result
-      rescue => e
-        unless e.is_a? ConcurrencyError
-          update_last_operation(binding, state: 'failed', description: e.message)
-        end
+        result
+      rescue StandardError => e
+        update_last_operation(binding, state: 'failed', description: e.message) unless e.is_a? ConcurrencyError
 
         raise e
       end
@@ -51,18 +49,19 @@ module VCAP::CloudController
           update_last_operation(
             binding,
             description: details[:last_operation][:description],
-            operation: binding.last_operation.broker_provided_operation)
-          return ContinuePolling.call(details[:retry_after])
+            operation: binding.last_operation.broker_provided_operation
+          )
+          ContinuePolling.call(details[:retry_after])
         when 'succeeded'
           perform_delete_actions(binding)
-          return PollingFinished
+          PollingFinished
         when 'failed'
           update_last_operation(binding, state: 'failed', description: details[:last_operation][:description])
           raise LastOperationFailedState
         end
       rescue LastOperationFailedState => e
         raise e
-      rescue => e
+      rescue StandardError => e
         update_last_operation(binding, state: 'failed', description: e.message)
         raise e
       end
@@ -79,11 +78,11 @@ module VCAP::CloudController
         details[:async] ? DeleteStarted.call(details[:operation]) : DeleteComplete
       rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
         broker_concurrency_error!
-      rescue CloudController::Errors::ApiError => err
-        broker_concurrency_error! if err.name == 'AsyncServiceBindingOperationInProgress'
-        unprocessable!(binding, err)
-      rescue => err
-        unprocessable!(binding, err)
+      rescue CloudController::Errors::ApiError => e
+        broker_concurrency_error! if e.name == 'AsyncServiceBindingOperationInProgress'
+        unprocessable!(binding, e)
+      rescue StandardError => e
+        unprocessable!(binding, e)
       end
 
       def update_last_operation(binding, description: nil, state: 'in progress', operation: nil)
@@ -94,7 +93,8 @@ module VCAP::CloudController
             state: state,
             description: description,
             broker_provided_operation: operation || binding.last_operation&.broker_provided_operation
-          })
+          }
+        )
       end
 
       def unprocessable!(binding, err)

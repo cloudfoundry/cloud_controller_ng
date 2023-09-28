@@ -15,7 +15,7 @@ module CloudController
 
         begin
           checksums = packer_implementation.send_package_to_blobstore(@package_guid, @uploaded_files_path, @cached_files_fingerprints)
-        rescue => e
+        rescue StandardError => e
           package.fail_upload!(e.message)
           raise e
         end

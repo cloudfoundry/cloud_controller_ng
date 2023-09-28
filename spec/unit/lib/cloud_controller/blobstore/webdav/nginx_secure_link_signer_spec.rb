@@ -6,19 +6,19 @@ module CloudController
     RSpec.describe NginxSecureLinkSigner do
       subject(:signer) do
         NginxSecureLinkSigner.new(
-          internal_endpoint:    internal_endpoint,
+          internal_endpoint: internal_endpoint,
           internal_path_prefix: internal_path_prefix,
-          public_endpoint:      public_endpoint,
-          public_path_prefix:   public_path_prefix,
-          basic_auth_user:      user,
-          basic_auth_password:  password,
-          httpclient:           httpclient
+          public_endpoint: public_endpoint,
+          public_path_prefix: public_path_prefix,
+          basic_auth_user: user,
+          basic_auth_password: password,
+          httpclient: httpclient
         )
       end
 
       let(:httpclient) { instance_double(HTTPClient) }
 
-      let(:expires) { 16726859876 } # some time in the year 2500
+      let(:expires) { 16_726_859_876 } # some time in the year 2500
 
       let(:internal_endpoint) { 'http://internal.example.com' }
       let(:internal_path_prefix) { nil }
@@ -64,18 +64,18 @@ module CloudController
           let(:response) { instance_double(HTTP::Message, status: 401, content: '') }
 
           it 'raises an error' do
-            expect {
+            expect do
               signer.sign_internal_url(expires: expires, path: 'some/path')
-            }.to raise_error(SigningRequestError, /Could not get a signed url/)
+            end.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
         end
 
         it 'raises SigningRequestError when HTTPClient raises SSLError' do
           allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new('My SSL Error'))
 
-          expect {
+          expect do
             signer.sign_internal_url(expires: expires, path: 'some/path')
-          }.to raise_error(SigningRequestError, /My SSL Error/)
+          end.to raise_error(SigningRequestError, /My SSL Error/)
         end
       end
 
@@ -122,18 +122,18 @@ module CloudController
           let(:response) { instance_double(HTTP::Message, status: 401, content: '') }
 
           it 'raises an error' do
-            expect {
+            expect do
               signer.sign_public_url(expires: expires, path: 'some/path')
-            }.to raise_error(SigningRequestError, /Could not get a signed url/)
+            end.to raise_error(SigningRequestError, /Could not get a signed url/)
           end
         end
 
         it 'raises SigningRequestError when HTTPClient raises SSLError' do
           allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new('My SSL Error'))
 
-          expect {
+          expect do
             signer.sign_internal_url(expires: expires, path: 'some/path')
-          }.to raise_error(SigningRequestError, /My SSL Error/)
+          end.to raise_error(SigningRequestError, /My SSL Error/)
         end
       end
     end

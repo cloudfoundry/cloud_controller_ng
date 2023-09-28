@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class FieldServiceInstanceSpaceDecorator
     def self.match?(fields)
-      fields.is_a?(Hash) && fields[:space]&.to_set&.intersect?(self.allowed)
+      fields.is_a?(Hash) && fields[:space]&.to_set&.intersect?(allowed)
     end
 
     def self.allowed

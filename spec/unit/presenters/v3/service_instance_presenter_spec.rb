@@ -26,13 +26,13 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::ServiceInstanceAnnotationModel.make(
         key_name: 'altitude',
         value: '14,412',
-        resource_guid: service_instance.guid,
+        resource_guid: service_instance.guid
       )
 
       VCAP::CloudController::ServiceInstanceAnnotationModel.make(
         key_name: 'maize',
         value: 'hfcs',
-        resource_guid: service_instance.guid,
+        resource_guid: service_instance.guid
       )
     end
 
@@ -43,70 +43,70 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
           name: 'denise-db',
-          tags: ['tag1', 'tag2'],
+          tags: %w[tag1 tag2],
           maintenance_info: maintenance_info,
-          dashboard_url: 'https://my-fantistic-service.com',
+          dashboard_url: 'https://my-fantistic-service.com'
         )
       end
 
       it 'presents the managed service instance' do
         expect(result).to eq({
-          guid: service_instance.guid,
-          name: 'denise-db',
-          created_at: service_instance.created_at,
-          updated_at: service_instance.updated_at,
-          type: 'managed',
-          tags: ['tag1', 'tag2'],
-          maintenance_info: {},
-          upgrade_available: false,
-          dashboard_url: 'https://my-fantistic-service.com',
-          last_operation: {},
-          metadata: {
-            labels: {
-              release: 'stable',
-              'canberra.au/potato': 'mashed'
-            },
-            annotations: {
-              altitude: '14,412',
-              maize: 'hfcs'
-            }
-          },
-          relationships: {
-            service_plan: {
-              data: {
-                guid: plan.guid
-              }
-            },
-            space: {
-              data: {
-                guid: service_instance.space.guid
-              }
-            }
-          },
-          links: {
-            service_plan: {
-              href: "#{link_prefix}/v3/service_plans/#{plan.guid}"
-            },
-            space: {
-              href: "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
-            },
-            self: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
-            },
-            parameters: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/parameters"
-            },
-            service_credential_bindings: {
-              href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
-            },
-            service_route_bindings: {
-              href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
-            },
-            shared_spaces: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces"
-            }
-          }
-        })
+                               guid: service_instance.guid,
+                               name: 'denise-db',
+                               created_at: service_instance.created_at,
+                               updated_at: service_instance.updated_at,
+                               type: 'managed',
+                               tags: %w[tag1 tag2],
+                               maintenance_info: {},
+                               upgrade_available: false,
+                               dashboard_url: 'https://my-fantistic-service.com',
+                               last_operation: {},
+                               metadata: {
+                                 labels: {
+                                   release: 'stable',
+                                   'canberra.au/potato': 'mashed'
+                                 },
+                                 annotations: {
+                                   altitude: '14,412',
+                                   maize: 'hfcs'
+                                 }
+                               },
+                               relationships: {
+                                 service_plan: {
+                                   data: {
+                                     guid: plan.guid
+                                   }
+                                 },
+                                 space: {
+                                   data: {
+                                     guid: service_instance.space.guid
+                                   }
+                                 }
+                               },
+                               links: {
+                                 service_plan: {
+                                   href: "#{link_prefix}/v3/service_plans/#{plan.guid}"
+                                 },
+                                 space: {
+                                   href: "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
+                                 },
+                                 self: {
+                                   href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
+                                 },
+                                 parameters: {
+                                   href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/parameters"
+                                 },
+                                 service_credential_bindings: {
+                                   href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
+                                 },
+                                 service_route_bindings: {
+                                   href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
+                                 },
+                                 shared_spaces: {
+                                   href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces"
+                                 }
+                               }
+                             })
       end
 
       describe 'last_operation' do
@@ -124,12 +124,12 @@ module VCAP::CloudController::Presenters::V3
 
         it 'presents the last operation' do
           expect(result[:last_operation]).to eq({
-            type: 'create',
-            state: 'succeeded',
-            description: 'did something cool',
-            created_at: last_operation.created_at,
-            updated_at: last_operation.updated_at,
-          })
+                                                  type: 'create',
+                                                  state: 'succeeded',
+                                                  description: 'did something cool',
+                                                  created_at: last_operation.created_at,
+                                                  updated_at: last_operation.updated_at
+                                                })
         end
       end
 
@@ -149,7 +149,7 @@ module VCAP::CloudController::Presenters::V3
       describe 'upgrade available' do
         context 'plan has the same maintenance_info' do
           let(:maintenance_info) { { version: '1.0.0' } }
-          let(:plan) { VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info) }
+          let(:plan) { VCAP::CloudController::ServicePlan.make(maintenance_info:) }
 
           it 'is false' do
             expect(result[:upgrade_available]).to be(false)
@@ -171,9 +171,9 @@ module VCAP::CloudController::Presenters::V3
       let(:service_instance) do
         si = VCAP::CloudController::UserProvidedServiceInstance.make(
           name: 'yu-db',
-          tags: ['tag3', 'tag4'],
+          tags: %w[tag3 tag4],
           syslog_drain_url: 'https://syslog-drain.com',
-          route_service_url: 'https://route-service.com',
+          route_service_url: 'https://route-service.com'
         )
         si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
           type: 'create',
@@ -184,63 +184,63 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the user-provided service instance' do
         expect(result).to eq({
-          guid: service_instance.guid,
-          name: 'yu-db',
-          created_at: service_instance.created_at,
-          updated_at: service_instance.updated_at,
-          type: 'user-provided',
-          tags: ['tag3', 'tag4'],
-          last_operation: {
-            created_at: service_instance.last_operation.created_at,
-            updated_at: service_instance.last_operation.updated_at,
-            state: 'succeeded',
-            type: 'create',
-            description: 'description goes here'
-          },
-          syslog_drain_url: 'https://syslog-drain.com',
-          route_service_url: 'https://route-service.com',
-          metadata: {
-            labels: {
-              release: 'stable',
-              'canberra.au/potato': 'mashed'
-            },
-            annotations: {
-              altitude: '14,412',
-              maize: 'hfcs'
-            }
-          },
-          relationships: {
-            space: {
-              data: {
-                guid: service_instance.space.guid
-              }
-            }
-          },
-          links: {
-            space: {
-              href: "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
-            },
-            self: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
-            },
-            credentials: {
-              href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/credentials"
-            },
-            service_credential_bindings: {
-              href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
-            },
-            service_route_bindings: {
-              href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
-            }
-          }
-        })
+                               guid: service_instance.guid,
+                               name: 'yu-db',
+                               created_at: service_instance.created_at,
+                               updated_at: service_instance.updated_at,
+                               type: 'user-provided',
+                               tags: %w[tag3 tag4],
+                               last_operation: {
+                                 created_at: service_instance.last_operation.created_at,
+                                 updated_at: service_instance.last_operation.updated_at,
+                                 state: 'succeeded',
+                                 type: 'create',
+                                 description: 'description goes here'
+                               },
+                               syslog_drain_url: 'https://syslog-drain.com',
+                               route_service_url: 'https://route-service.com',
+                               metadata: {
+                                 labels: {
+                                   release: 'stable',
+                                   'canberra.au/potato': 'mashed'
+                                 },
+                                 annotations: {
+                                   altitude: '14,412',
+                                   maize: 'hfcs'
+                                 }
+                               },
+                               relationships: {
+                                 space: {
+                                   data: {
+                                     guid: service_instance.space.guid
+                                   }
+                                 }
+                               },
+                               links: {
+                                 space: {
+                                   href: "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
+                                 },
+                                 self: {
+                                   href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}"
+                                 },
+                                 credentials: {
+                                   href: "#{link_prefix}/v3/service_instances/#{service_instance.guid}/credentials"
+                                 },
+                                 service_credential_bindings: {
+                                   href: "#{link_prefix}/v3/service_credential_bindings?service_instance_guids=#{service_instance.guid}"
+                                 },
+                                 service_route_bindings: {
+                                   href: "#{link_prefix}/v3/service_route_bindings?service_instance_guids=#{service_instance.guid}"
+                                 }
+                               }
+                             })
       end
     end
 
     context 'when a decorator is provided' do
       let(:fake_decorator) { double }
       let(:impl) do
-        ->(hash, resources) do
+        lambda do |hash, resources|
           hash.tap { |h| h[:included] = { resource: { guid: "included #{resources[0].guid}" } } }
         end
       end

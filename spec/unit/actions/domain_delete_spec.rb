@@ -18,9 +18,9 @@ module VCAP::CloudController
       let!(:domain) { Domain.make(owning_organization: org) }
 
       it 'deletes the domain record' do
-        expect {
+        expect do
           domain_delete.delete([domain])
-        }.to change { Domain.count }.by(-1)
+        end.to change(Domain, :count).by(-1)
         expect { domain.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -29,8 +29,8 @@ module VCAP::CloudController
         let(:process_type) { 'web' }
         let(:process) { ProcessModel.make(app: app, type: process_type) }
         let(:route) { Route.make(domain: domain, space: space, host: 'test') }
-        let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
-        let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
+        let(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
+        let!(:route_binding) { RouteBinding.make(route:, service_instance:) }
         let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type, app_port: 8080) }
 
         before do
@@ -38,28 +38,28 @@ module VCAP::CloudController
         end
 
         it 'deletes associated route mappings' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { RouteMappingModel.count }.by(-1)
-          expect(route.exists?).to be_falsey
-          expect(route_mapping.exists?).to be_falsey
-          expect(domain.exists?).to be_falsey
+          end.to change(RouteMappingModel, :count).by(-1)
+          expect(route).not_to exist
+          expect(route_mapping).not_to exist
+          expect(domain).not_to exist
         end
 
         it 'deletes associated route bindings' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { RouteBinding.count }.by(-1)
-          expect(route_binding.exists?).to be_falsey
-          expect(domain.exists?).to be_falsey
+          end.to change(RouteBinding, :count).by(-1)
+          expect(route_binding).not_to exist
+          expect(domain).not_to exist
         end
 
         it 'deletes routes' do
-          expect {
+          expect do
             domain_delete.delete([domain])
-          }.to change { Route.count }.by(-1)
-          expect(route.exists?).to be_falsey
-          expect(domain.exists?).to be_falsey
+          end.to change(Route, :count).by(-1)
+          expect(route).not_to exist
+          expect(domain).not_to exist
         end
       end
     end

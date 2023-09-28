@@ -36,23 +36,23 @@ module VCAP::CloudController
       def encrypt_raw(input, key, salt)
         Base64.strict_encode64(run_cipher(
                                  make_cipher.encrypt,
-          input,
-          salt,
-          key,
-          iterations: pbkdf2_hmac_iterations
-        ))
+                                 input,
+                                 salt,
+                                 key,
+                                 iterations: pbkdf2_hmac_iterations
+                               ))
       end
 
-      def decrypt(encrypted_input, salt, label: nil, iterations:)
+      def decrypt(encrypted_input, salt, iterations:, label: nil)
         return unless encrypted_input
 
         key = key_to_use(label)
 
-        decrypt_raw(encrypted_input, key, salt, iterations: iterations)
+        decrypt_raw(encrypted_input, key, salt, iterations:)
       end
 
       def decrypt_raw(encrypted_input, key, salt, iterations:)
-        run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key, iterations: iterations)
+        run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key, iterations:)
       end
 
       def encrypted_classes
@@ -140,8 +140,8 @@ module VCAP::CloudController
 
       module ClassMethods
         def all_encrypted_fields
-          if self.superclass.respond_to? :all_encrypted_fields
-            encrypted_fields + self.superclass.all_encrypted_fields
+          if superclass.respond_to? :all_encrypted_fields
+            encrypted_fields + superclass.all_encrypted_fields
           else
             encrypted_fields
           end
@@ -161,11 +161,11 @@ module VCAP::CloudController
           raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
           raise 'Field "encryption_iterations" does not exist' unless columns.include?(:encryption_iterations)
 
-          fields = { field_name: field_name, salt_name: salt_name }
-          fields.merge!({ storage_column: storage_column }) if storage_column
+          fields = { field_name:, salt_name: }
+          fields.merge!({ storage_column: }) if storage_column
           encrypted_fields << fields
 
-          Encryptor.encrypted_classes << self.name
+          Encryptor.encrypted_classes << name
 
           define_method "generate_#{salt_name}" do
             return if send(salt_name).present?

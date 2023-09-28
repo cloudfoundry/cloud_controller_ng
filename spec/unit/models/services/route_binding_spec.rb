@@ -4,6 +4,7 @@ require_relative 'service_operation_shared'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::RouteBinding, type: :model do
     let(:binding) { RouteBinding.new }
+
     it { is_expected.to have_timestamp_columns }
 
     describe '#new' do
@@ -32,8 +33,8 @@ module VCAP::CloudController
 
       it 'requires a service instance to have route_forwarding enabled' do
         space = Space.make
-        binding.route = Route.make space: space
-        binding.service_instance = ManagedServiceInstance.make space: space
+        binding.route = Route.make(space:)
+        binding.service_instance = ManagedServiceInstance.make(space:)
 
         binding.valid?
         expect(binding.errors[:service_instance]).to eq [:route_binding_not_allowed]
@@ -43,7 +44,7 @@ module VCAP::CloudController
         space = Space.make
         other_space = Space.make
 
-        service_instance = ManagedServiceInstance.make(:routing, space: space)
+        service_instance = ManagedServiceInstance.make(:routing, space:)
         route = Route.make space: other_space
 
         binding.service_instance = service_instance
@@ -58,13 +59,13 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:service_offering) { Service.make(requires: ['route_forwarding']) }
       let(:service_plan) { ServicePlan.make(service: service_offering) }
-      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-      let(:route) { Route.make(space: space) }
+      let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+      let(:route) { Route.make(space:) }
       let(:route_service_url) { 'https://foo.com' }
       let(:route_binding) do
         RouteBinding.new(
-          service_instance: service_instance,
-          route: route,
+          service_instance:,
+          route:
         )
       end
 
@@ -75,7 +76,7 @@ module VCAP::CloudController
           description: '10%'
         }
         attributes = {
-          route_service_url: route_service_url
+          route_service_url:
         }
         result = route_binding.save_with_new_operation(attributes, last_operation)
 
@@ -90,10 +91,10 @@ module VCAP::CloudController
       end
 
       context 'when saving the binding operation fails' do
-        it 'should rollback the binding' do
+        it 'rollbacks the binding' do
           invalid_new_operation = {
             state: 'will fail',
-            broker_provided_operation: 'too long' * 10000
+            broker_provided_operation: 'too long' * 10_000
           }
           expect { route_binding.save_with_new_operation({}, invalid_new_operation) }.to raise_error(Sequel::DatabaseError)
           expect(RouteBinding.count).to eq(0)
@@ -107,7 +108,7 @@ module VCAP::CloudController
 
           expect(route_binding.last_operation.state).to eq 'in progress'
           expect(route_binding.last_operation.type).to eq 'delete'
-          expect(route_binding.last_operation.description).to eq nil
+          expect(route_binding.last_operation.description).to be_nil
           expect(RouteBinding.count).to eq(1)
           expect(RouteBindingOperation.count).to eq(1)
         end

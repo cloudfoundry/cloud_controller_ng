@@ -13,7 +13,7 @@ module VCAP::CloudController::Validators
     end
 
     subject(:message) do
-      class_with_url.new(url: url)
+      class_with_url.new(url:)
     end
 
     context 'when the scheme is http' do

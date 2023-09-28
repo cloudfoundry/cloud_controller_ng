@@ -139,7 +139,7 @@ module VCAP::CloudController::RestController
         raise CloudController::Errors::InvalidAuthToken
       else
         logger.error 'Unexpected condition: valid token with no user/client id ' \
-                       "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
+                     "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
         raise CloudController::Errors::InvalidAuthToken
       end
     end
@@ -147,7 +147,8 @@ module VCAP::CloudController::RestController
     def check_arguments_encoding(args)
       args.each do |arg|
         if arg.respond_to?(:valid_encoding?) && !arg.valid_encoding?
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', "Invalid encoding for parameter: #{arg}")
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest',
+                                                                   "Invalid encoding for parameter: #{arg}")
         end
       end
     end
@@ -186,9 +187,9 @@ module VCAP::CloudController::RestController
 
     def check_read_permissions!
       return if SecurityContext.roles.admin? ||
-        SecurityContext.roles.admin_read_only? ||
-        SecurityContext.roles.global_auditor? ||
-        SecurityContext.scopes.include?('cloud_controller.read')
+                SecurityContext.roles.admin_read_only? ||
+                SecurityContext.roles.global_auditor? ||
+                SecurityContext.scopes.include?('cloud_controller.read')
 
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
@@ -229,7 +230,7 @@ module VCAP::CloudController::RestController
       #
       # @return [String] basename of the class
       def class_basename
-        self.name.split('::').last
+        name.split('::').last
       end
 
       # path
@@ -296,9 +297,7 @@ module VCAP::CloudController::RestController
         controller.before path do
           credentials = yield
 
-          unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials)
-            raise CloudController::Errors::NotAuthenticated
-          end
+          raise CloudController::Errors::NotAuthenticated unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials)
         end
       end
 

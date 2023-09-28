@@ -15,7 +15,7 @@ module VCAP::CloudController
           name: message.name,
           stack: message.stack,
           enabled: (message.enabled.nil? ? DEFAULT_ENABLED : message.enabled),
-          locked: (message.locked.nil? ? DEFAULT_LOCKED : message.locked),
+          locked: (message.locked.nil? ? DEFAULT_LOCKED : message.locked)
         )
 
         MetadataUpdate.update(buildpack, message)
@@ -27,15 +27,9 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, create_message)
-      if error.errors.on(:stack)&.include?(:buildpack_stack_does_not_exist)
-        error!(%{Stack '#{create_message.stack}' does not exist})
-      end
-      if error.errors.on([:name, :stack])&.include?(:unique)
-        error!(%{Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists})
-      end
-      if error.errors.on(:stack)&.include?(:unique)
-        error!(%{Buildpack with name '#{error.model.name}' and an unassigned stack already exists})
-      end
+      error!(%(Stack '#{create_message.stack}' does not exist)) if error.errors.on(:stack)&.include?(:buildpack_stack_does_not_exist)
+      error!(%(Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists)) if error.errors.on(%i[name stack])&.include?(:unique)
+      error!(%(Buildpack with name '#{error.model.name}' and an unassigned stack already exists)) if error.errors.on(:stack)&.include?(:unique)
 
       error!(error.message)
     end

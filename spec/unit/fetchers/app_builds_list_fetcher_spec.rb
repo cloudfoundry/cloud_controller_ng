@@ -39,14 +39,14 @@ module VCAP::CloudController
 
         it 'returns all of the builds' do
           expect(subject.count).to eq(2)
-          expect(subject.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+          expect(subject.all).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1)
         end
 
         context 'filtering states' do
           let(:filters) { { states: [BuildModel::STAGED_STATE] } }
 
           it 'returns all of the builds with the requested states' do
-            expect(subject.all).to match_array([staged_build_for_app1_space1])
+            expect(subject.all).to contain_exactly(staged_build_for_app1_space1)
           end
         end
       end

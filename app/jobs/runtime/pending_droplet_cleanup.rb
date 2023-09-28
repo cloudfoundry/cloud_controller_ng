@@ -15,8 +15,8 @@ module VCAP::CloudController
             where(state: [DropletModel::STAGING_STATE, DropletModel::PROCESSING_UPLOAD_STATE]).
             where(updated_at_past_threshold).
             update(
-              state:      DropletModel::FAILED_STATE,
-              error_id:   'StagingTimeExpired',
+              state: DropletModel::FAILED_STATE,
+              error_id: 'StagingTimeExpired',
               updated_at: DropletModel.dataset.current_datetime
             )
         end

@@ -3,15 +3,15 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_MANAGER,
     VCAP::CloudController::Membership::ORG_AUDITOR,
     VCAP::CloudController::Membership::ORG_USER,
-    VCAP::CloudController::Membership::ORG_BILLING_MANAGER,
+    VCAP::CloudController::Membership::ORG_BILLING_MANAGER
   ].freeze
 
   ROLES_FOR_ORG_CONTENT_READING = [
-    VCAP::CloudController::Membership::ORG_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER
   ].freeze
 
   ROLES_FOR_ORG_WRITING = [
-    VCAP::CloudController::Membership::ORG_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER
   ].freeze
 
   ROLES_FOR_SPACE_READING ||= [
@@ -19,26 +19,26 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
     VCAP::CloudController::Membership::ORG_MANAGER,
-    VCAP::CloudController::Membership::SPACE_SUPPORTER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
   ].freeze
 
   ROLES_FOR_DROPLET_DOWLOAD ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
-    VCAP::CloudController::Membership::ORG_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER
   ].freeze
 
   ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS ||= [
     VCAP::CloudController::Membership::ORG_MANAGER,
-    VCAP::CloudController::Membership::ORG_AUDITOR,
+    VCAP::CloudController::Membership::ORG_AUDITOR
   ].freeze
 
   SPACE_ROLES ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
-    VCAP::CloudController::Membership::SPACE_SUPPORTER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
   ].freeze
 
   SPACE_ROLES_FOR_EVENTS ||= [
@@ -48,7 +48,7 @@ class VCAP::CloudController::Permissions
   ].freeze
 
   ROLES_FOR_SPACE_SECRETS_READING ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_DEVELOPER
   ].freeze
 
   ROLES_FOR_SPACE_SERVICES_READING ||= [
@@ -61,24 +61,24 @@ class VCAP::CloudController::Permissions
   ].freeze
 
   ROLES_FOR_SPACE_WRITING ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_DEVELOPER
   ].freeze
 
   ROLES_FOR_APP_MANAGING ||= (ROLES_FOR_SPACE_WRITING + [
-    VCAP::CloudController::Membership::SPACE_SUPPORTER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
   ]).freeze
 
   ROLES_FOR_SPACE_UPDATING ||= [
     VCAP::CloudController::Membership::SPACE_MANAGER,
-    VCAP::CloudController::Membership::ORG_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER
   ].freeze
 
   ROLES_FOR_ROUTE_WRITING ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+    VCAP::CloudController::Membership::SPACE_DEVELOPER
   ].freeze
 
   ROLES_FOR_APP_ENVIRONMENT_VARIABLES_READING ||= (ROLES_FOR_SPACE_SECRETS_READING + [
-    VCAP::CloudController::Membership::SPACE_SUPPORTER,
+    VCAP::CloudController::Membership::SPACE_SUPPORTER
   ]).freeze
 
   def initialize(user)
@@ -102,11 +102,9 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_org_guids_query
-    if can_read_globally?
-      raise 'must not be called for users that can read globally'
-    else
-      membership.authorized_org_guids_subquery(ROLES_FOR_ORG_READING)
-    end
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_org_guids_subquery(ROLES_FOR_ORG_READING)
   end
 
   def readable_orgs_query
@@ -157,19 +155,15 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_spaces_query
-    if can_read_globally?
-      raise 'must not be called for users that can read globally'
-    else
-      membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING)
-    end
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING)
   end
 
   def readable_space_guids_query
-    if can_read_globally?
-      raise 'must not be called for users that can read globally'
-    else
-      membership.authorized_space_guids_subquery(ROLES_FOR_SPACE_READING)
-    end
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_space_guids_subquery(ROLES_FOR_SPACE_READING)
   end
 
   def can_read_from_space?(space_id, org_id)
@@ -250,11 +244,9 @@ class VCAP::CloudController::Permissions
   end
 
   def space_guids_with_readable_routes_query
-    if can_read_globally?
-      raise 'must not be called for users that can read globally'
-    else
-      membership.authorized_space_guids_subquery(ROLES_FOR_ROUTE_READING)
-    end
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_space_guids_subquery(ROLES_FOR_ROUTE_READING)
   end
 
   def can_read_app_environment_variables?(space_id, org_id)
@@ -268,7 +260,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_app_guids
-    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).select(:guid).map(&:guid)
+    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).pluck(:guid)
   end
 
   def readable_space_quota_guids

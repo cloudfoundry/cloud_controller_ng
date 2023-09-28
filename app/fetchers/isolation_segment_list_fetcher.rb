@@ -16,18 +16,14 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:guids)
-          dataset = dataset.where("#{IsolationSegmentModel.table_name}__guid".to_sym => message.guids)
-        end
+        dataset = dataset.where("#{IsolationSegmentModel.table_name}__guid".to_sym => message.guids) if message.requested?(:guids)
 
-        if message.requested?(:names)
-          dataset = dataset.where("#{IsolationSegmentModel.table_name}__name".to_sym => message.names)
-        end
+        dataset = dataset.where("#{IsolationSegmentModel.table_name}__name".to_sym => message.names) if message.requested?(:names)
 
         if message.requested?(:organization_guids)
           dataset = dataset.join(:organizations_isolation_segments, {
-            Sequel[:isolation_segments][:guid] => Sequel[:organizations_isolation_segments][:isolation_segment_guid]
-          }).where(Sequel.qualify(:organizations_isolation_segments, :organization_guid) => message.organization_guids)
+                                   Sequel[:isolation_segments][:guid] => Sequel[:organizations_isolation_segments][:isolation_segment_guid]
+                                 }).where(Sequel.qualify(:organizations_isolation_segments, :organization_guid) => message.organization_guids)
         end
 
         if message.requested?(:label_selector)
@@ -35,7 +31,7 @@ module VCAP::CloudController
             label_klass: IsolationSegmentLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: IsolationSegmentModel,
+            resource_klass: IsolationSegmentModel
           )
         end
 

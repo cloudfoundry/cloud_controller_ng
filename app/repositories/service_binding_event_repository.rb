@@ -10,10 +10,10 @@ module VCAP::CloudController
           attrs = censor_request_attributes(request)
 
           record_event(
-            type:            'audit.service_binding.start_create',
+            type: 'audit.service_binding.start_create',
             service_binding: service_binding,
             user_audit_info: user_audit_info,
-            metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
+            metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
           )
         end
 
@@ -21,10 +21,10 @@ module VCAP::CloudController
           attrs = censor_request_attributes(request)
 
           record_event(
-            type:            'audit.service_binding.create',
+            type: 'audit.service_binding.create',
             service_binding: service_binding,
             user_audit_info: user_audit_info,
-            metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
+            metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
           )
         end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
             metadata: {
               request: {
                 app_guid: service_binding.app_guid,
-                service_instance_guid: service_binding.service_instance_guid,
+                service_instance_guid: service_binding.service_instance_guid
               }
             }
           )
@@ -50,7 +50,7 @@ module VCAP::CloudController
             metadata: {
               request: {
                 app_guid: service_binding.app_guid,
-                service_instance_guid: service_binding.service_instance_guid,
+                service_instance_guid: service_binding.service_instance_guid
               }
             }
           )
@@ -66,18 +66,18 @@ module VCAP::CloudController
 
         def record_event(type:, service_binding:, user_audit_info:, metadata: {})
           Event.create(
-            type:              type,
-            actor:             user_audit_info.user_guid,
-            actor_type:        'user',
-            actor_name:        user_audit_info.user_email,
-            actor_username:    user_audit_info.user_name,
-            actee:             service_binding.guid,
-            actee_type:        'service_binding',
-            actee_name:        service_binding.name || '',
-            space_guid:        service_binding.space.guid,
+            type: type,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            actee: service_binding.guid,
+            actee_type: 'service_binding',
+            actee_name: service_binding.name || '',
+            space_guid: service_binding.space.guid,
             organization_guid: service_binding.space.organization.guid,
-            timestamp:         Sequel::CURRENT_TIMESTAMP,
-            metadata:          metadata
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            metadata: metadata
           )
         end
       end

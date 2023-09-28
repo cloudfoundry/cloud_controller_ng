@@ -7,11 +7,11 @@ module VCAP::CloudController
   RSpec.describe BuildCreate do
     subject(:action) do
       BuildCreate.new(
-        user_audit_info:         user_audit_info,
+        user_audit_info: user_audit_info,
         memory_limit_calculator: memory_limit_calculator,
-        disk_limit_calculator:   disk_limit_calculator,
+        disk_limit_calculator: disk_limit_calculator,
         log_rate_limit_calculator: log_rate_limit_calculator,
-        environment_presenter:   environment_builder
+        environment_presenter: environment_builder
       )
     end
 
@@ -27,7 +27,7 @@ module VCAP::CloudController
         staging_memory_in_mb: staging_memory_in_mb,
         staging_disk_in_mb: staging_disk_in_mb,
         staging_log_rate_limit_bytes_per_second: staging_log_rate_limit_bytes_per_second,
-        lifecycle: request_lifecycle,
+        lifecycle: request_lifecycle
       }.deep_stringify_keys
     end
     let(:request_lifecycle) do
@@ -52,14 +52,14 @@ module VCAP::CloudController
 
     let(:space) { Space.make }
     let(:org) { space.organization }
-    let(:app) { AppModel.make(space: space) }
+    let(:app) { AppModel.make(space:) }
     let!(:process) { ProcessModel.make(app: app, memory: 8192, disk_quota: 512, log_rate_limit: 7168) }
 
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
     let(:lifecycle_data) do
       {
-        stack:      stack.name,
+        stack: stack.name,
         buildpacks: [buildpack_git_url]
       }
     end
@@ -90,9 +90,9 @@ module VCAP::CloudController
         it 'creates a build' do
           build = nil
 
-          expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to change { BuildModel.count }.by(1)
+          expect do
+            build = action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to change(BuildModel, :count).by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
           expect(build.app_guid).to eq(app.guid)
@@ -106,8 +106,8 @@ module VCAP::CloudController
           expect(build.created_by_user_email).to eq('charles@las.gym')
           expect(build).to have_labels(
             { prefix: nil, key_name: 'release', value: 'stable' },
-                            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-            )
+            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+          )
           expect(build).to have_annotations(
             { key_name: 'anno', value: 'tations' }
           )
@@ -115,14 +115,12 @@ module VCAP::CloudController
 
         it 'creates an app usage event for STAGING_STARTED' do
           build = nil
-          expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to change {
-            AppUsageEvent.count
-          }.by(1)
+          expect do
+            build = action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to change(AppUsageEvent, :count).by(1)
 
           event = AppUsageEvent.last
-          expect(event).to_not be_nil
+          expect(event).not_to be_nil
           expect(event.state).to eq('STAGING_STARTED')
           expect(event.previous_state).to eq('STAGING')
           expect(event.instance_count).to eq(1)
@@ -140,12 +138,12 @@ module VCAP::CloudController
           expect(event.package_state).to eq('READY')
           expect(event.previous_package_state).to eq('READY')
 
-          expect(event.buildpack_guid).to eq(nil)
+          expect(event.buildpack_guid).to be_nil
           expect(event.buildpack_name).to eq(buildpack_git_url)
         end
 
         it 'creates a build audit event' do
-          build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
+          build = action.create_and_stage(package:, lifecycle:, metadata:)
           event = Event.last
           expect(event.type).to eq('audit.app.build.create')
           expect(event.actor).to eq('1234')
@@ -159,23 +157,23 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space_guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
           expect(event.metadata).to eq({
-            'build_guid'   => build.guid,
-            'package_guid' => package.guid,
-          })
+                                         'build_guid' => build.guid,
+                                         'package_guid' => package.guid
+                                       })
         end
 
         it 'does not create a droplet audit event' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to_not change {
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.not_to(change do
             Event.where(type: 'audit.app.droplet.create').count
-          }
+          end)
         end
       end
 
       describe 'creating a stage request' do
         it 'initiates a staging request' do
-          build = action.create_and_stage(package: package, lifecycle: lifecycle)
+          build = action.create_and_stage(package:, lifecycle:)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
             expect(staging_details.staging_guid).to eq(build.guid)
@@ -194,12 +192,13 @@ module VCAP::CloudController
           before do
             allow(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org).and_return(process.memory)
           end
+
           let(:staging_memory_in_mb) { nil }
 
           it 'uses the app web process memory for staging memory' do
             expect(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org)
 
-            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package:, lifecycle:)
             expect(build.staging_memory_in_mb).to eq(process.memory)
           end
         end
@@ -213,7 +212,7 @@ module VCAP::CloudController
 
           it 'uses the app web process disk for staging disk' do
             expect(disk_limit_calculator).to receive(:get_limit).with(process.disk_quota)
-            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package:, lifecycle:)
             expect(build.staging_disk_in_mb).to eq(process.disk_quota)
           end
         end
@@ -222,12 +221,13 @@ module VCAP::CloudController
           before do
             allow(log_rate_limit_calculator).to receive(:get_limit).with(process.log_rate_limit, space, org).and_return(process.log_rate_limit)
           end
+
           let(:staging_log_rate_limit_bytes_per_second) { nil }
 
           it 'uses the app web process log rate limit for staging log rate limit' do
             expect(log_rate_limit_calculator).to receive(:get_limit).with(process.log_rate_limit, space, org)
 
-            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package:, lifecycle:)
             expect(build.staging_log_rate_limit).to eq(process.log_rate_limit)
           end
         end
@@ -236,9 +236,9 @@ module VCAP::CloudController
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
           let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
           let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
-          let(:shared_isolation_segment) {
+          let(:shared_isolation_segment) do
             VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
-          }
+          end
 
           context 'when the org has a default' do
             context 'and the default is the shared isolation segments' do
@@ -247,7 +247,7 @@ module VCAP::CloudController
               end
 
               it 'does not set an isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle)
+                action.create_and_stage(package:, lifecycle:)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to be_nil
                 end
@@ -261,7 +261,7 @@ module VCAP::CloudController
               end
 
               it 'sets the isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle)
+                action.create_and_stage(package:, lifecycle:)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                 end
@@ -277,7 +277,7 @@ module VCAP::CloudController
                   end
 
                   it 'does not set the isolation segment' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle)
+                    action.create_and_stage(package:, lifecycle:)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to be_nil
                     end
@@ -292,7 +292,7 @@ module VCAP::CloudController
                   end
 
                   it 'sets the IS from the space' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle)
+                    action.create_and_stage(package:, lifecycle:)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to eq(isolation_segment_model_2.name)
                     end
@@ -312,7 +312,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the isolation segment' do
-                  action.create_and_stage(package: package, lifecycle: lifecycle)
+                  action.create_and_stage(package:, lifecycle:)
                   expect(stager).to have_received(:stage) do |staging_details|
                     expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                   end
@@ -325,10 +325,11 @@ module VCAP::CloudController
 
       context 'when the package is not ready' do
         let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
+
         it 'raises an InvalidPackage exception' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.to raise_error(BuildCreate::InvalidPackage, /not ready/)
         end
       end
 
@@ -337,31 +338,31 @@ module VCAP::CloudController
         let!(:enabled_buildpack) { Buildpack.make(name: 'enabled-buildpack') }
         let!(:lifecycle_data_model) do
           VCAP::CloudController::BuildpackLifecycleDataModel.make(
-            app:        app,
+            app: app,
             buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example'],
-            stack:      stack.name
+            stack: stack.name
           )
         end
         let(:lifecycle_data) do
           {
-              stack:      stack.name,
-              buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example']
+            stack: stack.name,
+            buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example']
           }
         end
 
         it 'raises an exception' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to raise_error(CloudController::Errors::ApiError, /'#{disabled_buildpack.name}' are disabled/)
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.to raise_error(CloudController::Errors::ApiError, /'#{disabled_buildpack.name}' are disabled/)
         end
       end
 
       context 'when there is already a staging in progress for the app' do
         it 'raises a StagingInProgress exception' do
           BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to raise_error(BuildCreate::StagingInProgress)
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.to raise_error(BuildCreate::StagingInProgress)
         end
       end
 
@@ -369,10 +370,11 @@ module VCAP::CloudController
         before do
           allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, 'some-message')
         end
+
         it 'raises a LogRateLimitOrgQuotaExceeded error' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitOrgQuotaExceeded, 'some-message')
+          expect do
+            action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitOrgQuotaExceeded, 'some-message')
         end
       end
 
@@ -380,15 +382,16 @@ module VCAP::CloudController
         before do
           allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, 'some-message')
         end
+
         it 'raises a LogRateLimitSpaceQuotaExceeded error' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
-          }.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitSpaceQuotaExceeded, 'some-message')
+          expect do
+            action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to raise_error(::VCAP::CloudController::BuildCreate::LogRateLimitSpaceQuotaExceeded, 'some-message')
         end
       end
 
       describe 'using custom buildpacks' do
-        let!(:app) { AppModel.make(space: space) }
+        let!(:app) { AppModel.make(space:) }
 
         context 'when custom buildpacks are disabled' do
           before { TestConfig.override(disable_custom_buildpacks: true) }
@@ -401,41 +404,45 @@ module VCAP::CloudController
             before do
               app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.create(
                 buildpacks: ['http://example.com/repo.git'],
-                stack:     Stack.make.name,
+                stack: Stack.make.name
               ))
             end
 
             it 'raises an exception' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
             end
 
             it 'does not create any DB records' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle) rescue nil
-              }.not_to change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] }
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              rescue StandardError
+                nil
+              end.not_to(change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] })
             end
           end
 
           context 'when the custom buildpack is set on the build' do
             let(:lifecycle_data) do
               {
-                stack:      stack.name,
-                buildpacks: ['http://example.com/repo.git'],
+                stack: stack.name,
+                buildpacks: ['http://example.com/repo.git']
               }
             end
 
             it 'raises an exception' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
             end
 
             it 'does not create any DB records' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle) rescue nil
-              }.not_to change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] }
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              rescue StandardError
+                nil
+              end.not_to(change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] })
             end
           end
         end
@@ -445,36 +452,36 @@ module VCAP::CloudController
             let!(:app_lifecycle_data_model) do
               BuildpackLifecycleDataModel.make(
                 buildpacks: ['http://example.com/repo.git'],
-                app:       app
+                app: app
               )
             end
 
             let(:lifecycle_data) do
               {
-                stack:      stack.name,
-                buildpacks: nil,
+                stack: stack.name,
+                buildpacks: nil
               }
             end
 
             it 'successfully creates a build' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to change { BuildModel.count }.by(1)
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to change(BuildModel, :count).by(1)
             end
           end
 
           context 'when the custom buildpack is set on the build' do
             let(:lifecycle_data) do
               {
-                stack:      stack.name,
-                buildpacks: ['http://example.com/repo.git'],
+                stack: stack.name,
+                buildpacks: ['http://example.com/repo.git']
               }
             end
 
             it 'successfully creates a build' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to change { BuildModel.count }.by(1)
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to change(BuildModel, :count).by(1)
             end
           end
         end

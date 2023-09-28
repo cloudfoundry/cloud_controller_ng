@@ -72,35 +72,35 @@ module VCAP::CloudController
     def checksum_info
       if sha256_checksum.blank? && package_hash.present?
         {
-          type:  'sha1',
-          value: package_hash,
+          type: 'sha1',
+          value: package_hash
         }
       else
         {
-          type:  'sha256',
-          value: sha256_checksum,
+          type: 'sha256',
+          value: sha256_checksum
         }
       end
     end
 
     def succeed_upload!(checksums)
-      return unless self.exists?
+      return unless exists?
 
       db.transaction do
-        self.lock!
+        lock!
         self.package_hash = checksums[:sha1]
         self.sha256_checksum = checksums[:sha256]
         self.state = VCAP::CloudController::PackageModel::READY_STATE
-        self.save
+        save
       end
     end
 
     def fail_upload!(err_msg)
       db.transaction do
-        self.lock!
+        lock!
         self.state = VCAP::CloudController::PackageModel::FAILED_STATE
         self.error = err_msg
-        self.save
+        save
       end
     end
   end

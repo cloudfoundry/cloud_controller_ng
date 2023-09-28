@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
+RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make }
   let!(:guid) { space_quota_definition.guid }
@@ -19,24 +19,24 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
 
     field :total_routes, 'How many routes a space can have. (-1 represents an unlimited amount)', required: opts[:required], example_values: [-1, 10, 23]
     field :total_reserved_route_ports,
-      'How many routes a space can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount; subject to org quota)',
-      default: -1,
-      example_values: [-1, 10, 20]
+          'How many routes a space can have that use a reserved port. These routes count toward total_routes. (-1 represents an unlimited amount; subject to org quota)',
+          default: -1,
+          example_values: [-1, 10, 20]
     field :memory_limit, 'How much memory in megabytes a space can have.', required: opts[:required], example_values: [5_120, 10_024]
 
     field :total_service_keys, 'How many service keys an organization can have. (-1 represents an unlimited amount)', default: -1, example_values: [-1, 5, 201]
     field :instance_memory_limit,
-      'The maximum amount of memory in megabytes an application instance can have. (-1 represents an unlimited amount)',
-      default: -1,
-      example_values: [-1, 10_024]
+          'The maximum amount of memory in megabytes an application instance can have. (-1 represents an unlimited amount)',
+          default: -1,
+          example_values: [-1, 10_024]
     field :app_instance_limit,
-      'How many app instances a space can create. (-1 represents an unlimited amount)',
-      example_values: [-1, 10, 23], default: -1
+          'How many app instances a space can create. (-1 represents an unlimited amount)',
+          example_values: [-1, 10, 23], default: -1
     field :organization_guid, 'The owning organization of the space quota', required: opts[:required], example_values: [Sham.guid]
     field :app_task_limit, 'The number of tasks that can be run per app. (-1 represents an unlimited amount)',
-      default: 5,
-      experimental: true,
-      example_values: [-1, 5, 10]
+          default: 5,
+          experimental: true,
+          example_values: [-1, 5, 10]
   end
 
   standard_model_list :space_quota_definition, VCAP::CloudController::SpaceQuotaDefinitionsController
@@ -50,7 +50,8 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       client.post '/v2/space_quota_definitions', MultiJson.dump(
         required_fields.merge(organization_guid: organization_guid,
                               total_reserved_route_ports: 5,
-                              total_routes: 10), pretty: true), headers
+                              total_routes: 10), pretty: true
+      ), headers
 
       expect(status).to eq(201)
       expect(parsed_response['entity']).to include('total_reserved_route_ports')
@@ -90,6 +91,7 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       describe 'Associate Spaces' do
         let!(:space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
         let(:space_guid) { space.guid }
+
         parameter :space_guid, 'The guid of the space'
 
         nested_model_associate :space, :space_quota_definition

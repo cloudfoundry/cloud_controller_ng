@@ -21,12 +21,12 @@ class PackagesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = PackageListFetcher.fetch_for_app(message: message)
+      app, dataset = PackageListFetcher.fetch_for_app(message:)
 
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     else
       dataset = if permission_queryer.can_read_globally?
-                  PackageListFetcher.fetch_all(message: message)
+                  PackageListFetcher.fetch_all(message:)
                 else
                   PackageListFetcher.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
                 end
@@ -111,20 +111,6 @@ class PackagesController < ApplicationController
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
-  def destroy
-    package = PackageModel.where(guid: hashed_params[:guid]).first
-
-    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
-    suspended! unless permission_queryer.is_space_active?(package.space.id)
-
-    delete_action = PackageDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
-    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
-  end
-
   def create
     package = hashed_params[:source_guid] ? create_copy : create_fresh
 
@@ -147,6 +133,20 @@ class PackagesController < ApplicationController
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
+  def destroy
+    package = PackageModel.where(guid: hashed_params[:guid]).first
+
+    package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
+    suspended! unless permission_queryer.is_space_active?(package.space.id)
+
+    delete_action = PackageDelete.new(user_audit_info)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
+    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
   private
 
   def create_fresh
@@ -165,7 +165,7 @@ class PackagesController < ApplicationController
       unprocessable_non_bits_package!
     end
 
-    PackageCreate.create(message: message, user_audit_info: user_audit_info)
+    PackageCreate.create(message:, user_audit_info:)
   end
 
   def create_copy

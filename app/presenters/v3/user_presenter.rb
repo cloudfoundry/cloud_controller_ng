@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
         origin: origin,
         metadata: {
           labels: hashified_labels(user.labels),
-          annotations: hashified_annotations(user.annotations),
+          annotations: hashified_annotations(user.annotations)
         },
         links: build_links
       }

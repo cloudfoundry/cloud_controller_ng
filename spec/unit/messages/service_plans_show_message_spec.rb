@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'fields' => { 'service_offering.service_broker' => 'guid,name' },
-          'include' => 'space.organization,service_offering',
+          'include' => 'space.organization,service_offering'
         }.with_indifferent_access
       end
 
@@ -17,14 +17,14 @@ module VCAP::CloudController
 
         expect(message).to be_valid
         expect(message).to be_a(described_class)
-        expect(message.fields).to match({ 'service_offering.service_broker': ['guid', 'name'] })
+        expect(message.fields).to match({ 'service_offering.service_broker': %w[guid name] })
         expect(message.include).to contain_exactly('space.organization', 'service_offering')
       end
 
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
-        expect(message.requested?(:fields)).to be_truthy
-        expect(message.requested?(:include)).to be_truthy
+        expect(message).to be_requested(:fields)
+        expect(message).to be_requested(:include)
       end
 
       it 'accepts an empty set' do

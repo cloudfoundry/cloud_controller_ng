@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Jobs', type: [:api, :legacy_api] do
+RSpec.resource 'Jobs', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
   authenticated_request
@@ -20,7 +20,7 @@ RSpec.resource 'Jobs', type: [:api, :legacy_api] do
         2
       end
 
-      def reschedule_at(time, attempts)
+      def reschedule_at(_time, _attempts)
         Time.now + 5
       end
     end
@@ -28,7 +28,7 @@ RSpec.resource 'Jobs', type: [:api, :legacy_api] do
     before { Delayed::Job.delete_all }
 
     field :guid, 'The guid of the job.', required: false
-    field :status, 'The status of the job.', required: false, readonly: true, valid_values: %w(failed finished queued running)
+    field :status, 'The status of the job.', required: false, readonly: true, valid_values: %w[failed finished queued running]
 
     class KnownFailingJob < FakeJob
       def perform
@@ -85,7 +85,7 @@ RSpec.resource 'Jobs', type: [:api, :legacy_api] do
         expect(parsed_response['entity']['error_details']).to include('description')
         expect(parsed_response['entity']['error_details']).to include('error_code')
 
-        expect(parsed_response['entity']['error_details']['code']).to eq(10001)
+        expect(parsed_response['entity']['error_details']['code']).to eq(10_001)
         expect(parsed_response['entity']['error_details']['description']).to eq('An unknown error occurred.')
         expect(parsed_response['entity']['error_details']['error_code']).to eq('UnknownError')
       end

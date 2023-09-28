@@ -3,8 +3,9 @@ require 'locket/lock_worker'
 require 'locket/lock_runner'
 
 RSpec.describe Locket::LockWorker do
-  let(:lock_runner) { instance_double(Locket::LockRunner, start: nil, lock_acquired?: nil) }
   subject(:lock_worker) { Locket::LockWorker.new(lock_runner) }
+
+  let(:lock_runner) { instance_double(Locket::LockRunner, start: nil, lock_acquired?: nil) }
 
   describe '#acquire_lock_and' do
     before do
@@ -13,7 +14,7 @@ RSpec.describe Locket::LockWorker do
       allow(lock_worker).to receive(:sleep) # dont use real time please
     end
 
-    it 'should start the LockRunner' do
+    it 'starts the LockRunner' do
       lock_worker.acquire_lock_and_repeatedly_call {}
 
       expect(lock_runner).to have_received(:start)

@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:body) do
           {
             routes: [
-              { route: 'existing.example.com' },
+              { route: 'existing.example.com' }
             ],
             surprise_key: 'surprise'
           }
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
         it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('No-route must be a boolean')
         end
       end
@@ -56,13 +56,13 @@ module VCAP::CloudController
         let(:routes) do
           [
             { 'route' => 'existing.example.com' },
-            { 'route' => 'new.example.com' },
+            { 'route' => 'new.example.com' }
           ]
         end
 
         it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -72,14 +72,14 @@ module VCAP::CloudController
             'no_route' => false,
             'routes' => [
               { 'route' => 'existing.example.com' },
-              { 'route' => 'new.example.com' },
+              { 'route' => 'new.example.com' }
             ]
           }
         end
 
-        it 'is  valid' do
+        it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Random-route must be a boolean')
         end
       end
@@ -138,7 +138,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Default-route must be a boolean')
         end
       end
@@ -150,7 +150,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Random-route and default-route may not be used together')
         end
       end
@@ -162,15 +162,14 @@ module VCAP::CloudController
           { 'routes' =>
             [
               { 'route' => 'existing.example.com' },
-              { 'route' => 'new.example.com', 'protocol' => 'http2' },
-            ]
-          }
+              { 'route' => 'new.example.com', 'protocol' => 'http2' }
+            ] }
         end
 
         it 'returns true' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -179,15 +178,14 @@ module VCAP::CloudController
           { 'routes' =>
             [
               { 'route' => 'potato://bad.example.com' },
-              { 'route' => 'new.example.com' },
-            ]
-          }
+              { 'route' => 'new.example.com' }
+            ] }
         end
 
         it 'returns false' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include("The route 'potato://bad.example.com' is not a properly formed URL")
         end
       end
@@ -199,15 +197,14 @@ module VCAP::CloudController
               { 'route' => 'existing.example.com', 'protocol' => 'bologna' },
               { 'route' => 'http2.example.com', 'protocol' => 'http2' },
               { 'route' => 'http1.example.com', 'protocol' => 'http1' },
-              { 'route' => 'tcp.example.com', 'protocol' => 'tcp' },
-            ]
-          }
+              { 'route' => 'tcp.example.com', 'protocol' => 'tcp' }
+            ] }
         end
 
         it 'returns false' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include("Route protocol must be 'http1', 'http2' or 'tcp'.")
         end
       end

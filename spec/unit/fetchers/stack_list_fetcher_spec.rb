@@ -18,13 +18,14 @@ module VCAP::CloudController
       let!(:stack2) { Stack.make(name: default_stack_name) }
 
       let(:message) { StacksListMessage.from_params(filters) }
+
       subject { fetcher.fetch_all(message) }
 
       context 'when no filters are specified' do
         let(:filters) { {} }
 
         it 'fetches all the stacks' do
-          expect(subject).to match_array([stack1, stack2])
+          expect(subject).to contain_exactly(stack1, stack2)
         end
       end
 
@@ -33,7 +34,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired stacks' do
           expect(subject).to include(stack1)
-          expect(subject).to_not include(stack2)
+          expect(subject).not_to include(stack2)
         end
       end
 
@@ -42,7 +43,7 @@ module VCAP::CloudController
           let(:filters) { { default: 'true' } }
 
           it 'returns all of the desired stacks' do
-            expect(subject).to_not include(stack1)
+            expect(subject).not_to include(stack1)
             expect(subject).to include(stack2)
           end
         end
@@ -52,7 +53,7 @@ module VCAP::CloudController
 
           it 'returns all of the desired stacks' do
             expect(subject).to include(stack1)
-            expect(subject).to_not include(stack2)
+            expect(subject).not_to include(stack2)
           end
         end
       end

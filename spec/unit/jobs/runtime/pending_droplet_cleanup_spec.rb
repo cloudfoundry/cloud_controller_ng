@@ -30,9 +30,9 @@ module VCAP::CloudController
           it 'marks droplets as failed' do
             cleanup_job.perform
 
-            expect(droplet1.reload.failed?).to be_truthy
-            expect(droplet2.reload.failed?).to be_truthy
-            expect(droplet3.reload.failed?).to be_truthy
+            expect(droplet1.reload).to be_failed
+            expect(droplet2.reload).to be_failed
+            expect(droplet3.reload).to be_failed
           end
 
           it 'sets the error_id' do
@@ -44,7 +44,7 @@ module VCAP::CloudController
           end
 
           it 'updates updated_at since we do not update through the model' do
-            expect { cleanup_job.perform }.to change { droplet1.reload.updated_at }
+            expect { cleanup_job.perform }.to(change { droplet1.reload.updated_at })
           end
         end
 
@@ -60,15 +60,15 @@ module VCAP::CloudController
           end
 
           it 'does NOT fail them' do
-            expect {
+            expect do
               cleanup_job.perform
-            }.not_to change {
+            end.not_to(change do
               [droplet1.reload.updated_at, droplet2.reload.updated_at, droplet3.reload.updated_at]
-            }
+            end)
 
-            expect(droplet1.reload.failed?).to be_falsey
-            expect(droplet2.reload.failed?).to be_falsey
-            expect(droplet3.reload.failed?).to be_falsey
+            expect(droplet1.reload).not_to be_failed
+            expect(droplet2.reload).not_to be_failed
+            expect(droplet3.reload).not_to be_failed
           end
         end
 
@@ -79,9 +79,9 @@ module VCAP::CloudController
 
           cleanup_job.perform
 
-          expect(droplet1.reload.failed?).to be_falsey
-          expect(droplet2.reload.failed?).to be_falsey
-          expect(droplet3.reload.failed?).to be_falsey
+          expect(droplet1.reload).not_to be_failed
+          expect(droplet2.reload).not_to be_failed
+          expect(droplet3.reload).not_to be_failed
         end
 
         it 'ignores droplets in a completed state' do
@@ -92,8 +92,8 @@ module VCAP::CloudController
 
           cleanup_job.perform
 
-          expect(droplet1.reload.failed?).to be_falsey
-          expect(droplet2.reload.failed?).to be_falsey
+          expect(droplet1.reload).not_to be_failed
+          expect(droplet2.reload).not_to be_failed
         end
       end
     end

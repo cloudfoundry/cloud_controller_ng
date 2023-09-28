@@ -74,10 +74,10 @@ module VCAP::CloudController
               return { finished: false } if intended_operation != service_binding.last_operation
 
               service_binding.update({
-                'credentials'      => binding_response[:credentials],
-                'syslog_drain_url' => binding_response[:syslog_drain_url],
-                'volume_mounts' => binding_response[:volume_mounts],
-              })
+                                       'credentials' => binding_response[:credentials],
+                                       'syslog_drain_url' => binding_response[:syslog_drain_url],
+                                       'volume_mounts' => binding_response[:volume_mounts]
+                                     })
               record_event(service_binding, request_attrs)
               service_binding.last_operation.update(last_operation_result[:last_operation])
             end
@@ -125,10 +125,10 @@ module VCAP::CloudController
           end
         end
 
-        def set_binding_failed_state(service_binding, logger)
+        def set_binding_failed_state(service_binding, _logger)
           service_binding.last_operation.update(
             state: 'failed',
-            description: 'A valid binding could not be fetched from the service broker.',
+            description: 'A valid binding could not be fetched from the service broker.'
           )
         end
 

@@ -5,15 +5,15 @@ module Diego
     extend Forwardable
 
     ACTION_TYPE_MAP = {
-      Bbs::Models::DownloadAction     => :download_action,
+      Bbs::Models::DownloadAction => :download_action,
       Bbs::Models::EmitProgressAction => :emit_progress_action,
-      Bbs::Models::RunAction          => :run_action,
-      Bbs::Models::UploadAction       => :upload_action,
-      Bbs::Models::TimeoutAction      => :timeout_action,
-      Bbs::Models::TryAction          => :try_action,
-      Bbs::Models::ParallelAction     => :parallel_action,
-      Bbs::Models::SerialAction       => :serial_action,
-      Bbs::Models::CodependentAction  => :codependent_action,
+      Bbs::Models::RunAction => :run_action,
+      Bbs::Models::UploadAction => :upload_action,
+      Bbs::Models::TimeoutAction => :timeout_action,
+      Bbs::Models::TryAction => :try_action,
+      Bbs::Models::ParallelAction => :parallel_action,
+      Bbs::Models::SerialAction => :serial_action,
+      Bbs::Models::CodependentAction => :codependent_action
     }.freeze
 
     class << self
@@ -45,10 +45,11 @@ module Diego
 
       def emit_progress(action, start_message:, success_message:, failure_message_prefix:)
         action(Bbs::Models::EmitProgressAction.new(
-                 action:                 action(action),
-                 start_message:          start_message,
-                 success_message:        success_message,
-                 failure_message_prefix: failure_message_prefix))
+                 action: action(action),
+                 start_message: start_message,
+                 success_message: success_message,
+                 failure_message_prefix: failure_message_prefix
+               ))
       end
 
       def codependent(actions)
@@ -63,13 +64,13 @@ module Diego
     end
 
     def_delegators ::Diego::ActionBuilder,
-      :action_type,
-      :action,
-      :serial,
-      :parallel,
-      :timeout,
-      :emit_progress,
-      :codependent,
-      :try_action
+                   :action_type,
+                   :action,
+                   :serial,
+                   :parallel,
+                   :timeout,
+                   :emit_progress,
+                   :codependent,
+                   :try_action
   end
 end

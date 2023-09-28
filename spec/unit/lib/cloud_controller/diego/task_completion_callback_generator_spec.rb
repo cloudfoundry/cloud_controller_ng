@@ -12,9 +12,9 @@ module VCAP::CloudController
         let(:task_config) do
           {
             internal_service_hostname: 'google.com',
-            internal_service_port:     '9090',
-            tls_port:                  '8888',
-            kubernetes:                kubernetes_config,
+            internal_service_port: '9090',
+            tls_port: '8888',
+            kubernetes: kubernetes_config
           }
         end
 

@@ -11,23 +11,25 @@ module VCAP::CloudController
 
       context 'when creating a security-group' do
         context 'with default values' do
-          let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(
-            {
-              name: 'secure-group'
-            })
-          }
+          let(:message) do
+            VCAP::CloudController::SecurityGroupCreateMessage.new(
+              {
+                name: 'secure-group'
+              }
+            )
+          end
 
           it 'creates a security-group' do
             created_group = nil
-            expect {
+            expect do
               created_group = subject.create(message)
-            }.to change { SecurityGroup.count }.by(1)
+            end.to change(SecurityGroup, :count).by(1)
 
             expect(created_group.guid).to be_a_guid
             expect(created_group.name).to eq 'secure-group'
             expect(created_group.rules).to eq([])
-            expect(created_group.running_default).to eq(false)
-            expect(created_group.staging_default).to eq(false)
+            expect(created_group.running_default).to be(false)
+            expect(created_group.staging_default).to be(false)
             expect(created_group.spaces.count).to eq(0)
           end
 
@@ -38,33 +40,35 @@ module VCAP::CloudController
         end
 
         context 'with provided values' do
-          let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(
-            {
-              name: 'secure-group',
-              globally_enabled: {
-                running: true,
-                staging: false
-              },
-              relationships: {
-                staging_spaces: {
-                  data: [
-                    { guid: space1.guid }
-                  ]
+          let(:message) do
+            VCAP::CloudController::SecurityGroupCreateMessage.new(
+              {
+                name: 'secure-group',
+                globally_enabled: {
+                  running: true,
+                  staging: false
                 },
-                running_spaces: {
-                  data: [
-                    { guid: space2.guid }
-                  ]
+                relationships: {
+                  staging_spaces: {
+                    data: [
+                      { guid: space1.guid }
+                    ]
+                  },
+                  running_spaces: {
+                    data: [
+                      { guid: space2.guid }
+                    ]
+                  }
                 }
-              },
-            })
-          }
+              }
+            )
+          end
 
           it 'creates a security-group' do
             created_group = nil
-            expect {
+            expect do
               created_group = subject.create(message)
-            }.to change { SecurityGroup.count }.by(1)
+            end.to change(SecurityGroup, :count).by(1)
 
             expect(created_group.guid).to be_a_guid
             expect(created_group.name).to eq 'secure-group'
@@ -98,12 +102,12 @@ module VCAP::CloudController
 
           let(:message) do
             VCAP::CloudController::SecurityGroupCreateMessage.new({
-              name: 'my-name',
-              rules: [
-                first_group,
-                second_group
-              ]
-            })
+                                                                    name: 'my-name',
+                                                                    rules: [
+                                                                      first_group,
+                                                                      second_group
+                                                                    ]
+                                                                  })
           end
 
           it 'creates a security group with the correct values' do
@@ -119,18 +123,18 @@ module VCAP::CloudController
           let(:invalid_space_guid) { 'invalid_space_guid' }
           let(:message) do
             VCAP::CloudController::SecurityGroupCreateMessage.new({
-              name: 'my-name',
-              relationships: {
-                running_spaces: { data: [{ guid: space1.guid }, { guid: invalid_space_guid }] }
-              }
-            })
+                                                                    name: 'my-name',
+                                                                    relationships: {
+                                                                      running_spaces: { data: [{ guid: space1.guid }, { guid: invalid_space_guid }] }
+                                                                    }
+                                                                  })
           end
 
           it 'raises a human-friendly error' do
             num_sec_groups = SecurityGroup.count
-            expect {
+            expect do
               subject.create(message)
-            }.to raise_error(subject::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist.")
+            end.to raise_error(subject::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist.")
 
             expect(SecurityGroup.count).to eq num_sec_groups
           end
@@ -145,23 +149,23 @@ module VCAP::CloudController
             expect(VCAP::CloudController::SecurityGroup).to receive(:create).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect {
+            expect do
               subject.create(message)
-            }.to raise_error(SecurityGroupCreate::Error, 'blork is busted')
+            end.to raise_error(SecurityGroupCreate::Error, 'blork is busted')
           end
 
           context 'when it is a uniqueness error' do
             let(:name) { 'Olsen' }
-            let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(name: name) }
+            let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(name:) }
 
             before do
               subject.create(message)
             end
 
             it 'raises a human-friendly error' do
-              expect {
+              expect do
                 subject.create(message)
-              }.to raise_error(SecurityGroupCreate::Error, "Security group with name '#{name}' already exists.")
+              end.to raise_error(SecurityGroupCreate::Error, "Security group with name '#{name}' already exists.")
             end
           end
         end

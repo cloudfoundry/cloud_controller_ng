@@ -2,12 +2,12 @@ module VCAP
   module CloudController
     class DeploymentModelTestFactory
       class << self
-        def make(*args)
-          deployment = DeploymentModel.make(*args)
+        def make(*)
+          deployment = DeploymentModel.make(*)
           DeploymentProcessModel.make(
             deployment: deployment,
             process_guid: deployment.deploying_web_process.guid,
-            process_type: deployment.deploying_web_process.type,
+            process_type: deployment.deploying_web_process.type
           )
           deployment
         end

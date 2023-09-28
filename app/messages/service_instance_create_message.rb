@@ -4,19 +4,19 @@ require 'utils/hash_utils'
 
 module VCAP::CloudController
   class ServiceInstanceCreateMessage < ServiceInstanceMessage
-    register_allowed_keys [
-      :type,
-      :relationships,
-      :name,
-      :tags,
+    register_allowed_keys %i[
+      type
+      relationships
+      name
+      tags
     ]
 
     validates_with RelationshipValidator
 
     validates :type, allow_blank: false, inclusion: {
-        in: %w(managed user-provided),
-        message: "must be one of 'managed', 'user-provided'"
-      }
+      in: %w[managed user-provided],
+      message: "must be one of 'managed', 'user-provided'"
+    }
     validates :name, string: true, presence: true
     validates :tags, array: true, allow_blank: true
     validate :tags_must_be_strings
@@ -30,9 +30,9 @@ module VCAP::CloudController
     private
 
     def tags_must_be_strings
-      if tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
-        errors.add(:tags, 'must be a list of strings')
-      end
+      return unless tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
+
+      errors.add(:tags, 'must be a list of strings')
     end
 
     class Relationships < BaseMessage

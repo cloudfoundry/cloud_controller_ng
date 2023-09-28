@@ -26,7 +26,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v3/organizations' do
-      let(:request_body) {
+      let(:request_body) do
         {
           name: 'org1',
           metadata: {
@@ -40,13 +40,12 @@ module VCAP::CloudController
             }
           }
         }.to_json
-      }
+      end
+
       it 'creates a new organization with the given name' do
-        expect {
+        expect do
           post '/v3/organizations', request_body, admin_header
-        }.to change {
-          Organization.count
-        }.by 1
+        end.to change(Organization, :count).by 1
 
         created_org = Organization.last
 
@@ -110,11 +109,9 @@ module VCAP::CloudController
         end
 
         it 'lets ALL users create orgs' do
-          expect {
+          expect do
             post '/v3/organizations', request_body, user_header
-          }.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
 
@@ -140,12 +137,11 @@ module VCAP::CloudController
             }
           )
         end
+
         it 'gives the user org manager and org user roles associated with the new org' do
-          expect {
+          expect do
             post '/v3/organizations', request_body, user_header
-          }.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
           expect(OrganizationManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
@@ -161,11 +157,9 @@ module VCAP::CloudController
 
       context 'when acting as an admin user' do
         it 'does not give the user any roles associated with the new org' do
-          expect {
+          expect do
             post '/v3/organizations', request_body, admin_header
-          }.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
           expect(created_org.users.count).to be(0)
@@ -190,19 +184,19 @@ module VCAP::CloudController
           it_behaves_like 'list query endpoint' do
             let(:message) { VCAP::CloudController::OrgsListMessage }
             let(:request) { '/v3/organizations' }
-            let(:excluded_params) {
+            let(:excluded_params) do
               [:isolation_segment_guid]
-            }
+            end
             let(:params) do
               {
-                guids: ['foo', 'bar'],
-                names: ['foo', 'bar'],
+                guids: %w[foo bar],
+                names: %w[foo bar],
                 page: '2',
                 per_page: '10',
                 order_by: 'updated_at',
                 label_selector: 'foo,bar',
-                created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-                updated_ats: { gt: Time.now.utc.iso8601 },
+                created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+                updated_ats: { gt: Time.now.utc.iso8601 }
               }
             end
           end
@@ -212,7 +206,7 @@ module VCAP::CloudController
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::Organization }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/organizations?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/organizations?#{filters}", nil, headers }
         end
         let(:headers) { admin_headers }
       end
@@ -309,7 +303,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
 
           parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(orgB.guid, orgC.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(orgB.guid, orgC.guid)
         end
       end
 
@@ -321,7 +315,7 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-          let(:api_call) { lambda { |user_headers| get 'v3/organizations', nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get 'v3/organizations', nil, user_headers } }
           let(:space) { VCAP::CloudController::Space.make }
           let(:org) { space.organization }
           let(:expected_codes_and_responses) do
@@ -430,7 +424,7 @@ module VCAP::CloudController
           },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
-            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" }
           }
         }
 
@@ -480,7 +474,7 @@ module VCAP::CloudController
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_domain.guid}/route_reservations) },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_domain.guid}/route_reservations} }
             }
           }
         end
@@ -507,9 +501,9 @@ module VCAP::CloudController
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{owned_private_domain.guid}/route_reservations) },
-              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{owned_private_domain.guid}\/relationships\/shared_organizations) }
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{owned_private_domain.guid}/route_reservations} },
+              shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{owned_private_domain.guid}/relationships/shared_organizations} }
             }
           }
         end
@@ -536,9 +530,9 @@ module VCAP::CloudController
             },
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
-              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
-              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_private_domain.guid}/route_reservations) },
-              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}\/relationships\/shared_organizations) }
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{organization1.guid}} },
+              route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_private_domain.guid}/route_reservations} },
+              shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_private_domain.guid}/relationships/shared_organizations} }
             }
           }
         end
@@ -555,14 +549,14 @@ module VCAP::CloudController
         end
 
         context 'without filters' do
-          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
           let(:expected_codes_and_responses) do
             h = Hash.new(
               code: 200,
               response_objects: [
                 shared_domain_json,
                 owned_private_domain_json,
-                shared_private_domain_json,
+                shared_private_domain_json
               ]
             )
             h['org_billing_manager'] = {
@@ -582,17 +576,17 @@ module VCAP::CloudController
         end
 
         describe 'when filtering by name' do
-          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
               code: 200,
               response_objects: [
-                shared_domain_json,
+                shared_domain_json
               ]
             )
             h['no_role'] = {
-              code: 404,
+              code: 404
             }
             h
           end
@@ -601,17 +595,17 @@ module VCAP::CloudController
         end
 
         describe 'when filtering by guid' do
-          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?guids=#{shared_domain.guid}", nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?guids=#{shared_domain.guid}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
               code: 200,
               response_objects: [
-                shared_domain_json,
+                shared_domain_json
               ]
             )
             h['no_role'] = {
-              code: 404,
+              code: 404
             }
             h
           end
@@ -620,21 +614,21 @@ module VCAP::CloudController
         end
 
         describe 'when filtering by organization_guid' do
-          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
+          let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
               code: 200,
               response_objects: [
-                owned_private_domain_json,
+                owned_private_domain_json
               ]
             )
             h['org_billing_manager'] = {
               code: 200,
-              response_objects: [],
+              response_objects: []
             }
             h['no_role'] = {
-              code: 404,
+              code: 404
             }
             h
           end
@@ -654,7 +648,7 @@ module VCAP::CloudController
         let(:base_link) { "/v3/organizations/#{org.guid}/domains" }
         let(:base_pagination_link) { "#{link_prefix}#{base_link}" }
 
-        let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+        let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
         it 'returns a 200 and the filtered apps for "in" label selector' do
           get "#{base_link}?label_selector=animal in (dog)", nil, admin_header
@@ -671,7 +665,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -690,7 +684,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -709,7 +703,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -728,7 +722,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -747,7 +741,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -766,7 +760,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -785,7 +779,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -804,7 +798,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -825,7 +819,7 @@ module VCAP::CloudController
     describe 'GET /v3/organizations/:guid/domains/default' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains/default", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains/default", nil, user_headers } }
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -898,10 +892,10 @@ module VCAP::CloudController
                 }
               },
               links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
-                organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
-                route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_private_domain.guid}/route_reservations) },
-                shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}/relationships/shared_organizations) }
+                self: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}} },
+                organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{organization1.guid}} },
+                route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_private_domain.guid}/route_reservations} },
+                shared_organizations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{shared_private_domain.guid}/relationships/shared_organizations} }
               }
             }
           end
@@ -934,8 +928,8 @@ module VCAP::CloudController
                 }
               },
               links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
-                route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
+                self: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}} },
+                route_reservations: { href: %r{#{Regexp.escape(link_prefix)}/v3/domains/#{UUID_REGEX}/route_reservations} }
               }
             }
           end
@@ -949,7 +943,7 @@ module VCAP::CloudController
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404,
+            code: 404
           )
           h
         end
@@ -962,7 +956,7 @@ module VCAP::CloudController
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404,
+            code: 404
           )
           h
         end
@@ -973,7 +967,7 @@ module VCAP::CloudController
       context 'when no domains exist' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404,
+            code: 404
           )
           h
         end
@@ -985,8 +979,8 @@ module VCAP::CloudController
     describe 'GET /v3/organizations/:guid/usage_summary' do
       let!(:org) { Organization.make }
       let!(:space) { Space.make(organization: org) }
-      let!(:app1) { AppModel.make(space: space) }
-      let!(:app2) { AppModel.make(space: space) }
+      let!(:app1) { AppModel.make(space:) }
+      let!(:app2) { AppModel.make(space:) }
       let!(:process1) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 101) }
       let!(:process2) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 102, instances: 2) }
 
@@ -994,7 +988,7 @@ module VCAP::CloudController
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
       end
 
-      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/usage_summary", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/usage_summary", nil, user_headers } }
 
       let(:org_summary_json) do
         {
@@ -1003,8 +997,8 @@ module VCAP::CloudController
             memory_in_mb: 705 # (tasks: 200 * 2) + (processes: 101 + 2 * 102)
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/usage_summary) },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/usage_summary} },
+            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
           }
         }
       end
@@ -1069,7 +1063,7 @@ module VCAP::CloudController
             },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
-              'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+              'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" }
             }
           }
 
@@ -1086,7 +1080,7 @@ module VCAP::CloudController
       context 'when organization is suspended' do
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
-        let(:api_call) { lambda { |user_headers| patch "/v3/organizations/#{org.guid}/relationships/default_isolation_segment", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}/relationships/default_isolation_segment", nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200 }
@@ -1106,25 +1100,26 @@ module VCAP::CloudController
     describe 'GET /v3/organizations/:guid' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
-      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}", nil, user_headers } }
-      let(:expected_response_object) do {
-            'guid' => org.guid,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'name' => org.name.to_s,
-            'links' => {
-              'self' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}" },
-              'domains' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains" },
-              'default_domain' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default" },
-              'quota' => { 'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}" }
-            },
-            'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
-            'metadata' => {
-              'labels' => {},
-              'annotations' => {}
-            },
-            'suspended' => false
-          }
+      let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}", nil, user_headers } }
+      let(:expected_response_object) do
+        {
+          'guid' => org.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name' => org.name.to_s,
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}" },
+            'domains' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains" },
+            'default_domain' => { 'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default" },
+            'quota' => { 'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}" }
+          },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {}
+          },
+          'suspended' => false
+        }
       end
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_object: expected_response_object)
@@ -1161,7 +1156,7 @@ module VCAP::CloudController
               annotations: {
                 quality: 'p sus'
               }
-            },
+            }
           }.to_json
 
           patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
@@ -1202,9 +1197,9 @@ module VCAP::CloudController
           it 'returns a 422 with a helpful error message' do
             update_request = { name: 'new-name' }.to_json
 
-            expect {
+            expect do
               patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
-            }.not_to change { organization1.reload.name }
+            end.not_to(change { organization1.reload.name })
 
             expect(last_response.status).to eq(422)
             expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
@@ -1214,7 +1209,7 @@ module VCAP::CloudController
         it 'updates the suspended field for the organization' do
           update_request = {
             name: 'New Name World',
-            suspended: true,
+            suspended: true
           }.to_json
 
           patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
@@ -1254,7 +1249,7 @@ module VCAP::CloudController
                 labels: {
                   fruit: nil
                 }
-              },
+              }
             }.to_json
           end
 
@@ -1291,7 +1286,7 @@ module VCAP::CloudController
       context 'when organization is suspended' do
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
-        let(:api_call) { lambda { |user_headers| patch "/v3/organizations/#{org.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}", nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
           h['admin'] = { code: 200 }
@@ -1319,33 +1314,48 @@ module VCAP::CloudController
       end
 
       before do
-        AppModel.make(space: space)
-        Route.make(space: space)
+        AppModel.make(space:)
+        Route.make(space:)
         org.add_user(associated_user)
         space.add_developer(associated_user)
-        ServiceInstance.make(space: space)
-        ServiceBroker.make(space: space)
+        ServiceInstance.make(space:)
+        ServiceBroker.make(space:)
       end
 
+      let(:db_check) do
+        lambda do
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
+
+          execute_all_jobs(expected_successes: 2, expected_failures: 0)
+          last_job = VCAP::CloudController::PollableJobModel.last
+          expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{last_job.guid}})
+          expect(last_job.resource_type).to eq('organization')
+
+          get "/v3/organizations/#{org.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+      let(:api_call) { ->(user_headers) { delete "/v3/organizations/#{org.guid}", nil, user_headers } }
+
       it 'destroys the requested organization and sub resources (spaces)' do
-        expect {
+        expect do
           delete "/v3/organizations/#{org.guid}", nil, admin_header
           expect(last_response.status).to eq(202)
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           execute_all_jobs(expected_successes: 2, expected_failures: 0)
           get "/v3/organizations/#{org.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
           get "/v3/spaces/#{space.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
-        }.to change { Organization.count }.by(-1).
-          and change { Space.count }.by(-1).
-          and change { AppModel.count }.by(-1).
-          and change { Route.count }.by(-1).
+        end.to change(Organization, :count).by(-1).
+          and change(Space, :count).by(-1).
+          and change(AppModel, :count).by(-1).
+          and change(Route, :count).by(-1).
           and change { associated_user.reload.default_space }.to(be_nil).
           and change { associated_user.reload.spaces }.to(be_empty).
-          and change { ServiceInstance.count }.by(-1).
-          and change { ServiceBroker.count }.by(-1).
+          and change(ServiceInstance, :count).by(-1).
+          and change(ServiceBroker, :count).by(-1).
           and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
       end
 
@@ -1355,21 +1365,6 @@ module VCAP::CloudController
           let(:api_call) do
             -> { delete "/v3/organizations/#{org.guid}", nil, admin_header }
           end
-        end
-      end
-
-      let(:api_call) { lambda { |user_headers| delete "/v3/organizations/#{org.guid}", nil, user_headers } }
-      let(:db_check) do
-        lambda do
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
-
-          execute_all_jobs(expected_successes: 2, expected_failures: 0)
-          last_job = VCAP::CloudController::PollableJobModel.last
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
-          expect(last_job.resource_type).to eq('organization')
-
-          get "/v3/organizations/#{org.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
         end
       end
 
@@ -1397,7 +1392,7 @@ module VCAP::CloudController
         it 'returns a 202' do
           delete "/v3/organizations/#{org.guid}", nil, admin_headers
           expect(last_response.status).to eq(202)
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           # ::OrganizationDelete should fail and ::V3::BuildpackCacheDelete should succeed
           execute_all_jobs(expected_successes: 1, expected_failures: 1)
@@ -1428,17 +1423,19 @@ module VCAP::CloudController
         organization2.add_user(other_org_user)
 
         allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(user.guid, org_manager.guid)).and_return({
-          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-          org_manager.guid => { 'username' => 'rob-mcjames', 'origin' => 'Okta' },
-        })
+                                                                                                                     user.guid => { 'username' => 'bob-mcjames',
+                                                                                                                                    'origin' => 'Okta' },
+                                                                                                                     org_manager.guid => { 'username' => 'rob-mcjames',
+                                                                                                                                           'origin' => 'Okta' }
+                                                                                                                   })
         allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
       end
 
       context 'filters' do
         before do
           allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return({
-            user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-          })
+                                                                                      user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
+                                                                                    })
         end
 
         it_behaves_like 'list query endpoint' do
@@ -1453,15 +1450,15 @@ module VCAP::CloudController
 
           let(:params) do
             {
-              guids: ['foo', 'bar'],
-              usernames: ['foo', 'bar'],
-              origins: ['foo', 'bar'],
-              page:   '2',
-              per_page:   '10',
-              order_by:   'updated_at',
-              label_selector:   'foo,bar',
-              created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-              updated_ats: { gt: Time.now.utc.iso8601 },
+              guids: %w[foo bar],
+              usernames: %w[foo bar],
+              origins: %w[foo bar],
+              page: '2',
+              per_page: '10',
+              order_by: 'updated_at',
+              label_selector: 'foo,bar',
+              created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+              updated_ats: { gt: Time.now.utc.iso8601 }
             }
           end
         end
@@ -1479,15 +1476,15 @@ module VCAP::CloudController
 
             let(:params) do
               {
-                guids: ['foo', 'bar'],
-                partial_usernames: ['foo', 'bar'],
-                origins: ['foo', 'bar'],
-                page:   '2',
-                per_page:   '10',
-                order_by:   'updated_at',
-                label_selector:   'foo,bar',
-                created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-                updated_ats: { gt: Time.now.utc.iso8601 },
+                guids: %w[foo bar],
+                partial_usernames: %w[foo bar],
+                origins: %w[foo bar],
+                page: '2',
+                per_page: '10',
+                order_by: 'updated_at',
+                label_selector: 'foo,bar',
+                created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+                updated_ats: { gt: Time.now.utc.iso8601 }
               }
             end
           end
@@ -1508,7 +1505,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1516,8 +1513,8 @@ module VCAP::CloudController
         context 'by usernames and origins' do
           before do
             allow(uaa_client).to receive(:users_for_ids).with([org_manager.guid]).and_return({
-              org_manager.guid => { 'username' => 'rob-mcjames', 'origin' => 'Okta' },
-            })
+                                                                                               org_manager.guid => { 'username' => 'rob-mcjames', 'origin' => 'Okta' }
+                                                                                             })
             allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['rob-mcjames'], ['Okta']).and_return([org_manager.guid])
           end
 
@@ -1535,7 +1532,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(org_manager.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(org_manager.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1543,8 +1540,8 @@ module VCAP::CloudController
         context 'by partial_usernames and origins' do
           before do
             allow(uaa_client).to receive(:users_for_ids).with([org_manager.guid]).and_return({
-              org_manager.guid => { 'username' => 'rob-mcjam', 'origin' => 'Okta' },
-            })
+                                                                                               org_manager.guid => { 'username' => 'rob-mcjam', 'origin' => 'Okta' }
+                                                                                             })
             allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['b-mcjam'], ['Okta'], false).and_return([org_manager.guid])
           end
 
@@ -1562,7 +1559,7 @@ module VCAP::CloudController
             }
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(org_manager.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(org_manager.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1583,7 +1580,7 @@ module VCAP::CloudController
               'next' => nil,
               'previous' => nil
             }
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
             expect(parsed_response['pagination']).to eq(expected_pagination)
           end
         end
@@ -1605,7 +1602,7 @@ module VCAP::CloudController
             get "/v3/organizations/#{organization1.guid}/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid)
           end
         end
 
@@ -1633,7 +1630,7 @@ module VCAP::CloudController
             get "/v3/organizations/#{organization1.guid}/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid)
           end
         end
       end
@@ -1641,7 +1638,7 @@ module VCAP::CloudController
       context 'no filters' do
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
-        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/users", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/users", nil, user_headers } }
         let(:user_json) { build_user_json(user.guid, 'bob-mcjames', 'Okta') }
         let(:org_manager_json) { build_user_json(org_manager.guid, 'rob-mcjames', 'Okta') }
         let(:expected_codes_and_responses) do
@@ -1649,16 +1646,16 @@ module VCAP::CloudController
             code: 200,
             response_objects: [
               user_json,
-              org_manager_json,
+              org_manager_json
             ]
           )
           h['no_role'] = {
             code: 404
           }
-          [
-            'admin',
-            'admin_read_only',
-            'global_auditor'
+          %w[
+            admin
+            admin_read_only
+            global_auditor
           ].each do |role|
             h[role] = {
               code: 200,
@@ -1674,8 +1671,8 @@ module VCAP::CloudController
         before do
           org.add_manager(org_manager)
           allow(uaa_client).to receive(:users_for_ids).with([org_manager.guid]).and_return({
-            org_manager.guid => { 'username' => 'rob-mcjames', 'origin' => 'Okta' },
-          })
+                                                                                             org_manager.guid => { 'username' => 'rob-mcjames', 'origin' => 'Okta' }
+                                                                                           })
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -1708,14 +1705,14 @@ module VCAP::CloudController
       created_at: iso8601,
       updated_at: iso8601,
       username: username,
-      presentation_name: username.present? ? username : guid,
+      presentation_name: (username.presence || guid),
       origin: origin,
       metadata: {
         labels: {},
         annotations: {}
       },
       links: {
-        self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{guid}) },
+        self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{guid}} }
       }
     }
   end

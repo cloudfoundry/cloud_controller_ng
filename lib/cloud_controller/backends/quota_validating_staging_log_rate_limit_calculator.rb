@@ -4,9 +4,7 @@ module VCAP::CloudController
     class OrgQuotaExceeded < StandardError; end
 
     def get_limit(requested_limit, space, org)
-      if requested_limit.nil?
-        requested_limit = -1
-      end
+      requested_limit = -1 if requested_limit.nil?
 
       requested_limit = requested_limit.to_i
 

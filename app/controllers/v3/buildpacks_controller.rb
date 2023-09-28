@@ -42,19 +42,6 @@ class BuildpacksController < ApplicationController
     unprocessable!(e)
   end
 
-  def destroy
-    buildpack = Buildpack.find(guid: hashed_params[:guid])
-    buildpack_not_found! unless buildpack
-
-    unauthorized! unless permission_queryer.can_write_globally?
-
-    delete_action = BuildpackDelete.new
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
-
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
-  end
-
   def update
     buildpack = Buildpack.find(guid: hashed_params[:guid])
     buildpack_not_found! unless buildpack
@@ -69,6 +56,19 @@ class BuildpacksController < ApplicationController
     render status: :ok, json: Presenters::V3::BuildpackPresenter.new(buildpack)
   rescue BuildpackUpdate::Error => e
     unprocessable!(e)
+  end
+
+  def destroy
+    buildpack = Buildpack.find(guid: hashed_params[:guid])
+    buildpack_not_found! unless buildpack
+
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    delete_action = BuildpackDelete.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def upload

@@ -70,7 +70,7 @@ class ServiceOfferingsController < ApplicationController
     decorators = []
     decorators << FieldServiceOfferingServiceBrokerDecorator.new(message.fields) if FieldServiceOfferingServiceBrokerDecorator.match?(message.fields)
 
-    presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering, decorators: decorators)
+    presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering, decorators:)
     render status: :ok, json: presenter.to_json
   end
 
@@ -116,11 +116,11 @@ class ServiceOfferingsController < ApplicationController
   private
 
   def enforce_authentication?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def enforce_read_scope?
-    %w(show index).include?(action_name) ? false : super
+    %w[show index].include?(action_name) ? false : super
   end
 
   def service_offering_not_found!
@@ -133,8 +133,8 @@ class ServiceOfferingsController < ApplicationController
   end
 
   def handle_order_by_presented_value(page_results)
-    if page_results.try(:pagination_options).try(:order_by) == 'label'
-      page_results.pagination_options.order_by = 'name'
-    end
+    return unless page_results.try(:pagination_options).try(:order_by) == 'label'
+
+    page_results.pagination_options.order_by = 'name'
   end
 end

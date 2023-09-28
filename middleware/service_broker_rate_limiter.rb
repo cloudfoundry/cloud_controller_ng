@@ -91,11 +91,10 @@ module CloudFoundry
         decrement_after_call = false
         user_guid = env['cf.user_guid']
         if apply_rate_limiting?(env)
-          if @concurrent_request_counter.try_increment?(user_guid, @max_concurrent_requests, @logger)
-            decrement_after_call = true
-          else
-            return too_many_requests!(env, user_guid)
-          end
+          return too_many_requests!(env, user_guid) unless @concurrent_request_counter.try_increment?(user_guid, @max_concurrent_requests, @logger)
+
+          decrement_after_call = true
+
         end
 
         @app.call(env)
@@ -121,12 +120,12 @@ module CloudFoundry
           %r{\A/v2/service_keys},
           %r{\A/v3/service_instances},
           %r{\A/v3/service_credential_bindings},
-          %r{\A/v3/service_route_bindings},
+          %r{\A/v3/service_route_bindings}
         ].any? { |re| request.fullpath.match(re) }
       end
 
       def rate_limit_method?(request)
-        %w(PATCH PUT POST DELETE).include?(request.method)
+        %w[PATCH PUT POST DELETE].include?(request.method)
       end
 
       def suggested_retry_after

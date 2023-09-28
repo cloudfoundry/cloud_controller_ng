@@ -2,9 +2,9 @@ RSpec.shared_examples_for 'a lifecycle' do
   let(:build) { VCAP::CloudController::BuildModel.make }
 
   it 'creates a lifecycle data model' do
-    expect {
+    expect do
       subject.create_lifecycle_data_model(build)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'provides staging environment variables' do

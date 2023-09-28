@@ -2,12 +2,12 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class ProcessesListMessage < MetadataListMessage
-    register_allowed_keys [
-      :app_guid,
-      :types,
-      :space_guids,
-      :organization_guids,
-      :app_guids,
+    register_allowed_keys %i[
+      app_guid
+      types
+      space_guids
+      organization_guids
+      app_guids
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
@@ -16,7 +16,7 @@ module VCAP::CloudController
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def self.from_params(params)
-      super(params, %w(types space_guids organization_guids app_guids))
+      super(params, %w[types space_guids organization_guids app_guids])
     end
 
     def to_param_hash

@@ -7,7 +7,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::AppModel.make(
         name: 'Davis',
         environment_variables: { 'some' => 'stuff' },
-        desired_state: 'STOPPED',
+        desired_state: 'STOPPED'
       )
     end
 
@@ -15,7 +15,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::Buildpack.make(name: 'limabean')
       app.lifecycle_data.update(
         buildpacks: ['git://user:pass@github.com/repo', 'limabean'],
-        stack: 'the-happiest-stack',
+        stack: 'the-happiest-stack'
       )
     end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController::Presenters::V3
           environment_variables: { href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables" },
           revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions" },
           deployed_revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions/deployed" },
-          features: { href: "#{link_prefix}/v3/apps/#{app.guid}/features" },
+          features: { href: "#{link_prefix}/v3/apps/#{app.guid}/features" }
         }
 
         expect(result[:guid]).to eq(app.guid)
@@ -78,7 +78,7 @@ module VCAP::CloudController::Presenters::V3
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
             key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController::Presenters::V3
         let(:result) { AppPresenter.new(app, decorators: [banana_decorator]).to_hash }
 
         it 'runs the decorators' do
-          expect(result[:included][:bananas]).to match_array(['Davis is bananas'])
+          expect(result[:included][:bananas]).to contain_exactly('Davis is bananas')
         end
       end
     end

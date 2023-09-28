@@ -7,15 +7,15 @@ module CCInitializers
       include ::NewRelic::Agent::MethodTracer
 
       class << self
-        %w(
+        %w[
           deleted
           updated
-        ).each do |method_name|
+        ].each do |method_name|
           add_method_tracer(
             method_name,
             "Custom/VCAP::CloudController::AppObserver/#{method_name}",
             push_scope: true,
-            metric: true,
+            metric: true
           )
         end
       end

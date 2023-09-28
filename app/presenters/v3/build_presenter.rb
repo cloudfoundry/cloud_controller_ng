@@ -33,14 +33,14 @@ module VCAP::CloudController
             created_by: {
               guid: build.created_by_user_guid,
               name: build.created_by_user_name,
-              email: build.created_by_user_email,
+              email: build.created_by_user_email
             },
             relationships: { app: { data: { guid: build.app_guid } } },
             metadata: {
               labels: hashified_labels(build.labels),
-              annotations: hashified_annotations(build.annotations),
+              annotations: hashified_annotations(build.annotations)
             },
-            links: build_links,
+            links: build_links
           }
         end
 
@@ -51,16 +51,14 @@ module VCAP::CloudController
         end
 
         def droplet
-          if build.droplet&.in_final_state?
-            return { guid: build.droplet.guid }
-          end
+          return { guid: build.droplet.guid } if build.droplet&.in_final_state?
 
           nil
         end
 
         def error
           e = [build.error_id, build.error_description].compact.join(' - ')
-          e.blank? ? nil : e
+          e.presence
         end
 
         def build_links

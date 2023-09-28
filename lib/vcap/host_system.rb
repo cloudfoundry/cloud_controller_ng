@@ -22,7 +22,7 @@ module VCAP
       else
         1 # unknown..
       end
-    rescue
+    rescue StandardError
       # In any case, let's always assume that there is 1 core
       1
     end

@@ -6,7 +6,7 @@ RSpec::Matchers.define :have_labels do |*expected|
       {
         prefix: label.key_prefix,
         key_name: label.key_name,
-        value: label.value,
+        value: label.value
       }
     end
 
@@ -15,7 +15,7 @@ RSpec::Matchers.define :have_labels do |*expected|
         {
           prefix: label.with_indifferent_access[:prefix],
           key_name: label.with_indifferent_access[:key_name],
-          value: label.with_indifferent_access[:value],
+          value: label.with_indifferent_access[:value]
         }
       end
 
@@ -30,7 +30,7 @@ RSpec::Matchers.define :have_labels do |*expected|
       [
         "Labels don't match!",
         "Expected #{expected}",
-        "     got #{actual_labels}",
+        "     got #{actual_labels}"
       ].join("\n")
     else
       'Expected labels but found none!'

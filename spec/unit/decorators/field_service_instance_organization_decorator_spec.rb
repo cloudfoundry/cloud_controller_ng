@@ -15,47 +15,47 @@ module VCAP::CloudController
       let!(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
 
       it 'decorated the given hash with orgs names from service instances' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'space.organization': ['name', 'foo'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ 'space.organization': %w[name foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            organizations: [
-              {
-                name: org1.name,
-              },
-              {
-                name: org2.name,
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  organizations: [
+                                    {
+                                      name: org1.name
+                                    },
+                                    {
+                                      name: org2.name
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       it 'decorated the given hash with orgs guids from service instances' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
-        decorator = described_class.new({ 'space.organization': ['guid', 'foo'] })
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ 'space.organization': %w[guid foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
         expect(hash).to match({
-          foo: 'bar',
-          included: {
-            monkeys: %w(zach greg),
-            organizations: [
-              {
-                guid: org1.guid,
-              },
-              {
-                guid: org2.guid,
-              }
-            ]
-          }
-        })
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  organizations: [
+                                    {
+                                      guid: org1.guid
+                                    },
+                                    {
+                                      guid: org2.guid
+                                    }
+                                  ]
+                                }
+                              })
       end
 
       context 'when instances share an org' do
@@ -71,28 +71,28 @@ module VCAP::CloudController
 
       context 'decorating relationships' do
         it 'includes the related resource correctly' do
-          decorator = described_class.new({ 'space.organization': ['name', 'guid'] })
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          decorator = described_class.new({ 'space.organization': %w[name guid] })
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           relationship = [space1, space2, space1]
 
           hash = decorator.decorate(undecorated_hash, relationship)
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              organizations: [
-                { name: org1.name, guid: org1.guid },
-                { name: org2.name, guid: org2.guid }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    organizations: [
+                                      { name: org1.name, guid: org1.guid },
+                                      { name: org2.name, guid: org2.guid }
+                                    ]
+                                  }
+                                })
         end
       end
     end
 
     describe '.match?' do
-      it_behaves_like 'field decorator match?', 'space.organization', ['name', 'guid']
+      it_behaves_like 'field decorator match?', 'space.organization', %w[name guid]
     end
   end
 end

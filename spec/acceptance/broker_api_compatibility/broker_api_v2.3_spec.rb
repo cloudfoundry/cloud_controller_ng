@@ -20,30 +20,31 @@ RSpec.describe 'Service Broker API integration' do
         let(:catalog) do
           {
             services: [{
-                         id:          'service-guid-here',
-                         name:        'MySQL',
-                         description: 'A MySQL-compatible relational database',
-                         bindable:    true,
-                         dashboard_client: {
-                           id:           'dash-id',
-                           secret:       'dash-board-confessional-ahhhhh',
-                           redirect_uri: 'http://redirect.to.me.plz'
-                         },
-                         plans: [{
-                                         id:          'plan1-guid-here',
-                                         name:        'small',
-                                         description: 'A small shared database with 100mb storage quota and 10 connections'
-                                       }, {
-                                         id:          'plan2-guid-here',
-                                         name:        'large',
-                                         description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
-                                       }]
-                       }]
+              id: 'service-guid-here',
+              name: 'MySQL',
+              description: 'A MySQL-compatible relational database',
+              bindable: true,
+              dashboard_client: {
+                id: 'dash-id',
+                secret: 'dash-board-confessional-ahhhhh',
+                redirect_uri: 'http://redirect.to.me.plz'
+              },
+              plans: [{
+                id: 'plan1-guid-here',
+                name: 'small',
+                description: 'A small shared database with 100mb storage quota and 10 connections'
+              }, {
+                id: 'plan2-guid-here',
+                name: 'large',
+                description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
+              }]
+            }]
           }
         end
 
         context 'when create-service-broker' do
           after { delete_broker }
+
           before do
             UAARequests.stub_all
 
@@ -55,7 +56,7 @@ RSpec.describe 'Service Broker API integration' do
               auth_username: broker_auth_username,
               auth_password: broker_auth_password
             }.to_json,
-              admin_headers)
+                 admin_headers)
           end
 
           it 'handles the dashboard_client in the broker catalog' do
@@ -90,14 +91,15 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           after { delete_broker }
+
           before do
             setup_broker(catalog)
             stub_catalog_fetch(broker_response_status, catalog_with_updated_secret)
             UAARequests.stub_all
 
             put("/v2/service_brokers/#{@broker_guid}",
-              {}.to_json,
-              admin_headers)
+                {}.to_json,
+                admin_headers)
           end
 
           it 'handles the dashboard_client in the broker catalog' do

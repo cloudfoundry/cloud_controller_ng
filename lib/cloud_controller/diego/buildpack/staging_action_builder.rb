@@ -21,8 +21,8 @@ module VCAP::CloudController
             stage_action,
             emit_progress(
               parallel(upload_actions),
-              start_message:          'Uploading droplet, build artifacts cache...',
-              success_message:        'Uploading complete',
+              start_message: 'Uploading droplet, build artifacts cache...',
+              success_message: 'Uploading complete',
               failure_message_prefix: 'Uploading failed'
             )
           ]
@@ -37,35 +37,35 @@ module VCAP::CloudController
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
-              name:              "buildpack-#{lifecycle_stack}-lifecycle",
-              url:               LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
-              destination_path:  '/tmp/lifecycle',
-              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              name: "buildpack-#{lifecycle_stack}-lifecycle",
+              url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+              destination_path: '/tmp/lifecycle',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
             )
           ]
 
           if lifecycle_data[:app_bits_checksum][:type] == 'sha256'
             layers << ::Diego::Bbs::Models::ImageLayer.new({
-              name:              'app package',
-              url:               lifecycle_data[:app_bits_download_uri],
-              destination_path:  '/tmp/app',
-              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
-              digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-              digest_value:      lifecycle_data[:app_bits_checksum][:value],
+              name: 'app package',
+              url: lifecycle_data[:app_bits_download_uri],
+              destination_path: '/tmp/app',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_value: lifecycle_data[:app_bits_checksum][:value]
             }.compact)
           end
 
           if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
             layers << ::Diego::Bbs::Models::ImageLayer.new({
-              name:              'build artifacts cache',
-              url:               lifecycle_data[:build_artifacts_cache_download_uri],
-              destination_path:  '/tmp/cache',
-              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
-              digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-              digest_value:      lifecycle_data[:buildpack_cache_checksum],
+              name: 'build artifacts cache',
+              url: lifecycle_data[:build_artifacts_cache_download_uri],
+              destination_path: '/tmp/cache',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_value: lifecycle_data[:buildpack_cache_checksum]
             }.compact)
           end
 
@@ -73,11 +73,11 @@ module VCAP::CloudController
                              reject { |buildpack| buildpack[:name] == 'custom' }.
                              map do |buildpack|
             layer = {
-              name:              buildpack[:name],
-              url:               buildpack[:url],
-              destination_path:  "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
-              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+              name: buildpack[:name],
+              url: buildpack[:url],
+              destination_path: "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
             }
             if buildpack[:sha256]
               layer[:digest_algorithm] = ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
@@ -95,9 +95,9 @@ module VCAP::CloudController
 
           dependencies = [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
-              to:        '/tmp/lifecycle',
-              cache_key: "buildpack-#{lifecycle_stack}-lifecycle",
+              from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+              to: '/tmp/lifecycle',
+              cache_key: "buildpack-#{lifecycle_stack}-lifecycle"
             )
           ]
 
@@ -105,10 +105,10 @@ module VCAP::CloudController
             next if buildpack[:name] == 'custom'
 
             buildpack_dependency = {
-              name:               buildpack[:name],
-              from:               buildpack[:url],
-              to:                 "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
-              cache_key:          buildpack[:key],
+              name: buildpack[:name],
+              from: buildpack[:url],
+              to: "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
+              cache_key: buildpack[:key]
             }
             if buildpack[:sha256]
               buildpack_dependency[:checksum_algorithm] = 'sha256'
@@ -143,26 +143,25 @@ module VCAP::CloudController
 
           unless @config.get(:diego, :enable_declarative_asset_downloads) && lifecycle_data[:app_bits_checksum][:type] == 'sha256'
             result << ::Diego::Bbs::Models::DownloadAction.new({
-              artifact:           'app package',
-              from:               lifecycle_data[:app_bits_download_uri],
-              to:                 '/tmp/app',
-              user:               'vcap',
+              artifact: 'app package',
+              from: lifecycle_data[:app_bits_download_uri],
+              to: '/tmp/app',
+              user: 'vcap',
               checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
-              checksum_value:     lifecycle_data[:app_bits_checksum][:value]
+              checksum_value: lifecycle_data[:app_bits_checksum][:value]
             }.compact)
           end
 
-          unless @config.get(:diego, :enable_declarative_asset_downloads)
-            if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
-              result << try_action(::Diego::Bbs::Models::DownloadAction.new({
-                artifact:           'build artifacts cache',
-                from:               lifecycle_data[:build_artifacts_cache_download_uri],
-                to:                 '/tmp/cache',
-                user:               'vcap',
-                checksum_algorithm: 'sha256',
-                checksum_value:     lifecycle_data[:buildpack_cache_checksum],
-              }.compact))
-            end
+          if !@config.get(:diego,
+                          :enable_declarative_asset_downloads) && (lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?)
+            result << try_action(::Diego::Bbs::Models::DownloadAction.new({
+              artifact: 'build artifacts cache',
+              from: lifecycle_data[:build_artifacts_cache_download_uri],
+              to: '/tmp/cache',
+              user: 'vcap',
+              checksum_algorithm: 'sha256',
+              checksum_value: lifecycle_data[:buildpack_cache_checksum]
+            }.compact))
           end
 
           result
@@ -172,10 +171,10 @@ module VCAP::CloudController
           staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
 
           ::Diego::Bbs::Models::RunAction.new(
-            path:            '/tmp/lifecycle/builder',
-            user:            'vcap',
-            args:            [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
+            path: '/tmp/lifecycle/builder',
+            user: 'vcap',
+            args: [
+              "-buildpackOrder=#{lifecycle_data[:buildpacks].pluck(:key).join(',')}",
               "-skipCertVerify=#{config.get(:skip_cert_verify)}",
               "-skipDetect=#{skip_detect?}",
               '-buildDir=/tmp/app',
@@ -183,7 +182,7 @@ module VCAP::CloudController
               '-outputMetadata=/tmp/result.json',
               '-outputBuildArtifactsCache=/tmp/output-cache',
               '-buildpacksDir=/tmp/buildpacks',
-              '-buildArtifactsCacheDir=/tmp/cache',
+              '-buildArtifactsCacheDir=/tmp/cache'
             ],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env: staging_details_env + platform_options_env
@@ -193,17 +192,17 @@ module VCAP::CloudController
         def upload_actions
           [
             ::Diego::Bbs::Models::UploadAction.new(
-              user:     'vcap',
+              user: 'vcap',
               artifact: 'droplet',
-              from:     '/tmp/droplet',
-              to:       upload_droplet_uri.to_s,
+              from: '/tmp/droplet',
+              to: upload_droplet_uri.to_s
             ),
 
             ::Diego::Bbs::Models::UploadAction.new(
-              user:     'vcap',
+              user: 'vcap',
               artifact: 'build artifacts cache',
-              from:     '/tmp/output-cache',
-              to:       upload_buildpack_artifacts_cache_uri.to_s,
+              from: '/tmp/output-cache',
+              to: upload_buildpack_artifacts_cache_uri.to_s
             )
           ]
         end
@@ -221,7 +220,7 @@ module VCAP::CloudController
           upload_buildpack_artifacts_cache_uri.path  = "/v1/build_artifacts/#{staging_details.staging_guid}"
           upload_buildpack_artifacts_cache_uri.query = {
             'cc-build-artifacts-upload-uri' => lifecycle_data[:build_artifacts_cache_upload_uri],
-            'timeout'                       => config.get(:staging, :timeout_in_seconds),
+            'timeout' => config.get(:staging, :timeout_in_seconds)
           }.to_param
           upload_buildpack_artifacts_cache_uri.to_s
         end
@@ -231,16 +230,14 @@ module VCAP::CloudController
           upload_droplet_uri.path  = "/v1/droplet/#{staging_details.staging_guid}"
           upload_droplet_uri.query = {
             'cc-droplet-upload-uri' => lifecycle_data[:droplet_upload_uri],
-            'timeout'               => config.get(:staging, :timeout_in_seconds),
+            'timeout' => config.get(:staging, :timeout_in_seconds)
           }.to_param
           upload_droplet_uri.to_s
         end
 
         def platform_options_env
           arr = []
-          if credhub_url.present? && cred_interpolation_enabled?
-            arr << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url)
-          end
+          arr << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url) if credhub_url.present? && cred_interpolation_enabled?
 
           arr
         end

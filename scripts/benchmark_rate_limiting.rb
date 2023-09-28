@@ -30,9 +30,7 @@ result = Benchmark.measure do
     end
 
     completion_percentage = i.to_f / NUM_REQUESTS_PER_USER * 100
-    if completion_percentage % 10 == 0
-      logger.info("    (#{completion_percentage.to_i}% completed)")
-    end
+    logger.info("    (#{completion_percentage.to_i}% completed)") if completion_percentage % 10 == 0
   end
 end
 logger.info('    ... done.')

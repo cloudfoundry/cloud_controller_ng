@@ -5,8 +5,8 @@ class InstancesPolicy
   end
 
   def validate
-    if @process.instances < 0
-      @errors.add(:instances, :less_than_zero)
-    end
+    return unless @process.instances < 0
+
+    @errors.add(:instances, :less_than_zero)
   end
 end

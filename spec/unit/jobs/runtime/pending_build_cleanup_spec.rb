@@ -30,8 +30,8 @@ module VCAP::CloudController
           it 'marks builds as failed' do
             cleanup_job.perform
 
-            expect(build1.reload.failed?).to be_truthy
-            expect(build2.reload.failed?).to be_truthy
+            expect(build1.reload).to be_failed
+            expect(build2.reload).to be_failed
           end
 
           it 'logs that it failed the builds' do
@@ -49,7 +49,7 @@ module VCAP::CloudController
           end
 
           it 'updates updated_at since we do not update through the model' do
-            expect { cleanup_job.perform }.to change { build1.reload.updated_at }
+            expect { cleanup_job.perform }.to(change { build1.reload.updated_at })
           end
         end
 
@@ -63,14 +63,14 @@ module VCAP::CloudController
           end
 
           it 'does NOT fail them' do
-            expect {
+            expect do
               cleanup_job.perform
-            }.not_to change {
+            end.not_to(change do
               [build1.reload.updated_at, build2.reload.updated_at]
-            }
+            end)
 
-            expect(build1.reload.failed?).to be_falsey
-            expect(build2.reload.failed?).to be_falsey
+            expect(build1.reload).not_to be_failed
+            expect(build2.reload).not_to be_failed
           end
         end
 
@@ -80,8 +80,8 @@ module VCAP::CloudController
 
           cleanup_job.perform
 
-          expect(build1.reload.failed?).to be_falsey
-          expect(build2.reload.failed?).to be_falsey
+          expect(build1.reload).not_to be_failed
+          expect(build2.reload).not_to be_failed
         end
 
         it 'ignores builds in a completed state' do
@@ -92,8 +92,8 @@ module VCAP::CloudController
 
           cleanup_job.perform
 
-          expect(build1.reload.failed?).to be_falsey
-          expect(build2.reload.failed?).to be_falsey
+          expect(build1.reload).not_to be_failed
+          expect(build2.reload).not_to be_failed
         end
       end
     end

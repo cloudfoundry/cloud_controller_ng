@@ -39,7 +39,7 @@ class WorkPool
         loop do
           job, args = @queue.pop
           job.call(*args)
-        rescue => e
+        rescue StandardError => e
           next unless @store_exceptions
 
           @lock.synchronize do

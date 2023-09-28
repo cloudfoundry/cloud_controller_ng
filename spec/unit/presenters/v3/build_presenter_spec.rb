@@ -4,15 +4,15 @@ require 'presenters/v3/build_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app:) }
     let!(:happy_buildpack) { VCAP::CloudController::Buildpack.make(name: 'the-happiest-buildpack') }
     let(:buildpacks) { [happy_buildpack.name, 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }
     let(:build) do
       VCAP::CloudController::BuildModel.make(
-        state:   VCAP::CloudController::BuildModel::STAGING_STATE,
+        state: VCAP::CloudController::BuildModel::STAGING_STATE,
         package: package,
-        app:     app,
+        app: app,
         staging_memory_in_mb: 1024,
         staging_disk_in_mb: 1024,
         staging_log_rate_limit: 2048,
@@ -22,28 +22,29 @@ module VCAP::CloudController::Presenters::V3
       )
     end
     let!(:lifecycle_data) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpacks: buildpacks, stack: stack, build: build)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpacks:, stack:, build:)
     end
 
     describe '#to_hash' do
       let(:result) { BuildPresenter.new(build).to_hash }
+
       context 'buildpack lifecycle' do
         it 'presents the build as a hash' do
           links = {
             self: { href: "#{link_prefix}/v3/builds/#{build.guid}" },
-            app:  { href: "#{link_prefix}/v3/apps/#{app.guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{app.guid}" }
           }
 
           expect(result[:guid]).to eq(build.guid)
           expect(result[:state]).to eq('STAGING')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
           expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack', 'http://***:***@example.com/happy'])
           expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
 
           expect(result[:package][:guid]).to eq(package.guid)
-          expect(result[:droplet]).to eq(nil)
+          expect(result[:droplet]).to be_nil
 
           expect(result[:staging_memory_in_mb]).to eq(1024)
           expect(result[:staging_disk_in_mb]).to eq(1024)
@@ -55,10 +56,10 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links]).to eq(links)
 
           expect(result[:created_by]).to eq({
-            guid: 'happy user guid',
-            name: 'happier user name',
-            email: 'this user emailed in',
-          })
+                                              guid: 'happy user guid',
+                                              name: 'happier user name',
+                                              email: 'this user emailed in'
+                                            })
         end
 
         context 'when buildpack contains username and password' do
@@ -86,18 +87,18 @@ module VCAP::CloudController::Presenters::V3
         it 'presents the build as a hash' do
           links = {
             self: { href: "#{link_prefix}/v3/builds/#{build.guid}" },
-            app:  { href: "#{link_prefix}/v3/apps/#{app.guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{app.guid}" }
           }
 
           expect(result[:guid]).to eq(build.guid)
           expect(result[:state]).to eq('STAGING')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
 
           expect(result[:lifecycle][:type]).to eq('docker')
           expect(result[:lifecycle][:data]).to eq({})
 
           expect(result[:package][:guid]).to eq(package.guid)
-          expect(result[:droplet]).to eq(nil)
+          expect(result[:droplet]).to be_nil
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -110,10 +111,10 @@ module VCAP::CloudController::Presenters::V3
         let(:droplet) do
           VCAP::CloudController::DropletModel.make(
             :buildpack,
-            state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+            state: VCAP::CloudController::DropletModel::STAGED_STATE,
             package_guid: package.guid,
-            app:          app,
-            build:        build
+            app: app,
+            build: build
           )
         end
 
@@ -125,7 +126,7 @@ module VCAP::CloudController::Presenters::V3
 
         it 'shows the droplet guid and state as STAGED' do
           expect(result[:state]).to eq('STAGED')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
           expect(result[:droplet][:guid]).to eq(droplet.guid)
           expect(result[:links][:droplet][:href]).to eq("#{link_prefix}/v3/droplets/#{droplet.guid}")
         end
@@ -134,9 +135,9 @@ module VCAP::CloudController::Presenters::V3
       context 'when the droplet stages with an error' do
         before do
           build.update(
-            state:             VCAP::CloudController::BuildModel::FAILED_STATE,
+            state: VCAP::CloudController::BuildModel::FAILED_STATE,
             error_description: 'something bad',
-            error_id:          'SomeError',
+            error_id: 'SomeError'
           )
         end
 

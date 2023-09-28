@@ -13,8 +13,8 @@ module VCAP::CloudController
             staging: {
               auth: {
                 user: String,
-                password: String,
-              },
+                password: String
+              }
             },
 
             diego: {
@@ -25,7 +25,7 @@ module VCAP::CloudController
                 key_file: String,
                 connect_timeout: Integer,
                 send_timeout: Integer,
-                receive_timeout: Integer,
+                receive_timeout: Integer
               },
               cc_uploader_url: String,
               file_server_url: String,
@@ -37,8 +37,8 @@ module VCAP::CloudController
               insecure_docker_registry_list: [String],
               docker_staging_stack: String,
               optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-              enable_declarative_asset_downloads: bool,
-            },
+              enable_declarative_asset_downloads: bool
+            }
           }
         end
 

@@ -3,8 +3,8 @@ module VCAP::CloudController
     export_attributes :state, :description, :type, :updated_at, :created_at
     many_to_one :service_binding
     def update_attributes(attrs)
-      self.set attrs
-      self.save
+      set attrs
+      save
     end
   end
 end

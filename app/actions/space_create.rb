@@ -25,9 +25,7 @@ module VCAP::CloudController
     attr_reader :user_audit_info
 
     def validation_error!(error)
-      if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on([:organization_id, :name])&.include?(:unique)
-        error!('Name must be unique per organization')
-      end
+      error!('Name must be unique per organization') if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on(%i[organization_id name])&.include?(:unique)
       error!(error.message)
     end
 

@@ -6,8 +6,8 @@ Sequel.migration do
       Integer :route_binding_id
       String :state, size: 255, null: false
       String :type, size: 255, null: false
-      String :description, size: 10000
-      String :broker_provided_operation, size: 10000
+      String :description, size: 10_000
+      String :broker_provided_operation, size: 10_000
 
       index :route_binding_id, name: :route_binding_id_index, unique: true
       primary_key :id, name: :id

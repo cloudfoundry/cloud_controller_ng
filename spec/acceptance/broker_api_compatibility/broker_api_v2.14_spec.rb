@@ -25,7 +25,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq true
+          expect(parsed_body['entity']['bindings_retrievable']).to be true
         end
 
         context 'and returns a parameters object' do
@@ -38,10 +38,10 @@ RSpec.describe 'Service Broker API integration' do
               to_return(status: 200, body: '{"parameters": {"foo":"bar"}}')
           end
 
-          it 'should be retrievable' do
+          it 'is retrievable' do
             get("/v2/service_bindings/#{@binding_guid}/parameters",
-              {}.to_json,
-              json_headers(admin_headers))
+                {}.to_json,
+                json_headers(admin_headers))
             parsed_body = MultiJson.load(last_response.body)
             expect(parsed_body['foo']).to eq 'bar'
           end
@@ -50,12 +50,12 @@ RSpec.describe 'Service Broker API integration' do
             user = VCAP::CloudController::User.make
 
             get("/v2/service_bindings/#{@binding_guid}/parameters",
-              {}.to_json,
-              headers_for(user, scopes: %w(cloud_controller.admin)))
+                {}.to_json,
+                headers_for(user, scopes: %w[cloud_controller.admin]))
 
             expect(
               a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
-                m = req.headers['X-Broker-Api-Originating-Identity'].match /(?<platform>\S+) (?<value>\S+)/
+                m = req.headers['X-Broker-Api-Originating-Identity'].match(/(?<platform>\S+) (?<value>\S+)/)
                 value = MultiJson.load(Base64.strict_decode64(m[:value]))
                 m[:platform] == 'cloudfoundry' && value['user_id'] == user.guid
               end
@@ -77,7 +77,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq false
+          expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
       end
 
@@ -88,7 +88,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq false
+          expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
       end
     end
@@ -107,7 +107,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq true
+          expect(parsed_body['entity']['instances_retrievable']).to be true
         end
       end
 
@@ -124,7 +124,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq false
+          expect(parsed_body['entity']['instances_retrievable']).to be false
         end
       end
 
@@ -135,7 +135,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq false
+          expect(parsed_body['entity']['instances_retrievable']).to be false
         end
       end
     end
@@ -159,17 +159,16 @@ RSpec.describe 'Service Broker API integration' do
           it 'performs the flow asynchronously and fetches the last operation from the broker' do
             operation_data = 'some_operation_data'
 
-            stub_async_last_operation(operation_data: operation_data, url: url)
+            stub_async_last_operation(operation_data:, url:)
             async_bind_service(status: 202, response_body: { operation: operation_data })
 
             service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
             expect(a_request(:put, service_binding_url(service_binding, 'accepts_incomplete=true'))).to have_been_made
 
             Delayed::Worker.new.work_off
-
-            expect(a_request(:get,
-                             "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-                            )).to have_been_made
+            operation_url = "#{service_binding_url(service_binding)}/last_operation"
+            query_params = "?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+            expect(a_request(:get, "#{operation_url}#{query_params}")).to have_been_made
           end
 
           context 'when the last operation is successful' do
@@ -204,7 +203,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
 
@@ -215,7 +214,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
 
@@ -226,7 +225,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
             end
@@ -262,7 +261,8 @@ RSpec.describe 'Service Broker API integration' do
           stub_async_last_operation
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
@@ -279,7 +279,8 @@ RSpec.describe 'Service Broker API integration' do
           update_service_instance(200, { dashboard_url: 'http://instance-dashboard.com' })
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker))
+          ).to have_been_made
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
@@ -299,24 +300,23 @@ RSpec.describe 'Service Broker API integration' do
         it 'performs the flow asynchronously and fetches the last operation from the broker' do
           operation_data = 'some_operation_data'
 
-          stub_async_last_operation(operation_data: operation_data)
+          stub_async_last_operation(operation_data:)
           async_unbind_service(status: 202, response_body: { operation: operation_data })
 
           service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
           expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
 
           Delayed::Worker.new.work_off
-
-          expect(a_request(:get,
-                           "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-                          )).to have_been_made
+          operation_url = "#{service_binding_url(service_binding)}/last_operation"
+          query_params = "?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+          expect(a_request(:get, "#{operation_url}#{query_params}")).to have_been_made
         end
 
         context 'when the last operation state is successful' do
           it 'deletes the binding' do
             operation_data = 'some_operation_data'
 
-            stub_async_last_operation(operation_data: operation_data)
+            stub_async_last_operation(operation_data:)
             async_unbind_service(status: 202, response_body: { operation: operation_data })
 
             Delayed::Worker.new.work_off
@@ -377,7 +377,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -405,7 +405,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -433,7 +433,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -461,7 +461,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+})
           ).not_to have_been_made
@@ -484,7 +484,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
           ).not_to have_been_made
@@ -507,7 +507,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
           ).not_to have_been_made

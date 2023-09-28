@@ -13,14 +13,13 @@ module VCAP::CloudController
       context 'when a name and label are requested' do
         let(:message) do
           VCAP::CloudController::SpaceUpdateMessage.new({
-           name: 'new-space-name',
-           metadata: {
-              labels: {
-                freaky: 'wednesday',
-              },
-            },
-                                                               }
-          )
+                                                          name: 'new-space-name',
+                                                          metadata: {
+                                                            labels: {
+                                                              freaky: 'wednesday'
+                                                            }
+                                                          }
+                                                        })
         end
 
         it 'updates a space' do
@@ -48,7 +47,7 @@ module VCAP::CloudController
             actee_type: 'space',
             actee_name: 'new-space-name',
             space_guid: space.guid,
-            organization_guid: space.organization.guid,
+            organization_guid: space.organization.guid
           )
           expect(event.metadata).to eq({ 'request' => message.audit_hash })
           expect(event.timestamp).to be
@@ -61,9 +60,9 @@ module VCAP::CloudController
             expect(space).to receive(:save).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect {
+            expect do
               SpaceUpdate.new(user_audit_info).update(space, message)
-            }.to raise_error(SpaceUpdate::Error, 'blork is busted')
+            end.to raise_error(SpaceUpdate::Error, 'blork is busted')
           end
         end
 
@@ -71,9 +70,9 @@ module VCAP::CloudController
           it 'errors usefully' do
             VCAP::CloudController::Space.make(name: 'new-space-name', organization: org)
 
-            expect {
+            expect do
               SpaceUpdate.new(user_audit_info).update(space, message)
-            }.to raise_error(SpaceUpdate::Error, "Organization '#{org.name}' already contains a space with name '#{message.name}'.")
+            end.to raise_error(SpaceUpdate::Error, "Organization '#{org.name}' already contains a space with name '#{message.name}'.")
           end
         end
       end

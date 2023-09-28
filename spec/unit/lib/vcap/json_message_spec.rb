@@ -3,32 +3,32 @@ require 'spec_helper'
 require 'vcap/json_message'
 
 RSpec.describe JsonMessage::Field do
-  it 'should raise an error when a required field is defined with a default' do
-    expect {
+  it 'raises an error when a required field is defined with a default' do
+    expect do
       JsonMessage::Field.new('key', schema: String, required: true, default: 'default')
-    }.to raise_error { |error|
+    end.to(raise_error do |error|
       expect(error).to be_an_instance_of(JsonMessage::DefinitionError)
       expect(error.message.size).to be > 0
-    }
+    end)
   end
 
   expected = 'should raise a schema validation error when schema validation'
   expected << ' fails for the default value of an optional field'
   it expected do
-    expect {
+    expect do
       JsonMessage::Field.new('optional', schema: Hash, required: false, default: 'default')
-    }.to raise_error { |error|
+    end.to(raise_error do |error|
       expect(error).to be_an_instance_of(JsonMessage::ValidationError)
       expect(error.message.size).to be > 0
-    }
+    end)
   end
 
   expected = 'should not raise a schema validation error when default value'
   expected << ' is absent for an optional field'
   it expected do
-    expect {
+    expect do
       JsonMessage::Field.new('optional', schema: String, required: false)
-    }.to_not raise_error
+    end.not_to raise_error
   end
 
   it 'can use a block to define the schema' do
@@ -40,61 +40,61 @@ RSpec.describe JsonMessage::Field do
 
     expect do
       field.validate(1)
-    end.to_not raise_error
+    end.not_to raise_error
   end
 end
 
 RSpec.describe JsonMessage do
   describe '#required' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
-    it 'should define the field accessor' do
+    it 'defines the field accessor' do
       @klass.required :required, String
       msg = @klass.new
-      expect(msg.required).to eq(nil)
-      expect { msg.required = 'required' }.to_not raise_error
+      expect(msg.required).to be_nil
+      expect { msg.required = 'required' }.not_to raise_error
     end
 
-    it 'should define the field to be required' do
+    it 'defines the field to be required' do
       @klass.required :required, String
       msg = @klass.new
 
-      expect {
+      expect do
         msg.encode
-      }.to raise_error { |error|
+      end.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ValidationError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
-    it 'should assume wildcard when schema is not defined' do
+    it 'assumes wildcard when schema is not defined' do
       @klass.required :required
       msg = @klass.new
-      expect { msg.required = Object.new }.to_not raise_error
+      expect { msg.required = Object.new }.not_to raise_error
     end
   end
 
   describe '#optional' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
-    it 'should define the field accessor' do
+    it 'defines the field accessor' do
       @klass.optional :optional, String
       msg = @klass.new
-      expect(msg.optional).to eq(nil)
-      expect { msg.optional = 'optional' }.to_not raise_error
+      expect(msg.optional).to be_nil
+      expect { msg.optional = 'optional' }.not_to raise_error
     end
 
-    it 'should define the field to be optional' do
+    it 'defines the field to be optional' do
       @klass.optional :optional, String
       msg = @klass.new
-      expect { msg.encode }.to_not raise_error
+      expect { msg.encode }.not_to raise_error
     end
 
-    it 'should define a default value' do
+    it 'defines a default value' do
       @klass.optional :optional, String, 'default'
       msg = @klass.new
       expect(msg.optional).to eq('default')
@@ -107,22 +107,22 @@ RSpec.describe JsonMessage do
       expect(msg.encode).to eq(Yajl::Encoder.encode({}))
     end
 
-    it 'should assume wildcard when schema is not defined' do
+    it 'assumes wildcard when schema is not defined' do
       @klass.optional :optional
       msg = @klass.new
-      expect { msg.optional = Object.new }.to_not raise_error
+      expect { msg.optional = Object.new }.not_to raise_error
     end
   end
 
   describe '#initialize' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
     it 'does not raise an exception when an unknown field is given' do
-      expect {
+      expect do
         @klass.new({ 'unknown' => 'unknown' })
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it 'does not add unknown fields to the result' do
@@ -145,49 +145,49 @@ RSpec.describe JsonMessage do
       expect(msg.optional).to eq('default')
     end
 
-    it 'should replace a default value with a defined value' do
+    it 'replaces a default value with a defined value' do
       @klass.optional :optional, String, 'default'
       msg = @klass.new({ 'optional' => 'defined' })
       expect(msg.optional).to eq('defined')
     end
 
-    it 'should not set a default for a field without a default value' do
+    it 'does not set a default for a field without a default value' do
       @klass.optional :optional, String
       msg = @klass.new
-      expect(msg.optional).to eq(nil)
+      expect(msg.optional).to be_nil
     end
 
-    it 'should set the default value for a required field with false default value' do
+    it 'sets the default value for a required field with false default value' do
       @klass.optional :enabled, -> { bool }, false
       msg = @klass.new
-      expect(msg.enabled).to eq(false)
+      expect(msg.enabled).to be(false)
     end
   end
 
   describe '#encode' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
-    it 'should encode uninitialized optional attribute with default value' do
+    it 'encodes uninitialized optional attribute with default value' do
       msg = @klass.new
       @klass.optional :optional, String, 'default'
       expect(msg.encode).to eq(Yajl::Encoder.encode({ 'optional' => 'default' }))
     end
 
-    it 'should raise validation errors when required fields are missing' do
+    it 'raises validation errors when required fields are missing' do
       @klass.required :required_one, String
       @klass.required :required_two, String
       msg = @klass.new
 
-      expect { msg.encode }.to raise_error { |error|
+      expect { msg.encode }.to(raise_error do |error|
         expect(error).to be_a(JsonMessage::ValidationError)
         expect(error.message).to be_an_instance_of(String)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
-    it 'should encode fields' do
+    it 'encodes fields' do
       @klass.required :required, String
       @klass.optional :with_default, String, 'default'
       @klass.optional :no_default, String
@@ -197,47 +197,47 @@ RSpec.describe JsonMessage do
       msg.no_default = 'defined'
 
       expected = {
-                  'required' => 'required',
-                  'with_default' => 'default',
-                  'no_default' => 'defined'
-                 }
+        'required' => 'required',
+        'with_default' => 'default',
+        'no_default' => 'defined'
+      }
       received = Yajl::Parser.parse(msg.encode)
       expect(received).to eq(expected)
     end
   end
 
   describe '#decode' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
-    it 'should raise a parse error when malformed json is passed' do
-      expect { @klass.decode('blah') }.to raise_error { |error|
+    it 'raises a parse error when malformed json is passed' do
+      expect { @klass.decode('blah') }.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ParseError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
-    it 'should raise a parse error when json passed is nil' do
-      expect { @klass.decode(nil) }.to raise_error { |error|
+    it 'raises a parse error when json passed is nil' do
+      expect { @klass.decode(nil) }.to(raise_error do |error|
         expect(error).to be_an_instance_of(JsonMessage::ParseError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
-    it 'should raise validation errors when required fields are missing' do
+    it 'raises validation errors when required fields are missing' do
       @klass.required :required_one, String
       @klass.required :required_two, String
 
-      expect {
+      expect do
         @klass.decode(Yajl::Encoder.encode({}))
-      }.to raise_error { |error|
+      end.to(raise_error do |error|
         expect(error).to be_a(JsonMessage::ValidationError)
         expect(error.message.size).to be > 0
-      }
+      end)
     end
 
-    it 'should decode json' do
+    it 'decodes json' do
       @klass.required :required, String
       @klass.optional :with_default, String, 'default'
       @klass.optional :no_default, String
@@ -253,11 +253,11 @@ RSpec.describe JsonMessage do
   end
 
   describe '#extract' do
-    before :each do
+    before do
       @klass = Class.new(JsonMessage)
     end
 
-    it 'should extract fields' do
+    it 'extracts fields' do
       @klass.required :required, String
       @klass.optional :optional, String, 'default'
       msg = @klass.new

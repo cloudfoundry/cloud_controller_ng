@@ -12,9 +12,9 @@ module VCAP::CloudController
       let(:rescheduling_request) do
         {
           'instance' => Sham.guid,
-          'index'    => 3,
-          'cell_id'  => Sham.guid,
-          'reason'   => 'Helpful reason for rescheduling',
+          'index' => 3,
+          'cell_id' => Sham.guid,
+          'reason' => 'Helpful reason for rescheduling'
         }
       end
 
@@ -24,7 +24,7 @@ module VCAP::CloudController
             post url, 'this is not json'
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match /MessageParseError/
+            expect(last_response.body).to match(/MessageParseError/)
           end
         end
       end

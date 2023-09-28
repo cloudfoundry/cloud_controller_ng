@@ -15,7 +15,7 @@ class StructuredError < StandardError
     {
       'description' => message,
       'backtrace' => backtrace,
-      'source' => hashify(source),
+      'source' => hashify(source)
     }
   end
 
@@ -29,7 +29,7 @@ class StructuredError < StandardError
     elsif source.is_a?(Exception)
       {
         'description' => source.message,
-        'backtrace' => source.backtrace,
+        'backtrace' => source.backtrace
       }
     else
       source.to_s

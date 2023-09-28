@@ -9,7 +9,7 @@ module VCAP::CloudController
         VCAP::CloudController::UserProvidedServiceInstance.create(
           name: Sham.name,
           space: VCAP::CloudController::Space.make,
-          credentials: value_to_encrypt,
+          credentials: value_to_encrypt
         )
       end
 
@@ -21,8 +21,9 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :space }
+
       it do
-        is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
+        expect(subject).to have_associated :service_bindings, associated_instance: lambda { |service_instance|
           app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
@@ -31,63 +32,64 @@ module VCAP::CloudController
 
     describe 'Validations' do
       let(:max_tags) { ['a' * 1024, 'b' * 1024] }
+
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :space }
       it { is_expected.to strip_whitespace :name }
       it { is_expected.to strip_whitespace :syslog_drain_url }
 
-      it 'should not bind an app and a service instance from different app spaces' do
+      it 'does not bind an app and a service instance from different app spaces' do
         service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
         VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
         service_binding = VCAP::CloudController::ServiceBinding.make
-        expect {
+        expect do
           service_instance.add_service_binding(service_binding)
-        }.to raise_error VCAP::CloudController::ServiceInstance::InvalidServiceBinding
+        end.to raise_error VCAP::CloudController::ServiceInstance::InvalidServiceBinding
       end
 
       it 'raises an error if the route_service_url is not https' do
-        expect {
+        expect do
           VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'http://route.url.com')
-        }.
+        end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_not_https')
       end
 
       it 'raises an error if the route_service_url does not have a valid host' do
-        expect {
+        expect do
           VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https://.com')
-        }.
+        end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
 
       it 'raises an error if the route_service_url format is invalid' do
-        expect {
+        expect do
           VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https\\route')
-        }.
+        end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
 
       it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
-        expect {
+        expect do
           UserProvidedServiceInstance.make tags: max_tags
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
-        expect {
+        expect do
           UserProvidedServiceInstance.make tags: max_tags[0..50]
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'does not accept user-provided tags with combined length of over 2048 characters' do
-        expect {
+        expect do
           UserProvidedServiceInstance.make tags: max_tags + ['z']
-        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+        end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'does not accept a single user-provided tag of length greater than 2048 characters' do
-        expect {
+        expect do
           UserProvidedServiceInstance.make tags: ['a' * 2049]
-        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+        end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
     end
 
@@ -116,7 +118,7 @@ module VCAP::CloudController
         expect(event).to match_service_instance(instance)
       end
 
-      it 'should create the service instance if the route_service_url is empty' do
+      it 'creates the service instance if the route_service_url is empty' do
         VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: '')
         expect(ServiceInstance.count).to eq(1)
       end
@@ -136,7 +138,7 @@ module VCAP::CloudController
     end
 
     describe '#tags' do
-      let(:instance_tags) { %w(a b c) }
+      let(:instance_tags) { %w[a b c] }
       let(:service_instance) { UserProvidedServiceInstance.make(tags: instance_tags) }
 
       it 'returns the instance tags' do
@@ -145,6 +147,7 @@ module VCAP::CloudController
 
       context 'when there are no tags' do
         let(:instance_tags) { nil }
+
         it 'returns an empty array' do
           expect(service_instance.tags).to eq []
         end

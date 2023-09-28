@@ -3,7 +3,7 @@ require 'utils/hash_utils'
 
 module VCAP::CloudController
   class ServiceRouteBindingCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:relationships, :parameters]
+    register_allowed_keys %i[relationships parameters]
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates :parameters, hash: true, allow_nil: true
@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      register_allowed_keys [:service_instance, :route]
+      register_allowed_keys %i[service_instance route]
 
       def route_guid
         HashUtils.dig(route, :data, :guid)

@@ -21,7 +21,7 @@ RSpec.describe 'max instance memory policies' do
       let!(:sidecar_process_type_3) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_3, app_guid: app_model.guid, type: 'web') }
 
       it 'returns false' do
-        expect(validator.valid?).to eq false
+        expect(validator.valid?).to be false
       end
     end
 
@@ -30,7 +30,7 @@ RSpec.describe 'max instance memory policies' do
       let!(:sidecar_process_type_3) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_3, app_guid: app_model.guid, type: 'web') }
 
       it 'does not error' do
-        expect(validator.valid?).to eq false
+        expect(validator.valid?).to be false
       end
     end
 
@@ -41,7 +41,7 @@ RSpec.describe 'max instance memory policies' do
       let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, 10) }
 
       it 'returns true' do
-        expect(validator.valid?).to eq true
+        expect(validator.valid?).to be true
       end
     end
 
@@ -49,7 +49,7 @@ RSpec.describe 'max instance memory policies' do
       let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, nil) }
 
       it 'does not error' do
-        expect(validator.valid?).to eq true
+        expect(validator.valid?).to be true
       end
     end
 
@@ -58,7 +58,7 @@ RSpec.describe 'max instance memory policies' do
       let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, 9, sidecar_1) }
 
       it 'does not count the exisiting sidecar twice' do
-        expect(validator.valid?).to eq true
+        expect(validator.valid?).to be true
       end
     end
   end

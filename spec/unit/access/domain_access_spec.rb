@@ -23,24 +23,25 @@ module VCAP::CloudController
       let(:object) { PrivateDomain.make(owning_organization: org) }
 
       context 'admin' do
-        include_context :admin_setup
+        include_context 'admin setup'
 
         before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
 
-        it_behaves_like :full_access
+        it_behaves_like 'full access'
       end
 
       context 'admin read only' do
-        include_context :admin_read_only_setup
+        include_context 'admin read only setup'
 
         before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
 
-        it_behaves_like :read_only_access
+        it_behaves_like 'read only access'
       end
 
       context 'organization manager' do
         before { org.add_manager(user) }
-        it_behaves_like :full_access
+
+        it_behaves_like 'full access'
 
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do
@@ -52,17 +53,20 @@ module VCAP::CloudController
 
       context 'organization auditor' do
         before { org.add_auditor(user) }
-        it_behaves_like :read_only_access
+
+        it_behaves_like 'read only access'
       end
 
       context 'organization user (defensive)' do
         before { org.add_user(user) }
-        it_behaves_like :no_access
+
+        it_behaves_like 'no access'
       end
 
       context 'organization billing manager (defensive)' do
         before { org.add_billing_manager(user) }
-        it_behaves_like :no_access
+
+        it_behaves_like 'no access'
       end
 
       context 'user in a different organization (defensive)' do
@@ -71,7 +75,7 @@ module VCAP::CloudController
           different_organization.add_user(user)
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'manager in a different organization (defensive)' do
@@ -80,12 +84,13 @@ module VCAP::CloudController
           different_organization.add_manager(user)
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
-        it_behaves_like :no_access
+
+        it_behaves_like 'no access'
       end
 
       context 'any user using client without cloud_controller.write' do
@@ -101,7 +106,7 @@ module VCAP::CloudController
           space.add_auditor(user)
         end
 
-        it_behaves_like :read_only_access
+        it_behaves_like 'read only access'
       end
 
       context 'any user using client without cloud_controller.read' do
@@ -117,22 +122,22 @@ module VCAP::CloudController
           space.add_auditor(user)
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
     end
 
     context 'when the domain is a shared domain' do
       let(:object) { SharedDomain.make }
 
-      it_behaves_like :admin_full_access
-      it_behaves_like :read_only_access
-      it_behaves_like :admin_read_only_access
+      it_behaves_like 'admin full access'
+      it_behaves_like 'read only access'
+      it_behaves_like 'admin read only access'
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
         let(:token) { { 'scope' => [] } }
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'any user using client without cloud_controller.read' do
@@ -148,7 +153,7 @@ module VCAP::CloudController
           space.add_auditor(user)
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
     end
   end

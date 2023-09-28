@@ -11,9 +11,10 @@ RSpec.describe 'Stacks Request' do
 
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
+
     let(:user) { make_user }
     let(:user_header) { headers_for(user) }
-    let(:api_call) { lambda { |user_header| get '/v3/stacks', nil, user_header } }
+    let(:api_call) { ->(user_header) { get '/v3/stacks', nil, user_header } }
 
     context 'lists all stacks' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
@@ -67,7 +68,7 @@ RSpec.describe 'Stacks Request' do
         let(:resource_klass) { VCAP::CloudController::Stack }
         let(:headers) { admin_headers }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/stacks?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/stacks?#{filters}", nil, headers }
         end
       end
 
@@ -76,15 +77,15 @@ RSpec.describe 'Stacks Request' do
         let(:message) { VCAP::CloudController::StacksListMessage }
         let(:params) do
           {
-            names: ['foo', 'bar'],
+            names: %w[foo bar],
             default: true,
-            page:   '2',
-            per_page:   '10',
-            order_by:   'updated_at',
-            label_selector:   'foo,bar',
+            page: '2',
+            per_page: '10',
+            order_by: 'updated_at',
+            label_selector: 'foo,bar',
             guids: 'foo,bar',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
         let!(:stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
@@ -247,18 +248,20 @@ RSpec.describe 'Stacks Request' do
         end
 
         context 'when there are labels' do
-          let!(:stack1_label) { VCAP::CloudController::StackLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: stack1.guid
-          )
-          }
-          let!(:stack2_label) { VCAP::CloudController::StackLabelModel.make(
-            key_name: 'release',
-            value: 'unstable',
-            resource_guid: stack2.guid
-          )
-          }
+          let!(:stack1_label) do
+            VCAP::CloudController::StackLabelModel.make(
+              key_name: 'release',
+              value: 'stable',
+              resource_guid: stack1.guid
+            )
+          end
+          let!(:stack2_label) do
+            VCAP::CloudController::StackLabelModel.make(
+              key_name: 'release',
+              value: 'unstable',
+              resource_guid: stack2.guid
+            )
+          end
 
           it 'returns a list of label filtered stacks' do
             get '/v3/stacks?label_selector=release=stable', nil, user_header
@@ -297,8 +300,8 @@ RSpec.describe 'Stacks Request' do
                       'self' => {
                         'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
                       }
-                    },
-                  },
+                    }
+                  }
                 ]
               }
             )
@@ -311,7 +314,7 @@ RSpec.describe 'Stacks Request' do
   describe 'GET /v3/stacks/:guid' do
     let(:user) { make_user }
     let(:user_header) { headers_for(user) }
-    let(:api_call) { lambda { |user_header| get "/v3/stacks/#{stack.guid}", nil, user_header } }
+    let(:api_call) { ->(user_header) { get "/v3/stacks/#{stack.guid}", nil, user_header } }
     let!(:stack) { VCAP::CloudController::Stack.make }
     let(:stacks_response_object) do
       {
@@ -349,7 +352,8 @@ RSpec.describe 'Stacks Request' do
     let!(:app_model3) do
       VCAP::CloudController::AppModel.make(
         :docker,
-        name: 'name2')
+        name: 'name2'
+      )
     end
 
     before do
@@ -376,7 +380,7 @@ RSpec.describe 'Stacks Request' do
               'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
               'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
               'previous' => nil,
-              'next' => nil,
+              'next' => nil
             },
             'resources' => [
               {
@@ -387,7 +391,7 @@ RSpec.describe 'Stacks Request' do
                   'type' => 'buildpack',
                   'data' => {
                     'buildpacks' => ['bp-name'],
-                    'stack' => 'stack-name',
+                    'stack' => 'stack-name'
                   }
                 },
                 'relationships' => {
@@ -413,9 +417,9 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
-                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" }
                 }
-              },
+              }
             ]
           }
         )
@@ -425,6 +429,7 @@ RSpec.describe 'Stacks Request' do
     context 'as an admin user' do
       let!(:user) { make_user(admin: true) }
       let!(:headers) { admin_headers_for(user) }
+
       it 'return the list of all apps using the given stack' do
         get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
 
@@ -438,7 +443,7 @@ RSpec.describe 'Stacks Request' do
               'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
               'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
               'previous' => nil,
-              'next' => nil,
+              'next' => nil
             },
             'resources' => [
               {
@@ -449,7 +454,7 @@ RSpec.describe 'Stacks Request' do
                   'type' => 'buildpack',
                   'data' => {
                     'buildpacks' => ['bp-name'],
-                    'stack' => 'stack-name',
+                    'stack' => 'stack-name'
                   }
                 },
                 'relationships' => {
@@ -475,7 +480,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
-                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" }
                 }
               },
               {
@@ -486,7 +491,7 @@ RSpec.describe 'Stacks Request' do
                   'type' => 'buildpack',
                   'data' => {
                     'buildpacks' => ['bp-name'],
-                    'stack' => 'stack-name',
+                    'stack' => 'stack-name'
                   }
                 },
                 'relationships' => {
@@ -512,7 +517,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
-                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" }
                 }
               }
             ]
@@ -522,7 +527,7 @@ RSpec.describe 'Stacks Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| get "/v3/stacks/#{stack.guid}/apps", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/stacks/#{stack.guid}/apps", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guids: [app_model1.guid, app_model2.guid])
@@ -540,35 +545,37 @@ RSpec.describe 'Stacks Request' do
         h['org_manager'] = {
           code: 200,
           response_guids: [
-            app_model1.guid,
+            app_model1.guid
           ]
         }
 
         h['space_manager'] = {
           code: 200,
           response_guids: [
-            app_model1.guid,
+            app_model1.guid
           ]
         }
 
         h['space_auditor'] = {
           code: 200,
           response_guids: [
-            app_model1.guid,
+            app_model1.guid
           ]
         }
 
         h['space_developer'] = {
           code: 200,
           response_guids: [
-            app_model1.guid,
-          ] }
+            app_model1.guid
+          ]
+        }
 
         h['space_supporter'] = {
           code: 200,
           response_guids: [
-            app_model1.guid,
-          ] }
+            app_model1.guid
+          ]
+        }
 
         h['no_role'] = { code: 200, response_guids: [] }
         h
@@ -610,10 +617,10 @@ RSpec.describe 'Stacks Request' do
         description: 'the-description',
         metadata: {
           labels: {
-            potato: 'yam',
+            potato: 'yam'
           },
           annotations: {
-            potato: 'idaho',
+            potato: 'idaho'
           }
         }
       }.to_json
@@ -621,11 +628,9 @@ RSpec.describe 'Stacks Request' do
     let(:headers) { admin_headers_for(user) }
 
     it 'creates a new stack' do
-      expect {
+      expect do
         post '/v3/stacks', request_body, headers
-      }.to change {
-        VCAP::CloudController::Stack.count
-      }.by 1
+      end.to change(VCAP::CloudController::Stack, :count).by 1
 
       created_stack = VCAP::CloudController::Stack.last
 
@@ -644,7 +649,7 @@ RSpec.describe 'Stacks Request' do
             },
             'annotations' => {
               'potato' => 'idaho'
-            },
+            }
           },
           'guid' => created_stack.guid,
           'created_at' => iso8601,
@@ -662,7 +667,7 @@ RSpec.describe 'Stacks Request' do
       let(:name) { 'the-name' }
 
       before do
-        VCAP::CloudController::Stack.make name: name
+        VCAP::CloudController::Stack.make name:
       end
 
       it 'responds with 422' do
@@ -708,7 +713,7 @@ RSpec.describe 'Stacks Request' do
             },
             'annotations' => {
               'potato' => 'idaho'
-            },
+            }
           },
           'guid' => stack.guid,
           'created_at' => iso8601,
@@ -732,7 +737,7 @@ RSpec.describe 'Stacks Request' do
       delete "/v3/stacks/#{stack.guid}", {}, headers
 
       expect(last_response.status).to eq(204)
-      expect(stack).to_not exist
+      expect(stack).not_to exist
     end
 
     context 'deleting metadata' do

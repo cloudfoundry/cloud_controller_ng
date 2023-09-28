@@ -37,7 +37,8 @@ module VCAP::CloudController
             billing_manager_guids: { type: '[string]' },
             auditor_guids: { type: '[string]' },
             app_event_guids: { type: '[string]' }
-          })
+          }
+        )
       end
 
       it do
@@ -55,11 +56,12 @@ module VCAP::CloudController
             space_guids: { type: '[string]' },
             space_quota_definition_guids: { type: '[string]' },
             default_isolation_segment_guid: { type: 'string' }
-          })
+          }
+        )
       end
 
       it 'can order by name and id when listing' do
-        expect(VCAP::CloudController::OrganizationsController.sortable_parameters).to match_array([:id, :name])
+        expect(VCAP::CloudController::OrganizationsController.sortable_parameters).to match_array(%i[id name])
       end
     end
 
@@ -79,19 +81,19 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
+                           name: 'organization',
+                           path: '/v2/organizations',
+                           enumerate: 1
 
           it 'cannot update quota definition' do
             quota = QuotaDefinition.make
-            expect(@org_a.quota_definition.guid).to_not eq(quota.guid)
+            expect(@org_a.quota_definition.guid).not_to eq(quota.guid)
 
             put "/v2/organizations/#{@org_a.guid}", MultiJson.dump(quota_definition_guid: quota.guid)
 
             @org_a.reload
             expect(last_response.status).to eq(403)
-            expect(@org_a.quota_definition.guid).to_not eq(quota.guid)
+            expect(@org_a.quota_definition.guid).not_to eq(quota.guid)
           end
 
           it 'cannot update billing_enabled' do
@@ -110,9 +112,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
+                           name: 'organization',
+                           path: '/v2/organizations',
+                           enumerate: 1
         end
 
         describe 'BillingManager' do
@@ -120,9 +122,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
+                           name: 'organization',
+                           path: '/v2/organizations',
+                           enumerate: 1
         end
 
         describe 'Auditor' do
@@ -130,9 +132,9 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
 
           include_examples 'permission enumeration', 'Auditor',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
+                           name: 'organization',
+                           path: '/v2/organizations',
+                           enumerate: 1
         end
       end
     end
@@ -141,15 +143,15 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::OrganizationsController).to have_nested_routes(
           {
-            spaces: [:get, :put, :delete],
-            domains: [:get, :delete],
-            private_domains: [:get, :put, :delete],
-            users: [:get, :put, :delete],
-            managers: [:get, :put, :delete],
-            billing_managers: [:get, :put, :delete],
-            auditors: [:get, :put, :delete],
-            app_events: [:get, :put, :delete],
-            space_quota_definitions: [:get, :put, :delete],
+            spaces: %i[get put delete],
+            domains: %i[get delete],
+            private_domains: %i[get put delete],
+            users: %i[get put delete],
+            managers: %i[get put delete],
+            billing_managers: %i[get put delete],
+            auditors: %i[get put delete],
+            app_events: %i[get put delete],
+            space_quota_definitions: %i[get put delete]
           }
         )
       end
@@ -169,8 +171,8 @@ module VCAP::CloudController
 
         it 'returns a 403' do
           put "/v2/organizations/#{org.guid}", MultiJson.dump({
-            default_isolation_segment_guid: isolation_segment.guid
-          })
+                                                                default_isolation_segment_guid: isolation_segment.guid
+                                                              })
 
           expect(last_response.status).to eq(403)
           expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
@@ -187,8 +189,8 @@ module VCAP::CloudController
         context 'when the isolation segment does not exist' do
           it 'returns a 404' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: 'bogus-guid'
-            })
+                                                                  default_isolation_segment_guid: 'bogus-guid'
+                                                                })
 
             expect(last_response.status).to eq(404)
           end
@@ -197,8 +199,8 @@ module VCAP::CloudController
         context 'when the isolation segment is not in the allowed list' do
           it 'returns a 400' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: isolation_segment.guid
-            })
+                                                                  default_isolation_segment_guid: isolation_segment.guid
+                                                                })
 
             expect(last_response.status).to eq(400)
           end
@@ -215,8 +217,8 @@ module VCAP::CloudController
 
           it 'sets the isolation segment as the org default' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: isolation_segment2.guid
-            })
+                                                                  default_isolation_segment_guid: isolation_segment2.guid
+                                                                })
 
             expect(last_response.status).to eq(201)
             org.reload
@@ -226,8 +228,8 @@ module VCAP::CloudController
           context 'when the segment is already the default isolation segment' do
             it 'leaves the default unchanged' do
               put "/v2/organizations/#{org.guid}", MultiJson.dump({
-                default_isolation_segment_guid: isolation_segment.guid
-              })
+                                                                    default_isolation_segment_guid: isolation_segment.guid
+                                                                  })
 
               expect(last_response.status).to eq(201)
               org.reload
@@ -248,8 +250,8 @@ module VCAP::CloudController
 
         it 'sets the isolation segment as the org default' do
           put "/v2/organizations/#{org.guid}", MultiJson.dump({
-            default_isolation_segment_guid: isolation_segment2.guid
-          })
+                                                                default_isolation_segment_guid: isolation_segment2.guid
+                                                              })
 
           expect(last_response.status).to eq(201)
           org.reload
@@ -288,8 +290,8 @@ module VCAP::CloudController
         context 'when the isolation segment does not exist' do
           it 'returns a 404' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: 'bogus-guid'
-            })
+                                                                  default_isolation_segment_guid: 'bogus-guid'
+                                                                })
 
             expect(last_response.status).to eq(404)
           end
@@ -298,8 +300,8 @@ module VCAP::CloudController
         context 'when the isolation segment is not in the allowed list' do
           it 'returns a 400' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: isolation_segment.guid
-            })
+                                                                  default_isolation_segment_guid: isolation_segment.guid
+                                                                })
 
             expect(last_response.status).to eq(400)
           end
@@ -316,8 +318,8 @@ module VCAP::CloudController
 
           it 'sets the isolation segment as the org default' do
             put "/v2/organizations/#{org.guid}", MultiJson.dump({
-              default_isolation_segment_guid: isolation_segment2.guid
-            })
+                                                                  default_isolation_segment_guid: isolation_segment2.guid
+                                                                })
 
             expect(last_response.status).to eq(201)
             org.reload
@@ -327,8 +329,8 @@ module VCAP::CloudController
           context 'when the segment is already the default isolation segment' do
             it 'leaves the default unchanged' do
               put "/v2/organizations/#{org.guid}", MultiJson.dump({
-                default_isolation_segment_guid: isolation_segment.guid
-              })
+                                                                    default_isolation_segment_guid: isolation_segment.guid
+                                                                  })
 
               expect(last_response.status).to eq(201)
               org.reload
@@ -349,8 +351,8 @@ module VCAP::CloudController
 
         it 'sets the isolation segment as the org default' do
           put "/v2/organizations/#{org.guid}", MultiJson.dump({
-            default_isolation_segment_guid: isolation_segment2.guid
-          })
+                                                                default_isolation_segment_guid: isolation_segment2.guid
+                                                              })
 
           expect(last_response.status).to eq(201)
           org.reload
@@ -393,9 +395,9 @@ module VCAP::CloudController
             isolation_segment = IsolationSegmentModel.make
 
             post '/v2/organizations', MultiJson.dump({
-              name: 'my-org-name',
-              isolation_segment_guid: isolation_segment.guid
-            })
+                                                       name: 'my-org-name',
+                                                       isolation_segment_guid: isolation_segment.guid
+                                                     })
 
             expect(last_response.status).to eq(201)
             org = Organization.find(name: 'my-org-name')
@@ -617,7 +619,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             org.reload
-            expect(org.managers).to_not include(other_user)
+            expect(org.managers).not_to include(other_user)
 
             event = Event.find(type: 'audit.user.organization_manager_remove', actee: other_user.guid)
             expect(event).not_to be_nil
@@ -665,7 +667,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             org.reload
-            expect(org.auditors).to_not include(other_user)
+            expect(org.auditors).not_to include(other_user)
 
             event = Event.find(type: 'audit.user.organization_auditor_remove', actee: other_user.guid)
             expect(event).not_to be_nil
@@ -713,7 +715,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             org.reload
-            expect(org.billing_managers).to_not include(other_user)
+            expect(org.billing_managers).not_to include(other_user)
 
             event = Event.find(type: 'audit.user.organization_billing_manager_remove', actee: other_user.guid)
             expect(event).not_to be_nil
@@ -761,7 +763,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             org.reload
-            expect(org.users).to_not include(other_user)
+            expect(org.users).not_to include(other_user)
 
             event = Event.find(type: 'audit.user.organization_user_remove', actee: other_user.guid)
             expect(event).not_to be_nil
@@ -775,6 +777,7 @@ module VCAP::CloudController
         let(:mgr) { User.make(guid: 'mgr-lemon') }
         let(:user) { User.make(guid: 'user-lime') }
         let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+
         before do
           allow(uaa_client).to receive(:usernames_for_ids).and_return({})
         end
@@ -786,7 +789,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(2)
           parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
-          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/], [user.guid, %w/org_user/]])
+          expect(parts).to contain_exactly([mgr.guid, %w[org_manager org_user]], [user.guid, %w[org_user]])
         end
 
         it 'supports querying by user' do
@@ -796,7 +799,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(1)
           parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
-          expect(parts).to match_array([[user.guid, %w/org_user/]])
+          expect(parts).to contain_exactly([user.guid, %w[org_user]])
         end
 
         it 'supports querying for the manager' do
@@ -806,7 +809,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(1)
           parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
-          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/]])
+          expect(parts).to contain_exactly([mgr.guid, %w[org_manager org_user]])
         end
       end
 
@@ -826,7 +829,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(1)
           parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
-          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/]])
+          expect(parts).to contain_exactly([mgr.guid, %w[org_manager org_user]])
         end
       end
 
@@ -865,25 +868,25 @@ module VCAP::CloudController
       end
 
       context 'with an offering that has private plans' do
-        before(:each) do
+        before do
           @service = Service.make(active: true)
           @service_plan = ServicePlan.make(service: @service, public: false)
           ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: org)
         end
 
-        it "should remove the offering when the org does not have access to any of the service's plans" do
+        it "removes the offering when the org does not have access to any of the service's plans" do
           get "/v2/organizations/#{other_org.guid}/services"
           expect(last_response).to be_ok
           expect(decoded_guids).not_to include(@service.guid)
         end
 
-        it "should return the offering when the org has access to one of the service's plans" do
+        it "returns the offering when the org has access to one of the service's plans" do
           get "/v2/organizations/#{org.guid}/services"
           expect(last_response).to be_ok
           expect(decoded_guids).to include(@service.guid)
         end
 
-        it 'should include plans that are visible to the org' do
+        it 'includes plans that are visible to the org' do
           get "/v2/organizations/#{org.guid}/services?inline-relations-depth=1"
 
           expect(last_response).to be_ok
@@ -894,7 +897,7 @@ module VCAP::CloudController
           expect(service_plans.first.fetch('metadata').fetch('url')).to eq("/v2/service_plans/#{@service_plan.guid}")
         end
 
-        it 'should exclude plans that are not visible to the org' do
+        it 'excludes plans that are not visible to the org' do
           public_service_plan = ServicePlan.make(service: @service, public: true)
 
           get "/v2/organizations/#{other_org.guid}/services?inline-relations-depth=1"
@@ -908,7 +911,7 @@ module VCAP::CloudController
       end
 
       describe 'get /v2/organizations/:guid/services?q=active:<t|f>' do
-        before(:each) do
+        before do
           @active = Array.new(3) { Service.make(active: true).tap { |svc| ServicePlan.make(service: svc) } }
           @inactive = Array.new(2) { Service.make(active: false).tap { |svc| ServicePlan.make(service: svc) } }
         end
@@ -1020,7 +1023,7 @@ module VCAP::CloudController
         set_current_user(manager)
       end
 
-      it 'should return the private domains associated with the organization and all shared domains' do
+      it 'returns the private domains associated with the organization and all shared domains' do
         get "/v2/organizations/#{organization.guid}/domains"
 
         expect(last_response.status).to eq(200)
@@ -1031,7 +1034,7 @@ module VCAP::CloudController
 
       context 'space roles' do
         let(:organization) { Organization.make }
-        let(:space) { Space.make(organization: organization) }
+        let(:space) { Space.make(organization:) }
 
         context 'space developers without org role' do
           let(:space_developer) { make_developer_for_space(space) }
@@ -1053,7 +1056,7 @@ module VCAP::CloudController
 
     describe 'Deprecated endpoints' do
       describe 'GET /v2/organizations/:guid/domains' do
-        it 'should be deprecated' do
+        it 'is deprecated' do
           set_current_user_as_admin
 
           get "/v2/organizations/#{org.guid}/domains"
@@ -1077,21 +1080,21 @@ module VCAP::CloudController
         context 'without the recursive flag' do
           context 'a single organization' do
             context 'as an admin' do
-              it 'should remove the user from the organization if that user does not belong to any space' do
+              it 'removes the user from the organization if that user does not belong to any space' do
                 org.add_space(org_space_empty)
                 expect(org.users).to include(user)
                 delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                expect(last_response.status).to eql(204)
+                expect(last_response.status).to be(204)
 
                 org.refresh
                 expect(org.user_guids).not_to include(user)
               end
 
-              it 'should not remove the user from the organization if that user belongs to a space associated with the organization' do
+              it 'does not remove the user from the organization if that user belongs to a space associated with the organization' do
                 org.add_space(org_space_full)
                 delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
 
-                expect(last_response.status).to eql(400)
+                expect(last_response.status).to be(400)
                 org.refresh
                 expect(org.users).to include(user)
               end
@@ -1109,7 +1112,7 @@ module VCAP::CloudController
                   org.add_space(org_space_empty)
                   expect(org.users).to include(user)
                   delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(204)
+                  expect(last_response.status).to be(204)
 
                   org.refresh
                   expect(org.user_guids).not_to include(user.guid)
@@ -1123,7 +1126,7 @@ module VCAP::CloudController
                   org.add_space(org_space_empty)
                   expect(org.users).to include(user)
                   delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
-                  expect(last_response.status).to eql(403)
+                  expect(last_response.status).to be(403)
 
                   org.refresh
                   expect(org.user_guids).to include(user.guid)
@@ -1135,34 +1138,34 @@ module VCAP::CloudController
 
         context 'with recursive flag' do
           context 'a single organization' do
-            it 'should remove the user from each space that is associated with the organization' do
+            it 'removes the user from each space that is associated with the organization' do
               org.add_space(org_space_full)
-              ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).to include(user) }
+              %w[developers auditors managers].each { |type| expect(org_space_full.send(type)).to include(user) }
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
-              expect(last_response.status).to eql(204)
+              expect(last_response.status).to be(204)
 
               org_space_full.refresh
-              ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).not_to include(user) }
+              %w[developers auditors managers].each { |type| expect(org_space_full.send(type)).not_to include(user) }
             end
 
-            it 'should remove the user from the organization' do
+            it 'removes the user from the organization' do
               org.add_space(org_space_full)
               expect(org.users).to include(user)
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
-              expect(last_response.status).to eql(204)
+              expect(last_response.status).to be(204)
 
               org.refresh
               expect(org.users).not_to include(user)
             end
 
-            it 'should remove all org roles from the user in the organization' do
+            it 'removes all org roles from the user in the organization' do
               org.add_space(org_space_full)
               org.add_manager(user)
               expect(org.users).to include(user)
               expect(org.managers).to include(user)
 
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
-              expect(last_response.status).to eql(204)
+              expect(last_response.status).to be(204)
 
               org.refresh
               expect(org.users).not_to include(user)
@@ -1174,7 +1177,7 @@ module VCAP::CloudController
             let(:org_2) { Organization.make(user_guids: [user.guid]) }
             let(:org2_space) { Space.make(organization: org_2, developer_guids: [user.guid]) }
 
-            it 'should remove all user roles from one organization, but no the other' do
+            it 'removes all user roles from one organization, but no the other' do
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
               [org, org_2].each { |organization| expect(organization.users).to include(user) }
@@ -1184,7 +1187,7 @@ module VCAP::CloudController
               expect(org.billing_managers).to include(user)
 
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
-              expect(last_response.status).to eql(204)
+              expect(last_response.status).to be(204)
 
               [org, org_2].each(&:refresh)
               expect(org.users).not_to include(user)
@@ -1193,16 +1196,16 @@ module VCAP::CloudController
               expect(org_2.users).to include(user)
             end
 
-            it 'should remove a user from each space associated with the organization being removed, but not the other' do
+            it 'removes a user from each space associated with the organization being removed, but not the other' do
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
-              ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).to include(user) }
+              %w[developers auditors managers].each { |type| expect(org_space_full.send(type)).to include(user) }
               expect(org2_space.developers).to include(user)
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true"
-              expect(last_response.status).to eql(204)
+              expect(last_response.status).to be(204)
 
               [org_space_full, org2_space].each(&:refresh)
-              ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).not_to include(user) }
+              %w[developers auditors managers].each { |type| expect(org_space_full.send(type)).not_to include(user) }
               expect(org2_space.developers).to include(user)
             end
           end
@@ -1223,7 +1226,7 @@ module VCAP::CloudController
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
               expect(last_response.status).to eq(204)
               org.reload
-              expect(org.users).to_not include(user)
+              expect(org.users).not_to include(user)
             end
           end
 
@@ -1233,7 +1236,7 @@ module VCAP::CloudController
 
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}"
               expect(last_response.status).to eq(403)
-              expect(decoded_response['code']).to eq(30006)
+              expect(decoded_response['code']).to eq(30_006)
               org.reload
               expect(org.users).to include(user)
             end
@@ -1242,7 +1245,7 @@ module VCAP::CloudController
       end
 
       context 'PUT /v2/organizations/org_guid' do
-        it 'should remove the user if that user does not belong to any space associated with the organization' do
+        it 'removes the user if that user does not belong to any space associated with the organization' do
           org.add_space(org_space_empty)
           expect(org.users).to include(user)
           put "/v2/organizations/#{org.guid}", MultiJson.dump('user_guids' => [])
@@ -1250,10 +1253,10 @@ module VCAP::CloudController
           expect(org.users).not_to include(user)
         end
 
-        it 'should not remove the user if the user belongs to a space within the org' do
+        it 'does not remove the user if the user belongs to a space within the org' do
           org.add_space(org_space_full)
           put "/v2/organizations/#{org.guid}", MultiJson.dump('user_guids' => [])
-          expect(last_response.status).to eql(400)
+          expect(last_response.status).to be(400)
           org.refresh
           expect(org.users).to include(user)
         end
@@ -1276,7 +1279,7 @@ module VCAP::CloudController
             org2.add_manager(target_manager)
           end
 
-          it 'should allow a user who is a manager of both the target org and the owning org to share a private domain' do
+          it 'allows a user who is a manager of both the target org and the owning org to share a private domain' do
             set_current_user(manager)
 
             put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}"
@@ -1285,14 +1288,14 @@ module VCAP::CloudController
             expect(org2.private_domains).to include(private_domain)
           end
 
-          it 'should not allow the user to share domains to an org that the user is not a org manager of' do
+          it 'does not allow the user to share domains to an org that the user is not a org manager of' do
             set_current_user(user)
 
             put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}"
             expect(last_response.status).to eq(403)
           end
 
-          it 'should not allow the user to share domains that user is not a manager in the owning organization of' do
+          it 'does not allow the user to share domains that user is not a manager in the owning organization of' do
             set_current_user(target_manager)
 
             put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}"
@@ -1336,8 +1339,8 @@ module VCAP::CloudController
 
       it 'returns an OrganizationInvalid message' do
         post '/v2/organizations', MultiJson.dump({ name: 'gotcha' })
-        expect(last_response.status).to eql(400)
-        expect(decoded_response['code']).to eq(30001)
+        expect(last_response.status).to be(400)
+        expect(decoded_response['code']).to eq(30_001)
         expect(decoded_response['description']).to include('Quota Definition could not be found')
       end
     end
@@ -1452,7 +1455,7 @@ module VCAP::CloudController
           end
 
           let!(:space) { Space.make(organization: org) }
-          let!(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let!(:service_instance) { ManagedServiceInstance.make(space:) }
 
           it 'deletes the service instance' do
             delete "/v2/organizations/#{org.guid}?recursive=true"
@@ -1461,9 +1464,9 @@ module VCAP::CloudController
           end
 
           context 'and one of the instances fails to delete' do
-            let!(:service_instance_2) { ManagedServiceInstance.make(space: space) }
-            let!(:service_instance_3) { ManagedServiceInstance.make(space: space) }
-            let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+            let!(:service_instance_2) { ManagedServiceInstance.make(space:) }
+            let!(:service_instance_3) { ManagedServiceInstance.make(space:) }
+            let!(:service_binding) { ServiceBinding.make(service_instance:) }
 
             before do
               stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
@@ -1489,7 +1492,7 @@ module VCAP::CloudController
 
         context 'and async=true' do
           let(:space) { Space.make(organization: org) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:service_instance) { ManagedServiceInstance.make(space:) }
 
           before do
             stub_deprovision(service_instance, accepts_incomplete: true)
@@ -1498,9 +1501,9 @@ module VCAP::CloudController
 
           it 'successfully deletes the space in a background job' do
             space_guid = space.guid
-            app_guid = AppModel.make(space_guid: space_guid).guid
+            app_guid = AppModel.make(space_guid:).guid
             service_instance_guid = service_instance.guid
-            route_guid = Route.make(space_guid: space_guid).guid
+            route_guid = Route.make(space_guid:).guid
 
             delete "/v2/organizations/#{org.guid}?recursive=true&async=true"
 
@@ -1641,8 +1644,8 @@ module VCAP::CloudController
             set_current_user(org_manager)
 
             delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}"
-            expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30004)
+            expect(last_response.status).to be(403)
+            expect(decoded_response['code']).to eq(30_004)
           end
         end
       end
@@ -1684,8 +1687,8 @@ module VCAP::CloudController
             set_current_user(billing_manager)
 
             delete "/v2/organizations/#{org.guid}/billing_managers/#{billing_manager.guid}"
-            expect(last_response.status).to eql(403)
-            expect(decoded_response['code']).to eq(30005)
+            expect(last_response.status).to be(403)
+            expect(decoded_response['code']).to eq(30_005)
           end
         end
       end
@@ -1728,38 +1731,42 @@ module VCAP::CloudController
             set_current_user(auditor)
 
             delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(204)
+            expect(last_response.status).to be(204)
           end
         end
 
         context 'as the org manager' do
           let(:org_manager) { User.make }
+
           before do
             org.add_manager org_manager
             set_current_user org_manager
           end
+
           it 'is allowed' do
             delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(204)
+            expect(last_response.status).to be(204)
           end
         end
 
         context 'as a user' do
           let(:user) { User.make }
+
           before do
             org.add_user user
             set_current_user user
           end
+
           it 'is not allowed' do
             delete "/v2/organizations/#{org.guid}/auditors/#{auditor.guid}"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
           end
         end
       end
     end
 
     describe 'adding user roles by username' do
-      [:user, :manager, :billing_manager, :auditor].each do |role|
+      %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/organizations/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
@@ -1781,6 +1788,7 @@ module VCAP::CloudController
               context 'when the specified origin is not in the user\'s origins' do
                 let(:user) { User.make(username: 'fake@example.com') }
                 let(:fake_origin) { 'fake_origin' }
+
                 before do
                   allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
                 end
@@ -1789,7 +1797,7 @@ module VCAP::CloudController
                   put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com', origin: origin1 })
 
                   expect(last_response.status).to eq(404), last_response.body
-                  expect(decoded_response['code']).to eq(20007)
+                  expect(decoded_response['code']).to eq(20_007)
                   expect(decoded_response['description']).to eq("The user could not be found, username: 'fake@example.com', origin: '#{origin1}'")
                 end
               end
@@ -1825,7 +1833,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'larry_the_user' })
 
                 expect(last_response.status).to eq(400), " Expected 400, got #{last_response.status}: body: #{last_response.body}"
-                expect(decoded_response['code']).to eq(20006)
+                expect(decoded_response['code']).to eq(20_006)
                 expect(decoded_response['description']).
                   to eq("The user exists in multiple origins. Specify an origin for the requested user from: '#{origin1}', '#{origin2}'")
               end
@@ -1842,7 +1850,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(201), last_response.body
-                expect(org.send("#{plural_role}_dataset").where(guid: user.guid)).to_not be_empty
+                expect(org.send("#{plural_role}_dataset").where(guid: user.guid)).not_to be_empty
               end
 
               it 'verifies the user has update access to the org' do
@@ -1857,7 +1865,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(404), last_response.body
-                expect(decoded_response['code']).to eq(20003)
+                expect(decoded_response['code']).to eq(20_003)
               end
 
               it 'returns an error when UAA is not available' do
@@ -1866,7 +1874,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(503)
-                expect(decoded_response['code']).to eq(20004)
+                expect(decoded_response['code']).to eq(20_004)
               end
 
               it 'returns an error when UAA is unavailable' do
@@ -1875,7 +1883,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(503)
-                expect(decoded_response['code']).to eq(20004)
+                expect(decoded_response['code']).to eq(20_004)
               end
 
               it 'creates an audit.user.organization_role_add when a role is associated to a space' do
@@ -1902,7 +1910,7 @@ module VCAP::CloudController
                   put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                   expect(last_response.status).to eq(403)
-                  expect(decoded_response['code']).to eq(330002)
+                  expect(decoded_response['code']).to eq(330_002)
                 end
 
                 it 'succeeds for admins' do
@@ -1920,7 +1928,7 @@ module VCAP::CloudController
     end
 
     describe 'removing user roles by username with the POST action' do
-      [:user, :manager, :billing_manager, :auditor].each do |role|
+      %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "POST /v2/organizations/:guid/#{role}" do
           let(:user) { User.make(username: 'larry_the_user') }
@@ -1944,7 +1952,7 @@ module VCAP::CloudController
                 post "/v2/organizations/#{org.guid}/#{plural_role}/remove", MultiJson.dump({ username: user.username, origin: origin1 })
 
                 expect(last_response.status).to eq(404)
-                expect(decoded_response['code']).to eq(20007)
+                expect(decoded_response['code']).to eq(20_007)
                 expect(decoded_response['description']).to eq("The user could not be found, username: '#{user.username}', origin: '#{origin1}'")
               end
             end
@@ -1960,10 +1968,10 @@ module VCAP::CloudController
                 expect(org.send(plural_role)).to include(user)
 
                 post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
-                  MultiJson.dump(username: user.username, origin: origin1)
+                     MultiJson.dump(username: user.username, origin: origin1)
 
                 expect(last_response.status).to eq(204)
-                expect(org.reload.send(plural_role)).to_not include(user)
+                expect(org.reload.send(plural_role)).not_to include(user)
                 expect(last_response.body).to be_empty
               end
             end
@@ -1981,23 +1989,23 @@ module VCAP::CloudController
                 expect(org.send(plural_role)).to include(user)
 
                 post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
-                  MultiJson.dump(username: user.username)
+                     MultiJson.dump(username: user.username)
 
                 expect(last_response.status).to eq(204)
-                expect(org.reload.send(plural_role)).to_not include(user)
+                expect(org.reload.send(plural_role)).not_to include(user)
                 expect(last_response.body).to be_empty
               end
             end
 
             context 'when the username exists in multiple UAA origins' do
               it 'returns a 400 error' do
-                expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+                expect(uaa_client).to receive(:origins_for_username).and_return(%w[origin1 origin2])
 
                 post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
-                  MultiJson.dump({ username: user.username })
+                     MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(400)
-                expect(decoded_response['code']).to eq(20006)
+                expect(decoded_response['code']).to eq(20_006)
               end
             end
           end
@@ -2006,7 +2014,7 @@ module VCAP::CloudController
     end
 
     describe 'removing user roles by username with the DELETE action' do
-      [:user, :manager, :billing_manager, :auditor].each do |role|
+      %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
@@ -2026,7 +2034,7 @@ module VCAP::CloudController
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(204)
-            expect(org.reload.send(plural_role)).to_not include(user)
+            expect(org.reload.send(plural_role)).not_to include(user)
             expect(last_response.body).to be_empty
           end
 
@@ -2041,7 +2049,7 @@ module VCAP::CloudController
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
             expect(last_response.status).to eq(404)
-            expect(decoded_response['code']).to eq(20003)
+            expect(decoded_response['code']).to eq(20_003)
           end
 
           it 'returns an error when UAA is not available' do
@@ -2050,7 +2058,7 @@ module VCAP::CloudController
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(503)
-            expect(decoded_response['code']).to eq(20004)
+            expect(decoded_response['code']).to eq(20_004)
           end
 
           it 'returns an error when UAA is unavailable' do
@@ -2059,7 +2067,7 @@ module VCAP::CloudController
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
             expect(last_response.status).to eq(503)
-            expect(decoded_response['code']).to eq(20004)
+            expect(decoded_response['code']).to eq(20_004)
           end
 
           it 'creates an event of type audit.user.organization_role_remove when a user-role association is removed from the organization' do
@@ -2076,12 +2084,12 @@ module VCAP::CloudController
 
           context 'when the username exists in multiple UAA origins' do
             it 'returns a 400 error' do
-              expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+              expect(uaa_client).to receive(:origins_for_username).and_return(%w[origin1 origin2])
 
               delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(400)
-              expect(decoded_response['code']).to eq(20006)
+              expect(decoded_response['code']).to eq(20_006)
             end
           end
 
@@ -2096,7 +2104,7 @@ module VCAP::CloudController
               delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(403)
-              expect(decoded_response['code']).to eq(330002)
+              expect(decoded_response['code']).to eq(330_002)
             end
 
             it 'succeeds for admins' do
@@ -2104,7 +2112,7 @@ module VCAP::CloudController
               delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(204)
-              expect(org.reload.send(plural_role)).to_not include(user)
+              expect(org.reload.send(plural_role)).not_to include(user)
               expect(last_response.body).to be_empty
             end
           end
@@ -2151,7 +2159,7 @@ module VCAP::CloudController
     end
 
     describe 'adding user roles by user guid' do
-      [:user, :manager, :billing_manager, :auditor].each do |role|
+      %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/organizations/:guid/#{plural_role}/:user_id" do
           let(:user) { User.make(username: 'larry_the_user') }
@@ -2178,7 +2186,7 @@ module VCAP::CloudController
               expect(decoded_response['metadata']['guid']).to eq(org.guid)
 
               event = Event.find(type: event_type, actee: other_user.guid)
-              expect(event).to_not be_nil
+              expect(event).not_to be_nil
               expect(event.organization_guid).to eq(org.guid)
               expect(event.actee_name).to eq('joe_the_user')
             end
@@ -2203,7 +2211,7 @@ module VCAP::CloudController
     end
 
     describe 'removing user roles by user_id' do
-      [:user, :manager, :billing_manager, :auditor].each do |role|
+      %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}/:user_id" do
           let(:user) { User.make(username: 'larry_the_user') }
@@ -2226,10 +2234,10 @@ module VCAP::CloudController
               delete "/v2/organizations/#{org.guid}/#{plural_role}/#{other_user.guid}"
 
               expect(last_response.status).to eq(204)
-              expect(org.send(plural_role)).to_not include(user)
+              expect(org.send(plural_role)).not_to include(user)
 
               event = Event.find(type: event_type, actee: other_user.guid)
-              expect(event).to_not be_nil
+              expect(event).not_to be_nil
               expect(event.organization_guid).to eq(org.guid)
             end
           end

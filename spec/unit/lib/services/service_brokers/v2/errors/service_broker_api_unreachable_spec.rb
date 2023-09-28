@@ -17,17 +17,17 @@ module VCAP::Services
             exception.set_backtrace(['/generatedexception:3', '/backtrace:4'])
 
             expect(exception.to_h).to eq({
-              'description' => 'The service broker could not be reached',
-              'backtrace' => ['/generatedexception:3', '/backtrace:4'],
-              'http' => {
-                'uri' => uri,
-                'method' => 'PUT'
-              },
-              'source' => {
-                'description' => error.message,
-                'backtrace' => ['/socketerror:1', '/backtrace:2']
-              }
-            })
+                                           'description' => 'The service broker could not be reached',
+                                           'backtrace' => ['/generatedexception:3', '/backtrace:4'],
+                                           'http' => {
+                                             'uri' => uri,
+                                             'method' => 'PUT'
+                                           },
+                                           'source' => {
+                                             'description' => error.message,
+                                             'backtrace' => ['/socketerror:1', '/backtrace:2']
+                                           }
+                                         })
           end
 
           it 'renders the correct status code to the user' do

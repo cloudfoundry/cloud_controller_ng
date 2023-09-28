@@ -13,11 +13,11 @@ module VCAP::CloudController
       attribute :total_reserved_route_ports, Integer, default: -1
 
       to_one :organization
-      to_many :spaces, exclude_in: [:create, :update]
+      to_many :spaces, exclude_in: %i[create update]
     end
 
     def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:organization_id, :name])
+      name_errors = e.errors.on(%i[organization_id name])
       if name_errors && name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('SpaceQuotaDefinitionNameTaken', attributes['name'])
       else
@@ -35,7 +35,8 @@ module VCAP::CloudController
         unless affected_processes.where(log_rate_limit: ProcessModel::UNLIMITED_LOG_RATE).empty?
           raise CloudController::Errors::ApiError.new_from_details(
             'UnprocessableEntity',
-            'Current usage exceeds new quota values. This space currently contains apps running with an unlimited log rate limit.')
+            'Current usage exceeds new quota values. This space currently contains apps running with an unlimited log rate limit.'
+          )
         end
       end
 

@@ -25,7 +25,7 @@ module VCAP::Services::ServiceBrokers
         broker.db.transaction do
           synchronize_services_and_plans!
         end
-      rescue => e
+      rescue StandardError => e
         broker.destroy
         raise e
       end
@@ -52,9 +52,7 @@ module VCAP::Services::ServiceBrokers
       self
     end
 
-    def errors
-      broker.errors
-    end
+    delegate :errors, to: :broker
 
     private
 
@@ -65,21 +63,19 @@ module VCAP::Services::ServiceBrokers
     end
 
     def synchronize_dashboard_clients!
-      unless client_manager.synchronize_clients_with_catalog(catalog)
-        raise_humanized_exception(client_manager.errors)
-      end
+      raise_humanized_exception(client_manager.errors) unless client_manager.synchronize_clients_with_catalog(catalog)
 
-      if client_manager.has_warnings?
-        client_manager.warnings.each { |warning| warnings << warning }
-      end
+      return unless client_manager.has_warnings?
+
+      client_manager.warnings.each { |warning| warnings << warning }
     end
 
     def synchronize_services_and_plans!
       @service_manager.sync_services_and_plans(catalog)
 
-      if @service_manager.has_warnings?
-        @service_manager.warnings.each { |warning| warnings << warning }
-      end
+      return unless @service_manager.has_warnings?
+
+      @service_manager.warnings.each { |warning| warnings << warning }
     end
 
     def validate_catalog!
@@ -91,7 +87,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def catalog
-      client = VCAP::Services::ServiceClientProvider.provide(broker: broker)
+      client = VCAP::Services::ServiceClientProvider.provide(broker:)
       @catalog ||= VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, client.catalog)
     rescue V2::Errors::ServiceBrokerResponseMalformed
       raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerRequestMalformed')
@@ -109,21 +105,21 @@ module VCAP::Services::ServiceBrokers
     end
 
     def route_service_warning
-      catalog.services.each { |service|
+      catalog.services.each do |service|
         if service.route_service?
-          @warnings << "Service #{service.name} is declared to be a route service but support for route services is disabled." \
-                       ' Users will be prevented from binding instances of this service with routes.'
+          @warnings << "Service #{service.name} is declared to be a route service but support for route services is disabled. " \
+                       'Users will be prevented from binding instances of this service with routes.'
         end
-      }
+      end
     end
 
     def volume_mount_service_warning
-      catalog.services.each { |service|
+      catalog.services.each do |service|
         if service.volume_mount_service?
-          @warnings << "Service #{service.name} is declared to be a volume mount service but support for volume mount services is disabled." \
-                       ' Users will be prevented from binding instances of this service with apps.'
+          @warnings << "Service #{service.name} is declared to be a volume mount service but support for volume mount services is disabled. " \
+                       'Users will be prevented from binding instances of this service with apps.'
         end
-      }
+      end
     end
   end
 end

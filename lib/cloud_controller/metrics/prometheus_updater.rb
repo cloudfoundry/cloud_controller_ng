@@ -7,44 +7,32 @@ module VCAP::CloudController::Metrics
     end
 
     def update_gauge_metric(metric, value, message)
-      unless @registry.exist?(metric)
-        @registry.gauge(metric, docstring: message)
-      end
+      @registry.gauge(metric, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).set(value)
     end
 
     def increment_gauge_metric(metric, message)
-      unless @registry.exist?(metric)
-        @registry.gauge(metric, docstring: message)
-      end
+      @registry.gauge(metric, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).increment
     end
 
     def decrement_gauge_metric(metric, message)
-      unless @registry.exist?(metric)
-        @registry.gauge(metric, docstring: message)
-      end
+      @registry.gauge(metric, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).decrement
     end
 
     def increment_counter_metric(metric, message)
-      unless @registry.exist?(metric)
-        @registry.counter(metric, docstring: message)
-      end
+      @registry.counter(metric, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).increment
     end
 
     def update_histogram_metric(metric, value, message, buckets)
-      unless @registry.exist?(metric)
-        @registry.histogram(metric, buckets: buckets, docstring: message)
-      end
+      @registry.histogram(metric, buckets: buckets, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).observe(value)
     end
 
     def update_summary_metric(metric, value, message)
-      unless @registry.exist?(metric)
-        @registry.summary(metric, docstring: message)
-      end
+      @registry.summary(metric, docstring: message) unless @registry.exist?(metric)
       @registry.get(metric).observe(value)
     end
 
@@ -133,7 +121,7 @@ module VCAP::CloudController::Metrics
     private
 
     def duration_buckets
-      Prometheus::Client::Histogram.linear_buckets(start: 10000, width: 5000, count: 5)
+      Prometheus::Client::Histogram.linear_buckets(start: 10_000, width: 5000, count: 5)
     end
 
     def nanoseconds_to_milliseconds(time_ns)

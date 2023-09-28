@@ -16,7 +16,7 @@ module VCAP::CloudController
       expect(logger).to have_received(:warn).with(
         'finalized-degenerate-deployment',
         deployment: deployment.guid,
-        app: deployment.app.guid,
+        app: deployment.app.guid
       )
       expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
       expect(deployment.status_reason).to eq(DeploymentModel::DEGENERATE_STATUS_REASON)
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     it 'does not scale the deployment' do
       subject.dispatch
-      expect(updater).to_not have_received(:scale)
+      expect(updater).not_to have_received(:scale)
     end
 
     it 'processes the deployment only once' do
@@ -56,8 +56,8 @@ module VCAP::CloudController
       context 'when there are no deployments' do
         it 'does nothing' do
           subject.dispatch
-          expect(updater).to_not have_received(:scale)
-          expect(updater).to_not have_received(:cancel)
+          expect(updater).not_to have_received(:scale)
+          expect(updater).not_to have_received(:cancel)
         end
       end
 
@@ -65,6 +65,7 @@ module VCAP::CloudController
         before do
           allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
         end
+
         it 'scales the deployment' do
           subject.dispatch
           expect(updater).to have_received(:scale)
@@ -75,6 +76,7 @@ module VCAP::CloudController
         before do
           allow(DeploymentUpdater::Updater).to receive(:new).with(canceling_deployment, logger).and_return(updater)
         end
+
         it 'cancels the deployment' do
           subject.dispatch
           expect(updater).to have_received(:cancel)

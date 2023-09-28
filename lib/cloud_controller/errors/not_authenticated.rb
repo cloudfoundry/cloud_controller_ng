@@ -14,7 +14,7 @@ module CloudController
       end
 
       def code
-        10002
+        10_002
       end
       alias_method :error_code, :code
     end

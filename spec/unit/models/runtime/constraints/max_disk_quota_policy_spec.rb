@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe MaxDiskQuotaPolicy do
+  subject(:validator) { MaxDiskQuotaPolicy.new(process, max_mb) }
+
   let(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:max_mb) { 10 }
-
-  subject(:validator) { MaxDiskQuotaPolicy.new(process, max_mb) }
 
   it 'when requested size is larger than the space allocated to the process' do
     allow(process).to receive(:disk_quota).and_return(100)

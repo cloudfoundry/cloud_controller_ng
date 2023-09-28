@@ -4,6 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneCompletedDeployments, job_context: :worker do
       let(:max_retained_deployments_per_app) { 15 }
+
       subject(:job) { PruneCompletedDeployments.new(max_retained_deployments_per_app) }
 
       it { is_expected.to be_a_valid_job }
@@ -119,9 +120,9 @@ module VCAP::CloudController
             DeploymentProcessModel.make(deployment: d)
           end
 
-          expect {
+          expect do
             job.perform
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'multiple apps' do
@@ -134,14 +135,14 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                DeploymentModel.make(id: i + 1000 * app_index, state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
+                DeploymentModel.make(id: i + (1000 * app_index), state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
               end
             end
 
             job.perform
 
-            expect(DeploymentModel.where(app: app).count).to eq(15)
-            expect(DeploymentModel.where(app: app).map(&:id)).to match_array((36..50).to_a)
+            expect(DeploymentModel.where(app:).count).to eq(15)
+            expect(DeploymentModel.where(app:).map(&:id)).to match_array((36..50).to_a)
 
             expect(DeploymentModel.where(app: app_the_second).count).to eq(15)
             expect(DeploymentModel.where(app: app_the_second).map(&:id)).to match_array((1036..1050).to_a)

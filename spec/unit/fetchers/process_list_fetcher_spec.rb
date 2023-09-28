@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      subject { ProcessListFetcher.fetch_all(message, eager_loaded_associations: eager_loaded_associations) }
+      subject { ProcessListFetcher.fetch_all(message, eager_loaded_associations:) }
 
       let!(:web) { ProcessModel.make(type: 'web') }
       let!(:web2) { ProcessModel.make(type: 'web') }
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       it 'returns all of the processes' do
         results = subject.all
-        expect(results).to match_array([web, web2, worker])
+        expect(results).to contain_exactly(web, web2, worker)
       end
 
       context 'filters' do
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
           it 'only returns matching processes' do
             results = subject.all
-            expect(results).to match_array([web, web2])
+            expect(results).to contain_exactly(web, web2)
           end
         end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
           it 'only returns matching processes' do
             results = subject.all
-            expect(results).to match_array([web])
+            expect(results).to contain_exactly(web)
           end
         end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
           it 'only returns matching processes' do
             results = subject.all
-            expect(results).to match_array([web])
+            expect(results).to contain_exactly(web)
           end
         end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
           it 'only returns matching processes' do
             results = subject.all
-            expect(results).to match_array([desired_process])
+            expect(results).to contain_exactly(desired_process)
           end
         end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
           it 'returns the matching processes' do
             results = subject.all
-            expect(results).to match_array([web, web2])
+            expect(results).to contain_exactly(web, web2)
           end
         end
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of packages' do
             results = subject.all
-            expect(results).to match_array([web2])
+            expect(results).to contain_exactly(web2)
           end
         end
       end
@@ -105,7 +105,7 @@ module VCAP::CloudController
       let!(:process_in_space2) { ProcessModel.make(app: app2) }
       let(:space_guids) { [] }
 
-      subject { ProcessListFetcher.fetch_for_spaces(message, space_guids: space_guids, eager_loaded_associations: eager_loaded_associations) }
+      subject { ProcessListFetcher.fetch_for_spaces(message, space_guids:, eager_loaded_associations:) }
 
       before { ProcessModel.make }
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
         it 'returns only the processes in spaces requested' do
           results = subject.all
-          expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
+          expect(results).to contain_exactly(process_in_space1, process2_in_space1, process_in_space2)
         end
       end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
         it 'only returns matching processes' do
           results = subject.all
-          expect(results).to match_array([process_in_space1, process2_in_space1])
+          expect(results).to contain_exactly(process_in_space1, process2_in_space1)
         end
       end
     end
@@ -149,7 +149,7 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:filters) { { app_guid: app.guid } }
 
-      subject { ProcessListFetcher.fetch_for_app(message, eager_loaded_associations: eager_loaded_associations) }
+      subject { ProcessListFetcher.fetch_for_app(message, eager_loaded_associations:) }
 
       it 'returns a Sequel::Dataset and the app' do
         returned_app, results = subject
@@ -161,7 +161,7 @@ module VCAP::CloudController
         let(:eager_loaded_associations) { [:labels] }
 
         it 'eager loads the specified resources for the processes' do
-          ProcessModel.make(:process, app: app)
+          ProcessModel.make(:process, app:)
 
           _, processes_dataset = subject
           results = processes_dataset.all
@@ -172,12 +172,12 @@ module VCAP::CloudController
       end
 
       it 'returns the processes for the app' do
-        process1 = ProcessModel.make(:process, app: app)
-        process2 = ProcessModel.make(:process, app: app)
+        process1 = ProcessModel.make(:process, app:)
+        process2 = ProcessModel.make(:process, app:)
         ProcessModel.make(:process)
 
         _app, results = subject
-        expect(results.all).to match_array([process1, process2])
+        expect(results.all).to contain_exactly(process1, process2)
       end
 
       context 'when the app does not exist' do

@@ -36,14 +36,14 @@ module VCAP::CloudController
             global_general_limit: config.get(:rate_limiter, :global_general_limit),
             per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
             global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
-            interval: config.get(:rate_limiter, :reset_interval_in_minutes),
+            interval: config.get(:rate_limiter, :reset_interval_in_minutes)
           }
         end
         if config.get(:max_concurrent_service_broker_requests) > 0
           use CloudFoundry::Middleware::ServiceBrokerRateLimiter, {
             logger: Steno.logger('cc.service_broker_rate_limiter'),
             max_concurrent_requests: config.get(:max_concurrent_service_broker_requests),
-            broker_timeout_seconds: config.get(:broker_client_timeout_seconds),
+            broker_timeout_seconds: config.get(:broker_client_timeout_seconds)
           }
         end
         if config.get(:rate_limiter_v2_api, :enabled)
@@ -53,13 +53,11 @@ module VCAP::CloudController
             global_general_limit: config.get(:rate_limiter_v2_api, :global_general_limit),
             per_process_admin_limit: config.get(:rate_limiter_v2_api, :per_process_admin_limit),
             global_admin_limit: config.get(:rate_limiter_v2_api, :global_admin_limit),
-            interval: config.get(:rate_limiter_v2_api, :reset_interval_in_minutes),
+            interval: config.get(:rate_limiter_v2_api, :reset_interval_in_minutes)
           }
         end
 
-        if config.get(:security_event_logging, :enabled)
-          use CloudFoundry::Middleware::CefLogs, Logger.new(config.get(:security_event_logging, :file)), config.get(:local_route)
-        end
+        use CloudFoundry::Middleware::CefLogs, Logger.new(config.get(:security_event_logging, :file)), config.get(:local_route) if config.get(:security_event_logging, :enabled)
         use Rack::CommonLogger, logger if logger
 
         map '/' do
@@ -72,7 +70,7 @@ module VCAP::CloudController
         end
 
         map '/healthz' do
-          run lambda { |_| [200, { 'Content-Type' => 'application/json' }, ['OK']] }
+          run ->(_) { [200, { 'Content-Type' => 'application/json' }, ['OK']] }
         end
       end
     end
@@ -80,12 +78,12 @@ module VCAP::CloudController
     private
 
     def access_log(config)
-      if !config.get(:nginx, :use_nginx) && config.get(:logging, :file)
-        access_filename = File.join(File.dirname(config.get(:logging, :file)), 'cc.access.log')
-        access_log ||= File.open(access_filename, 'a')
-        access_log.sync = true
-        access_log
-      end
+      return unless !config.get(:nginx, :use_nginx) && config.get(:logging, :file)
+
+      access_filename = File.join(File.dirname(config.get(:logging, :file)), 'cc.access.log')
+      access_log ||= File.open(access_filename, 'a')
+      access_log.sync = true
+      access_log
     end
   end
 end

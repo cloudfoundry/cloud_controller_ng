@@ -10,17 +10,18 @@ module VCAP::CloudController
 
         it 'updates the feature flag enabled field' do
           message = FeatureFlagsUpdateMessage.new(
-            enabled: false,
+            enabled: false
           )
           FeatureFlagUpdate.new.update(feature_flag1, message)
 
-          expect(feature_flag1.enabled).to eq(false)
+          expect(feature_flag1.enabled).to be(false)
         end
       end
 
       context 'when error message is changed' do
         let(:feature_flag1) { FeatureFlag.make(enabled: true, error_message: 'Old error message') }
-        it 'updates the  feature flag error message field' do
+
+        it 'updates the feature flag error message field' do
           message = FeatureFlagsUpdateMessage.new(
             custom_error_message: 'New error message',
             enabled: true
@@ -28,7 +29,7 @@ module VCAP::CloudController
           FeatureFlagUpdate.new.update(feature_flag1, message)
 
           expect(feature_flag1.error_message).to eq('New error message')
-          expect(feature_flag1.enabled).to eq(true)
+          expect(feature_flag1.enabled).to be(true)
         end
       end
     end

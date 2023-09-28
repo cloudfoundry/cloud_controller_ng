@@ -11,10 +11,10 @@ RSpec.describe ServiceInstancePresenter do
       end
 
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(service: service)
+        VCAP::CloudController::ServicePlan.make(service:)
       end
 
-      let(:service) { VCAP::CloudController::Service.make(tags: ['relational', 'mysql']) }
+      let(:service) { VCAP::CloudController::Service.make(tags: %w[relational mysql]) }
 
       it { is_expected.to have_key(:label) }
       it { is_expected.to have_key(:provider) }
@@ -27,7 +27,7 @@ RSpec.describe ServiceInstancePresenter do
         expect(subject[:provider]).to eq(service_instance.service.provider)
         expect(subject[:plan]).to eq(service_instance.service_plan.name)
         expect(subject[:name]).to eq(service_instance.name)
-        expect(subject[:tags]).to eq(['relational', 'mysql', 'meow'])
+        expect(subject[:tags]).to eq(%w[relational mysql meow])
       end
     end
 

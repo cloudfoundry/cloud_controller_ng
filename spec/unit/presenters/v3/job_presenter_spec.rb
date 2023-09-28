@@ -46,7 +46,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'when the job has completed' do
-          it 'should still show the resource link' do
+          it 'stills show the resource link' do
             links = {
               self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" },
               "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/#{resource.guid}" }
@@ -61,7 +61,7 @@ module VCAP::CloudController::Presenters::V3
             resource.delete
           end
 
-          it 'should not show the resource link' do
+          it 'does not show the resource link' do
             links = {
               self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
             }
@@ -73,12 +73,12 @@ module VCAP::CloudController::Presenters::V3
         context 'when the job has an error' do
           let(:api_error) do
             YAML.dump({
-              'errors' => [{
-                'title' => 'CF-BlobstoreError',
-                'code' => 150007,
-                'description' => 'Failed to perform blobstore operation after three retries.'
-              }]
-            })
+                        'errors' => [{
+                          'title' => 'CF-BlobstoreError',
+                          'code' => 150_007,
+                          'description' => 'Failed to perform blobstore operation after three retries.'
+                        }]
+                      })
           end
 
           context 'when the job later completes' do
@@ -98,10 +98,10 @@ module VCAP::CloudController::Presenters::V3
 
             it 'presents the list of errors' do
               expect(result[:errors]).to eq([{
-                title: 'CF-BlobstoreError',
-                code: 150007,
-                description: 'Failed to perform blobstore operation after three retries.'
-              }])
+                                              title: 'CF-BlobstoreError',
+                                              code: 150_007,
+                                              description: 'Failed to perform blobstore operation after three retries.'
+                                            }])
             end
           end
         end
@@ -113,10 +113,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'presents the list of warnings' do
-            expect(result[:warnings]).to match_array([
-              { detail: 'warning one' },
-              { detail: 'warning two' }
-            ])
+            expect(result[:warnings]).to contain_exactly({ detail: 'warning one' }, { detail: 'warning two' })
           end
         end
       end

@@ -9,7 +9,7 @@ module VCAP::CloudController
             logging: {
               level: String, # debug, info, etc.
               file: String, # Log file to use
-              syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
+              syslog: String # Name to associate with syslog messages (should start with 'vcap.')
             },
 
             pid_filename: String, # Pid filename to use
@@ -23,7 +23,7 @@ module VCAP::CloudController
               log_db_queries: bool,
               ssl_verify_hostname: bool,
               connection_validation_timeout: Integer,
-              optional(:ca_cert_path) => String,
+              optional(:ca_cert_path) => String
             },
 
             index: Integer, # Component index (cc-0, cc-1, etc)
@@ -47,7 +47,7 @@ module VCAP::CloudController
               client_ca_file: String,
               client_key_file: String,
               client_chain_file: String,
-              optional(:temporary_istio_domains) => Array,
+              optional(:temporary_istio_domains) => Array
             }
           }
         end

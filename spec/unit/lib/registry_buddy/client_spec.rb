@@ -5,6 +5,7 @@ module RegistryBuddy
   RSpec.describe Client do
     let(:registry_buddy_host) { '127.0.0.1' }
     let(:registry_buddy_port) { 8080 }
+
     subject(:client) { RegistryBuddy::Client.new(registry_buddy_host, registry_buddy_port) }
 
     describe '#post_package' do
@@ -14,10 +15,10 @@ module RegistryBuddy
       before do
         stub_request(:post, "http://#{registry_buddy_host}:#{registry_buddy_port}/packages").
           with(body: {
-            'package_zip_path' => '/path/to/package.zip',
-            'package_guid' => 'a-package-guid',
-            'registry_base_path' => 'docker.io/cfcapidocker'
-          }).to_return(status: status, body: response)
+                 'package_zip_path' => '/path/to/package.zip',
+                 'package_guid' => 'a-package-guid',
+                 'registry_base_path' => 'docker.io/cfcapidocker'
+               }).to_return(status: status, body: response)
       end
 
       context 'when the request succeeds' do
@@ -77,8 +78,7 @@ module RegistryBuddy
         client.delete_image(image_reference)
 
         expect(WebMock).to have_requested(:delete,
-          "http://#{registry_buddy_host}:#{registry_buddy_port}/images"
-        ).with(body: JSON.dump('image_reference' => image_reference))
+                                          "http://#{registry_buddy_host}:#{registry_buddy_port}/images").with(body: JSON.dump('image_reference' => image_reference))
       end
 
       context 'when the request succeeds' do

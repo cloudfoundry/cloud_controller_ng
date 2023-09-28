@@ -10,22 +10,22 @@ module VCAP::CloudController
     subject(:action) { AppFindOrCreateSkeleton.new(user_audit_info) }
 
     context 'when the app exists' do
-      let(:message) { AppManifestMessage.create_from_yml({ name: name }) }
-      let!(:app) { AppModel.make(name: name, space: space) }
+      let(:message) { AppManifestMessage.create_from_yml({ name: }) }
+      let!(:app) { AppModel.make(name:, space:) }
 
       it 'returns the existing app' do
-        expect(action.find_or_create(message: message, space: space)).to eq app
+        expect(action.find_or_create(message:, space:)).to eq app
       end
     end
 
     context 'when the app does not exist' do
       context 'when the app is a buildpack app' do
-        let(:message) { AppManifestMessage.create_from_yml({ name: name }) }
+        let(:message) { AppManifestMessage.create_from_yml({ name: }) }
 
         it 'creates the app' do
           app = nil
-          expect { app = action.find_or_create(message: message, space: space) }.
-            to change { AppModel.count }.by(1)
+          expect { app = action.find_or_create(message:, space:) }.
+            to change(AppModel, :count).by(1)
 
           expect(app.name).to eq(name)
           expect(app.space).to eq(space)
@@ -38,8 +38,8 @@ module VCAP::CloudController
 
         it 'creates the app' do
           app = nil
-          expect { app = action.find_or_create(message: message, space: space) }.
-            to change { AppModel.count }.by(1)
+          expect { app = action.find_or_create(message:, space:) }.
+            to change(AppModel, :count).by(1)
 
           expect(app.name).to eq(name)
           expect(app.space).to eq(space)

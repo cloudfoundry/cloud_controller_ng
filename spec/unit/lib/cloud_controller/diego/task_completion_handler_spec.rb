@@ -27,13 +27,13 @@ module VCAP::CloudController
           it 'marks the task as succeeded' do
             handler.complete_task(task, response)
             expect(task.reload.state).to eq TaskModel::SUCCEEDED_STATE
-            expect(task.reload.failure_reason).to eq(nil)
+            expect(task.reload.failure_reason).to be_nil
           end
 
           it 'creates an AppUsageEvent with state TASK_STOPPED' do
-            expect {
+            expect do
               handler.complete_task(task, response)
-            }.to change { AppUsageEvent.count }.by(1)
+            end.to change(AppUsageEvent, :count).by(1)
 
             event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
             expect(event).not_to be_nil
@@ -54,7 +54,7 @@ module VCAP::CloudController
                 'diego.tasks.saving-failed',
                 task_guid: task.guid,
                 payload: response,
-                error: 'save-error',
+                error: 'save-error'
               )
             end
           end
@@ -90,7 +90,7 @@ module VCAP::CloudController
                 'diego.tasks.saving-failed',
                 task_guid: task.guid,
                 payload: response,
-                error: 'save-error',
+                error: 'save-error'
               )
             end
           end
@@ -100,7 +100,7 @@ module VCAP::CloudController
           context 'when the failed field is missing' do
             let(:response) do
               {
-                failure_reason: '',
+                failure_reason: ''
               }
             end
 
@@ -114,7 +114,7 @@ module VCAP::CloudController
           context 'when the failure reason field is missing' do
             let(:response) do
               {
-                failed: true,
+                failed: true
               }
             end
 

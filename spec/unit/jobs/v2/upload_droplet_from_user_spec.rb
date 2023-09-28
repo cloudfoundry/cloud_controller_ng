@@ -24,9 +24,9 @@ module VCAP::CloudController
         end
 
         it 'marks the droplet as STAGED' do
-          expect(droplet.staged?).to be_falsey
+          expect(droplet).not_to be_staged
           job.perform
-          expect(droplet.reload.staged?).to be_truthy
+          expect(droplet.reload).to be_staged
         end
 
         it 'sets the droplet as the current droplet for the app' do
@@ -54,9 +54,9 @@ module VCAP::CloudController
           end
 
           it 'does not mark the droplet as staged' do
-            expect(droplet.staged?).to be_falsey
+            expect(droplet).not_to be_staged
             job.perform
-            expect(droplet.reload.staged?).to be_falsey
+            expect(droplet.reload).not_to be_staged
           end
 
           it 'does not set the droplet as the current droplet for the app' do

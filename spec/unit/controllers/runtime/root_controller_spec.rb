@@ -73,7 +73,7 @@ module VCAP::CloudController
           it 'does not return a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expect(hash['links']['credhub']).to eq(nil)
+            expect(hash['links']['credhub']).to be_nil
           end
         end
       end
@@ -96,7 +96,7 @@ module VCAP::CloudController
           it 'does not return a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expect(hash['links']['routing']).to eq(nil)
+            expect(hash['links']['routing']).to be_nil
           end
         end
       end
@@ -158,7 +158,7 @@ module VCAP::CloudController
           'href' => expected_ssh_endpoint,
           'meta' => {
             'host_key_fingerprint' => expected_host_key_fingerprint,
-            'oauth_client' => expected_ssh_oauth_client,
+            'oauth_client' => expected_ssh_oauth_client
           }
         )
       end

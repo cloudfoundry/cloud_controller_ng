@@ -135,7 +135,7 @@ module VCAP::CloudController
 
         it 'sets the buildpack stack if it is unset and in buildpack manifest' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }
-          expect(last_response.status).to eql 201
+          expect(last_response.status).to be 201
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to eq('stack-from-manifest')
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
         it 'returns ERROR (422) if provided stack does not exist' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_unknown_stack, buildpack_name: valid_zip_unknown_stack.path }
-          expect(last_response.status).to eql 422
+          expect(last_response.status).to be 422
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to be_nil
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
         it 'sets the buildpack stack to nil if it is unset and NOT in buildpack manifest' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip, buildpack_name: valid_zip.path }
-          expect(last_response.status).to eql 201
+          expect(last_response.status).to be 201
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to be_nil
@@ -162,10 +162,10 @@ module VCAP::CloudController
           test_buildpack.update(stack: 'not-from-manifest')
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }
-          expect(last_response.status).to eql 422
+          expect(last_response.status).to be 422
 
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(390011)
+          expect(json['code']).to eq(390_011)
           expect(json['description']).to eql 'Uploaded buildpack stack (stack-from-manifest) does not match not-from-manifest'
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
@@ -174,9 +174,9 @@ module VCAP::CloudController
 
         it 'requires a filename as part of the upload' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: 'abc' }
-          expect(last_response.status).to eql 400
+          expect(last_response.status).to be 400
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a filename must be specified/)
         end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: 'abc.zip' }
           expect(last_response.status).to eq(400)
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a file must be provided/)
         end
 
@@ -194,9 +194,9 @@ module VCAP::CloudController
           expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_tar_gz }
-          expect(last_response.status).to eql 400
+          expect(last_response.status).to be 400
           json = MultiJson.load(last_response.body)
-          expect(json['code']).to eq(290002)
+          expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/only zip files allowed/)
         end
 
@@ -268,7 +268,7 @@ module VCAP::CloudController
         end
 
         context 'when the upload file is nil' do
-          it 'should be a bad request' do
+          it 'is a bad request' do
             expect(FileUtils).not_to receive(:rm_f)
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil }
             expect(last_response.status).to eq(400)
@@ -277,15 +277,16 @@ module VCAP::CloudController
 
         context 'when the same bits are uploaded twice' do
           let(:test_buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'buildpack2', stack: 'stack', position: 0 }) }
+
           before do
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip2 }
             put "/v2/buildpacks/#{test_buildpack2.guid}/bits", { buildpack: valid_zip2 }
           end
 
-          it 'should have different keys' do
+          it 'has different keys' do
             bp1 = Buildpack.find(name: 'upload_binary_buildpack')
             bp2 = Buildpack.find(name: 'buildpack2')
-            expect(bp1.key).to_not eq(bp2.key)
+            expect(bp1.key).not_to eq(bp2.key)
           end
         end
       end
@@ -296,7 +297,7 @@ module VCAP::CloudController
         let(:staging_config) do
           {
             staging: { timeout_in_seconds: 240, auth: { user: staging_user, password: staging_password } },
-            directories: { tmpdir: File.dirname(valid_zip.path) },
+            directories: { tmpdir: File.dirname(valid_zip.path) }
           }
         end
 
@@ -318,7 +319,7 @@ module VCAP::CloudController
           expect(last_response.header['Location']).to match(/cc-buildpacks/)
         end
 
-        it 'should return 404 for missing bits' do
+        it 'returns 404 for missing bits' do
           authorize(staging_user, staging_password)
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(404)

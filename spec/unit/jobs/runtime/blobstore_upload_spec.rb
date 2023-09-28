@@ -21,9 +21,9 @@ module VCAP::CloudController
 
       describe '#perform' do
         it 'uploads the file to the blostore' do
-          expect {
+          expect do
             job.perform
-          }.to change {
+          end.to change {
             blobstore.exists?(blobstore_key)
           }.to(true)
         end
@@ -64,12 +64,12 @@ module VCAP::CloudController
           end
 
           context 'when its the final attempt' do
-            it 'it deletes the file' do
+            it 'deletes the file' do
               worker.work_off 1
 
-              expect {
+              expect do
                 worker.work_off 1
-              }.to change {
+              end.to change {
                 File.exist?(local_file.path)
               }.from(true).to(false)
             end
@@ -84,7 +84,7 @@ module VCAP::CloudController
           end
 
           it 'receives an error' do
-            expect(Delayed::Job.last.last_error).to match /File not found/
+            expect(Delayed::Job.last.last_error).to match(/File not found/)
           end
 
           it 'does not retry' do

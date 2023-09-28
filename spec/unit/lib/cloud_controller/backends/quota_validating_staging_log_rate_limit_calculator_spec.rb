@@ -39,9 +39,9 @@ module VCAP::CloudController
         let(:space_quota_limit) { requested_limit - 1 }
 
         it 'raises a SpaceQuotaExceeded error' do
-          expect {
+          expect do
             calculator.get_limit(requested_limit, space, org)
-          }.to raise_error(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, /staging requires 100 bytes per second/)
+          end.to raise_error(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, /staging requires 100 bytes per second/)
         end
       end
 
@@ -49,9 +49,9 @@ module VCAP::CloudController
         let(:org_quota_limit) { requested_limit - 1 }
 
         it 'raises a OrgQuotaExceeded error' do
-          expect {
+          expect do
             calculator.get_limit(requested_limit, space, org)
-          }.to raise_error(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, /staging requires 100 bytes per second/)
+          end.to raise_error(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, /staging requires 100 bytes per second/)
         end
       end
 

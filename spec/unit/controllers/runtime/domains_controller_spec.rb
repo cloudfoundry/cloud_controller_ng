@@ -12,26 +12,26 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::DomainsController).to have_creatable_attributes({
-          name:                     { type: 'string', required: true },
-          wildcard:                 { type: 'bool', default: true },
-          owning_organization_guid: { type: 'string' },
-          space_guids:              { type: '[string]' }
-        })
+                                                                                        name: { type: 'string', required: true },
+                                                                                        wildcard: { type: 'bool', default: true },
+                                                                                        owning_organization_guid: { type: 'string' },
+                                                                                        space_guids: { type: '[string]' }
+                                                                                      })
       end
 
       it do
         expect(VCAP::CloudController::DomainsController).to have_updatable_attributes({
-          name:                     { type: 'string' },
-          wildcard:                 { type: 'bool' },
-          owning_organization_guid: { type: 'string' },
-          space_guids:              { type: '[string]' }
-        })
+                                                                                        name: { type: 'string' },
+                                                                                        wildcard: { type: 'bool' },
+                                                                                        owning_organization_guid: { type: 'string' },
+                                                                                        space_guids: { type: '[string]' }
+                                                                                      })
       end
     end
 
     describe 'Associations' do
       it do
-        expect(VCAP::CloudController::DomainsController).to have_nested_routes({ spaces: [:get, :put, :delete] })
+        expect(VCAP::CloudController::DomainsController).to have_nested_routes({ spaces: %i[get put delete] })
       end
     end
 
@@ -61,9 +61,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
           include_examples 'permission enumeration', 'OrgManager',
-            name:      'domain',
-            path:      '/v2/domains',
-            enumerate: 2
+                           name: 'domain',
+                           path: '/v2/domains',
+                           enumerate: 2
         end
 
         describe 'OrgUser' do
@@ -72,9 +72,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@shared_domain] }
 
           include_examples 'permission enumeration', 'OrgUser',
-            name:      'domain',
-            path:      '/v2/domains',
-            enumerate: 1
+                           name: 'domain',
+                           path: '/v2/domains',
+                           enumerate: 1
         end
 
         describe 'BillingManager' do
@@ -83,9 +83,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@shared_domain] }
 
           include_examples 'permission enumeration', 'BillingManager',
-            name:      'domain',
-            path:      '/v2/domains',
-            enumerate: 1
+                           name: 'domain',
+                           path: '/v2/domains',
+                           enumerate: 1
         end
 
         describe 'Auditor' do
@@ -94,9 +94,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
           include_examples 'permission enumeration', 'Auditor',
-            name:      'domain',
-            path:      '/v2/domains',
-            enumerate: 2
+                           name: 'domain',
+                           path: '/v2/domains',
+                           enumerate: 2
         end
 
         context 'with a shared private domain' do
@@ -109,10 +109,10 @@ module VCAP::CloudController
             let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
 
             include_examples 'permission enumeration', 'OrgManager',
-              permissions_overlap: true,
-              name:      'domain',
-              path:      '/v2/domains',
-              enumerate: 3
+                             permissions_overlap: true,
+                             name: 'domain',
+                             path: '/v2/domains',
+                             enumerate: 3
           end
 
           describe 'SpaceDeveloper' do
@@ -120,10 +120,10 @@ module VCAP::CloudController
             let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
 
             include_examples 'permission enumeration', 'SpaceDeveloper',
-              permissions_overlap: true,
-              name:      'domain',
-              path:      '/v2/domains',
-              enumerate: 3
+                             permissions_overlap: true,
+                             name: 'domain',
+                             path: '/v2/domains',
+                             enumerate: 3
           end
         end
       end
@@ -152,7 +152,7 @@ module VCAP::CloudController
       before { set_current_user(user) }
 
       context 'a space auditor' do
-        let(:space) { Space.make organization: organization }
+        let(:space) { Space.make organization: }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
         before do
@@ -229,7 +229,7 @@ module VCAP::CloudController
             domains[guid] = link
           end
 
-          expect(domains[private_domain.guid]).to match /private_domains/
+          expect(domains[private_domain.guid]).to match(/private_domains/)
         end
       end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController
             domains[guid] = link
           end
 
-          expect(domains[private_domain.guid]).to match /private_domains/
+          expect(domains[private_domain.guid]).to match(/private_domains/)
         end
       end
 
@@ -273,6 +273,7 @@ module VCAP::CloudController
         end
       end
     end
+
     describe 'POST /v2/domains' do
       context 'as an org manager' do
         let(:user) { User.make }
@@ -314,16 +315,16 @@ module VCAP::CloudController
         let!(:route) { Route.make(domain: shared_domain) }
 
         it 'does not delete the route' do
-          expect {
+          expect do
             delete "/v2/domains/#{shared_domain.guid}"
-          }.to_not change { SharedDomain.find(guid: shared_domain.guid) }
+          end.not_to(change { SharedDomain.find(guid: shared_domain.guid) })
         end
 
         it 'returns an error' do
           delete "/v2/domains/#{shared_domain.guid}"
           expect(last_response.status).to eq(400)
-          expect(decoded_response['code']).to equal(10006)
-          expect(decoded_response['description']).to match /delete the routes associations for your domains/i
+          expect(decoded_response['code']).to equal(10_006)
+          expect(decoded_response['description']).to match(/delete the routes associations for your domains/i)
         end
       end
     end

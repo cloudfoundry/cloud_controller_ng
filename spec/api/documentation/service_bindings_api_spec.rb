@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
+RSpec.resource 'Service Bindings', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
   let!(:v2_app) { VCAP::CloudController::ProcessModel.make(app: service_binding.app, type: 'web') }
@@ -13,17 +13,18 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
     service_instance = service_binding.service_instance
     stub_request(
       :delete,
-      %r{#{service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}).
-      with(basic_auth: basic_auth(service_broker: service_broker)).
+      %r{#{service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}
+    ).
+      with(basic_auth: basic_auth(service_broker:)).
       to_return(status: 200, body: '{}')
   end
 
   standard_model_list :service_binding,
-    VCAP::CloudController::ServiceBindingsController,
-    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+                      VCAP::CloudController::ServiceBindingsController,
+                      export_attributes: %i[app_guid service_instance_guid credentials binding_options gateway_data gateway_name syslog_drain_url volume_mounts]
   standard_model_get :service_binding,
-    nested_associations: [:app, :service_instance],
-    export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
+                     nested_associations: %i[app service_instance],
+                     export_attributes: %i[app_guid service_instance_guid credentials binding_options gateway_data gateway_name syslog_drain_url volume_mounts]
   standard_model_delete :service_binding
 
   post '/v2/service_bindings' do
@@ -34,8 +35,8 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
 
     example 'Create a Service Binding' do
       space = VCAP::CloudController::Space.make
-      service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
-      process_guid = VCAP::CloudController::ProcessModelFactory.make(space: space).guid
+      service_instance_guid = VCAP::CloudController::ServiceInstance.make(space:).guid
+      process_guid = VCAP::CloudController::ProcessModelFactory.make(space:).guid
       request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
 
       client.post '/v2/service_bindings', request_json, headers

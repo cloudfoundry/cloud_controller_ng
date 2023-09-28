@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class ManifestStrategy
-    NULL_START_COMMANDS = ['default', 'null'].freeze
+    NULL_START_COMMANDS = %w[default null].freeze
 
     def initialize(message, process)
       @process = process

@@ -29,6 +29,16 @@ class DomainsController < ApplicationController
     )
   end
 
+  def show
+    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
+    domain_not_found! unless domain
+
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
+  end
+
   def create
     message = DomainCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -41,9 +51,7 @@ class DomainsController < ApplicationController
       unauthorized! unless permission_queryer.can_write_globally?
     end
 
-    if message.router_group_guid.present? && fetch_router_group(message.router_group_guid).nil?
-      unprocessable!("Router group with guid '#{message.router_group_guid}' not found.")
-    end
+    unprocessable!("Router group with guid '#{message.router_group_guid}' not found.") if message.router_group_guid.present? && fetch_router_group(message.router_group_guid).nil?
     domain = DomainCreate.new.create(message: message, shared_organizations: shared_org_objects)
 
     render status: :created, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
@@ -64,21 +72,9 @@ class DomainsController < ApplicationController
 
     dataset = RouteFetcher.fetch(message, omniscient: true)
     matching_route = false
-    if dataset.any?
-      matching_route = true
-    end
+    matching_route = true if dataset.any?
 
-    render status: :ok, json: { matching_route: matching_route }
-  end
-
-  def show
-    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    domain = find_domain(message)
-    domain_not_found! unless domain
-
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
+    render status: :ok, json: { matching_route: }
   end
 
   def update
@@ -91,7 +87,7 @@ class DomainsController < ApplicationController
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
     suspended! unless org_active?(domain.owning_organization_id)
 
-    domain = DomainUpdate.new.update(domain: domain, message: message)
+    domain = DomainUpdate.new.update(domain:, message:)
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, **presenter_args)
   end
@@ -166,12 +162,10 @@ class DomainsController < ApplicationController
   end
 
   def find_domain(message)
-    domain = DomainFetcher.fetch(
+    DomainFetcher.fetch(
       message,
       permission_queryer.readable_org_guids_for_domains_query
     ).first
-
-    domain
   end
 
   def check_unshare_domain_permissions!(owning_org_id, shared_org_id)
@@ -199,7 +193,8 @@ class DomainsController < ApplicationController
     organizations = Organization.where(guid: message.shared_organizations_guids).all
 
     unless organizations.length == message.shared_organizations_guids.length
-      unprocessable!("Organization with guid '#{find_missing_guid(organizations, message.shared_organizations_guids)}' does not exist, or you do not have access to it.")
+      unprocessable!("Organization with guid '#{find_missing_guid(organizations,
+                                                                  message.shared_organizations_guids)}' does not exist, or you do not have access to it.")
     end
 
     organizations.each do |org|

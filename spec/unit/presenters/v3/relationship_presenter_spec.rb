@@ -31,6 +31,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     let(:data) { [] }
+
     subject(:relationship_presenter) { RelationshipPresenter.new('relationship', data) }
 
     describe '#to_hash' do

@@ -13,7 +13,7 @@ module IntegrationSetup
     FileUtils.rm(config['pid_filename']) if File.exist?(config['pid_filename'])
 
     db_connection_string = "#{TestConfig.config[:db][:db_connection_string]}_integration_cc"
-    if !opts[:preserve_database]
+    unless opts[:preserve_database]
       db = /postgres/.match?(db_connection_string) ? 'postgres' : 'mysql'
       env = {
         'DB_CONNECTION_STRING' => db_connection_string,
@@ -29,7 +29,11 @@ module IntegrationSetup
 
     Integer(CC_START_TIMEOUT / SLEEP_INTERVAL).times do
       sleep SLEEP_INTERVAL
-      result = Net::HTTP.get_response(URI.parse(info_endpoint)) rescue nil
+      result = begin
+        Net::HTTP.get_response(URI.parse(info_endpoint))
+      rescue StandardError
+        nil
+      end
       return if result && result.code.to_i == 200
     end
 
@@ -52,9 +56,7 @@ module IntegrationSetupHelpers
       stdout, stderr, child_status = Open3.capture3(opts[:env], cmd, spawn_opts)
       pid = child_status.pid
 
-      unless child_status.success? || opts[:continue_on_failure]
-        raise "`#{cmd}` exited with #{child_status} #{coredump_text(child_status)}\n#{failure_output(stdout, stderr)}"
-      end
+      raise "`#{cmd}` exited with #{child_status} #{coredump_text(child_status)}\n#{failure_output(stdout, stderr)}" unless child_status.success? || opts[:continue_on_failure]
     else
       spawn_opts[:out] = opts[:debug] ? :out : '/dev/null'
       spawn_opts[:err] = opts[:debug] ? :out : '/dev/null'
@@ -92,8 +94,8 @@ module IntegrationSetupHelpers
 
   def failure_output(stdout, stderr)
     "================ STDOUT\n" \
-    "#{stdout}\n" \
-    "================ STDERR\n" \
-    "#{stderr}"
+      "#{stdout}\n" \
+      "================ STDERR\n" \
+      "#{stderr}"
   end
 end

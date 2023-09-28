@@ -22,7 +22,7 @@ module VCAP::CloudController
       it 'based on config' do
         Timecop.freeze do
           expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(BlobstoreDelete),
-                                                     hash_including(run_at: 144.seconds.from_now))
+                                                         hash_including(run_at: 144.seconds.from_now))
           BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
         end
       end

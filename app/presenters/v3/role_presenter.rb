@@ -4,7 +4,7 @@ module VCAP::CloudController::Presenters::V3
   class RolePresenter < BasePresenter
     class << self
       def associated_resources
-        [:user, :space, :organization]
+        %i[user space organization]
       end
     end
 
@@ -29,11 +29,11 @@ module VCAP::CloudController::Presenters::V3
     def build_links
       links = {
         self: {
-          href: url_builder.build_url(path: "/v3/roles/#{role.guid}"),
+          href: url_builder.build_url(path: "/v3/roles/#{role.guid}")
         },
         user: {
-          href: url_builder.build_url(path: "/v3/users/#{CGI.escape(role.user_guid)}"),
-        },
+          href: url_builder.build_url(path: "/v3/users/#{CGI.escape(role.user_guid)}")
+        }
       }
       if VCAP::CloudController::RoleTypes::SPACE_ROLES.include? role.type
         links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{role.space_guid}") }
@@ -47,7 +47,7 @@ module VCAP::CloudController::Presenters::V3
       relationships = {
         user: {
           data: { guid: role.user_guid }
-        },
+        }
       }
 
       if VCAP::CloudController::RoleTypes::SPACE_ROLES.include? role.type

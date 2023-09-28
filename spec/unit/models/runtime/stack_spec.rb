@@ -9,16 +9,16 @@ module VCAP::CloudController
     describe 'Associations' do
       it 'has apps' do
         stack = Stack.make
-        process1 = ProcessModelFactory.make(stack: stack)
-        process2 = ProcessModelFactory.make(stack: stack)
-        expect(stack.apps).to match_array([process1, process2])
+        process1 = ProcessModelFactory.make(stack:)
+        process2 = ProcessModelFactory.make(stack:)
+        expect(stack.apps).to contain_exactly(process1, process2)
       end
 
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
         process1 = ProcessModelFactory.make(type: 'web', stack: stack)
         ProcessModelFactory.make(type: 'other', stack: stack)
-        expect(stack.apps).to match_array([process1])
+        expect(stack.apps).to contain_exactly(process1)
       end
     end
 
@@ -48,9 +48,9 @@ module VCAP::CloudController
           stacks: 'name => Missing key'
         }.each do |key, expected_error|
           it "requires #{key} (validates via '#{expected_error}')" do
-            expect {
+            expect do
               Stack.configure(file)
-            }.to raise_error(Membrane::SchemaValidationError, /#{expected_error}/)
+            end.to raise_error(Membrane::SchemaValidationError, /#{expected_error}/)
           end
         end
       end
@@ -61,9 +61,9 @@ module VCAP::CloudController
         before { Stack.configure(nil) }
 
         it 'raises config not specified error' do
-          expect {
+          expect do
             Stack.default
-          }.to raise_error(Stack::MissingConfigFileError)
+          end.to raise_error(Stack::MissingConfigFileError)
         end
       end
 
@@ -122,8 +122,9 @@ module VCAP::CloudController
                     'name' => 'cider',
                     'description' => 'cider-description',
                     'build_rootfs_image' => 'cider-build',
-                    'run_rootfs_image' => 'cider-run',
-                  })
+                    'run_rootfs_image' => 'cider-run'
+                  }
+                )
 
                 Stack.populate
 
@@ -140,12 +141,12 @@ module VCAP::CloudController
               Stack.populate
             end
 
-            it 'should not create duplicates' do
-              expect { Stack.populate }.not_to change { Stack.count }
+            it 'does not create duplicates' do
+              expect { Stack.populate }.not_to(change(Stack, :count))
             end
 
             context 'and the config file would change an existing stack' do
-              it 'should warn and not update' do
+              it 'warns and not update' do
                 cider = Stack.find(name: 'cider')
                 cider.description = 'cider-description has changed'
                 cider.save
@@ -173,9 +174,9 @@ module VCAP::CloudController
         before { Stack.configure(nil) }
 
         it 'raises config not specified error' do
-          expect {
+          expect do
             Stack.default
-          }.to raise_error(Stack::MissingConfigFileError)
+          end.to raise_error(Stack::MissingConfigFileError)
         end
       end
 
@@ -192,9 +193,9 @@ module VCAP::CloudController
 
         context 'when stack is not found with default name' do
           it 'raises MissingDefaultStack' do
-            expect {
+            expect do
               Stack.default
-            }.to raise_error(Stack::MissingDefaultStackError, /default-stack-name/)
+            end.to raise_error(Stack::MissingDefaultStackError, /default-stack-name/)
           end
         end
       end
@@ -202,16 +203,17 @@ module VCAP::CloudController
 
     describe '#default?' do
       before { Stack.configure(file) }
-      let(:stack) { Stack.make(name: name) }
+
+      let(:stack) { Stack.make(name:) }
       let(:name) { 'mimi' }
 
       context 'when config was not set' do
         before { Stack.configure(nil) }
 
         it 'raises config not specified error' do
-          expect {
+          expect do
             stack.default?
-          }.to raise_error(Stack::MissingConfigFileError)
+          end.to raise_error(Stack::MissingConfigFileError)
         end
       end
 
@@ -250,7 +252,7 @@ module VCAP::CloudController
       end
 
       it 'fails if there are apps' do
-        ProcessModelFactory.make(stack: stack)
+        ProcessModelFactory.make(stack:)
         expect { stack.destroy }.to raise_error Stack::AppsStillPresentError
       end
     end

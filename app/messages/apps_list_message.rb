@@ -2,13 +2,13 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class AppsListMessage < MetadataListMessage
-    register_allowed_keys [
-      :names,
-      :organization_guids,
-      :space_guids,
-      :stacks,
-      :include,
-      :lifecycle_type
+    register_allowed_keys %i[
+      names
+      organization_guids
+      space_guids
+      stacks
+      include
+      lifecycle_type
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -21,18 +21,16 @@ module VCAP::CloudController
     validates :stacks, array: true, allow_nil: true
 
     def valid_order_by_values
-      super + [:name, :state]
+      super + %i[name state]
     end
 
     def self.from_params(params)
-      super(params, %w(names organization_guids space_guids stacks include))
+      super(params, %w[names organization_guids space_guids stacks include])
     end
 
     def pagination_options
       super.tap do |po|
-        if po.order_by == 'state'
-          po.order_by = 'desired_state'
-        end
+        po.order_by = 'desired_state' if po.order_by == 'state'
       end
     end
   end

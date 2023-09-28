@@ -9,12 +9,11 @@ module RegistryBuddy
     def post_package(package_guid, zip_file_path, registry)
       response = with_request_error_handling 200 do
         client.post('/packages',
-          body: {
-            'package_guid' => package_guid,
-            'package_zip_path' => zip_file_path,
-            'registry_base_path' => registry,
-          }
-        )
+                    body: {
+                      'package_guid' => package_guid,
+                      'package_zip_path' => zip_file_path,
+                      'registry_base_path' => registry
+                    })
       end
       JSON.parse(response.body)
     end
@@ -22,8 +21,7 @@ module RegistryBuddy
     def delete_image(image_reference)
       with_request_error_handling 202 do
         client.delete('/images',
-          body: JSON.dump(image_reference: image_reference)
-        )
+                      body: JSON.dump(image_reference:))
       end
 
       nil

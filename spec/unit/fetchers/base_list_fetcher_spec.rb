@@ -12,7 +12,7 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:app_model) { AppModel.make(space: space) }
+      let(:app_model) { AppModel.make(space:) }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -23,11 +23,11 @@ module VCAP::CloudController
         let!(:event_2) { Event.make(guid: '2') }
 
         let(:filters) do
-          { guids: ['1', '3'] }
+          { guids: %w[1 3] }
         end
 
         it 'returns records with matching guids' do
-          expect(subject).to match_array([event_1])
+          expect(subject).to contain_exactly(event_1)
         end
       end
 
@@ -43,14 +43,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp less than the given timestamp' do
-            expect(subject).to match_array([event_1, event_2])
+            expect(subject).to contain_exactly(event_1, event_2)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_1, event_2])
+              expect(subject).to contain_exactly(event_1, event_2)
             end
           end
         end
@@ -61,14 +61,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp before or at a given timestamp' do
-            expect(subject).to match_array([event_1, event_2, event_3])
+            expect(subject).to contain_exactly(event_1, event_2, event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_1, event_2, event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_1, event_2, event_3, event_between_3_and_4)
             end
           end
         end
@@ -79,14 +79,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_3, event_4])
+            expect(subject).to contain_exactly(event_3, event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_3, event_between_3_and_4, event_4])
+              expect(subject).to contain_exactly(event_3, event_between_3_and_4, event_4)
             end
           end
         end
@@ -97,14 +97,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp greater than the given timestamp' do
-            expect(subject).to match_array([event_4])
+            expect(subject).to contain_exactly(event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_4])
+              expect(subject).to contain_exactly(event_4)
             end
           end
         end
@@ -115,14 +115,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_2, event_3])
+            expect(subject).to contain_exactly(event_2, event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_2, event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_2, event_3, event_between_3_and_4)
             end
           end
         end
@@ -133,14 +133,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_3])
+            expect(subject).to contain_exactly(event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', created_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a created_at timestamp at a given timestamp' do
-              expect(subject).to match_array([event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_3, event_between_3_and_4)
             end
           end
         end
@@ -152,14 +152,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a created_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_2, event_4])
+            expect(subject).to contain_exactly(event_2, event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_2_and_3) { Event.make(guid: '2.5', created_at: '2020-05-26T18:47:02.5Z') }
 
             it 'returns events with a created_at timestamp at a given timestamp' do
-              expect(subject).to match_array([event_2, event_between_2_and_3, event_4])
+              expect(subject).to contain_exactly(event_2, event_between_2_and_3, event_4)
             end
           end
         end
@@ -185,14 +185,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp less than the given timestamp' do
-            expect(subject).to match_array([event_1, event_2])
+            expect(subject).to contain_exactly(event_1, event_2)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_1, event_2])
+              expect(subject).to contain_exactly(event_1, event_2)
             end
           end
         end
@@ -203,14 +203,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp before or at a given timestamp' do
-            expect(subject).to match_array([event_1, event_2, event_3])
+            expect(subject).to contain_exactly(event_1, event_2, event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_1, event_2, event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_1, event_2, event_3, event_between_3_and_4)
             end
           end
         end
@@ -221,14 +221,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_3, event_4])
+            expect(subject).to contain_exactly(event_3, event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_3, event_between_3_and_4, event_4])
+              expect(subject).to contain_exactly(event_3, event_between_3_and_4, event_4)
             end
           end
         end
@@ -239,14 +239,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp greater than the given timestamp' do
-            expect(subject).to match_array([event_4])
+            expect(subject).to contain_exactly(event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_4])
+              expect(subject).to contain_exactly(event_4)
             end
           end
         end
@@ -257,14 +257,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_2, event_3])
+            expect(subject).to contain_exactly(event_2, event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp before or at a given timestamp' do
-              expect(subject).to match_array([event_2, event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_2, event_3, event_between_3_and_4)
             end
           end
         end
@@ -275,14 +275,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_3])
+            expect(subject).to contain_exactly(event_3)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_3_and_4) { Event.make(guid: '3.5', updated_at: '2020-05-26T18:47:03.5Z') }
 
             it 'returns events with a updated_at timestamp at a given timestamp' do
-              expect(subject).to match_array([event_3, event_between_3_and_4])
+              expect(subject).to contain_exactly(event_3, event_between_3_and_4)
             end
           end
         end
@@ -294,14 +294,14 @@ module VCAP::CloudController
           end
 
           it 'returns events with a updated_at timestamp at or after a given timestamp' do
-            expect(subject).to match_array([event_2, event_4])
+            expect(subject).to contain_exactly(event_2, event_4)
           end
 
           context 'when there are events with subsecond timestamps' do
             let!(:event_between_2_and_3) { Event.make(guid: '2.5', updated_at: '2020-05-26T18:47:02.5Z') }
 
             it 'returns events with a updated_at timestamp at a given timestamp' do
-              expect(subject).to match_array([event_2, event_between_2_and_3, event_4])
+              expect(subject).to contain_exactly(event_2, event_between_2_and_3, event_4)
             end
           end
         end

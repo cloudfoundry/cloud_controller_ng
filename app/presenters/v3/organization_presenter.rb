@@ -30,7 +30,7 @@ module VCAP::CloudController::Presenters::V3
           labels: hashified_labels(organization.labels),
           annotations: hashified_annotations(organization.annotations)
         },
-        links: build_links,
+        links: build_links
       }
     end
 

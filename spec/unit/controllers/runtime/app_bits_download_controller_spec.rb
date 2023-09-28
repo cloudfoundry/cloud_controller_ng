@@ -14,7 +14,7 @@ module VCAP::CloudController
           set_current_user(developer)
         end
 
-        it 'should return 404 for an app without a package' do
+        it 'returns 404 for an app without a package' do
           get "/v2/apps/#{process.app.guid}/download"
           expect(last_response.status).to eq(404)
         end
@@ -27,13 +27,13 @@ module VCAP::CloudController
             allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
           end
 
-          it 'should return 302' do
+          it 'returns 302' do
             get "/v2/apps/#{process.app.guid}/download"
             expect(last_response.status).to eq(302)
           end
         end
 
-        it 'should return 404 for non-existent apps' do
+        it 'returns 404 for non-existent apps' do
           get '/v2/apps/abcd/download'
           expect(last_response.status).to eq(404)
         end
@@ -44,7 +44,7 @@ module VCAP::CloudController
           set_current_user(user)
         end
 
-        it 'should return 403' do
+        it 'returns 403' do
           get "/v2/apps/#{process.app.guid}/download"
           expect(last_response.status).to eq(403)
         end

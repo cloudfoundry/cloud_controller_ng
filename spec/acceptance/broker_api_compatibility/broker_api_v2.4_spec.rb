@@ -16,18 +16,18 @@ RSpec.describe 'Service Broker API integration' do
       let(:catalog) do
         {
           services: [{
-            id:          'service-guid-here',
-            name:        'MySQL',
+            id: 'service-guid-here',
+            name: 'MySQL',
             description: 'A MySQL-compatible relational database',
-            bindable:    true,
+            bindable: true,
             plan_updateable: true,
             plans: [{
-              id:          'plan1-guid-here',
-              name:        'small',
+              id: 'plan1-guid-here',
+              name: 'small',
               description: 'A small shared database with 100mb storage quota and 10 connections'
             }, {
-              id:          'plan2-guid-here',
-              name:        'large',
+              id: 'plan2-guid-here',
+              name: 'large',
               description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
             }]
           }]

@@ -13,10 +13,10 @@ module VCAP
           class << self
             # :labels and :annotations come from MetadataPresentationHelpers
             def associated_resources
-              super + [
-                :route_binding_operation,
-                :service_instance,
-                :route,
+              super + %i[
+                route_binding_operation
+                service_instance
+                route
               ]
             end
           end
@@ -36,7 +36,7 @@ module VCAP
               last_operation: last_operation(binding),
               metadata: {
                 labels: hashified_labels(binding.labels),
-                annotations: hashified_annotations(binding.annotations),
+                annotations: hashified_annotations(binding.annotations)
               },
               relationships: relationships,
               links: links
@@ -63,9 +63,7 @@ module VCAP
                 href: url_builder.build_url(path: "/v3/routes/#{binding.route.guid}")
               }
             }.tap do |l|
-              if binding.service_instance.managed_instance?
-                l[:parameters] = { href: url_builder.build_url(path: "/v3/service_route_bindings/#{binding.guid}/parameters") }
-              end
+              l[:parameters] = { href: url_builder.build_url(path: "/v3/service_route_bindings/#{binding.guid}/parameters") } if binding.service_instance.managed_instance?
             end
           end
 

@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe AppStage do
       let(:stagers) { instance_double(Stagers, validate_process: nil) }
 
-      subject(:action) { AppStage.new(stagers: stagers) }
+      subject(:action) { AppStage.new(stagers:) }
 
       describe '#stage' do
         let(:buildpack) { BuildpackLifecycleBuildpackModel.make(:custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack') }
@@ -78,9 +78,9 @@ module VCAP::CloudController
           process = ProcessModelFactory.make
           allow(stagers).to receive(:validate_process).with(process).and_raise(StandardError.new)
 
-          expect {
+          expect do
             action.stage(process)
-          }.to raise_error(StandardError)
+          end.to raise_error(StandardError)
 
           expect(build_create).not_to have_received(:create_and_stage_without_event)
         end
@@ -110,8 +110,8 @@ module VCAP::CloudController
             it 'translates it to an ApiError' do
               expect { action.stage(process) }.to(raise_error(
                                                     CloudController::Errors::ApiError,
-                /helpful message/
-              )) { |err| expect(err.details.name).to eq('SpaceQuotaMemoryLimitExceeded') }
+                                                    /helpful message/
+                                                  )) { |err| expect(err.details.name).to eq('SpaceQuotaMemoryLimitExceeded') }
             end
           end
 
@@ -125,8 +125,8 @@ module VCAP::CloudController
             it 'translates it to an ApiError' do
               expect { action.stage(process) }.to(raise_error(
                                                     CloudController::Errors::ApiError,
-                /helpful message/
-              )) { |err| expect(err.details.name).to eq('AppMemoryQuotaExceeded') }
+                                                    /helpful message/
+                                                  )) { |err| expect(err.details.name).to eq('AppMemoryQuotaExceeded') }
             end
           end
 
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
             it 'translates it to an ApiError' do
               expect { action.stage(process) }.to(raise_error(CloudController::Errors::ApiError,
-                /helpful message/)) { |err| expect(err.details.name).to eq('SpaceQuotaLogRateLimitExceeded') }
+                                                              /helpful message/)) { |err| expect(err.details.name).to eq('SpaceQuotaLogRateLimitExceeded') }
             end
           end
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
 
             it 'translates it to an ApiError' do
               expect { action.stage(process) }.to(raise_error(CloudController::Errors::ApiError,
-                /helpful message/)) { |err| expect(err.details.name).to eq('OrgQuotaLogRateLimitExceeded') }
+                                                              /helpful message/)) { |err| expect(err.details.name).to eq('OrgQuotaLogRateLimitExceeded') }
             end
           end
         end
@@ -173,8 +173,8 @@ module VCAP::CloudController
           let(:user_audit_info) do
             UserAuditInfo.new(
               user_email: 'my@email.com',
-              user_name:  'user name',
-              user_guid:  'userguid'
+              user_name: 'user name',
+              user_guid: 'userguid'
             )
           end
           let(:logger_spy) { spy('logger') }
@@ -203,12 +203,12 @@ module VCAP::CloudController
                 'telemetry-time' => Time.now.to_datetime.rfc3339,
                 'create-build' => {
                   'api-version' => 'v2',
-                  'lifecycle' =>  'buildpack',
-                  'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' =>  'my_stack',
-                  'app-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
-                  'build-id' =>  OpenSSL::Digest::SHA256.hexdigest(process.latest_build.guid),
-                  'user-id' =>  OpenSSL::Digest.hexdigest('SHA256', 'userguid'),
+                  'lifecycle' => 'buildpack',
+                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' => 'my_stack',
+                  'app-id' => OpenSSL::Digest::SHA256.hexdigest(process.app.guid),
+                  'build-id' => OpenSSL::Digest::SHA256.hexdigest(process.latest_build.guid),
+                  'user-id' => OpenSSL::Digest.hexdigest('SHA256', 'userguid')
                 }
               }
               expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))

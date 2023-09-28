@@ -56,14 +56,14 @@ module VCAP
         schema.deparse
       end
 
-      URL = UrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w(http https)))
+      URL = UrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w[http https]))
       HTTPS_URL = HttpsUrlDecorator.new(URI::DEFAULT_PARSER.make_regexp('https'))
       EMAIL = EmailDecorator.new(RFC822::EMAIL_REGEXP_WHOLE)
-      GIT_URL = GitUrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w(http https git)))
+      GIT_URL = GitUrlDecorator.new(URI::DEFAULT_PARSER.make_regexp(%w[http https git]))
 
       # The block will be evaluated in the context of the schema validator used
       # by class `JsonMessage` viz. `Membrane`.
-      Boolean = lambda { |*_| bool }
+      Boolean = ->(*_) { bool }
     end
 
     class MetadataMessage < Message

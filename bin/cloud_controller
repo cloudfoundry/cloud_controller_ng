@@ -9,7 +9,7 @@ require 'cloud_controller'
 puts RUBY_DESCRIPTION
 begin
   VCAP::CloudController::Runner.new(ARGV).run!
-rescue => e
+rescue StandardError => e
   puts e
   exit 1
 end

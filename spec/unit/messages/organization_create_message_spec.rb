@@ -19,7 +19,7 @@ module VCAP::CloudController
         it 'must be present' do
           body = {}
           message = OrganizationCreateMessage.new(body)
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Name can't be blank")
         end
       end

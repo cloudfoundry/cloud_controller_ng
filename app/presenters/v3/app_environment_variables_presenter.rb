@@ -32,7 +32,7 @@ module VCAP::CloudController
         def build_links
           {
             self: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/environment_variables") },
-            app:  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") }
+            app: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") }
           }
         end
       end

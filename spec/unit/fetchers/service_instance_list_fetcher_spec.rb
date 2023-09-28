@@ -70,13 +70,14 @@ module VCAP::CloudController
           let(:filters) { { organization_guids: [space_1.organization.guid, space_2.organization.guid, 'no-such-org-guid'] } }
 
           it 'returns instances with matching org guids' do
-            expect(fetcher.fetch(message, omniscient: true).map(&:guid)).to contain_exactly(*[msi_1, upsi, msi_2, ssi].map(&:guid))
+            expect(fetcher.fetch(message, omniscient: true).map(&:guid)).to match_array([msi_1, upsi, msi_2, ssi].map(&:guid))
             expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: [space_1.id, space_3.id]).select(:guid))).to contain_exactly(msi_1, ssi, upsi)
           end
         end
 
         context 'by label selector' do
           let(:filters) { { 'label_selector' => 'key=value' } }
+
           before do
             ServiceInstanceLabelModel.make(resource_guid: msi_2.guid, key_name: 'key', value: 'value')
           end

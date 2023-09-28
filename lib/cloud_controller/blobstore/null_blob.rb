@@ -5,7 +5,7 @@ module CloudController
 
       def public_download_url; end
 
-      def attributes(*keys)
+      def attributes(*_keys)
         {}
       end
 

@@ -47,8 +47,7 @@ module CloudController
 
           context 'a file does not respond to url' do
             before do
-              allow(file).to receive(:url).and_return(nil)
-              allow(file).to receive(:public_url).and_return('http://example.com/public')
+              allow(file).to receive_messages(url: nil, public_url: 'http://example.com/public')
               it 'returns a public url from file' do
                 expect(blob.internal_download_url).to eql('http://example.com/public')
               end
@@ -93,8 +92,7 @@ module CloudController
 
           context 'a file does not respond to url' do
             before do
-              allow(file).to receive(:url).and_return(nil)
-              allow(file).to receive(:public_url).and_return('http://example.com/public')
+              allow(file).to receive_messages(url: nil, public_url: 'http://example.com/public')
               it 'returns a public url from file' do
                 expect(blob.public_download_url).to eql('http://example.com/public')
               end

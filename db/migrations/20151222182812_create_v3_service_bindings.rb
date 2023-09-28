@@ -16,7 +16,7 @@ Sequel.migration do
       Integer :service_instance_id, null: false
       foreign_key [:service_instance_id], :service_instances, name: :fk_v3_service_bindings_service_instance_id
 
-      index [:app_id, :service_instance_id], unique: true
+      index %i[app_id service_instance_id], unique: true
     end
   end
 end

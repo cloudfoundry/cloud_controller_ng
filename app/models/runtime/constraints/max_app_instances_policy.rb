@@ -18,8 +18,8 @@ class MaxAppInstancesPolicy
 
     proposed_instance_count = other_apps.reject { |process| process.state == 'STOPPED' }.sum(&:instances) + @process.instances
 
-    if proposed_instance_count > @quota_definition.app_instance_limit
-      @errors.add(:app_instance_limit, @error_name)
-    end
+    return unless proposed_instance_count > @quota_definition.app_instance_limit
+
+    @errors.add(:app_instance_limit, @error_name)
   end
 end

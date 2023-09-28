@@ -9,15 +9,15 @@ module VCAP::CloudController::Presenters::V3
         app: app_model,
         name: 'my-sidecar',
         command: './start-me-up',
-        memory: 301,
+        memory: 301
       )
     end
-    let!(:web_sidecar_process_type) {
+    let!(:web_sidecar_process_type) do
       VCAP::CloudController::SidecarProcessTypeModel.create(type: 'web', sidecar_guid: sidecar.guid, app_guid: sidecar.app_guid)
-    }
-    let!(:worker_sidecar_process_type) {
+    end
+    let!(:worker_sidecar_process_type) do
       VCAP::CloudController::SidecarProcessTypeModel.create(type: 'worker', sidecar_guid: sidecar.guid, app_guid: sidecar.app_guid)
-    }
+    end
 
     describe '#to_hash' do
       it 'presents the sidecar as json' do
@@ -25,7 +25,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(sidecar.guid)
         expect(result[:name]).to eq('my-sidecar')
         expect(result[:command]).to eq('./start-me-up')
-        expect(result[:process_types]).to eq(['web', 'worker'])
+        expect(result[:process_types]).to eq(%w[web worker])
         expect(result[:memory_in_mb]).to eq(301)
         expect(result[:origin]).to eq('user')
         expect(result[:created_at]).to eq(sidecar.created_at)

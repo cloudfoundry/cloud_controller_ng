@@ -6,29 +6,25 @@ module VCAP::CloudController
       def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
         super(Service,
               message,
-              omniscient: omniscient,
-              readable_orgs_query: readable_orgs_query,
-              readable_spaces_query: readable_spaces_query,
-              eager_loaded_associations: eager_loaded_associations)
+              omniscient:,
+              readable_orgs_query:,
+              readable_spaces_query:,
+              eager_loaded_associations:)
       end
 
       private
 
       def filter(message, dataset, klass)
-        if message.requested?(:names)
-          dataset = dataset.where(Sequel[:services][:label] =~ message.names)
-        end
+        dataset = dataset.where(Sequel[:services][:label] =~ message.names) if message.requested?(:names)
 
-        if message.requested?(:available)
-          dataset = dataset.where { Sequel[:services][:active] =~ message.available? }
-        end
+        dataset = dataset.where { Sequel[:services][:active] =~ message.available? } if message.requested?(:available)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ServiceOfferingLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: Service,
+            resource_klass: Service
           )
         end
 

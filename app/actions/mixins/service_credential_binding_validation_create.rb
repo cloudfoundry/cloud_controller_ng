@@ -20,8 +20,9 @@ module VCAP::CloudController
       errors = exception.errors
       validate_service_key_quotas!(errors, validation_error_handler)
 
-      if errors.on([:name, :service_instance_id])&.include?(:unique)
-        validation_error_handler.error!("The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{name}'.")
+      if errors.on(%i[name service_instance_id])&.include?(:unique)
+        validation_error_handler.error!('The binding name is invalid. Key binding names must be unique. ' \
+                                        "The service instance already has a key binding with name '#{name}'.")
       end
 
       validation_error_handler.error!(exception.message)

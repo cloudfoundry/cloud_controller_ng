@@ -15,7 +15,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       it 'sends params to broker for service instance provision' do
-        provision_service parameters: parameters
+        provision_service(parameters:)
         expected_body = hash_including({ 'parameters' => parameters })
 
         expect(
@@ -25,7 +25,7 @@ RSpec.describe 'Service Broker API integration' do
 
       it 'sends params to broker for service instance update' do
         provision_service
-        update_service_instance(200, parameters: parameters)
+        update_service_instance(200, parameters:)
         expected_body = hash_including({ 'parameters' => parameters })
 
         expect(
@@ -38,7 +38,7 @@ RSpec.describe 'Service Broker API integration' do
         service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
         create_app
-        bind_service parameters: parameters
+        bind_service(parameters:)
 
         expected_body = hash_including({ 'parameters' => parameters })
         expect(
@@ -50,7 +50,7 @@ RSpec.describe 'Service Broker API integration' do
         provision_service
         service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
-        create_service_key parameters: parameters
+        create_service_key(parameters:)
 
         expected_body = hash_including({ 'parameters' => parameters })
         expect(

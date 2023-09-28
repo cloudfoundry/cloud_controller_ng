@@ -40,9 +40,9 @@ module VCAP::CloudController
       end
 
       def set_is_oauth_client(user, token)
-        if user && user.is_oauth_client.nil?
-          user.update(is_oauth_client: is_oauth_client?(token))
-        end
+        return unless user && user.is_oauth_client.nil?
+
+        user.update(is_oauth_client: is_oauth_client?(token))
       end
 
       def user_from_token(token)
@@ -58,7 +58,7 @@ module VCAP::CloudController
         User.find(guid: guid.to_s)
       end
 
-      def validate_unique_user(user, token, guid)
+      def validate_unique_user(user, token, _guid)
         if is_oauth_client?(token)
           if is_oauth_client_field_for(user) == false || client_is_shadowing_user?(token['client_id'])
             logger.error("Invalid token client_id: #{token['client_id']}")

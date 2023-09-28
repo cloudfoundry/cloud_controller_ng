@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'when instances exceeds 2000000' do
-          let(:params) { { instances: 3000000 } }
+          let(:params) { { instances: 3_000_000 } }
 
           it 'is not valid' do
             message = ManifestProcessScaleMessage.new(params)
@@ -199,10 +199,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(2)
-          expect(message.errors.full_messages).to match_array([
-            'Disk quota must be greater than 0MB',
-            'Memory must be greater than 0MB'
-          ])
+          expect(message.errors.full_messages).to contain_exactly('Disk quota must be greater than 0MB', 'Memory must be greater than 0MB')
         end
       end
     end

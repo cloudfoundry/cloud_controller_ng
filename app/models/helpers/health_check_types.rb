@@ -10,12 +10,12 @@ module VCAP::CloudController
         HTTP,
         NONE,
         PORT,
-        PROCESS,
+        PROCESS
       ]
     end
 
     def self.readiness_types
-      self.all_types - [NONE]
+      all_types - [NONE]
     end
   end
 end

@@ -5,18 +5,28 @@ require 'jobs/v3/create_binding_async_job'
 module VCAP::CloudController
   module V3
     RSpec.describe CreateBindingAsyncJob do
+      let(:subject) do
+        described_class.new(
+          :any,
+          'foo',
+          parameters: {},
+          user_audit_info: {},
+          audit_hash: {}
+        )
+      end
+
       context 'route' do
-        let(:route) { VCAP::CloudController::Route.make(space: space) }
+        let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
-              service_instance: service_instance,
-              route: route,
+              service_instance:,
+              route:
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -30,12 +40,12 @@ module VCAP::CloudController
               type: 'app',
               service_instance: service_instance,
               app: AppModel.make(space: service_instance.space),
-              credentials: {},
+              credentials: {}
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -46,28 +56,18 @@ module VCAP::CloudController
         let(:binding) do
           ServiceKey.new.save_with_attributes_and_new_operation(
             {
-                service_instance: service_instance,
-                name: 'key-name',
-                credentials: {},
-              },
+              service_instance: service_instance,
+              name: 'key-name',
+              credentials: {}
+            },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
         it_behaves_like 'create binding job', :key
-      end
-
-      let(:subject) do
-        described_class.new(
-          :any,
-          'foo',
-          parameters: {},
-          user_audit_info: {},
-          audit_hash: {}
-        )
       end
 
       describe '#actor' do
@@ -110,6 +110,7 @@ module VCAP::CloudController
 
       describe '#resource_type' do
         let(:actor) { double('Actor', resource_type: 'super') }
+
         before do
           allow(VCAP::CloudController::V3::CreateServiceBindingFactory).to receive(:for).and_return(actor)
         end

@@ -8,7 +8,7 @@ module VCAP::CloudController
     describe '.fetch' do
       let(:app) { AppModel.make }
       let(:space) { app.space }
-      let!(:process) { ProcessModel.make(app: app) }
+      let!(:process) { ProcessModel.make(app:) }
 
       it 'returns the process and space' do
         actual_process, actual_space = fetcher.fetch(process_guid: process.guid)
@@ -28,7 +28,7 @@ module VCAP::CloudController
     describe 'fetch_for_app_by_type' do
       let(:app) { AppModel.make }
       let(:space) { app.space }
-      let!(:process) { ProcessModel.make(app: app) }
+      let!(:process) { ProcessModel.make(app:) }
 
       it 'returns the process, app, space' do
         actual_process, actual_app, actual_space = fetcher.fetch_for_app_by_type(process_type: process.type, app_guid: app.guid)

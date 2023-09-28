@@ -34,7 +34,7 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect { fetched_secrets }.to raise_error(%r(unable to read secret value file: "/path/does/not/exist"))
+          expect { fetched_secrets }.to raise_error(%r{unable to read secret value file: "/path/does/not/exist"})
         end
       end
     end

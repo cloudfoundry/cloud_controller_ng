@@ -38,7 +38,7 @@ module VCAP::Services::ServiceBrokers
       existing_services.each do |catalog_service|
         cond = {
           service_broker: catalog_service.service_broker,
-          unique_id:      catalog_service.broker_provided_id,
+          unique_id: catalog_service.broker_provided_id
         }
         service = VCAP::CloudController::Service.find(cond)
         update_service_from_catalog(service, catalog_service)
@@ -47,7 +47,7 @@ module VCAP::Services::ServiceBrokers
       new_services.each do |catalog_service|
         service = VCAP::CloudController::Service.new(
           unique_id: catalog_service.broker_provided_id,
-          service_broker: catalog_service.service_broker,
+          service_broker: catalog_service.service_broker
         )
         update_service_from_catalog(service, catalog_service)
       end
@@ -62,7 +62,7 @@ module VCAP::Services::ServiceBrokers
       existing_plans.each do |catalog_plan|
         cond = {
           unique_id: catalog_plan.broker_provided_id,
-          service: catalog_plan.catalog_service.cc_service,
+          service: catalog_plan.catalog_service.cc_service
         }
         plan = VCAP::CloudController::ServicePlan.find(cond)
 
@@ -71,10 +71,10 @@ module VCAP::Services::ServiceBrokers
 
       new_plans.each do |catalog_plan|
         plan = VCAP::CloudController::ServicePlan.new({
-          unique_id: catalog_plan.broker_provided_id,
-          service: catalog_plan.catalog_service.cc_service,
-          public: false,
-        })
+                                                        unique_id: catalog_plan.broker_provided_id,
+                                                        service: catalog_plan.catalog_service.cc_service,
+                                                        public: false
+                                                      })
 
         update_plan_from_catalog(plan, catalog_plan)
       end
@@ -82,17 +82,17 @@ module VCAP::Services::ServiceBrokers
 
     def update_service_from_catalog(service, catalog_service)
       service.set(
-        label:       catalog_service.name,
+        label: catalog_service.name,
         description: catalog_service.description,
-        bindable:    catalog_service.bindable,
-        tags:        catalog_service.tags,
-        extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
-        active:      catalog_service.plans_present?,
-        requires:    catalog_service.requires,
+        bindable: catalog_service.bindable,
+        tags: catalog_service.tags,
+        extra: catalog_service.metadata ? catalog_service.metadata.to_json : nil,
+        active: catalog_service.plans_present?,
+        requires: catalog_service.requires,
         plan_updateable: catalog_service.plan_updateable,
         bindings_retrievable: catalog_service.bindings_retrievable,
         instances_retrievable: catalog_service.instances_retrievable,
-        allow_context_updates: catalog_service.allow_context_updates,
+        allow_context_updates: catalog_service.allow_context_updates
       )
 
       @services_event_repository.with_service_event(service) do
@@ -109,19 +109,19 @@ module VCAP::Services::ServiceBrokers
       end
 
       plan.set({
-        name:        catalog_plan.name,
-        description: catalog_plan.description,
-        free:        catalog_plan.free,
-        bindable:    catalog_plan.bindable,
-        active:      true,
-        extra:       catalog_plan.metadata.try(:to_json),
-        plan_updateable: catalog_plan.plan_updateable,
-        maximum_polling_duration: catalog_plan.maximum_polling_duration,
-        maintenance_info: catalog_plan.maintenance_info,
-        create_instance_schema: create_instance,
-        update_instance_schema: update_instance,
-        create_binding_schema: create_binding,
-      })
+                 name: catalog_plan.name,
+                 description: catalog_plan.description,
+                 free: catalog_plan.free,
+                 bindable: catalog_plan.bindable,
+                 active: true,
+                 extra: catalog_plan.metadata.try(:to_json),
+                 plan_updateable: catalog_plan.plan_updateable,
+                 maximum_polling_duration: catalog_plan.maximum_polling_duration,
+                 maintenance_info: catalog_plan.maintenance_info,
+                 create_instance_schema: create_instance,
+                 update_instance_schema: update_instance,
+                 create_binding_schema: create_binding
+               })
       @services_event_repository.with_service_plan_event(plan) do
         plan.save(changed: true)
       end

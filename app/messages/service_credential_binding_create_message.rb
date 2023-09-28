@@ -1,11 +1,11 @@
 require 'messages/metadata_base_message'
 module VCAP::CloudController
   class ServiceCredentialBindingCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:type, :name, :relationships, :parameters]
+    register_allowed_keys %i[type name relationships parameters]
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates :parameters, hash: true, allow_nil: true
     validates :type, allow_blank: false, inclusion: {
-      in: %w(app key),
+      in: %w[app key],
       message: "must be 'app' or 'key'"
     }
 

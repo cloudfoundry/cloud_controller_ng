@@ -13,9 +13,6 @@ RSpec.describe 'fill role_guid and timestamps for organizations_users table', is
 
   before do
     FileUtils.cp(File.join(DBMigrator::SEQUEL_MIGRATIONS, filename), tmp_migrations_dir)
-  end
-
-  before do
     [user, user_2].each do |user|
       db[role_table].insert({ user_id: user.id, organization_id: organization.id })
     end

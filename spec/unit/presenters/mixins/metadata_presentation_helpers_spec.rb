@@ -10,6 +10,7 @@ module VCAP::CloudController::Presenters::Mixins
     describe '#hashified_labels' do
       context 'when the list of labels is empty' do
         let(:labels) { [] }
+
         it 'returns an empty hash' do
           expect(subject.hashified_labels(labels)).to eq({})
         end
@@ -54,6 +55,7 @@ module VCAP::CloudController::Presenters::Mixins
     describe '#hashified_annotations' do
       context 'when the list of annotations is empty' do
         let(:annotations) { [] }
+
         it 'returns an empty hash' do
           expect(subject.hashified_annotations(annotations)).to eq({})
         end

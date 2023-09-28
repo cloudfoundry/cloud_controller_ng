@@ -14,7 +14,7 @@ module CloudController
           {
             'default_space_guid' => user.default_space_guid,
             'active' => to_bool(user.active),
-            'admin' => to_bool(user.admin),
+            'admin' => to_bool(user.admin)
           }
         end
 

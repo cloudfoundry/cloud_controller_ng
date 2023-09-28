@@ -40,12 +40,12 @@ module VCAP::CloudController::Validators
 
       def validate_authentication_credentials
         # AuthenticationMessage handles the hash error message for credentials
-        if authentication_credentials_hash.is_a?(Hash) && !authentication_credentials.valid?
-          record.errors.add(
-            :authentication,
-            message: "Field(s) #{authentication_credentials.errors.attribute_names.map(&:to_s)} must be valid: #{authentication_credentials.errors.full_messages}"
-          )
-        end
+        return unless authentication_credentials_hash.is_a?(Hash) && !authentication_credentials.valid?
+
+        record.errors.add(
+          :authentication,
+          message: "Field(s) #{authentication_credentials.errors.attribute_names.map(&:to_s)} must be valid: #{authentication_credentials.errors.full_messages}"
+        )
       end
     end
   end

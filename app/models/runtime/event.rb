@@ -19,8 +19,8 @@ module VCAP::CloudController
     serialize_attributes :json, :metadata
 
     export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee,
-      :actee_type, :actee_name, :timestamp, :metadata, :space_guid,
-      :organization_guid
+                      :actee_type, :actee_name, :timestamp, :metadata, :space_guid,
+                      :organization_guid
 
     def data
       metadata
@@ -49,10 +49,10 @@ module VCAP::CloudController
 
     def after_save
       super
-      if Config.config.get(:log_audit_events)
-        logger = Steno.logger('cc.model.event')
-        logger.info Presenters::V3::EventPresenter.new(self).body.to_json
-      end
+      return unless Config.config.get(:log_audit_events)
+
+      logger = Steno.logger('cc.model.event')
+      logger.info Presenters::V3::EventPresenter.new(self).body.to_json
     end
 
     def denormalize_space_and_org_guids

@@ -38,7 +38,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def human_readable_attr_name(name)
       {
-        parameters: "Schemas #{@path.join('.')}",
+        parameters: "Schemas #{@path.join('.')}"
       }.fetch(name) { raise NotImplementedError }
     end
   end

@@ -51,7 +51,7 @@ shared_examples 'permission enumeration' do |perm_name, opts|
   perms_overlap = opts[:permissions_overlap]
   user_opts = opts[:user_opts] || {}
   describe "GET #{path}" do
-    it "should return #{name.pluralize} to a user that has #{perm_name} permissions" do
+    it "returns #{name.pluralize} to a user that has #{perm_name} permissions" do
       expected_count = expected.respond_to?(:call) ? expected.call : expected
       set_current_user(member_a, user_opts)
       get path
@@ -70,7 +70,7 @@ shared_examples 'permission enumeration' do |perm_name, opts|
     end
 
     unless perms_overlap
-      it "should not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
+      it "does not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
         set_current_user(member_b, user_opts)
         get "#{path}/#{@obj_a.guid}"
         expect(last_response).not_to be_ok

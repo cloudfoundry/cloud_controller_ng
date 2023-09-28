@@ -61,6 +61,7 @@ module VCAP::CloudController
 
         context 'and the app is new' do
           let(:process) { ProcessModel.new }
+
           before do
             process.instances = 1
             process.log_rate_limit = 100
@@ -75,6 +76,7 @@ module VCAP::CloudController
 
       context 'and the app is requesting unlimited log quota' do
         let(:process) { ProcessModel.new }
+
         before do
           process.instances = 1
           process.log_rate_limit = -1
@@ -97,6 +99,7 @@ module VCAP::CloudController
     describe '#currently_used_log_rate_limit' do
       context 'when the app is new' do
         let(:process) { ProcessModel.new }
+
         it 'returns 0' do
           expect(subject.currently_used_log_rate_limit).to eq(0)
         end

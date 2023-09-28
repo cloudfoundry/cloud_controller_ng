@@ -61,9 +61,9 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect {
+              expect do
                 lifecycle_data.message
-              }.to raise_error(Membrane::SchemaValidationError)
+              end.to raise_error(Membrane::SchemaValidationError)
             end
           end
 
@@ -76,9 +76,9 @@ module VCAP::CloudController
             end
 
             it 'does not raise an error' do
-              expect {
+              expect do
                 lifecycle_data.message
-              }.not_to raise_error
+              end.not_to raise_error
             end
           end
         end

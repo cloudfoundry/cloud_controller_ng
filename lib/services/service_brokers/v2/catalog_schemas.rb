@@ -51,7 +51,7 @@ module VCAP::Services::ServiceBrokers::V2
       {
         schemas: 'Schemas',
         service_instance: 'Schemas service_instance',
-        service_binding: 'Schemas service_binding',
+        service_binding: 'Schemas service_binding'
       }.fetch(name) { raise NotImplementedError }
     end
   end

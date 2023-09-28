@@ -56,7 +56,7 @@ module VCAP::CloudController
         logger.info('sync-failed', error: e.name, error_message: e.message)
         @bump_freshness = false
         raise BBSFetchError.new(e.message)
-      rescue => e
+      rescue StandardError => e
         logger.info('sync-failed', error: e.class.name, error_message: e.message)
         @bump_freshness = false
         raise

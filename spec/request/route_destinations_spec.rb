@@ -12,10 +12,10 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   context 'buildpack table test' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
     let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
-    let(:route1) { VCAP::CloudController::Route.make(space: space) }
-    let(:route2) { VCAP::CloudController::Route.make(space: space) }
+    let(:route1) { VCAP::CloudController::Route.make(space:) }
+    let(:route2) { VCAP::CloudController::Route.make(space:) }
 
     [
       # case,  dst1 specified port,   dst2 specified port,   dst1 actual port,   dst2 actual port,   exposed ports,
@@ -23,11 +23,11 @@ RSpec.describe 'Route Destinations Request' do
       [1,      nil,                   2222,                  8080,               2222,               [8080, 2222]],
       [2,      1111,                  nil,                   1111,               8080,               [1111, 8080]],
       [3,      1111,                  2222,                  1111,               2222,               [1111, 2222]],
-      [4,      nil,                   8080,                  8080,               8080,               [8080]],
+      [4,      nil,                   8080,                  8080,               8080,               [8080]]
     ].each do |sample, dst1_specified_port, dst2_specified_port, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
       it "case #{sample}" do
         params1 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params1[:port] = dst1_specified_port if dst1_specified_port
 
@@ -35,7 +35,7 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq(200)
 
         params2 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params2[:port] = dst2_specified_port if dst2_specified_port
 
@@ -57,16 +57,16 @@ RSpec.describe 'Route Destinations Request' do
         get "/v2/apps/#{app_model.guid}", nil, admin_header
         expect(last_response.status).to eq(200)
         expect(parsed_response['entity']['ports']).not_to be_nil
-        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+        expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
     end
   end
 
   context 'docker table test' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
     let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
-    let(:route1) { VCAP::CloudController::Route.make(space: space) }
-    let(:route2) { VCAP::CloudController::Route.make(space: space) }
+    let(:route1) { VCAP::CloudController::Route.make(space:) }
+    let(:route2) { VCAP::CloudController::Route.make(space:) }
 
     [
       # case,  dst1 specified port,   dst2 specified port,   docker ports,   dst1 actual port,   dst2 actual port,   exposed ports,
@@ -78,11 +78,11 @@ RSpec.describe 'Route Destinations Request' do
       [5,      1111,                  nil,                   [3333],         1111,               3333,               [1111, 3333]],
       [6,      1111,                  2222,                  [],             1111,               2222,               [1111, 2222]],
       [7,      1111,                  2222,                  [3333],         1111,               2222,               [1111, 2222]],
-      [8,      nil,                   8080,                  [],             8080,               8080,               [8080]],
+      [8,      nil,                   8080,                  [],             8080,               8080,               [8080]]
     ].each do |sample, dst1_specified_port, dst2_specified_port, docker_ports, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
       it "case #{sample}" do
         params1 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params1[:port] = dst1_specified_port if dst1_specified_port
 
@@ -90,7 +90,7 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq(200)
 
         params2 = {
-          app: { guid: app_model.guid },
+          app: { guid: app_model.guid }
         }
         params2[:port] = dst2_specified_port if dst2_specified_port
 
@@ -103,9 +103,9 @@ RSpec.describe 'Route Destinations Request' do
           execution_metadata: {
             ports: docker_ports.map { |dp| { Port: dp, Protocol: 'tcp' } }
           }.to_json,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
-        app_model.update(droplet: droplet)
+        app_model.update(droplet:)
 
         get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
         expect(last_response.status).to eq(200)
@@ -122,16 +122,16 @@ RSpec.describe 'Route Destinations Request' do
         get "/v2/apps/#{app_model.guid}", nil, admin_header
         expect(last_response.status).to eq(200)
         expect(parsed_response['entity']['ports']).not_to be_nil
-        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+        expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
     end
   end
 
   describe 'GET /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let!(:destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'web') }
-    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
     let(:response_json) do
       {
         destinations: [
@@ -149,8 +149,8 @@ RSpec.describe 'Route Destinations Request' do
           }
         ],
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-          route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+          self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+          route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
         }
       }
     end
@@ -196,7 +196,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'filters' do
-      let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model2) { VCAP::CloudController::AppModel.make(space:) }
       let!(:destination2) { VCAP::CloudController::RouteMappingModel.make(app: app_model2, route: route, process_type: 'web') }
 
       context 'when filtering on app_guids' do
@@ -216,8 +216,8 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   describe 'POST /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let(:user_header) { headers_for(user) }
     let!(:existing_destination) do
       VCAP::CloudController::RouteMappingModel.make(
@@ -238,7 +238,7 @@ RSpec.describe 'Route Destinations Request' do
                 type: 'web'
               }
             },
-            protocol: 'http2',
+            protocol: 'http2'
           },
           {
             app: {
@@ -253,7 +253,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
 
       let(:response_json) do
         {
@@ -268,7 +268,7 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http1',
+              protocol: 'http1'
             },
             {
               guid: UUID_REGEX,
@@ -280,12 +280,12 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http2',
+              protocol: 'http2'
             }
           ],
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-            route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+            route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
           }
         }
       end
@@ -318,8 +318,8 @@ RSpec.describe 'Route Destinations Request' do
               destination_guid: new_destination['guid'],
               process_type: 'web',
               weight: nil,
-              protocol: 'http2',
-            }.to_json,
+              protocol: 'http2'
+            }.to_json
           }
         end
       end
@@ -394,6 +394,7 @@ RSpec.describe 'Route Destinations Request' do
           expect(last_response.status).to eq(200)
         end
       end
+
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
           let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -521,7 +522,7 @@ RSpec.describe 'Route Destinations Request' do
             }
           end
 
-          it 'returns a ' do
+          it 'returns a' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
@@ -581,9 +582,9 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   describe 'PATCH /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
     let(:user_header) { headers_for(user) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let(:params) do
       {
         destinations: [
@@ -650,14 +651,15 @@ RSpec.describe 'Route Destinations Request' do
           protocol: existing_protocol
         )
       end
+
       context 'http1/http2' do
         [
-          ['http2', 'http1', 'http1'],
-          ['http2', 'http2', 'http2'],
-          ['http2', nil,     'http1'],
-          ['http1', 'http1', 'http1'],
-          ['http1', 'http2', 'http2'],
-          ['http1', nil,     'http1'],
+          %w[http2 http1 http1],
+          %w[http2 http2 http2],
+          ['http2', nil, 'http1'],
+          %w[http1 http1 http1],
+          %w[http1 http2 http2],
+          ['http1', nil,     'http1']
         ].each do |set_from, set_to, result|
           context "when existing destination is #{set_from}" do
             let(:existing_protocol) { set_from }
@@ -673,14 +675,14 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'tcp' do
-        let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+        let(:routing_api_client) { double('routing_api_client', router_group:) }
         let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
         let(:route) do
           UAARequests.stub_all
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
 
-          VCAP::CloudController::Route.make(:tcp, space: space)
+          VCAP::CloudController::Route.make(:tcp, space:)
         end
         let(:existing_protocol) { 'tcp' }
         let(:new_protocol) { nil }
@@ -692,15 +694,16 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
     end
+
     context 'when removing a destination app' do
-      let(:app_model_1) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:app_model_2) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model_1) { VCAP::CloudController::AppModel.make(space:) }
+      let(:app_model_2) { VCAP::CloudController::AppModel.make(space:) }
       let!(:existing_destination_1) do
         VCAP::CloudController::RouteMappingModel.make(
           app: app_model_1,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let!(:existing_destination_2) do
@@ -708,7 +711,7 @@ RSpec.describe 'Route Destinations Request' do
           app: app_model_2,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let(:params) do
@@ -734,13 +737,13 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when removing all destination apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
       let!(:existing_destination) do
         VCAP::CloudController::RouteMappingModel.make(
           app: app_model,
           route: route,
           process_type: 'web',
-          app_port: 8080,
+          app_port: 8080
         )
       end
       let(:params) do
@@ -774,7 +777,7 @@ RSpec.describe 'Route Destinations Request' do
           ]
         }
       end
-      let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
       let(:response_json) do
         {
           destinations: [
@@ -792,8 +795,8 @@ RSpec.describe 'Route Destinations Request' do
             }
           ],
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
-            route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/destinations} },
+            route: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}} }
           }
         }
       end
@@ -849,7 +852,7 @@ RSpec.describe 'Route Destinations Request' do
         it 'replaces all destinations on the route' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
           expect(last_response.status).to eq(200)
-          expect(parsed_response['destinations'].map { |d| d['protocol'] }).to contain_exactly('http1', 'http2')
+          expect(parsed_response['destinations'].pluck('protocol')).to contain_exactly('http1', 'http2')
         end
       end
 
@@ -987,7 +990,7 @@ RSpec.describe 'Route Destinations Request' do
             }
           end
 
-          it 'returns a ' do
+          it 'returns a' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
@@ -1025,7 +1028,7 @@ RSpec.describe 'Route Destinations Request' do
       it 'creates route destinations with weights' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
         expect(last_response.status).to eq(200)
-        expect(parsed_response['destinations'].map { |r| r['weight'] }).to contain_exactly(80, 20)
+        expect(parsed_response['destinations'].pluck('weight')).to contain_exactly(80, 20)
         rm_hashes = route.reload.route_mappings.map do |rm|
           { process_type: rm.process_type, weight: rm.weight }
         end
@@ -1068,7 +1071,7 @@ RSpec.describe 'Route Destinations Request' do
                   process: {
                     type: 'worker'
                   }
-                },
+                }
               }
             ]
           }
@@ -1097,14 +1100,14 @@ RSpec.describe 'Route Destinations Request' do
           destinations: [
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 80,
               port: 8080
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 20,
               port: 9000
@@ -1143,25 +1146,25 @@ RSpec.describe 'Route Destinations Request' do
           destinations: [
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 1,
               port: 9000
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 1,
               port: 9000
             },
             {
               app: {
-                guid: app_model.guid,
+                guid: app_model.guid
               },
               weight: 98,
               port: 8080
-            },
+            }
           ]
         }
       end
@@ -1205,8 +1208,8 @@ RSpec.describe 'Route Destinations Request' do
 
   describe 'UPDATE /v3/routes/:guid/destinations/:destination_guid' do
     let(:user_header) { headers_for(user) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
 
     let!(:destination_to_preserve) do
       VCAP::CloudController::RouteMappingModel.make(
@@ -1229,7 +1232,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/routes/#{route.guid}/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, user_headers } }
 
       let(:db_check) do
         lambda do
@@ -1281,16 +1284,16 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when the route has a protocol of tcp' do
-      let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+      let(:routing_api_client) { double('routing_api_client', router_group:) }
       let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
       let(:tcp_route) do
         UAARequests.stub_all
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
         allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
 
-        VCAP::CloudController::Route.make(:tcp, space: space)
+        VCAP::CloudController::Route.make(:tcp, space:)
       end
-      let(:tcp_app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:tcp_app) { VCAP::CloudController::AppModel.make(space:) }
       let!(:destination) do
         VCAP::CloudController::RouteMappingModel.make(
           app: tcp_app,
@@ -1309,7 +1312,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'and the destination has a protocol of http1' do
-        it 'it returns 422 with a helpful message' do
+        it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http1' }.to_json, admin_header
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
@@ -1317,7 +1320,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'and the destination has a protocol of http2' do
-        it 'it returns 422 with a helpful message' do
+        it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http2' }.to_json, admin_header
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
@@ -1328,8 +1331,8 @@ RSpec.describe 'Route Destinations Request' do
 
   describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do
     let(:user_header) { headers_for(user) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
 
     let!(:destination_to_preserve) do
       VCAP::CloudController::RouteMappingModel.make(
@@ -1352,7 +1355,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, user_headers } }
 
       let(:db_check) do
         lambda do
@@ -1389,8 +1392,8 @@ RSpec.describe 'Route Destinations Request' do
               destination_guid: destination_to_delete.guid,
               process_type: destination_to_delete.process_type,
               weight: nil,
-              protocol: 'http1',
-            }.to_json,
+              protocol: 'http1'
+            }.to_json
           }
         end
       end

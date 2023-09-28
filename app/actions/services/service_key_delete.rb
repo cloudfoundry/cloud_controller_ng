@@ -22,12 +22,12 @@ module VCAP::CloudController
 
         begin
           client.unbind(service_binding)
-        rescue => e
+        rescue StandardError => e
           raise_wrapped_error(service_binding, e)
         end
 
         service_binding.destroy
-      rescue => e
+      rescue StandardError => e
         errors << e
       end
 

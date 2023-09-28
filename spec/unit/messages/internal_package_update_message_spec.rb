@@ -6,45 +6,43 @@ module VCAP::CloudController
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:body) do
-          { 'state'     => 'PROCESSING_UPLOAD',
+          { 'state' => 'PROCESSING_UPLOAD',
             'checksums' => [
               {
-                'type'  => 'sha1',
+                'type' => 'sha1',
                 'value' => 'potato'
               },
               {
-                'type'  => 'sha256',
+                'type' => 'sha256',
                 'value' => 'potatoest'
               }
             ],
-            'error'     => 'something bad happened',
-            'extra'     => 'some-key'
-          }
+            'error' => 'something bad happened',
+            'extra' => 'some-key' }
         end
 
         it 'is not valid' do
           message = InternalPackageUpdateMessage.new(body)
 
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages[0]).to include("Unknown field(s): 'extra'")
         end
       end
 
       describe 'state' do
         let(:body) do
-          { 'state'     => state,
+          { 'state' => state,
             'checksums' => [
               {
-                'type'  => 'sha1',
+                'type' => 'sha1',
                 'value' => 'potato'
               },
               {
-                'type'  => 'sha256',
+                'type' => 'sha256',
                 'value' => 'potatoest'
               }
             ],
-            'error' => 'something bad happened'
-          }
+            'error' => 'something bad happened' }
         end
 
         context 'when state is PROCESSING_UPLOAD' do
@@ -83,7 +81,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:state]).to include('must be one of PROCESSING_UPLOAD, READY, FAILED')
           end
         end
@@ -94,7 +92,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:state]).to include('must be one of PROCESSING_UPLOAD, READY, FAILED')
           end
         end
@@ -105,7 +103,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:state]).to include('must be one of PROCESSING_UPLOAD, READY, FAILED')
           end
         end
@@ -116,7 +114,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:state]).to include('must be one of PROCESSING_UPLOAD, READY, FAILED')
           end
         end
@@ -126,11 +124,11 @@ module VCAP::CloudController
         let(:checksums) do
           [
             {
-              'type'  => 'sha1',
+              'type' => 'sha1',
               'value' => 'potato'
             },
             {
-              'type'  => 'sha256',
+              'type' => 'sha256',
               'value' => 'potatoest'
             }
           ]
@@ -138,7 +136,7 @@ module VCAP::CloudController
 
         let(:body) do
           {
-            'state'     => 'READY',
+            'state' => 'READY',
             'checksums' => checksums
           }
         end
@@ -148,12 +146,12 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato',
                   'extra' => 'something'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -162,7 +160,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors.full_messages[0]).to include("Unknown field(s): 'extra'")
             end
           end
@@ -171,11 +169,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 }
               ]
@@ -184,7 +182,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors['checksums']).to include('both sha1 and sha256 checksums must be provided')
             end
           end
@@ -193,11 +191,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 }
               ]
@@ -206,7 +204,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors['checksums']).to include('both sha1 and sha256 checksums must be provided')
             end
           end
@@ -215,15 +213,15 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'potato'
                 }
               ]
@@ -232,7 +230,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors['checksums']).to include('both sha1 and sha256 checksums must be provided')
             end
           end
@@ -240,7 +238,7 @@ module VCAP::CloudController
           context 'when no checksums are provided' do
             let(:body) do
               {
-                'state' => 'FAILED',
+                'state' => 'FAILED'
               }
             end
 
@@ -265,11 +263,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'bogus',
+                  'type' => 'bogus',
                   'value' => 'potato'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -278,7 +276,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors[:checksums]).to include('Type must be one of sha1, sha256')
             end
           end
@@ -289,11 +287,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => ''
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -302,7 +300,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors[:checksums]).to include('Value must be between 1 and 500 characters')
             end
           end
@@ -311,11 +309,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'a' * 501
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -324,7 +322,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = InternalPackageUpdateMessage.new(body)
 
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors[:checksums]).to include('Value must be between 1 and 500 characters')
             end
           end
@@ -333,11 +331,11 @@ module VCAP::CloudController
             let(:checksums) do
               [
                 {
-                  'type'  => 'sha1',
+                  'type' => 'sha1',
                   'value' => 'a'
                 },
                 {
-                  'type'  => 'sha256',
+                  'type' => 'sha256',
                   'value' => 'potatoest'
                 }
               ]
@@ -376,7 +374,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:error]).to include('must be between 1 and 500 characters')
           end
         end
@@ -387,7 +385,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = InternalPackageUpdateMessage.new(body)
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:error]).to include('must be between 1 and 500 characters')
           end
         end

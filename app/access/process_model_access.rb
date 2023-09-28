@@ -14,7 +14,7 @@ module VCAP::CloudController
       read_for_update?(object, params)
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -33,12 +33,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)
@@ -54,7 +54,7 @@ module VCAP::CloudController
       true
     end
 
-    def create?(app, params=nil)
+    def create?(app, _params=nil)
       return true if admin_user?
       return false if app.in_suspended_org?
 
@@ -66,9 +66,7 @@ module VCAP::CloudController
       return false unless create?(app, params)
       return true if params.nil?
 
-      if %w(instances memory disk_quota).any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
-        FeatureFlag.raise_unless_enabled!(:app_scaling)
-      end
+      FeatureFlag.raise_unless_enabled!(:app_scaling) if %w[instances memory disk_quota].any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
 
       true
     end

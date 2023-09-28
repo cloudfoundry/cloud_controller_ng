@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      register_allowed_keys [:organization, :spaces]
+      register_allowed_keys %i[organization spaces]
 
       validates :organization, allow_nil: false, to_one_relationship: true
       validates :spaces, allow_nil: true, to_many_relationship: true
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       def space_guids
         space_data = HashUtils.dig(spaces, :data)
-        space_data ? space_data.map { |space| space[:guid] } : []
+        space_data ? space_data.pluck(:guid) : []
       end
     end
   end

@@ -18,13 +18,13 @@ module VCAP::CloudController
             TelemetryLogger.v3_emit(
               'create-sidecar',
               {
-                'app-id' => sidecar.app_guid,
+                'app-id' => sidecar.app_guid
               },
               {
                 'api-version' => 'v3',
                 'origin' => 'buildpack',
                 'memory-in-mb' => sidecar.memory,
-                'process-types' => sidecar.process_types,
+                'process-types' => sidecar.process_types
               }
             )
           end
@@ -32,13 +32,13 @@ module VCAP::CloudController
       end
 
       def raise_error_if_sidecar_names_conflict(app, sidecar_create_message)
-        if app.sidecars_dataset.where(name: sidecar_create_message.name, origin: SidecarModel::ORIGIN_USER).present?
-          raise ConflictingSidecarsError.new(
-            "Buildpack defined sidecar \'#{sidecar_create_message.name}\'"\
-            ' conflicts with an existing user-defined sidecar.'\
-            " Consider renaming \'#{sidecar_create_message.name}\'."
-          )
-        end
+        return if app.sidecars_dataset.where(name: sidecar_create_message.name, origin: SidecarModel::ORIGIN_USER).blank?
+
+        raise ConflictingSidecarsError.new(
+          "Buildpack defined sidecar '#{sidecar_create_message.name}' " \
+          'conflicts with an existing user-defined sidecar. ' \
+          "Consider renaming '#{sidecar_create_message.name}'."
+        )
       end
 
       private

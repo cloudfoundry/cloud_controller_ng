@@ -12,8 +12,8 @@ module VCAP::CloudController
       it 'deletes and cancels the label' do
         label_delete.delete([label, label2])
 
-        expect(label.exists?).to eq(false), 'Expected label to not exist, but it does'
-        expect(label2.exists?).to eq(false), 'Expected label2 to not exist, but it does'
+        expect(label.exists?).to be(false), 'Expected label to not exist, but it does'
+        expect(label2.exists?).to be(false), 'Expected label2 to not exist, but it does'
       end
     end
   end

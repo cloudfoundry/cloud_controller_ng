@@ -63,26 +63,26 @@ module VCAP::CloudController
 
       it 're-raises validation errors' do
         allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('invalid'))
-        expect {
+        expect do
           app_assign_droplet.assign(app_model, droplet)
-        }.to raise_error(AppAssignDroplet::InvalidApp)
+        end.to raise_error(AppAssignDroplet::InvalidApp)
       end
 
       describe 'error cases' do
         context 'when the droplet is not associated with the application' do
           it 'raises an error' do
             other_droplet = DropletModel.make
-            expect {
+            expect do
               app_assign_droplet.assign(app_model, other_droplet)
-            }.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+            end.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
 
         context 'when the droplet does not exist' do
           it 'raises an error' do
-            expect {
+            expect do
               app_assign_droplet.assign(app_model, nil)
-            }.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+            end.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
 
@@ -92,9 +92,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               app_assign_droplet.assign(app_model, droplet)
-            }.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
+            end.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
           end
         end
 
@@ -104,9 +104,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               app_assign_droplet.assign(app_model, droplet)
-            }.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
+            end.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
           end
         end
 
@@ -116,9 +116,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               app_assign_droplet.assign(app_model, droplet)
-            }.to raise_error AppAssignDroplet::InvalidApp, 'some message'
+            end.to raise_error AppAssignDroplet::InvalidApp, 'some message'
           end
         end
       end

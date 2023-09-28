@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe IntegerArraySerializer do
-    it 'should register with sequel' do
+    it 'registers with sequel' do
       expect(Sequel::Plugins::Serialization).to receive(:register_format)
       class Foo; extend IntegerArraySerializer; end
     end
@@ -36,7 +36,7 @@ module VCAP::CloudController
       let(:serializer) { IntegerArraySerializer.deserializer }
 
       it 'returns nil when passed nil' do
-        expect(serializer.call(nil)).to eq(nil)
+        expect(serializer.call(nil)).to be_nil
       end
 
       it 'returns an empty array when passed an empty string' do

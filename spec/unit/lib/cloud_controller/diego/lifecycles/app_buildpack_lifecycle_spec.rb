@@ -15,9 +15,9 @@ module VCAP::CloudController
       let!(:app) { AppModel.make }
 
       it 'creates BuildpackLifecycleDataModel' do
-        expect {
+        expect do
           lifecycle.create_lifecycle_data_model(app)
-        }.to change { BuildpackLifecycleDataModel.count }.by(1)
+        end.to change(BuildpackLifecycleDataModel, :count).by(1)
       end
 
       describe 'defaults' do
@@ -32,6 +32,7 @@ module VCAP::CloudController
 
         context 'when the user requested a buildpack' do
           let(:lifecycle_request_data) { { buildpacks: ['custom-bp'] } }
+
           before do
             Buildpack.make(name: 'custom-bp')
           end
@@ -44,6 +45,7 @@ module VCAP::CloudController
 
         context 'when the user requests multiple buildpacks' do
           let(:lifecycle_request_data) { { buildpacks: ['custom-bp', 'http://buildpack.com', 'http://other.com'] } }
+
           before do
             Buildpack.make(name: 'custom-bp')
           end

@@ -21,7 +21,7 @@ module CloudController
           client.get(download_uri(path)) do |chunk|
             block.yield chunk
           end
-        rescue
+        rescue StandardError
           raise if retries > 1
 
           retries += 1

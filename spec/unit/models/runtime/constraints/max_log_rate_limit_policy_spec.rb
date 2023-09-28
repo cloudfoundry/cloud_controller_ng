@@ -44,6 +44,7 @@ RSpec.describe 'max log_rate_limit policies' do
           before do
             process.instances = 5
           end
+
           it 'registers an error' do
             expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(400).and_return(false)
             expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
@@ -64,6 +65,7 @@ RSpec.describe 'max log_rate_limit policies' do
           before do
             process.instances = 5
           end
+
           it 'does not register an error' do
             expect(validator).to validate_without_error(process)
           end
@@ -73,14 +75,14 @@ RSpec.describe 'max log_rate_limit policies' do
 
     context 'when the app does not specify a log quota' do
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(log_rate_limit: -1, state: 'STOPPED') }
+
       before do
         process.state = 'STARTED'
       end
 
       context 'when the org specifies a log quota' do
         before do
-          allow(org_or_space).to receive(:name).and_return('some-org')
-          allow(org_or_space).to receive(:log_rate_limit).and_return(5000)
+          allow(org_or_space).to receive_messages(name: 'some-org', log_rate_limit: 5000)
         end
 
         it 'is unhappy and adds an error' do
@@ -91,9 +93,7 @@ RSpec.describe 'max log_rate_limit policies' do
 
       context 'when the space specifies a log quota' do
         before do
-          allow(org_or_space).to receive(:name).and_return('some-space')
-          allow(org_or_space).to receive(:log_rate_limit).and_return(5000)
-          allow(org_or_space).to receive(:organization_guid).and_return('some-org-guid')
+          allow(org_or_space).to receive_messages(name: 'some-space', log_rate_limit: 5000, organization_guid: 'some-org-guid')
         end
 
         it 'is unhappy and adds an error' do

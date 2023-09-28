@@ -49,7 +49,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (BuildpackUpdateMessage::MAX_BUILDPACK_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -70,8 +70,8 @@ module VCAP::CloudController
         context 'when it is too long' do
           let(:params) { { stack: 'B' * (BuildpackUpdateMessage::MAX_STACK_LENGTH + 1) } }
 
-          it 'should return an error' do
-            expect(subject).to be_invalid
+          it 'returns an error' do
+            expect(subject).not_to be_valid
             expect(subject.errors[:stack]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -124,7 +124,7 @@ module VCAP::CloudController
           let(:params) { { position: nil } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:position]).to include('is not a number')
           end
         end
@@ -150,7 +150,7 @@ module VCAP::CloudController
           let(:params) { { enabled: nil } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:enabled]).to include('must be a boolean')
           end
         end
@@ -170,7 +170,7 @@ module VCAP::CloudController
           let(:params) { { locked: true } }
 
           it do
-            is_expected.to be_valid
+            expect(subject).to be_valid
           end
         end
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
           let(:params) { { locked: nil } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:locked]).to include('must be a boolean')
           end
         end

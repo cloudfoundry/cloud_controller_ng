@@ -12,16 +12,16 @@ module VCAP::CloudController
     private
 
     def unmapped_valid?
-      errors.add(:base, "Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.") unless self.requested?(:unmapped)
+      errors.add(:base, "Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.") unless requested?(:unmapped)
 
-      unless ['true', 'false'].include?(self.unmapped)
+      unless %w[true false].include?(unmapped)
         errors.add(:unmapped, 'must be a boolean')
         return
       end
 
-      if self.unmapped == 'false'
-        errors.add(:base, "Mass delete not supported for mapped routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
-      end
+      return unless unmapped == 'false'
+
+      errors.add(:base, "Mass delete not supported for mapped routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
     end
   end
 end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   class AppBuildsListFetcher < BaseListFetcher
     class << self
       def fetch_all(app_guid, message)
-        dataset = BuildModel.dataset.where(app_guid: app_guid)
+        dataset = BuildModel.dataset.where(app_guid:)
         filter(message, dataset)
       end
 
@@ -16,13 +16,11 @@ module VCAP::CloudController
             label_klass: BuildLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: BuildModel,
-              )
+            resource_klass: BuildModel
+          )
         end
 
-        if message.requested? :states
-          dataset = dataset.where(state: message.states)
-        end
+        dataset = dataset.where(state: message.states) if message.requested? :states
 
         super(message, dataset, BuildModel)
       end

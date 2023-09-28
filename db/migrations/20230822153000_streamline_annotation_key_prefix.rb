@@ -36,16 +36,16 @@ Sequel.migration do
         annotations = self[table.to_sym].where(Sequel.like(:key, '%/%'))
         annotations.each do |annotation|
           prefix, key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(annotation[:key].to_s)
-          if prefix.present?
-            self[table.to_sym].where(guid: annotation[:guid]).delete
-            self[table.to_sym].insert(guid: annotation[:guid],
-                                      created_at: annotation[:created_at],
-                                      updated_at: Sequel::CURRENT_TIMESTAMP,
-                                      resource_guid: annotation[:resource_guid],
-                                      key_prefix: prefix,
-                                      key: key_name,
-                                      value: annotation[:value])
-          end
+          next if prefix.blank?
+
+          self[table.to_sym].where(guid: annotation[:guid]).delete
+          self[table.to_sym].insert(guid: annotation[:guid],
+                                    created_at: annotation[:created_at],
+                                    updated_at: Sequel::CURRENT_TIMESTAMP,
+                                    resource_guid: annotation[:resource_guid],
+                                    key_prefix: prefix,
+                                    key: key_name,
+                                    value: annotation[:value])
         end
       end
     end

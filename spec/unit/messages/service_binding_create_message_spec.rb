@@ -4,7 +4,7 @@ require 'messages/service_binding_create_message'
 module VCAP::CloudController
   RSpec.describe ServiceBindingCreateMessage do
     describe 'validations' do
-      let(:valid_body) {
+      let(:valid_body) do
         {
           type: 'app',
           relationships: {
@@ -17,10 +17,10 @@ module VCAP::CloudController
               data: {
                 guid: 'squid'
               }
-            },
-          },
+            }
+          }
         }
-      }
+      end
 
       context 'when all values are correct' do
         let(:symbolized_body) { valid_body }
@@ -77,7 +77,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"data\": {\"guid\": \"valid-guid"}}\"/)
+            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: "service_instance: {"data": {"guid": "valid-guid"}}"/)
           end
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"data\": {\"guid\": \"valid-guid"}}\"/)
+            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: "service_instance: {"data": {"guid": "valid-guid"}}"/)
           end
         end
 

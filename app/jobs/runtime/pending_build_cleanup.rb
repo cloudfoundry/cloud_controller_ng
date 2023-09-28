@@ -15,10 +15,10 @@ module VCAP::CloudController
             where(state: BuildModel::STAGING_STATE).
             where(updated_at_past_threshold).
             all.
-            map { |build|
+            map do |build|
               logger.info("Staging timeout has elapsed for build: #{build.guid}", build_guid: build.guid)
               build.fail_to_stage!('StagingTimeExpired')
-            }
+            end
         end
 
         def job_name_in_configuration

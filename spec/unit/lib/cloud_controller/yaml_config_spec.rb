@@ -32,9 +32,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             YAMLConfig.safe_load_file(tmpyml.path)
-          }.to raise_error(Psych::DisallowedClass, 'Tried to load unspecified class: Dog')
+          end.to raise_error(Psych::DisallowedClass, 'Tried to load unspecified class: Dog')
         end
       end
     end

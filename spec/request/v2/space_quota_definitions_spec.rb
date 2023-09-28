@@ -6,7 +6,7 @@ RSpec.describe 'SpaceQuotaDefinitions' do
 
   describe 'PUT /v2/space_quota_definitions/guid/spaces/space_guid' do
     context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
-      let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+      let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
       let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: 100) }
 
       let!(:space) { VCAP::CloudController::Space.make(organization: org) }

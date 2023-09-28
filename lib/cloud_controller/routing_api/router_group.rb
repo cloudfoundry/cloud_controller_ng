@@ -1,6 +1,7 @@
 module VCAP::CloudController::RoutingApi
   class RouterGroup
     attr_reader :guid, :type, :name
+
     def initialize(hash)
       @guid = hash['guid']
       @name = hash['name']

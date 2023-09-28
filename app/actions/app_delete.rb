@@ -63,7 +63,7 @@ module VCAP::CloudController
       Repositories::AppEventRepository.new.record_app_delete_request(
         app,
         app.space,
-        @user_audit_info,
+        @user_audit_info
       )
     end
 
