@@ -140,18 +140,22 @@ resource_pool:
   maximum_size: 42
   minimum_size: 1
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 buildpacks:
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 packages:
   max_package_size: 42
   max_valid_packages_stored: 42
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 droplets:
   max_staged_droplets_stored: 42
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 request_timeout_in_seconds: 600
 skip_cert_verify: true
@@ -175,11 +179,13 @@ resource_pool:
   minimum_size: 1
   fog_connection: {}
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: ''
   fog_connection: {}
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 packages:
   app_package_directory_key: ''
@@ -187,12 +193,14 @@ packages:
   max_valid_packages_stored: 42
   fog_connection: {}
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 droplets:
   droplet_directory_key: ''
   max_staged_droplets_stored: 42
   fog_connection: {}
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 
 

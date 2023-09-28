@@ -137,12 +137,15 @@ module CloudController
       end
 
       def formatted_storage_options
-        return {} unless @storage_options && @storage_options[:encryption]
+        return {} unless @storage_options && !(@storage_options[:encryption].nil? && @storage_options[:uniform].nil?)
 
-        opts = @storage_options.dup
-        encrypt_opt = opts.delete(:encryption)
-        opts['x-amz-server-side-encryption'] = encrypt_opt
-        opts
+        if @storage_options[:encryption]
+          opts = @storage_options.dup
+          opts['x-amz-server-side-encryption'] = opts.delete(:encryption)
+          return opts
+        end
+
+        @storage_options
       end
 
       def delete_file(file)

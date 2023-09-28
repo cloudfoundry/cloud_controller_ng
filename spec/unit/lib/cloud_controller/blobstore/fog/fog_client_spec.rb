@@ -350,7 +350,7 @@ module CloudController
             end
           end
 
-          context 'encryption' do
+          context 'storage options' do
             let(:files) { double(:files, create: true) }
 
             before do
@@ -360,10 +360,10 @@ module CloudController
             context 'when encryption type is specified' do
               let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
                                                            directory_key: directory_key,
-                                                           storage_options: { encryption: 'my-algo' })
+                                                           storage_options: { encryption: 'my-algo', other: 'thing' })
               }
 
-              it 'passes the encryption options to aws' do
+              it 'passes the formatted storage options to aws' do
                 path = File.join(local_dir, 'empty_file.png')
                 FileUtils.touch(path)
 
@@ -373,20 +373,61 @@ module CloudController
                                                              body: anything,
                                                              content_type: anything,
                                                              public: anything,
-                                                             'x-amz-server-side-encryption' => 'my-algo')
+                                                             'x-amz-server-side-encryption' => 'my-algo',
+                                                             other: 'thing')
               end
             end
 
-            context 'when encryption type is not specified' do
-              let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
-                                                           directory_key: directory_key)
+            context 'when uniform flag is specified' do
+              let(:client_with_uniform) { FogClient.new(connection_config: connection_config,
+                                                        directory_key: directory_key,
+                                                        storage_options: { uniform: false, other: 'thing' })
               }
 
-              it 'does not pass the encryption options to aws' do
+              it 'forwards the storage options to gcp' do
                 path = File.join(local_dir, 'empty_file.png')
                 FileUtils.touch(path)
 
-                client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+                client_with_uniform.cp_to_blobstore(path, 'abcdef123456')
+
+                expect(files).to have_received(:create).with(key: anything,
+                                                             body: anything,
+                                                             content_type: anything,
+                                                             public: anything,
+                                                             uniform: false,
+                                                             other: 'thing')
+              end
+            end
+
+            context 'when no encryption type nor uniform flag are specified' do
+              let(:client_with_other) { FogClient.new(connection_config: connection_config,
+                                                      directory_key: directory_key,
+                                                      storage_options: { other: 'thing' })
+              }
+
+              it 'does not pass the storage options' do
+                path = File.join(local_dir, 'empty_file.png')
+                FileUtils.touch(path)
+
+                client_with_other.cp_to_blobstore(path, 'abcdef123456')
+
+                expect(files).to have_received(:create).with(key: anything,
+                                                             body: anything,
+                                                             content_type: anything,
+                                                             public: anything)
+              end
+            end
+
+            context 'when no storage options are specified' do
+              let(:client) { FogClient.new(connection_config: connection_config,
+                                                      directory_key: directory_key)
+              }
+
+              it 'succeeds' do
+                path = File.join(local_dir, 'empty_file.png')
+                FileUtils.touch(path)
+
+                client.cp_to_blobstore(path, 'abcdef123456')
 
                 expect(files).to have_received(:create).with(key: anything,
                                                              body: anything,
@@ -439,13 +480,7 @@ module CloudController
             end
           end
 
-          context 'encryption' do
-            let(:encryption) { 'my-algo' }
-            let(:client) do
-              FogClient.new(connection_config: connection_config,
-                            directory_key: directory_key,
-                            storage_options: { encryption: encryption, other: 'thing' })
-            end
+          context 'storage options' do
             let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
             let(:src_file) { double(:file, copy: true, nil?: false) }
 
@@ -454,18 +489,58 @@ module CloudController
               allow_any_instance_of(FogClient).to receive(:file).with(dest_key).and_return(dest_file)
             end
 
-            context 'when encryption type is specified' do
-              it 'passes the encryption options to aws' do
-                client.cp_file_between_keys(src_key, dest_key)
-                options = { 'x-amz-server-side-encryption' => 'my-algo', other: 'thing' }
-                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
+            context 'encryption' do
+              let(:encryption) { 'my-algo' }
+              let(:client) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              storage_options: { encryption: encryption, other: 'thing' })
+              end
+              context 'when encryption type is specified' do
+                it 'passes the storage options to aws' do
+                  client.cp_file_between_keys(src_key, dest_key)
+                  options = { 'x-amz-server-side-encryption' => 'my-algo', other: 'thing' }
+                  expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
+                end
               end
             end
 
-            context 'when encryption type is not specified' do
-              let(:encryption) { nil }
+            context 'uniform' do
+              let(:uniform) { false }
+              let(:client) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              storage_options: { uniform: uniform, other: 'thing' })
+              end
+              context 'when uniform flag is specified' do
+                it 'forwards the storage options to gcp' do
+                  client.cp_file_between_keys(src_key, dest_key)
+                  options = { uniform: false, other: 'thing' }
+                  expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', options)
+                end
+              end
+            end
 
-              it 'does not pass the encryption options to aws' do
+            context 'when no encryption type nor uniform flag are specified' do
+              let(:client) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              storage_options: { other: 'thing' })
+              end
+
+              it 'does not pass the storage options' do
+                client.cp_file_between_keys(src_key, dest_key)
+                expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', {})
+              end
+            end
+
+            context 'when no storage options are specified' do
+              let(:client) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key)
+              end
+
+              it 'succeeds' do
                 client.cp_file_between_keys(src_key, dest_key)
                 expect(src_file).to have_received(:copy).with('a-directory-key', 'xy/z7/xyz789', {})
               end

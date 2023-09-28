@@ -31,7 +31,7 @@ module CloudController
             root_dir: root_dir,
             min_size: options[:minimum_size],
             max_size: options[:maximum_size],
-            storage_options: options[:fog_aws_storage_options]
+            storage_options: options[:fog_aws_storage_options].present? ? options[:fog_aws_storage_options] : options[:fog_gcp_storage_options]
           )
 
           logger = Steno.logger('cc.blobstore')
