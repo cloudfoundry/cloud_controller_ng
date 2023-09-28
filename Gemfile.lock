@@ -148,7 +148,7 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.12.0)
     eventmachine (1.2.7)
-    excon (0.100.0)
+    excon (0.103.0)
     faraday (0.17.6)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.7)
@@ -169,7 +169,7 @@ GEM
       fog-json
       ipaddress (~> 0.8)
       xml-simple (~> 1.1)
-    fog-aws (3.19.0)
+    fog-aws (3.20.0)
       fog-core (~> 2.1)
       fog-json (~> 1.1)
       fog-xml (~> 0.1)
