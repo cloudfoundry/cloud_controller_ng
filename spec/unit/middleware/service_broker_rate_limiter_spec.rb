@@ -15,7 +15,7 @@ module CloudFoundry
         ServiceBrokerRateLimiter.new(app, logger: logger, max_concurrent_requests: max_concurrent_requests, broker_timeout_seconds: broker_timeout)
       end
 
-      before(:each) do
+      before do
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
         allow(logger).to receive(:info)
         allow(app).to receive(:call) do
@@ -119,7 +119,8 @@ module CloudFoundry
 
       describe 'skipped requests' do
         let(:concurrent_request_counter) { double }
-        before(:each) { middleware.instance_variable_set('@concurrent_request_counter', concurrent_request_counter) }
+
+        before { middleware.instance_variable_set('@concurrent_request_counter', concurrent_request_counter) }
 
         context 'user is an admin' do
           before do
@@ -213,23 +214,23 @@ module CloudFoundry
             end
 
             it 'returns true for a new user' do
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true for a recurring user performing the maximum allowed concurrent requests' do
               (max_concurrent_requests - 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns false for a recurring user with too many concurrent requests' do
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+              expect(concurrent_request_counter).not_to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true again for a recurring user after a single decrement' do
               (max_concurrent_requests + 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
               concurrent_request_counter.decrement(user_guid, logger)
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true in case of a Redis error' do
@@ -239,7 +240,7 @@ module CloudFoundry
               allow_any_instance_of(Redis).to receive(:incr).and_raise(Redis::ConnectionError)
               allow(logger).to receive(:error)
 
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
               expect(logger).to have_received(:error).with(/Redis error/)
             end
           end
@@ -254,13 +255,13 @@ module CloudFoundry
             it 'decreases the number of concurrent requests, allowing for another concurrent request' do
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
               concurrent_request_counter.decrement(user_guid, logger)
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'does not decrease the number of concurrent requests below zero' do
               concurrent_request_counter.decrement(user_guid, logger)
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+              expect(concurrent_request_counter).not_to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'writes an error log in case of a Redis error' do

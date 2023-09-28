@@ -94,7 +94,7 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
         db_connection_options = VCAP::CloudController::DbConnection::OptionsFactory.
                                 build(required_options.merge(log_db_queries: true))
 
-        expect(db_connection_options[:log_db_queries]).to eq(true)
+        expect(db_connection_options[:log_db_queries]).to be(true)
       end
 
       it 'sets the connection_validation_timeout' do

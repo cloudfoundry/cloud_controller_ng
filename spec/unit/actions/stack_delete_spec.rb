@@ -12,7 +12,7 @@ module VCAP::CloudController
         it 'deletes the stack record' do
           expect do
             stack_delete.delete(stack)
-          end.to change { Stack.count }.by(-1)
+          end.to change(Stack, :count).by(-1)
           expect { stack.refresh }.to raise_error(Sequel::Error, 'Record not found')
         end
 
@@ -20,18 +20,18 @@ module VCAP::CloudController
           label = StackLabelModel.make(resource_guid: stack.guid)
           expect do
             stack_delete.delete(stack)
-          end.to change { StackLabelModel.count }.by(-1)
-          expect(label.exists?).to be_falsey
-          expect(stack.exists?).to be_falsey
+          end.to change(StackLabelModel, :count).by(-1)
+          expect(label).not_to exist
+          expect(stack).not_to exist
         end
 
         it 'deletes associated annotations' do
           annotation = StackAnnotationModel.make(resource_guid: stack.guid)
           expect do
             stack_delete.delete(stack)
-          end.to change { StackAnnotationModel.count }.by(-1)
-          expect(annotation.exists?).to be_falsey
-          expect(stack.exists?).to be_falsey
+          end.to change(StackAnnotationModel, :count).by(-1)
+          expect(annotation).not_to exist
+          expect(stack).not_to exist
         end
 
         context 'when there are apps associated with the stack' do
@@ -45,7 +45,7 @@ module VCAP::CloudController
             expect do
               stack_delete.delete(stack)
             end.to raise_error(Stack::AppsStillPresentError)
-            expect(stack.exists?).to be_truthy
+            expect(stack).to exist
           end
         end
       end

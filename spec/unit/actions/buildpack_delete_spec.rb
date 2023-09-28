@@ -11,7 +11,7 @@ module VCAP::CloudController
       it 'deletes the buildpack record' do
         expect do
           buildpack_delete.delete([buildpack])
-        end.to change { Buildpack.count }.by(-1)
+        end.to change(Buildpack, :count).by(-1)
         expect { buildpack.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -23,9 +23,7 @@ module VCAP::CloudController
         it 'schedules a job to the delete the blobstore item' do
           expect do
             buildpack_delete.delete([buildpack])
-          end.to change {
-            Delayed::Job.count
-          }.by(1)
+          end.to change(Delayed::Job, :count).by(1)
 
           job = Delayed::Job.last
           expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
@@ -53,17 +51,17 @@ module VCAP::CloudController
         it 'deletes associated labels' do
           expect do
             buildpack_delete.delete([buildpack])
-          end.to change { BuildpackLabelModel.count }.by(-1)
-          expect(label.exists?).to be_falsey
-          expect(buildpack.exists?).to be_falsey
+          end.to change(BuildpackLabelModel, :count).by(-1)
+          expect(label).not_to exist
+          expect(buildpack).not_to exist
         end
 
         it 'deletes associated annotations' do
           expect do
             buildpack_delete.delete([buildpack])
-          end.to change { BuildpackAnnotationModel.count }.by(-1)
-          expect(annotation.exists?).to be_falsey
-          expect(buildpack.exists?).to be_falsey
+          end.to change(BuildpackAnnotationModel, :count).by(-1)
+          expect(annotation).not_to exist
+          expect(buildpack).not_to exist
         end
       end
 
@@ -75,9 +73,7 @@ module VCAP::CloudController
         it 'does not schedule a blobstore delete job' do
           expect do
             buildpack_delete.delete([buildpack])
-          end.not_to(change do
-            Delayed::Job.count
-          end)
+          end.not_to(change(Delayed::Job, :count))
         end
       end
     end

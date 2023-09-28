@@ -82,6 +82,7 @@ module VCAP::CloudController
 
         context 'when it is a db uniqueness error' do
           let(:name) { 'mySpace' }
+
           it 'handles Space::DBNameUniqueRaceErrors' do
             allow(Space).to receive(:create).and_raise(Space::DBNameUniqueRaceError)
 

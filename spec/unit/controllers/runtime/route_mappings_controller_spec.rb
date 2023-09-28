@@ -454,7 +454,7 @@ module VCAP::CloudController
         it 'deletes the route mapping' do
           delete "/v2/route_mappings/#{route_mapping.guid}"
           expect(last_response).to have_status_code(204)
-          expect(route_mapping.exists?).to be_falsey
+          expect(route_mapping).not_to exist
         end
 
         it 'does not delete the associated app and route' do

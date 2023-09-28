@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       it 'symbolizes keys' do
         message = fake_class.new({ 'foo' => 'bar' })
-        expect(message.requested?(:foo)).to be_truthy
+        expect(message).to be_requested(:foo)
       end
 
       it 'does not mutate the params for initialization' do
@@ -39,8 +39,8 @@ module VCAP::CloudController
 
         message = FakeClass.new({ requested: 'thing' })
 
-        expect(message.requested?(:requested)).to be_truthy
-        expect(message.requested?(:notrequested)).to be_falsey
+        expect(message).to be_requested(:requested)
+        expect(message).not_to be_requested(:notrequested)
       end
     end
 
@@ -169,7 +169,7 @@ module VCAP::CloudController
       end
 
       it 'handles single nil values' do
-        expect(BaseMessage.to_array!(params, :nil_field)).to eq(nil)
+        expect(BaseMessage.to_array!(params, :nil_field)).to be_nil
       end
 
       it 'handles empty values' do
@@ -177,7 +177,7 @@ module VCAP::CloudController
       end
 
       it "doesn't try to convert a hash to an array" do
-        expect(BaseMessage.to_array!(params, :hash_not_array)).to eq(nil)
+        expect(BaseMessage.to_array!(params, :hash_not_array)).to be_nil
       end
     end
 
@@ -202,7 +202,7 @@ module VCAP::CloudController
       it 'is NOT valid with not allowed keys in the message' do
         message = fake_class.new({ notallowed: 'something', extra: 'stuff' })
 
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to include("Unknown field(s): 'notallowed', 'extra'")
       end
     end
@@ -228,7 +228,7 @@ module VCAP::CloudController
       it 'is NOT valid with not allowed keys in the BaseMessage' do
         message = fake_class.new({ notallowed: 'something', extra: 'stuff' })
 
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to include("Unknown query parameter(s): 'notallowed', 'extra'. Valid parameters are: 'allowed', 'other_allowed'")
       end
     end
@@ -254,7 +254,7 @@ module VCAP::CloudController
       it 'is NOT valid with not allowed include value' do
         message = fake_class.new({ include: ['stuff'] })
 
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'. Valid included resources are: 'foo', 'bar'")
       end
     end
@@ -280,7 +280,7 @@ module VCAP::CloudController
       it 'is NOT valid with not allowed lifecycle_type value' do
         message = fake_class.new({ lifecycle_type: 'stuff' })
 
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to include("Invalid lifecycle_type: 'stuff'")
       end
     end

@@ -383,6 +383,7 @@ RSpec.describe 'Users Request' do
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
+
       # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
       context 'filtering timestamps on creation' do
         before do
@@ -399,7 +400,7 @@ RSpec.describe 'Users Request' do
 
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid, resource_2.guid)
-          expect(parsed_response['resources'].pluck('guid')).to_not include(resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(resource_3.guid, resource_4.guid)
         end
       end
 
@@ -426,7 +427,7 @@ RSpec.describe 'Users Request' do
 
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid, resource_2.guid)
-          expect(parsed_response['resources'].pluck('guid')).to_not include(resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(resource_3.guid, resource_4.guid)
         end
       end
     end
@@ -719,8 +720,7 @@ RSpec.describe 'Users Request' do
         let(:uaa_client_id) { 'cc_routing' }
 
         before do
-          allow(uaa_client).to receive(:users_for_ids).and_return({})
-          allow(uaa_client).to receive(:get_clients).and_return([{ client_id: uaa_client_id }])
+          allow(uaa_client).to receive_messages(users_for_ids: {}, get_clients: [{ client_id: uaa_client_id }])
         end
 
         let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
@@ -835,6 +835,7 @@ RSpec.describe 'Users Request' do
               user_headers
       }
     end
+
     describe 'metadata' do
       let(:client_json) do
         {
@@ -981,6 +982,7 @@ RSpec.describe 'Users Request' do
     context 'when the user is logged in' do
       context 'when the current non-admin user tries to delete themselves' do
         let(:user_header) { headers_for(user_to_delete, scopes: %w[cloud_controller.write]) }
+
         before do
           set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user_to_delete)
         end

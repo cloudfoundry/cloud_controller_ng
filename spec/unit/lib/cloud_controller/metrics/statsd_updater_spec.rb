@@ -94,7 +94,7 @@ module VCAP::CloudController::Metrics
         allow(batch).to receive(:gauge)
       end
 
-      it 'should contain EventMachine data' do
+      it 'contains EventMachine data' do
         thread_info = {
           thread_count: 5,
           event_machine: {

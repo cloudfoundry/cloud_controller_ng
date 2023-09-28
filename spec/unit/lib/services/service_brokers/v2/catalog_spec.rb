@@ -61,7 +61,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         specify '#valid? returns false' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.nested_errors).not_to be_empty
         end
       end
@@ -75,7 +75,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to include('Service ids must be unique')
         end
       end
@@ -93,7 +93,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'gives an error' do
             catalog = Catalog.new(broker, catalog_hash)
-            expect(catalog.valid?).to eq false
+            expect(catalog.valid?).to be false
             expect(catalog.errors.messages).to include('Service names must be unique within a broker')
           end
         end
@@ -111,7 +111,7 @@ module VCAP::Services::ServiceBrokers::V2
           it 'is does not check for preexistent services' do
             catalog = Catalog.new(broker, catalog_hash)
 
-            expect(catalog.valid?).to eq true
+            expect(catalog.valid?).to be true
           end
         end
 
@@ -209,7 +209,7 @@ module VCAP::Services::ServiceBrokers::V2
           it 'is valid' do
             catalog = Catalog.new(broker, catalog_hash)
 
-            expect(catalog.valid?).to eq true
+            expect(catalog.valid?).to be true
           end
         end
       end
@@ -234,7 +234,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to include('Service dashboard_client id must be unique')
         end
       end
@@ -246,7 +246,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
         end
       end
 
@@ -257,7 +257,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not give a uniqueness error on dashboard_client id' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq true
+          expect(catalog.valid?).to be true
         end
       end
 
@@ -273,7 +273,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'is invalid, but not due to uniqueness constraints' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to eq []
         end
       end
@@ -285,7 +285,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'is invalid, but not due to uniqueness constraints' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to eq []
         end
       end

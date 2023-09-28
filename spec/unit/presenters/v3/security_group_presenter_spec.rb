@@ -36,8 +36,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(security_group.created_at)
         expect(result[:updated_at]).to eq(security_group.updated_at)
         expect(result[:name]).to eq(security_group.name)
-        expect(result[:globally_enabled][:running]).to eq(true)
-        expect(result[:globally_enabled][:staging]).to eq(false)
+        expect(result[:globally_enabled][:running]).to be(true)
+        expect(result[:globally_enabled][:staging]).to be(false)
         expect(result[:rules]).to eq([
           {
             'protocol' => 'tcp',

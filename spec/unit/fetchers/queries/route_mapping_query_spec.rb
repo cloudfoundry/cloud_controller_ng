@@ -20,7 +20,7 @@ module VCAP::RestAPI
             { q: ["app_guid:#{route_mapping.app_guid}"] }
           ).all
 
-          expect(results).to match_array([route_mapping])
+          expect(results).to contain_exactly(route_mapping)
         end
 
         it 'works when no app guid is provided' do
@@ -51,7 +51,7 @@ module VCAP::RestAPI
             { q: ["app_guid IN #{app_guid}"] }
           ).all
 
-          expect(results).to match_array([route_mapping_1, route_mapping_2])
+          expect(results).to contain_exactly(route_mapping_1, route_mapping_2)
         end
 
         it 'works for IN with multiple app guids' do
@@ -73,7 +73,7 @@ module VCAP::RestAPI
             { q: ["app_guid IN #{app_guid1},#{app_guid2}"] }
           ).all
 
-          expect(results).to match_array([route_mapping_1, route_mapping_2, route_mapping_3])
+          expect(results).to contain_exactly(route_mapping_1, route_mapping_2, route_mapping_3)
         end
 
         it 'works for IN with no app guids' do

@@ -22,9 +22,11 @@ module VCAP::CloudController
             it 'passes through buildpack name' do
               expect(single_buildpack_job.name).to eq(name)
             end
+
             it 'passes through opts' do
               expect(single_buildpack_job.options).to eq(opts)
             end
+
             it 'passes through file' do
               expect(single_buildpack_job.file).to eq(file)
             end
@@ -53,7 +55,7 @@ module VCAP::CloudController
               end
 
               it 'sets the stack to nil' do
-                expect(single_buildpack_job.stack_name).to eq(nil)
+                expect(single_buildpack_job.stack_name).to be_nil
               end
             end
           end
@@ -86,7 +88,7 @@ module VCAP::CloudController
 
                 include_examples 'passthrough parameters'
 
-                it 'it plans on creating a new record' do
+                it 'plans on creating a new record' do
                   expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)
                 end
 
@@ -123,7 +125,7 @@ module VCAP::CloudController
                 end
 
                 it 'leaves the stack nil' do
-                  expect(single_buildpack_job.stack_name).to be nil
+                  expect(single_buildpack_job.stack_name).to be_nil
                 end
               end
 
@@ -187,7 +189,7 @@ module VCAP::CloudController
 
               include_examples 'passthrough parameters'
 
-              it 'it plans on creating a new record' do
+              it 'plans on creating a new record' do
                 expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)
               end
 
@@ -214,6 +216,7 @@ module VCAP::CloudController
 
           context 'and there is only one matching Buildpack' do
             let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
+
             context 'and the Buildpack has a nil stack' do
               context 'and the buildpack is not locked' do
                 it 'creates a job for each buildpack' do
@@ -257,6 +260,7 @@ module VCAP::CloudController
                 expect(jobs[0].stack_name).to eq(existing_stack.name)
                 expect(jobs[0].guid_to_upgrade).to eq(existing_buildpack.guid)
               end
+
               it 'creates new Buildpacks for the remaining manifest entries' do
                 expect(jobs[1]).to be_a(CreateBuildpackInstaller)
                 expect(jobs[1].stack_name).to eq('manifest stack')

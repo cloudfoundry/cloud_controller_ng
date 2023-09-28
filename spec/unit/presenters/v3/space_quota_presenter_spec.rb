@@ -51,10 +51,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:routes][:total_reserved_ports]).to eq(space_quota.total_reserved_route_ports)
 
         expect(result[:relationships][:organization][:data][:guid]).to eq(org.guid)
-        expect(result[:relationships][:spaces][:data]).to match_array([
-          { guid: space_1.guid },
-          { guid: space_2.guid }
-        ])
+        expect(result[:relationships][:spaces][:data]).to contain_exactly({ guid: space_1.guid }, { guid: space_2.guid })
 
         expect(result[:links][:self][:href]).to match(%r{/v3/space_quotas/#{space_quota.guid}$})
         expect(result[:links][:organization][:href]).to match(%r{/v3/organizations/#{org.guid}$})
@@ -95,10 +92,7 @@ module VCAP::CloudController::Presenters::V3
         let(:visible_space_guids) { [] }
 
         it 'displays all spaces' do
-          expect(result[:relationships][:spaces][:data]).to match_array([
-            { guid: space_1.guid },
-            { guid: space_2.guid }
-          ])
+          expect(result[:relationships][:spaces][:data]).to contain_exactly({ guid: space_1.guid }, { guid: space_2.guid })
         end
       end
     end

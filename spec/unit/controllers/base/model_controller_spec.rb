@@ -92,7 +92,7 @@ module VCAP::CloudController
       end
 
       context 'for no user' do
-        it 'should return 401' do
+        it 'returns 401' do
           set_current_user(nil)
           get '/v2/test_models'
           expect(last_response.status).to eq(401), last_response.body
@@ -136,7 +136,7 @@ module VCAP::CloudController
         set_current_user(user)
         expect do
           post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'foobar' })
-        end.to_not(change { TestModel.count })
+        end.not_to(change(TestModel, :count))
 
         expect(decoded_response['code']).to eq(10_003)
         expect(decoded_response['description']).to match(/not authorized/)
@@ -242,7 +242,7 @@ module VCAP::CloudController
         expect(last_response.body).to eq('serialized json')
       end
 
-      it 'returns not authorized if the user does not have access ' do
+      it 'returns not authorized if the user does not have access' do
         set_current_user(user)
         put "/v2/test_models/#{model.guid}", MultiJson.dump(fields)
 
@@ -331,18 +331,14 @@ module VCAP::CloudController
               expect do
                 delete "/v2/test_models/#{model.guid}?#{query_params}"
                 run_delayed_job
-              end.to change {
-                TestModel.count
-              }.by(-1)
+              end.to change(TestModel, :count).by(-1)
             end
 
             it 'successfully deletes association marked for destroy' do
               expect do
                 delete "/v2/test_models/#{model.guid}?#{query_params}"
                 run_delayed_job
-              end.to change {
-                TestModelDestroyDep.count
-              }.by(-1)
+              end.to change(TestModelDestroyDep, :count).by(-1)
             end
 
             it 'successfully nullifies association marked for nullify' do
@@ -370,9 +366,7 @@ module VCAP::CloudController
         it 'deletes the object' do
           expect do
             delete "/v2/test_models/#{model.guid}?#{query_params}"
-          end.to change {
-            TestModel.count
-          }.by(-1)
+          end.to change(TestModel, :count).by(-1)
 
           expect(last_response.status).to eq(204)
           expect(last_response.body).to eq('')
@@ -435,7 +429,7 @@ module VCAP::CloudController
         expect(decoded_response['prev_url']).to be_nil
         expect(decoded_response['next_url']).to include('page=2&results-per-page=2')
         found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
-        expect(found_guids).to match_array([model1.guid, model2.guid])
+        expect(found_guids).to contain_exactly(model1.guid, model2.guid)
       end
 
       it 'returns other pages when requested' do
@@ -447,7 +441,7 @@ module VCAP::CloudController
         expect(decoded_response).to have_key('next_url')
         expect(decoded_response['next_url']).to be_nil
         found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
-        expect(found_guids).to match_array([model3.guid])
+        expect(found_guids).to contain_exactly(model3.guid)
       end
 
       describe 'using query parameters' do
@@ -622,7 +616,7 @@ module VCAP::CloudController
         context 'when removing an associated object' do
           it 'succeeds when user has access to both objects in the association' do
             associated_model2.save
-            expect(model.test_model_many_to_ones).to_not be_empty
+            expect(model.test_model_many_to_ones).not_to be_empty
 
             delete "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model2.guid}", '{}'
 
@@ -648,7 +642,7 @@ module VCAP::CloudController
 
               expect(last_response.status).to eq(403)
               model.reload
-              expect(model.test_model_many_to_ones).to_not include(associated_model1)
+              expect(model.test_model_many_to_ones).not_to include(associated_model1)
             end
           end
         end
@@ -723,7 +717,7 @@ module VCAP::CloudController
               expect(last_response.status).to eq(200)
               expect(decoded_response['total_results']).to eq(2)
               found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
-              expect(found_guids).to match_array([associated_model1.guid, associated_model2.guid])
+              expect(found_guids).to contain_exactly(associated_model1.guid, associated_model2.guid)
             end
 
             it 'uses the collection_renderer for the associated class' do
@@ -750,7 +744,7 @@ module VCAP::CloudController
               it 'does not return relations inline' do
                 get "/v2/test_models/#{model.guid}"
                 expect(entity).to have_key 'test_model_many_to_manies_url'
-                expect(entity).to_not have_key 'test_model_many_to_manies'
+                expect(entity).not_to have_key 'test_model_many_to_manies'
               end
             end
 
@@ -758,7 +752,7 @@ module VCAP::CloudController
               it 'does not return relations inline' do
                 get "/v2/test_models/#{model.guid}?inline-relations-depth=0"
                 expect(entity).to have_key 'test_model_many_to_manies_url'
-                expect(entity).to_not have_key 'test_model_many_to_manies'
+                expect(entity).not_to have_key 'test_model_many_to_manies'
               end
             end
 
@@ -789,7 +783,7 @@ module VCAP::CloudController
                 get "/v2/test_model_many_to_ones/#{model.guid}"
                 expect(entity).to have_key 'test_model_url'
                 expect(entity).to have_key 'test_model_guid'
-                expect(entity).to_not have_key 'test_model'
+                expect(entity).not_to have_key 'test_model'
               end
             end
 
@@ -798,7 +792,7 @@ module VCAP::CloudController
                 get "/v2/test_model_many_to_ones/#{model.guid}?inline-relations-depth=0"
                 expect(entity).to have_key 'test_model_url'
                 expect(entity).to have_key 'test_model_guid'
-                expect(entity).to_not have_key 'test_model'
+                expect(entity).not_to have_key 'test_model'
               end
             end
 

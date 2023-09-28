@@ -140,16 +140,17 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it {
-        is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-                                         :log_rate_limit
+        expect(subject).to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
+                                             :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                             :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                                             :log_rate_limit
       }
+
       it {
-        is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-                                         :log_rate_limit
+        expect(subject).to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
+                                             :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                             :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                                             :log_rate_limit
       }
     end
 
@@ -187,7 +188,7 @@ module VCAP::CloudController
       it 'will not change the value returned (deprecated)' do
         expect do
           quota_definition.trial_db_allowed = true
-        end.to_not(change do
+        end.not_to(change do
           quota_definition
         end)
       end

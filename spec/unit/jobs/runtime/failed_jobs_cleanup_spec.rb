@@ -74,6 +74,7 @@ module VCAP::CloudController
               }.from(@delayed_job).to(nil)
             end
           end
+
           context 'when the number of delayed jobs exceeds max_number_of_failed_delayed_jobs' do
             let(:run_at) { Time.now.utc }
             let(:the_job) { FailingJob.new }
@@ -90,9 +91,7 @@ module VCAP::CloudController
 
               expect do
                 cleanup_job.perform
-              end.to change {
-                Delayed::Job.count
-              }.by(-2)
+              end.to change(Delayed::Job, :count).by(-2)
               expect(Delayed::Job.find(id: @delayed_job.id)).to be_nil
               expect(Delayed::Job.find(id: @delayed_job2.id)).to be_nil
             end

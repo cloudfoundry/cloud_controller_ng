@@ -22,6 +22,7 @@ RSpec.describe MaxServiceKeysPolicy do
 
   context 'when quota is nil' do
     let(:quota) { nil }
+
     it 'does not add errors' do
       expect(policy).to validate_without_error(service_key)
     end
@@ -44,6 +45,7 @@ RSpec.describe MaxServiceKeysPolicy do
 
   context 'when the quota is reached' do
     let(:existing_service_key_count) { total_service_keys }
+
     before { total_service_keys.times { make_service_key } }
 
     context 'and the request is for a new service key' do

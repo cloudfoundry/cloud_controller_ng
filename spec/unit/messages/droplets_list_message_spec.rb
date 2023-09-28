@@ -34,7 +34,7 @@ module VCAP::CloudController
         expect(message.guids).to match_array(%w[guid1 guid2])
         expect(message.space_guids).to match_array(%w[guid3 guid4])
         expect(message.organization_guids).to match_array(%w[guid3 guid4])
-        expect(message.current).to eq(true)
+        expect(message.current).to be(true)
       end
 
       it 'converts requested keys to symbols' do
@@ -86,7 +86,7 @@ module VCAP::CloudController
             context 'when the request contains organization_guids' do
               it 'is invalid' do
                 message = DropletsListMessage.from_params({ app_guid: 'blah', organization_guids: %w[app1 app2] })
-                expect(message).to_not be_valid
+                expect(message).not_to be_valid
                 expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
               end
             end
@@ -94,7 +94,7 @@ module VCAP::CloudController
             context 'when the request contains space_guids' do
               it 'is invalid' do
                 message = DropletsListMessage.from_params({ app_guid: 'blah', space_guids: %w[app1 app2] })
-                expect(message).to_not be_valid
+                expect(message).not_to be_valid
                 expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
               end
             end
@@ -102,7 +102,7 @@ module VCAP::CloudController
             context 'when the request contains app_guids' do
               it 'is invalid' do
                 message = DropletsListMessage.from_params({ app_guid: 'blah', app_guids: %w[app1 app2] })
-                expect(message).to_not be_valid
+                expect(message).not_to be_valid
                 expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'app_guids'")
               end
             end
@@ -115,7 +115,7 @@ module VCAP::CloudController
 
               it 'validates current must be true' do
                 message = DropletsListMessage.from_params({ app_guid: 'blah', current: 'false' })
-                expect(message).to be_invalid
+                expect(message).not_to be_valid
                 expect(message.errors[:current].length).to eq(1)
                 expect(message.errors[:current]).to include("only accepts the value 'true'")
               end
@@ -127,7 +127,7 @@ module VCAP::CloudController
           context 'when the request contains current field' do
             it 'is invalid' do
               message = DropletsListMessage.from_params({ current: 'true' })
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'current'")
             end
           end
@@ -135,25 +135,25 @@ module VCAP::CloudController
 
         it 'validates organization_guids is an array' do
           message = DropletsListMessage.from_params organization_guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do
           message = DropletsListMessage.from_params space_guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:space_guids].length).to eq 1
         end
 
         it 'validates app_guids is an array' do
           message = DropletsListMessage.from_params app_guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:app_guids].length).to eq 1
         end
 
         it 'validates states is an array' do
           message = DropletsListMessage.from_params states: 'not array at all'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:states].length).to eq 1
         end
       end
@@ -161,11 +161,11 @@ module VCAP::CloudController
 
     describe '#to_param_hash' do
       it 'excludes app_guid' do
-        expect(DropletsListMessage.from_params({ app_guid: '24234' }).to_param_hash.keys).to match_array([])
+        expect(DropletsListMessage.from_params({ app_guid: '24234' }).to_param_hash.keys).to be_empty
       end
 
       it 'excludes package_guid' do
-        expect(DropletsListMessage.from_params({ package_guid: '24234' }).to_param_hash.keys).to match_array([])
+        expect(DropletsListMessage.from_params({ package_guid: '24234' }).to_param_hash.keys).to be_empty
       end
     end
 

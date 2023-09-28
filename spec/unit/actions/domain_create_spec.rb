@@ -73,11 +73,11 @@ module VCAP::CloudController
 
             expect do
               domain = subject.create(message:)
-            end.to change { SharedDomain.count }.by(1)
+            end.to change(SharedDomain, :count).by(1)
 
             expect(domain.name).to eq(name)
             expect(domain.internal).to eq(internal)
-            expect(domain.guid).to_not be_nil
+            expect(domain.guid).not_to be_nil
             expect(domain).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
               { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
@@ -115,7 +115,7 @@ module VCAP::CloudController
         it 'creates a private domain' do
           expect do
             subject.create(message: message, shared_organizations: [shared_org1, shared_org2])
-          end.to change { PrivateDomain.count }.by(1)
+          end.to change(PrivateDomain, :count).by(1)
 
           domain = PrivateDomain.last
           expect(domain.name).to eq name
@@ -148,11 +148,11 @@ module VCAP::CloudController
 
             expect do
               domain = subject.create(message:)
-            end.to change { SharedDomain.count }.by(1)
+            end.to change(SharedDomain, :count).by(1)
 
             expect(domain.name).to eq(name)
             expect(domain.router_group_guid).to eq(router_group_guid[:guid])
-            expect(domain.guid).to_not be_nil
+            expect(domain.guid).not_to be_nil
             expect(domain).to have_labels(
               { prefix: nil, key_name: 'release', value: 'stable' },
               { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }

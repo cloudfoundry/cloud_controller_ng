@@ -7,6 +7,7 @@ module VCAP::CloudController::Diego
     let(:staging_guid) { 'staging-guid' }
     let(:bbs_client) { instance_double(::Diego::Client) }
     let(:config) { VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
+
     subject(:client) { BbsStagerClient.new(bbs_client, config) }
 
     describe '#stage' do
@@ -96,6 +97,7 @@ module VCAP::CloudController::Diego
 
       context 'when bbs returns a response with an error' do
         let(:error_type) { ::Diego::Bbs::Models::Error::Type::InvalidRecord }
+
         before do
           allow(bbs_client).to receive(:cancel_task).and_return(
             ::Diego::Bbs::Models::TaskLifecycleResponse.new(

@@ -147,6 +147,7 @@ RSpec.describe 'Droplets' do
           }
         }
       end
+
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', invalid_params.to_json, developer_headers
         expect(last_response.status).to eq(422)
@@ -164,6 +165,7 @@ RSpec.describe 'Droplets' do
           }
         }
       end
+
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', nonexistent_app_params.to_json, developer_headers
         expect(last_response.status).to eq(422)
@@ -828,6 +830,9 @@ RSpec.describe 'Droplets' do
       let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
       let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
 
+      let(:organization2) { space2.organization }
+      let(:organization1) { space.organization }
+
       it 'filters by states' do
         get '/v3/droplets?states=STAGED,FAILED', nil, developer_headers
 
@@ -844,7 +849,7 @@ RSpec.describe 'Droplets' do
         )
 
         returned_guids = parsed_response['resources'].pluck('guid')
-        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
+        expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid, droplet3.guid)
         expect(returned_guids).not_to include(droplet4.guid)
       end
 
@@ -864,7 +869,7 @@ RSpec.describe 'Droplets' do
         )
 
         returned_guids = parsed_response['resources'].pluck('guid')
-        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+        expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid)
       end
 
       it 'filters by guids' do
@@ -883,11 +888,8 @@ RSpec.describe 'Droplets' do
         )
 
         returned_guids = parsed_response['resources'].pluck('guid')
-        expect(returned_guids).to match_array([droplet1.guid, droplet3.guid])
+        expect(returned_guids).to contain_exactly(droplet1.guid, droplet3.guid)
       end
-
-      let(:organization1) { space.organization }
-      let(:organization2) { space2.organization }
 
       it 'filters by organization guids' do
         get "/v3/droplets?organization_guids=#{organization1.guid}", nil, developer_headers
@@ -905,7 +907,7 @@ RSpec.describe 'Droplets' do
         )
 
         returned_guids = parsed_response['resources'].pluck('guid')
-        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
+        expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid, droplet3.guid)
       end
 
       it 'filters by space guids that the developer has access to' do
@@ -924,7 +926,7 @@ RSpec.describe 'Droplets' do
         )
 
         returned_guids = parsed_response['resources'].pluck('guid')
-        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
+        expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid, droplet3.guid)
       end
     end
 
@@ -1151,7 +1153,7 @@ RSpec.describe 'Droplets' do
           expect(last_response.status).to eq(200)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+          expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid)
         end
 
         it 'returns only the droplets for the app with specified labels' do
@@ -1160,7 +1162,7 @@ RSpec.describe 'Droplets' do
           expect(last_response.status).to eq(200)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([droplet1.guid])
+          expect(returned_guids).to contain_exactly(droplet1.guid)
         end
 
         it 'returns only the current droplet' do
@@ -1179,7 +1181,7 @@ RSpec.describe 'Droplets' do
           )
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([droplet2.guid])
+          expect(returned_guids).to contain_exactly(droplet2.guid)
         end
       end
 
@@ -1203,7 +1205,7 @@ RSpec.describe 'Droplets' do
             }
           )
 
-          expect(parsed_response['resources']).to match_array([])
+          expect(parsed_response['resources']).to be_empty
         end
       end
     end
@@ -1224,7 +1226,7 @@ RSpec.describe 'Droplets' do
       )
 
       returned_guids = parsed_response['resources'].pluck('guid')
-      expect(returned_guids).to match_array([droplet2.guid])
+      expect(returned_guids).to contain_exactly(droplet2.guid)
     end
 
     context 'permissions' do
@@ -1392,7 +1394,7 @@ RSpec.describe 'Droplets' do
       expect(last_response.status).to eq(200)
 
       returned_guids = parsed_response['resources'].pluck('guid')
-      expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+      expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid)
     end
 
     it 'returns only the packages for the app with specified labels' do
@@ -1401,7 +1403,7 @@ RSpec.describe 'Droplets' do
       expect(last_response.status).to eq(200)
 
       returned_guids = parsed_response['resources'].pluck('guid')
-      expect(returned_guids).to match_array([droplet1.guid])
+      expect(returned_guids).to contain_exactly(droplet1.guid)
     end
 
     it 'filters by states' do
@@ -1420,7 +1422,7 @@ RSpec.describe 'Droplets' do
       )
 
       returned_guids = parsed_response['resources'].pluck('guid')
-      expect(returned_guids).to match_array([droplet2.guid])
+      expect(returned_guids).to contain_exactly(droplet2.guid)
     end
 
     context 'permissions' do
@@ -1579,6 +1581,7 @@ RSpec.describe 'Droplets' do
       h['no_role'] = { code: 404 }
       h
     end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
     context 'when organization is suspended' do
@@ -1684,6 +1687,7 @@ RSpec.describe 'Droplets' do
         organization_guid: org.guid
       }
     end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
     context 'when organization is suspended' do
@@ -1855,6 +1859,7 @@ RSpec.describe 'Droplets' do
         h['no_role'] = { code: 404 }
         h
       end
+
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when organization is suspended' do

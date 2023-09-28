@@ -51,7 +51,7 @@ module VCAP::CloudController
         }.merge(process.to_hash)
 
         expect(decoded_response['apps'][0]).to include(MultiJson.load(MultiJson.dump(expected_app_hash)))
-        expect(decoded_response['apps'][0]['service_names']).to match_array([first_service.name, second_service.name])
+        expect(decoded_response['apps'][0]['service_names']).to contain_exactly(first_service.name, second_service.name)
       end
 
       it 'returns the space services' do
@@ -85,7 +85,7 @@ module VCAP::CloudController
         get "/v2/spaces/#{space.guid}/summary"
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['services'].pluck('guid')).to_not include service_instance2.guid
+        expect(parsed_response['services'].pluck('guid')).not_to include service_instance2.guid
       end
 
       it 'does not include sharing information for not-shared service instances' do
@@ -142,7 +142,7 @@ module VCAP::CloudController
         let(:foreign_space) { Space.make }
         let(:services_response) { decoded_response['services'] }
 
-        before(:each) do
+        before do
           service_instance.add_shared_space(foreign_space)
 
           get "/v2/spaces/#{host_space.guid}/summary"
@@ -161,6 +161,7 @@ module VCAP::CloudController
       context 'when an app is deleted concurrently' do
         let(:deleted_process) { ProcessModelFactory.make(space:) }
         let!(:deleted_app_guid) { deleted_process.app.guid }
+
         before do
           deleted_process.app = nil
           allow_any_instance_of(Space).to receive(:apps).and_return([process, deleted_process])

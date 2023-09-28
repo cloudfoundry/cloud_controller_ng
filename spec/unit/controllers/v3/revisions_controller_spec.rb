@@ -20,7 +20,7 @@ RSpec.describe RevisionsController, type: :controller do
     it 'returns 200 and shows the revision' do
       get :show, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body).to be_a_response_like(
         {
           'guid' => revision.guid,
@@ -66,7 +66,7 @@ RSpec.describe RevisionsController, type: :controller do
 
       get :show, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body).to be_a_response_like(
         {
           'guid' => revision.guid,
@@ -109,7 +109,7 @@ RSpec.describe RevisionsController, type: :controller do
     it 'raises an ApiError with a 404 code when the revision does not exist' do
       get :show, params: { revision_guid: 'hahaha' }
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status :not_found
       expect(response.body).to include 'ResourceNotFound'
     end
 
@@ -123,7 +123,7 @@ RSpec.describe RevisionsController, type: :controller do
           get :show, params: { revision_guid: revision.guid }
 
           expect(response.body).to include 'NotAuthorized'
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
         end
       end
 
@@ -137,7 +137,7 @@ RSpec.describe RevisionsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           get :show, params: { revision_guid: revision.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -188,7 +188,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 200 and the updated revision' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body).to be_a_response_like(
           {
             'guid' => revision.guid,
@@ -246,7 +246,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'is removed' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body).to be_a_response_like(
           {
             'guid' => revision.guid,
@@ -295,7 +295,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 404' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
@@ -307,7 +307,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 403' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
       end
     end
 
@@ -326,7 +326,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 422' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
@@ -354,14 +354,14 @@ RSpec.describe RevisionsController, type: :controller do
     it 'returns 200 and shows environment_variables' do
       get :show_environment_variables, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['var']).to eq({ 'key' => 'value' })
     end
 
     it 'records an audit event' do
       expect do
         get :show_environment_variables, params: { revision_guid: revision.guid }
-      end.to change { VCAP::CloudController::Event.count }.by(1)
+      end.to change(VCAP::CloudController::Event, :count).by(1)
 
       event = VCAP::CloudController::Event.find(type: 'audit.app.revision.environment_variables.show')
       expect(event).not_to be_nil
@@ -383,7 +383,7 @@ RSpec.describe RevisionsController, type: :controller do
     context 'when retrieving env variables for revision that do not exist' do
       it '404s' do
         get :show_environment_variables, params: { revision_guid: 'nonsense' }
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
@@ -394,7 +394,7 @@ RSpec.describe RevisionsController, type: :controller do
 
       it '404s' do
         get :show_environment_variables, params: { revision_guid: 'nonsense' }
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
@@ -405,7 +405,7 @@ RSpec.describe RevisionsController, type: :controller do
 
       it '403s' do
         get :show_environment_variables, params: { revision_guid: revision.guid }
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end

@@ -14,6 +14,7 @@ module VCAP::CloudController
 
       context 'when the route belongs to a domain with the "http" protocol' do
         let!(:domain) { SharedDomain.make }
+
         it 'returns "http"' do
           route = Route.new(domain:)
           expect(route.protocol).to eq('http')
@@ -22,6 +23,7 @@ module VCAP::CloudController
 
       context 'when the route belongs to a domain with the "tcp" protocol' do
         let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
+
         it 'returns "tcp"' do
           route = Route.new(domain: tcp_domain, port: 6000)
           expect(route.protocol).to eq('tcp')
@@ -119,7 +121,7 @@ module VCAP::CloudController
         it 'associates apps through route mappings' do
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
-          expect(route.apps).to match_array([process])
+          expect(route.apps).to contain_exactly(process)
         end
 
         it 'does not associate non-web v2 apps' do
@@ -128,7 +130,7 @@ module VCAP::CloudController
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
           RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
 
-          expect(route.apps).to match_array([process])
+          expect(route.apps).to contain_exactly(process)
         end
 
         it 'returns a single app when an app is bound to multiple ports' do
@@ -167,6 +169,7 @@ module VCAP::CloudController
             expect { route.space = Space.make }.not_to raise_error
           end
         end
+
         context 'when the route sharing flag is disabled' do
           let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'route_sharing', enabled: false, error_message: nil) }
 
@@ -208,7 +211,7 @@ module VCAP::CloudController
               it 'succeeds if the organization shares the domain' do
                 space = Space.make
                 domain.add_shared_organization(space.organization)
-                expect { route.space = space }.to_not raise_error
+                expect { route.space = space }.not_to raise_error
               end
             end
           end
@@ -286,6 +289,7 @@ module VCAP::CloudController
 
         context 'when sharing private domains to other orgs' do
           let!(:first_route) { Route.make(host: 'host', domain: domain, space: space1a, path: '/mangos') }
+
           before do
             domain.add_shared_organization(org2)
           end
@@ -321,13 +325,14 @@ module VCAP::CloudController
           it "fails if it's different" do
             route = Route.make(domain: SharedDomain.make)
             route.domain = SharedDomain.make
-            expect(route.valid?).to be_falsey
+            expect(route).not_to be_valid
           end
         end
 
         context 'when private' do
           let(:space) { Space.make }
           let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
           it 'succeeds if it is the same domain' do
             route = Route.make(space:, domain:)
             route.domain = domain
@@ -337,7 +342,7 @@ module VCAP::CloudController
           it 'fails if its a different domain' do
             route = Route.make(space:, domain:)
             route.domain = PrivateDomain.make(owning_organization: space.organization)
-            expect(route.valid?).to be_falsey
+            expect(route).not_to be_valid
           end
         end
       end
@@ -348,6 +353,7 @@ module VCAP::CloudController
             kubernetes: {}
           )
         end
+
         it 'removes the associated route mappings' do
           route = Route.make
           app = AppModel.make(space: route.space)
@@ -356,8 +362,8 @@ module VCAP::CloudController
 
           route.destroy
 
-          expect(mapping1.exists?).to be_falsey
-          expect(mapping2.exists?).to be_falsey
+          expect(mapping1).not_to exist
+          expect(mapping2).not_to exist
         end
       end
     end
@@ -369,7 +375,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_presence :host }
 
-      it 'should call RouteValidator' do
+      it 'calls RouteValidator' do
         validator = double
         expect(RouteValidator).to receive(:new).and_return(validator)
         expect(validator).to receive(:validate)
@@ -384,7 +390,7 @@ module VCAP::CloudController
           allow(validator).to receive(:validate).and_raise(RoutingApi::RoutingApiDisabled)
         end
 
-        it 'should add routing_api_disabled to errors' do
+        it 'adds routing_api_disabled to errors' do
           route.validate
           expect(route.errors.on(:routing_api)).to include :routing_api_disabled
         end
@@ -397,7 +403,7 @@ module VCAP::CloudController
           allow(validator).to receive(:validate).and_raise(RoutingApi::UaaUnavailable)
         end
 
-        it 'should add uaa_unavailable to errors' do
+        it 'adds uaa_unavailable to errors' do
           route.validate
           expect(route.errors.on(:routing_api)).to include :uaa_unavailable
         end
@@ -410,7 +416,7 @@ module VCAP::CloudController
           allow(validator).to receive(:validate).and_raise(RoutingApi::RoutingApiUnavailable)
         end
 
-        it 'should add routing_api_unavailable to errors' do
+        it 'adds routing_api_unavailable to errors' do
           route.validate
           expect(route.errors.on(:routing_api)).to include :routing_api_unavailable
         end
@@ -507,7 +513,7 @@ module VCAP::CloudController
         end
 
         it 'defaults the port to nil' do
-          expect(route.port).to eq(nil)
+          expect(route.port).to be_nil
         end
 
         context 'when port is specified' do
@@ -619,33 +625,33 @@ module VCAP::CloudController
           route.domain = domain
         end
 
-        it 'should allow * to be the host name' do
+        it 'allows * to be the host name' do
           route.host = '*'
           expect(route).to be_valid
         end
 
-        it 'should not allow * in the host name' do
+        it 'does not allow * in the host name' do
           route.host = 'a*'
           expect(route).not_to be_valid
         end
 
-        it 'should not allow . in the host name' do
+        it 'does not allow . in the host name' do
           route.host = 'a.b'
           expect(route).not_to be_valid
         end
 
-        it 'should not allow / in the host name' do
+        it 'does not allow / in the host name' do
           route.host = 'a/b'
           expect(route).not_to be_valid
         end
 
-        it 'should not allow a nil host' do
+        it 'does not allow a nil host' do
           expect do
             Route.make(space: space, domain: domain, host: nil)
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should allow an empty host' do
+        it 'allows an empty host' do
           Route.make(
             space: space,
             domain: domain,
@@ -653,7 +659,7 @@ module VCAP::CloudController
           )
         end
 
-        it 'should not allow a blank host' do
+        it 'does not allow a blank host' do
           expect do
             Route.make(
               space: space,
@@ -663,14 +669,14 @@ module VCAP::CloudController
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow a long host' do
+        it 'does not allow a long host' do
           expect do
             Route.make(
               space: space,
               domain: domain,
               host: 'f' * 63
             )
-          end.to_not raise_error
+          end.not_to raise_error
 
           expect do
             Route.make(
@@ -681,7 +687,7 @@ module VCAP::CloudController
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow a host which, along with the domain, exceeds the maximum length' do
+        it 'does not allow a host which, along with the domain, exceeds the maximum length' do
           domain_200_chars = "#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 50}"
           domain_253_chars = "#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 49}.#{'f' * 50}.ff"
           domain = PrivateDomain.make(owning_organization: space.organization, name: domain_200_chars)
@@ -696,7 +702,7 @@ module VCAP::CloudController
               domain: domain,
               host: valid_host
             )
-          end.to_not raise_error
+          end.not_to raise_error
 
           expect do
             Route.make(
@@ -704,7 +710,7 @@ module VCAP::CloudController
               domain: domain_that_cannot_have_a_host,
               host: ''
             )
-          end.to_not raise_error
+          end.not_to raise_error
 
           expect do
             Route.make(
@@ -716,7 +722,7 @@ module VCAP::CloudController
         end
 
         context 'shared domains' do
-          it 'should not allow route to match existing domain' do
+          it 'does not allow route to match existing domain' do
             SharedDomain.make name: 'bar.foo.com'
             expect do
               Route.make(
@@ -752,6 +758,7 @@ module VCAP::CloudController
         end
 
         let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
         subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
 
         context 'for organization quotas' do
@@ -783,7 +790,7 @@ module VCAP::CloudController
           end
 
           context 'on update' do
-            it 'should not validate the total routes limit if already existing' do
+            it 'does not validate the total routes limit if already existing' do
               subject.save
 
               expect(subject).to be_valid
@@ -840,14 +847,14 @@ module VCAP::CloudController
               end
 
               it 'is invalid' do
-                expect(subject).to_not be_valid
+                expect(subject).not_to be_valid
                 expect(subject.errors.on(:space)).to include :total_reserved_route_ports_exceeded
               end
             end
           end
 
           context 'on update' do
-            it 'should not validate the total routes limit if already existing' do
+            it 'does not validate the total routes limit if already existing' do
               subject.save
 
               expect(subject).to be_valid
@@ -893,6 +900,7 @@ module VCAP::CloudController
                     domain: http_domain,
                     host: 'bar')
         end
+
         subject(:tcp_route) do
           Route.new(space: space,
                     domain: tcp_domain,
@@ -953,8 +961,9 @@ module VCAP::CloudController
                 before do
                   tcp_route.save
                 end
+
                 it 'is invalid' do
-                  expect(subject).to_not be_valid
+                  expect(subject).not_to be_valid
                   expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
                 end
               end
@@ -971,7 +980,7 @@ module VCAP::CloudController
                 end
 
                 it 'is invalid' do
-                  expect(subject).to_not be_valid
+                  expect(subject).not_to be_valid
                   expect(subject.errors.on(:space)).to include :total_reserved_route_ports_exceeded
                 end
               end
@@ -998,7 +1007,7 @@ module VCAP::CloudController
               end
 
               it 'has the error on organization' do
-                expect(subject).to_not be_valid
+                expect(subject).not_to be_valid
                 expect(subject.errors.on(:organization)).to include :total_reserved_route_ports_exceeded
               end
             end
@@ -1026,7 +1035,7 @@ module VCAP::CloudController
             org_quota.save
           end
 
-          it 'should not validate the total routes limit if already existing' do
+          it 'does not validate the total routes limit if already existing' do
             expect(subject).to be_valid
             subject.save
 
@@ -1055,7 +1064,7 @@ module VCAP::CloudController
 
       describe '#fqdn' do
         context 'for a non-nil path' do
-          it 'should return the fqdn for the route' do
+          it 'returns the fqdn for the route' do
             r = Route.make(
               host: 'www',
               domain: domain,
@@ -1068,7 +1077,7 @@ module VCAP::CloudController
 
         context 'for a nil path' do
           context 'for a non-nil host' do
-            it 'should return the fqdn for the route' do
+            it 'returns the fqdn for the route' do
               r = Route.make(
                 host: 'www',
                 domain: domain,
@@ -1079,7 +1088,7 @@ module VCAP::CloudController
           end
 
           context 'for a nil host' do
-            it 'should return the fqdn for the route' do
+            it 'returns the fqdn for the route' do
               r = Route.make(
                 host: '',
                 domain: domain,
@@ -1103,6 +1112,7 @@ module VCAP::CloudController
 
         context 'without a route_binding' do
           let(:route) { Route.make }
+
           it 'returns nil' do
             expect(route.route_service_url).to be_nil
           end
@@ -1111,7 +1121,7 @@ module VCAP::CloudController
 
       describe '#uri' do
         context 'for a non-nil path' do
-          it 'should return the fqdn with path' do
+          it 'returns the fqdn with path' do
             r = Route.make(
               host: 'www',
               domain: domain,
@@ -1120,8 +1130,9 @@ module VCAP::CloudController
             )
             expect(r.uri).to eq("www.#{domain.name}/path")
           end
+
           context 'that has a port' do
-            it 'should return the fqdn with the path and port' do
+            it 'returns the fqdn with the path and port' do
               r = Route.make(
                 host: 'www',
                 domain: domain,
@@ -1135,7 +1146,7 @@ module VCAP::CloudController
         end
 
         context 'for a nil path' do
-          it 'should return the fqdn' do
+          it 'returns the fqdn' do
             r = Route.make(
               host: 'www',
               domain: domain,
@@ -1170,10 +1181,12 @@ module VCAP::CloudController
 
       describe '#in_suspended_org?' do
         let(:space) { Space.make }
+
         subject(:route) { Route.new(space:) }
 
         context 'when in a suspended organization' do
           before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+
           it 'is true' do
             expect(route).to be_in_suspended_org
           end
@@ -1181,6 +1194,7 @@ module VCAP::CloudController
 
         context 'when in an unsuspended organization' do
           before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+
           it 'is false' do
             expect(route).not_to be_in_suspended_org
           end
@@ -1196,7 +1210,7 @@ module VCAP::CloudController
       let(:space_b) { Space.make(organization: org) }
       let(:domain_b) { PrivateDomain.make(owning_organization: org) }
 
-      it 'should not allow creation of a empty host on a shared domain' do
+      it 'does not allow creation of a empty host on a shared domain' do
         shared_domain = SharedDomain.make
 
         expect do
@@ -1285,73 +1299,74 @@ module VCAP::CloudController
     end
 
     context 'decoded paths' do
-      it 'should not allow a path of just slash' do
+      it 'does not allow a path of just slash' do
         assert_invalid_path('/')
       end
 
-      it 'should allow a blank path' do
+      it 'allows a blank path' do
         assert_valid_path('') # kinda weird but it's like not having a path
       end
 
-      it 'should not allow path that does not start with a slash' do
+      it 'does not allow path that does not start with a slash' do
         assert_invalid_path('bar')
       end
 
-      it 'should allow a path starting with a slash' do
+      it 'allows a path starting with a slash' do
         assert_valid_path('/foo')
       end
 
-      it 'should allow a multi-part path' do
+      it 'allows a multi-part path' do
         assert_valid_path('/foo/bar')
       end
 
-      it 'should allow a multi-part path ending with a slash' do
+      it 'allows a multi-part path ending with a slash' do
         assert_valid_path('/foo/bar/')
       end
 
-      it 'should allow equal sign as part of the path' do
+      it 'allows equal sign as part of the path' do
         assert_valid_path('/foo=bar')
       end
 
-      it 'should not allow question mark' do
+      it 'does not allow question mark' do
         assert_invalid_path('/foo?a=b')
       end
 
-      it 'should not allow trailing question mark' do
+      it 'does not allow trailing question mark' do
         assert_invalid_path('/foo?')
       end
 
-      it 'should not allow non-ASCII characters in the path' do
+      it 'does not allow non-ASCII characters in the path' do
         assert_invalid_path('/barΩ')
       end
     end
 
     context 'encoded paths' do
-      it 'should not allow a path of just slash' do
-        assert_invalid_path('%2F')
-      end
-      it 'should allow a path of just slash' do
+      it 'does not allow a path of just slash' do
         assert_invalid_path('%2F')
       end
 
-      it 'should not allow a path that does not start with slash' do
+      it 'allows a path of just slash' do
+        assert_invalid_path('%2F')
+      end
+
+      it 'does not allow a path that does not start with slash' do
         assert_invalid_path('%20space')
       end
 
-      it 'should allow a path that contains ?' do
+      it 'allows a path that contains ?' do
         assert_valid_path('/%3F')
       end
 
-      it 'should allow a path that begins with an escaped slash' do
+      it 'allows a path that begins with an escaped slash' do
         assert_invalid_path('%2Fpath')
       end
 
-      it 'should allow  all other escaped chars in a proper url' do
+      it 'allows all other escaped chars in a proper url' do
         assert_valid_path('/a%20space')
       end
     end
 
-    context '#internal?' do
+    describe '#internal?' do
       before do
         TestConfig.override(
           kubernetes: {}
@@ -1364,13 +1379,13 @@ module VCAP::CloudController
 
       context 'when the route has an internal domain' do
         it 'is true' do
-          expect(internal_route.internal?).to eq(true)
+          expect(internal_route.internal?).to be(true)
         end
       end
 
       context 'when the route has a non-internal domain' do
         it 'is false' do
-          expect(external_private_route.internal?).to eq(false)
+          expect(external_private_route.internal?).to be(false)
         end
       end
     end
@@ -1425,6 +1440,7 @@ module VCAP::CloudController
                 kubernetes: {}
               )
             end
+
             it 'finds the first offset' do
               internal_route_1.destroy
               expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(1)
@@ -1535,19 +1551,22 @@ module VCAP::CloudController
       end
     end
 
-    context '#wildcard_host?' do
+    describe '#wildcard_host?' do
       let!(:route) { Route.make(host:) }
+
       context 'when the host is *' do
         let(:host) { '*' }
+
         it 'returns true' do
-          expect(route.wildcard_host?).to eq(true)
+          expect(route.wildcard_host?).to be(true)
         end
       end
 
       context 'when the host is not *' do
         let(:host) { 'meow' }
+
         it 'returns false' do
-          expect(route.wildcard_host?).to eq(false)
+          expect(route.wildcard_host?).to be(false)
         end
       end
     end

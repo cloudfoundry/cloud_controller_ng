@@ -5,6 +5,16 @@ require 'jobs/v3/create_binding_async_job'
 module VCAP::CloudController
   module V3
     RSpec.describe CreateBindingAsyncJob do
+      let(:subject) do
+        described_class.new(
+          :any,
+          'foo',
+          parameters: {},
+          user_audit_info: {},
+          audit_hash: {}
+        )
+      end
+
       context 'route' do
         let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
@@ -60,16 +70,6 @@ module VCAP::CloudController
         it_behaves_like 'create binding job', :key
       end
 
-      let(:subject) do
-        described_class.new(
-          :any,
-          'foo',
-          parameters: {},
-          user_audit_info: {},
-          audit_hash: {}
-        )
-      end
-
       describe '#actor' do
         let(:actor) do
           instance_double(VCAP::CloudController::V3::CreateServiceCredentialBindingJobActor)
@@ -110,6 +110,7 @@ module VCAP::CloudController
 
       describe '#resource_type' do
         let(:actor) { double('Actor', resource_type: 'super') }
+
         before do
           allow(VCAP::CloudController::V3::CreateServiceBindingFactory).to receive(:for).and_return(actor)
         end

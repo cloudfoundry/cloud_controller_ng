@@ -91,6 +91,7 @@ module VCAP::CloudController
                                                })
       end
     end
+
     describe 'v3 emit' do
       it 'logs v3 api version' do
         TelemetryLogger.v3_emit(
@@ -108,6 +109,7 @@ module VCAP::CloudController
                                                })
       end
     end
+
     describe 'internal emit' do
       it 'logs version as internal api' do
         TelemetryLogger.internal_emit(

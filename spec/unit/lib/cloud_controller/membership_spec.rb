@@ -479,7 +479,7 @@ module VCAP::CloudController
       end
 
       context 'when the user has no role in any organization' do
-        it 'should return an empty list' do
+        it 'returns an empty list' do
           guids = membership.authorized_org_guids([Membership::ORG_USER,
                                                    Membership::ORG_AUDITOR,
                                                    Membership::ORG_BILLING_MANAGER,

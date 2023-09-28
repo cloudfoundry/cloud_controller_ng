@@ -12,6 +12,8 @@ module VCAP::CloudController
                        enumerate: 7
     end
 
+    let(:developer) { make_developer_for_space(Space.make) }
+
     describe 'Query Parameters' do
       it { expect(ServicePlansController).to be_queryable_by(:active) }
       it { expect(ServicePlansController).to be_queryable_by(:service_guid) }
@@ -123,8 +125,6 @@ module VCAP::CloudController
       end
     end
 
-    let(:developer) { make_developer_for_space(Space.make) }
-
     describe 'non public service plans' do
       let!(:private_plan) { ServicePlan.make(public: false) }
       let(:plan_guids) do
@@ -183,7 +183,7 @@ module VCAP::CloudController
 
         schemas = decoded_response.fetch('entity')['schemas']
 
-        expect(schemas).to_not be_nil
+        expect(schemas).not_to be_nil
         expect(schemas).to eq(
           {
             'service_instance' => {
@@ -208,7 +208,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code 200
 
           bindable = decoded_response.fetch('entity')['bindable']
-          expect(bindable).to_not be_nil
+          expect(bindable).not_to be_nil
           expect(bindable).to eq service_plan.service.bindable
         end
       end
@@ -385,6 +385,7 @@ module VCAP::CloudController
       context 'as an admin' do
         let(:different_service) { Service.make(service_broker: ServiceBroker.make) }
         let(:different_service_plan) { ServicePlan.make }
+
         before do
           set_current_user_as_admin
           different_service_plan.service = different_service
@@ -576,7 +577,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
           service_plan.reload
           expect(service_plan.name).to eq('old-name')
-          expect(service_plan.public).to eq(false)
+          expect(service_plan.public).to be(false)
         end
       end
     end
@@ -584,7 +585,7 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/service_plans/:guid' do
       let(:service_plan) { ServicePlan.make }
 
-      it 'should prevent recursive deletions if there are any instances' do
+      it 'prevents recursive deletions if there are any instances' do
         set_current_user_as_admin
         ManagedServiceInstance.make(service_plan:)
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"

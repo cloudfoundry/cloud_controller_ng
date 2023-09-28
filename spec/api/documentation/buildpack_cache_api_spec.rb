@@ -51,7 +51,7 @@ RSpec.resource 'Blobstores', type: :api do
       Fog.unmock!
       blobstore = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
       blobstore.cp_to_blobstore(file, key)
-      expect(blobstore.exists?(key)).to be_truthy
+      expect(blobstore).to exist(key)
 
       client.delete '/v2/blobstores/buildpack_cache', {}, request_headers
 
@@ -59,7 +59,7 @@ RSpec.resource 'Blobstores', type: :api do
 
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-      expect(blobstore.exists?(key)).to be_falsey
+      expect(blobstore).not_to exist(key)
     end
   end
 end

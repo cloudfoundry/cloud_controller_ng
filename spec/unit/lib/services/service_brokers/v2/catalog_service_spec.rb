@@ -39,25 +39,25 @@ module VCAP::Services::ServiceBrokers::V2
       it 'defaults @plan_updateable to false' do
         attrs = build_valid_service_attrs
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.plan_updateable).to eq false
+        expect(service.plan_updateable).to be false
       end
 
       it 'sets @plan_updateable if it is provided in the hash' do
         attrs = build_valid_service_attrs(plan_updateable: true)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.plan_updateable).to eq true
+        expect(service.plan_updateable).to be true
       end
 
       it 'defaults @allow_context_updates to false' do
         attrs = build_valid_service_attrs
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.allow_context_updates).to eq false
+        expect(service.allow_context_updates).to be false
       end
 
       it 'sets @allow_context_updates if it is provided in the hash' do
         attrs = build_valid_service_attrs(allow_context_updates: true)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.allow_context_updates).to eq true
+        expect(service.allow_context_updates).to be true
       end
     end
 
@@ -107,7 +107,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'validates that @description is less than 10_001 characters' do
         attrs = build_valid_service_attrs(description: 'A' * 10_001)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service).to_not be_valid
+        expect(service).not_to be_valid
 
         expect(service.errors.messages).to include 'Service description may not have more than 10000 characters'
       end
@@ -490,7 +490,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:service) { CatalogService.new(service_broker, 'requires' => ['route_forwarding']) }
 
         it 'returns true' do
-          expect(service.route_service?).to be_truthy
+          expect(service).to be_route_service
         end
       end
 
@@ -498,7 +498,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:service) { CatalogService.new(service_broker, 'requires' => []) }
 
         it 'returns false' do
-          expect(service.route_service?).to be_falsey
+          expect(service).not_to be_route_service
         end
       end
     end

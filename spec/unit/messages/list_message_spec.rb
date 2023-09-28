@@ -10,19 +10,19 @@ module VCAP::CloudController
     describe 'page' do
       it 'is invalid if page is a string' do
         message = ListMessage.from_params({ page: 'a string' }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:page]).to include('must be a positive integer')
       end
 
       it 'is invalid if page is 0' do
         message = ListMessage.from_params({ page: 0 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:page]).to include('must be a positive integer')
       end
 
       it 'is invalid if page is negative' do
         message = ListMessage.from_params({ page: -1 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:page]).to include('must be a positive integer')
       end
 
@@ -35,19 +35,19 @@ module VCAP::CloudController
     describe 'per_page' do
       it 'is invalid if per_page is a string' do
         message = ListMessage.from_params({ per_page: 'a string' }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:per_page]).to include('must be a positive integer')
       end
 
       it 'is invalid if per_page is 0' do
         message = ListMessage.from_params({ per_page: 0 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:per_page]).to include('must be a positive integer')
       end
 
       it 'is invalid if per_page is negative' do
         message = ListMessage.from_params({ per_page: -1 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:per_page]).to include('must be a positive integer')
       end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
         message = ListMessage.from_params({ per_page: 5000 }, [])
 
         expect(message).to be_valid
-        expect(invalid_message).to be_invalid
+        expect(invalid_message).not_to be_valid
       end
     end
 
@@ -83,13 +83,13 @@ module VCAP::CloudController
 
       it 'is invalid when page * default per_page exceeds DB limits' do
         message = ListMessage.from_params({ page: 184_467_440_737_095_517, per_page: nil }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
       end
 
       it 'is invalid when page * per_page exceeds DB limits' do
         message = ListMessage.from_params({ page: 9_223_372_036_854_775_807, per_page: 2 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 9223372036854775807')
       end
     end
@@ -114,13 +114,13 @@ module VCAP::CloudController
 
       it 'is invalid when page * default per_page exceeds DB limits' do
         message = ListMessage.from_params({ page: 100_001, per_page: nil }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 10000')
       end
 
       it 'is invalid when page * per_page exceeds DB limits' do
         message = ListMessage.from_params({ page: 5001, per_page: 2 }, [])
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:maximum_result]).to include('(page * per_page) must be less than 10000')
       end
     end
@@ -144,17 +144,17 @@ module VCAP::CloudController
 
         it 'does not validate when order_by is `something_else`' do
           message = ListMessage.from_params({ order_by: 'something_else' }, [])
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
 
         it 'does not validate when order_by is `*created_at`' do
           message = ListMessage.from_params({ order_by: '*created_at' }, [])
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
 
         it 'does not validate when order_by is `12312`' do
           message = ListMessage.from_params({ order_by: '12312' }, [])
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
       end
 
@@ -302,6 +302,7 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors[:created_ats]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
+
         it 'validates guids are in array format' do
           message = ListMessage.from_params({ guids: 47 }, [])
           expect(message).not_to be_valid

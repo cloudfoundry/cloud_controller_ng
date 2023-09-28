@@ -35,8 +35,8 @@ module VCAP::Services::ServiceBrokers::V2
       describe 'returning a correct response object' do
         subject { make_request }
 
-        its(:code) { should eq(200) }
-        its(:body) { should_not be_nil }
+        its(:code) { is_expected.to eq(200) }
+        its(:body) { is_expected.not_to be_nil }
       end
 
       it 'sets X-Broker-Api-Version header correctly' do
@@ -349,8 +349,8 @@ module VCAP::Services::ServiceBrokers::V2
           to_return(status: 234, body: {}.to_json)
       end
 
-      it 'should delegate to HttpResponse and just pass proper attrs' do
-        expect(request.code).to eql(234)
+      it 'delegates to HttpResponse and just pass proper attrs' do
+        expect(request.code).to be(234)
         expect(request.body).to eql({}.to_json)
       end
     end
@@ -368,7 +368,7 @@ module VCAP::Services::ServiceBrokers::V2
           to_return(status: 200, body: '')
       end
 
-      it 'should follow redirects' do
+      it 'follows redirects' do
         request
 
         expect(a_request(http_method, another_url)).to have_been_made

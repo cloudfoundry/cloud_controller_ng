@@ -27,10 +27,11 @@ module VCAP::CloudController
                                      relationships: { app: { data: { guid: app.guid } } }
                                    })
         end
+
         it 'creates a droplet for app including the default process_types' do
           expect do
             droplet_create.create(app, message, user_audit_info)
-          end.to change { DropletModel.count }.by(1)
+          end.to change(DropletModel, :count).by(1)
 
           droplet = DropletModel.last
 
@@ -42,6 +43,7 @@ module VCAP::CloudController
           expect(droplet.buildpack_lifecycle_data.buildpacks).to be_empty
           expect(droplet.buildpack_lifecycle_data.stack).to be_nil
         end
+
         it 'creates an audit event' do
           expect(Repositories::DropletEventRepository).
             to receive(:record_create).with(instance_of(DropletModel),
@@ -65,7 +67,7 @@ module VCAP::CloudController
         it 'creates a droplet for app with given process_types' do
           expect do
             droplet_create.create(app, message, user_audit_info)
-          end.to change { DropletModel.count }.by(1)
+          end.to change(DropletModel, :count).by(1)
 
           droplet = DropletModel.last
 

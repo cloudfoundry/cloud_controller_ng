@@ -10,9 +10,7 @@ module VCAP::CloudController
       it 'returns the job' do
         expect do
           delete '/v2/blobstores/buildpack_cache'
-        end.to change {
-          Delayed::Job.count
-        }.by(1)
+        end.to change(Delayed::Job, :count).by(1)
 
         job = Delayed::Job.last
 

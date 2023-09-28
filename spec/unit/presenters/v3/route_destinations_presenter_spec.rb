@@ -41,7 +41,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to include(:route)
       end
 
-      it 'should present destinations correctly' do
+      it 'presents destinations correctly' do
         expect(result[:destinations][0][:guid]).to eq(route_mapping.guid)
         expect(result[:destinations][0][:app]).to match({
                                                           guid: app.guid,
@@ -60,6 +60,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:destinations][1][:weight]).to eq(route_mapping2.weight)
         expect(result[:destinations][1][:protocol]).to eq(route_mapping2.protocol)
       end
+
       context 'ordering destinations' do
         let!(:route_mapping) do
           VCAP::CloudController::RouteMappingModel.make(
@@ -84,6 +85,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:destinations][1][:guid]).to eq(route_mapping.guid)
         end
       end
+
       context 'links' do
         it 'includes correct link hrefs' do
           expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/routes/#{route_mapping.route_guid}/destinations")

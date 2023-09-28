@@ -365,9 +365,9 @@ RSpec.describe 'Spaces' do
       delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
       expect(last_response.status).to eq(204)
-      expect(unmapped_route.exists?).to eq(false), "Expected route '#{unmapped_route.guid}' to not exist"
-      expect(mapped_route.exists?).to eq(true), "Expected route '#{mapped_route.guid}' to exist"
-      expect(bound_route.exists?).to eq(true), "Expected route '#{bound_route.guid}' to exist"
+      expect(unmapped_route.exists?).to be(false), "Expected route '#{unmapped_route.guid}' to not exist"
+      expect(mapped_route.exists?).to be(true), "Expected route '#{mapped_route.guid}' to exist"
+      expect(bound_route.exists?).to be(true), "Expected route '#{bound_route.guid}' to exist"
       expect(last_response.body).to be_empty
     end
   end

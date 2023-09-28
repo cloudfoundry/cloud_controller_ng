@@ -105,7 +105,7 @@ module VCAP::CloudController
           service_instance.reload
         end
 
-        it 'should set last operation on update' do
+        it 'sets last operation on update' do
           action.update(service_instance, message)
 
           service_instance.reload
@@ -115,6 +115,7 @@ module VCAP::CloudController
           expect(service_instance.last_operation.description).to eq('Operation succeeded')
         end
       end
+
       it 'returns the updated service instance' do
         si = action.update(service_instance, message)
         expect(si).to eq(service_instance.reload)

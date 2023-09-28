@@ -31,30 +31,30 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = SpacesListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:guids)
       end
     end
 
     describe 'validations' do
       it 'validates names is an array' do
         message = SpacesListMessage.from_params names: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates organization_guids is an array' do
         message = SpacesListMessage.from_params organization_guids: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:organization_guids].length).to eq 1
       end
 
       it 'validates guids is an array' do
         message = SpacesListMessage.from_params guids: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:guids].length).to eq 1
       end
 
@@ -71,9 +71,9 @@ module VCAP::CloudController
         message = SpacesListMessage.from_params 'include' => 'organization'
         expect(message).to be_valid
         message = SpacesListMessage.from_params 'include' => 'spaceship'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         message = SpacesListMessage.from_params 'include' => 'org,spaceship'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
       end
     end
   end

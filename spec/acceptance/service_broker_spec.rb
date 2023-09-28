@@ -95,7 +95,7 @@ RSpec.describe 'Service Broker' do
     }
   end
 
-  before(:each) { setup_cc }
+  before { setup_cc }
 
   def build_service(attrs={})
     @index ||= 0
@@ -139,8 +139,8 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
 
-        expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270_012)
+        expect(last_response.status).to be(502)
+        expect(decoded_response['code']).to be(270_012)
         expect(decoded_response['description']).to eql("Service broker catalog is invalid: \nService MySQL\n  At least one plan is required\n")
       end
     end
@@ -255,8 +255,8 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
 
-        expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270_012)
+        expect(last_response.status).to be(502)
+        expect(decoded_response['code']).to be(270_012)
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" \
           "Service ids must be unique\n" \
@@ -388,6 +388,7 @@ RSpec.describe 'Service Broker' do
                 before do
                   stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
                 end
+
                 it 'succeeds' do
                   post('/v2/service_brokers', {
                     name: 'some-guid',
@@ -396,7 +397,7 @@ RSpec.describe 'Service Broker' do
                     auth_password: 'password'
                   }.to_json, admin_headers)
 
-                  expect(last_response.status).to eql(201)
+                  expect(last_response.status).to be(201)
                 end
               end
             end
@@ -417,7 +418,7 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to be(201)
             end
           end
 
@@ -430,6 +431,7 @@ RSpec.describe 'Service Broker' do
                 before do
                   stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
                 end
+
                 it 'rejects the request' do
                   post('/v2/service_brokers', {
                     name: 'some-guid',
@@ -438,8 +440,8 @@ RSpec.describe 'Service Broker' do
                     auth_password: 'password'
                   }.to_json, admin_headers)
 
-                  expect(last_response.status).to eql(502)
-                  expect(decoded_response['code']).to eql(270_012)
+                  expect(last_response.status).to be(502)
+                  expect(decoded_response['code']).to be(270_012)
                   expect(decoded_response['description']).to eql(
                     "Service broker catalog is invalid: \n" \
                     "Service MySQL\n  " \
@@ -468,8 +470,8 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270_012)
+              expect(last_response.status).to be(502)
+              expect(decoded_response['code']).to be(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
                 "Service MySQL\n  " \
@@ -500,6 +502,7 @@ RSpec.describe 'Service Broker' do
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
             end
+
             it 'responds with invalid' do
               post('/v2/service_brokers', {
                 name: 'some-guid',
@@ -508,8 +511,8 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270_012)
+              expect(last_response.status).to be(502)
+              expect(decoded_response['code']).to be(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
                 "Service MySQL\n  " \
@@ -539,8 +542,8 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270_012)
+              expect(last_response.status).to be(502)
+              expect(decoded_response['code']).to be(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
                 "Service MySQL\n  " \
@@ -569,6 +572,7 @@ RSpec.describe 'Service Broker' do
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
             end
+
             it 'responds with invalid' do
               post('/v2/service_brokers', {
                 name: 'some-guid',
@@ -577,8 +581,8 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270_012)
+              expect(last_response.status).to be(502)
+              expect(decoded_response['code']).to be(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
                 "Service MySQL\n  " \
@@ -605,8 +609,8 @@ RSpec.describe 'Service Broker' do
                 auth_password: 'password'
               }.to_json, admin_headers)
 
-              expect(last_response.status).to eql(502)
-              expect(decoded_response['code']).to eql(270_012)
+              expect(last_response.status).to be(502)
+              expect(decoded_response['code']).to be(270_012)
               expect(decoded_response['description']).to eql(
                 "Service broker catalog is invalid: \n" \
                 "Service MySQL\n  " \
@@ -645,8 +649,8 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
 
-        expect(last_response.status).to eql(502)
-        expect(decoded_response['code']).to eql(270_012)
+        expect(last_response.status).to be(502)
+        expect(decoded_response['code']).to be(270_012)
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" \
           "Service MySQL\n  " \
@@ -757,8 +761,8 @@ RSpec.describe 'Service Broker' do
           auth_username: 'username',
           auth_password: 'password'
         }.to_json, admin_headers)
-        expect(last_response.status).to eql(400)
-        expect(decoded_response['code']).to eql(270_002)
+        expect(last_response.status).to be(400)
+        expect(decoded_response['code']).to be(270_002)
         expect(decoded_response['description']).to eql('The service broker name is taken')
       end
 
@@ -769,7 +773,7 @@ RSpec.describe 'Service Broker' do
           auth_username: 'username',
           auth_password: 'password'
         }.to_json, admin_headers)
-        expect(last_response.status).to eql(201)
+        expect(last_response.status).to be(201)
       end
     end
 
@@ -805,7 +809,7 @@ RSpec.describe 'Service Broker' do
           auth_password: 'password'
         }.to_json, admin_headers)
         expect(last_response).to have_status_code(400)
-        expect(decoded_response['code']).to eql(270_002)
+        expect(decoded_response['code']).to be(270_002)
         expect(decoded_response['description']).to eql('The service broker name is taken')
       end
     end
@@ -853,7 +857,7 @@ RSpec.describe 'Service Broker' do
         }.to_json, admin_headers)
 
         expect(last_response).to have_status_code(502)
-        expect(decoded_response['code']).to eql(270_012)
+        expect(decoded_response['code']).to be(270_012)
         expect(decoded_response['description']).to match('Service dashboard client id must be unique')
       end
     end

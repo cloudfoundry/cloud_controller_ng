@@ -36,7 +36,7 @@ module VCAP::CloudController
           it 'does nothing and does not raise any errors' do
             expect do
               installer.install(TestConfig.config_instance.get(:install_buildpacks))
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
 
@@ -230,7 +230,7 @@ module VCAP::CloudController
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
 
-          expect(installer.logger).to_not have_received(:error)
+          expect(installer.logger).not_to have_received(:error)
         end
       end
     end

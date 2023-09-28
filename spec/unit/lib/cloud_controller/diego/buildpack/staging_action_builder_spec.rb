@@ -144,7 +144,7 @@ module VCAP::CloudController
             expect(emit_progress_action.failure_message_prefix).to eq('Uploading failed')
 
             parallel_upload_action = actions[2].emit_progress_action.action
-            expect(parallel_upload_action.parallel_action).to_not be_nil
+            expect(parallel_upload_action.parallel_action).not_to be_nil
             upload_actions = parallel_upload_action.parallel_action.actions
             expect(upload_actions[0].upload_action).to eq(upload_droplet_action)
             expect(upload_actions[1].upload_action).to eq(upload_build_artifacts_cache_action)
@@ -609,7 +609,7 @@ module VCAP::CloudController
         describe '#task_environment_variables' do
           it 'returns LANG' do
             lang_env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: 'en_US.UTF-8')
-            expect(builder.task_environment_variables).to match_array([lang_env])
+            expect(builder.task_environment_variables).to contain_exactly(lang_env)
           end
         end
       end

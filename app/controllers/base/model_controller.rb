@@ -95,7 +95,8 @@ module VCAP::CloudController::RestController
       validate_access(:index, model)
 
       if params.key?('order-by') && self.class.sortable_parameters.exclude?(params['order-by'].to_sym)
-        raise CloudController::Errors::ApiError.new_from_details('OrderByParameterInvalid', params['order-by'])
+        raise CloudController::Errors::ApiError.new_from_details('OrderByParameterInvalid',
+                                                                 params['order-by'])
       end
 
       collection_renderer.render_json(

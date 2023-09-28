@@ -106,7 +106,7 @@ module VCAP
 
           context 'service broker created by legacy code that lacks any state' do
             it 'creates the state' do
-              expect { job.perform }.to_not raise_error
+              expect { job.perform }.not_to raise_error
 
               expect(broker.reload.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
@@ -129,8 +129,7 @@ module VCAP
             before do
               allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
 
-              allow(service_manager).to receive(:has_warnings?).and_return(true)
-              allow(service_manager).to receive(:warnings).and_return([warning])
+              allow(service_manager).to receive_messages(has_warnings?: true, warnings: [warning])
             end
 
             it 'then the warning gets stored' do
@@ -180,8 +179,7 @@ module VCAP
               Services::ValidationErrors.new.add('nested-error')
             )
 
-            allow(catalog).to receive(:valid?).and_return(false)
-            allow(catalog).to receive(:validation_errors).and_return(validation_errors)
+            allow(catalog).to receive_messages(valid?: false, validation_errors: validation_errors)
           end
 
           def uaa_conflicting_catalog
@@ -200,9 +198,7 @@ module VCAP
             incompatibility_errors.add('Service 2 is declared to be a route service but support for route services is disabled.')
             incompatibility_errors.add('Service 3 is declared to be a volume mount service but support for volume mount services is disabled.')
 
-            allow(catalog).to receive(:valid?).and_return(true)
-            allow(catalog).to receive(:compatible?).and_return(false)
-            allow(catalog).to receive(:incompatibility_errors).and_return(incompatibility_errors)
+            allow(catalog).to receive_messages(valid?: true, compatible?: false, incompatibility_errors: incompatibility_errors)
           end
         end
       end

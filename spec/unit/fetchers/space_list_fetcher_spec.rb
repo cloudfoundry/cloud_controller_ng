@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       it 'includes all the spaces with the provided guids' do
         results = fetcher.fetch(message: message, guids: permitted_space_guids).all
-        expect(results).to match_array([space1, space3, space4])
+        expect(results).to contain_exactly(space1, space3, space4)
       end
 
       describe 'eager loading associated resources' do
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
-          expect(results).to match_array([space1, space4])
+          expect(results).to contain_exactly(space1, space4)
         end
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
-          expect(results).to match_array([space4])
+          expect(results).to contain_exactly(space4)
         end
       end
     end
@@ -59,9 +59,7 @@ module VCAP::CloudController
         all_spaces = fetcher.fetch_all(message:)
         expect(all_spaces.count).to eq(4)
 
-        expect(all_spaces).to match_array([
-          space1, space2, space3, space4
-        ])
+        expect(all_spaces).to contain_exactly(space1, space2, space3, space4)
       end
 
       describe 'eager loading associated resources' do
@@ -81,7 +79,7 @@ module VCAP::CloudController
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch_all(message:).all
-          expect(results).to match_array([space1])
+          expect(results).to contain_exactly(space1)
         end
       end
 
@@ -90,11 +88,11 @@ module VCAP::CloudController
 
         it 'includes the spaces belonging to the specified organizations' do
           results = fetcher.fetch_all(message:).all
-          expect(results).to match_array([space2, space4])
+          expect(results).to contain_exactly(space2, space4)
         end
       end
 
-      context 'when organization_guids  and a label_selector are provided' do
+      context 'when organization_guids and a label_selector are provided' do
         let(:message) do
           SpacesListMessage.from_params(
             { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' }

@@ -13,11 +13,11 @@ module VCAP::CloudController
       context 'name' do
         subject(:space) { Space.make }
 
-        it 'should allow standard ascii character' do
+        it 'allows standard ascii character' do
           space.name = "A -_- word 2!?()'\"&+."
           expect do
             space.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
         describe 'database errors' do
@@ -36,28 +36,28 @@ module VCAP::CloudController
           end
         end
 
-        it 'should allow backslash character' do
+        it 'allows backslash character' do
           space.name = 'a\\word'
           expect do
             space.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           space.name = '防御力¡'
           expect do
             space.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline character' do
+        it 'does not allow newline character' do
           space.name = "a \n word"
           expect do
             space.save
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape character' do
+        it 'does not allow escape character' do
           space.name = "a \e word"
           expect do
             space.save
@@ -124,7 +124,7 @@ module VCAP::CloudController
             PrivateDomain.make(owning_organization: space.organization)
           end
 
-          it "should list the owning organization's domains and shared domains" do
+          it "lists the owning organization's domains and shared domains" do
             expect(space.domains).to match_array(organization.domains)
           end
         end
@@ -132,7 +132,7 @@ module VCAP::CloudController
         context 'adding domains' do
           it 'does not add the domain to the space if it is a shared domain' do
             shared_domain = SharedDomain.make
-            expect { space.add_domain(shared_domain) }.not_to(change { space.domains })
+            expect { space.add_domain(shared_domain) }.not_to(change(space, :domains))
           end
 
           it "does nothing if the private domain already belongs to the space's org" do
@@ -173,7 +173,7 @@ module VCAP::CloudController
           end.to have_queried_db_times(//, 0)
 
           expect(@eager_loaded_space).to eql(space)
-          expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
+          expect(@eager_loaded_domains).to contain_exactly(private_domain1, private_domain2, shared_domain)
           expect(@eager_loaded_domains).to eql(org.domains)
         end
 
@@ -247,13 +247,13 @@ module VCAP::CloudController
         let!(:space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
 
         it 'returns security groups associated with the space, and the defaults' do
-          expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+          expect(space.security_groups).to contain_exactly(associated_sg, default_sg, another_default_sg)
         end
 
         it 'works when eager loading' do
           eager_space = Space.eager(:security_groups).all.first
           expect(eager_space.associations).to include(:security_groups)
-          expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+          expect(eager_space.security_groups).to contain_exactly(associated_sg, default_sg, another_default_sg)
         end
 
         it 'can be deleted when associated' do
@@ -282,13 +282,13 @@ module VCAP::CloudController
         let!(:space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
 
         it 'returns security groups associated with the space, and the defaults' do
-          expect(space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+          expect(space.staging_security_groups).to contain_exactly(associated_sg, default_sg, another_default_sg)
         end
 
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
           expect(eager_space.associations).to include(:staging_security_groups)
-          expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+          expect(eager_space.staging_security_groups).to contain_exactly(associated_sg, default_sg, another_default_sg)
         end
 
         it 'can be deleted when associated' do
@@ -346,7 +346,7 @@ module VCAP::CloudController
               it 'adds the isolation segment but does not affect the running app' do
                 expect do
                   space.update(isolation_segment_guid: isolation_segment_model.guid)
-                end.to_not raise_error
+                end.not_to raise_error
                 space.reload
 
                 expect(space.isolation_segment_model).to eq(isolation_segment_model)
@@ -375,7 +375,7 @@ module VCAP::CloudController
 
         shared_examples 'bad app space permission' do |perm|
           context perm do
-            it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
+            it "does not get associated with a #{perm.singularize} that isn't a member of the org" do
               exception = Space.const_get("Invalid#{perm.camelize}Relation")
               wrong_org = Organization.make
               user = make_user_for_org(wrong_org)
@@ -397,14 +397,14 @@ module VCAP::CloudController
           space = Space.make
           process1 = ProcessModelFactory.make(space:)
           process2 = ProcessModelFactory.make(space:)
-          expect(space.apps).to match_array([process1, process2])
+          expect(space.apps).to contain_exactly(process1, process2)
         end
 
         it 'does not associate non-web v2 apps' do
           space = Space.make
           process1 = ProcessModelFactory.make(type: 'web', space: space)
           ProcessModelFactory.make(type: 'other', space: space)
-          expect(space.apps).to match_array([process1])
+          expect(space.apps).to contain_exactly(process1)
         end
 
         context 'when there are multiple web processes for an app' do
@@ -449,7 +449,7 @@ module VCAP::CloudController
           end
 
           it 'returns the newest web processes for each app' do
-            expect(space.apps).to match_array([newer_web_process_app_one, newer_web_process_app_two])
+            expect(space.apps).to contain_exactly(newer_web_process_app_one, newer_web_process_app_two)
           end
         end
 
@@ -483,11 +483,11 @@ module VCAP::CloudController
 
             spaces = Space.where(id: [space1.id, space3.id]).eager(:apps).all
 
-            expect(spaces).to match_array([space1, space3])
+            expect(spaces).to contain_exactly(space1, space3)
             queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
             queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
-            expect(queried_space_1.associations[:apps]).to match_array([process1_space1, process2_space1, process3_space1])
-            expect(queried_space_3.associations[:apps]).to match_array([process1_space3, process2_space3, process3_space3])
+            expect(queried_space_1.associations[:apps]).to contain_exactly(process1_space1, process2_space1, process3_space1)
+            expect(queried_space_3.associations[:apps]).to contain_exactly(process1_space3, process2_space3, process3_space3)
             # rubocop:enable Lint/UselessAssignment
           end
 
@@ -524,11 +524,11 @@ module VCAP::CloudController
 
             spaces = Space.where(id: [space1.id, space3.id]).eager(apps: proc { |ds| ds.where(instances: 5) }).all
 
-            expect(spaces).to match_array([space1, space3])
+            expect(spaces).to contain_exactly(space1, space3)
             queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
             queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
-            expect(queried_space_1.associations[:apps]).to match_array([scaled_process_space1])
-            expect(queried_space_3.associations[:apps]).to match_array([scaled_process_space3])
+            expect(queried_space_1.associations[:apps]).to contain_exactly(scaled_process_space1)
+            expect(queried_space_3.associations[:apps]).to contain_exactly(scaled_process_space3)
             # rubocop:enable Lint/UselessAssignment
           end
         end
@@ -537,18 +537,21 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh }
+
       it {
-        is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
-                                         :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
+        expect(subject).to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
+                                             :auditor_guids, :supporter_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
       }
     end
 
     describe '#in_suspended_org?' do
       let(:org) { Organization.make }
+
       subject(:space) { Space.new(organization: org) }
 
       context 'when in a suspended organization' do
         before { allow(org).to receive(:suspended?).and_return(true) }
+
         it 'is true' do
           expect(space).to be_in_suspended_org
         end
@@ -556,6 +559,7 @@ module VCAP::CloudController
 
       context 'when in an unsuspended organization' do
         before { allow(org).to receive(:suspended?).and_return(false) }
+
         it 'is false' do
           expect(space).not_to be_in_suspended_org
         end
@@ -611,7 +615,7 @@ module VCAP::CloudController
 
         expect do
           subject.destroy
-        end.to_not(change do
+        end.not_to(change do
           Event.where(id: [event.id]).count
         end)
 
@@ -628,32 +632,32 @@ module VCAP::CloudController
       it 'returns true if there is enough memory remaining when no processes are running' do
         ProcessModelFactory.make(space: space, memory: 50, instances: 1)
 
-        expect(space.has_remaining_memory(500)).to eq(true)
-        expect(space.has_remaining_memory(501)).to eq(false)
+        expect(space.has_remaining_memory(500)).to be(true)
+        expect(space.has_remaining_memory(501)).to be(false)
       end
 
       it 'returns true if there is enough memory remaining when processes are consuming memory' do
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
         ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
-        expect(space.has_remaining_memory(50)).to eq(true)
-        expect(space.has_remaining_memory(51)).to eq(false)
+        expect(space.has_remaining_memory(50)).to be(true)
+        expect(space.has_remaining_memory(51)).to be(false)
       end
 
       it 'includes RUNNING tasks when determining available memory' do
         process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
         TaskModel.make(app: process.app, memory_in_mb: 50, state: 'RUNNING')
 
-        expect(space.has_remaining_memory(50)).to eq(true)
-        expect(space.has_remaining_memory(51)).to eq(false)
+        expect(space.has_remaining_memory(50)).to be(true)
+        expect(space.has_remaining_memory(51)).to be(false)
       end
 
       it 'does not include non-RUNNING tasks when determining available memory' do
         process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
         TaskModel.make(app: process.app, memory_in_mb: 50, state: 'SUCCEEDED')
 
-        expect(space.has_remaining_memory(100)).to eq(true)
-        expect(space.has_remaining_memory(101)).to eq(false)
+        expect(space.has_remaining_memory(100)).to be(true)
+        expect(space.has_remaining_memory(101)).to be(false)
       end
 
       context 'when the instance_memory is unlimited' do
@@ -661,7 +665,7 @@ module VCAP::CloudController
         let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
         it 'there is always more remaining memory' do
-          expect(space.has_remaining_memory(1_234_567_890)).to eq(true)
+          expect(space.has_remaining_memory(1_234_567_890)).to be(true)
         end
       end
     end
@@ -799,7 +803,7 @@ module VCAP::CloudController
         spaces = Space.having_developers(user).all
 
         expect(spaces).to include(space1)
-        expect(spaces).to_not include(space2)
+        expect(spaces).not_to include(space2)
       end
     end
 

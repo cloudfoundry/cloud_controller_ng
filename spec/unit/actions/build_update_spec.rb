@@ -107,6 +107,7 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'updates some, deletes nils, leaves unspecified fields alone' do
             expect(message).to be_valid
             build_update.update(build, message)

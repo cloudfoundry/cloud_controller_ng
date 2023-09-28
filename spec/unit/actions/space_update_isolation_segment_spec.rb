@@ -17,7 +17,7 @@ module VCAP::CloudController
         SpaceUpdateIsolationSegmentMessage.new({ data: { guid: isolation_segment.guid } })
       end
 
-      context ' when the org is entitled to the isolation segment' do
+      context 'when the org is entitled to the isolation segment' do
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do
@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         it 'updates the isolation segment for the space' do
-          expect(space.isolation_segment_guid).to eq(nil)
+          expect(space.isolation_segment_guid).to be_nil
 
           space_update.update(space, org, message)
           space.reload
@@ -56,7 +56,7 @@ module VCAP::CloudController
             space_update.update(space, org, message)
             space.reload
 
-            expect(space.isolation_segment_guid).to eq(nil)
+            expect(space.isolation_segment_guid).to be_nil
           end
         end
 

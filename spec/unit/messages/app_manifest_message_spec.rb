@@ -6,6 +6,7 @@ module VCAP::CloudController
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:params_from_yaml) { { instances: 3, memory: '2G', name: 'foo' } }
+
         it 'is valid' do
           message = AppManifestMessage.create_from_yml(params_from_yaml)
 
@@ -19,7 +20,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = AppManifestMessage.create_from_yml(params_from_yaml)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors).to have(2).items
           expect(message.errors.full_messages[0]).to match(/^Name must not be empty/)
         end
@@ -433,9 +434,10 @@ module VCAP::CloudController
               env: 'im a non-hash'
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Env must be an object of keys and values')
           end
@@ -453,16 +455,13 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(4).items
-            expect(message.errors.full_messages).to match_array([
-              'Env cannot set PORT',
-              'Env cannot start with VCAP_',
-              'Env cannot start with VMC_',
-              'Env key must be a minimum length of 1'
-            ])
+            expect(message.errors.full_messages).to contain_exactly('Env cannot set PORT', 'Env cannot start with VCAP_', 'Env cannot start with VMC_',
+                                                                    'Env key must be a minimum length of 1')
           end
         end
       end
@@ -503,7 +502,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to match_array(["The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL"])
+            expect(message.errors.full_messages).to contain_exactly("The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL")
           end
         end
 
@@ -514,7 +513,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to match_array(['Routes must be a list of route objects'])
+            expect(message.errors.full_messages).to contain_exactly('Routes must be a list of route objects')
           end
         end
 
@@ -536,7 +535,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).not_to be_valid
-              expect(message.errors.full_messages).to match_array(['No-route must be a boolean'])
+              expect(message.errors.full_messages).to contain_exactly('No-route must be a boolean')
             end
           end
 
@@ -577,7 +576,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).not_to be_valid
-              expect(message.errors.full_messages).to match_array(['Random-route must be a boolean'])
+              expect(message.errors.full_messages).to contain_exactly('Random-route must be a boolean')
             end
           end
 
@@ -618,7 +617,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).not_to be_valid
-              expect(message.errors.full_messages).to match_array(['Default-route must be a boolean'])
+              expect(message.errors.full_messages).to contain_exactly('Default-route must be a boolean')
             end
           end
 
@@ -653,7 +652,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Services must be a list of service instances')
           end
@@ -666,7 +665,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Processes must be an array of process configurations')
           end
@@ -677,7 +676,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('All Processes must specify a type')
           end
@@ -688,7 +687,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('All Processes must specify a type')
           end
@@ -699,7 +698,7 @@ module VCAP::CloudController
 
           it 'has the type of the process in the error message' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to include('Process "totally-a-type": Instances must be greater than or equal to 0')
             expect(message.errors.full_messages).to include('Process "totally-a-type": Timeout must be greater than or equal to 1')
@@ -751,9 +750,10 @@ module VCAP::CloudController
 
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors).to have(27).items
-              expect(message.errors.full_messages).to match_array([
+
+              expected_errors = [
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type1": Log rate limit per second is not a number',
@@ -781,7 +781,9 @@ module VCAP::CloudController
                 'Process "type2": Readiness health check invocation timeout is not a number',
                 'Process "type2": Health check interval must be greater than or equal to 1',
                 'Process "type2": Readiness health check interval must be greater than or equal to 1'
-              ])
+              ]
+
+              expect(message.errors.full_messages).to match_array(expected_errors)
             end
           end
         end
@@ -794,7 +796,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(2).items
             expect(message.errors.full_messages).to include('Process "foo" may only be present once')
             expect(message.errors.full_messages).to include('Process "bob" may only be present once')
@@ -812,6 +814,7 @@ module VCAP::CloudController
                 expect(message.manifest_process_scale_messages.first.log_rate_limit).to eq(-1)
               end
             end
+
             context 'with a bytes suffix' do
               let(:params_from_yaml) { { name: 'eugene', processes: [{ 'type' => 'foo', 'log-rate-limit-per-second' => '-1B' }] } }
 
@@ -926,9 +929,10 @@ module VCAP::CloudController
               metadata: 'im a non-hash'
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Metadata must be an object')
           end
@@ -943,9 +947,10 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors_on(:metadata)).to include("'labels' is not an object")
           end
@@ -960,13 +965,12 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors_on(:metadata)).to match_array([
-              'label key error: key cannot be empty string'
-            ])
+            expect(message.errors_on(:metadata)).to contain_exactly('label key error: key cannot be empty string')
           end
         end
 
@@ -981,13 +985,12 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors_on(:metadata)).to match_array([
-              "label value error: 'no spaces or ! allowed' contains invalid characters"
-            ])
+            expect(message.errors_on(:metadata)).to contain_exactly("label value error: 'no spaces or ! allowed' contains invalid characters")
           end
         end
 
@@ -1000,9 +1003,10 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
             expect(message.errors_on(:metadata)).to include("'annotations' is not an object")
           end
@@ -1017,13 +1021,12 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors_on(:metadata)).to match_array([
-              "annotation key error: 'xxxxxxxx...' is greater than 63 characters"
-            ])
+            expect(message.errors_on(:metadata)).to contain_exactly("annotation key error: 'xxxxxxxx...' is greater than 63 characters")
           end
         end
 
@@ -1038,13 +1041,12 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors).to have(1).items
-            expect(message.errors_on(:metadata)).to match_array([
-              "annotation value error: 'oversize...' is greater than 5000 characters"
-            ])
+            expect(message.errors_on(:metadata)).to contain_exactly("annotation value error: 'oversize...' is greater than 5000 characters")
           end
         end
       end
@@ -1103,20 +1105,20 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(params_from_yaml)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages).to match_array([
-            'Process "web": Instances must be greater than or equal to 0',
-            'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-            'Process "web": Disk quota must be greater than 0MB',
-            'Buildpack must be a string',
-            'Stack must be a string',
-            'Env must be an object of keys and values'
-          ])
+          error_messages = ['Process "web": Instances must be greater than or equal to 0',
+                            'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                            'Process "web": Disk quota must be greater than 0MB',
+                            'Buildpack must be a string',
+                            'Stack must be a string',
+                            'Env must be an object of keys and values']
+          expect(message.errors.full_messages).to match_array(error_messages)
         end
       end
     end
 
     describe '.create_from_yml' do
       let(:parsed_yaml) { { 'name' => 'blah', 'instances' => 4, 'memory' => '200GB' } }
+
       it 'returns the correct AppManifestMessage' do
         message = AppManifestMessage.create_from_yml(parsed_yaml)
 
@@ -1129,8 +1131,8 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = AppManifestMessage.create_from_yml(parsed_yaml)
 
-        expect(message.requested?(:instances)).to be_truthy
-        expect(message.requested?(:memory)).to be_truthy
+        expect(message).to be_requested(:instances)
+        expect(message).to be_requested(:memory)
       end
     end
 
@@ -1433,10 +1435,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors).to have(2).items
-            expect(message.errors.full_messages).to match_array([
-              'Process "web": Memory must be greater than 0MB',
-              'Process "web": Disk quota must be greater than 0MB'
-            ])
+            expect(message.errors.full_messages).to contain_exactly('Process "web": Memory must be greater than 0MB', 'Process "web": Disk quota must be greater than 0MB')
           end
         end
 
@@ -1501,10 +1500,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors).to have(2).items
-            expect(message.errors.full_messages).to match_array([
-              'Process "web": Memory must be greater than 0MB',
-              'Process "web": Disk quota must be greater than 0MB'
-            ])
+            expect(message.errors.full_messages).to contain_exactly('Process "web": Memory must be greater than 0MB', 'Process "web": Disk quota must be greater than 0MB')
           end
         end
 
@@ -1705,7 +1701,7 @@ module VCAP::CloudController
 
             it 'returns the error' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors.full_messages).to include(
                 'Process "web": Health check type must be "port", "process", or "http"'
               )
@@ -1971,6 +1967,7 @@ module VCAP::CloudController
             'name' => 'dora'
           }
         end
+
         it 'returns an empty array' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
@@ -2032,6 +2029,7 @@ module VCAP::CloudController
 
         context 'when it specifies a "default" buildpack' do
           let(:parsed_yaml) { { buildpack: 'default' } }
+
           it 'updates the buildpack_data to be an empty array' do
             message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
@@ -2040,6 +2038,7 @@ module VCAP::CloudController
 
         context 'when it specifies a null buildpack' do
           let(:parsed_yaml) { { buildpack: nil } }
+
           it 'updates the buildpack_data to be an empty array' do
             message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
@@ -2048,6 +2047,7 @@ module VCAP::CloudController
 
         context 'when it specifies a "null" buildpack' do
           let(:parsed_yaml) { { buildpack: 'null' } }
+
           it 'updates the buildpack_data to be an empty array' do
             message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
@@ -2068,6 +2068,7 @@ module VCAP::CloudController
 
     describe '#app_update_environment_variables_message' do
       let(:parsed_yaml) { { 'name' => 'eugene', 'env' => { 'foo' => 'bar', 'baz' => 4.44444444444, 'qux' => false } } }
+
       it 'returns a UpdateEnvironmentVariablesMessage containing the env vars' do
         message = AppManifestMessage.create_from_yml(parsed_yaml)
         expect(message).to be_valid
@@ -2089,9 +2090,9 @@ module VCAP::CloudController
           }
         end
 
-        it 'should be invalid' do
+        it 'is invalid' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:base]).to include('No-route must be a boolean')
         end
       end
@@ -2104,7 +2105,7 @@ module VCAP::CloudController
         it 'does not set the routes in the message' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_routes_update_message.requested?(:routes)).to be_falsey
+          expect(message.manifest_routes_update_message).not_to be_requested(:routes)
         end
       end
     end

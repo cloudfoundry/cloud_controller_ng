@@ -23,7 +23,7 @@ module VCAP::CloudController
       it 'deletes both space records' do
         expect do
           space_delete.delete(space_dataset)
-        end.to change { Space.count }.by(-2)
+        end.to change(Space, :count).by(-2)
         expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -58,7 +58,7 @@ module VCAP::CloudController
         it 'deletes associated apps' do
           expect do
             space_delete.delete(space_dataset)
-          end.to change { AppModel.count }.by(-1)
+          end.to change(AppModel, :count).by(-1)
           expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
           it 'deletes service instances' do
             expect do
               space_delete.delete(space_dataset)
-            end.to change { ServiceInstance.count }.by(-1)
+            end.to change(ServiceInstance, :count).by(-1)
             expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
@@ -109,15 +109,15 @@ module VCAP::CloudController
             it 'deletes other spaces' do
               space_delete.delete(space_dataset)
 
-              expect(space.exists?).to be_falsey
-              expect(space_2.exists?).to be_falsey
-              expect(space_4.exists?).to be_truthy
+              expect(space).not_to exist
+              expect(space_2).not_to exist
+              expect(space_4).to exist
             end
 
             it 'deletes the other instances' do
               expect do
                 space_delete.delete(space_dataset)
-              end.to change { ServiceInstance.count }.by(-2)
+              end.to change(ServiceInstance, :count).by(-2)
               expect { service_instance_1.refresh }.not_to raise_error
               expect { service_instance_2.refresh }.not_to raise_error
               expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -240,9 +240,9 @@ module VCAP::CloudController
 
             expect do
               space_delete.delete(Space.where(guid: space.guid))
-            end.to change { Space.count }.by(-1)
+            end.to change(Space, :count).by(-1)
 
-            expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be nil
+            expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be_nil
           end
 
           context 'when the private brokers have service instances' do
@@ -251,9 +251,9 @@ module VCAP::CloudController
 
               expect do
                 space_delete.delete(Space.where(guid: space.guid))
-              end.to change { Space.count }.by(-1)
+              end.to change(Space, :count).by(-1)
 
-              expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be nil
+              expect(ServiceBroker.find(guid: broker_to_be_deleted.guid)).to be_nil
             end
 
             context 'when deleting a service instance associated with a private broker fails' do
@@ -269,7 +269,7 @@ module VCAP::CloudController
 
                 expect do
                   space_delete.delete(Space.where(guid: space.guid))
-                end.to change { ServiceBroker.count }.by(-1)
+                end.to change(ServiceBroker, :count).by(-1)
                 expect { broker_to_be_deleted.refresh }.not_to raise_error
                 expect { broker_to_be_deleted2.refresh }.to raise_error Sequel::Error, 'Record not found'
               end
@@ -293,7 +293,7 @@ module VCAP::CloudController
             expect(route.exists?).to be true
             expect do
               space_delete.delete(space_dataset)
-            end.to change { Route.count }.by(-1)
+            end.to change(Route, :count).by(-1)
           end
         end
 
@@ -316,7 +316,7 @@ module VCAP::CloudController
           it 'deletes associated space labels' do
             expect do
               space_delete.delete(space_dataset)
-            end.to change { SpaceLabelModel.count }.by(-2)
+            end.to change(SpaceLabelModel, :count).by(-2)
             expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
         end

@@ -352,7 +352,7 @@ RSpec.describe 'V3 service brokers' do
   describe 'GET /v3/service_brokers/:guid' do
     context 'when the service broker does not exist' do
       it 'return with 404 Not Found' do
-        is_expected.to_not find_broker(broker_guid: 'does-not-exist', with: admin_headers)
+        expect(subject).not_to find_broker(broker_guid: 'does-not-exist', with: admin_headers)
       end
     end
 
@@ -459,7 +459,7 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'returns 404 Not Found for space developer in another space' do
-        is_expected.to_not find_broker(broker_guid: space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
+        expect(subject).not_to find_broker(broker_guid: space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
       end
     end
   end
@@ -662,7 +662,7 @@ RSpec.describe 'V3 service brokers' do
           VCAP::CloudController::ServiceBroker.make(name: 'another broker')
         end
 
-        it 'should return 422 and meaningful error and does not create a broker' do
+        it 'returns 422 and meaningful error and does not create a broker' do
           patch("/v3/service_brokers/#{broker.guid}", { name: 'another broker' }.to_json, admin_headers)
           expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
           expect(broker.reload.name).to eq 'broker name'
@@ -680,7 +680,7 @@ RSpec.describe 'V3 service brokers' do
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
-        it 'should return 422 and meaningful error and does not create a broker' do
+        it 'returns 422 and meaningful error and does not create a broker' do
           job = VCAP::CloudController::PollableJobModel.last
 
           expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
@@ -889,7 +889,7 @@ RSpec.describe 'V3 service brokers' do
     context 'when broker does not exist' do
       let(:update_request_body) { {} }
 
-      it 'should return 404' do
+      it 'returns 404' do
         patch('/v3/service_brokers/some-guid', update_request_body.to_json, admin_headers)
 
         expect(last_response).to have_status_code(404)
@@ -925,9 +925,7 @@ RSpec.describe 'V3 service brokers' do
     it 'creates a service broker in the database' do
       expect do
         create_broker_successfully(global_broker_request_body, with: admin_headers)
-      end.to change {
-        VCAP::CloudController::ServiceBroker.count
-      }.by(1)
+      end.to change(VCAP::CloudController::ServiceBroker, :count).by(1)
 
       broker = VCAP::CloudController::ServiceBroker.last
       expect(broker.name).to eq(global_broker_request_body[:name])
@@ -1296,7 +1294,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker(global_broker_with_identical_name_body, with: admin_headers)
       end
 
-      it 'should return 422 and meaningful error and does not create a broker' do
+      it 'returns 422 and meaningful error and does not create a broker' do
         expect_no_broker_created
         expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
       end
@@ -1308,7 +1306,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker(global_broker_with_identical_name_body, with: admin_headers)
       end
 
-      it 'should return 422 and meaningful error and does not create a broker' do
+      it 'returns 422 and meaningful error and does not create a broker' do
         expect_no_broker_created
         expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
       end
@@ -1320,7 +1318,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker(global_broker_with_identical_url_body, with: admin_headers)
       end
 
-      it 'should return 202 Accepted and broker created' do
+      it 'returns 202 Accepted and broker created' do
         expect(last_response).to have_status_code(202)
         expect_created_broker(global_broker_with_identical_url_body)
       end

@@ -49,6 +49,7 @@ module VCAP::CloudController
 
         context 'when there is a buildpack with nil stack' do
           let!(:buildpack) { Buildpack.create(name: 'oscar', stack: nil) }
+
           it 'will allow updating a different field' do
             expect do
               buildpack.update(filename: '/some/file')
@@ -126,7 +127,7 @@ module VCAP::CloudController
           @another_buildpack.key = nil
           @another_buildpack.save
 
-          expect(all_buildpacks).to_not include(@another_buildpack)
+          expect(all_buildpacks).not_to include(@another_buildpack)
           expect(all_buildpacks).to have(2).items
         end
 
@@ -142,7 +143,7 @@ module VCAP::CloudController
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(null_buildpack)
-            expect(all_buildpacks).to_not include(null_buildpack)
+            expect(all_buildpacks).not_to include(null_buildpack)
             expect(all_buildpacks).to have(3).items
           end
         end
@@ -152,14 +153,14 @@ module VCAP::CloudController
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(empty_buildpack)
-            expect(all_buildpacks).to_not include(empty_buildpack)
+            expect(all_buildpacks).not_to include(empty_buildpack)
             expect(all_buildpacks).to have(3).items
           end
         end
       end
 
       context 'when there are no buildpacks' do
-        it 'should cope with no buildpacks' do
+        it 'copes with no buildpacks' do
           expect(all_buildpacks).to be_empty
         end
       end
@@ -169,7 +170,7 @@ module VCAP::CloudController
         let!(:disabled_buildpack) { Buildpack.make(key: 'disabled-buildpack', enabled: false) }
 
         it 'includes them in the list' do
-          expect(all_buildpacks).to match_array([enabled_buildpack, disabled_buildpack])
+          expect(all_buildpacks).to contain_exactly(enabled_buildpack, disabled_buildpack)
         end
       end
 

@@ -9,11 +9,13 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_url' => 'http://relationship.example.com' } }
+
     subject { ServicePlanPresenter.new }
 
     describe '#entity_hash' do
       before do
         set_current_user_as_admin
+        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
       let(:service_plan) do
@@ -30,10 +32,6 @@ module CloudController::Presenters::V2
       let(:create_instance_schema) { nil }
       let(:update_instance_schema) { nil }
       let(:create_binding_schema) { nil }
-
-      before do
-        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
-      end
 
       it 'returns the service plan entity' do
         expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to eq(
@@ -68,6 +66,7 @@ module CloudController::Presenters::V2
         let(:create_instance_schema) { nil }
         let(:update_instance_schema) { nil }
         let(:create_binding_schema) { nil }
+
         it 'returns an empty schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {
@@ -88,6 +87,7 @@ module CloudController::Presenters::V2
       context 'when the plan create_instance_schema is valid json' do
         schema = { '$schema' => 'example.com/schema' }
         let(:create_instance_schema) { schema.to_json }
+
         it 'returns the service plan entity with the schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {
@@ -107,6 +107,7 @@ module CloudController::Presenters::V2
 
       context 'when the plan create_instance_schema is invalid json' do
         let(:create_instance_schema) { '{' }
+
         it 'returns an empty schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {
@@ -127,6 +128,7 @@ module CloudController::Presenters::V2
       context 'when the plan update_instance_schema is valid json' do
         schema = { '$schema' => 'example.com/schema' }
         let(:update_instance_schema) { schema.to_json }
+
         it 'returns the service plan entity with the schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {
@@ -152,6 +154,7 @@ module CloudController::Presenters::V2
 
       context 'when the plan update_instance_schema is invalid json' do
         let(:update_instance_schema) { '{' }
+
         it 'returns an empty schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {
@@ -172,6 +175,7 @@ module CloudController::Presenters::V2
       context 'when the plan create_binding_schema is valid json' do
         schema = { '$schema' => 'example.com/schema' }
         let(:create_binding_schema) { schema.to_json }
+
         it 'returns the service plan entity with the schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
             {

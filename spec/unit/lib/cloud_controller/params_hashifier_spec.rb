@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       it 'processes the rails5 parameters' do
-        expect(controller.hashed_params[:array1]).to match_array(['abc', :def])
+        expect(controller.hashed_params[:array1]).to contain_exactly('abc', :def)
         expect(controller.hashed_params[:hash1][:abc]).to eq(1)
         expect(controller.hashed_params[:hash1]['ghi']).to eq(3)
         expect(controller.hashed_params[:hash1][:ghi]).to eq(3)

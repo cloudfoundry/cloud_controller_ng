@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         params.each do |key, _|
-          expect(message.requested?(key.to_sym)).to be_truthy
+          expect(message).to be_requested(key.to_sym)
         end
       end
 
@@ -79,14 +79,14 @@ module VCAP::CloudController
         it 'returns an invalid message when there is no service instance relationship' do
           params[:relationships].delete(:service_instance)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships 'relationships' must include one or more valid relationships")
         end
 
         it 'returns an invalid message when there is invalid relationships' do
           params[:relationships][:app] = {}
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'app'")
         end
       end

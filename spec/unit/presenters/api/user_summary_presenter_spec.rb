@@ -2,6 +2,8 @@ require 'spec_helper'
 
 RSpec.describe UserSummaryPresenter do
   describe '#to_hash' do
+    subject { UserSummaryPresenter.new(user) }
+
     let(:org) { VCAP::CloudController::Organization.make }
     let(:managed_org) { VCAP::CloudController::Organization.make }
     let(:billing_managed_org) { VCAP::CloudController::Organization.make }
@@ -24,8 +26,6 @@ RSpec.describe UserSummaryPresenter do
 
       u
     end
-
-    subject { UserSummaryPresenter.new(user) }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

@@ -22,6 +22,7 @@ RSpec.describe 'max instance memory policies' do
 
       context 'if the policy target is nil' do
         let(:policy_target) { nil }
+
         it 'does not give an error' do
           expect(validator).to validate_without_error(process)
         end
@@ -30,7 +31,7 @@ RSpec.describe 'max instance memory policies' do
       context 'when quota definition is null' do
         let(:quota_definition) { nil }
 
-        it 'does not give error ' do
+        it 'does not give error' do
           process.memory = 150
           expect(validator).to validate_without_error(process)
         end
@@ -53,9 +54,9 @@ RSpec.describe 'max instance memory policies' do
     end
 
     context 'app starts off STARTED with memory over quota' do
-      let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 200, state: 'STARTED') }
-
       subject(:validator) { AppMaxInstanceMemoryPolicy.new(process, policy_target, error_name) }
+
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 200, state: 'STARTED') }
 
       it 'gives an error when the app is created' do
         expect(validator).to validate_with_error(process, :memory, error_name)
@@ -86,6 +87,7 @@ RSpec.describe 'max instance memory policies' do
 
       context 'if the policy target is nil' do
         let(:policy_target) { nil }
+
         it 'does not give an error' do
           expect(validator).to validate_without_error(process)
         end
@@ -94,7 +96,7 @@ RSpec.describe 'max instance memory policies' do
       context 'when quota definition is null' do
         let(:quota_definition) { nil }
 
-        it 'does not give error ' do
+        it 'does not give error' do
           process.memory = 150
           expect(validator).to validate_without_error(process)
         end
@@ -135,9 +137,9 @@ RSpec.describe 'max instance memory policies' do
   end
 
   describe TaskMaxInstanceMemoryPolicy do
-    let(:task) { VCAP::CloudController::TaskModel.make }
-
     subject(:validator) { TaskMaxInstanceMemoryPolicy.new(task, policy_target, error_name) }
+
+    let(:task) { VCAP::CloudController::TaskModel.make }
 
     it 'gives error when task memory_in_mb exceeds instance memory limit' do
       task.memory_in_mb = 200
@@ -151,6 +153,7 @@ RSpec.describe 'max instance memory policies' do
 
     context 'if the policy target is nil' do
       let(:policy_target) { nil }
+
       it 'does not give an error' do
         expect(validator).to validate_without_error(task)
       end
@@ -159,7 +162,7 @@ RSpec.describe 'max instance memory policies' do
     context 'when quota definition is null' do
       let(:quota_definition) { nil }
 
-      it 'does not give error ' do
+      it 'does not give error' do
         task.memory_in_mb = 150
         expect(validator).to validate_without_error(task)
       end

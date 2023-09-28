@@ -271,6 +271,7 @@ RSpec.describe 'Roles Request' do
           )
         end
       end
+
       context 'creating role by user GUID for unaffiliated user' do
         let(:params) do
           {
@@ -559,6 +560,7 @@ RSpec.describe 'Roles Request' do
 
           h
         end
+
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
@@ -1095,11 +1097,13 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
+
     context 'listing roles with overlapping timestamps' do
       let!(:user_jeff) { VCAP::CloudController::User.make(guid: 'jeff-guid') }
       let!(:role_one) { VCAP::CloudController::OrganizationAuditor.make(guid: '1', user: user_jeff, organization: org, created_at: '2019-12-25T13:00:00Z') }
       let!(:role_two) { VCAP::CloudController::SpaceAuditor.make(guid: '2', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
       let!(:role_three) { VCAP::CloudController::SpaceManager.make(guid: '3', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
+
       it 'sorts the the roles on a secondary key and keeps the same order between calls' do
         get('/v3/roles', nil, admin_header)
         expect(last_response).to have_status_code(200)
@@ -1629,12 +1633,12 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           space.add_manager(user_with_role)
         end
 
-        it 'should return a 422 when trying to delete the organization_user role' do
+        it 'returns a 422 when trying to delete the organization_user role' do
           delete "/v3/roles/#{org_user_role.guid}", nil, admin_headers
           expect(last_response).to have_status_code(422)
         end
 
-        it 'should successfully delete any other org role' do
+        it 'successfullies delete any other org role' do
           delete "/v3/roles/#{role.guid}", nil, admin_headers
           expect(last_response).to have_status_code(202)
         end

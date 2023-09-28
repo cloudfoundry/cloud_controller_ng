@@ -4,6 +4,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceKeysController do
+    let(:unbind_body) { {} }
+    let(:unbind_status) { 200 }
+    let(:bind_body) { { credentials: } }
+    let(:bind_status) { 200 }
+    let(:guid_pattern) { '[[:alnum:]-]+' }
+    let(:credentials) { { 'foo' => 'bar' } }
+
     describe 'Attributes' do
       it do
         expect(ServiceKeysController).to have_creatable_attributes(
@@ -15,14 +22,6 @@ module VCAP::CloudController
         )
       end
     end
-
-    let(:credentials) { { 'foo' => 'bar' } }
-
-    let(:guid_pattern) { '[[:alnum:]-]+' }
-    let(:bind_status) { 200 }
-    let(:bind_body) { { credentials: } }
-    let(:unbind_status) { 200 }
-    let(:unbind_body) { {} }
 
     def broker_url(broker)
       broker.broker_url
@@ -262,7 +261,7 @@ module VCAP::CloudController
           end
 
           it 'does not send a bind request to broker' do
-            expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
+            expect(a_request(:put, bind_url_regex(service_instance: instance))).not_to have_been_made
           end
         end
 
@@ -289,10 +288,10 @@ module VCAP::CloudController
               post '/v2/service_keys', req
 
               expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                to_not have_been_made
+                not_to have_been_made
             end
 
-            it 'should show an error message for create key operation' do
+            it 'shows an error message for create key operation' do
               post '/v2/service_keys', req
               expect(last_response).to have_status_code 409
               expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
@@ -344,7 +343,7 @@ module VCAP::CloudController
 
               it 'does not send a bind request to broker' do
                 make_request
-                expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
+                expect(a_request(:put, bind_url_regex(service_instance: instance))).not_to have_been_made
               end
             end
 
@@ -457,25 +456,25 @@ module VCAP::CloudController
 
       it 'returns the service keys filtered by service_instance_guid' do
         get "/v2/service_keys?q=service_instance_guid:#{instance_a.guid}"
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to be(200)
         expect(decoded_response.fetch('total_results')).to eq(2)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
         expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
 
         get "/v2/service_keys?q=service_instance_guid:#{instance_b.guid}"
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to be(200)
         expect(decoded_response.fetch('total_results')).to eq(1)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
       end
 
       it 'returns the service keys filtered by key name' do
         get '/v2/service_keys?q=name:fake-key-a'
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to be(200)
         expect(decoded_response.fetch('total_results')).to eq(1)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
 
         get '/v2/service_keys?q=name:non-exist-key-name'
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to be(200)
         expect(decoded_response.fetch('total_results')).to eq(0)
       end
     end
@@ -539,7 +538,7 @@ module VCAP::CloudController
 
           get "/v2/service_keys/#{service_key.guid}"
 
-          expect(last_response.status).to eql(200)
+          expect(last_response.status).to be(200)
           expect(metadata.fetch('guid')).to eq(service_key.guid)
           expect(entity.fetch('credentials')).to eq(credentials)
         end
@@ -566,7 +565,7 @@ module VCAP::CloudController
       context 'when the key is not a CredHub reference' do
         it 'returns the specific service key' do
           get "/v2/service_keys/#{service_key.guid}"
-          expect(last_response.status).to eql(200)
+          expect(last_response.status).to be(200)
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_key.guid)
           expect(entity.fetch('credentials')).to eq(service_key.credentials)
         end
@@ -574,7 +573,7 @@ module VCAP::CloudController
 
       it 'returns empty result if no service key found' do
         get '/v2/service_keys/non-exist-service-key-guid'
-        expect(last_response.status).to eql(404)
+        expect(last_response.status).to be(404)
         expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
         expect(decoded_response.fetch('description')).to eq('The service key could not be found: non-exist-service-key-guid')
       end
@@ -686,7 +685,7 @@ module VCAP::CloudController
             service_key = ServiceKey.make(service_instance: managed_service_instance)
 
             get "/v2/service_keys/#{service_key.guid}/parameters"
-            expect(last_response.status).to eql(400)
+            expect(last_response.status).to be(400)
             expect(last_response.body).to include('This service does not support fetching service key parameters.')
           end
         end
@@ -698,7 +697,7 @@ module VCAP::CloudController
             service_key = ServiceKey.make(service_instance: managed_service_instance)
 
             get "/v2/service_keys/#{service_key.guid}/parameters"
-            expect(last_response.status).to eql(400)
+            expect(last_response.status).to be(400)
             expect(last_response.body).to include('This service does not support fetching service key parameters.')
           end
         end
@@ -719,7 +718,7 @@ module VCAP::CloudController
           context 'when the broker returns the parameters' do
             it 'returns the parameters' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({ 'foo' => true }.to_json)
             end
           end
@@ -729,7 +728,7 @@ module VCAP::CloudController
 
             it 'returns the parameters' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -739,7 +738,7 @@ module VCAP::CloudController
 
             it 'returns an empty object' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -749,7 +748,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -760,7 +759,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -772,7 +771,7 @@ module VCAP::CloudController
             it 'returns a 502 and an error' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
 
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
@@ -784,7 +783,7 @@ module VCAP::CloudController
             it 'returns a 502 and an error' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
 
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerRequestRejected')
             end
@@ -827,12 +826,13 @@ module VCAP::CloudController
           context 'when the service key guid is invalid' do
             it 'returns a 404' do
               get '/v2/service_keys/some-bogus-guid/parameters'
-              expect(last_response.status).to eql(404)
+              expect(last_response.status).to be(404)
               expect(last_response.body).to include('The service key could not be found: some-bogus-guid')
             end
           end
         end
       end
+
       context 'when the key is for a user provided service' do
         let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
 
@@ -840,7 +840,7 @@ module VCAP::CloudController
           service_key = ServiceKey.make(service_instance: user_provided_service_instance)
 
           get "/v2/service_keys/#{service_key.guid}/parameters"
-          expect(last_response.status).to eql(400)
+          expect(last_response.status).to be(400)
           expect(last_response.body).to include('This service does not support fetching service key parameters.')
         end
       end

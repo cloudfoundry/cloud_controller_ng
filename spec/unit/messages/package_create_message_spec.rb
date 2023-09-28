@@ -121,6 +121,7 @@ module VCAP::CloudController
 
         context 'when a non-string image is provided' do
           let(:params) { { relationships: relationships, type: 'docker', data: { image: 5, store_image: false, credentials: {} } } }
+
           it 'is invalid' do
             message = PackageCreateMessage.new(params)
             expect(message).not_to be_valid

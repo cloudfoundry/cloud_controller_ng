@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:admin_user) { User.make }
     let(:non_admin_user) { User.make }
     let(:app_event_repository) { Repositories::AppEventRepository.new }
+
     before do
       set_current_user(non_admin_user)
       TestConfig.override(kubernetes: { host_url: nil })
@@ -23,6 +24,7 @@ module VCAP::CloudController
 
     describe 'query by org_guid' do
       let(:process) { ProcessModelFactory.make }
+
       it 'filters apps by org_guid' do
         set_current_user_as_admin
         get "/v2/apps?q=organization_guid:#{process.organization.guid}"
@@ -130,14 +132,14 @@ module VCAP::CloudController
           process = ProcessModel.make
           get "/v2/apps/#{process.app.guid}?inline-relations-depth=0"
           expect(entity).to have_key('events_url')
-          expect(entity).to_not have_key('events')
+          expect(entity).not_to have_key('events')
         end
 
         it 'does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query' do
           process = ProcessModel.make
           get "/v2/apps/#{process.app.guid}?inline-relations-depth=1"
           expect(entity).to have_key('events_url')
-          expect(entity).to_not have_key('events')
+          expect(entity).not_to have_key('events')
         end
       end
     end
@@ -159,6 +161,7 @@ module VCAP::CloudController
         before do
           allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
         end
+
         it 'records app create' do
           set_current_user(admin_user, admin: true)
 
@@ -738,6 +741,7 @@ module VCAP::CloudController
 
       context 'switch from diego to dea' do
         let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [8080, 5222]) }
+
         it 'updates the backend of the app and returns 201 with warning' do
           put "/v2/apps/#{process.app.guid}", '{ "diego": false}'
           expect(last_response).to have_status_code(201)
@@ -758,7 +762,7 @@ module VCAP::CloudController
         end
 
         context 'when not updating ports' do
-          it 'should keep previously specified custom ports' do
+          it 'keeps previously specified custom ports' do
             put "/v2/apps/#{process.app.guid}", '{ "instances":2 }'
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([9090, 5222])
@@ -767,7 +771,7 @@ module VCAP::CloudController
         end
 
         context 'when the user sets ports to an empty array' do
-          it 'should keep previously specified custom ports' do
+          it 'keeps previously specified custom ports' do
             put "/v2/apps/#{process.app.guid}", '{ "ports":[] }'
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([9090, 5222])
@@ -837,7 +841,7 @@ module VCAP::CloudController
               put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
             end.to raise_error RuntimeError, /Error saving/
 
-            expect(app_event_repository).to_not have_received(:record_app_update)
+            expect(app_event_repository).not_to have_received(:record_app_update)
           end
         end
       end
@@ -944,14 +948,14 @@ module VCAP::CloudController
           end
 
           it 'marks the app for re-staging' do
-            expect(process.needs_staging?).to eq(false)
+            expect(process.needs_staging?).to be(false)
 
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
-            expect(process.needs_staging?).to eq(true)
-            expect(process.staged?).to eq(false)
+            expect(process.needs_staging?).to be(true)
+            expect(process.staged?).to be(false)
           end
         end
 
@@ -980,14 +984,14 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make }
 
           it 'does not mark the app for staging' do
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
 
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
           end
         end
@@ -1229,14 +1233,14 @@ module VCAP::CloudController
       end
 
       it 'deletes the app' do
-        expect(process.exists?).to be_truthy
-        expect(parent_app.exists?).to be_truthy
+        expect(process).to exist
+        expect(parent_app).to exist
 
         delete_app
 
         expect(last_response.status).to eq(204)
-        expect(process.exists?).to be_falsey
-        expect(parent_app.exists?).to be_falsey
+        expect(process).not_to exist
+        expect(parent_app).not_to exist
       end
 
       context 'when the app disappears after the find_validate_access_check' do
@@ -1274,14 +1278,14 @@ module VCAP::CloudController
             delete_app
           end
 
-          it 'should raise an error' do
+          it 'raises an error' do
             expect(last_response.status).to eq(400)
             expect(decoded_response['description']).to match(/service_bindings/i)
           end
         end
 
         context 'when recursive=true is set' do
-          it 'should succeed on a recursive delete' do
+          it 'succeeds on a recursive delete' do
             delete "/v2/apps/#{process.app.guid}?recursive=true"
 
             expect(last_response).to have_status_code(204)
@@ -1372,7 +1376,7 @@ module VCAP::CloudController
       context 'GET' do
         it 'returns the route mapping' do
           get "/v2/apps/#{process.app.guid}/route_mappings"
-          expect(last_response.status).to eql(200)
+          expect(last_response.status).to be(200)
           parsed_body = parse(last_response.body)
           expect(parsed_body['resources'].first['entity']['route_guid']).to eq(route.guid)
           expect(parsed_body['resources'].first['entity']['app_guid']).to eq(process.app.guid)
@@ -1382,21 +1386,21 @@ module VCAP::CloudController
       context 'POST' do
         it 'returns 404' do
           post "/v2/apps/#{process.app.guid}/route_mappings", '{}'
-          expect(last_response.status).to eql(404)
+          expect(last_response.status).to be(404)
         end
       end
 
       context 'PUT' do
         it 'returns 404' do
           put "/v2/apps/#{process.app.guid}/route_mappings/#{route_mapping.guid}", '{}'
-          expect(last_response.status).to eql(404)
+          expect(last_response.status).to be(404)
         end
       end
 
       context 'DELETE' do
         it 'returns 404' do
           delete "/v2/apps/#{process.app.guid}/route_mappings/#{route_mapping.guid}"
-          expect(last_response.status).to eql(404)
+          expect(last_response.status).to be(404)
         end
       end
     end
@@ -1420,7 +1424,7 @@ module VCAP::CloudController
 
           it 'returns a JSON payload indicating they do not have permission to read this endpoint' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
           end
         end
@@ -1432,7 +1436,7 @@ module VCAP::CloudController
 
           it 'returns successfully' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
             parsed_body = parse(last_response.body)
             expect(parsed_body).to have_key('staging_env_json')
             expect(parsed_body).to have_key('running_env_json')
@@ -1445,7 +1449,7 @@ module VCAP::CloudController
         context 'environment variable' do
           it 'returns application environment with VCAP_APPLICATION' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['application_env_json']).to have_key('VCAP_APPLICATION')
             expect(decoded_response['application_env_json']).to match({
@@ -1481,7 +1485,7 @@ module VCAP::CloudController
 
           it 'returns system environment with VCAP_SERVICES' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['system_env_json']['VCAP_SERVICES']).not_to eq({})
           end
@@ -1495,7 +1499,7 @@ module VCAP::CloudController
 
             it 'does not include the binding in VCAP_SERVICES' do
               get "/v2/apps/#{process.app.guid}/env"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
 
               expect(decoded_response['system_env_json']['VCAP_SERVICES']).to eq({})
             end
@@ -1511,7 +1515,7 @@ module VCAP::CloudController
 
           it 'returns staging_env_json with those variables' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['staging_env_json'].size).to eq(1)
             expect(decoded_response['staging_env_json']).to have_key('POTATO')
@@ -1528,7 +1532,7 @@ module VCAP::CloudController
 
           it 'returns staging_env_json with those variables' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['running_env_json'].size).to eq(1)
             expect(decoded_response['running_env_json']).to have_key('PIE')
@@ -1543,7 +1547,7 @@ module VCAP::CloudController
 
           it 'returns InsufficientScope' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
           end
         end
@@ -1554,9 +1558,9 @@ module VCAP::CloudController
           set_current_user_as_global_auditor
         end
 
-        it 'should not be able to read environment variables' do
+        it 'is not able to read environment variables' do
           get "/v2/apps/#{process.app.guid}/env"
-          expect(last_response.status).to eql(403)
+          expect(last_response.status).to be(403)
           expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
         end
       end
@@ -1576,7 +1580,7 @@ module VCAP::CloudController
         context 'when the user is a space developer' do
           it 'returns non-redacted environment values' do
             get '/v2/apps?inline-relations-depth=2'
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['resources'].first['entity']['environment_json']).to eq(test_environment_json)
             expect(decoded_response).not_to have_key('system_env_json')
@@ -1590,7 +1594,7 @@ module VCAP::CloudController
 
           it 'returns redacted values' do
             get '/v2/apps?inline-relations-depth=2'
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to be(200)
 
             expect(decoded_response['resources'].first['entity']['environment_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(decoded_response).not_to have_key('system_env_json')
@@ -1607,7 +1611,7 @@ module VCAP::CloudController
 
         it 'returns access denied' do
           get "/v2/apps/#{process.app.guid}/env"
-          expect(last_response.status).to eql(403)
+          expect(last_response.status).to be(403)
         end
       end
 
@@ -1623,7 +1627,7 @@ module VCAP::CloudController
       context 'when the app does not exist' do
         it 'returns not found' do
           get '/v2/apps/nonexistentappguid/env'
-          expect(last_response.status).to eql 404
+          expect(last_response.status).to be 404
         end
       end
 
@@ -1661,7 +1665,7 @@ module VCAP::CloudController
 
           it 'indicates they do not have permission rather than that the feature flag is disabled' do
             get "/v2/apps/#{process.app.guid}/env"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
           end
         end
@@ -1810,18 +1814,18 @@ module VCAP::CloudController
         allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
       end
 
-      it 'should let the user download the droplet' do
+      it 'lets the user download the droplet' do
         get "/v2/apps/#{process.app.guid}/droplet/download", MultiJson.dump({})
         expect(last_response).to be_redirect
         expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
       end
 
-      it 'should return an error for non-existent apps' do
+      it 'returns an error for non-existent apps' do
         get '/v2/apps/bad/droplet/download', MultiJson.dump({})
         expect(last_response.status).to eq(404)
       end
 
-      it 'should return an error for an app without a droplet' do
+      it 'returns an error for an app without a droplet' do
         process.desired_droplet.destroy
 
         get "/v2/apps/#{process.app.guid}/droplet/download", MultiJson.dump({})
@@ -1878,9 +1882,7 @@ module VCAP::CloudController
             expect do
               put "/v2/apps/#{process.app.guid}/droplet/upload", req_body
               expect(last_response.status).to eq 201
-            end.to change {
-              Delayed::Job.count
-            }.by(1)
+            end.to change(Delayed::Job, :count).by(1)
 
             job = Delayed::Job.last
             expect(job.handler).to include('V2::UploadDropletFromUser')
@@ -2257,7 +2259,7 @@ module VCAP::CloudController
         put "/v2/apps/#{process.app.guid}/routes/#{route.guid}", nil
 
         expect(last_response).to have_status_code(201)
-        expect(process.reload.routes).to match_array([route])
+        expect(process.reload.routes).to contain_exactly(route)
 
         route_mapping = RouteMappingModel.last
         expect(route_mapping.app_port).to eq(8080)
@@ -2286,7 +2288,7 @@ module VCAP::CloudController
         end
 
         it 'succeeds' do
-          expect(process.reload.routes).to match_array([route])
+          expect(process.reload.routes).to contain_exactly(route)
 
           put "/v2/apps/#{process.app.guid}/routes/#{route.guid}", nil
           expect(last_response).to have_status_code(201)
@@ -2350,7 +2352,7 @@ module VCAP::CloudController
           put "/v2/apps/#{process.app.guid}/routes/#{route.guid}", nil
 
           expect(last_response).to have_status_code(201)
-          expect(process.reload.routes).to match_array([route])
+          expect(process.reload.routes).to contain_exactly(route)
 
           route_mapping = RouteMappingModel.last
           expect(route_mapping.app_port).to eq(8080)
@@ -2384,7 +2386,7 @@ module VCAP::CloudController
       end
 
       it 'removes the association' do
-        expect(process.reload.routes).to match_array([route])
+        expect(process.reload.routes).to contain_exactly(route)
 
         delete "/v2/apps/#{process.app.guid}/routes/#{route.guid}"
         expect(last_response.status).to eq(204)
@@ -2466,7 +2468,7 @@ module VCAP::CloudController
 
         [[process1, 'guava'], [process2, 'peach'], [process3, 'cilantro']].each do |process, fruit|
           get "/v2/apps/#{process.app.guid}/service_bindings?q=name:#{fruit}"
-          expect(last_response.status).to eql(200)
+          expect(last_response.status).to be(200)
           service_bindings = decoded_response['resources']
           expect(service_bindings.size).to eq(1)
           entity = service_bindings[0]['entity']
@@ -2525,7 +2527,7 @@ module VCAP::CloudController
       end
 
       it 'removes the association' do
-        expect(process.reload.service_bindings).to match_array([service_binding])
+        expect(process.reload.service_bindings).to contain_exactly(service_binding)
 
         delete "/v2/apps/#{process.app.guid}/service_bindings/#{service_binding.guid}"
         expect(last_response.status).to eq(204)
@@ -2584,8 +2586,8 @@ module VCAP::CloudController
         it 'succeeds and present data reading permissions' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(true)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(true)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 
@@ -2598,8 +2600,8 @@ module VCAP::CloudController
         it 'succeeds and present data reading permissions' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(false)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(false)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 
@@ -2642,8 +2644,8 @@ module VCAP::CloudController
         it 'succeeds and present data reading permissions' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(false)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(false)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 
@@ -2656,8 +2658,8 @@ module VCAP::CloudController
         it 'succeeds and present data reading permissions' do
           get "/v2/apps/#{process.app.guid}/permissions"
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(false)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(false)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 
@@ -2670,8 +2672,8 @@ module VCAP::CloudController
           get "/v2/apps/#{process.app.guid}/permissions"
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(true)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(true)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 
@@ -2684,8 +2686,8 @@ module VCAP::CloudController
           get "/v2/apps/#{process.app.guid}/permissions"
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['read_sensitive_data']).to eq(false)
-          expect(parsed_response['read_basic_data']).to eq(true)
+          expect(parsed_response['read_sensitive_data']).to be(false)
+          expect(parsed_response['read_basic_data']).to be(true)
         end
       end
 

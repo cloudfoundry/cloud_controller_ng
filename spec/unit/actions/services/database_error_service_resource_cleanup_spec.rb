@@ -1,9 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
+  subject { VCAP::CloudController::DatabaseErrorServiceResourceCleanup.new(logger) }
+
   let(:logger) { double }
   let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-  subject { VCAP::CloudController::DatabaseErrorServiceResourceCleanup.new(logger) }
 
   before do
     allow(logger).to receive(:info)
@@ -59,8 +60,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     let(:service_binding_guid) { '5' }
 
     before do
-      allow(service_binding).to receive(:guid).and_return(service_binding_guid)
-      allow(service_binding).to receive(:service_instance).and_return(service_instance)
+      allow(service_binding).to receive_messages(guid: service_binding_guid, service_instance: service_instance)
       allow(client).to receive(:unbind)
 
       allow(VCAP::Services::ServiceClientProvider).to receive(:provide).
@@ -104,8 +104,7 @@ RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
     let(:service_key_guid) { '5' }
 
     before do
-      allow(service_key).to receive(:guid).and_return(service_key_guid)
-      allow(service_key).to receive(:service_instance).and_return(service_instance)
+      allow(service_key).to receive_messages(guid: service_key_guid, service_instance: service_instance)
       allow(client).to receive(:unbind)
 
       allow(VCAP::Services::ServiceClientProvider).to receive(:provide).

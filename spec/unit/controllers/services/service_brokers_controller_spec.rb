@@ -401,7 +401,7 @@ module VCAP::CloudController
                 TestConfig.config[:route_services_enabled] = true
               end
 
-              it 'should succeed without warnings' do
+              it 'succeeds without warnings' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -414,7 +414,8 @@ module VCAP::CloudController
               before do
                 TestConfig.config[:route_services_enabled] = false
               end
-              it 'should succeed with a warning' do
+
+              it 'succeeds with a warning' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -451,7 +452,8 @@ module VCAP::CloudController
                   catalog_json['services'][0]['requires'] = ['route_forwarding']
                   stub_catalog
                 end
-                it 'should succeed with two warnings' do
+
+                it 'succeeds with two warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
@@ -464,7 +466,8 @@ module VCAP::CloudController
                 before do
                   stub_catalog
                 end
-                it 'should succeed with one warnings' do
+
+                it 'succeeds with one warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
@@ -488,7 +491,7 @@ module VCAP::CloudController
                 TestConfig.config[:volume_services_enabled] = true
               end
 
-              it 'should succeed without warnings' do
+              it 'succeeds without warnings' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -501,7 +504,8 @@ module VCAP::CloudController
               before do
                 TestConfig.config[:volume_services_enabled] = false
               end
-              it 'should succeed with a warning' do
+
+              it 'succeeds with a warning' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -538,7 +542,8 @@ module VCAP::CloudController
                   catalog_json['services'][0]['requires'] = ['volume_mount']
                   stub_catalog
                 end
-                it 'should succeed with two warnings' do
+
+                it 'succeeds with two warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
@@ -551,7 +556,8 @@ module VCAP::CloudController
                 before do
                   stub_catalog
                 end
-                it 'should succeed with one warnings' do
+
+                it 'succeeds with one warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
@@ -763,6 +769,7 @@ module VCAP::CloudController
 
           context 'when the broker name is taken' do
             let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
+
             before { body_hash[:name] = another_broker.name }
 
             it 'returns an error' do

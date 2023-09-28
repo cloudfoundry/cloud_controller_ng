@@ -29,7 +29,7 @@ module VCAP::CloudController
       it 'prepares the sub-processes of the app' do
         AppStop.stop(app:, user_audit_info:)
         app.processes.each do |process|
-          expect(process.started?).to eq(false)
+          expect(process.started?).to be(false)
           expect(process.state).to eq('STOPPED')
         end
       end

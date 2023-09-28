@@ -115,7 +115,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:type]).to eq(process.type)
         expect(result[0][:index]).to eq(0)
         expect(result[0][:state]).to eq('RUNNING')
-        expect(result[0][:details]).to eq(nil)
+        expect(result[0][:details]).to be_nil
         expect(result[0][:isolation_segment]).to eq('hecka-compliant')
         expect(result[0][:host]).to eq('myhost')
         expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
@@ -135,7 +135,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:index]).to eq(1)
         expect(result[1][:state]).to eq('CRASHED')
         expect(result[1][:details]).to eq('some-details')
-        expect(result[1][:isolation_segment]).to eq(nil)
+        expect(result[1][:isolation_segment]).to be_nil
         expect(result[1][:host]).to eq('toast')
         expect(result[1][:instance_ports]).to eq(instance_ports_2)
         expect(result[1][:uptime]).to eq(42)
@@ -194,7 +194,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:type]).to eq(process.type)
           expect(result[0][:index]).to eq(0)
           expect(result[0][:state]).to eq('RUNNING')
-          expect(result[0][:details]).to eq(nil)
+          expect(result[0][:details]).to be_nil
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
           expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
@@ -237,7 +237,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:type]).to eq(process.type)
           expect(result[0][:index]).to eq(0)
           expect(result[0][:state]).to eq('RUNNING')
-          expect(result[0][:details]).to eq(nil)
+          expect(result[0][:details]).to be_nil
           expect(result[0][:isolation_segment]).to eq('hecka-compliant')
           expect(result[0][:host]).to eq('myhost')
           expect(result[0][:instance_internal_ip]).to eq('5.6.7.8')
@@ -254,6 +254,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       let(:stats_for_process) { {} }
+
       it 'maps the content of #present_stats_hash to :resources' do
         allow(presenter).to receive(:present_stats_hash).and_return({ a: 1, b: 2 })
         expect(presenter.to_hash).to eq(resources: { a: 1, b: 2 })

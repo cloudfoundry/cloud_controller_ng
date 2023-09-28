@@ -42,7 +42,7 @@ module VCAP::CloudController
       it 'sleeps while it waits for the process to stop' do
         getpgid_returns = [1, 1, nil, nil]
         allow(Process).to receive(:getpgid).with(pid) { getpgid_returns.shift || raise(Errno::ESRCH) }
-        expect(drain).to receive(:sleep).exactly(2).times
+        expect(drain).to receive(:sleep).twice
 
         drain.shutdown_nginx(pid_path)
       end

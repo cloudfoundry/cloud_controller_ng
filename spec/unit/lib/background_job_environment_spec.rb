@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe BackgroundJobEnvironment do
+  subject(:background_job_environment) { BackgroundJobEnvironment.new(config) }
+
   before do
     allow(Steno).to receive(:init)
 
@@ -8,9 +10,8 @@ RSpec.describe BackgroundJobEnvironment do
       logging: { level: 'fatal' }
     )
   end
-  let(:config) { VCAP::CloudController::Config.config }
 
-  subject(:background_job_environment) { BackgroundJobEnvironment.new(config) }
+  let(:config) { VCAP::CloudController::Config.config }
 
   describe '#setup_environment' do
     before do

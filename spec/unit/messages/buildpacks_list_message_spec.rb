@@ -30,11 +30,11 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = BuildpacksListMessage.from_params(params)
 
-        expect(message.requested?(:stacks)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
+        expect(message).to be_requested(:stacks)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:label_selector)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
       end
     end
 
@@ -82,13 +82,13 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates names is an array' do
         message = BuildpacksListMessage.from_params names: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates stacks is an array' do
         message = BuildpacksListMessage.from_params stacks: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:stacks].length).to eq 1
       end
 

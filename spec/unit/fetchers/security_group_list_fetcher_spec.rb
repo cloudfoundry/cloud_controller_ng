@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
     end
 
-    context '#fetch_all' do
+    describe '#fetch_all' do
       let(:security_groups) { fetcher.fetch_all(message) }
 
       include_examples 'eager loading'
@@ -54,6 +54,7 @@ module VCAP::CloudController
 
       context 'when we filter on guid' do
         let(:filters) { { guids: [security_group_1.guid] } }
+
         it 'returns only the security groups with the specified guids' do
           expect(security_groups.all).to contain_exactly(security_group_1)
         end
@@ -61,6 +62,7 @@ module VCAP::CloudController
 
       context 'when we filter on name' do
         let(:filters) { { names: [security_group_1.name] } }
+
         it 'returns only the security groups with the specified names' do
           expect(security_groups.all).to contain_exactly(security_group_1)
         end

@@ -15,8 +15,8 @@ module VCAP::CloudController
         it 'deletes the process record' do
           expect do
             process_delete.delete(process)
-          end.to change { ProcessModel.count }.by(-1)
-          expect(process.exists?).to be_falsey
+          end.to change(ProcessModel, :count).by(-1)
+          expect(process).not_to exist
         end
 
         it 'creates an audit.app.process.delete event' do
@@ -31,18 +31,18 @@ module VCAP::CloudController
           label = ProcessLabelModel.make(resource_guid: process.guid)
           expect do
             process_delete.delete([process])
-          end.to change { ProcessLabelModel.count }.by(-1)
-          expect(label.exists?).to be_falsey
-          expect(process.exists?).to be_falsey
+          end.to change(ProcessLabelModel, :count).by(-1)
+          expect(label).not_to exist
+          expect(process).not_to exist
         end
 
         it 'deletes associated annotations' do
           annotation = ProcessAnnotationModel.make(resource_guid: process.guid)
           expect do
             process_delete.delete([process])
-          end.to change { ProcessAnnotationModel.count }.by(-1)
-          expect(annotation.exists?).to be_falsey
-          expect(process.exists?).to be_falsey
+          end.to change(ProcessAnnotationModel, :count).by(-1)
+          expect(annotation).not_to exist
+          expect(process).not_to exist
         end
       end
 
@@ -53,9 +53,9 @@ module VCAP::CloudController
         it 'deletes the process record' do
           expect do
             process_delete.delete([process1, process2])
-          end.to change { ProcessModel.count }.by(-2)
-          expect(process1.exists?).to be_falsey
-          expect(process2.exists?).to be_falsey
+          end.to change(ProcessModel, :count).by(-2)
+          expect(process1).not_to exist
+          expect(process2).not_to exist
         end
       end
     end

@@ -4,6 +4,7 @@ require_relative 'service_operation_shared'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::RouteBinding, type: :model do
     let(:binding) { RouteBinding.new }
+
     it { is_expected.to have_timestamp_columns }
 
     describe '#new' do
@@ -90,7 +91,7 @@ module VCAP::CloudController
       end
 
       context 'when saving the binding operation fails' do
-        it 'should rollback the binding' do
+        it 'rollbacks the binding' do
           invalid_new_operation = {
             state: 'will fail',
             broker_provided_operation: 'too long' * 10_000
@@ -107,7 +108,7 @@ module VCAP::CloudController
 
           expect(route_binding.last_operation.state).to eq 'in progress'
           expect(route_binding.last_operation.type).to eq 'delete'
-          expect(route_binding.last_operation.description).to eq nil
+          expect(route_binding.last_operation.description).to be_nil
           expect(RouteBinding.count).to eq(1)
           expect(RouteBindingOperation.count).to eq(1)
         end

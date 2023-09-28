@@ -18,12 +18,14 @@ module VCAP::CloudController
 
       describe '.for_task' do
         it 'returns task environment variables' do
-          expect(TaskEnvironmentVariableCollector.for_task(task)).to match_array([
+          task_collector = TaskEnvironmentVariableCollector.for_task(task)
+          expected = [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: '{"credhuburi":"credhub.place:port"}')
-          ])
+          ]
+          expect(task_collector).to match_array(expected)
           expect(VCAP::CloudController::Diego::TaskEnvironment).to have_received(:new).with(task.app, task, task.app.space, environment_json)
         end
       end

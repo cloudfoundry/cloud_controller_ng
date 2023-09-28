@@ -150,7 +150,7 @@ module VCAP::CloudController
 
           subject.run!
 
-          expect(TelemetryLogger).to_not have_received(:init)
+          expect(TelemetryLogger).not_to have_received(:init)
         end
       end
 
@@ -207,13 +207,13 @@ module VCAP::CloudController
             describe flag do
               let(:argv_options) { [flag, config_file.path] }
 
-              it "should set ENV['NEW_RELIC_ENV'] to production" do
+              it "sets ENV['NEW_RELIC_ENV'] to production" do
                 ENV.delete('NEW_RELIC_ENV')
                 expect { subject }.to change { ENV.fetch('NEW_RELIC_ENV', nil) }.from(nil).to('production')
               end
 
-              it 'should set the configuration file' do
-                expect(subject.secrets_file).to eq(nil)
+              it 'sets the configuration file' do
+                expect(subject.secrets_file).to be_nil
                 expect(subject.config_file).to eq(config_file.path)
               end
             end

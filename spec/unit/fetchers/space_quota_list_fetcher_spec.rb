@@ -26,7 +26,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'fetches all the quotas' do
-          expect(subject).to match_array([quota1, quota2, quota3])
+          expect(subject).to contain_exactly(quota1, quota2, quota3)
         end
       end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
         let(:filters) { { 'names' => 'quota1-name,quota2-name' } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota1, quota2])
+          expect(subject).to contain_exactly(quota1, quota2)
         end
       end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
         let(:filters) { { 'guids' => "#{quota2.guid},#{quota3.guid}" } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota2, quota3])
+          expect(subject).to contain_exactly(quota2, quota3)
         end
       end
 
@@ -50,14 +50,14 @@ module VCAP::CloudController
         let(:filters) { { 'organization_guids' => org1.guid.to_s } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota1, quota2])
+          expect(subject).to contain_exactly(quota1, quota2)
         end
 
         context 'and there are no readable space quotas' do
           let(:readable_space_quota_guids) { [] }
 
           it 'returns an empty list of quotas' do
-            expect(subject).to match_array([])
+            expect(subject).to be_empty
           end
         end
       end
@@ -78,7 +78,7 @@ module VCAP::CloudController
           let(:filters) { { 'space_guids' => "#{space1.guid},#{space2.guid}" } }
 
           it 'does not include the quotas from spaces in orgs that it cannot see' do
-            expect(subject).to match_array([quota2])
+            expect(subject).to contain_exactly(quota2)
           end
         end
       end

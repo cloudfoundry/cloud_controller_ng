@@ -44,7 +44,7 @@ module VCAP::CloudController
         }
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid
-        expect(message.errors_on(:metadata)).to match_array(["'annotations' is not an object", "'labels' is not an object"])
+        expect(message.errors_on(:metadata)).to contain_exactly("'annotations' is not an object", "'labels' is not an object")
       end
 
       it 'validates bad image references' do
@@ -53,7 +53,7 @@ module VCAP::CloudController
         }
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid
-        expect(message.errors_on(:image)).to match_array(['must be a string'])
+        expect(message.errors_on(:image)).to contain_exactly('must be a string')
       end
     end
   end

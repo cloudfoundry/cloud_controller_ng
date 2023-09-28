@@ -61,6 +61,7 @@ module VCAP::CloudController
 
         context 'and the app is new' do
           let(:process) { ProcessModel.new }
+
           before do
             process.instances = 1
             process.memory    = 100
@@ -84,6 +85,7 @@ module VCAP::CloudController
     describe '#currently_used_memory' do
       context 'when the app is new' do
         let(:process) { ProcessModel.new }
+
         it 'returns 0' do
           expect(subject.currently_used_memory).to eq(0)
         end

@@ -11,7 +11,7 @@ module VCAP::CloudController
       it 'deletes the security group record' do
         expect do
           security_group_delete.delete([security_group])
-        end.to change { SecurityGroup.count }.by(-1)
+        end.to change(SecurityGroup, :count).by(-1)
         expect { security_group.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 

@@ -26,10 +26,10 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = StacksListMessage.from_params(params)
 
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:default)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:default)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
       end
     end
 
@@ -75,13 +75,13 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates names is an array' do
         message = StacksListMessage.from_params names: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates that default is boolean-like' do
         message = StacksListMessage.from_params({ default: 'maybe' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:default].length).to eq 1
       end
 

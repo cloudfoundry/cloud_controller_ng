@@ -18,7 +18,7 @@ module VCAP::CloudController
     describe '#fetch' do
       it 'includes all the orgs with the provided guids' do
         results = fetcher.fetch(message: message, guids: some_org_guids).all
-        expect(results).to match_array([org1, org3, org4])
+        expect(results).to contain_exactly(org1, org3, org4)
       end
 
       describe 'eager loading associated resources' do
@@ -39,7 +39,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch(message: message, guids: some_org_guids).all
-            expect(results).to match_array([org1, org4])
+            expect(results).to contain_exactly(org1, org4)
           end
 
           context 'respects any provided guids' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
               results = fetcher.fetch(message: message, guids: some_org_guids).all
-              expect(results).to match_array([org1])
+              expect(results).to contain_exactly(org1)
             end
           end
         end
@@ -58,7 +58,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch(message: message, guids: all_org_guids).all
-            expect(results).to match_array([org1, org3, org4])
+            expect(results).to contain_exactly(org1, org3, org4)
           end
 
           context 'respects any provided guids' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
               results = fetcher.fetch(message: message, guids: some_org_guids).all
-              expect(results).to match_array([org1])
+              expect(results).to contain_exactly(org1)
             end
           end
         end
@@ -81,9 +81,7 @@ module VCAP::CloudController
         all_orgs = fetcher.fetch_all(message:)
         expect(all_orgs.count).to eq(6)
 
-        expect(all_orgs).to match_array([
-          org1, org2, org3, org4, org5, system_org
-        ])
+        expect(all_orgs).to contain_exactly(org1, org2, org3, org4, org5, system_org)
       end
 
       describe 'eager loading associated resources' do
@@ -92,9 +90,7 @@ module VCAP::CloudController
         it 'eager loads the specified resources for all orgs' do
           results = fetcher.fetch_all(message: message, eager_loaded_associations: %i[quota_definition labels]).all
 
-          expect(results).to match_array([
-            org1, org2, org3, org4, org5, system_org
-          ])
+          expect(results).to contain_exactly(org1, org2, org3, org4, org5, system_org)
 
           expect(results.first.associations.key?(:quota_definition)).to be true
           expect(results.first.associations.key?(:labels)).to be true
@@ -108,7 +104,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message:).all
-            expect(results).to match_array([org1, org4, org5])
+            expect(results).to contain_exactly(org1, org4, org5)
           end
         end
 
@@ -117,7 +113,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message:).all
-            expect(results).to match_array([org1, org3, org4])
+            expect(results).to contain_exactly(org1, org3, org4)
           end
         end
 
@@ -153,7 +149,7 @@ module VCAP::CloudController
 
       it 'fetches the orgs that the user can see associated with the iso seg' do
         _, results = fetcher.fetch_for_isolation_segment(message: message, guids: readable_org_guids)
-        expect(results.all).to match_array([org1, org2])
+        expect(results.all).to contain_exactly(org1, org2)
       end
 
       describe 'eager loading associated resources' do
@@ -161,7 +157,7 @@ module VCAP::CloudController
           _, org_ds = fetcher.fetch_for_isolation_segment(message: message, guids: readable_org_guids, eager_loaded_associations: %i[quota_definition labels])
           results = org_ds.all
 
-          expect(results).to match_array([org1, org2])
+          expect(results).to contain_exactly(org1, org2)
 
           expect(results.first.associations.key?(:quota_definition)).to be true
           expect(results.first.associations.key?(:labels)).to be true
@@ -186,7 +182,7 @@ module VCAP::CloudController
 
       it 'fetches all the orgs associated with the iso seg' do
         _, results = fetcher.fetch_all_for_isolation_segment(message:)
-        expect(results.all).to match_array([org1, org2, org5])
+        expect(results.all).to contain_exactly(org1, org2, org5)
       end
 
       describe 'eager loading associated resources' do
@@ -194,7 +190,7 @@ module VCAP::CloudController
           _, org_ds = fetcher.fetch_all_for_isolation_segment(message: message, eager_loaded_associations: %i[quota_definition labels])
           results = org_ds.all
 
-          expect(results).to match_array([org1, org2, org5])
+          expect(results).to contain_exactly(org1, org2, org5)
 
           expect(results.first.associations.key?(:quota_definition)).to be true
           expect(results.first.associations.key?(:labels)).to be true

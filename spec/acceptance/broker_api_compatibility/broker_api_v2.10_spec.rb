@@ -52,7 +52,7 @@ RSpec.describe 'Service Broker API integration' do
 
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['volume_mounts']).to match_array([{ 'device_type' => 'shared', 'mode' => 'rw', 'container_dir' => '/var/vcap/data/foo' }])
+          expect(parsed_body['entity']['volume_mounts']).to contain_exactly({ 'device_type' => 'shared', 'mode' => 'rw', 'container_dir' => '/var/vcap/data/foo' })
         end
       end
     end

@@ -168,7 +168,8 @@ module VCAP::Services::ServiceBrokers::V2
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError => e
       if service_binding.is_a? VCAP::CloudController::ServiceBinding
-        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name,
+                                                                 service_binding.service_instance.name)
       end
 
       raise e

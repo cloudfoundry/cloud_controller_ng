@@ -2,8 +2,9 @@ require 'spec_helper'
 
 RSpec.describe UserPresenter do
   describe '#to_hash' do
-    let(:user) { VCAP::CloudController::User.make(admin: true) }
     subject { UserPresenter.new(user) }
+
+    let(:user) { VCAP::CloudController::User.make(admin: true) }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

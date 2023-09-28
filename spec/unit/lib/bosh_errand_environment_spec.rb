@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe BoshErrandEnvironment do
+  subject(:bosh_errand_environment) { BoshErrandEnvironment.new(config) }
+
   let(:stdout_sink_enabled) { true }
   let(:config) do
     VCAP::CloudController::Config.new(
@@ -11,8 +13,6 @@ RSpec.describe BoshErrandEnvironment do
       context: :rotate_database_key
     )
   end
-
-  subject(:bosh_errand_environment) { BoshErrandEnvironment.new(config) }
 
   describe '#initialize' do
     it 'configures steno logger with stdout sink' do

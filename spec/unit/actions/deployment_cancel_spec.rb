@@ -37,7 +37,7 @@ module VCAP::CloudController
         let(:status_reason) { DeploymentModel::DEPLOYING_STATUS_REASON }
 
         it 'sets the deployments status to CANCELING' do
-          expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
+          expect(deployment.state).not_to eq(DeploymentModel::CANCELING_STATE)
 
           DeploymentCancel.cancel(deployment:, user_audit_info:)
           deployment.reload

@@ -42,7 +42,7 @@ module VCAP::CloudController
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
             request = { 'big' => 'data' }
             event   = ServiceBindingEventRepository.record_start_create(service_binding, user_audit_info, request, manifest_triggered: true)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -104,7 +104,7 @@ module VCAP::CloudController
             request = { 'big' => 'data' }
             event   = ServiceBindingEventRepository.record_create(service_binding, user_audit_info, request, manifest_triggered: true)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 

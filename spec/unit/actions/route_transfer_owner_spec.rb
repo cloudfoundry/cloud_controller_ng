@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       context 'target space is already the owning space' do
-        it 'it does nothing and succeeds' do
+        it 'does nothing and succeeds' do
           expect { RouteTransferOwner.transfer(route, original_owning_space, user_audit_info) }.not_to raise_error
           expect(route.shared_spaces.map(&:name)).not_to include original_owning_space.name
           expect(route.space.name).to eq original_owning_space.name

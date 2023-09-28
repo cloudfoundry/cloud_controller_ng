@@ -34,6 +34,7 @@ module VCAP::CloudController
           }
         )
       end
+
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with('service_binding').and_return(binding_event_repo)
         allow(binding_event_repo).to receive(:record_create)
@@ -45,7 +46,7 @@ module VCAP::CloudController
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app:, message:)
 
-            expect(binding).to_not be_nil
+            expect(binding).not_to be_nil
             expect(binding).to eq(ServiceBinding.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.app).to eq(app)
@@ -86,7 +87,7 @@ module VCAP::CloudController
                 b = action.precursor(service_instance, app:, message:)
 
                 expect(b.guid).not_to eq(binding.guid)
-                expect(b.create_in_progress?).to be_truthy
+                expect(b).to be_create_in_progress
                 expect { binding.reload }.to raise_error Sequel::NoExistingObject
               end
             end
@@ -263,13 +264,14 @@ module VCAP::CloudController
               it_behaves_like 'the credential binding precursor'
             end
           end
+
           context 'when successful' do
             it_behaves_like 'the credential binding precursor'
           end
         end
       end
 
-      context '#bind' do
+      describe '#bind' do
         let(:precursor) { action.precursor(service_instance, app:, message:) }
         let(:details) do
           {
@@ -313,7 +315,7 @@ module VCAP::CloudController
               let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
               let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_async_response) }
 
-              it 'should log audit start_create' do
+              it 'logs audit start_create' do
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,

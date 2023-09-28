@@ -302,7 +302,7 @@ module VCAP::CloudController
                         it 'errors without materializing sidecars' do
                           expect do
                             subject.staging_complete(success_response, true)
-                          end.not_to(change { SidecarModel.count })
+                          end.not_to(change(SidecarModel, :count))
 
                           expect(build.state).to eq(BuildModel::FAILED_STATE)
                           expect(build.error_id).to eq('StagingError')
@@ -410,8 +410,8 @@ module VCAP::CloudController
               end
 
               it 'does not attempt to start the app' do
-                expect(runner).to_not receive(:start)
-                expect(logger).to_not receive(:error).with(
+                expect(runner).not_to receive(:start)
+                expect(logger).not_to receive(:error).with(
                   'diego.staging.buildpack.starting-process-failed', anything
                 )
 
@@ -529,7 +529,7 @@ module VCAP::CloudController
 
           describe 'failure case' do
             context 'when the staging fails' do
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 subject.staging_complete(fail_response)
                 build.reload
 
@@ -538,7 +538,7 @@ module VCAP::CloudController
                 expect(build.error_description).to eq('Found no compatible cell')
               end
 
-              it 'should not create a droplet' do
+              it 'does not create a droplet' do
                 subject.staging_complete(fail_response)
                 expect(build.reload.droplet).to be_nil
               end
@@ -551,7 +551,7 @@ module VCAP::CloudController
                 expect(build.error_description).to eq('Found no compatible cell')
               end
 
-              it 'should emit a loggregator error' do
+              it 'emits a loggregator error' do
                 expect(VCAP::AppLogEmitter).to receive(:emit_error).with(build.app_guid, /Found no compatible cell/)
                 subject.staging_complete(fail_response)
               end
@@ -592,7 +592,7 @@ module VCAP::CloudController
                 expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
 
@@ -613,7 +613,7 @@ module VCAP::CloudController
             end
 
             context 'with a malformed error message' do
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 expect do
                   subject.staging_complete(malformed_fail_response)
                 end.to raise_error(CloudController::Errors::ApiError)

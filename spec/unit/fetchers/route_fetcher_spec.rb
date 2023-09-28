@@ -25,6 +25,7 @@ module VCAP::CloudController
 
       describe 'permissions' do
         let(:routes_filter) { {} }
+
         it 'fetches all generated routes for omniscient users' do
           expect(RouteFetcher.fetch(message, omniscient: true).all).to contain_exactly(route1, route2, route3)
         end
@@ -171,8 +172,7 @@ module VCAP::CloudController
           before do
             TestConfig.override(kubernetes: {})
             allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-            allow(routing_api_client).to receive(:enabled?).and_return(true)
-            allow(routing_api_client).to receive(:router_group).and_return(router_group)
+            allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
           end
 
           context 'when there is a matching route' do
@@ -214,6 +214,7 @@ module VCAP::CloudController
             let(:message) do
               RoutesListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
             end
+
             it 'returns only the route whose label matches' do
               expect(results.length).to eq(2)
               expect(results).to contain_exactly(route1, route3)

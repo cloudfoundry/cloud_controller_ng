@@ -169,6 +169,7 @@ module VCAP::CloudController
           )
         end
       end
+
       context 'when the route is not associated with an istio domain' do
         let(:route) { Route.make }
 

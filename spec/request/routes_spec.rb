@@ -54,32 +54,29 @@ RSpec.describe 'Routes Request' do
         url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: match_array([
-          {
-            guid: route_in_org_dest_web.guid,
-            app: {
-              guid: app_model.guid,
-              process: {
-                type: route_in_org_dest_web.process_type
-              }
-            },
-            weight: route_in_org_dest_web.weight,
-            port: route_in_org_dest_web.presented_port,
-            protocol: 'http1'
-          },
-          {
-            guid: route_in_org_dest_worker.guid,
-            app: {
-              guid: app_model.guid,
-              process: {
-                type: route_in_org_dest_worker.process_type
-              }
-            },
-            weight: route_in_org_dest_worker.weight,
-            port: route_in_org_dest_worker.presented_port,
-            protocol: 'http1'
-          }
-        ]),
+        destinations: contain_exactly({
+                                        guid: route_in_org_dest_web.guid,
+                                        app: {
+                                          guid: app_model.guid,
+                                          process: {
+                                            type: route_in_org_dest_web.process_type
+                                          }
+                                        },
+                                        weight: route_in_org_dest_web.weight,
+                                        port: route_in_org_dest_web.presented_port,
+                                        protocol: 'http1'
+                                      }, {
+                                        guid: route_in_org_dest_worker.guid,
+                                        app: {
+                                          guid: app_model.guid,
+                                          process: {
+                                            type: route_in_org_dest_worker.process_type
+                                          }
+                                        },
+                                        weight: route_in_org_dest_worker.weight,
+                                        port: route_in_org_dest_worker.presented_port,
+                                        protocol: 'http1'
+                                      }),
         relationships: {
           space: {
             data: { guid: route_in_org.space.guid }
@@ -588,8 +585,7 @@ RSpec.describe 'Routes Request' do
 
         before do
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
         context 'when there are multiple TCP routes with different ports' do
@@ -1079,6 +1075,7 @@ RSpec.describe 'Routes Request' do
   describe 'POST /v3/routes' do
     context 'when creating a route in a tcp domain' do
       let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'some-router-group', router_group_type: 'tcp') }
+
       before do
         token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
         stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
@@ -1551,8 +1548,7 @@ RSpec.describe 'Routes Request' do
             external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
         let(:params) do
@@ -2288,6 +2284,7 @@ RSpec.describe 'Routes Request' do
       before do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
       end
+
       context 'when UAA is unavailable' do
         before do
           allow(routing_api_client).to receive(:router_group).and_raise VCAP::CloudController::RoutingApi::UaaUnavailable
@@ -2331,9 +2328,9 @@ RSpec.describe 'Routes Request' do
 
       context 'when the router group is unavailable' do
         let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'not a guid', name: 'my.domain') }
+
         before do
-          allow(routing_api_client).to receive(:enabled?).and_return true
-          allow(routing_api_client).to receive(:router_group).and_return nil
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
         end
 
         it 'returns a 503 with a helpful error message' do
@@ -2796,13 +2793,13 @@ RSpec.describe 'Routes Request' do
       expect(last_response.status).to eq(200)
       route.reload
       expect(route.shared_spaces).to include(target_space_1, target_space_2)
-      expect(route.shared?).to be_truthy
+      expect(route).to be_shared
     end
 
     it 'reports that the route is not shared when it has not been shared' do
       route.reload
       expect(route.shared_spaces).to be_empty
-      expect(route.shared?).to be_falsey
+      expect(route).not_to be_shared
     end
 
     describe 'when route_sharing flag is disabled' do
@@ -2849,7 +2846,7 @@ RSpec.describe 'Routes Request' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -2874,7 +2871,7 @@ RSpec.describe 'Routes Request' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -2943,7 +2940,7 @@ RSpec.describe 'Routes Request' do
           )
 
           route.reload
-          expect(route.shared?).to be_falsey
+          expect(route).not_to be_shared
         end
       end
 
@@ -2972,7 +2969,7 @@ RSpec.describe 'Routes Request' do
           )
 
           route.reload
-          expect(route.shared?).to be_falsey
+          expect(route).not_to be_shared
         end
       end
     end
@@ -3138,6 +3135,7 @@ RSpec.describe 'Routes Request' do
 
     context 'attempting to unshare from space that owns us' do
       let(:space_to_unshare) { space }
+
       it 'responds with 422 and does not unshare the roue' do
         api_call.call(space_dev_headers)
 
@@ -3407,6 +3405,7 @@ RSpec.describe 'Routes Request' do
           )
         end
       end
+
       context 'user does not have write access to the target space' do
         let(:no_write_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
         let(:request_body) do
@@ -3459,7 +3458,7 @@ RSpec.describe 'Routes Request' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -3473,6 +3472,7 @@ RSpec.describe 'Routes Request' do
           )
         end
       end
+
       context 'when data is not a hash' do
         let(:request_body) do
           {
@@ -3480,7 +3480,7 @@ RSpec.describe 'Routes Request' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -3538,20 +3538,18 @@ RSpec.describe 'Routes Request' do
         url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: match_array([
-          {
-            guid: route_mapping1.guid,
-            app: {
-              guid: app_model.guid,
-              process: {
-                type: route_mapping1.process_type
-              }
-            },
-            weight: route_mapping1.weight,
-            port: route_mapping1.presented_port,
-            protocol: 'http1'
-          }
-        ]),
+        destinations: contain_exactly({
+                                        guid: route_mapping1.guid,
+                                        app: {
+                                          guid: app_model.guid,
+                                          process: {
+                                            type: route_mapping1.process_type
+                                          }
+                                        },
+                                        weight: route_mapping1.weight,
+                                        port: route_mapping1.presented_port,
+                                        protocol: 'http1'
+                                      }),
         relationships: {
           space: {
             data: { guid: route1.space.guid }
@@ -3583,20 +3581,18 @@ RSpec.describe 'Routes Request' do
         url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
         created_at: iso8601,
         updated_at: iso8601,
-        destinations: match_array([
-          {
-            guid: route_mapping2.guid,
-            app: {
-              guid: app_model.guid,
-              process: {
-                type: route_mapping2.process_type
-              }
-            },
-            weight: route_mapping2.weight,
-            port: route_mapping2.presented_port,
-            protocol: 'http1'
-          }
-        ]),
+        destinations: contain_exactly({
+                                        guid: route_mapping2.guid,
+                                        app: {
+                                          guid: app_model.guid,
+                                          process: {
+                                            type: route_mapping2.process_type
+                                          }
+                                        },
+                                        weight: route_mapping2.weight,
+                                        port: route_mapping2.presented_port,
+                                        protocol: 'http1'
+                                      }),
         relationships: {
           space: {
             data: { guid: route2.space.guid }
@@ -3641,8 +3637,7 @@ RSpec.describe 'Routes Request' do
 
       before do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-        allow(routing_api_client).to receive(:enabled?).and_return(true)
-        allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
       end
 
       context 'when there are multiple TCP routes with different ports' do

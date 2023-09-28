@@ -63,8 +63,8 @@ module VCAP::CloudController
 
           it 'deletes the buildpacks when the lifecycle is deleted' do
             lifecycle_data_guid = lifecycle_data.guid
-            expect(lifecycle_data_guid).to_not be_nil
-            expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).to_not be_empty
+            expect(lifecycle_data_guid).not_to be_nil
+            expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).not_to be_empty
 
             lifecycle_data.destroy
             expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).to be_empty
@@ -124,20 +124,14 @@ module VCAP::CloudController
               lifecycle_data.save
               new_buildpacks = lifecycle_data.reload.buildpacks
               expect(new_buildpacks.size).to eq(lifecycle_buildpacks.size)
-              expect(new_buildpacks).to match_array(['pleasant-valley-buildpack', 'stepping-stone-buildpack', 'git://my-buildpacks.tv/fred/barney.git'])
-              expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.
-                      map { |d| { version: d[:version], name: d[:buildpack_name], buildpack_name: d.name } }).
-                to match_array([
-                  { version: '3.1',
-                    name: 'valley',
-                    buildpack_name: 'pleasant-valley-buildpack' },
-                  { version: '95',
-                    name: 'gilooley',
-                    buildpack_name: 'stepping-stone-buildpack' },
-                  { version: 'ME',
-                    name: 'hilltop',
-                    buildpack_name: 'git://my-buildpacks.tv/fred/barney.git' }
-                ])
+              expect(new_buildpacks).to contain_exactly('pleasant-valley-buildpack', 'stepping-stone-buildpack', 'git://my-buildpacks.tv/fred/barney.git')
+              buildpack_lifecycle_buildpacks_attrs = lifecycle_data.reload.buildpack_lifecycle_buildpacks.map do |d|
+                { version: d[:version], name: d[:buildpack_name], buildpack_name: d.name }
+              end
+              expected_result = [{ version: '3.1', name: 'valley', buildpack_name: 'pleasant-valley-buildpack' },
+                                 { version: '95', name: 'gilooley', buildpack_name: 'stepping-stone-buildpack' },
+                                 { version: 'ME', name: 'hilltop', buildpack_name: 'git://my-buildpacks.tv/fred/barney.git' }]
+              expect(buildpack_lifecycle_buildpacks_attrs).to match_array(expected_result)
             end
           end
 
@@ -156,8 +150,8 @@ module VCAP::CloudController
 
             it 'deletes the buildpacks when the lifecycle is deleted' do
               lifecycle_data_guid = lifecycle_data.guid
-              expect(lifecycle_data_guid).to_not be_nil
-              expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).to_not be_empty
+              expect(lifecycle_data_guid).not_to be_nil
+              expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).not_to be_empty
 
               lifecycle_data.destroy
               expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).to be_empty
@@ -300,6 +294,7 @@ module VCAP::CloudController
 
       context 'when the buildpack is a custom buildpack (url)' do
         let(:custom_buildpack_url) { 'https://github.com/buildpacks/the-best' }
+
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: [custom_buildpack_url]) }
 
         it 'is a custom buildpack for the URL' do
@@ -319,7 +314,7 @@ module VCAP::CloudController
 
           it 'returns true' do
             lifecycle_data.legacy_buildpack_url = 'https://someurl.com'
-            expect(lifecycle_data.using_custom_buildpack?).to eq true
+            expect(lifecycle_data.using_custom_buildpack?).to be true
           end
         end
 
@@ -329,7 +324,7 @@ module VCAP::CloudController
           end
 
           it 'returns true' do
-            expect(lifecycle_data.using_custom_buildpack?).to eq true
+            expect(lifecycle_data.using_custom_buildpack?).to be true
           end
         end
       end
@@ -338,7 +333,7 @@ module VCAP::CloudController
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: nil) }
 
         it 'returns false' do
-          expect(lifecycle_data.using_custom_buildpack?).to eq false
+          expect(lifecycle_data.using_custom_buildpack?).to be false
         end
       end
     end

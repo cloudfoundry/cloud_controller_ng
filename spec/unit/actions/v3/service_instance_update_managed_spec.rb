@@ -8,7 +8,7 @@ module VCAP::CloudController
     RSpec.describe ServiceInstanceUpdateManaged do
       RSpec.shared_examples 'async service instance update' do
         it "returns 'true' for update_broker_needed?" do
-          expect(action.update_broker_needed?).to be_truthy
+          expect(action).to be_update_broker_needed
         end
 
         it 'locks the service instance' do
@@ -343,6 +343,7 @@ module VCAP::CloudController
 
           context 'when updating parameters' do
             let(:body) { { parameters: { param1: 'value' } } }
+
             it 'raises error' do
               expect do
                 action.preflight!
@@ -408,7 +409,7 @@ module VCAP::CloudController
           end
 
           it "returns 'false' for update_broker_needed?" do
-            expect(action.update_broker_needed?).to be_falsey
+            expect(action).not_to be_update_broker_needed
           end
 
           it 'returns the current unchanged instance' do
@@ -430,7 +431,7 @@ module VCAP::CloudController
             end
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'updates the values in the service instance in the database' do
@@ -477,7 +478,7 @@ module VCAP::CloudController
             end
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'updates the values in the service instance in the database' do
@@ -565,7 +566,7 @@ module VCAP::CloudController
             let(:body) { {} }
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'returns the updated service instance' do
@@ -746,7 +747,7 @@ module VCAP::CloudController
                 let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
 
                 it "returns 'false' for update_broker_needed?" do
-                  expect(action.update_broker_needed?).to be_falsey
+                  expect(action).not_to be_update_broker_needed
                 end
               end
             end
@@ -899,7 +900,7 @@ module VCAP::CloudController
             action.update(accepts_incomplete: true)
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(new_name)
             expect(instance.tags).to eq(new_tags)
@@ -954,7 +955,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -996,7 +997,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(new_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -1050,7 +1051,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(new_service_plan)
@@ -1093,7 +1094,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -1146,7 +1147,7 @@ module VCAP::CloudController
               action.update(accepts_incomplete: true)
 
               instance = original_instance.reload
-              expect(instance).to_not be_nil
+              expect(instance).not_to be_nil
               expect(instance.dashboard_url).to eq(original_dashboard_url)
 
               expect(instance.last_operation.type).to eq('update')
@@ -1174,7 +1175,7 @@ module VCAP::CloudController
             action.update(accepts_incomplete: true)
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(original_name)
             expect(instance.service_plan).to eq(original_service_plan)
@@ -1212,7 +1213,7 @@ module VCAP::CloudController
               action.update(accepts_incomplete: true)
 
               instance = original_instance.reload
-              expect(instance).to_not be_nil
+              expect(instance).not_to be_nil
               expect(instance.dashboard_url).to eq(original_dashboard_url)
 
               expect(instance.last_operation.type).to eq('update')
@@ -1377,7 +1378,7 @@ module VCAP::CloudController
             action.poll
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance.name).to eq(new_name)
             expect(instance.tags).to eq(new_tags)
             expect(instance.service_plan).to eq(new_plan)
@@ -1414,7 +1415,7 @@ module VCAP::CloudController
               let(:service_offering) { Service.make(instances_retrievable: false) }
               let(:new_plan) { ServicePlan.make(service: service_offering) }
 
-              it 'should not call fetch service instance' do
+              it 'does not call fetch service instance' do
                 action.poll
 
                 expect(client).not_to have_received(:fetch_service_instance)
@@ -1425,7 +1426,7 @@ module VCAP::CloudController
               let(:service) { Service.make(instances_retrievable: true) }
               let(:new_plan) { ServicePlan.make(service:) }
 
-              it 'should fetch service instance' do
+              it 'fetches service instance' do
                 action.poll
 
                 expect(client).to have_received(:fetch_service_instance).with(
@@ -1445,7 +1446,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq('http://some-dashboard-url.com')
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')
@@ -1463,7 +1464,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq(original_dashboard_url)
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')
@@ -1479,7 +1480,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq(original_dashboard_url)
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')

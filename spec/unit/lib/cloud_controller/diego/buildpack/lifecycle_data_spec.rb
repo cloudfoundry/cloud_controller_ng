@@ -46,11 +46,11 @@ module VCAP::CloudController
             it 'does not raise an error' do
               expect do
                 lifecycle_data.message
-              end.to_not raise_error
+              end.not_to raise_error
             end
 
             it 'omits buildpack artifacts cache download uri from the message' do
-              expect(lifecycle_data.message.keys).to_not include(:build_artifacts_cache_download_uri)
+              expect(lifecycle_data.message.keys).not_to include(:build_artifacts_cache_download_uri)
             end
           end
 
@@ -62,11 +62,11 @@ module VCAP::CloudController
             it 'does not raise an error' do
               expect do
                 lifecycle_data.message
-              end.to_not raise_error
+              end.not_to raise_error
             end
 
             it 'omits buildpack_cache_checksum from the message' do
-              expect(lifecycle_data.message.keys).to_not include(:buildpack_cache_checksum)
+              expect(lifecycle_data.message.keys).not_to include(:buildpack_cache_checksum)
             end
           end
 

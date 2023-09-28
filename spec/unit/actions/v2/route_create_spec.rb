@@ -33,14 +33,14 @@ module VCAP::CloudController
             allow(access_validator).to receive(:validate_access).and_raise('some-exception')
           end
 
-          it 'should not create a route in the db' do
+          it 'does not create a route in the db' do
             expect do
               route_create.create_route(route_hash:)
             rescue StandardError
-            end.not_to(change { Route.count })
+            end.not_to(change(Route, :count))
           end
 
-          it 'should bubble up the exception' do
+          it 'bubbles up the exception' do
             expect { route_create.create_route(route_hash:) }.to raise_error('some-exception')
           end
         end

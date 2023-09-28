@@ -137,7 +137,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start(app:, user_audit_info:)
-          end.to change { RevisionModel.count }.by(1)
+          end.to change(RevisionModel, :count).by(1)
           last_revision = RevisionModel.last
           expect(last_revision.version).to eq(new_revision_number)
           expect(last_revision.description).to eq('New droplet deployed.')
@@ -149,7 +149,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start(app:, user_audit_info:)
-          end.not_to(change { RevisionModel.count })
+          end.not_to(change(RevisionModel, :count))
         end
 
         it 'does not create a new revision if the droplet did not change' do
@@ -157,7 +157,7 @@ module VCAP::CloudController
           app.update(droplet: dropletA)
           expect do
             AppStart.start(app:, user_audit_info:)
-          end.to change { RevisionModel.count }.by(0)
+          end.not_to(change(RevisionModel, :count))
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)
           expect(worker_process.reload.revision).to eq(revisionA)
@@ -168,7 +168,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start(app:, user_audit_info:)
-          end.to change { RevisionModel.count }.by(0)
+          end.not_to(change(RevisionModel, :count))
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)
           expect(worker_process.reload.revision).to eq(revisionA)
@@ -179,7 +179,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
-          end.to change { RevisionModel.count }.by(0)
+          end.not_to(change(RevisionModel, :count))
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)
           expect(worker_process.reload.revision).to eq(revisionA)
@@ -190,7 +190,7 @@ module VCAP::CloudController
           app.update(droplet: dropletB)
           expect do
             AppStart.start_without_event(app, create_revision: false)
-          end.to change { RevisionModel.count }.by(0)
+          end.not_to(change(RevisionModel, :count))
           expect(RevisionModel.last.version).to eq(revisionA.version)
           expect(web_process.reload.revision).to eq(revisionA)
           expect(worker_process.reload.revision).to eq(revisionA)

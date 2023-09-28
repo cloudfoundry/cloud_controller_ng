@@ -43,7 +43,7 @@ module VCAP::CloudController
           event_binding_guids = events.collect(&:actee)
 
           expect(events.length).to eq(2)
-          expect(event_binding_guids).to match_array([service_binding_1.guid, service_binding_2.guid])
+          expect(event_binding_guids).to contain_exactly(service_binding_1.guid, service_binding_2.guid)
         end
 
         it 'deletes the service bindings' do
@@ -80,7 +80,7 @@ module VCAP::CloudController
           event_key_guids = events.collect(&:actee)
 
           expect(events.length).to eq(2)
-          expect(event_key_guids).to match_array([service_key_1.guid, service_key_2.guid])
+          expect(event_key_guids).to contain_exactly(service_key_1.guid, service_key_2.guid)
         end
 
         it 'deletes the service keys' do
@@ -105,7 +105,7 @@ module VCAP::CloudController
           event_key_guid = events.collect(&:actee)
 
           expect(events.length).to eq(1)
-          expect(event_key_guid).to match_array([service_instance.guid])
+          expect(event_key_guid).to contain_exactly(service_instance.guid)
         end
       end
     end

@@ -388,6 +388,7 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#blob_sender' do
     let(:sender) { double('sender') }
+
     it 'returns the correct sender when using ngx' do
       config.set(:nginx, config.get(:nginx).merge(use_nginx: true))
       expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
@@ -421,6 +422,7 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#log_cache_metrics_client' do
     let(:logcache_client) { instance_double(Logcache::Client) }
+
     before do
       allow(Logcache::Client).to receive(:new).and_return(logcache_client)
     end
@@ -540,6 +542,7 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#build_instances_client' do
     let(:diego_client) { double }
+
     before do
       allow(Diego::Client).to receive(:new).and_return(diego_client)
     end

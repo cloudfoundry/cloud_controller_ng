@@ -146,8 +146,11 @@ module VCAP::CloudController
     def setup_app_log_emitter
       VCAP::AppLogEmitter.fluent_emitter = fluent_emitter if @config.get(:fluent)
 
-      if @config.get(:loggregator) && @config.get(:loggregator, :router)
-        VCAP::AppLogEmitter.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API', @config.get(:index))
+      if @config.get(:loggregator) && @config.get(
+        :loggregator, :router
+      )
+        VCAP::AppLogEmitter.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API',
+                                                                      @config.get(:index))
       end
 
       VCAP::AppLogEmitter.logger = logger

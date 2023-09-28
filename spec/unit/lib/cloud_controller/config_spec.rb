@@ -44,6 +44,7 @@ module VCAP::CloudController
         ]
       }
     end
+
     subject(:config_instance) { Config.new(test_config_hash) }
 
     describe '.load_from_file' do
@@ -156,7 +157,7 @@ module VCAP::CloudController
             end
 
             it 'preserves the enable allow ssh configuration from the file' do
-              expect(config[:allow_app_ssh_access]).to eq(true)
+              expect(config[:allow_app_ssh_access]).to be(true)
             end
 
             it 'preserves the internal_service_hostname value from the file' do
@@ -411,7 +412,7 @@ module VCAP::CloudController
 
         it 'does not enable GC profiling' do
           config_instance.configure_components
-          expect(GC::Profiler.enabled?).to eq(false)
+          expect(GC::Profiler.enabled?).to be(false)
         end
       end
 
@@ -463,7 +464,7 @@ module VCAP::CloudController
 
         it 'enables GC profiling' do
           config_instance.configure_components
-          expect(GC::Profiler.enabled?).to eq(true)
+          expect(GC::Profiler.enabled?).to be(true)
         end
       end
 
@@ -548,6 +549,7 @@ module VCAP::CloudController
 
       context 'worker schema' do
         let(:schema_context) { :worker }
+
         context 'when given an Integer' do
           let(:backoff_rate) { 1 }
 
@@ -567,6 +569,7 @@ module VCAP::CloudController
 
       context 'api schema' do
         let(:schema_context) { :api }
+
         context 'when given an Integer' do
           let(:backoff_rate) { 1 }
 

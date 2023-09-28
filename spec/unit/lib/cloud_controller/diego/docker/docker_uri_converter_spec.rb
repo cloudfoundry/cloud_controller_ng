@@ -125,6 +125,7 @@ module VCAP::CloudController
 
     context('and the docker image url has scheme') do
       let(:image_url) { 'https://docker.io/repo' }
+
       it('errors') do
         expect do
           converter.convert image_url

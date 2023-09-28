@@ -71,7 +71,7 @@ module VCAP::CloudController
             other_iso_seg = IsolationSegmentModel.make
             assigner.assign(other_iso_seg, [org])
             org.update(default_isolation_segment_guid: other_iso_seg.guid)
-            expect(org.default_isolation_segment_guid).to_not be_nil
+            expect(org.default_isolation_segment_guid).not_to be_nil
           end
 
           it 'sets the default isolation segment to null' do

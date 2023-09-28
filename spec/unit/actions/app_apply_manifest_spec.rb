@@ -596,6 +596,7 @@ module VCAP::CloudController
             context 'when the app name has special characters' do
               let(:message) { AppManifestMessage.create_from_yml({ name: 'blah!@#', default_route: true }) }
               let(:app_model) { AppModel.make(name: 'blah!@#') }
+
               it 'fails with a useful error message' do
                 expect do
                   app_apply_manifest.apply(app_model.guid, message)
@@ -608,6 +609,7 @@ module VCAP::CloudController
               let(:app_name) { 'a' * 100 }
               let(:message) { AppManifestMessage.create_from_yml({ name: app_name, default_route: true }) }
               let(:app_model) { AppModel.make(name: app_name) }
+
               it 'fails with a useful error' do
                 expect do
                   app_apply_manifest.apply(app_model.guid, message)
@@ -759,8 +761,7 @@ module VCAP::CloudController
               allow(service_cred_binding_create).to receive(:precursor).and_return(ServiceBinding.make)
               allow(service_binding_create_message_1).to receive(:audit_hash).and_return({ foo: 'bar-1' })
               allow(service_binding_create_message_1).to receive(:parameters)
-              allow(service_binding_create_message_2).to receive(:audit_hash).and_return({ foo: 'bar-2' })
-              allow(service_binding_create_message_2).to receive(:parameters).and_return({ 'foo' => 'bar' })
+              allow(service_binding_create_message_2).to receive_messages(audit_hash: { foo: 'bar-2' }, parameters: { 'foo' => 'bar' })
             end
 
             it 'creates an action with the right arguments' do
@@ -845,7 +846,7 @@ module VCAP::CloudController
               it 'does not create the binding' do
                 app_apply_manifest.apply(app.guid, message)
 
-                expect(service_cred_binding_create).to_not have_received(:bind)
+                expect(service_cred_binding_create).not_to have_received(:bind)
               end
 
               context "last binding operation is 'create failed'" do
@@ -865,6 +866,7 @@ module VCAP::CloudController
 
             context 'volume_services_enabled' do
               let(:message) { AppManifestMessage.create_from_yml({ services: [service_instance.name] }) }
+
               before do
                 TestConfig.override(volume_services_enabled: true)
               end
@@ -1044,7 +1046,7 @@ module VCAP::CloudController
 
                   it 'polls service bindings until they are in a terminal state' do
                     expect(service_cred_binding_create).to receive(:poll).exactly(3).times
-                    expect(app_apply_manifest).to receive(:sleep).with(1).exactly(2).times
+                    expect(app_apply_manifest).to receive(:sleep).with(1).twice
                     expect do
                       app_apply_manifest.apply(app.guid, message)
                     end.to raise_error(AppApplyManifest::ServiceBindingError)
@@ -1274,6 +1276,7 @@ module VCAP::CloudController
         describe 'when the app no longer exists' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }) }
           let(:app_guid) { 'fake-guid' }
+
           it 'raises a NotFound error' do
             expect do
               app_apply_manifest.apply(app_guid, message)
@@ -1292,6 +1295,7 @@ module VCAP::CloudController
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }) }
           let(:process) { ProcessModel.make(memory: 512, state: ProcessModel::STARTED, type: 'web') }
           let(:app) { process.app }
+
           it "doesn't change the process's version" do
             app.update(name: 'blah')
             version = process.version

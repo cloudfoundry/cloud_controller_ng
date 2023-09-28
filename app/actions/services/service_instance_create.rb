@@ -34,7 +34,8 @@ module VCAP::CloudController
       setup_async_job(request_attrs, service_instance) if service_instance.operation_in_progress?
 
       if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
-        @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
+        @services_event_repository.record_service_instance_event(:create, service_instance,
+                                                                 request_attrs)
       end
 
       service_instance

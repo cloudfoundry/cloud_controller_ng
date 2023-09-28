@@ -25,7 +25,7 @@ module VCAP::CloudController
         it 'creates the app' do
           app = nil
           expect { app = action.find_or_create(message:, space:) }.
-            to change { AppModel.count }.by(1)
+            to change(AppModel, :count).by(1)
 
           expect(app.name).to eq(name)
           expect(app.space).to eq(space)
@@ -39,7 +39,7 @@ module VCAP::CloudController
         it 'creates the app' do
           app = nil
           expect { app = action.find_or_create(message:, space:) }.
-            to change { AppModel.count }.by(1)
+            to change(AppModel, :count).by(1)
 
           expect(app.name).to eq(name)
           expect(app.space).to eq(space)

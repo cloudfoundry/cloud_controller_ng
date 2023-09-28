@@ -114,9 +114,9 @@ module VCAP::CloudController
     end
 
     def organization_validation_error!(type, error, user, organization)
-      if error.errors.on(%i[organization_id user_id])&.any? { |e| [:unique].include?(e) }
-        error!("User '#{user.presentation_name}' already has '#{type}' role in organization '#{organization.name}'.")
-      end
+      error!("User '#{user.presentation_name}' already has '#{type}' role in organization '#{organization.name}'.") if error.errors.on(%i[organization_id user_id])&.any? do |e|
+                                                                                                                         [:unique].include?(e)
+                                                                                                                       end
 
       error!(error.message)
     end

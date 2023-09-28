@@ -25,7 +25,7 @@ module VCAP::CloudController
         to_return(status: unbind_status, body: unbind_body.to_json)
     end
 
-    context '#delete' do
+    describe '#delete' do
       before do
         stub_requests(service_key.service_instance.service.service_broker)
       end
@@ -71,12 +71,13 @@ module VCAP::CloudController
             let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
             let(:instance) { ManagedServiceInstance.make }
             let(:service_key) { ServiceKey.make(service_instance: instance) }
+
             before do
               instance.service_instance_operation = last_operation
               instance.save
             end
 
-            it 'should raise an error for unbind operation' do
+            it 'raises an error for unbind operation' do
               expect do
                 subject.delete_service_key(service_key)
               end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{instance.name} is in progress.")

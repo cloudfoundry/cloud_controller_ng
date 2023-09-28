@@ -38,8 +38,8 @@ module CloudFoundry
 
           it 'nils it out after the request has been processed' do
             middleware.call(request_headers)
-            expect(::VCAP::Request.b3_trace_id).to eq(nil)
-            expect(::VCAP::Request.b3_span_id).to eq(nil)
+            expect(::VCAP::Request.b3_trace_id).to be_nil
+            expect(::VCAP::Request.b3_span_id).to be_nil
           end
         end
 

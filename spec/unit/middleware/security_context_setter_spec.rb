@@ -98,10 +98,10 @@ module CloudFoundry
               expect(body).to eq('a body')
             end
           end
+
           context 'when token is invalid' do
             before do
-              allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_return(false)
-              allow(VCAP::CloudController::SecurityContext).to receive(:missing_token?).and_return(false)
+              allow(VCAP::CloudController::SecurityContext).to receive_messages(valid_token?: false, missing_token?: false)
             end
 
             it 'changes the response to 401' do
@@ -116,10 +116,10 @@ module CloudFoundry
               )
             end
           end
+
           context 'when token is missing' do
             before do
-              allow(VCAP::CloudController::SecurityContext).to receive(:valid_token?).and_return(false)
-              allow(VCAP::CloudController::SecurityContext).to receive(:missing_token?).and_return(true)
+              allow(VCAP::CloudController::SecurityContext).to receive_messages(valid_token?: false, missing_token?: true)
             end
 
             it 'forwards the response from the rate limiter' do
@@ -155,6 +155,7 @@ module CloudFoundry
 
           context 'when the path is /v3/*' do
             let(:path_info) { '/v3/foo' }
+
             it 'throws an error' do
               _, _, body = middleware.call(env)
               json_body = JSON.parse(body.first)
@@ -169,9 +170,11 @@ module CloudFoundry
 
         context 'when an error is raised after calling the next middleware' do
           let(:error) { RuntimeError.new('oops') }
+
           before do
             allow(app).to receive(:call).and_raise(error)
           end
+
           it 'unsets the user_guid on the request' do
             expect(::VCAP::Request).to receive(:user_guid=).with('user-id-1')
             expect(::VCAP::Request).to receive(:user_guid=).with(nil)

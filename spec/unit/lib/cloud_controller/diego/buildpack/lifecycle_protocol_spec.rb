@@ -279,6 +279,7 @@ module VCAP
                   )
                 end
                 let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
+
                 before do
                   process.update(revision:)
                 end

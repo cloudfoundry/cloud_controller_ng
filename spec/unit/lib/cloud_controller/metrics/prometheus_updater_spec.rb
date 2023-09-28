@@ -139,7 +139,7 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#update_thread_info' do
-      it 'should contain EventMachine data' do
+      it 'contains EventMachine data' do
         thread_info = {
           thread_count: 5,
           event_machine: {

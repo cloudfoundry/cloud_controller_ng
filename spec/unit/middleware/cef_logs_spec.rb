@@ -135,6 +135,7 @@ module CloudFoundry
 
         context 'when using no auth' do
           let(:env) { {} }
+
           before { allow(fake_request).to receive(:authorization).and_return(nil) }
 
           it 'includes the user info as no-auth auth' do
@@ -182,8 +183,7 @@ module CloudFoundry
         end
 
         it 'escapes "|" in the prefix' do
-          allow(fake_request).to receive(:method).and_return('a|b')
-          allow(fake_request).to receive(:path).and_return('pa|th')
+          allow(fake_request).to receive_messages(method: 'a|b', path: 'pa|th')
 
           middleware.call(env)
 
@@ -206,8 +206,7 @@ module CloudFoundry
         end
 
         it 'escapes "\" in the prefix' do
-          allow(fake_request).to receive(:method).and_return('a\b')
-          allow(fake_request).to receive(:path).and_return('pa\th')
+          allow(fake_request).to receive_messages(method: 'a\b', path: 'pa\th')
 
           middleware.call(env)
 

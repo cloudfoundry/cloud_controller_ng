@@ -29,7 +29,7 @@ module VCAP::CloudController
             let(:last_operation_state) { 'initial' }
 
             it 'is blocking' do
-              expect(action.blocking_operation_in_progress?).to be_truthy
+              expect(action).to be_blocking_operation_in_progress
             end
           end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
             let(:last_operation_state) { 'in progress' }
 
             it 'is blocking' do
-              expect(action.blocking_operation_in_progress?).to be_truthy
+              expect(action).to be_blocking_operation_in_progress
             end
           end
 
@@ -47,7 +47,7 @@ module VCAP::CloudController
             let(:last_operation_state) { 'in progress' }
 
             it 'is not blocking' do
-              expect(action.blocking_operation_in_progress?).to be_falsey
+              expect(action).not_to be_blocking_operation_in_progress
             end
           end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
             let(:last_operation_state) { 'failed' }
 
             it 'is not blocking' do
-              expect(action.blocking_operation_in_progress?).to be_falsey
+              expect(action).not_to be_blocking_operation_in_progress
             end
           end
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
           end
 
           it 'is not blocking' do
-            expect(action.blocking_operation_in_progress?).to be_falsey
+            expect(action).not_to be_blocking_operation_in_progress
           end
         end
       end
@@ -317,7 +317,7 @@ module VCAP::CloudController
               service_instance.save_with_new_operation({}, { type: 'update', state: 'in progress' })
             end
 
-            it 'should raise' do
+            it 'raises' do
               expect do
                 action.delete
               end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
@@ -326,12 +326,13 @@ module VCAP::CloudController
 
           context 'when a create operation is already in progress' do
             let(:create_operation) { Sham.guid }
+
             before do
               service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress', broker_provided_operation: create_operation })
             end
 
             context 'broker accepts delete request' do
-              it 'should delete the service instance' do
+              it 'deletes the service instance' do
                 action.delete
 
                 expect(ServiceInstance.all).to be_empty
@@ -345,7 +346,7 @@ module VCAP::CloudController
                 )
               end
 
-              it 'should leave create in progress' do
+              it 'leaves create in progress' do
                 expect do
                   action.delete
                 end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")
@@ -362,7 +363,7 @@ module VCAP::CloudController
               service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
             end
 
-            it 'should raise' do
+            it 'raises' do
               expect do
                 action.delete
               end.to raise_error(CloudController::Errors::ApiError, "An operation for service instance #{service_instance.name} is in progress.")

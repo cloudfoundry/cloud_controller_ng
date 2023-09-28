@@ -4,9 +4,9 @@ require 'vcap/rest_api/message'
 
 RSpec.describe Membrane::Schemas::Regexp::MatchValidator do
   describe '#fail' do
-    let(:object) { 'some-string' }
-
     subject { Membrane::Schemas::Regexp::MatchValidator.new(regexp, object) }
+
+    let(:object) { 'some-string' }
 
     context 'with a normal ruby regexp' do
       let(:regexp) { /foo/ }

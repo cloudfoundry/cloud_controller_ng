@@ -31,11 +31,11 @@ module VCAP::CloudController
 
     it 'accepts the allowed keys' do
       expect(message).to be_valid
-      expect(message.requested?(:name)).to be_truthy
-      expect(message.requested?(:relationships)).to be_truthy
-      expect(message.requested?(:tags)).to be_truthy
-      expect(message.requested?(:parameters)).to be_truthy
-      expect(message.requested?(:maintenance_info)).to be_truthy
+      expect(message).to be_requested(:name)
+      expect(message).to be_requested(:relationships)
+      expect(message).to be_requested(:tags)
+      expect(message).to be_requested(:parameters)
+      expect(message).to be_requested(:maintenance_info)
     end
 
     it 'builds the right message' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
     describe 'validations' do
       it 'is invalid when there are unknown keys' do
         body[:type] = 'user-provided'
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'type'")
       end
 
@@ -101,31 +101,31 @@ module VCAP::CloudController
       context 'maintenance_info' do
         it 'must be an object' do
           body[:maintenance_info] = 42
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:maintenance_info]).to include('must be an object')
         end
 
         it 'is invalid when there are unknown fields' do
           body[:maintenance_info] = { something: 'other_info' }
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Maintenance info Unknown field(s): 'something'")
         end
 
         it 'is invalid when version is not semver' do
           body[:maintenance_info] = { version: 'other_info' }
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include(include('must be a Semantic Version string'))
         end
 
-        it 'it can be empty' do
+        it 'can be empty' do
           body[:maintenance_info] = {}
 
           expect(message).to be_valid
         end
 
-        it 'it can be nil' do
+        it 'can be nil' do
           body[:maintenance_info] = nil
 
           expect(message).to be_valid
@@ -141,7 +141,7 @@ module VCAP::CloudController
       context 'parameters' do
         it 'must be an object' do
           body[:parameters] = 42
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:parameters]).to include('must be an object')
         end
       end
@@ -150,7 +150,7 @@ module VCAP::CloudController
         it 'is invalid when there are unknown relationships' do
           body[:relationships][:service_offering] = { data: { guid: 'plan-guid' } }
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'service_offering'")
         end
 
@@ -162,7 +162,7 @@ module VCAP::CloudController
           expect(message.errors_on(:relationships)).to include('Service plan guid must be between 1 and 200 characters')
         end
 
-        it 'is invalid when service plan is empty ' do
+        it 'is invalid when service plan is empty' do
           body[:relationships] = { service_plan: {} }
 
           expect(message).not_to be_valid

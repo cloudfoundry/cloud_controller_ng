@@ -8,6 +8,7 @@ module VCAP::CloudController
       let(:user_email) { 'user@example.com' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
       let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
       subject(:org_create) { OrganizationCreate.new(user_audit_info:) }
 
       before do

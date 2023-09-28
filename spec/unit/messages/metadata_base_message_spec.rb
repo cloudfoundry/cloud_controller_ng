@@ -9,6 +9,7 @@ module VCAP::CloudController
           register_allowed_keys []
         end
       end
+
       context 'when the message contains labels' do
         it 'can parse labels' do
           params =

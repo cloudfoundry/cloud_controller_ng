@@ -39,10 +39,10 @@ module VCAP::CloudController
         expect(broker).to be_valid
 
         broker.broker_url = '127.0.0.1/api'
-        expect(broker).to_not be_valid
+        expect(broker).not_to be_valid
 
         broker.broker_url = 'ftp://127.0.0.1/api'
-        expect(broker).to_not be_valid
+        expect(broker).not_to be_valid
 
         broker.broker_url = 'http://127.0.0.1/api'
         expect(broker).to be_valid
@@ -51,7 +51,7 @@ module VCAP::CloudController
         expect(broker).to be_valid
 
         broker.broker_url = 'https://admin:password@127.0.0.1/api'
-        expect(broker).to_not be_valid
+        expect(broker).not_to be_valid
       end
     end
 
@@ -73,23 +73,27 @@ module VCAP::CloudController
 
       it 'returns true when state is SYNCHRONIZING' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
-        expect(broker.in_transitional_state?).to eq true
+        expect(broker.in_transitional_state?).to be true
       end
+
       it 'returns false when state is SYNCHRONIZATION_FAILED' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
-        expect(broker.in_transitional_state?).to eq false
+        expect(broker.in_transitional_state?).to be false
       end
+
       it 'returns false when state is AVAILABLE' do
         broker.state = ServiceBrokerStateEnum::AVAILABLE
-        expect(broker.in_transitional_state?).to eq false
+        expect(broker.in_transitional_state?).to be false
       end
+
       it 'returns true when state is DELETE_IN_PROGRESS' do
         broker.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
-        expect(broker.in_transitional_state?).to eq true
+        expect(broker.in_transitional_state?).to be true
       end
+
       it 'returns false when state is DELETE_FAILED' do
         broker.state = ServiceBrokerStateEnum::DELETE_FAILED
-        expect(broker.in_transitional_state?).to eq false
+        expect(broker.in_transitional_state?).to be false
       end
     end
 
@@ -98,27 +102,32 @@ module VCAP::CloudController
 
       it 'returns false when state is SYNCHRONIZING' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
-        expect(broker.available?).to eq false
+        expect(broker.available?).to be false
       end
+
       it 'returns false when state is SYNCHRONIZATION_FAILED' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
-        expect(broker.available?).to eq false
+        expect(broker.available?).to be false
       end
+
       it 'returns true when state is AVAILABLE' do
         broker.state = ServiceBrokerStateEnum::AVAILABLE
-        expect(broker.available?).to eq true
+        expect(broker.available?).to be true
       end
+
       it 'returns true when state is empty to support old brokers' do
         broker.state = ''
-        expect(broker.available?).to eq true
+        expect(broker.available?).to be true
       end
+
       it 'returns false when state is DELETE_IN_PROGRESS' do
         broker.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
-        expect(broker.available?).to eq false
+        expect(broker.available?).to be false
       end
+
       it 'returns false when state is DELETE_FAILED' do
         broker.state = ServiceBrokerStateEnum::DELETE_FAILED
-        expect(broker.available?).to eq false
+        expect(broker.available?).to be false
       end
     end
 
@@ -148,7 +157,7 @@ module VCAP::CloudController
           expect do
             service_broker.destroy
           rescue Sequel::ForeignKeyConstraintViolation
-          end.to_not(change do
+          end.not_to(change do
             Service.where(id: service.id).count
           end)
         end
@@ -187,12 +196,12 @@ module VCAP::CloudController
         end
 
         it 'is true' do
-          expect(broker.space_scoped?).to be_truthy
+          expect(broker).to be_space_scoped
         end
       end
 
       it 'is false if the broker does not have a space id' do
-        expect(broker.space_scoped?).to be_falsey
+        expect(broker).not_to be_space_scoped
       end
     end
 
@@ -207,7 +216,7 @@ module VCAP::CloudController
         end
 
         it 'returns true' do
-          expect(service_broker.has_service_instances?).to eq(true)
+          expect(service_broker.has_service_instances?).to be(true)
         end
 
         it 'does a single db query' do
@@ -217,7 +226,7 @@ module VCAP::CloudController
 
       context 'when there are no service instances' do
         it 'returns false' do
-          expect(service_broker.has_service_instances?).to eq(false)
+          expect(service_broker.has_service_instances?).to be(false)
         end
 
         it 'does a single db query' do

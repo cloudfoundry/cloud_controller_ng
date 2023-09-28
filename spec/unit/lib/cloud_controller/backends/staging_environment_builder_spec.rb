@@ -68,8 +68,8 @@ module VCAP::CloudController
           RouteMappingModel.make(app: app, route: route2)
 
           environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
-          expect(environment_variables['VCAP_APPLICATION'][:uris]).to match_array([route1.fqdn, route2.fqdn])
-          expect(environment_variables['VCAP_APPLICATION'][:application_uris]).to match_array([route1.fqdn, route2.fqdn])
+          expect(environment_variables['VCAP_APPLICATION'][:uris]).to contain_exactly(route1.fqdn, route2.fqdn)
+          expect(environment_variables['VCAP_APPLICATION'][:application_uris]).to contain_exactly(route1.fqdn, route2.fqdn)
         end
       end
 

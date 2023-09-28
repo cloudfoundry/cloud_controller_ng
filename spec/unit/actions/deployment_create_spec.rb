@@ -47,6 +47,7 @@ module VCAP::CloudController
             resource_guid: web_process.guid
           )
         end
+
         it 'assigns the old process metadata to the new process' do
           deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
           deploying_web_process = deployment.deploying_web_process
@@ -63,7 +64,7 @@ module VCAP::CloudController
 
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-            end.to change { DeploymentModel.count }.by(1)
+            end.to change(DeploymentModel, :count).by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
             expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
@@ -78,7 +79,7 @@ module VCAP::CloudController
           it 'creates a revision associated with the provided droplet' do
             expect do
               DeploymentCreate.create(app:, message:, user_audit_info:)
-            end.to change { RevisionModel.count }.by(1)
+            end.to change(RevisionModel, :count).by(1)
 
             revision = RevisionModel.last
             expect(revision.droplet_guid).to eq(next_droplet.guid)
@@ -348,7 +349,7 @@ module VCAP::CloudController
             it 'has a nil previous droplet' do
               deployment = DeploymentCreate.create(app: app_without_current_droplet, message: message, user_audit_info: user_audit_info)
 
-              expect(deployment.previous_droplet).to eq(nil)
+              expect(deployment.previous_droplet).to be_nil
             end
 
             it 'records an audit event for the deployment' do
@@ -417,7 +418,7 @@ module VCAP::CloudController
 
                 expect do
                   deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                end.to change { DeploymentModel.count }.by(1)
+                end.to change(DeploymentModel, :count).by(1)
 
                 expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
                 expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
@@ -505,7 +506,7 @@ module VCAP::CloudController
 
               expect do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-              end.to change { DeploymentModel.count }.by(1)
+              end.to change(DeploymentModel, :count).by(1)
 
               expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
               expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
@@ -594,7 +595,7 @@ module VCAP::CloudController
 
             expect do
               DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-            end.not_to(change { RevisionModel.count })
+            end.not_to(change(RevisionModel, :count))
 
             deploying_web_process = app.reload.newest_web_process
             expect(deploying_web_process.revision.guid).to eq(revision.guid)
@@ -614,7 +615,7 @@ module VCAP::CloudController
 
               expect do
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              end.to change { RevisionModel.count }.by(1)
+              end.to change(RevisionModel, :count).by(1)
 
               current_revision = RevisionModel.last
               expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
@@ -635,7 +636,7 @@ module VCAP::CloudController
 
               expect do
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              end.to change { RevisionModel.count }.by(1)
+              end.to change(RevisionModel, :count).by(1)
 
               current_revision = RevisionModel.last
               expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
@@ -654,7 +655,7 @@ module VCAP::CloudController
                 app.reload.newest_web_process.update(command: 'something else')
                 app.reload
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              end.to change { RevisionModel.count }.by(2)
+              end.to change(RevisionModel, :count).by(2)
 
               expect(app.reload.newest_web_process.command).to eq 'something else'
             end
@@ -677,7 +678,7 @@ module VCAP::CloudController
 
               expect do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-              end.to change { DeploymentModel.count }.by(1)
+              end.to change(DeploymentModel, :count).by(1)
 
               expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
               expect(deployment.app_guid).to eq(app.guid)
@@ -783,7 +784,7 @@ module VCAP::CloudController
 
           expect do
             deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-          end.to change { DeploymentModel.count }.by(1)
+          end.to change(DeploymentModel, :count).by(1)
 
           expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
           expect(deployment.app_guid).to eq(app.guid)
@@ -795,7 +796,7 @@ module VCAP::CloudController
         it 'creates a revision associated with the droplet from the associated revision' do
           expect do
             DeploymentCreate.create(app:, message:, user_audit_info:)
-          end.to change { RevisionModel.count }.by(1)
+          end.to change(RevisionModel, :count).by(1)
 
           revision = RevisionModel.last
           expect(revision.droplet_guid).to eq(rollback_droplet.guid)
@@ -831,7 +832,7 @@ module VCAP::CloudController
         it 'creates a revision associated with the environment variables of the associated revision' do
           expect do
             DeploymentCreate.create(app:, message:, user_audit_info:)
-          end.to change { RevisionModel.count }.by(1)
+          end.to change(RevisionModel, :count).by(1)
 
           revision = RevisionModel.last
           expect(revision.environment_variables).to eq({ 'foo' => 'var2' })
@@ -908,7 +909,7 @@ module VCAP::CloudController
               expect do
                 DeploymentCreate.create(app:, message:, user_audit_info:)
               end.to raise_error(DeploymentCreate::Error, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
-            end.not_to(change { RevisionModel.count })
+            end.not_to(change(RevisionModel, :count))
           end
         end
 
@@ -935,7 +936,7 @@ module VCAP::CloudController
 
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-            end.to change { DeploymentModel.count }.by(1)
+            end.to change(DeploymentModel, :count).by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
             expect(deployment.app_guid).to eq(app.guid)

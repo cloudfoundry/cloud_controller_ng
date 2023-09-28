@@ -12,7 +12,7 @@ module VCAP::CloudController
       describe 'guids' do
         it 'is invalid if guids is not an array' do
           message = SecurityGroupListMessage.from_params guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids].length).to eq 1
         end
 
@@ -25,7 +25,7 @@ module VCAP::CloudController
       describe 'names' do
         it 'is invalid if names is not an array' do
           message = SecurityGroupListMessage.from_params names: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:names].length).to eq 1
         end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
       describe 'running space guids' do
         it 'is invalid if running space guids is not an array' do
           message = SecurityGroupListMessage.from_params running_space_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:running_space_guids].length).to eq 1
         end
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
       describe 'staging_space_guids' do
         it 'is invalid if staging space guids is not an array' do
           message = SecurityGroupListMessage.from_params staging_space_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:staging_space_guids].length).to eq 1
         end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
         it 'is invalid if globally enabled running is not a boolean-like string' do
           message = SecurityGroupListMessage.from_params globally_enabled_running: 'not a boolean'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:globally_enabled_running].length).to eq 1
         end
       end
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
         it 'is invalid if globally enabled staging is not a boolean-like string' do
           message = SecurityGroupListMessage.from_params globally_enabled_staging: 'not a boolean'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:globally_enabled_staging].length).to eq 1
         end
       end

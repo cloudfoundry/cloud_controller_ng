@@ -11,7 +11,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
         end
       end
@@ -23,7 +23,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total routes is not a number')
           end
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total routes must be an integer')
           end
         end
@@ -45,7 +45,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total routes must be greater than or equal to 0')
           end
         end
@@ -72,7 +72,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total routes must be less than or equal to 2147483647')
           end
         end
@@ -85,7 +85,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total reserved ports is not a number')
           end
         end
@@ -96,7 +96,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total reserved ports must be an integer')
           end
         end
@@ -107,7 +107,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total reserved ports must be greater than or equal to 0')
           end
         end
@@ -127,13 +127,14 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
             { total_reserved_ports: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total reserved ports must be less than or equal to 2147483647')
           end
         end

@@ -19,10 +19,11 @@ module VCAP::CloudController
     describe 'Associations' do
       context 'routes' do
         let(:space) { Space.make }
+
         it {
-          is_expected.to have_associated :routes,
-                                         test_instance: SharedDomain.make,
-                                         associated_instance: ->(domain) { Route.make(space:, domain:) }
+          expect(subject).to have_associated :routes,
+                                             test_instance: SharedDomain.make,
+                                             associated_instance: ->(domain) { Route.make(space:, domain:) }
         }
       end
 
@@ -39,7 +40,7 @@ module VCAP::CloudController
           it 'fails validation' do
             domain = Domain.make(owning_organization_id: nil)
             expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
-            expect(domain.shared_organizations).to_not include(org)
+            expect(domain.shared_organizations).not_to include(org)
           end
         end
 
@@ -47,17 +48,18 @@ module VCAP::CloudController
           it 'fails validation' do
             domain = Domain.make(owning_organization_id: org.id)
             expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
-            expect(domain.shared_organizations).to_not include(org)
+            expect(domain.shared_organizations).not_to include(org)
           end
         end
       end
 
       context 'owning_organization' do
         let(:org) { Organization.make }
+
         it do
-          is_expected.to have_associated :owning_organization,
-                                         test_instance: Domain.make(owning_organization: org),
-                                         associated_instance: ->(_domain) { org }
+          expect(subject).to have_associated :owning_organization,
+                                             test_instance: Domain.make(owning_organization: org),
+                                             associated_instance: ->(_domain) { org }
         end
       end
 
@@ -70,7 +72,7 @@ module VCAP::CloudController
 
           it 'succeeds when setting the org to the same thing' do
             shared = SharedDomain.make
-            expect { shared.owning_organization = nil }.to_not raise_error
+            expect { shared.owning_organization = nil }.not_to raise_error
           end
         end
 
@@ -88,7 +90,7 @@ module VCAP::CloudController
           it 'succeeds when setting the org to the same thing' do
             org = Organization.make
             private_domain = PrivateDomain.make(owning_organization: org)
-            expect { private_domain.owning_organization = org }.to_not raise_error
+            expect { private_domain.owning_organization = org }.not_to raise_error
           end
         end
       end
@@ -135,7 +137,7 @@ module VCAP::CloudController
         end.to have_queried_db_times(//, 0)
 
         expect(@eager_loaded_domain).to eql(domain)
-        expect(@eager_loaded_spaces).to match_array([space1, space2])
+        expect(@eager_loaded_spaces).to contain_exactly(space1, space2)
         expect(@eager_loaded_spaces).to eql(org.spaces)
       end
 

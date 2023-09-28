@@ -32,7 +32,7 @@ module VCAP::CloudController
           it 'tags the event as manifest triggered' do
             event = route_event_repository.record_route_create(route, actor_audit_info, request_attrs, manifest_triggered: true)
             event.reload
-            expect(event.metadata['manifest_triggered']).to eq(true)
+            expect(event.metadata['manifest_triggered']).to be(true)
           end
         end
       end
@@ -120,6 +120,7 @@ module VCAP::CloudController
 
       describe '#record_route_map' do
         let(:app) { AppModel.make(space: route.space) }
+
         context 'when route mapping has no weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
@@ -146,6 +147,7 @@ module VCAP::CloudController
                                          })
           end
         end
+
         context 'when route mapping has weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 
@@ -176,6 +178,7 @@ module VCAP::CloudController
 
       describe '#record_route_unmap' do
         let(:app) { AppModel.make(space: route.space) }
+
         context 'when route mapping has no weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
@@ -202,6 +205,7 @@ module VCAP::CloudController
                                          })
           end
         end
+
         context 'when route mapping has weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 

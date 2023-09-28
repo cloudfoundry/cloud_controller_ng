@@ -4,6 +4,17 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingsController do
+    let(:credentials) do
+      { 'foo' => 'bar' }
+    end
+    let(:last_operation_body) { { state: 'in progress' } }
+    let(:last_operation_status) { 200 }
+    let(:unbind_body) { {} }
+    let(:unbind_status) { 200 }
+    let(:bind_body) { { credentials: } }
+    let(:bind_status) { 200 }
+    let(:guid_pattern) { '[[:alnum:]-]+' }
+
     describe 'Query Parameters' do
       it { expect(ServiceBindingsController).to be_queryable_by(:app_guid) }
       it { expect(ServiceBindingsController).to be_queryable_by(:service_instance_guid) }
@@ -27,17 +38,6 @@ module VCAP::CloudController
                                                                          name: { type: 'string', required: false }
                                                                        })
       end
-    end
-
-    let(:guid_pattern) { '[[:alnum:]-]+' }
-    let(:bind_status) { 200 }
-    let(:bind_body) { { credentials: } }
-    let(:unbind_status) { 200 }
-    let(:unbind_body) { {} }
-    let(:last_operation_status) { 200 }
-    let(:last_operation_body) { { state: 'in progress' } }
-    let(:credentials) do
-      { 'foo' => 'bar' }
     end
 
     def broker_url(broker)
@@ -444,7 +444,7 @@ module VCAP::CloudController
                 context 'when bindings_retrievable is false' do
                   let(:service) { Service.make(bindings_retrievable: false) }
 
-                  it 'should throw invalid service binding error' do
+                  it 'throws invalid service binding error' do
                     expect(last_response).to have_status_code(400)
                     expect(decoded_response['error_code']).to eq 'CF-ServiceBindingInvalid'
                     expect(decoded_response['description']).to match('Could not create asynchronous binding when bindings_retrievable is false.')
@@ -525,7 +525,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(400)
 
               expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                to_not have_been_made
+                not_to have_been_made
             end
           end
         end
@@ -596,7 +596,7 @@ module VCAP::CloudController
           it 'does not send a bind request to broker' do
             post '/v2/service_bindings', req.to_json
 
-            expect(a_request(:put, bind_url_regex(service_instance:))).to_not have_been_made
+            expect(a_request(:put, bind_url_regex(service_instance:))).not_to have_been_made
           end
         end
 
@@ -634,7 +634,7 @@ module VCAP::CloudController
             post '/v2/service_bindings', request_body
 
             expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-              to_not have_been_made
+              not_to have_been_made
           end
 
           it 'does not trigger orphan mitigation' do
@@ -646,7 +646,7 @@ module VCAP::CloudController
             expect(a_request(:delete, bind_url_regex(service_instance:))).not_to have_been_made
           end
 
-          it 'should show an error message for create bind operation' do
+          it 'shows an error message for create bind operation' do
             post '/v2/service_bindings', request_body
             expect(last_response).to have_status_code 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
@@ -729,7 +729,7 @@ module VCAP::CloudController
 
             it 'does not send a bind request to broker' do
               make_request
-              expect(a_request(:put, bind_url_regex(service_instance:))).to_not have_been_made
+              expect(a_request(:put, bind_url_regex(service_instance:))).not_to have_been_made
             end
           end
 
@@ -1007,7 +1007,7 @@ module VCAP::CloudController
                 expect(last_response).to have_status_code(204)
               end
 
-              it 'should warn the user about the misbehaving broker' do
+              it 'warns the user about the misbehaving broker' do
                 delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
 
                 expect(last_response.headers).to include('X-Cf-Warnings')
@@ -1046,7 +1046,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(400)
 
               expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                to_not have_been_made
+                not_to have_been_made
             end
 
             context 'when ?async=true' do
@@ -1056,7 +1056,7 @@ module VCAP::CloudController
                   expect(last_response).to have_status_code(400)
 
                   expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                    to_not have_been_made
+                    not_to have_been_made
                 end
               end
             end
@@ -1127,7 +1127,7 @@ module VCAP::CloudController
             service_binding.save
           end
 
-          it 'should be able to trigger delete binding' do
+          it 'is able to trigger delete binding' do
             delete "/v2/service_bindings/#{service_binding.guid}"
             expect(last_response).to have_status_code 204
             expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
@@ -1153,12 +1153,13 @@ module VCAP::CloudController
 
         context 'when the instance operation is in progress' do
           let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+
           before do
             service_instance.service_instance_operation = last_operation
             service_instance.save
           end
 
-          it 'should show an error message for unbind operation' do
+          it 'shows an error message for unbind operation' do
             delete "/v2/service_bindings/#{service_binding.guid}"
             expect(last_response).to have_status_code 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
@@ -1182,7 +1183,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
+    describe 'GET', '/v2/service_bindings?inline-relations-depth=1', :regression do
       let(:space) { Space.make }
       let(:managed_service_instance) { ManagedServiceInstance.make(space:) }
       let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
@@ -1195,25 +1196,19 @@ module VCAP::CloudController
         ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app, name: 'service-binding-name')
 
         get '/v2/service_bindings?inline-relations-depth=1'
-        expect(last_response.status).to eql(200)
+        expect(last_response.status).to be(200)
 
         service_bindings = decoded_response['resources']
 
         service_instance_guids = service_bindings.map do |res|
           res['entity']['service_instance']['metadata']['guid']
         end
-        expect(service_instance_guids).to match_array([
-          managed_service_instance.guid,
-          user_provided_service_instance.guid
-        ])
+        expect(service_instance_guids).to contain_exactly(managed_service_instance.guid, user_provided_service_instance.guid)
 
         service_instance_names = service_bindings.map do |res|
           res['entity']['name']
         end
-        expect(service_instance_names).to match_array([
-          nil,
-          'service-binding-name'
-        ])
+        expect(service_instance_names).to contain_exactly(nil, 'service-binding-name')
       end
 
       context 'when service-bindings have names' do
@@ -1242,13 +1237,14 @@ module VCAP::CloudController
           expect(decoded_response['next_url']).to be_nil
           service_bindings = decoded_response['resources']
           expect(service_bindings.size).to eq(2)
-          expect(service_bindings.map { |x| x['entity']['app_guid'] }).to match_array([process1.app.guid, process3.app.guid])
-          expect(service_bindings.map { |x| x['entity']['service_instance_guid'] }).to match_array([managed_service_instance.guid, managed_service_instance.guid])
+          expect(service_bindings.map { |x| x['entity']['app_guid'] }).to contain_exactly(process1.app.guid, process3.app.guid)
+          expect(service_bindings.map { |x| x['entity']['service_instance_guid'] }).to contain_exactly(managed_service_instance.guid, managed_service_instance.guid)
           expect(service_bindings.map { |x| x['entity']['name'] }).to match_array(%w[potato potato])
         end
 
         context 'when there are many service-bindings per service-instance' do
           let(:processes) { 8.times.to_a.map { |i| ProcessModelFactory.make(space: space, name: "process#{i}") } }
+
           before do
             set_current_user(developer)
             6.times { |i| ServiceBinding.make(service_instance: managed_service_instance, app: processes[i].app, name: 'potato') }
@@ -1260,7 +1256,7 @@ module VCAP::CloudController
             get '/v2/service_bindings?results-per-page=2&page=1&q=name:potato'
 
             expect(last_response.status).to eq(200), last_response.body
-            expect(decoded_response['prev_url']).to be(nil)
+            expect(decoded_response['prev_url']).to be_nil
             next_url = decoded_response['next_url']
             expect(next_url).to match(%r{^/v2/service_bindings\?(?=.*page=2).*q=name:potato})
             service_bindings = decoded_response['resources']
@@ -1352,6 +1348,7 @@ module VCAP::CloudController
             ServiceBinding.make(service_instance: si1, app: process1.app, name: 'binding')
             ServiceBinding.make(service_instance: si2, app: process2.app, name: 'binding')
           end
+
           it 'developer1 can see only bindings in space1' do
             set_current_user(developer1)
             get '/v2/service_bindings?q=name:binding'
@@ -1432,7 +1429,7 @@ module VCAP::CloudController
             binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
 
             get "/v2/service_bindings/#{binding.guid}/parameters"
-            expect(last_response.status).to eql(400)
+            expect(last_response.status).to be(400)
             expect(last_response.body).to include('This service does not support fetching service binding parameters.')
           end
         end
@@ -1456,7 +1453,7 @@ module VCAP::CloudController
 
             it 'returns the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({ 'foo' => { 'bar' => true } }.to_json)
             end
           end
@@ -1466,7 +1463,7 @@ module VCAP::CloudController
 
             it 'returns an empty object' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -1476,7 +1473,7 @@ module VCAP::CloudController
 
             it 'returns an empty object' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -1486,7 +1483,7 @@ module VCAP::CloudController
 
             it 'returns only the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({ 'foo' => 'bar' }.to_json)
             end
           end
@@ -1496,7 +1493,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -1508,7 +1505,7 @@ module VCAP::CloudController
             it 'returns a 502 and an error' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
 
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
@@ -1519,7 +1516,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(502)
+              expect(last_response.status).to be(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -1534,7 +1531,7 @@ module VCAP::CloudController
 
             it 'returns the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(200)
+              expect(last_response.status).to be(200)
               expect(last_response.body).to eql({ 'foo' => true }.to_json)
             end
           end
@@ -1550,7 +1547,7 @@ module VCAP::CloudController
 
             it 'returns a 403' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to eql(403)
+              expect(last_response.status).to be(403)
             end
           end
 
@@ -1562,7 +1559,7 @@ module VCAP::CloudController
               binding.save
             end
 
-            it 'should show an error message for get parameter operation' do
+            it 'shows an error message for get parameter operation' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
               expect(last_response).to have_status_code 409
               expect(last_response.body).to match 'AsyncServiceBindingOperationInProgress'
@@ -1614,7 +1611,7 @@ module VCAP::CloudController
           binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
 
           get "/v2/service_bindings/#{binding.guid}/parameters"
-          expect(last_response.status).to eql(400)
+          expect(last_response.status).to be(400)
           expect(last_response.body).to include('This service does not support fetching service binding parameters.')
         end
       end
@@ -1623,7 +1620,7 @@ module VCAP::CloudController
         it 'returns a 404' do
           set_current_user(developer)
           get '/v2/service_bindings/some-bogus-guid/parameters'
-          expect(last_response.status).to eql(404)
+          expect(last_response.status).to be(404)
           expect(last_response.body).to include('The service binding could not be found: some-bogus-guid')
         end
       end
@@ -1634,7 +1631,7 @@ module VCAP::CloudController
         it 'returns a 404' do
           set_current_user(developer)
           get "/v2/service_bindings/#{service_key.guid}/parameters"
-          expect(last_response.status).to eql(404)
+          expect(last_response.status).to be(404)
           expect(last_response.body).to include("The service binding could not be found: #{service_key.guid}")
         end
       end

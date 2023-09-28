@@ -4,6 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneExcessAppRevisions, job_context: :worker do
       let(:max_retained_revisions_per_app) { 15 }
+
       subject(:job) { PruneExcessAppRevisions.new(max_retained_revisions_per_app) }
 
       it { is_expected.to be_a_valid_job }
@@ -63,7 +64,7 @@ module VCAP::CloudController
 
           expect do
             job.perform
-          end.to change { RevisionProcessCommandModel.count }.by(-35)
+          end.to change(RevisionProcessCommandModel, :count).by(-35)
 
           expect(process_commands[0...35].none?(&:exists?))
           expect(process_commands[35...50].all?(&:exists?))

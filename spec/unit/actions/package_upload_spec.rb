@@ -23,7 +23,7 @@ module VCAP::CloudController
         returned_job = nil
         expect do
           returned_job = package_upload.upload_async(message:, package:, config:, user_audit_info:)
-        end.to change { Delayed::Job.count }.by(1)
+        end.to change(Delayed::Job, :count).by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)
@@ -71,7 +71,7 @@ module VCAP::CloudController
         returned_job = nil
         expect do
           returned_job = package_upload.upload_async_without_event(message:, package:, config:)
-        end.to change { Delayed::Job.count }.by(1)
+        end.to change(Delayed::Job, :count).by(1)
 
         job = Delayed::Job.last
         expect(returned_job).to eq(job)

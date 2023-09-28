@@ -124,6 +124,7 @@ module VCAP
               end
             end
           end
+
           it 'when changing exponential backoff rate and default polling interval' do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
@@ -146,6 +147,7 @@ module VCAP
               end
             end
           end
+
           it 'when changing exponential backoff rate and retry_after from the job' do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10

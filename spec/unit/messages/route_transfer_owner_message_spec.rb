@@ -12,7 +12,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'it is valid' do
+        it 'is valid' do
           message = RouteTransferOwnerMessage.new(symbolized_body)
 
           expect(message).to be_valid
@@ -28,7 +28,7 @@ module VCAP::CloudController
         it 'returns an error' do
           message = RouteTransferOwnerMessage.new(symbolized_body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include("can't be blank")
         end
       end
@@ -43,7 +43,7 @@ module VCAP::CloudController
         it 'returns an error' do
           message = RouteTransferOwnerMessage.new(symbolized_body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include("can't be blank")
         end
       end
@@ -83,7 +83,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = RouteTransferOwnerMessage.new(symbolized_body)
 
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors[:data]).to include("can only accept key 'guid'")
           end
         end

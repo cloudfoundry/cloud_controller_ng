@@ -84,14 +84,11 @@ RSpec.describe 'Jobs' do
         'operation' => 'user.test_job',
         'state' => 'COMPLETE',
         'errors' => [],
-        'warnings' => match_array([
-          {
-            'detail' => 'warning-one'
-          },
-          {
-            'detail' => 'warning-two'
-          }
-        ]),
+        'warnings' => contain_exactly({
+                                        'detail' => 'warning-one'
+                                      }, {
+                                        'detail' => 'warning-two'
+                                      }),
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/jobs/#{job_guid}" },
           'users' => { 'href' => "#{link_prefix}/v3/users/#{user.guid}" }

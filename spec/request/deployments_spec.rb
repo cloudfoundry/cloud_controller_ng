@@ -201,7 +201,7 @@ RSpec.describe 'Deployments' do
         }
       end
 
-      it 'should create a deployment object using the droplet associated with the revision' do
+      it 'creates a deployment object using the droplet associated with the revision' do
         revision_count = VCAP::CloudController::RevisionModel.count
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
@@ -317,7 +317,7 @@ RSpec.describe 'Deployments' do
         }
       end
 
-      it 'should create a deployment object with the metadata' do
+      it 'creates a deployment object with the metadata' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
 
@@ -403,7 +403,7 @@ RSpec.describe 'Deployments' do
         expect do
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
-        end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+        end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
 
         deployment = VCAP::CloudController::DeploymentModel.last
         revision = VCAP::CloudController::RevisionModel.last
@@ -579,7 +579,7 @@ RSpec.describe 'Deployments' do
         }
       end
 
-      it 'should log the required fields when a deployment is created' do
+      it 'logs the required fields when a deployment is created' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -597,7 +597,8 @@ RSpec.describe 'Deployments' do
           expect(last_response.status).to eq(201), last_response.body
         end
       end
-      it 'should log the roll back app request' do
+
+      it 'logs the roll back app request' do
         app_model.update(revisions_enabled: true)
         Timecop.freeze do
           expected_json = {
@@ -797,7 +798,7 @@ RSpec.describe 'Deployments' do
         org.save
       end
 
-      it 'should return a 422 when a quota is violated' do
+      it 'returns a 422 when a quota is violated' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(422)
 
@@ -1097,7 +1098,7 @@ RSpec.describe 'Deployments' do
         end
       end
 
-      it 'should list all deployments' do
+      it 'lists all deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
         expect(last_response.status).to eq(200)
 
@@ -1319,7 +1320,7 @@ RSpec.describe 'Deployments' do
         end
       end
 
-      it 'should not include the deployments in the other space' do
+      it 'does not include the deployments in the other space' do
         get '/v3/deployments', nil, user_header
         expect(last_response.status).to eq(200)
 

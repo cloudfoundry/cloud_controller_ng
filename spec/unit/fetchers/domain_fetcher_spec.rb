@@ -8,7 +8,9 @@ module VCAP::CloudController
     describe '#fetch_all_for_orgs' do
       before do
         Domain.dataset.destroy
+        org3.add_private_domain(private_domain1)
       end
+
       let!(:org1) { Organization.make(guid: 'org1') }
       let!(:org2) { Organization.make(guid: 'org2') }
       let!(:org3) { Organization.make(guid: 'org3') }
@@ -18,10 +20,6 @@ module VCAP::CloudController
       let!(:private_domain1) { PrivateDomain.make(guid: 'private_domain1', owning_organization: org1) }
       let!(:private_domain2) { PrivateDomain.make(guid: 'private_domain2', owning_organization: org1) }
       let!(:private_domain3) { PrivateDomain.make(guid: 'private_domain3', owning_organization: org3) }
-
-      before do
-        org3.add_private_domain(private_domain1)
-      end
 
       context 'when there are no readable org guids' do
         it 'lists shared domains only' do
@@ -238,6 +236,7 @@ module VCAP::CloudController
           let(:message) do
             DomainsListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
           end
+
           it 'returns only the domain whose label matches' do
             expect(results.length).to eq(1)
             expect(results[0]).to eq(shared_domain1)

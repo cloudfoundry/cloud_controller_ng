@@ -19,6 +19,7 @@ module VCAP::CloudController
             buildpacks: %w[cool-buildpack rad-buildpack]
           }
         end
+
         before do
           Buildpack.make(name: 'cool-buildpack')
           Buildpack.make(name: 'rad-buildpack')

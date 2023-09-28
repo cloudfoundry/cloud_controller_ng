@@ -147,7 +147,8 @@ module VCAP::CloudController::RestController
     def check_arguments_encoding(args)
       args.each do |arg|
         if arg.respond_to?(:valid_encoding?) && !arg.valid_encoding?
-          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', "Invalid encoding for parameter: #{arg}")
+          raise CloudController::Errors::ApiError.new_from_details('InvalidRequest',
+                                                                   "Invalid encoding for parameter: #{arg}")
         end
       end
     end

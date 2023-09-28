@@ -78,6 +78,7 @@ RSpec.describe VCAP::CloudController::DbConnection::Finalizer do
   context 'default collation' do
     context 'when the db is MySQL' do
       let(:database_type) { :mysql }
+
       it 'sets the default collation' do
         subject.finalize(db_connection, {}, logger)
         expect(db_connection.default_collate).to eq('utf8_bin')
@@ -86,6 +87,7 @@ RSpec.describe VCAP::CloudController::DbConnection::Finalizer do
 
     context 'when the db is Postgres' do
       let(:database_type) { :postgres }
+
       it 'does not set the default collation' do
         subject.finalize(db_connection, {}, logger)
         expect(db_connection.default_collate).to be_nil

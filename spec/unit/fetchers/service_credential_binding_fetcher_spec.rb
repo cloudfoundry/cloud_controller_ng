@@ -9,7 +9,7 @@ module VCAP
       describe 'not a real guid' do
         let!(:existing_credential_binding) { ServiceBinding.make }
 
-        it 'should return nothing' do
+        it 'returns nothing' do
           credential_binding = fetcher.fetch('does-not-exist', readable_spaces_query: nil)
           expect(credential_binding).to be_nil
         end
@@ -37,6 +37,7 @@ module VCAP
         describe 'when not in the space' do
           let!(:other_space) { Space.make }
           let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
           it 'can not be found' do
             credential_binding = fetcher.fetch(service_key.guid, readable_spaces_query:)
 
@@ -68,6 +69,7 @@ module VCAP
           describe 'when not in the space' do
             let!(:other_space) { Space.make }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
             it 'can not be found' do
               credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
@@ -98,6 +100,7 @@ module VCAP
           describe 'when not in the space' do
             let!(:other_space) { Space.make }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
             it 'can not be found' do
               credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
@@ -118,7 +121,7 @@ module VCAP
           it 'fetches the last operation' do
             credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
-            expect(credential_binding.last_operation).to_not be_nil
+            expect(credential_binding.last_operation).not_to be_nil
 
             last_operation = credential_binding.last_operation
 

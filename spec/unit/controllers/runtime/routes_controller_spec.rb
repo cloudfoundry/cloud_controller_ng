@@ -22,9 +22,8 @@ module VCAP::CloudController
     let(:route_event_repository) { instance_double(Repositories::RouteEventRepository).as_null_object }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
-      allow(CloudController::DependencyLocator.instance).to receive(:app_event_repository).and_return(app_event_repository)
-      allow(CloudController::DependencyLocator.instance).to receive(:route_event_repository).and_return(route_event_repository)
+      allow(CloudController::DependencyLocator.instance).to receive_messages(routing_api_client:, app_event_repository:,
+                                                                             route_event_repository:)
       allow(routing_api_client).to receive(:router_group).with(tcp_group_1).and_return(router_groups[0])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_3).and_return(router_groups[2])
@@ -50,6 +49,7 @@ module VCAP::CloudController
           port: { type: 'integer' }
         )
       end
+
       it do
         expect(VCAP::CloudController::RoutesController).to have_updatable_attributes(
           host: { type: 'string' },
@@ -70,60 +70,74 @@ module VCAP::CloudController
           @domain_b = PrivateDomain.make(owning_organization: @org_b)
           @obj_b    = Route.make(domain: @domain_b, space: @space_b)
         end
+
         describe 'Org Level Permissions' do
           describe 'OrgManager' do
             let(:member_a) { @org_a_manager }
             let(:member_b) { @org_b_manager }
+
             include_examples 'permission enumeration', 'OrgManager',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'OrgUser' do
             let(:member_a) { @org_a_member }
             let(:member_b) { @org_b_member }
+
             include_examples 'permission enumeration', 'OrgUser',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 0
           end
+
           describe 'BillingManager' do
             let(:member_a) { @org_a_billing_manager }
             let(:member_b) { @org_b_billing_manager }
+
             include_examples 'permission enumeration', 'BillingManager',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 0
           end
+
           describe 'Auditor' do
             let(:member_a) { @org_a_auditor }
             let(:member_b) { @org_b_auditor }
+
             include_examples 'permission enumeration', 'Auditor',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 1
           end
         end
+
         describe 'App Space Level Permissions' do
           describe 'SpaceManager' do
             let(:member_a) { @space_a_manager }
             let(:member_b) { @space_b_manager }
+
             include_examples 'permission enumeration', 'SpaceManager',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'Developer' do
             let(:member_a) { @space_a_developer }
             let(:member_b) { @space_b_developer }
+
             include_examples 'permission enumeration', 'Developer',
                              name: 'route',
                              path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'SpaceAuditor' do
             let(:member_a) { @space_a_auditor }
             let(:member_b) { @space_b_auditor }
+
             include_examples 'permission enumeration', 'SpaceAuditor',
                              name: 'route',
                              path: '/v2/routes',
@@ -180,7 +194,7 @@ module VCAP::CloudController
         delete "v2/routes/#{route.guid}"
 
         expect(last_response.status).to eq 204
-        expect(route.exists?).to be_falsey
+        expect(route).not_to exist
       end
 
       context 'when async=true' do
@@ -188,11 +202,11 @@ module VCAP::CloudController
           delete "v2/routes/#{route.guid}?async=true"
 
           expect(last_response.status).to eq 202
-          expect(route.exists?).to be_truthy
+          expect(route).to exist
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-          expect(route.exists?).to be_falsey
+          expect(route).not_to exist
         end
       end
 
@@ -887,6 +901,7 @@ module VCAP::CloudController
           context 'when the routing api client raises a UaaUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
                 and_raise(RoutingApi::UaaUnavailable)
@@ -903,6 +918,7 @@ module VCAP::CloudController
           context 'when the routing api client raises a RoutingApiUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
                 and_raise(RoutingApi::RoutingApiUnavailable)
@@ -938,7 +954,7 @@ module VCAP::CloudController
           get "/v2/routes/#{route.guid}"
 
           expect(last_response.status).to eq 200
-          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+          expect(decoded_response['entity']['domain_guid']).not_to be_nil
         end
       end
 
@@ -949,7 +965,7 @@ module VCAP::CloudController
           get "/v2/routes/#{route.guid}"
 
           expect(last_response.status).to eq 200
-          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+          expect(decoded_response['entity']['domain_guid']).not_to be_nil
         end
       end
     end
@@ -971,7 +987,7 @@ module VCAP::CloudController
       end
 
       context 'related resources' do
-        it 'should contain links to the apps and route_mappings resources' do
+        it 'contains links to the apps and route_mappings resources' do
           get 'v2/routes'
           expect(last_response.status).to eq(200), last_response.body
 
@@ -1082,6 +1098,7 @@ module VCAP::CloudController
 
             context 'at page 1' do
               let(:page) { 1 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1096,6 +1113,7 @@ module VCAP::CloudController
 
             context 'at page 2' do
               let(:page) { 2 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1110,6 +1128,7 @@ module VCAP::CloudController
 
             context 'at page 3' do
               let(:page) { 3 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1125,7 +1144,7 @@ module VCAP::CloudController
       end
 
       context 'when user can read globally' do
-        it 'should return all the routes' do
+        it 'returns all the routes' do
           get 'v2/routes'
           expect(last_response.status).to eq(200), last_response.body
 
@@ -1143,7 +1162,7 @@ module VCAP::CloudController
           set_current_user(developer)
         end
 
-        it 'should return just the routes the user can access' do
+        it 'returns just the routes the user can access' do
           get 'v2/routes'
 
           expect(last_response.status).to eq(200), last_response.body
@@ -1219,7 +1238,7 @@ module VCAP::CloudController
             end
           end
 
-          context ' when the path does exist' do
+          context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
               let(:route) { Route.make(path:) }
@@ -1291,6 +1310,7 @@ module VCAP::CloudController
           let(:tcp_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
           let(:tcp_2_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
           let(:tcp_route) { Route.make(domain: tcp_domain, host: '', port: 1234) }
+
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
           end
@@ -1330,7 +1350,7 @@ module VCAP::CloudController
             end
           end
 
-          context ' when the path does exist' do
+          context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
               let(:route) { Route.make(path:) }
@@ -1432,7 +1452,7 @@ module VCAP::CloudController
             get "v2/routes/#{route.guid}/apps"
 
             expect(last_response.status).to eq(200), last_response.body
-            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to match_array([app_model.guid, process2.app.guid])
+            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(app_model.guid, process2.app.guid)
           end
         end
       end
@@ -1458,6 +1478,7 @@ module VCAP::CloudController
           before do
             set_current_user_as_admin
           end
+
           it 'returns all route_mappings of the route' do
             get "/v2/routes/#{route.guid}/route_mappings"
 
@@ -1498,7 +1519,7 @@ module VCAP::CloudController
         put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
         expect(last_response.status).to eq(201)
 
-        expect(route.reload.apps).to match_array([process])
+        expect(route.reload.apps).to contain_exactly(process)
 
         mapping = RouteMappingModel.last
         expect(mapping.route).to eq(route)
@@ -1552,12 +1573,12 @@ module VCAP::CloudController
         end
 
         it 'reports success' do
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
 
           put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
         end
       end
 
@@ -1597,7 +1618,7 @@ module VCAP::CloudController
           put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
 
           mapping = RouteMappingModel.last
           expect(mapping.route).to eq(route)
@@ -1632,13 +1653,13 @@ module VCAP::CloudController
       end
 
       it 'removes the association' do
-        expect(route.reload.apps).to match_array([process])
+        expect(route.reload.apps).to contain_exactly(process)
 
         delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
         expect(last_response.status).to eq(204)
 
         expect(route.reload.apps).to be_empty
-        expect(route_mapping.exists?).to be_falsey
+        expect(route_mapping).not_to exist
       end
 
       context 'when the route does not exist' do
@@ -1661,13 +1682,13 @@ module VCAP::CloudController
         before { route_mapping.destroy }
 
         it 'succeeds' do
-          expect(route.reload.apps).to match_array([])
+          expect(route.reload.apps).to be_empty
 
           delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
           expect(last_response.status).to eq(204)
 
           expect(route.reload.apps).to be_empty
-          expect(route_mapping.exists?).to be_falsey
+          expect(route_mapping).not_to exist
         end
       end
 

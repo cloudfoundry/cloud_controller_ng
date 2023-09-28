@@ -3,10 +3,11 @@ require 'support/stepper'
 
 RSpec.describe 'Stepper' do
   # make sure randomness is predictable/testable
+  subject(:stepper) { Stepper.new(self, random:) }
+
   let(:random) { Random.new(1234) }
 
   let(:target) { Target.new }
-  subject(:stepper) { Stepper.new(self, random:) }
 
   context 'in isolation (#step is mocked out - too much complexity)' do
     before do
@@ -165,7 +166,7 @@ RSpec.describe 'Stepper' do
           [:method_one, '[0]'],
           [:stepper, :step, 'step 2']
         ])
-        expect(stepper.aborted?).to eq(true)
+        expect(stepper.aborted?).to be(true)
         expect(stepper.errors).to eq([error])
       end
 

@@ -78,10 +78,8 @@ module VCAP::CloudController
         end
 
         it 'returns the correct diff' do
-          expect(subject).to match_array([
-            { 'op' => 'add', 'path' => '/applications/0/random-route', 'value' => true },
-            { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' }
-          ])
+          expect(subject).to contain_exactly({ 'op' => 'add', 'path' => '/applications/0/random-route', 'value' => true },
+                                             { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' })
         end
       end
 
@@ -100,6 +98,7 @@ module VCAP::CloudController
 
         context 'when processes do not change' do
           let!(:process1) { ProcessModel.make(app: app1_model, memory: 256) }
+
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '256M'
           end
@@ -270,6 +269,7 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '1G'
             default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '1024K'
           end
+
           it 'returns an empty diff' do
             expect(subject).to eq([])
           end
@@ -285,6 +285,7 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['readiness-health-check-interval'] = 20
             default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '2G'
           end
+
           it 'returns the diff formatted' do
             expect(subject).to eq([
               { 'op' => 'add', 'path' => '/applications/0/processes/0/health-check-interval', 'value' => 10 },
@@ -453,9 +454,7 @@ module VCAP::CloudController
         end
 
         it 'returns the correct diff' do
-          expect(subject).to match_array([
-            { 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => process1.instances, 'value' => 5 }
-          ])
+          expect(subject).to contain_exactly({ 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => process1.instances, 'value' => 5 })
         end
       end
 
@@ -478,7 +477,7 @@ module VCAP::CloudController
           end
 
           it 'returns an empty diff if the field is equivalent' do
-            expect(subject).to match_array([])
+            expect(subject).to be_empty
           end
         end
 
@@ -500,9 +499,7 @@ module VCAP::CloudController
           end
 
           it 'returns an empty diff if the field is equivalent' do
-            expect(subject).to match_array([
-              { 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' }
-            ])
+            expect(subject).to contain_exactly({ 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' })
           end
         end
       end

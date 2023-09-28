@@ -251,6 +251,7 @@ RSpec.describe 'ServiceInstances' do
         before do
           set_current_user(user)
         end
+
         it 'returns the service_plan_guid in the response' do
           get "v2/service_instances/#{service_instance.guid}", nil, headers_for(user)
 

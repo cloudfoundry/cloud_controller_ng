@@ -359,6 +359,7 @@ RSpec.describe 'v3 service credential bindings' do
         describe 'label_selector' do
           let!(:key_labels) { { env: 'prod', animal: 'dog' } }
           let!(:app_labels) { { env: 'prod', animal: 'horse' } }
+
           before do
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: key_binding)
@@ -392,7 +393,7 @@ RSpec.describe 'v3 service credential bindings' do
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expected_guids = bindings.map(&:guid)
-          expect(returned_guids).to contain_exactly(*expected_guids)
+          expect(returned_guids).to match_array(expected_guids)
         end
       end
 
@@ -459,6 +460,7 @@ RSpec.describe 'v3 service credential bindings' do
   describe 'GET /v3/service_credential_bindings/:guid' do
     describe 'query params' do
       let(:binding) { VCAP::CloudController::ServiceBinding.make }
+
       it 'returns 400 for invalid query params' do
         get "/v3/service_credential_bindings/#{binding.guid}?bahamas=yes-please", nil, admin_headers
 
@@ -536,7 +538,7 @@ RSpec.describe 'v3 service credential bindings' do
       end
     end
 
-    describe 'app credential binding ' do
+    describe 'app credential binding' do
       let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
       let(:labels) { { foo: 'bar' } }
       let(:annotations) { { baz: 'wow' } }
@@ -721,12 +723,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the originating space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
 
-          it 'should return the credentials for users in the originating space' do
+          it 'returns the credentials for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(200)
           end
 
-          it 'should return 404 for users in the shared space' do
+          it 'returns 404 for users in the shared space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(404)
           end
@@ -735,12 +737,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the shared space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
 
-          it 'should return 404 for users in the originating space' do
+          it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(404)
           end
 
-          it 'should return the credentials for users in the shared space space' do
+          it 'returns the credentials for users in the shared space space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(200)
           end
@@ -882,12 +884,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the originating space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
 
-          it 'should return the parameters for users in the originating space' do
+          it 'returns the parameters for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(200)
           end
 
-          it 'should return 404 for users in the shared space' do
+          it 'returns 404 for users in the shared space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(404)
           end
@@ -896,12 +898,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the shared space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
 
-          it 'should return 404 for users in the originating space' do
+          it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(404)
           end
 
-          it 'should return the parameters for users in the shared space space' do
+          it 'returns the parameters for users in the shared space space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(200)
           end
@@ -915,7 +917,7 @@ RSpec.describe 'v3 service credential bindings' do
           instance.service.update(bindings_retrievable: false)
         end
 
-        it 'should fail as can not be done' do
+        it 'fails as can not be done' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(502)
@@ -932,7 +934,7 @@ RSpec.describe 'v3 service credential bindings' do
             binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
           end
 
-          it 'should fail as not allowed' do
+          it 'fails as not allowed' do
             api_call.call(admin_headers)
 
             expect(last_response).to have_status_code(409)
@@ -975,7 +977,7 @@ RSpec.describe 'v3 service credential bindings' do
           instance.service.update(bindings_retrievable: false)
         end
 
-        it 'should fail as can not be done' do
+        it 'fails as can not be done' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(502)
@@ -1161,6 +1163,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when the service instance and the app are not in the same space' do
           let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
+
           it 'returns a 422 error' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)

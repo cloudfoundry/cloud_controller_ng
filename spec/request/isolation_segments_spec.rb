@@ -197,7 +197,7 @@ RSpec.describe 'IsolationSegmentModels' do
       expect(last_response.status).to eq(204)
       isolation_segment.reload
       expect(isolation_segment.organizations).to include(org2)
-      expect(isolation_segment.organizations).to_not include(org1)
+      expect(isolation_segment.organizations).not_to include(org1)
     end
   end
 
@@ -475,9 +475,11 @@ RSpec.describe 'IsolationSegmentModels' do
 
     context 'permissions' do
       let(:iso_seg1) { VCAP::CloudController::IsolationSegmentModel.make }
+
       before do
         assigner.assign(iso_seg1, [space.organization])
       end
+
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get '/v3/isolation_segments', nil, user_headers } }
         let(:org) { space.organization }

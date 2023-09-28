@@ -20,7 +20,7 @@ module VCAP::CloudController
       it 'deletes the route record' do
         expect do
           route_delete.delete([route])
-        end.to change { Route.count }.by(-1)
+        end.to change(Route, :count).by(-1)
         expect { route.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -53,6 +53,7 @@ module VCAP::CloudController
             value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
+
         before do
           stub_unbind(route_binding)
         end
@@ -60,34 +61,34 @@ module VCAP::CloudController
         it 'deletes associated route mappings' do
           expect do
             route_delete.delete([route])
-          end.to change { RouteMappingModel.count }.by(-1)
-          expect(route.exists?).to be_falsey
-          expect(route_mapping.exists?).to be_falsey
-          expect(route.exists?).to be_falsey
+          end.to change(RouteMappingModel, :count).by(-1)
+          expect(route).not_to exist
+          expect(route_mapping).not_to exist
+          expect(route).not_to exist
         end
 
         it 'deletes associated route bindings' do
           expect do
             route_delete.delete([route])
-          end.to change { RouteBinding.count }.by(-1)
-          expect(route_binding.exists?).to be_falsey
-          expect(route.exists?).to be_falsey
+          end.to change(RouteBinding, :count).by(-1)
+          expect(route_binding).not_to exist
+          expect(route).not_to exist
         end
 
         it 'deletes associated metadata labels' do
           expect do
             route_delete.delete([route])
-          end.to change { RouteLabelModel.count }.by(-1)
+          end.to change(RouteLabelModel, :count).by(-1)
           expect(RouteLabelModel.count).to eq 0
-          expect(route.exists?).to be_falsey
+          expect(route).not_to exist
         end
 
         it 'deletes associated metadata labels' do
           expect do
             route_delete.delete([route])
-          end.to change { RouteAnnotationModel.count }.by(-1)
+          end.to change(RouteAnnotationModel, :count).by(-1)
           expect(RouteAnnotationModel.count).to eq 0
-          expect(route.exists?).to be_falsey
+          expect(route).not_to exist
         end
       end
     end

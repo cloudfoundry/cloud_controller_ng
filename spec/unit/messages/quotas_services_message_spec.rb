@@ -11,7 +11,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
         end
       end
@@ -23,27 +23,29 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service instances is not a number')
           end
         end
+
         context 'when the type is decimal' do
           let(:params) do
             { total_service_instances: 1.1 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service instances must be an integer')
           end
         end
+
         context 'when the type is a negative integer' do
           let(:params) do
             { total_service_instances: -1 }
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service instances must be greater than or equal to 0')
           end
         end
@@ -55,6 +57,7 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the type is nil (unlimited)' do
           let(:params) do
             { total_service_instances: nil }
@@ -62,13 +65,14 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
             { total_service_instances: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service instances must be less than or equal to 2147483647')
           end
         end
@@ -81,27 +85,29 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service keys is not a number')
           end
         end
+
         context 'when the type is decimal' do
           let(:params) do
             { total_service_keys: 1.1 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service keys must be an integer')
           end
         end
+
         context 'when the type is a negative integer' do
           let(:params) do
             { total_service_keys: -1 }
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service keys must be greater than or equal to 0')
           end
         end
@@ -113,6 +119,7 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the type is nil (unlimited)' do
           let(:params) do
             { total_service_keys: nil }
@@ -120,13 +127,14 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the value is greater than the maximum allowed value in the DB' do
           let(:params) do
             { total_service_keys: 1_000_000_000_000_000_000_000_000 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total service keys must be less than or equal to 2147483647')
           end
         end
@@ -147,7 +155,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Paid services allowed must be a boolean')
           end
         end

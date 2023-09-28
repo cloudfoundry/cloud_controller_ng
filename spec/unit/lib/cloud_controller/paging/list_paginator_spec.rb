@@ -42,6 +42,7 @@ module VCAP::CloudController
 
       describe 'sorting' do
         let(:per_page) { 10 }
+
         it 'sorts by the order_by option in the corresponding order_direction for asc' do
           app_model1.update(name: 'b')
           app_model2.update(name: 'a')

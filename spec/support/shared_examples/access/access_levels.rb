@@ -1,4 +1,4 @@
-shared_examples :full_access do
+shared_examples 'full access' do
   it { is_expected.to allow_op_on_object :create, object }
   it { is_expected.to allow_op_on_object :read, object }
   it { is_expected.to allow_op_on_object :read_for_update, object }
@@ -7,7 +7,7 @@ shared_examples :full_access do
   it { is_expected.to allow_op_on_object :index, object.class }
 end
 
-shared_examples :read_only_access do
+shared_examples 'read only access' do
   it { is_expected.not_to allow_op_on_object :create, object }
   it { is_expected.to allow_op_on_object :read, object }
   it { is_expected.not_to allow_op_on_object :read_for_update, object }
@@ -17,7 +17,7 @@ shared_examples :read_only_access do
   it { is_expected.to allow_op_on_object :index, object.class }
 end
 
-shared_examples :no_access do
+shared_examples 'no access' do
   it { is_expected.not_to allow_op_on_object :create, object }
   it { is_expected.not_to allow_op_on_object :read, object }
   it { is_expected.not_to allow_op_on_object :read_for_update, object }
@@ -29,22 +29,22 @@ shared_examples :no_access do
   # override the default behavior of always allowing access to :index
 end
 
-shared_examples :admin_full_access do
-  include_context :admin_setup
-  it_behaves_like :full_access
+shared_examples 'admin full access' do
+  include_context 'admin setup'
+  it_behaves_like 'full access'
 end
 
-shared_examples :admin_read_only_access do
-  include_context :admin_read_only_setup
-  it_behaves_like :read_only_access
+shared_examples 'admin read only access' do
+  include_context 'admin read only setup'
+  it_behaves_like 'read only access'
 end
 
-shared_examples :global_auditor_access do
-  include_context :global_auditor_setup
-  it_behaves_like :read_only_access
+shared_examples 'global auditor access' do
+  include_context 'global auditor setup'
+  it_behaves_like 'read only access'
 end
 
-shared_context :admin_setup do
+shared_context 'admin setup' do
   before do
     token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] }
     VCAP::CloudController::SecurityContext.set(user, token)
@@ -53,7 +53,7 @@ shared_context :admin_setup do
   after { VCAP::CloudController::SecurityContext.clear }
 end
 
-shared_context :global_auditor_setup do
+shared_context 'global auditor setup' do
   before do
     token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_GLOBAL_AUDITOR] }
     VCAP::CloudController::SecurityContext.set(user, token)
@@ -62,7 +62,7 @@ shared_context :global_auditor_setup do
   after { VCAP::CloudController::SecurityContext.clear }
 end
 
-shared_context :admin_read_only_setup do
+shared_context 'admin read only setup' do
   before do
     token = { 'scope' => [VCAP::CloudController::Roles::CLOUD_CONTROLLER_ADMIN_READ_ONLY_SCOPE] }
     VCAP::CloudController::SecurityContext.set(user, token)

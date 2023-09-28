@@ -29,7 +29,7 @@ module VCAP::CloudController
         Timecop.travel(999.seconds.from_now)
         expect(UaaTokenCache.get_token(client_id)).to eq 'bearer STUFF'
         Timecop.travel(2.seconds.from_now)
-        expect(UaaTokenCache.get_token(client_id)).to eq nil
+        expect(UaaTokenCache.get_token(client_id)).to be_nil
       end
 
       it 'never expires a token where expires in is nil' do

@@ -8,6 +8,7 @@ module VCAP::CloudController
       let(:services_event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
       let(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
+
       subject(:org_delete) { V2::OrganizationDelete.new(space_delete) }
       describe '#delete' do
         let!(:org_1) { Organization.make }
@@ -47,7 +48,7 @@ module VCAP::CloudController
           it 'deletes the org record' do
             expect do
               org_delete.delete(org_dataset)
-            end.to change { Organization.count }.by(-2)
+            end.to change(Organization, :count).by(-2)
             expect { org_1.refresh }.to raise_error Sequel::Error, 'Record not found'
             expect { org_2.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
@@ -63,21 +64,21 @@ module VCAP::CloudController
           it 'deletes any spaces in the org' do
             expect do
               org_delete.delete(org_dataset)
-            end.to change { Space.count }.by(-2)
+            end.to change(Space, :count).by(-2)
             expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
           it 'deletes associated apps' do
             expect do
               org_delete.delete(org_dataset)
-            end.to change { AppModel.count }.by(-1)
+            end.to change(AppModel, :count).by(-1)
             expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
           it 'deletes associated service instances' do
             expect do
               org_delete.delete(org_dataset)
-            end.to change { ServiceInstance.count }.by(-2)
+            end.to change(ServiceInstance, :count).by(-2)
             expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
         end

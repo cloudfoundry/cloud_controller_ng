@@ -255,7 +255,7 @@ RSpec.shared_examples 'resource with metadata' do
       expect(successes).to be >= 1
       expect(failures).to be 0
     end
-    expect(resource).to_not exist
+    expect(resource).not_to exist
   end
 
   it 'can be deleted when it has associated labels' do
@@ -268,7 +268,7 @@ RSpec.shared_examples 'resource with metadata' do
       expect(successes).to be >= 1
       expect(failures).to be 0
     end
-    expect(resource).to_not exist
+    expect(resource).not_to exist
   end
 end
 

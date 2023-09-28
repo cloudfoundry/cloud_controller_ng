@@ -27,7 +27,7 @@ module VCAP::CloudController
       @route_event_repository = dependencies.fetch(:route_event_repository)
     end
 
-    # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength
     def self.translate_validation_exception(e, attributes)
       return CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled') if e.errors.on(:routing_api) == [:routing_api_disabled]
 
@@ -46,11 +46,13 @@ module VCAP::CloudController
       return CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', e.errors.on(:router_group)) if e.errors.on(:router_group)
 
       if e.errors.on(:port) == [:port_unsupported]
-        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                                                                  'Port is supported for domains of TCP router groups only.')
       end
 
       if e.errors.on(:port) == [:port_required]
-        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'For TCP routes you must specify a port or request a random one.')
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                                                                  'For TCP routes you must specify a port or request a random one.')
       end
 
       if e.errors.on(:port) == [:port_unavailable]
@@ -59,7 +61,8 @@ module VCAP::CloudController
                                                                   'Try a different port or request a random one be generated for you.')
       end
       if e.errors.on(:host) == [:host_and_path_domain_tcp] || e.errors.on(:path) == [:host_and_path_domain_tcp]
-        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Host and path are not supported, as domain belongs to a TCP router group.')
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                                                                  'Host and path are not supported, as domain belongs to a TCP router group.')
       end
 
       name_errors = e.errors.on(%i[host domain_id])
@@ -94,11 +97,13 @@ module VCAP::CloudController
       end
 
       if e.errors.on(:path) == [:path_not_supported_for_internal_domain]
-        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Path is not supported for internal domains.')
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                                                                  'Path is not supported for internal domains.')
       end
 
       if e.errors.on(:host) == [:wildcard_host_not_supported_for_internal_domain]
-        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Wild card host names are not supported for internal domains.')
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid',
+                                                                  'Wild card host names are not supported for internal domains.')
       end
 
       path_error = e.errors.on(:path)
@@ -111,7 +116,7 @@ module VCAP::CloudController
 
       CloudController::Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
+    # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength
 
     def create
       json_msg = self.class::CreateMessage.decode(body)
@@ -323,7 +328,8 @@ module VCAP::CloudController
       domain_invalid!(domain_guid) if domain.nil?
 
       if routing_api_client.router_group(domain.router_group_guid).nil?
-        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
+        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound',
+                                                                 domain.router_group_guid.to_s)
       end
 
       raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.') unless domain.shared? && domain.tcp?

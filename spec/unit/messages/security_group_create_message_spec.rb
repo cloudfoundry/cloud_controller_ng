@@ -81,7 +81,7 @@ module VCAP::CloudController
           let(:params) { { 'name' => 'B' * (SecurityGroupCreateMessage::MAX_SECURITY_GROUP_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -90,7 +90,7 @@ module VCAP::CloudController
           let(:params) { { 'name' => '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include("can't be blank")
           end
         end
@@ -98,7 +98,7 @@ module VCAP::CloudController
         context 'when it is not a string' do
           let(:params) { { name: true } }
 
-          it { is_expected.to be_invalid }
+          it { is_expected.not_to be_valid }
         end
       end
 
@@ -158,7 +158,7 @@ module VCAP::CloudController
           end
 
           it 'is invalid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
           end
         end
       end
@@ -176,16 +176,18 @@ module VCAP::CloudController
         context 'when no configuration is supplied' do
           context 'when value is not a hash' do
             let(:globally_enabled) { 'bad' }
+
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:globally_enabled]).to eq(['must be an object'])
             end
           end
 
           context 'when the nested keys are invalid' do
             let(:globally_enabled) { { 'bad' => 'key' } }
+
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'staging'"])
             end
           end
@@ -197,8 +199,9 @@ module VCAP::CloudController
                 'staging' => 'value'
               }
             end
+
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:globally_enabled]).to eq(['values must be booleans'])
             end
           end
@@ -237,7 +240,7 @@ module VCAP::CloudController
             }
           end
 
-          it { is_expected.to be_invalid }
+          it { is_expected.not_to be_valid }
         end
 
         context 'given unexpected staging spaces relationship data (not one-to-many relationship)' do
@@ -252,7 +255,7 @@ module VCAP::CloudController
             }
           end
 
-          it { is_expected.to be_invalid }
+          it { is_expected.not_to be_valid }
         end
 
         context 'given unexpected running spaces relationship data (not one-to-many relationship)' do
@@ -267,7 +270,7 @@ module VCAP::CloudController
             }
           end
 
-          it { is_expected.to be_invalid }
+          it { is_expected.not_to be_valid }
         end
 
         context 'given a malformed running space guid' do
@@ -284,7 +287,7 @@ module VCAP::CloudController
             }
           end
 
-          it { is_expected.to be_invalid }
+          it { is_expected.not_to be_valid }
         end
       end
     end
@@ -301,7 +304,7 @@ module VCAP::CloudController
       end
 
       it 'returns the value provided for the running key' do
-        expect(subject.running).to eq true
+        expect(subject.running).to be true
       end
     end
 
@@ -317,7 +320,7 @@ module VCAP::CloudController
       end
 
       it 'returns the value provided for the staging key' do
-        expect(subject.staging).to eq false
+        expect(subject.staging).to be false
       end
     end
 

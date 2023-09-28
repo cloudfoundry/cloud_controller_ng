@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:request_logs) { double(:request_logs) }
 
-    before :each do
+    before do
       allow(logger).to receive :info
       allow(logger).to receive :warn
       allow(periodic_updater).to receive :setup_updates
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       it "uses thin's experimental threaded mode intentionally" do
-        expect(thin_server.threaded).to eq(true)
+        expect(thin_server.threaded).to be(true)
       end
 
       it 'starts the thin server' do
@@ -79,7 +79,7 @@ module VCAP::CloudController
         subject.instance_variable_set(:@thin_server, thin_server)
       end
 
-      it 'should stop thin and EM, logs incomplete requests' do
+      it 'stops thin and EM, logs incomplete requests' do
         expect(thin_server).to receive(:stop)
         expect(request_logs).to receive(:log_incomplete_requests)
         expect(EM).to receive(:stop)

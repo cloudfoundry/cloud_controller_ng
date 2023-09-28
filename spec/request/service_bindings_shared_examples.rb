@@ -59,9 +59,6 @@ RSpec.shared_examples 'metadata update for service binding' do |audit_name|
         {},
         { type: 'create', state: 'in progress', broker_provided_operation: 'some-info' }
       )
-    end
-
-    before do
       api_call.call(admin_headers)
       expect(last_response).to have_status_code(200)
       binding.reload

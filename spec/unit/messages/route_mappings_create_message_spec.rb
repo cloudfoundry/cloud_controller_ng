@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     it 'converts requested keys to symbols' do
       message = RouteMappingsCreateMessage.new(body)
-      expect(message.requested?(:relationships)).to be_truthy
+      expect(message).to be_requested(:relationships)
     end
 
     describe 'validations' do
@@ -48,6 +48,7 @@ module VCAP::CloudController
 
       describe 'weight' do
         let(:message) { RouteMappingsCreateMessage.new(body) }
+
         context 'when weight is NOT provided' do
           let(:body) do
             {
@@ -58,6 +59,7 @@ module VCAP::CloudController
               }
             }
           end
+
           it 'is valid' do
             expect(message).to be_valid
           end
@@ -79,7 +81,7 @@ module VCAP::CloudController
             let(:weight) { 0 }
 
             it 'is invalid' do
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors[:weight]).to include('0 must be an integer between 1 and 128')
             end
           end
@@ -88,7 +90,7 @@ module VCAP::CloudController
             let(:weight) { 129 }
 
             it 'is invalid' do
-              expect(message).to be_invalid
+              expect(message).not_to be_valid
               expect(message.errors[:weight]).to include('129 must be an integer between 1 and 128')
             end
           end
@@ -119,7 +121,7 @@ module VCAP::CloudController
         it 'is not valid when app_guid has an invalid guid' do
           message = RouteMappingsCreateMessage.new({ relationships: { app: { guid: 876 } } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app_guid)).to_not be_empty
+          expect(message.errors_on(:app_guid)).not_to be_empty
         end
       end
 

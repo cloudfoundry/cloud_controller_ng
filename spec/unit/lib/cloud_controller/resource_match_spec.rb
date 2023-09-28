@@ -23,17 +23,17 @@ module VCAP::CloudController
         @resource_pool.add_directory(@tmpdir)
       end
 
-      it 'should return an empty list when no resources match' do
+      it 'returns an empty list when no resources match' do
         res = ResourceMatch.new([@nonexisting_descriptor]).match_resources
         expect(res).to eq([])
       end
 
-      it 'should return a resource that matches' do
+      it 'returns a resource that matches' do
         res = ResourceMatch.new([@descriptors.first, @nonexisting_descriptor]).match_resources
         expect(res).to eq([@descriptors.first])
       end
 
-      it 'should return many resources that match' do
+      it 'returns many resources that match' do
         res = ResourceMatch.new(@descriptors + [@nonexisting_descriptor]).match_resources
         expect(res).to eq(@descriptors)
       end

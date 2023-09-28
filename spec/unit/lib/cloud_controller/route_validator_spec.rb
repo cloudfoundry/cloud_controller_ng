@@ -43,6 +43,7 @@ module VCAP::CloudController
 
       context 'and the path value is not null' do
         let(:path) { '/path' }
+
         it 'adds an error' do
           validator.validate
           expect(route.errors.on(:path)).to include(:path_not_supported_for_internal_domain)
@@ -60,6 +61,7 @@ module VCAP::CloudController
 
       context 'and the host value is a wildcard' do
         let(:host) { '*' }
+
         it 'adds an error' do
           validator.validate
           expect(route.errors.on(:host)).to include(:wildcard_host_not_supported_for_internal_domain)
@@ -103,6 +105,7 @@ module VCAP::CloudController
 
         context 'host is empty in request' do
           let(:host) { '' }
+
           it 'does not add errors' do
             validator.validate
             expect(route.errors).to be_empty
@@ -120,6 +123,7 @@ module VCAP::CloudController
 
         context 'path is empty in request' do
           let(:path) { '' }
+
           it 'does not add an error to the route' do
             validator.validate
             expect(route.errors).to be_empty

@@ -108,9 +108,9 @@ module VCAP::CloudController::Diego
             application_id: app.guid,
             application_version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
             application_name: app.name,
-            application_uris: match_array([route1.fqdn, route2.fqdn]),
+            application_uris: contain_exactly(route1.fqdn, route2.fqdn),
             version: /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            uris: match_array([route1.fqdn, route2.fqdn]),
+            uris: contain_exactly(route1.fqdn, route2.fqdn),
             name: app.name,
             space_name: space.name,
             space_id: space.guid,
@@ -145,6 +145,7 @@ module VCAP::CloudController::Diego
 
       context 'when the app does not have a database_uri' do
         let(:app_env_vars) { { 'DATABASE_URL' => 'cool-db' } }
+
         before do
           allow(app).to receive(:database_uri).and_return(nil)
         end

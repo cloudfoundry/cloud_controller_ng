@@ -43,38 +43,38 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it 'exports these attributes' do
-        is_expected.to export_attributes :name,
-                                         :free,
-                                         :description,
-                                         :service_guid,
-                                         :extra,
-                                         :unique_id,
-                                         :public,
-                                         :bindable,
-                                         :plan_updateable,
-                                         :maximum_polling_duration,
-                                         :maintenance_info,
-                                         :active,
-                                         :create_instance_schema,
-                                         :update_instance_schema,
-                                         :create_binding_schema
+        expect(subject).to export_attributes :name,
+                                             :free,
+                                             :description,
+                                             :service_guid,
+                                             :extra,
+                                             :unique_id,
+                                             :public,
+                                             :bindable,
+                                             :plan_updateable,
+                                             :maximum_polling_duration,
+                                             :maintenance_info,
+                                             :active,
+                                             :create_instance_schema,
+                                             :update_instance_schema,
+                                             :create_binding_schema
       end
 
       it 'imports these attributes' do
-        is_expected.to import_attributes :name,
-                                         :free,
-                                         :description,
-                                         :service_guid,
-                                         :extra,
-                                         :unique_id,
-                                         :public,
-                                         :bindable,
-                                         :plan_updateable,
-                                         :maximum_polling_duration,
-                                         :maintenance_info,
-                                         :create_instance_schema,
-                                         :update_instance_schema,
-                                         :create_binding_schema
+        expect(subject).to import_attributes :name,
+                                             :free,
+                                             :description,
+                                             :service_guid,
+                                             :extra,
+                                             :unique_id,
+                                             :public,
+                                             :bindable,
+                                             :plan_updateable,
+                                             :maximum_polling_duration,
+                                             :maintenance_info,
+                                             :create_instance_schema,
+                                             :update_instance_schema,
+                                             :create_binding_schema
       end
     end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
               plan.save
             rescue StandardError
               nil
-            end.to_not change(plan, :unique_id)
+            end.not_to change(plan, :unique_id)
           end
 
           it 'raises a validation error' do
@@ -195,7 +195,7 @@ module VCAP::CloudController
       end
 
       it 'returns plans from private service brokers in all the spaces the user has roles in' do
-        expect(ServicePlan.plan_ids_from_private_brokers(user).select_map(:service_plans__id)).to(match_array([service_plan_1.id, service_plan_2.id]))
+        expect(ServicePlan.plan_ids_from_private_brokers(user).select_map(:service_plans__id)).to(contain_exactly(service_plan_1.id, service_plan_2.id))
       end
 
       it "doesn't return plans for private services in spaces the user doesn't have roles in" do
@@ -233,7 +233,7 @@ module VCAP::CloudController
         context 'when the service instances are in spaces that the user has a role in' do
           it 'returns all plans regardless of active or public' do
             expect(ServicePlan.plan_ids_for_visible_service_instances(user).select_map(:service_plans__id)).
-              to match_array([service_plan.id, non_public_plan.id, inactive_plan.id])
+              to contain_exactly(service_plan.id, non_public_plan.id, inactive_plan.id)
           end
         end
 
@@ -314,7 +314,7 @@ module VCAP::CloudController
         space = Space.make(organization:)
 
         visible = ServicePlan.space_visible(space).all
-        expect(visible).to_not include(hidden_private_plan)
+        expect(visible).not_to include(hidden_private_plan)
         expect(hidden_private_plan.visible_in_space?(space)).to be false
       end
     end
@@ -327,11 +327,13 @@ module VCAP::CloudController
 
         context 'and the service is bindable' do
           let(:service) { Service.make(bindable: true) }
+
           specify { expect(service_plan).to be_bindable }
         end
 
         context 'and the service is unbindable' do
           let(:service) { Service.make(bindable: false) }
+
           specify { expect(service_plan).not_to be_bindable }
         end
       end
@@ -341,11 +343,13 @@ module VCAP::CloudController
 
         context 'and the service is bindable' do
           let(:service) { Service.make(bindable: true) }
+
           specify { expect(service_plan).not_to be_bindable }
         end
 
         context 'and the service is unbindable' do
           let(:service) { Service.make(bindable: false) }
+
           specify { expect(service_plan).not_to be_bindable }
         end
       end
@@ -355,11 +359,13 @@ module VCAP::CloudController
 
         context 'and the service is bindable' do
           let(:service) { Service.make(bindable: true) }
+
           specify { expect(service_plan).to be_bindable }
         end
 
         context 'and the service is unbindable' do
           let(:service) { Service.make(bindable: false) }
+
           specify { expect(service_plan).to be_bindable }
         end
       end
@@ -373,11 +379,13 @@ module VCAP::CloudController
 
         context 'and the service is plan_updateable' do
           let(:service) { Service.make(plan_updateable: true) }
+
           specify { expect(service_plan).to be_plan_updateable }
         end
 
         context 'and the service is not plan_updateable' do
           let(:service) { Service.make(plan_updateable: false) }
+
           specify { expect(service_plan).not_to be_plan_updateable }
         end
       end
@@ -387,11 +395,13 @@ module VCAP::CloudController
 
         context 'and the service is plan_updateable' do
           let(:service) { Service.make(plan_updateable: true) }
+
           specify { expect(service_plan).not_to be_plan_updateable }
         end
 
         context 'and the service is not plan_updateable' do
           let(:service) { Service.make(plan_updateable: false) }
+
           specify { expect(service_plan).not_to be_plan_updateable }
         end
       end
@@ -401,11 +411,13 @@ module VCAP::CloudController
 
         context 'and the service is updateable' do
           let(:service) { Service.make(plan_updateable: true) }
+
           specify { expect(service_plan).to be_plan_updateable }
         end
 
         context 'and the service is not updateable' do
           let(:service) { Service.make(plan_updateable: false) }
+
           specify { expect(service_plan).to be_plan_updateable }
         end
       end
@@ -415,6 +427,7 @@ module VCAP::CloudController
 
         context 'and the service updateable is also nil' do
           let(:service) { Service.make(plan_updateable: nil) }
+
           specify { expect(service_plan.plan_updateable?).to be(false) }
         end
       end
@@ -427,13 +440,13 @@ module VCAP::CloudController
         service = Service.make service_broker: broker
         plan = ServicePlan.make(service:)
 
-        expect(plan.broker_space_scoped?).to be_truthy
+        expect(plan).to be_broker_space_scoped
       end
 
       it 'returns false if the plan belongs to a service that belongs to a public broker' do
         plan = ServicePlan.make
 
-        expect(plan.broker_space_scoped?).to be_falsey
+        expect(plan).not_to be_broker_space_scoped
       end
     end
 

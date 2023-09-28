@@ -204,6 +204,7 @@ module VCAP::CloudController
 
               context 'at page 1' do
                 let(:page) { 1 }
+
                 it 'passes the org_guid filter into the next_url' do
                   get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                   expect(last_response.status).to eq(200), last_response.body
@@ -218,6 +219,7 @@ module VCAP::CloudController
 
               context 'at page 2' do
                 let(:page) { 2 }
+
                 it 'passes the org_guid filter into the next_url' do
                   get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                   expect(last_response.status).to eq(200), last_response.body
@@ -232,6 +234,7 @@ module VCAP::CloudController
 
               context 'at page 3' do
                 let(:page) { 3 }
+
                 it 'passes the org_guid filter into the next_url' do
                   get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                   expect(last_response.status).to eq(200), last_response.body
@@ -246,6 +249,7 @@ module VCAP::CloudController
 
               context 'at page 4' do
                 let(:page) { 4 }
+
                 it 'passes the org_guid filter into the next_url' do
                   get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                   expect(last_response.status).to eq(200), last_response.body
@@ -374,6 +378,7 @@ module VCAP::CloudController
         let(:update_req) do
           { 'uri' => 'https://user:password@service-location.com:port/db' }
         end
+
         it 'fails with a 400 error' do
           post '/v2/user_provided_service_instances', req.to_json
 
@@ -479,13 +484,13 @@ module VCAP::CloudController
             TestConfig.config[:route_services_enabled] = false
           end
 
-          it 'should succeed with a warning' do
+          it 'succeeds with a warning' do
             post '/v2/user_provided_service_instances', req.to_json
 
             expect(last_response).to have_status_code 201
 
             escaped_warning = last_response.headers['X-Cf-Warnings']
-            expect(escaped_warning).to_not be_nil
+            expect(escaped_warning).not_to be_nil
             warning = CGI.unescape(escaped_warning)
             expect(warning).to match(/Support for route services is disabled. This service instance cannot be bound to a route./)
           end
@@ -499,7 +504,7 @@ module VCAP::CloudController
               }
             end
 
-            it 'should succeed without a warning' do
+            it 'succeeds without a warning' do
               post '/v2/user_provided_service_instances', req.to_json
 
               expect(last_response).to have_status_code 201
@@ -515,7 +520,7 @@ module VCAP::CloudController
             TestConfig.config[:route_services_enabled] = true
           end
 
-          it 'should succeed without warnings' do
+          it 'succeeds without warnings' do
             post '/v2/user_provided_service_instances', req.to_json
 
             expect(last_response.status).to eq 201
@@ -710,7 +715,7 @@ module VCAP::CloudController
         set_current_user(developer, email: 'developer@example.com')
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
         expect(last_response.status).to eq(200)
-        expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+        expect(JSON.parse(last_response.body)['total_results']).to be(0)
 
         put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
         expect(last_response).to have_status_code(201)
@@ -731,7 +736,7 @@ module VCAP::CloudController
 
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
         expect(last_response.status).to eq(200)
-        expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+        expect(JSON.parse(last_response.body)['total_results']).to be(1)
       end
 
       context 'when route service is disabled' do
@@ -739,7 +744,7 @@ module VCAP::CloudController
           TestConfig.config[:route_services_enabled] = false
         end
 
-        it 'should raise a 403 error' do
+        it 'raises a 403 error' do
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
 
           expect(last_response).to have_status_code(403)
@@ -793,7 +798,7 @@ module VCAP::CloudController
           new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+          expect(JSON.parse(last_response.body)['total_results']).to be(0)
 
           put "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400)
@@ -802,14 +807,14 @@ module VCAP::CloudController
 
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+          expect(JSON.parse(last_response.body)['total_results']).to be(0)
         end
 
         context 'and the associated is the same as the requested instance' do
           it 'raises ServiceInstanceAlreadyBoundToSameRoute' do
             get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
             expect(last_response).to have_status_code(200)
-            expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+            expect(JSON.parse(last_response.body)['total_results']).to be(1)
 
             put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
             expect(last_response).to have_status_code(400)
@@ -818,7 +823,7 @@ module VCAP::CloudController
 
             get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
             expect(last_response).to have_status_code(200)
-            expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+            expect(JSON.parse(last_response.body)['total_results']).to be(1)
           end
         end
       end
@@ -893,7 +898,7 @@ module VCAP::CloudController
           set_current_user(developer, email: 'developer@example.com')
           get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
           expect(last_response).to have_status_code(200)
-          expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+          expect(JSON.parse(last_response.body)['total_results']).to be(1)
 
           delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response).to have_status_code(204)
@@ -914,7 +919,7 @@ module VCAP::CloudController
 
           get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
           expect(last_response).to have_status_code(200)
-          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+          expect(JSON.parse(last_response.body)['total_results']).to be(0)
         end
       end
 

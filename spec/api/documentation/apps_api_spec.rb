@@ -220,6 +220,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       before do
         VCAP::CloudController::RouteMappingModel.make(app: process.app, route: associated_route, process_type: process.type)
       end
+
       let!(:route) { VCAP::CloudController::Route.make(space: process.space) }
       let(:route_guid) { route.guid }
       let(:associated_route) { VCAP::CloudController::Route.make(space: process.space) }

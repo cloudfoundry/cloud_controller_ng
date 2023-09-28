@@ -228,6 +228,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service broker registration' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           setup_broker_with_user(user)
           @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
@@ -246,6 +247,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service provision request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service(user:)
         end
@@ -282,6 +284,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service update request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service(user:)
           update_service_instance(200, user:)
@@ -300,6 +303,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service binding request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
           create_app
@@ -345,7 +349,7 @@ RSpec.describe 'Service Broker API integration' do
 
           it 'reports the request as enqueued' do
             parsed_body = MultiJson.load(last_response.body)
-            expect(parsed_body).to_not be_empty
+            expect(parsed_body).not_to be_empty
             expect(parsed_body).to include('entity')
             expect(parsed_body['entity']).to include('status' => 'queued')
           end
@@ -364,6 +368,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'create service key request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
           create_service_key(user:)
@@ -382,6 +387,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'delete service key request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
           create_service_key
@@ -542,6 +548,7 @@ RSpec.describe 'Service Broker API integration' do
       context 'for bind route service' do
         let(:catalog) { default_catalog(requires: ['route_forwarding']) }
         let(:route) { VCAP::CloudController::Route.make(space: @space) }
+
         before do
           provision_service
           create_route_binding(route)

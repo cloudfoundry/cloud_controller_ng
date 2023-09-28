@@ -59,7 +59,7 @@ module VCAP::CloudController
             package = nil
             expect do
               package = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-            end.to change { Delayed::Job.count }.by(1)
+            end.to change(Delayed::Job, :count).by(1)
 
             job = Delayed::Job.last
             expect(job.queue).to eq(Jobs::Queues.generic)
@@ -79,7 +79,7 @@ module VCAP::CloudController
           it 'does no enqueue a job to copy the bits in the blobstore' do
             expect do
               package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
-            end.not_to(change { Delayed::Job.count })
+            end.not_to(change(Delayed::Job, :count))
           end
         end
       end

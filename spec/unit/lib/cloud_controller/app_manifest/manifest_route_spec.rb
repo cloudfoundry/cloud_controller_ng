@@ -10,7 +10,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
 
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
 
@@ -28,7 +28,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
 
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(true)
+            expect(manifest_route.valid?).to be(true)
           end
         end
       end
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
           it 'is invalid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(false)
+            expect(manifest_route.valid?).to be(false)
           end
         end
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
           it 'is invalid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(false)
+            expect(manifest_route.valid?).to be(false)
           end
         end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
           it 'is invalid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(false)
+            expect(manifest_route.valid?).to be(false)
           end
         end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
           it 'is invalid' do
             manifest_route = ManifestRoute.parse(route)
-            expect(manifest_route.valid?).to eq(false)
+            expect(manifest_route.valid?).to be(false)
           end
         end
 
@@ -103,7 +103,7 @@ module VCAP::CloudController
           it 'is invalid' do
             manifest_route = ManifestRoute.parse(route)
 
-            expect(manifest_route.valid?).to eq(false)
+            expect(manifest_route.valid?).to be(false)
           end
         end
       end

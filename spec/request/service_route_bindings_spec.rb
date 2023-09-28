@@ -3,6 +3,18 @@ require 'request_spec_shared_examples'
 require 'request/service_bindings_shared_examples'
 
 RSpec.describe 'v3 service route bindings' do
+  let(:space_dev_headers) do
+    org.add_user(user)
+    space.add_developer(user)
+    headers_for(user)
+  end
+  let(:route_service_url) { 'https://route_service_url.com' }
+  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let(:org) { VCAP::CloudController::Organization.make }
+  let(:user) { VCAP::CloudController::User.make }
+
   describe 'GET /v3/service_route_bindings' do
     # Because route bindings don't have names, we can't use the 'paginated response' shared example
     describe 'behaving like a paginated resource' do
@@ -1736,19 +1748,6 @@ RSpec.describe 'v3 service route bindings' do
 
       it_behaves_like 'permissions for update endpoint when organization is suspended', 200
     end
-  end
-
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
-  let(:route_service_url) { 'https://route_service_url.com' }
-
-  let(:space_dev_headers) do
-    org.add_user(user)
-    space.add_developer(user)
-    headers_for(user)
   end
 
   def expected_json(binding_guid:, route_service_url:, route_guid:, service_instance_guid:, last_operation_state:, last_operation_type:, include_params_link:, metadata: {})

@@ -49,9 +49,21 @@ RSpec.resource 'Service Brokers', type: %i[api legacy_api] do
   end
 
   describe 'Standard endpoints' do
+    let(:auth_username) { 'admin-user' }
+    let(:auth_password) { 'some-secret' }
+    let(:broker_url) { 'mybroker.example.com' }
+
     before do
       service_broker.space = space
       service_broker.save
+      stub_request(:get, 'https://broker.example.com:443/v2/catalog').
+        with(basic_auth: %w[admin secretpassw0rd]).
+        with(headers: { 'Accept' => 'application/json' }).
+        to_return(status: 200, body: broker_catalog, headers: {})
+      stub_request(:get, "https://#{broker_url}:443/v2/catalog").
+        with(headers: { 'Accept' => 'application/json' }).
+        with(basic_auth: [auth_username, auth_password]).
+        to_return(status: 200, body: broker_catalog, headers: {})
     end
 
     standard_model_list :service_broker, VCAP::CloudController::ServiceBrokersController
@@ -60,12 +72,6 @@ RSpec.resource 'Service Brokers', type: %i[api legacy_api] do
 
     post '/v2/service_brokers' do
       include_context 'fields_for_creation'
-      before do
-        stub_request(:get, 'https://broker.example.com:443/v2/catalog').
-          with(basic_auth: %w[admin secretpassw0rd]).
-          with(headers: { 'Accept' => 'application/json' }).
-          to_return(status: 200, body: broker_catalog, headers: {})
-      end
 
       example 'Create a Service Broker' do
         client.post '/v2/service_brokers', fields_json, headers
@@ -84,23 +90,12 @@ RSpec.resource 'Service Brokers', type: %i[api legacy_api] do
       include_context 'guid_parameter'
       include_context 'updatable_fields'
 
-      let(:auth_username) { 'admin-user' }
-      let(:auth_password) { 'some-secret' }
-      let(:broker_url) { 'mybroker.example.com' }
-
       let(:fields_to_update) do
         {
           auth_username: auth_username,
           auth_password: auth_password,
           broker_url: "https://#{broker_url}"
         }
-      end
-
-      before do
-        stub_request(:get, "https://#{broker_url}:443/v2/catalog").
-          with(headers: { 'Accept' => 'application/json' }).
-          with(basic_auth: [auth_username, auth_password]).
-          to_return(status: 200, body: broker_catalog, headers: {})
       end
 
       example 'Update a Service Broker' do

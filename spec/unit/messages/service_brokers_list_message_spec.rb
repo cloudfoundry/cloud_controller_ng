@@ -27,10 +27,10 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = ServiceBrokersListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:names)
       end
     end
 

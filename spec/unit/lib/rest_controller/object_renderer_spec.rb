@@ -14,8 +14,10 @@ module VCAP::CloudController::RestController
       let(:instance) { VCAP::CloudController::TestModelSecondLevel.make }
 
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 11) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 11)
+        end
 
         it 'raises BadQueryParameter error' do
           expect do
@@ -25,8 +27,10 @@ module VCAP::CloudController::RestController
       end
 
       context 'when asked inline_relations_depth equals to max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 10) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 10)
+        end
 
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)
@@ -35,8 +39,10 @@ module VCAP::CloudController::RestController
       end
 
       context 'when asked inline_relations_depth is less than max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 9) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 9)
+        end
 
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)

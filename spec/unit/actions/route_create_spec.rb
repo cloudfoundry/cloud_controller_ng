@@ -34,7 +34,7 @@ module VCAP::CloudController
         it 'creates a route' do
           expect do
             subject.create(message:, space:, domain:)
-          end.to change { Route.count }.by(1)
+          end.to change(Route, :count).by(1)
 
           route = Route.last
           expect(route.space.guid).to eq space.guid
@@ -88,7 +88,7 @@ module VCAP::CloudController
         it 'creates a route and associated labels' do
           expect do
             subject.create(message: message_with_label, space: space, domain: domain)
-          end.to change { RouteLabelModel.count }.by(1)
+          end.to change(RouteLabelModel, :count).by(1)
 
           route = Route.last
           expect(route.labels.length).to eq(1)
@@ -99,7 +99,7 @@ module VCAP::CloudController
         it 'creates a route and associated annotations' do
           expect do
             subject.create(message: message_with_annotation, space: space, domain: domain)
-          end.to change { RouteAnnotationModel.count }.by(1)
+          end.to change(RouteAnnotationModel, :count).by(1)
 
           route = Route.last
           expect(route.annotations.length).to eq(1)
@@ -552,17 +552,15 @@ module VCAP::CloudController
           before do
             allow(CloudController::DependencyLocator).to receive_message_chain(:instance, :routing_api_client).
               and_return(routing_api_client)
-            allow(routing_api_client).to receive(:router_group).and_return(router_group)
-            allow(routing_api_client).to receive(:enabled?).and_return(true)
-            allow(router_group).to receive(:type).and_return('tcp')
-            allow(router_group).to receive(:reservable_ports).and_return([1234])
+            allow(routing_api_client).to receive_messages(router_group: router_group, enabled?: true)
+            allow(router_group).to receive_messages(type: 'tcp', reservable_ports: [1234])
           end
 
           context 'when the port is available' do
             it 'creates a route with the port' do
               expect do
                 subject.create(message:, space:, domain:)
-              end.to change { Route.count }.by(1)
+              end.to change(Route, :count).by(1)
 
               route = Route.last
               expect(route.port).to eq(1234)
@@ -636,14 +634,13 @@ module VCAP::CloudController
 
             before do
               allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-              allow(routing_api_client).to receive(:enabled?).and_return(true)
-              allow(routing_api_client).to receive(:router_group).and_return(router_group)
+              allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
             end
 
             it 'randomly assigns an available port' do
               expect do
                 subject.create(message:, space:, domain:)
-              end.to change { Route.count }.by(1)
+              end.to change(Route, :count).by(1)
 
               route = Route.last
               expect(route.port).to eq(1234)

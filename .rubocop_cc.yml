@@ -3,6 +3,7 @@
 require:
   - rubocop-sequel
   - rubocop-rails
+  - rubocop-rspec
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -23,6 +24,10 @@ Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 Layout/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
+Layout/EmptyLineBetweenDefs:
+  EmptyLineBetweenClassDefs: false
+Layout/LineLength:
+  Max: 180
 Lint/UnifiedInteger:
   Exclude:
     - db/migrations/**/*
@@ -37,8 +42,6 @@ Metrics/BlockLength:
   Max: 50
 Metrics/CyclomaticComplexity:
   Max: 12
-Layout/LineLength:
-  Max: 180
 Metrics/MethodLength:
   Max: 60
 Migration/AddConstraintName: # Exclude for old Migrations
@@ -117,8 +120,6 @@ Style/FormatString:
   EnforcedStyle: sprintf
 Style/RaiseArgs:
   EnforcedStyle: compact
-Layout/EmptyLineBetweenDefs:
-  EmptyLineBetweenClassDefs: false
 Style/HashSyntax:
   EnforcedShorthandSyntax: consistent
 Style/ExpandPathArguments:
@@ -437,7 +438,94 @@ Rails/WhereNot:
   Enabled: true
 Rails/WhereNotWithMultipleConditions:
   Enabled: true
-
+Capybara/ClickLinkOrButtonStyle:
+  Enabled: false
+Capybara/MatchStyle:
+  Enabled: false
+Capybara/NegationMatcher:
+  Enabled: false
+Capybara/SpecificActions:
+  Enabled: false
+Capybara/SpecificFinders:
+  Enabled: false
+Capybara/SpecificMatcher:
+  Enabled: false
+Capybara/RSpec/HaveSelector:
+  Enabled: false
+Capybara/RSpec/PredicateMatcher:
+  Enabled: false
+FactoryBot/AssociationStyle:
+  Enabled: true
+FactoryBot/ConsistentParenthesesStyle:
+  Enabled: true
+FactoryBot/FactoryAssociationWithStrategy:
+  Enabled: true
+FactoryBot/FactoryNameStyle:
+  Enabled: true
+FactoryBot/IdSequence:
+  Enabled: true
+FactoryBot/RedundantFactoryOption:
+  Enabled: true
+FactoryBot/SyntaxMethods:
+  Enabled: true
+RSpec/BeEmpty:
+  Enabled: true
+RSpec/BeEq:
+  Enabled: true
+RSpec/BeNil:
+  Enabled: true
+RSpec/ChangeByZero:
+  Enabled: true
+RSpec/ContainExactly:
+  Enabled: true
+RSpec/DuplicatedMetadata:
+  Enabled: true
+RSpec/EmptyMetadata:
+  Enabled: true
+RSpec/Eq:
+  Enabled: true
+RSpec/ExcessiveDocstringSpacing:
+  Enabled: true
+RSpec/IdenticalEqualityAssertion:
+  Enabled: true
+RSpec/IndexedLet:
+  Enabled: true
+RSpec/MatchArray:
+  Enabled: true
+RSpec/MetadataStyle:
+  Enabled: true
+RSpec/NoExpectationExample:
+  Enabled: true
+RSpec/PendingWithoutReason:
+  Enabled: true
+RSpec/ReceiveMessages:
+  Enabled: true
+RSpec/RedundantAround:
+  Enabled: true
+RSpec/SkipBlockInsideExample:
+  Enabled: true
+RSpec/SortMetadata:
+  Enabled: true
+RSpec/SpecFilePathFormat:
+  Enabled: true
+RSpec/SpecFilePathSuffix:
+  Enabled: true
+RSpec/SubjectDeclaration:
+  Enabled: true
+RSpec/VerifiedDoubleReference:
+  Enabled: true
+RSpec/Rails/AvoidSetupHook:
+  Enabled: true
+RSpec/Rails/HaveHttpStatus:
+  Enabled: true
+RSpec/Rails/InferredSpecType:
+  Enabled: true
+RSpec/Rails/MinitestAssertions:
+  Enabled: true
+RSpec/Rails/NegationBeValid:
+  Enabled: true
+RSpec/Rails/TravelAround:
+  Enabled: true
 ### Broken Cops that break code
 Lint/ShadowedException: # Brakes "bundle exec rake rubocop" if enabled
   Enabled: false

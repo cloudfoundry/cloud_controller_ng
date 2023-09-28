@@ -40,7 +40,7 @@ module VCAP::CloudController
         end
 
         it 'does not include the auth_password' do
-          expect(entity).to_not have_key(:auth_password)
+          expect(entity).not_to have_key(:auth_password)
         end
       end
     end

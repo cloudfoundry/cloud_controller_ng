@@ -24,7 +24,7 @@ RSpec.describe DBMigrator do
         db,
         DBMigrator::SEQUEL_MIGRATIONS,
         allow_missing_migration_files: true
-      ).and_return(true).at_most(2).times
+      ).and_return(true).at_most(:twice)
 
       expect(Timeout).to receive(:timeout).with(60, anything).and_yield
       expect_any_instance_of(Object).not_to receive(:sleep)

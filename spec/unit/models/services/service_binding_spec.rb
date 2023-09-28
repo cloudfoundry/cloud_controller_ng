@@ -139,6 +139,7 @@ module VCAP::CloudController
 
         context 'when the service instance and the app are in different spaces' do
           let(:service_instance) { ManagedServiceInstance.make }
+
           context 'when the service instance has not been shared into the app space' do
             it 'is not valid' do
               expect do
@@ -214,10 +215,12 @@ module VCAP::CloudController
 
     describe '#in_suspended_org?' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
+
       subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app_model) }
 
       context 'when in a suspended organization' do
         before { allow(app_model.space).to receive(:in_suspended_org?).and_return(true) }
+
         it 'is true' do
           expect(service_binding).to be_in_suspended_org
         end
@@ -225,6 +228,7 @@ module VCAP::CloudController
 
       context 'when in an unsuspended organization' do
         before { allow(app_model.space).to receive(:in_suspended_org?).and_return(false) }
+
         it 'is false' do
           expect(service_binding).not_to be_in_suspended_org
         end
@@ -244,7 +248,7 @@ module VCAP::CloudController
       context 'service that does not require syslog_drain' do
         let(:service) { Service.make(requires: []) }
 
-        it 'should allow a non syslog_drain with a nil syslog drain url' do
+        it 'allows a non syslog_drain with a nil syslog drain url' do
           expect do
             service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = nil
@@ -252,7 +256,7 @@ module VCAP::CloudController
           end.not_to raise_error
         end
 
-        it 'should allow a non syslog_drain with an empty syslog drain url' do
+        it 'allows a non syslog_drain with an empty syslog drain url' do
           expect do
             service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = ''
@@ -264,7 +268,7 @@ module VCAP::CloudController
       context 'service that does require a syslog_drain' do
         let(:service) { Service.make(requires: ['syslog_drain']) }
 
-        it 'should allow a syslog_drain with a syslog drain url' do
+        it 'allows a syslog_drain with a syslog drain url' do
           expect do
             service_binding = ServiceBinding.make(service_instance:)
             service_binding.syslog_drain_url = 'http://syslogurl.com'
@@ -278,13 +282,13 @@ module VCAP::CloudController
       let(:v2_app) { ProcessModelFactory.make(state: 'STARTED', instances: 1, type: 'web') }
       let(:service_instance) { ManagedServiceInstance.make(space: v2_app.space) }
 
-      it 'should not trigger restaging when creating a binding' do
+      it 'does not trigger restaging when creating a binding' do
         ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
         v2_app.refresh
         expect(v2_app.needs_staging?).to be false
       end
 
-      it 'should not trigger restaging when directly destroying a binding' do
+      it 'does not trigger restaging when directly destroying a binding' do
         binding = ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
         expect { binding.destroy }.not_to change { v2_app.refresh.needs_staging? }.from(false)
       end
@@ -390,7 +394,7 @@ module VCAP::CloudController
           allow(ServiceBindingOperation).to receive(:create).and_raise(Sequel::DatabaseError, 'failed to create new-binding operation')
         end
 
-        it 'should rollback the binding' do
+        it 'rollbacks the binding' do
           expect { binding.save_with_new_operation({ state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
           expect(ServiceBinding.where(guid: binding.guid).count).to eq(0)
         end
@@ -403,7 +407,7 @@ module VCAP::CloudController
 
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.type).to eq 'delete'
-          expect(binding.last_operation.description).to eq nil
+          expect(binding.last_operation.description).to be_nil
           expect(ServiceBinding.where(guid: binding.guid).count).to eq(1)
           expect(ServiceBindingOperation.where(service_binding_id: binding.id).count).to eq(1)
         end

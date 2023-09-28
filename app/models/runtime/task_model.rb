@@ -89,7 +89,8 @@ module VCAP::CloudController
       return unless environment_variables
 
       if environment_variables.to_json.length > ENV_VAR_MAX_LENGTH
-        errors.add(:environment_variables, "exceeded the maximum length allowed of #{ENV_VAR_MAX_LENGTH} characters as json")
+        errors.add(:environment_variables,
+                   "exceeded the maximum length allowed of #{ENV_VAR_MAX_LENGTH} characters as json")
       end
       VCAP::CloudController::Validators::EnvironmentVariablesValidator.
         validate_each(self, :environment_variables, environment_variables)

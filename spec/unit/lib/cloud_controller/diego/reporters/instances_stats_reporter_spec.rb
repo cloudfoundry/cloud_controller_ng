@@ -104,8 +104,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_actual_lrps_response)
-          allow(bbs_instances_client).to receive(:desired_lrp_instance).and_return(bbs_desired_lrp_response)
+          allow(bbs_instances_client).to receive_messages(lrp_instances: bbs_actual_lrps_response, desired_lrp_instance: bbs_desired_lrp_response)
           allow(log_cache_client).to receive(:container_metrics).
             with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
             and_return(log_cache_response)
@@ -186,7 +185,7 @@ module VCAP::CloudController
           let(:placement_tags) { [] }
 
           it 'returns nil for the isolation_segment' do
-            expect(instances_reporter.stats_for_app(process)[0][:isolation_segment]).to eq(nil)
+            expect(instances_reporter.stats_for_app(process)[0][:isolation_segment]).to be_nil
           end
         end
 
@@ -330,6 +329,7 @@ module VCAP::CloudController
 
           context 'when an error is raised communicating with diego' do
             let(:error) { StandardError.new('tomato') }
+
             before do
               allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_raise(error)
             end
@@ -341,6 +341,7 @@ module VCAP::CloudController
             context 'when the error is InstancesUnavailable' do
               let(:error) { CloudController::Errors::InstancesUnavailable.new('ruh roh') }
               let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+
               before { allow(instances_reporter).to receive(:logger).and_return(mock_logger) }
 
               it 'reraises the exception and logs the error' do
@@ -353,6 +354,7 @@ module VCAP::CloudController
           context 'when an error is raised communicating with log cache' do
             let(:error) { StandardError.new('tomato') }
             let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+
             before do
               allow(log_cache_client).to receive(:container_metrics).
                 with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).

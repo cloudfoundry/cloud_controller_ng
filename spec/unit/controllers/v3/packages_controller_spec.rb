@@ -22,7 +22,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'returns 200 and updates the package state' do
       post :upload, params: params.merge(guid: package.guid)
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
     end
@@ -64,7 +64,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'with correctly named cached resources' do
-        shared_examples_for :uploading_successfully do
+        shared_examples_for 'uploading successfully' do
           let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
 
           before do
@@ -78,7 +78,7 @@ RSpec.describe PackagesController, type: :controller do
             expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
             expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
             expect(uploader).to have_received(:upload_async) do |args|
-              expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048, mode: '645' }])
+              expect(args[:message].resources).to contain_exactly({ fn: 'lol', sha1: 'abc', size: 2048, mode: '645' })
             end
           end
         end
@@ -90,7 +90,7 @@ RSpec.describe PackagesController, type: :controller do
             }
           end
 
-          include_examples :uploading_successfully
+          include_examples 'uploading successfully'
         end
 
         context 'v3 resource format' do
@@ -100,7 +100,7 @@ RSpec.describe PackagesController, type: :controller do
             }
           end
 
-          include_examples :uploading_successfully
+          include_examples 'uploading successfully'
         end
       end
     end
@@ -114,7 +114,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'raises 403' do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('app_bits_upload')
         end
@@ -126,7 +126,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 200 and updates the package state' do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
           expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
         end
@@ -142,7 +142,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 422 Unprocessable' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Package type must be bits.')
       end
@@ -152,7 +152,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 404 ResourceNotFound error' do
         post :upload, params: params.merge(guid: 'not-real'), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -163,7 +163,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 422 UnprocessableEntity error' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -177,7 +177,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 400 PackageBitsAlreadyUploaded error' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response.status).to eq(400)
+        expect(response).to have_http_status(:bad_request)
         expect(response.body).to include('PackageBitsAlreadyUploaded')
       end
     end
@@ -190,7 +190,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -204,7 +204,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns an Unauthorized error' do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -217,7 +217,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 404' do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -231,7 +231,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 403' do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -255,7 +255,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'returns 302 and the redirect' do
       get :download, params: { guid: package.guid }
 
-      expect(response.status).to eq(302)
+      expect(response).to have_http_status(:found)
       expect(response.headers['Location']).to eq('http://package.example.com')
     end
 
@@ -268,7 +268,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         get :download, params: { guid: package.guid }
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -282,7 +282,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         get :download, params: { guid: package.guid }
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -295,7 +295,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         get :download, params: { guid: package.guid }
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -304,7 +304,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 404' do
         get :download, params: { guid: 'a-bogus-guid' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -318,7 +318,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns an Unauthorized error' do
           get :download, params: { guid: package.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -331,7 +331,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 404' do
           get :download, params: { guid: package.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -344,7 +344,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 403' do
           get :download, params: { guid: package.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -364,7 +364,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'returns a 200 OK and the package' do
       get :show, params: { guid: package.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
     end
 
@@ -372,7 +372,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 404 Not Found' do
         get :show, params: { guid: 'made-up-guid' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -386,7 +386,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 403 NotAuthorized error' do
           get :show, params: { guid: package.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -399,7 +399,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 404 not found' do
           get :show, params: { guid: package.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -451,7 +451,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'updates the package' do
         patch :update, params: { guid: package.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'hino' })
         expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'adora', 'beet' => 'formanova' })
 
@@ -480,11 +480,12 @@ RSpec.describe PackagesController, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'hino' })
           expect(package).to have_labels({ key_name: 'truck', value: 'hino' })
         end
       end
+
       context 'when an empty request is sent' do
         let(:request_body) do
           {}
@@ -492,7 +493,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'succeeds' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           package.reload
           expect(parsed_body['guid']).to eq(package.guid)
         end
@@ -502,11 +503,12 @@ RSpec.describe PackagesController, type: :controller do
         before do
           set_current_user_as_admin
         end
+
         let!(:update_message2) { update_message.merge({ animals: 'Cows' }) }
 
         it 'fails' do
           patch :update, params: { guid: package.guid }.merge(update_message2), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 
@@ -514,7 +516,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'fails' do
           patch :update, params: { guid: "Greg's missing package" }.merge(update_message), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
         end
       end
 
@@ -531,7 +533,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -549,7 +551,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -572,7 +574,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -591,7 +593,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'formanova' })
 
           package.reload
@@ -630,7 +632,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 404 ResourceNotFound error' do
             patch :update, params: { guid: app_model.guid }.merge(update_message), as: :json
 
-            expect(response.status).to eq 404
+            expect(response).to have_http_status :not_found
             expect(response.body).to include 'ResourceNotFound'
           end
         end
@@ -644,7 +646,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'raises ApiError NotAuthorized' do
             patch :update, params: { guid: package.guid }.merge(update_message), as: :json
 
-            expect(response.status).to eq 403
+            expect(response).to have_http_status :forbidden
             expect(response.body).to include 'NotAuthorized'
           end
         end
@@ -669,7 +671,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 404 Not Found' do
         delete :destroy, params: { guid: 'nono' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -683,7 +685,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns an Unauthorized error' do
           delete :destroy, params: { guid: package.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -696,7 +698,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           delete :destroy, params: { guid: package.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -710,7 +712,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'raises ApiError NotAuthorized' do
           delete :destroy, params: { guid: package.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -734,9 +736,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'creates a job to track the deletion and returns it in the location header' do
       expect do
         delete :destroy, params: { guid: package.guid }
-      end.to change {
-        VCAP::CloudController::PollableJobModel.count
-      }.by(1)
+      end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
 
       job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
@@ -746,7 +746,7 @@ RSpec.describe PackagesController, type: :controller do
       expect(job.resource_guid).to eq(package.guid)
       expect(job.resource_type).to eq('package')
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
   end
@@ -769,7 +769,7 @@ RSpec.describe PackagesController, type: :controller do
 
     it 'returns 200' do
       get :index
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
 
     it 'lists the packages visible to the user' do
@@ -793,9 +793,9 @@ RSpec.describe PackagesController, type: :controller do
 
         get :index, params: { app_guid: app.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         response_guids = parsed_body['resources'].pluck('guid')
-        expect(response_guids).to match_array([package_1.guid, package_2.guid])
+        expect(response_guids).to contain_exactly(package_1.guid, package_2.guid)
       end
 
       it "doesn't allow filtering on space_guids in a nested query" do
@@ -804,7 +804,7 @@ RSpec.describe PackagesController, type: :controller do
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
                               space_guids: user_spaces.map(&:guid).join(',') }
 
-        expect(response.status).to eq(400)
+        expect(response).to have_http_status(:bad_request)
         expect(response.body).to include("Unknown query parameter(s): 'space_guids'")
       end
 
@@ -816,9 +816,9 @@ RSpec.describe PackagesController, type: :controller do
 
         get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         response_guids = parsed_body['resources'].pluck('guid')
-        expect(response_guids).to match_array([package_1.guid, package_2.guid])
+        expect(response_guids).to contain_exactly(package_1.guid, package_2.guid)
       end
 
       it 'provides the correct base url in the pagination links' do
@@ -830,7 +830,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 404 Resource Not Found' do
           get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -844,7 +844,7 @@ RSpec.describe PackagesController, type: :controller do
           get :index, params: { app_guid: app_model.guid }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -884,7 +884,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns an 400 Bad Request' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           m = /Unknown query parameter\(s\): '(\w+)', '(\w+)'/.match(response.body)
           expect(m).not_to be_nil
@@ -898,7 +898,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns an 400 Bad Request' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Per page must be between')
         end
@@ -909,7 +909,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'when the user can read but not write to the space' do
         it 'returns a 200 OK' do
           get :index
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
         end
       end
 
@@ -921,7 +921,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 403 NotAuthorized error' do
           get :index
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -953,7 +953,7 @@ RSpec.describe PackagesController, type: :controller do
 
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 201
+          expect(response).to have_http_status :created
           expect(app_model.reload.packages.count).to eq(1)
           created_package = app_model.packages.first
 
@@ -972,7 +972,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include "must be one of 'bits, docker'"
           end
@@ -984,7 +984,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -997,7 +997,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1008,7 +1008,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message('Cannot create bits package for a Docker app.')
           end
@@ -1023,7 +1023,7 @@ RSpec.describe PackagesController, type: :controller do
             it 'returns a 403 NotAuthorized error' do
               post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-              expect(response.status).to eq 403
+              expect(response).to have_http_status :forbidden
               expect(response.body).to include 'NotAuthorized'
             end
           end
@@ -1036,7 +1036,7 @@ RSpec.describe PackagesController, type: :controller do
             it 'returns a 422 UnprocessableEntity error' do
               post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-              expect(response.status).to eq 422
+              expect(response).to have_http_status :unprocessable_entity
               expect(response.body).to include 'UnprocessableEntity'
             end
           end
@@ -1049,7 +1049,7 @@ RSpec.describe PackagesController, type: :controller do
             it 'returns a 422 UnprocessableEntity error' do
               post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-              expect(response.status).to eq 422
+              expect(response).to have_http_status :unprocessable_entity
               expect(response.body).to include 'UnprocessableEntity'
             end
           end
@@ -1077,7 +1077,7 @@ RSpec.describe PackagesController, type: :controller do
           expect(app_model.packages.count).to eq(0)
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 201
+          expect(response).to have_http_status :created
 
           app_model.reload
           package = app_model.packages.first
@@ -1093,7 +1093,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message('Cannot create Docker package for a buildpack app.')
           end
@@ -1102,6 +1102,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'with metadata' do
         let(:metadata_request_body) { request_body.merge(metadata) }
+
         context 'when the label is invalid' do
           let(:metadata) do
             {
@@ -1116,7 +1117,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: metadata_request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message(/label [\w\s]+ error/)
           end
@@ -1136,7 +1137,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: metadata_request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message(/annotation [\w\s]+ error/)
           end
@@ -1162,7 +1163,7 @@ RSpec.describe PackagesController, type: :controller do
             response_body = parsed_body
             response_metadata = response_body['metadata']
 
-            expect(response.status).to eq(201)
+            expect(response).to have_http_status(:created)
             expect(response_metadata['labels']['release']).to eq 'stable'
             expect(response_metadata['annotations']['notes']).to eq 'detailed information'
           end
@@ -1193,7 +1194,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 422' do
           post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
         end
       end
@@ -1206,7 +1207,7 @@ RSpec.describe PackagesController, type: :controller do
         copied_package = target_app_model.reload.packages.first
         response_guid = parsed_body['guid']
 
-        expect(response.status).to eq 201
+        expect(response).to have_http_status :created
         expect(copied_package.type).to eq(original_package.type)
         expect(response_guid).to eq copied_package.guid
       end
@@ -1220,7 +1221,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 403 NotAuthorized error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response.status).to eq 403
+            expect(response).to have_http_status :forbidden
             expect(response.body).to include 'NotAuthorized'
           end
         end
@@ -1233,7 +1234,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1247,7 +1248,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 403 Unauthorized error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response.status).to eq 403
+            expect(response).to have_http_status :forbidden
             expect(response.body).to include 'NotAuthorized'
           end
         end
@@ -1260,7 +1261,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1274,7 +1275,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 403 Unauthorized error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response.status).to eq 403
+            expect(response).to have_http_status :forbidden
             expect(response.body).to include 'NotAuthorized'
           end
         end
@@ -1284,7 +1285,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 422 UnprocessableEntity error' do
           post :create, params: { source_guid: 'bogus package guid' }.merge(relationship_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -1295,7 +1296,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 422 UnprocessableEntity error' do
           post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -1308,7 +1309,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 422' do
           post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include 'ruh roh'
         end

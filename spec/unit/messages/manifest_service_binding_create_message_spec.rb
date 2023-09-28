@@ -50,6 +50,7 @@ module VCAP::CloudController
               }
             ] }
         end
+
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
           expect(message).not_to be_valid
@@ -106,6 +107,7 @@ module VCAP::CloudController
               }
             ] }
         end
+
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
           expect(message).not_to be_valid

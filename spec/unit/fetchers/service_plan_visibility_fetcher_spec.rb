@@ -143,6 +143,7 @@ module VCAP::CloudController
       context 'when no plans are specified' do
         context 'when user is admin' do
           let(:can_read_globally) { true }
+
           it 'returns an empty list' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: []
@@ -152,6 +153,7 @@ module VCAP::CloudController
 
         context 'when all orgs are readable' do
           let(:readable_org_guids) { [org1.guid, org2.guid] }
+
           it 'returns an empty list' do
             expect(fetcher.fetch_orgs(
                      service_plan_guids: []
@@ -167,13 +169,13 @@ module VCAP::CloudController
           let(:can_read_globally) { true }
 
           it 'returns true' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_1.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_1.guid]
+            )
 
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_2.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_2.guid]
+            )
           end
         end
 
@@ -181,13 +183,13 @@ module VCAP::CloudController
           let(:readable_org_guids) { [org1.guid, org2.guid] }
 
           it 'returns true' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_1.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_1.guid]
+            )
 
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_2.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_2.guid]
+            )
           end
         end
 
@@ -195,13 +197,13 @@ module VCAP::CloudController
           let(:readable_org_guids) { [org2.guid] }
 
           it 'returns true' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_1.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_1.guid]
+            )
 
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_2.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_2.guid]
+            )
           end
         end
 
@@ -209,27 +211,27 @@ module VCAP::CloudController
           let(:readable_org_guids) { [org1.guid] }
 
           it 'returns true for `plan_1`' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_1.guid]
-                   )).to be_truthy
+            expect(fetcher).to be_any_orgs(
+              service_plan_guids: [plan_1.guid]
+            )
           end
 
           it 'returns false for `plan_2`' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_2.guid]
-                   )).to be_falsey
+            expect(fetcher).not_to be_any_orgs(
+              service_plan_guids: [plan_2.guid]
+            )
           end
         end
 
         context 'when no orgs are readable' do
           it 'returns false' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_1.guid]
-                   )).to be_falsey
+            expect(fetcher).not_to be_any_orgs(
+              service_plan_guids: [plan_1.guid]
+            )
 
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: [plan_2.guid]
-                   )).to be_falsey
+            expect(fetcher).not_to be_any_orgs(
+              service_plan_guids: [plan_2.guid]
+            )
           end
         end
       end
@@ -243,9 +245,9 @@ module VCAP::CloudController
             let(:readable_org_guids) { [org2.guid] }
 
             it 'returns true' do
-              expect(fetcher.any_orgs?(
-                       service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-                     )).to be_truthy
+              expect(fetcher).to be_any_orgs(
+                service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
+              )
             end
           end
 
@@ -253,9 +255,9 @@ module VCAP::CloudController
             let(:readable_org_guids) { [org1.guid, org2.guid] }
 
             it 'returns true' do
-              expect(fetcher.any_orgs?(
-                       service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-                     )).to be_truthy
+              expect(fetcher).to be_any_orgs(
+                service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
+              )
             end
           end
 
@@ -263,9 +265,9 @@ module VCAP::CloudController
             let(:can_read_globally) { true }
 
             it 'returns true' do
-              expect(fetcher.any_orgs?(
-                       service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
-                     )).to be_truthy
+              expect(fetcher).to be_any_orgs(
+                service_plan_guids: [plan_1.guid, plan_alpha.guid, plan_beta.guid]
+              )
             end
           end
         end
@@ -274,19 +276,21 @@ module VCAP::CloudController
       context 'when no plans are specified' do
         context 'when user is admin' do
           let(:can_read_globally) { true }
+
           it 'returns false' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: []
-                   )).to be_falsey
+            expect(fetcher).not_to be_any_orgs(
+              service_plan_guids: []
+            )
           end
         end
 
         context 'when all orgs are readable' do
           let(:readable_org_guids) { [org1.guid, org2.guid] }
+
           it 'returns false' do
-            expect(fetcher.any_orgs?(
-                     service_plan_guids: []
-                   )).to be_falsey
+            expect(fetcher).not_to be_any_orgs(
+              service_plan_guids: []
+            )
           end
         end
       end

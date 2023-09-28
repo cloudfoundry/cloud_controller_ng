@@ -150,7 +150,7 @@ module VCAP::CloudController
           expect(ServiceBinding.count).to eq(1)
           expect(service_binding.app_guid).to eq(app.guid)
           expect(service_binding.service_instance_guid).to eq(service_instance.guid)
-          expect(service_binding.volume_mounts).to match_array([expected_volume_mount_1, expected_volume_mount_2])
+          expect(service_binding.volume_mounts).to contain_exactly(expected_volume_mount_1, expected_volume_mount_2)
         end
       end
 
@@ -189,7 +189,7 @@ module VCAP::CloudController
           expect(event.type).to eq('audit.service_binding.create')
           expect(event.actee).to eq(service_binding.guid)
           expect(event.actee_type).to eq('service_binding')
-          expect(event.metadata['manifest_triggered']).to eq(nil)
+          expect(event.metadata['manifest_triggered']).to be_nil
         end
 
         context 'when the binding is created by applying a manifest' do
@@ -199,7 +199,7 @@ module VCAP::CloudController
             service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
 
             event = Event.last
-            expect(event.metadata['manifest_triggered']).to eq(true)
+            expect(event.metadata['manifest_triggered']).to be(true)
           end
         end
       end
@@ -273,7 +273,7 @@ module VCAP::CloudController
           it 'creates the service binding' do
             expect do
               service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-            end.to change { ServiceBinding.count }.by 1
+            end.to change(ServiceBinding, :count).by 1
           end
         end
       end
@@ -325,7 +325,7 @@ module VCAP::CloudController
           it 'enqueues a fetch job' do
             expect do
               service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-            end.to change { Delayed::Job.count }.from(0).to(1)
+            end.to change(Delayed::Job, :count).from(0).to(1)
 
             expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceBindingStateFetch
             expect(Delayed::Job.first.queue).to eq(Jobs::Queues.generic)
@@ -336,13 +336,13 @@ module VCAP::CloudController
               allow(ServiceBindingOperation).to receive(:create).and_raise('failed')
             end
 
-            it 'should NOT insert binding when the operation fails to create' do
+            it 'does not insert binding when the operation fails to create' do
               expect do
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
               end.to raise_error('failed').and not_change(ServiceBinding, :count)
             end
 
-            it 'should attempt to unbind without using the database' do
+            it 'attempts to unbind without using the database' do
               expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
               expect do
@@ -356,13 +356,13 @@ module VCAP::CloudController
           context 'when bindings_retrievable is false' do
             let(:service) { Service.make(bindings_retrievable: false) }
 
-            it 'should raise an error' do
+            it 'raises an error' do
               expect do
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
               end.to raise_error(ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable)
             end
 
-            it 'should attempt to unbind without using the database' do
+            it 'attempts to unbind without using the database' do
               expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
               begin

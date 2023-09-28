@@ -102,7 +102,7 @@ module VCAP::CloudController
 
       it 'invalidates duplicates in the includes field' do
         message = RoutesListMessage.from_params 'include' => 'domain,domain'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:base].length).to eq 1
         expect(message.errors[:base][0]).to match(/Duplicate included resource: 'domain'/)
       end

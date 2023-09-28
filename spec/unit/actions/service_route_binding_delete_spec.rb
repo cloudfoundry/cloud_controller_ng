@@ -110,7 +110,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it 'should log audit start_create' do
+            it 'logs audit start_create' do
               action.delete(binding)
 
               expect(binding_event_repo).to have_received(:record_start_delete).with(

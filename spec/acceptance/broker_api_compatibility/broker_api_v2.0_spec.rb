@@ -36,6 +36,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 401' do
         let(:broker_response_status) { 401 }
 
@@ -43,6 +44,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 403' do
         let(:broker_response_status) { 403 }
 
@@ -50,6 +52,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 422' do
         let(:broker_response_status) { 422 }
 
@@ -57,6 +60,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 502' do
         let(:broker_response_status) { 502 }
 
@@ -64,6 +68,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 500' do
         let(:broker_response_status) { 500 }
 

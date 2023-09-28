@@ -36,11 +36,12 @@ module VCAP::CloudController
 
       describe 'weight' do
         let(:message) { RouteMappingsUpdateMessage.new(body) }
+
         context 'when weight is less than 1' do
           let(:weight) { 0 }
 
           it 'is invalid' do
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:weight]).to include('0 must be an integer between 1 and 128')
           end
         end
@@ -49,7 +50,7 @@ module VCAP::CloudController
           let(:weight) { 129 }
 
           it 'is invalid' do
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:weight]).to include('129 must be an integer between 1 and 128')
           end
         end

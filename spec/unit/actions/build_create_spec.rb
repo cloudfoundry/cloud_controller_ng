@@ -92,7 +92,7 @@ module VCAP::CloudController
 
           expect do
             build = action.create_and_stage(package:, lifecycle:, metadata:)
-          end.to change { BuildModel.count }.by(1)
+          end.to change(BuildModel, :count).by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
           expect(build.app_guid).to eq(app.guid)
@@ -117,12 +117,10 @@ module VCAP::CloudController
           build = nil
           expect do
             build = action.create_and_stage(package:, lifecycle:, metadata:)
-          end.to change {
-            AppUsageEvent.count
-          }.by(1)
+          end.to change(AppUsageEvent, :count).by(1)
 
           event = AppUsageEvent.last
-          expect(event).to_not be_nil
+          expect(event).not_to be_nil
           expect(event.state).to eq('STAGING_STARTED')
           expect(event.previous_state).to eq('STAGING')
           expect(event.instance_count).to eq(1)
@@ -140,7 +138,7 @@ module VCAP::CloudController
           expect(event.package_state).to eq('READY')
           expect(event.previous_package_state).to eq('READY')
 
-          expect(event.buildpack_guid).to eq(nil)
+          expect(event.buildpack_guid).to be_nil
           expect(event.buildpack_name).to eq(buildpack_git_url)
         end
 
@@ -167,7 +165,7 @@ module VCAP::CloudController
         it 'does not create a droplet audit event' do
           expect do
             action.create_and_stage(package:, lifecycle:)
-          end.to_not(change do
+          end.not_to(change do
             Event.where(type: 'audit.app.droplet.create').count
           end)
         end
@@ -194,6 +192,7 @@ module VCAP::CloudController
           before do
             allow(memory_limit_calculator).to receive(:get_limit).with(process.memory, space, org).and_return(process.memory)
           end
+
           let(:staging_memory_in_mb) { nil }
 
           it 'uses the app web process memory for staging memory' do
@@ -222,6 +221,7 @@ module VCAP::CloudController
           before do
             allow(log_rate_limit_calculator).to receive(:get_limit).with(process.log_rate_limit, space, org).and_return(process.log_rate_limit)
           end
+
           let(:staging_log_rate_limit_bytes_per_second) { nil }
 
           it 'uses the app web process log rate limit for staging log rate limit' do
@@ -325,6 +325,7 @@ module VCAP::CloudController
 
       context 'when the package is not ready' do
         let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
+
         it 'raises an InvalidPackage exception' do
           expect do
             action.create_and_stage(package:, lifecycle:)
@@ -369,6 +370,7 @@ module VCAP::CloudController
         before do
           allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::OrgQuotaExceeded, 'some-message')
         end
+
         it 'raises a LogRateLimitOrgQuotaExceeded error' do
           expect do
             action.create_and_stage(package:, lifecycle:, metadata:)
@@ -380,6 +382,7 @@ module VCAP::CloudController
         before do
           allow(log_rate_limit_calculator).to receive(:get_limit).and_raise(QuotaValidatingStagingLogRateLimitCalculator::SpaceQuotaExceeded, 'some-message')
         end
+
         it 'raises a LogRateLimitSpaceQuotaExceeded error' do
           expect do
             action.create_and_stage(package:, lifecycle:, metadata:)
@@ -463,7 +466,7 @@ module VCAP::CloudController
             it 'successfully creates a build' do
               expect do
                 action.create_and_stage(package:, lifecycle:)
-              end.to change { BuildModel.count }.by(1)
+              end.to change(BuildModel, :count).by(1)
             end
           end
 
@@ -478,7 +481,7 @@ module VCAP::CloudController
             it 'successfully creates a build' do
               expect do
                 action.create_and_stage(package:, lifecycle:)
-              end.to change { BuildModel.count }.by(1)
+              end.to change(BuildModel, :count).by(1)
             end
           end
         end

@@ -87,7 +87,7 @@ module VCAP::Services::SSO::UAA
 
         expect(logger).to receive(:info) do |arg|
           expect(arg).to match(/POST UAA transaction: #{tx_url}/)
-          expect(arg).to_not match(/client_secret/)
+          expect(arg).not_to match(/client_secret/)
         end
 
         client_manager = UaaClientManager.new
@@ -224,8 +224,7 @@ module VCAP::Services::SSO::UAA
           allow(OpenSSL::X509::Store).to receive(:new).and_return(mock_cert_store)
           allow(mock_http).to receive(:ca_file=)
           allow(mock_http).to receive(:cert_store=)
-          allow(mock_http).to receive(:cert_store).and_return(mock_cert_store)
-          allow(mock_http).to receive(:request).and_return(double(:response, code: '200'))
+          allow(mock_http).to receive_messages(cert_store: mock_cert_store, request: double(:response, code: '200'))
           allow(mock_cert_store).to receive(:set_default_paths)
         end
 

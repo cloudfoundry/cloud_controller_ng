@@ -11,7 +11,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
         VCAP::CloudController::ServicePlan.make(public: true)
       end
 
-      it 'should return type public' do
+      it 'returns type public' do
         expect(result).to eq({
                                type: 'public'
                              })
@@ -29,7 +29,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
         VCAP::CloudController::ServicePlan.make(public: false, service: offering)
       end
 
-      it 'should return type space' do
+      it 'returns type space' do
         expect(result).to eq({
                                type: 'space',
                                space: {
@@ -45,7 +45,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
         VCAP::CloudController::ServicePlan.make(public: false)
       end
 
-      it 'should return type admin' do
+      it 'returns type admin' do
         expect(result).to eq({
                                type: 'admin'
                              })
@@ -64,7 +64,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
       let(:org_2) { VCAP::CloudController::Organization.make }
       let(:visible_in_orgs) { [org_1, org_2] }
 
-      it 'should return type organization' do
+      it 'returns type organization' do
         expect(result).to eq({
                                type: 'organization',
                                organizations: [
@@ -83,7 +83,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
       context 'when the list of orgs is empty' do
         let(:visible_in_orgs) { [] }
 
-        it 'should return an empty list' do
+        it 'returns an empty list' do
           expect(result).to eq({
                                  type: 'organization',
                                  organizations: []
@@ -94,7 +94,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
       context 'when the list of orgs is omitted' do
         let(:visible_in_orgs) { nil }
 
-        it 'should return the type and omit the list' do
+        it 'returns the type and omit the list' do
           expect(result).to eq({
                                  type: 'organization'
                                })

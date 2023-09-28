@@ -70,7 +70,7 @@ module VCAP::CloudController
             service_instance.save
           end
 
-          it 'should raise an async operation in progress error' do
+          it 'raises an async operation in progress error' do
             action = ServiceInstanceRead.new
 
             expect { action.fetch_parameters(service_instance) }.to raise_error do |error|
@@ -86,7 +86,7 @@ module VCAP::CloudController
           let(:service_instance) { UserProvidedServiceInstance.make }
 
           it 'does not call the broker to fetch parameters' do
-            expect(VCAP::Services::ServiceClientProvider).to_not receive(:provide)
+            expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)
 
             action = ServiceInstanceRead.new
             begin
@@ -106,7 +106,7 @@ module VCAP::CloudController
           let(:service) { Service.make(instances_retrievable: false) }
 
           it 'does not call the broker to fetch parameters' do
-            expect(VCAP::Services::ServiceClientProvider).to_not receive(:provide)
+            expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)
 
             action = ServiceInstanceRead.new
             begin
@@ -129,7 +129,7 @@ module VCAP::CloudController
               service_instance.save
             end
 
-            it 'should raise a NotSupporedError instead of ' do
+            it 'raises a NotSupporedError instead of' do
               action = ServiceInstanceRead.new
               expect { action.fetch_parameters(service_instance) }.to raise_error(ServiceInstanceRead::NotSupportedError)
             end

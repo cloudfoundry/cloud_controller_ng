@@ -113,7 +113,7 @@ module VCAP::CloudController
         end
 
         it 'does NOT attempt to stop the process in the runtime' do
-          expect(runner).to_not receive(:stop)
+          expect(runner).not_to receive(:stop)
 
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
         end
@@ -133,7 +133,7 @@ module VCAP::CloudController
         it 'does not generate a STOP usage event' do
           expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-          end.to_not(change { AppUsageEvent.where(state: 'STOPPED').count })
+          end.not_to(change { AppUsageEvent.where(state: 'STOPPED').count })
         end
 
         context 'when submitting the start request to the backend fails' do

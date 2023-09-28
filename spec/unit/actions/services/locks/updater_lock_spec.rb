@@ -82,7 +82,7 @@ module VCAP::CloudController
         it 'does not update the service instance' do
           expect do
             updater_lock.unlock_and_fail!
-          end.to_not(change { service_instance.updated_at })
+          end.not_to(change(service_instance, :updated_at))
         end
       end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
     describe 'tracking if unlock is needed' do
       it 'is false by default' do
-        expect(updater_lock.needs_unlock?).to be_falsey
+        expect(updater_lock).not_to be_needs_unlock
       end
 
       describe 'after it is locked' do
@@ -115,23 +115,23 @@ module VCAP::CloudController
         end
 
         it 'is true' do
-          expect(updater_lock.needs_unlock?).to be_truthy
+          expect(updater_lock).to be_needs_unlock
         end
 
         it 'is false if you unlock and fail' do
           updater_lock.unlock_and_fail!
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
 
         it 'is false if you synchronous unlock' do
           updater_lock.synchronous_unlock!
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
 
         it 'is false if you enqueue an unlock' do
           job = double(Jobs::Services::ServiceInstanceStateFetch)
           updater_lock.enqueue_unlock!(job)
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
       end
     end

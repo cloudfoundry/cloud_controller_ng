@@ -9,32 +9,14 @@ require 'messages/service_instance_update_managed_message'
 module VCAP::CloudController
   module V3
     RSpec.describe UpdateServiceInstanceJob do
-      it_behaves_like 'delayed job', described_class
-
-      it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
-
-      let(:params) { { some_data: 'some_value' } }
-      let(:maintenance_info) { { 'version' => '1.2.0' } }
-      let(:plan) { ServicePlan.make(maintenance_info:) }
-      let(:service_instance) do
-        si = ManagedServiceInstance.make(service_plan: plan)
-        si.save_with_new_operation(
-          {},
-          {
-            type: 'update',
-            state: 'in progress'
-          }
+      let(:job) do
+        described_class.new(
+          service_instance.guid,
+          message: message,
+          user_audit_info: user_info,
+          audit_hash: audit_hash
         )
-        si
       end
-      let(:user_guid) { Sham.uaa_id }
-      let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
-      let(:audit_hash) { { request: 'some_value' } }
-
-      let(:arbitrary_parameters) { { foo: 'bar' } }
-      let(:new_tags) { %w[bar quz] }
-      let(:new_plan) { ServicePlan.make }
-
       let(:message) do
         ServiceInstanceUpdateManagedMessage.new({
                                                   name: 'new_name',
@@ -49,15 +31,30 @@ module VCAP::CloudController
                                                   }
                                                 })
       end
-
-      let(:job) do
-        described_class.new(
-          service_instance.guid,
-          message: message,
-          user_audit_info: user_info,
-          audit_hash: audit_hash
+      let(:new_plan) { ServicePlan.make }
+      let(:new_tags) { %w[bar quz] }
+      let(:arbitrary_parameters) { { foo: 'bar' } }
+      let(:audit_hash) { { request: 'some_value' } }
+      let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
+      let(:user_guid) { Sham.uaa_id }
+      let(:service_instance) do
+        si = ManagedServiceInstance.make(service_plan: plan)
+        si.save_with_new_operation(
+          {},
+          {
+            type: 'update',
+            state: 'in progress'
+          }
         )
+        si
       end
+      let(:plan) { ServicePlan.make(maintenance_info:) }
+      let(:maintenance_info) { { 'version' => '1.2.0' } }
+      let(:params) { { some_data: 'some_value' } }
+
+      it_behaves_like 'delayed job', described_class
+
+      it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
 
       describe '#perform' do
         let(:update_response) {}

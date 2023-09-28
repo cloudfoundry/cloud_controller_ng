@@ -137,8 +137,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Associate Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: developer.guid, origins_for_username: ['uaa'])
 
             client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)
@@ -151,8 +150,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Remove Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: associated_developer.guid, origins_for_username: ['uaa'])
 
             client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
             expect(status).to eq(200)
@@ -195,8 +193,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Associate Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: manager.guid, origins_for_username: ['uaa'])
 
             client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)
@@ -209,8 +206,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Remove Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: associated_manager.guid, origins_for_username: ['uaa'])
 
             client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
             expect(status).to eq(200)
@@ -253,8 +249,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Associate Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: auditor.guid, origins_for_username: ['uaa'])
 
             client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)
@@ -267,8 +262,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
           example 'Remove Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-            allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
-            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+            allow(uaa_client).to receive_messages(id_for_username: associated_auditor.guid, origins_for_username: ['uaa'])
 
             client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
             expect(status).to eq(200)

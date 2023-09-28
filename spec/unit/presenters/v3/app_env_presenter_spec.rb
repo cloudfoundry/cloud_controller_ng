@@ -21,7 +21,9 @@ module VCAP::CloudController::Presenters::V3
         app: app
       )
     end
+
     let(:show_secrets) { true }
+
     subject(:presenter) { AppEnvPresenter.new(app, show_secrets) }
 
     describe '#to_hash' do

@@ -13,7 +13,7 @@ module VCAP::CloudController
     let(:space) { object }
 
     describe 'when the parent organization is suspended' do
-      before(:each) do
+      before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
 

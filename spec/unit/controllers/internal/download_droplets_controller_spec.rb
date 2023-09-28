@@ -37,6 +37,7 @@ module VCAP::CloudController
         Fog.unmock!
         TestConfig.override(**staging_config)
       end
+
       after { FileUtils.rm_rf(workspace) }
 
       def get_and_redirect(url)
@@ -58,7 +59,7 @@ module VCAP::CloudController
         let(:tls_port) { Config.config.get(:tls_port) }
         let(:expected_redirect) { "https://#{hostname}:#{tls_port}/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download" }
 
-        it 'should redirect to the url provided by the blobstore_url_generator' do
+        it 'redirects to the url provided by the blobstore_url_generator' do
           upload_droplet
           get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
 
@@ -114,7 +115,7 @@ module VCAP::CloudController
       end
 
       context 'with an invalid app' do
-        it 'should return an error' do
+        it 'returns an error' do
           get_and_redirect '/internal/v2/droplets/bad/bogus/download'
           expect(last_response.status).to eq(404)
         end
@@ -154,6 +155,7 @@ module VCAP::CloudController
         Fog.unmock!
         TestConfig.override(**staging_config)
       end
+
       after { FileUtils.rm_rf(workspace) }
 
       def upload_droplet(target_droplet=droplet)
@@ -230,7 +232,7 @@ module VCAP::CloudController
       end
 
       context 'with an invalid app' do
-        it 'should return an error' do
+        it 'returns an error' do
           get '/internal/v4/droplets/bad/bogus/download'
           expect(last_response.status).to eq(404)
         end
@@ -241,7 +243,7 @@ module VCAP::CloudController
           allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         end
 
-        it 'should redirect to the url provided by the blobstore_url_generator' do
+        it 'redirects to the url provided by the blobstore_url_generator' do
           upload_droplet
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
 

@@ -273,6 +273,7 @@ module VCAP::CloudController
         end
       end
     end
+
     describe 'POST /v2/domains' do
       context 'as an org manager' do
         let(:user) { User.make }
@@ -316,7 +317,7 @@ module VCAP::CloudController
         it 'does not delete the route' do
           expect do
             delete "/v2/domains/#{shared_domain.guid}"
-          end.to_not(change { SharedDomain.find(guid: shared_domain.guid) })
+          end.not_to(change { SharedDomain.find(guid: shared_domain.guid) })
         end
 
         it 'returns an error' do

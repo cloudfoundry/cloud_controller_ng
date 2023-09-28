@@ -156,6 +156,7 @@ module VCAP::CloudController
 
         context 'when it is not_equal' do
           let(:operator) { :not_equal }
+
           it 'returns the models that satisfy the "!=" requirements' do
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,

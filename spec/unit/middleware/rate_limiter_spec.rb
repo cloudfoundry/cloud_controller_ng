@@ -34,13 +34,13 @@ module CloudFoundry
       let(:frozen_time) { Time.utc(2015, 10, 21, 7, 28) + Time.zone_offset('PDT') }
       let(:frozen_epoch) { frozen_time.to_i }
 
-      before(:each) do
+      before do
         middleware.instance_variable_set('@expiring_request_counter', expiring_request_counter)
         allow(expiring_request_counter).to receive(:increment).and_return([1, expires_in])
         Timecop.freeze frozen_time
       end
 
-      after(:each) do
+      after do
         Timecop.return
       end
 
@@ -125,9 +125,9 @@ module CloudFoundry
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               expect(expiring_request_counter).to receive(:increment).with('forwarded_ip', interval, logger).and_return([0, expires_in])
               _, response_headers, = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit']).to_not be_nil
-              expect(response_headers['X-RateLimit-Remaining']).to_not be_nil
-              expect(response_headers['X-RateLimit-Reset']).to_not be_nil
+              expect(response_headers['X-RateLimit-Limit']).not_to be_nil
+              expect(response_headers['X-RateLimit-Remaining']).not_to be_nil
+              expect(response_headers['X-RateLimit-Reset']).not_to be_nil
             end
           end
         end
@@ -242,7 +242,7 @@ module CloudFoundry
           expect(response_headers).not_to include('X-RateLimit-Remaining')
           expect(status).to eq(200)
           expect(app).to have_received(:call).at_least(:once)
-          expect(expiring_request_counter).to_not have_received(:increment)
+          expect(expiring_request_counter).not_to have_received(:increment)
         end
       end
 
@@ -250,7 +250,7 @@ module CloudFoundry
         let(:path_info) { '/v3/foo' }
         let(:user_1_env) { { 'cf.user_guid' => 'user-id-1', 'PATH_INFO' => path_info } }
 
-        before(:each) do
+        before do
           allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 1, expires_in])
         end
 

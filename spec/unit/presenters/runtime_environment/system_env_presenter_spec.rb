@@ -92,7 +92,7 @@ module VCAP::CloudController
             ServiceBinding.make(app: app, service_instance: service_instance_diff_label)
           end
 
-          it 'should group services by label' do
+          it 'groups services by label' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES]).to have(2).groups
             expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(2).services
             expect(system_env_presenter.system_env[:VCAP_SERVICES][service_alt.label.to_sym]).to have(1).service

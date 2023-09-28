@@ -61,7 +61,7 @@ module VCAP::CloudController
             allow(delete_binding_action).to receive(:delete).with(service_binding).and_raise(err)
 
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error)
-            expect(service_instance.shared_spaces).to_not be_empty
+            expect(service_instance.shared_spaces).not_to be_empty
           end
         end
 

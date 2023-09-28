@@ -21,14 +21,14 @@ module VCAP::CloudController
 
       describe '#perform' do
         context 'when creating a buildpack' do
-          shared_examples_for :creating_a_buildpack do
+          shared_examples_for 'creating a buildpack' do
             it 'creates a new buildpack with the requested stack' do
               expect do
                 job.perform
-              end.to change { Buildpack.count }.from(0).to(1)
+              end.to change(Buildpack, :count).from(0).to(1)
 
               buildpack = Buildpack.first
-              expect(buildpack).to_not be_nil
+              expect(buildpack).not_to be_nil
               expect(buildpack.name).to eq('mybuildpack')
               expect(buildpack.stack).to eq(stack_name)
               expect(buildpack.key).to start_with(buildpack.guid)
@@ -39,7 +39,8 @@ module VCAP::CloudController
 
           context 'when the no stack is requested' do
             let(:stack_name) { nil }
-            it_behaves_like :creating_a_buildpack
+
+            it_behaves_like 'creating a buildpack'
           end
 
           context 'when the requested stack does not exist' do
@@ -55,7 +56,7 @@ module VCAP::CloudController
           context 'when the requested stack does exist' do
             let!(:existing_stack) { Stack.make(name: stack_name) }
 
-            it_behaves_like :creating_a_buildpack
+            it_behaves_like 'creating a buildpack'
           end
         end
 
@@ -89,7 +90,7 @@ module VCAP::CloudController
               expect do
                 job.perform
               end.to raise_error(RuntimeError)
-            end.to_not(change { Buildpack.count })
+            end.not_to(change(Buildpack, :count))
           end
 
           it 'does not create a new stack and re-raises the error' do
@@ -97,7 +98,7 @@ module VCAP::CloudController
               expect do
                 job.perform
               end.to raise_error(RuntimeError)
-            end.to_not(change { Stack.count })
+            end.not_to(change(Stack, :count))
           end
         end
       end

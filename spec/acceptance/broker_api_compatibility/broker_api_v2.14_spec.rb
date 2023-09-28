@@ -25,7 +25,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq true
+          expect(parsed_body['entity']['bindings_retrievable']).to be true
         end
 
         context 'and returns a parameters object' do
@@ -38,7 +38,7 @@ RSpec.describe 'Service Broker API integration' do
               to_return(status: 200, body: '{"parameters": {"foo":"bar"}}')
           end
 
-          it 'should be retrievable' do
+          it 'is retrievable' do
             get("/v2/service_bindings/#{@binding_guid}/parameters",
                 {}.to_json,
                 json_headers(admin_headers))
@@ -77,7 +77,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq false
+          expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
       end
 
@@ -88,7 +88,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['bindings_retrievable']).to eq false
+          expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
       end
     end
@@ -107,7 +107,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq true
+          expect(parsed_body['entity']['instances_retrievable']).to be true
         end
       end
 
@@ -124,7 +124,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq false
+          expect(parsed_body['entity']['instances_retrievable']).to be false
         end
       end
 
@@ -135,7 +135,7 @@ RSpec.describe 'Service Broker API integration' do
               json_headers(admin_headers))
           parsed_body = MultiJson.load(last_response.body)
 
-          expect(parsed_body['entity']['instances_retrievable']).to eq false
+          expect(parsed_body['entity']['instances_retrievable']).to be false
         end
       end
     end
@@ -203,7 +203,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
 
@@ -214,7 +214,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
 
@@ -225,7 +225,7 @@ RSpec.describe 'Service Broker API integration' do
                   Delayed::Worker.new.work_off
 
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).not_to have_been_made
                 end
               end
             end
@@ -377,7 +377,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -405,7 +405,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -433,7 +433,7 @@ RSpec.describe 'Service Broker API integration' do
             Delayed::Worker.new.work_off
           end
 
-          it 'should not orphan mitigate' do
+          it 'does not orphan mitigate' do
             expect(
               a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
             ).not_to have_been_made
@@ -461,7 +461,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+})
           ).not_to have_been_made
@@ -484,7 +484,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
           ).not_to have_been_made
@@ -507,7 +507,7 @@ RSpec.describe 'Service Broker API integration' do
           Delayed::Worker.new.work_off
         end
 
-        it 'should not orphan mitigate' do
+        it 'does not orphan mitigate' do
           expect(
             a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
           ).not_to have_been_made

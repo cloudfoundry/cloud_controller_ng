@@ -68,7 +68,7 @@ module VCAP::CloudController
         expect do
           post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', position: 1 })
           expect(last_response.status).to eq(201)
-        end.to change { Buildpack.count }.from(0).to(1)
+        end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
         expect(buildpack.stack).to be_nil
       end
@@ -77,7 +77,7 @@ module VCAP::CloudController
         expect do
           post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', stack: stack.name, position: 1 })
           expect(last_response.status).to eq(201)
-        end.to change { Buildpack.count }.from(0).to(1)
+        end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
         expect(buildpack.stack).to eq(stack.name)
       end
@@ -195,7 +195,7 @@ module VCAP::CloudController
           expect(buildpack1.key).to be_nil
 
           delete "/v2/buildpacks/#{buildpack1.guid}"
-          expect(last_response.status).to eql(204)
+          expect(last_response.status).to be(204)
           expect(Buildpack.find(name: buildpack1.name)).to be_nil
         end
       end

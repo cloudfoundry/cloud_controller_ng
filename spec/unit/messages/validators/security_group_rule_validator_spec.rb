@@ -29,7 +29,7 @@ module VCAP::CloudController::Validators
       let(:rules) { 'bad rule' }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors[:rules]).to include 'must be an array'
       end
     end
@@ -47,7 +47,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'returns indexed errors corresponding to each invalid rule' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
         expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         expect(subject.errors.full_messages).to include "Rules[1]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
@@ -59,7 +59,7 @@ module VCAP::CloudController::Validators
       let(:rules) { ['bad rule'] }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to include 'Rules[0]: must be an object'
       end
     end
@@ -75,7 +75,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'returns an error about the invalid key' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to include 'Rules[0]: unknown field(s): ["blork", "blark"]'
       end
     end
@@ -108,7 +108,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error if the field is not a string' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a string'
         end
       end
@@ -124,7 +124,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
@@ -140,7 +140,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
         end
       end
@@ -156,7 +156,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
@@ -173,7 +173,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
@@ -189,7 +189,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
@@ -205,7 +205,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
@@ -288,7 +288,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error if the field is not a string' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: description must be a string'
         end
       end
@@ -324,7 +324,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error if the field is not a string' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include('Rules[0]: log must be a boolean')
         end
       end
@@ -335,7 +335,7 @@ module VCAP::CloudController::Validators
         let(:rules) { [{ protocol: 4 }] }
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
         end
       end
@@ -344,7 +344,7 @@ module VCAP::CloudController::Validators
         let(:rules) { [{ protocol: nil }] }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
         end
       end
@@ -353,7 +353,7 @@ module VCAP::CloudController::Validators
         let(:rules) { [{ protocol: 'arp' }] }
 
         it 'adds an error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
         end
       end
@@ -440,7 +440,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'accepts the valid port' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include(
             'Rules[0]: ports are required for protocols of type TCP and UDP'
           )
@@ -459,7 +459,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'does not accept the ports as valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include(
             'Rules[0]: ports must be a valid single port, comma separated list of ports, or range or ports, formatted as a string'
           )
@@ -476,7 +476,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'adds an error if the field is not a string' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include(
             'Rules[0]: ports must be a valid single port, comma separated list of ports, or range or ports, formatted as a string'
           )
@@ -495,7 +495,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'does not accept the provided ports' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include('Rules[0]: ports are not allowed for protocols of type all')
         end
       end
@@ -534,7 +534,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'is invalid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: type is required for protocols of type ICMP'
           expect(subject.errors.full_messages).to include 'Rules[0]: code is required for protocols of type ICMP'
         end
@@ -552,7 +552,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'returns a luxurious error for both the upper and lower bounds' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: type must be an integer between -1 and 255 (inclusive)'
           expect(subject.errors.full_messages).to include 'Rules[0]: code must be an integer between -1 and 255 (inclusive)'
         end
@@ -570,7 +570,7 @@ module VCAP::CloudController::Validators
         end
 
         it 'must be an int' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: type must be an integer between -1 and 255 (inclusive)'
           expect(subject.errors.full_messages).to include 'Rules[0]: code must be an integer between -1 and 255 (inclusive)'
         end

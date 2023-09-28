@@ -121,7 +121,7 @@ module CloudController::Packager
         end
       end
 
-      context 'when the package zip file is missing ' do
+      context 'when the package zip file is missing' do
         let(:uploaded_files_path) { File.join(local_tmp_dir, 'file_that_does_not_exist.zip') }
 
         context 'and there are NO cached files' do
@@ -198,7 +198,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(package_guid, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -211,7 +211,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(package_guid, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -224,7 +224,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(package_guid, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -260,7 +260,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files exceeds the configured maximum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(package_guid, uploaded_files_path, cached_files_fingerprints)
             sha_of_greetings_file_in_good_zip = '82693f9b3a4857415aeffccd535c375891d96f74'
             sha_of_bye_file_in_good_zip       = 'ee9e51458f4642f48efe956962058245ee7127b1'
@@ -270,7 +270,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files is less than the configured minimum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(package_guid, uploaded_files_path, cached_files_fingerprints)
             sha_of_hi_file_in_good_zip  = '55ca6286e3e4f4fba5d0448333fa99fc5a404a73'
             sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'

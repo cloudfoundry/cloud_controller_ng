@@ -50,26 +50,22 @@ module VCAP::CloudController
 
         it 'returns an array of crashed instances' do
           result = instances_reporter.crashed_instances_for_app(process)
-          expect(result).to match_array(
-            [
-              { 'instance' => 'instance-b', 'uptime' => 0, 'since' => two_days_ago_since_epoch_seconds },
-              { 'instance' => 'instance-e', 'uptime' => 0, 'since' => two_days_ago_since_epoch_seconds }
-            ]
-          )
+          expect(result).to contain_exactly({ 'instance' => 'instance-b', 'uptime' => 0, 'since' => two_days_ago_since_epoch_seconds },
+                                            { 'instance' => 'instance-e', 'uptime' => 0, 'since' => two_days_ago_since_epoch_seconds })
         end
 
         it 'always sets uptime to 0 for crashed instances' do
           result  = instances_reporter.crashed_instances_for_app(process)
           uptimes = result.pluck('uptime')
 
-          expect(uptimes.all? { |i| i == 0 }).to be_truthy
+          expect(uptimes).to(be_all { |i| i == 0 })
         end
 
         it 'reports since as seconds' do
           result = instances_reporter.crashed_instances_for_app(process)
           sinces = result.pluck('since')
 
-          expect(sinces.all? { |i| i == two_days_ago_since_epoch_seconds }).to be_truthy
+          expect(sinces).to(be_all { |i| i == two_days_ago_since_epoch_seconds })
         end
 
         context 'when the bbs response contains more lrps than the process is configured for' do
@@ -443,6 +439,7 @@ module VCAP::CloudController
 
         context 'when an error is raised' do
           let(:error) { StandardError.new('tomato') }
+
           before do
             allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_raise(error)
           end

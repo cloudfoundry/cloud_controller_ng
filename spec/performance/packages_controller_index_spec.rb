@@ -48,7 +48,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
 
       avg_time = (search_time * 1.0) / runs
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['resources'].size).to be(3)
 
       expect(avg_time).to be <= 0.2

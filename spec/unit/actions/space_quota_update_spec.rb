@@ -55,7 +55,7 @@ module VCAP::CloudController
 
           expect(updated_space_quota.total_services).to eq(10)
           expect(updated_space_quota.total_service_keys).to eq(20)
-          expect(updated_space_quota.non_basic_services_allowed).to eq(false)
+          expect(updated_space_quota.non_basic_services_allowed).to be(false)
 
           expect(updated_space_quota.total_reserved_route_ports).to eq(1)
           expect(updated_space_quota.total_routes).to eq(8)
@@ -106,6 +106,7 @@ module VCAP::CloudController
             before do
               create_spaces_with_unlimited_log_rate_process(1)
             end
+
             it 'errors with a message telling the user the affected space' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
@@ -118,6 +119,7 @@ module VCAP::CloudController
             before do
               create_spaces_with_unlimited_log_rate_process(2)
             end
+
             it 'errors with a message telling the user the affected spaces' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)
@@ -130,6 +132,7 @@ module VCAP::CloudController
             before do
               create_spaces_with_unlimited_log_rate_process(5)
             end
+
             it 'errors with a message telling the user some of the affected spaces and a total count' do
               expect do
                 SpaceQuotaUpdate.update(space_quota, message)

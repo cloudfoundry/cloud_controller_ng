@@ -275,9 +275,7 @@ module VCAP::CloudController
 
         describe '#global_environment_variables' do
           it 'returns a list' do
-            expect(builder.global_environment_variables).to match_array(
-              [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
-            )
+            expect(builder.global_environment_variables).to contain_exactly(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG))
           end
         end
 
@@ -288,7 +286,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              expect(builder.privileged?).to eq(true)
+              expect(builder.privileged?).to be(true)
             end
           end
 
@@ -298,7 +296,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              expect(builder.privileged?).to eq(false)
+              expect(builder.privileged?).to be(false)
             end
           end
         end
@@ -329,11 +327,12 @@ module VCAP::CloudController
           let(:ports) { [11, 22, 33] }
 
           it 'returns the array of environment variables' do
-            expect(builder.port_environment_variables).to match_array([
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11'),
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11'),
-              ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0')
-            ])
+            env_var1 = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '11')
+            env_var2 = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_PORT', value: '11')
+            env_var3 = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APP_HOST', value: '0.0.0.0')
+            expected_env_vars = [env_var1, env_var2, env_var3]
+
+            expect(builder.port_environment_variables).to match_array(expected_env_vars)
           end
         end
       end

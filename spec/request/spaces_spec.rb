@@ -39,9 +39,7 @@ RSpec.describe 'Spaces' do
     it 'creates a new space with the given name and org' do
       expect do
         post '/v3/spaces', request_body, admin_header
-      end.to change {
-        VCAP::CloudController::Space.count
-      }.by 1
+      end.to change(VCAP::CloudController::Space, :count).by 1
 
       created_space = VCAP::CloudController::Space.last
 
@@ -114,6 +112,7 @@ RSpec.describe 'Spaces' do
       org.add_user(user)
       TestConfig.override(kubernetes: {})
     end
+
     it 'returns the requested space' do
       space1.add_developer(user)
       get "/v3/spaces/#{space1.guid}", nil, user_header
@@ -280,6 +279,7 @@ RSpec.describe 'Spaces' do
         space3.add_developer(user)
         TestConfig.override(kubernetes: {})
       end
+
       it 'returns a paginated list of spaces the user has access to' do
         get '/v3/spaces?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
@@ -466,7 +466,7 @@ RSpec.describe 'Spaces' do
       it 'does not include spaces if no one asks for them' do
         get '/v3/spaces', nil, admin_header
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to_not have_key('included')
+        expect(parsed_response).not_to have_key('included')
       end
     end
 
@@ -1014,6 +1014,17 @@ RSpec.describe 'Spaces' do
       VCAP::CloudController::ServiceBroker.make(space:)
     end
 
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
+
+        execute_all_jobs(expected_successes: 2, expected_failures: 0)
+        get "/v3/spaces/#{space.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+    end
+    let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}", nil, user_headers } }
+
     it 'destroys the requested space and sub resources' do
       expect do
         delete "/v3/spaces/#{space.guid}", nil, admin_header
@@ -1023,25 +1034,14 @@ RSpec.describe 'Spaces' do
         execute_all_jobs(expected_successes: 2, expected_failures: 0)
         get "/v3/spaces/#{space.guid}", {}, admin_headers
         expect(last_response.status).to eq(404)
-      end.to change { VCAP::CloudController::Space.count }.by(-1).
-        and change { VCAP::CloudController::AppModel.count }.by(-1).
-        and change { VCAP::CloudController::Route.count }.by(-1).
+      end.to change(VCAP::CloudController::Space, :count).by(-1).
+        and change(VCAP::CloudController::AppModel, :count).by(-1).
+        and change(VCAP::CloudController::Route, :count).by(-1).
         and change { associated_user.reload.default_space }.to(be_nil).
         and change { associated_user.reload.spaces }.to(be_empty).
-        and change { VCAP::CloudController::ServiceInstance.count }.by(-1).
-        and change { VCAP::CloudController::ServiceBroker.count }.by(-1).
+        and change(VCAP::CloudController::ServiceInstance, :count).by(-1).
+        and change(VCAP::CloudController::ServiceBroker, :count).by(-1).
         and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
-    end
-
-    let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}", nil, user_headers } }
-    let(:db_check) do
-      lambda do
-        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
-
-        execute_all_jobs(expected_successes: 2, expected_failures: 0)
-        get "/v3/spaces/#{space.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
-      end
     end
 
     context 'deleting metadata' do
@@ -1199,7 +1199,7 @@ RSpec.describe 'Spaces' do
 
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['data']).to eq(nil)
+        expect(parsed_response['data']).to be_nil
       end
     end
 
@@ -1268,6 +1268,7 @@ RSpec.describe 'Spaces' do
   describe 'GET /v3/spaces/:guid/users' do
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
+
     context 'filters' do
       before do
         org.add_user(user)
@@ -1374,6 +1375,7 @@ RSpec.describe 'Spaces' do
             }
           )
         end
+
         it 'returns 200 and the filtered users' do
           get "/v3/spaces/#{space1.guid}/users?usernames=bob-mcjames&origins=Okta", nil, admin_header
 
@@ -1434,7 +1436,7 @@ RSpec.describe 'Spaces' do
 
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
-          expect(parsed_response['resources'].pluck('guid')).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
 
@@ -1463,7 +1465,7 @@ RSpec.describe 'Spaces' do
 
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
-          expect(parsed_response['resources'].pluck('guid')).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
     end
@@ -1563,6 +1565,7 @@ RSpec.describe 'Spaces' do
         allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
         allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
       end
+
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 

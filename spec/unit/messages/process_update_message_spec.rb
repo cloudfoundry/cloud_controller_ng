@@ -8,31 +8,31 @@ module VCAP::CloudController
       it 'returns true if the key was requested, false otherwise' do
         message = ProcessUpdateMessage.new({ requested: 'thing' })
 
-        expect(message.requested?(:requested)).to be_truthy
-        expect(message.requested?(:notrequested)).to be_falsey
+        expect(message).to be_requested(:requested)
+        expect(message).not_to be_requested(:notrequested)
       end
 
       it 'handles nested health check keys' do
         message = ProcessUpdateMessage.new({ requested: 'thing' })
-        expect(message.requested?(:health_check_type)).to be_falsey
-        expect(message.requested?(:health_check_timeout)).to be_falsey
+        expect(message).not_to be_requested(:health_check_type)
+        expect(message).not_to be_requested(:health_check_timeout)
 
         message = ProcessUpdateMessage.new({ health_check: { type: 'type', data: { timeout: 4, invocation_timeout: 7, interval: 8 } } })
-        expect(message.requested?(:health_check_type)).to be_truthy
-        expect(message.requested?(:health_check_timeout)).to be_truthy
-        expect(message.requested?(:health_check_invocation_timeout)).to be_truthy
-        expect(message.requested?(:health_check_interval)).to be_truthy
+        expect(message).to be_requested(:health_check_type)
+        expect(message).to be_requested(:health_check_timeout)
+        expect(message).to be_requested(:health_check_invocation_timeout)
+        expect(message).to be_requested(:health_check_interval)
       end
 
       it 'handles nested readiness health check keys' do
         message = ProcessUpdateMessage.new({ requested: 'thing' })
-        expect(message.requested?(:readiness_health_check_type)).to be_falsey
-        expect(message.requested?(:readiness_health_check_timeout)).to be_falsey
+        expect(message).not_to be_requested(:readiness_health_check_type)
+        expect(message).not_to be_requested(:readiness_health_check_timeout)
 
         message = ProcessUpdateMessage.new({ readiness_health_check: { type: 'type', data: { invocation_timeout: 7, interval: 9 } } })
-        expect(message.requested?(:readiness_health_check_type)).to be_truthy
-        expect(message.requested?(:readiness_health_check_invocation_timeout)).to be_truthy
-        expect(message.requested?(:readiness_health_check_interval)).to be_truthy
+        expect(message).to be_requested(:readiness_health_check_type)
+        expect(message).to be_requested(:readiness_health_check_invocation_timeout)
+        expect(message).to be_requested(:readiness_health_check_interval)
       end
     end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
       context 'when command is nil' do
         let(:params) { { command: nil } }
 
-        it 'it is valid' do
+        it 'is valid' do
           message = ProcessUpdateMessage.new(params)
 
           expect(message).to be_valid
@@ -638,7 +638,7 @@ module VCAP::CloudController
             body['bogus'] = 'field'
             message = ProcessUpdateMessage.new(body)
 
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
           end
 

@@ -148,6 +148,7 @@ RSpec.describe 'Environment group variables' do
 
       context 'when user passes in {}' do
         let(:params) { {} }
+
         it 'does not error' do
           patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
 
@@ -235,6 +236,7 @@ RSpec.describe 'Environment group variables' do
             }
           }
         end
+
         it 'returns a 422' do
           patch '/v3/environment_variable_groups/staging', big_params.to_json, admin_header
 

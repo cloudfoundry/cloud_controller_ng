@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe MaxAppInstancesPolicy do
+  subject(:validator) { MaxAppInstancesPolicy.new(process, process.organization, quota_definition, error_name) }
+
   let(:max_apps) { 8 }
   let(:current_org_instances) { 3 }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make(instances: 1, state: 'STARTED') }
@@ -8,8 +10,6 @@ RSpec.describe MaxAppInstancesPolicy do
   let!(:org_process) { VCAP::CloudController::ProcessModelFactory.make(space: org_space, instances: current_org_instances, state: 'STARTED') }
   let(:quota_definition) { double(app_instance_limit: max_apps) }
   let(:error_name) { :app_instance_limit_error }
-
-  subject(:validator) { MaxAppInstancesPolicy.new(process, process.organization, quota_definition, error_name) }
 
   it 'gives error when number of instances across all org apps exceeds instance limit' do
     process.instances = max_apps - current_org_instances + 1
@@ -42,7 +42,7 @@ RSpec.describe MaxAppInstancesPolicy do
   context 'when quota definition is null' do
     let(:quota_definition) { nil }
 
-    it 'does not give error ' do
+    it 'does not give error' do
       process.instances = 150
       expect(validator).to validate_without_error(process)
     end

@@ -29,7 +29,7 @@ module VCAP::CloudController
 
         it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('No-route must be a boolean')
         end
       end
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -77,9 +77,9 @@ module VCAP::CloudController
           }
         end
 
-        it 'is  valid' do
+        it 'is valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Random-route must be a boolean')
         end
       end
@@ -138,7 +138,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Default-route must be a boolean')
         end
       end
@@ -150,7 +150,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include('Random-route and default-route may not be used together')
         end
       end
@@ -169,7 +169,7 @@ module VCAP::CloudController
         it 'returns true' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(true)
+          expect(msg.valid?).to be(true)
         end
       end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
         it 'returns false' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include("The route 'potato://bad.example.com' is not a properly formed URL")
         end
       end
@@ -204,7 +204,7 @@ module VCAP::CloudController
         it 'returns false' do
           msg = ManifestRoutesUpdateMessage.new(body)
 
-          expect(msg.valid?).to eq(false)
+          expect(msg.valid?).to be(false)
           expect(msg.errors.full_messages).to include("Route protocol must be 'http1', 'http2' or 'tcp'.")
         end
       end

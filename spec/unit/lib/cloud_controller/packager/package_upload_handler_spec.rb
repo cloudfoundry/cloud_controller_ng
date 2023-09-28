@@ -66,12 +66,13 @@ module CloudController::Packager
 
         it 'succeeds and removes the compressed path' do
           expect(FileUtils).to receive(:rm_f).with(uploaded_files_path)
-          expect(packer.pack).to eq nil
+          expect(packer.pack).to be_nil
         end
       end
 
       context 'when sending the package to the blobstore fails' do
         let(:expected_error) { StandardError.new('failed to send') }
+
         before do
           allow(packer_implementation).to receive(:send_package_to_blobstore).and_raise(expected_error)
         end

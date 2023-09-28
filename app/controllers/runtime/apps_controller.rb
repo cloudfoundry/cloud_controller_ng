@@ -140,7 +140,8 @@ module VCAP::CloudController
       space   = process.space
 
       if !recursive_delete? && process.service_bindings.present?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', process.class.table_name)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings',
+                                                                 process.class.table_name)
       end
 
       begin

@@ -70,6 +70,7 @@ module VCAP::CloudController
 
         context 'when both the db_encryption_key and custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
+
           it 'can decrypt all the rows' do
             expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
@@ -111,6 +112,7 @@ module VCAP::CloudController
 
         context 'when both the db_encryption_key and custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
+
           it 'can decrypt all the rows' do
             expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
@@ -131,6 +133,7 @@ module VCAP::CloudController
 
         context 'when only the database_encryption part is present' do
           let(:config) { Config.new(next_db_encryption_part) }
+
           it 'can decrypt all the rows' do
             expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)
@@ -151,6 +154,7 @@ module VCAP::CloudController
 
         context 'when both the db_encryption_key and all custom encryption_keys are present' do
           let(:config) { Config.new(initial_db_encryption_part.merge(next_db_encryption_part)) }
+
           it 'can decrypt all the rows' do
             expect do
               ValidateDatabaseKeys.can_decrypt_all_rows!(config)

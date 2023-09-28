@@ -9,14 +9,14 @@ require 'actions/v3/service_instance_delete'
 module VCAP::CloudController
   module V3
     RSpec.describe DeleteServiceInstanceJob do
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
+      let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+      let(:service_plan) { ServicePlan.make(service: service_offering) }
+      let(:service_offering) { Service.make }
+
       it_behaves_like 'delayed job', described_class
 
       subject(:job) { described_class.new(service_instance.guid, user_audit_info) }
-
-      let(:service_offering) { Service.make }
-      let(:service_plan) { ServicePlan.make(service: service_offering) }
-      let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
-      let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
 
       describe '#perform' do
         let(:delete_response) { { finished: false, operation: 'test-operation' } }

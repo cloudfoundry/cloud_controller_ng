@@ -11,8 +11,7 @@ module VCAP::CloudController
       let(:requested_limit) { 100 }
 
       before do
-        allow(calculator).to receive(:minimum_limit).and_return(minimum_limit)
-        allow(calculator).to receive(:maximum_limit).and_return(maximum_limit)
+        allow(calculator).to receive_messages(minimum_limit:, maximum_limit:)
       end
 
       it 'uses the requested_limit' do
@@ -61,6 +60,7 @@ module VCAP::CloudController
     describe '#minimum_limit' do
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
+
         before do
           TestConfig.override(staging: { minimum_staging_disk_mb: expected_limit })
         end

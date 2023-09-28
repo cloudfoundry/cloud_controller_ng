@@ -12,6 +12,7 @@ module VCAP::CloudController
 
     describe '#unshare' do
       let(:target_space3) { Space.make }
+
       before do
         allow_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_unshare)
         route_share.create(route, [target_space1, target_space2, target_space3], user_audit_info)

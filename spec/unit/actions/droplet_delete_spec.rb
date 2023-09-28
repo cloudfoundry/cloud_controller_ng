@@ -24,14 +24,14 @@ module VCAP::CloudController
       it 'deletes the droplet record' do
         expect do
           droplet_delete.delete([droplet])
-        end.to change { DropletModel.count }.by(-1)
+        end.to change(DropletModel, :count).by(-1)
         expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
       it 'deletes associated metadata' do
         expect do
           droplet_delete.delete([droplet])
-        end.to change { DropletLabelModel.count }.by(-1)
+        end.to change(DropletLabelModel, :count).by(-1)
         expect { label.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -50,9 +50,7 @@ module VCAP::CloudController
       it 'schedules a job to the delete the blobstore item' do
         expect do
           droplet_delete.delete([droplet])
-        end.to change {
-          Delayed::Job.count
-        }.by(1)
+        end.to change(Delayed::Job, :count).by(1)
 
         job = Delayed::Job.last
         job_delete_handler = YAML.safe_load(job.handler, permitted_classes: [
@@ -77,9 +75,7 @@ module VCAP::CloudController
         it 'does not schedule a blobstore delete job' do
           expect do
             droplet_delete.delete([droplet])
-          end.not_to(change do
-            Delayed::Job.count
-          end)
+          end.not_to(change(Delayed::Job, :count))
         end
       end
     end

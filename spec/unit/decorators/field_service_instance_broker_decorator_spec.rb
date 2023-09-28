@@ -74,7 +74,7 @@ module VCAP::CloudController
       context 'for user provided service instances' do
         let!(:service_instance_3) { UserProvidedServiceInstance.make }
 
-        it 'should return the unchanged hash' do
+        it 'returns the unchanged hash' do
           undecorated_hash = { foo: 'bar' }
           decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['name'] })
 

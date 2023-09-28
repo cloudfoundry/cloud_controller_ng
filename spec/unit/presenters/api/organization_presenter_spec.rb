@@ -2,14 +2,16 @@ require 'spec_helper'
 
 RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
+    subject { OrganizationPresenter.new(org) }
+
     let(:org) { VCAP::CloudController::Organization.make }
+
     before do
       VCAP::CloudController::Space.make(organization: org)
       user = VCAP::CloudController::User.make
       user.add_organization org
       user.add_managed_organization org
     end
-    subject { OrganizationPresenter.new(org) }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

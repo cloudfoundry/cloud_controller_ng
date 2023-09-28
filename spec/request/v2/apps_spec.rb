@@ -599,7 +599,7 @@ RSpec.describe 'Apps' do
         }
       end
 
-      it 'should log the required fields when the app is created' do
+      it 'logs the required fields when the app is created' do
         Timecop.freeze do
           post '/v2/apps', post_params.to_json, headers_for(user)
 
@@ -772,7 +772,7 @@ RSpec.describe 'Apps' do
 
     context 'telemetry' do
       context 'update app' do
-        it 'should log the required fields' do
+        it 'logs the required fields' do
           Timecop.freeze do
             expected_json = {
               'telemetry-source' => 'cloud_controller_ng',
@@ -820,7 +820,7 @@ RSpec.describe 'Apps' do
             MultiJson.dump({ instances: })
           end
 
-          it 'should log the required fields' do
+          it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
@@ -838,7 +838,7 @@ RSpec.describe 'Apps' do
             MultiJson.dump({ memory: })
           end
 
-          it 'should log the required fields' do
+          it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
@@ -856,7 +856,7 @@ RSpec.describe 'Apps' do
             MultiJson.dump({ disk_quota: })
           end
 
-          it 'should log the required fields' do
+          it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
@@ -885,7 +885,7 @@ RSpec.describe 'Apps' do
           MultiJson.dump({ state: 'STARTED' })
         end
 
-        it 'should log the required fields' do
+        it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_start_json))
@@ -913,7 +913,7 @@ RSpec.describe 'Apps' do
           MultiJson.dump({ state: 'STOPPED' })
         end
 
-        it 'should log the required fields' do
+        it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_stop_json))
@@ -937,6 +937,7 @@ RSpec.describe 'Apps' do
         )
       end
       let(:sidecar1) { VCAP::CloudController::SidecarModel.make(app: process.app, memory: 20) }
+
       before do
         VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
       end
@@ -1132,7 +1133,7 @@ RSpec.describe 'Apps' do
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the app is deleted' do
+      it 'logs the required fields when the app is deleted' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -1512,7 +1513,7 @@ RSpec.describe 'Apps' do
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the app is restaged' do
+      it 'logs the required fields when the app is restaged' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -1535,10 +1536,12 @@ RSpec.describe 'Apps' do
 
       context 'docker app' do
         let(:process) { VCAP::CloudController::ProcessModelFactory.make(name: 'maria', space: space, docker_image: 'some-image') }
+
         before do
           VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
         end
-        it 'should log the required fields when the app is restaged' do
+
+        it 'logs the required fields when the app is restaged' do
           Timecop.freeze do
             expected_json = {
               'telemetry-source' => 'cloud_controller_ng',
@@ -1608,7 +1611,7 @@ RSpec.describe 'Apps' do
         }
       end
 
-      it 'should log the required fields' do
+      it 'logs the required fields' do
         Timecop.freeze do
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
           put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
@@ -1764,7 +1767,7 @@ RSpec.describe 'Apps' do
       delete "/v2/apps/#{process.guid}/service_bindings/#{service_binding.guid}", nil, headers_for(user)
 
       expect(last_response.status).to eq 204
-      expect(service_binding.exists?).to be_falsey
+      expect(service_binding).not_to exist
     end
   end
 
@@ -1887,13 +1890,13 @@ RSpec.describe 'Apps' do
 
     it 'removes the associated route' do
       expect(process.routes).to include(route1)
-      expect(route_mapping1.exists?).to be_truthy
+      expect(route_mapping1).to exist
 
       delete "/v2/apps/#{process.guid}/routes/#{route1.guid}", nil, headers_for(user)
 
       expect(last_response.status).to eq(204)
       expect(process.reload.routes).not_to include(route1)
-      expect(route_mapping1.exists?).to be_falsey
+      expect(route_mapping1).not_to exist
     end
   end
 

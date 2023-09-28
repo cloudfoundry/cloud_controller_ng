@@ -26,7 +26,7 @@ module VCAP::CloudController
             }
           end
 
-          it 'should update the instance attributes' do
+          it 'updates the instance attributes' do
             update_service_instance(200, headers: admin_headers, body: body)
 
             expect(last_response).to have_status_code(201)
@@ -58,7 +58,7 @@ module VCAP::CloudController
               }
             end
 
-            it 'should get 403 with appropriate error description' do
+            it 'gets 403 with appropriate error description' do
               update_service_instance(200, headers: headers_for(user), body: body)
 
               expect(last_response).to have_status_code(403)
@@ -80,7 +80,7 @@ module VCAP::CloudController
               }
             end
 
-            it 'should update the instance attributes and not call the broker' do
+            it 'updates the instance attributes and not call the broker' do
               update_service_instance(200, headers: headers_for(user), body: body)
 
               expect(last_response).to have_status_code(201)
@@ -102,7 +102,7 @@ module VCAP::CloudController
               }
             end
 
-            it 'should get 403 with appropriate error description' do
+            it 'gets 403 with appropriate error description' do
               update_service_instance(200, headers: headers_for(user), body: body)
 
               expect(last_response).to have_status_code(403)

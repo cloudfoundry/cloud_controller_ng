@@ -109,35 +109,35 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid) }
 
       describe 'name' do
-        it 'should allow standard ascii characters' do
+        it 'allows standard ascii characters' do
           task.name = "A -_- word 2!?()'\"&+."
           expect do
             task.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           task.name = 'a \\ word'
           expect do
             task.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           task.name = '詩子¡'
           expect do
             task.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           task.name = "a \n word"
           expect do
             task.save
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           task.name = "a \e word"
           expect do
             task.save
@@ -173,7 +173,7 @@ module VCAP::CloudController
 
         it 'can not be something else' do
           task.state = 'SOMETHING ELSE'
-          expect(task).to_not be_valid
+          expect(task).not_to be_valid
         end
       end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
 
         it 'cannot be > 4096 characters' do
           task.command = 'a' * 4097
-          expect(task).to_not be_valid
+          expect(task).not_to be_valid
           expect(task.errors.full_messages).to include('command must be shorter than 4097 characters')
         end
       end
@@ -213,7 +213,7 @@ module VCAP::CloudController
 
           expect do
             TaskModel.make app: other_app, sequence_id: 0
-          end.to_not raise_exception
+          end.not_to raise_exception
         end
       end
 
@@ -489,7 +489,7 @@ module VCAP::CloudController
                   log_rate_limit: 199,
                   app: app
                 )
-              end.to_not raise_error
+              end.not_to raise_error
             end
 
             it 'does not allow a task that exceeds the limit to start' do

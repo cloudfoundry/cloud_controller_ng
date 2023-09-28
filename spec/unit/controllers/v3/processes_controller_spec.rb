@@ -22,7 +22,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         get :index, params: { app_guid: app.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
       it 'provides the correct base url in the pagination links' do
@@ -52,7 +52,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns a 404 Resource Not Found' do
           get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -66,7 +66,7 @@ RSpec.describe ProcessesController, type: :controller do
           get :index, params: { app_guid: app.guid }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -79,7 +79,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 403 NotAuthorized' do
         get :index
 
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
         expect(response.body).to include('NotAuthorized')
       end
     end
@@ -96,8 +96,8 @@ RSpec.describe ProcessesController, type: :controller do
           get :index
 
           response_guids = parsed_body['resources'].pluck('guid')
-          expect(response.status).to eq(200)
-          expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
+          expect(response).to have_http_status(:ok)
+          expect(response_guids).to contain_exactly(process1.guid, process2.guid, process3.guid)
         end
 
         it 'eager loads associated resources that the presenter specifies' do
@@ -108,7 +108,7 @@ RSpec.describe ProcessesController, type: :controller do
 
           get :index
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
         end
       end
     end
@@ -120,7 +120,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns an 400 Bad Request' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Unknown query parameter(s):')
           expect(response.body).to include('invalid')
@@ -132,7 +132,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns 400' do
           get :index, params: { order_by: '^=%' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include 'BadQueryParameter'
           expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
         end
@@ -144,7 +144,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns an 400 Bad Request' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Per page must be between 1 and 5000')
         end
@@ -164,7 +164,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'returns 200 OK with process' do
       get :show, params: { process_guid: process_type.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
@@ -176,7 +176,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns a 200 and the process' do
         get :show, params: { type: process_type.type, app_guid: app.guid }
 
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
         expect(parsed_body['guid']).to eq(process_type.guid)
       end
 
@@ -187,7 +187,7 @@ RSpec.describe ProcessesController, type: :controller do
 
           get :show, params: { type: other_process.type, app_guid: app.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Process not found'
         end
@@ -197,7 +197,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns a 404' do
           get :show, params: { type: process_type.type, app_guid: 'made-up' }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App not found'
         end
@@ -211,7 +211,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns a 404' do
           get :show, params: { type: process_type.type, app_guid: app.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App not found'
         end
@@ -222,7 +222,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises an ApiError with a 404 code' do
         get :show, params: { process_guid: 'ABC123' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
         expect(response.body).to include('Process not found')
       end
@@ -235,7 +235,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           get :show, params: { process_guid: process_type.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -248,7 +248,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           get :show, params: { process_guid: process_type.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
           expect(response.body).to include('Process not found')
         end
@@ -277,7 +277,7 @@ RSpec.describe ProcessesController, type: :controller do
       patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
       expect(process_type.reload.command).to eq('new command')
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
@@ -292,7 +292,7 @@ RSpec.describe ProcessesController, type: :controller do
         patch :update, params: { app_guid: app.guid, type: process_type.type }.merge(request_body), as: :json
 
         expect(process_type.reload.command).to eq('new command')
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['guid']).to eq(process_type.guid)
       end
 
@@ -303,7 +303,7 @@ RSpec.describe ProcessesController, type: :controller do
 
           patch :update, params: { app_guid: app.guid, type: other_process.type }.merge(request_body), as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Process not found'
         end
@@ -313,7 +313,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns a 404' do
           patch :update, params: { app_guid: 'made-up', type: process_type.type }.merge(request_body), as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App not found'
         end
@@ -327,7 +327,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'returns a 404' do
           patch :update, params: { app_guid: app.guid, type: process_type.type }.merge(request_body), as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App not found'
         end
@@ -338,7 +338,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises an ApiError with a 404 code' do
         patch :update, params: { process_guid: 'made-up-guid' }.merge(request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -351,7 +351,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('errorz')
       end
@@ -363,7 +363,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Command must be a string')
       end
@@ -379,7 +379,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
       it 'raises 422 if the process is a web process' do
@@ -387,7 +387,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('Cannot update this process while a deployment is in flight.')
       end
     end
@@ -410,7 +410,7 @@ RSpec.describe ProcessesController, type: :controller do
       expect(process_type.instances).to eq(1)
 
       delete :terminate, params: { process_guid: process_type.guid, index: 0 }
-      expect(response.status).to eq(204)
+      expect(response).to have_http_status(:no_content)
 
       process_type.reload
       expect(index_stopper).to have_received(:stop_index).with(process_type, 0)
@@ -422,14 +422,14 @@ RSpec.describe ProcessesController, type: :controller do
 
         delete :terminate, params: { app_guid: app.guid, type: process_type.type, index: 0 }, as: :json
 
-        expect(response.status).to eq(204)
+        expect(response).to have_http_status(:no_content)
         expect(index_stopper).to have_received(:stop_index).with(process_type, 0)
       end
 
       it 'returns a 404 if app does not exist' do
         delete :terminate, params: { app_guid: 'sad-bad-guid', type: process_type.type, index: 0 }, as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'App not found'
       end
@@ -437,7 +437,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns a 404 if process type does not exist' do
         delete :terminate, params: { app_guid: app.guid, type: 'bad-type', index: 0 }, as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
         expect(response.body).to include('Process not found')
       end
@@ -450,7 +450,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           delete :terminate, params: { app_guid: app.guid, type: process_type.type, index: 0 }, as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App not found'
         end
@@ -460,7 +460,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'returns a 404 if process does not exist' do
       delete :terminate, params: { process_guid: 'bad-guid', index: 0 }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
       expect(response.body).to include('ResourceNotFound')
       expect(response.body).to include('Process not found')
     end
@@ -468,7 +468,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'returns a 404 if instance index out of bounds' do
       delete :terminate, params: { process_guid: process_type.guid, index: 1 }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
       expect(response.body).to include('ResourceNotFound')
       expect(response.body).to include('Instance not found')
     end
@@ -480,7 +480,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -493,7 +493,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -507,7 +507,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -536,7 +536,7 @@ RSpec.describe ProcessesController, type: :controller do
       expect(process_type.instances).to eq(2)
       expect(process_type.memory).to eq(100)
       expect(process_type.disk_quota).to eq(200)
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
@@ -545,7 +545,7 @@ RSpec.describe ProcessesController, type: :controller do
       version = process_type.version
       put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       process_type.reload
       expect(process_type.version).to eq(version)
     end
@@ -563,7 +563,7 @@ RSpec.describe ProcessesController, type: :controller do
         expect(process_type.memory).to eq(100)
         expect(process_type.disk_quota).to eq(200)
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         expect(parsed_body['guid']).to eq(process_type.guid)
       end
 
@@ -571,7 +571,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           put :scale, params: { app_guid: 'foo', type: process_type.type }, as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include('App not found')
         end
@@ -581,7 +581,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           put :scale, params: { app_guid: app.guid, type: 'bananas' }, as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Process not found'
         end
@@ -595,7 +595,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           put :scale, params: { app_guid: app.guid, type: process_type.type }, as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'App'
         end
@@ -610,7 +610,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           put :scale, params: { app_guid: app.guid, type: process_type.type }, as: :json
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -624,7 +624,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('errorz')
       end
@@ -637,7 +637,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 403' do
           put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('app_scaling')
         end
@@ -650,7 +650,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises an ApiError with a 403 code' do
         put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
         expect(response.body).to include('NotAuthorized')
       end
     end
@@ -661,7 +661,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Instances is not a number')
       end
@@ -671,7 +671,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 404' do
         put :scale, params: { process_guid: 'fake-guid' }.merge(request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -686,7 +686,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
       end
 
       it 'raises 422 if the process is a web process' do
@@ -694,7 +694,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('Cannot scale this process while a deployment is in flight.'), response.body
       end
     end
@@ -708,7 +708,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -722,7 +722,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -733,7 +733,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -757,7 +757,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'returns the stats for all instances for the process' do
       get :stats, params: { process_guid: process_type.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['resources'][0]['type']).to eq('potato')
       expect(response.headers['X-Cf-Warnings']).to be_nil
     end
@@ -768,7 +768,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns the stats and a header with the warnings' do
         get :stats, params: { process_guid: process_type.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['resources'][0]['type']).to eq('potato')
         expect(response.headers['X-Cf-Warnings']).to eq('s0mjgnbha')
       end
@@ -778,7 +778,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns the stats for all instances of specified type for all processes of an app' do
         get :stats, params: { app_guid: app.guid, type: process_type.type }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['resources'][0]['type']).to eq('potato')
       end
 
@@ -790,7 +790,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404 error' do
           get :stats, params: { app_guid: app.guid, type: process_type.type }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
           expect(response.body).to include('App')
         end
@@ -800,7 +800,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises a 404 error' do
           get :stats, params: { app_guid: 'bogus-guid', type: process_type.type }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
           expect(response.body).to include('App')
         end
@@ -810,7 +810,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises a 404 error' do
           get :stats, params: { app_guid: app.guid, type: 1234 }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
           expect(response.body).to include('Process')
         end
@@ -821,7 +821,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 404' do
         get :stats, params: { process_guid: 'fake-guid' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -833,7 +833,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           get :stats, params: { process_guid: process_type.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -846,7 +846,7 @@ RSpec.describe ProcessesController, type: :controller do
         it 'raises 404' do
           get :stats, params: { process_guid: process_type.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end

@@ -14,13 +14,13 @@ module VCAP::CloudController
         context 'when the event exists' do
           let(:event) { ServiceUsageEvent.make }
 
-          it 'should return the event' do
+          it 'returns the event' do
             expect(repository.find(event.guid)).to eq(event)
           end
         end
 
         context 'when the event does not exist' do
-          it 'should return nil' do
+          it 'returns nil' do
             expect(repository.find('does-not-exist')).to be_nil
           end
         end
@@ -98,7 +98,7 @@ module VCAP::CloudController
 
           expect do
             repository.purge_and_reseed_service_instances!
-          end.to change { ServiceUsageEvent.count }.to(0)
+          end.to change(ServiceUsageEvent, :count).to(0)
         end
 
         context 'when there are existing service instances' do
@@ -157,6 +157,7 @@ module VCAP::CloudController
       describe '#delete_events_older_than' do
         let!(:service_instance) { ManagedServiceInstance.make }
         let(:cutoff_age_in_days) { 1 }
+
         before do
           ServiceUsageEvent.dataset.delete
 
@@ -174,9 +175,7 @@ module VCAP::CloudController
 
           expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          end.to change {
-            ServiceUsageEvent.count
-          }.to(1)
+          end.to change(ServiceUsageEvent, :count).to(1)
 
           expect(ServiceUsageEvent.last).to eq(new_event.reload)
         end
@@ -184,9 +183,7 @@ module VCAP::CloudController
         it 'will keep the last record even if before the cutoff age' do
           expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          end.to change {
-            ServiceUsageEvent.count
-          }.to(1)
+          end.to change(ServiceUsageEvent, :count).to(1)
 
           expect(ServiceUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
         end

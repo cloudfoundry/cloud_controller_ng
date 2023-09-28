@@ -41,7 +41,7 @@ RSpec.describe TasksController, type: :controller do
     it 'returns a 202 and the task' do
       post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(parsed_body['name']).to eq('mytask')
       expect(parsed_body['state']).to eq('RUNNING')
       expect(parsed_body['memory_in_mb']).to eq(2048)
@@ -86,7 +86,7 @@ RSpec.describe TasksController, type: :controller do
         it 'raises 403 for non-admins' do
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('task_creation')
         end
@@ -95,7 +95,7 @@ RSpec.describe TasksController, type: :controller do
           set_current_user_as_admin(user:)
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
         end
       end
 
@@ -107,7 +107,7 @@ RSpec.describe TasksController, type: :controller do
         it 'raises 403' do
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -121,7 +121,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 403 unauthorized' do
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -134,7 +134,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 404 ResourceNotFound' do
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -144,7 +144,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a 404 ResourceNotFound' do
         post :create, params: { app_guid: 'bogus' }.merge(request_body), as: :json
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'App not found'
       end
@@ -167,7 +167,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include('label key error')
         end
@@ -193,7 +193,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include 'annotation key error'
         end
@@ -221,7 +221,7 @@ RSpec.describe TasksController, type: :controller do
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 202
+          expect(response).to have_http_status :accepted
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
@@ -248,7 +248,7 @@ RSpec.describe TasksController, type: :controller do
         it 'responds with 422' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -260,7 +260,7 @@ RSpec.describe TasksController, type: :controller do
 
         post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unknown field(s): 'invalid'"
       end
@@ -273,7 +273,7 @@ RSpec.describe TasksController, type: :controller do
 
         post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'command must be shorter than 7 characters'
       end
@@ -283,7 +283,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a useful error message' do
         post :create, params: { app_guid: app_model.guid }
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -293,7 +293,7 @@ RSpec.describe TasksController, type: :controller do
         it "successfully creates the task on the app's droplet" do
           post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
           expect(parsed_body['droplet_guid']).to include(droplet.guid)
         end
 
@@ -303,7 +303,7 @@ RSpec.describe TasksController, type: :controller do
           it 'returns a 422 and a helpful error' do
             post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include 'Task must have a droplet. Specify droplet or assign current droplet to app.'
           end
@@ -323,9 +323,9 @@ RSpec.describe TasksController, type: :controller do
             droplet_guid: custom_droplet.guid
           ), as: :json
 
-          expect(response.status).to eq 202
+          expect(response).to have_http_status :accepted
           expect(parsed_body['droplet_guid']).to eq(custom_droplet.guid)
-          expect(parsed_body['droplet_guid']).to_not eq(droplet.guid)
+          expect(parsed_body['droplet_guid']).not_to eq(droplet.guid)
         end
 
         context 'and the droplet is not found' do
@@ -336,7 +336,7 @@ RSpec.describe TasksController, type: :controller do
               droplet_guid: 'fake-droplet-guid'
             ), as: :json
 
-            expect(response.status).to eq 404
+            expect(response).to have_http_status :not_found
             expect(response.body).to include 'ResourceNotFound'
             expect(response.body).to include 'Droplet not found'
           end
@@ -352,7 +352,7 @@ RSpec.describe TasksController, type: :controller do
               droplet_guid: custom_droplet.guid
             ), as: :json
 
-            expect(response.status).to eq 404
+            expect(response).to have_http_status :not_found
             expect(response.body).to include 'ResourceNotFound'
             expect(response.body).to include 'Droplet not found'
           end
@@ -372,7 +372,7 @@ RSpec.describe TasksController, type: :controller do
     it 'returns a 200 and the task' do
       get :show, params: { task_guid: task.guid }
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(parsed_body['name']).to eq('mytask')
       expect(parsed_body['memory_in_mb']).to eq(2048)
     end
@@ -386,7 +386,7 @@ RSpec.describe TasksController, type: :controller do
         it 'raises 403' do
           get :show, params: { task_guid: task.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -399,7 +399,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 404 ResourceNotFound' do
           get :show, params: { task_guid: task.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Task not found'
         end
@@ -414,7 +414,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 200' do
           get :show, params: { task_guid: task.guid }
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
         end
       end
     end
@@ -422,7 +422,7 @@ RSpec.describe TasksController, type: :controller do
     it 'returns a 404 if the task does not exist' do
       get :show, params: { task_guid: 'bogus' }
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status :not_found
       expect(response.body).to include 'ResourceNotFound'
       expect(response.body).to include 'Task not found'
     end
@@ -441,8 +441,8 @@ RSpec.describe TasksController, type: :controller do
       get :index
 
       response_guids = parsed_body['resources'].pluck('guid')
-      expect(response.status).to eq(200)
-      expect(response_guids).to match_array([task_1.guid, task_2.guid])
+      expect(response).to have_http_status(:ok)
+      expect(response_guids).to contain_exactly(task_1.guid, task_2.guid)
     end
 
     it 'provides the correct base url in the pagination links' do
@@ -480,9 +480,9 @@ RSpec.describe TasksController, type: :controller do
 
         get :index, params: { app_guid: app_model.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         response_guids = parsed_body['resources'].pluck('guid')
-        expect(response_guids).to match_array([task_1.guid, task_2.guid])
+        expect(response_guids).to contain_exactly(task_1.guid, task_2.guid)
       end
 
       it 'provides the correct base url in the pagination links' do
@@ -509,7 +509,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 404 Resource Not Found' do
           get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -523,7 +523,7 @@ RSpec.describe TasksController, type: :controller do
           get :index, params: { app_guid: app_model.guid }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
@@ -536,7 +536,7 @@ RSpec.describe TasksController, type: :controller do
             'app_guids' => [app_model.guid]
           }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include "Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'"
         end
       end
@@ -555,7 +555,7 @@ RSpec.describe TasksController, type: :controller do
         get :index
 
         response_guids = parsed_body['resources'].pluck('guid')
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(response_guids).to match_array([task_1, task_2, task_3].map(&:guid))
       end
     end
@@ -565,7 +565,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns 400' do
           get :index, params: { per_page: 'meow' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
@@ -575,7 +575,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns 400' do
           get :index, params: { meow: 'bad-val', nyan: 'mow' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Unknown query parameter(s)')
           expect(response.body).to include('nyan')
@@ -598,7 +598,7 @@ RSpec.describe TasksController, type: :controller do
     it 'returns a 202' do
       put :cancel, params: { task_guid: task.guid }
 
-      expect(response.status).to eq 202
+      expect(response).to have_http_status :accepted
       expect(parsed_body['name']).to eq('usher')
       expect(parsed_body['guid']).to eq(task.guid)
     end
@@ -607,7 +607,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a 404 ResourceNotFound' do
         put :cancel, params: { task_guid: 'bogus-guid' }
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Task not found'
       end
@@ -621,7 +621,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a 422 Unprocessable' do
         put :cancel, params: { task_guid: task.guid }
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include('sad trombone')
       end
     end
@@ -635,7 +635,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 404 ResourceNotFound' do
           put :cancel, params: { task_guid: task.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Task not found'
         end
@@ -650,7 +650,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns a 403 NotAuthorized' do
           put :cancel, params: { task_guid: task.guid }
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -673,7 +673,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -692,7 +692,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'label key error'
       end
@@ -715,7 +715,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'annotation key error'
       end
@@ -757,7 +757,7 @@ RSpec.describe TasksController, type: :controller do
         it 'updates the metadata' do
           patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expected_metadata_response = {
             'labels' => {
               'potato' => 'yam',
@@ -782,7 +782,7 @@ RSpec.describe TasksController, type: :controller do
             it 'returns a 404 ResourceNotFound error' do
               patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-              expect(response.status).to eq 404
+              expect(response).to have_http_status :not_found
               expect(response.body).to include 'ResourceNotFound'
             end
           end
@@ -796,7 +796,7 @@ RSpec.describe TasksController, type: :controller do
             it 'raises ApiError NotAuthorized' do
               patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-              expect(response.status).to eq 403
+              expect(response).to have_http_status :forbidden
               expect(response.body).to include 'NotAuthorized'
             end
           end
@@ -819,7 +819,7 @@ RSpec.describe TasksController, type: :controller do
           it 'updates the metadata' do
             patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expected_metadata_response = {
               'labels' => {
                 'potato' => 'yam'

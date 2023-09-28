@@ -129,6 +129,7 @@ RSpec.describe 'SharedDomains' do
                                                       }
                                                     })
     end
+
     context 'router groups' do
       before do
         stub_request(:get, 'http://localhost:3000/routing/v1/router_groups').

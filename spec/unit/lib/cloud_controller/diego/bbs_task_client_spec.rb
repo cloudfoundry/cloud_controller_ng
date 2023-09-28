@@ -114,7 +114,7 @@ module VCAP::CloudController::Diego
           it 'succeeds without error' do
             expect do
               client.cancel_task(task.guid)
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
 
@@ -164,7 +164,7 @@ module VCAP::CloudController::Diego
             expect do
               fetched_task = client.fetch_task(task.guid)
               expect(fetched_task).to be_nil
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
 

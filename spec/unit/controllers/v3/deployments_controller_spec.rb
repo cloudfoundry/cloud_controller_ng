@@ -39,7 +39,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 201' do
         post :create, params: request_body, as: :json
 
-        expect(response.status).to eq(201)
+        expect(response).to have_http_status(:created)
       end
 
       context 'when a droplet is not provided' do
@@ -78,7 +78,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.')
           end
@@ -118,7 +118,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
             expect do
               post :create, params: request_body, as: :json
-            end.not_to(change { VCAP::CloudController::RevisionModel.count })
+            end.not_to(change(VCAP::CloudController::RevisionModel, :count))
           end
         end
 
@@ -133,7 +133,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
           expect do
             post :create, params: request_body, as: :json
-          end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
         end
 
         it 'sets the app droplet to the provided droplet' do
@@ -162,7 +162,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
           end
@@ -187,7 +187,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
           end
@@ -199,7 +199,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'returns 422 with an error message' do
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
         end
       end
@@ -239,7 +239,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
           expect do
             post :create, params: request_body, as: :json
-          end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
           expect(VCAP::CloudController::RevisionModel.last.droplet_guid).to eq(droplet.guid)
         end
 
@@ -258,7 +258,7 @@ RSpec.describe DeploymentsController, type: :controller do
               to receive(:create).and_call_original
             expect do
               post :create, params: request_body, as: :json
-            end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+            end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
             expect(VCAP::CloudController::RevisionModel.last.commands_by_process_type).to eq({ 'web' => 'custom_web_command' })
           end
         end
@@ -267,7 +267,7 @@ RSpec.describe DeploymentsController, type: :controller do
           earlier_revision.destroy
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('The revision does not exist')
         end
@@ -276,7 +276,7 @@ RSpec.describe DeploymentsController, type: :controller do
           droplet.destroy
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to deploy this revision, the droplet for this revision no longer exists.')
         end
@@ -285,7 +285,7 @@ RSpec.describe DeploymentsController, type: :controller do
           app.update(revisions_enabled: false)
 
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('Cannot create deployment from a revision for an app without revisions enabled')
         end
       end
@@ -312,7 +312,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'returns 422 with an error message' do
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include("Cannot set both fields 'droplet' and 'revision'")
         end
       end
@@ -345,7 +345,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'sets some metadata' do
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
           expect(parsed_body['metadata']).to eq(metadata)
         end
       end
@@ -375,14 +375,14 @@ RSpec.describe DeploymentsController, type: :controller do
 
       it 'returns 422 with an error message' do
         post :create, params: request_body, as: :json
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
       end
     end
 
     it 'returns 401 for Unauthenticated requests' do
       post :create, params: request_body, as: :json
-      expect(response.status).to eq(401)
+      expect(response).to have_http_status(:unauthorized)
     end
 
     context 'when temporary_disable_deployments is true' do
@@ -394,7 +394,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 403' do
         post :create, params: request_body, as: :json
 
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
         expect(response.body).to include("Deployments cannot be created due to manifest property 'temporary_disable_deployments'")
       end
 
@@ -417,14 +417,14 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 200 on show existing deployment' do
         get :show, params: { guid: deployment.guid }, as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['guid']).to eq(deployment.guid)
       end
 
       it 'returns a 404 on bogus deployment' do
         get :show, params: { guid: 'not a deployment' }, as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
 
@@ -436,7 +436,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
           get :show, params: { guid: deployment.guid }, as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['guid']).to eq(deployment.guid)
           expect(parsed_body['relationships']['app']['data']['guid']).to eq(app.guid)
           expect(parsed_body['droplet']['guid']).to eq(droplet.guid)
@@ -463,7 +463,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
     it 'returns 401 for Unauthenticated requests' do
       get :show, params: { guid: deployment.guid }, as: :json
-      expect(response.status).to eq(401)
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
@@ -502,7 +502,7 @@ RSpec.describe DeploymentsController, type: :controller do
                 expect(resources.size).to eq(0), "role #{role}: expected 0, got: #{resources.size}"
               else
                 expect(resources.size).to eq(2), "role #{role}: expected 2, got: #{resources.size}"
-                expect(resources.pluck('guid')).to match_array([deployment.guid, another_deployment.guid])
+                expect(resources.pluck('guid')).to contain_exactly(deployment.guid, another_deployment.guid)
               end
             end
           end
@@ -517,7 +517,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns a 403 Not Authorized error' do
           get :index
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -535,7 +535,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns 400' do
             get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
           end
@@ -547,7 +547,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns 400' do
             get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include('Unknown query parameter(s)')
             expect(response.body).to include('bad_param')
@@ -560,7 +560,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'returns 400' do
             get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include('Per page must be between')
           end
@@ -572,7 +572,7 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'adds requested params to the links' do
             get(:index, params:)
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/deployments")
             expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
             expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -588,14 +588,14 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'gets only the requested deployments' do
             get(:index, params:)
 
-            expect(response.status).to eq(200)
-            expect(parsed_body['resources'].pluck('guid')).to match_array([deployed_deployment.guid, canceled_deployment.guid])
+            expect(response).to have_http_status(:ok)
+            expect(parsed_body['resources'].pluck('guid')).to contain_exactly(deployed_deployment.guid, canceled_deployment.guid)
           end
 
           it 'echo the params in the pagination links' do
             get :index, params: params.merge({ per_page: 1 })
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expect(parsed_body['pagination']['next']['href']).to match(/states=#{CGI.escape(states_list)}/)
           end
         end
@@ -619,7 +619,7 @@ RSpec.describe DeploymentsController, type: :controller do
     it 'returns 404 not found when the deployment does not exist' do
       post :cancel, params: { guid: 'non-existant-giud' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
 
     it 'returns a 200 and cancels the deployment' do
@@ -627,7 +627,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
       post :cancel, params: { guid: deployment.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(response.body).to be_empty
     end
 
@@ -638,7 +638,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         post :cancel, params: { guid: deployment.guid }
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to match(/awry/)
       end
     end
@@ -678,9 +678,10 @@ RSpec.describe DeploymentsController, type: :controller do
           }
         }
       end
+
       it 'displays an informative error' do
         patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response).to have_error_message("labels' is not an object")
       end
     end
@@ -695,7 +696,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           patch :update, params: { guid: deployment.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -708,7 +709,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns 403 NotAuthorized' do
           patch :update, params: { guid: deployment.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -728,11 +729,12 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'updates' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['guid']).to eq(deployment.guid)
           expect(parsed_body['metadata']['labels']['key']).to eq('value')
         end
       end
+
       context 'when the label is invalid' do
         let(:request_body) do
           {
@@ -747,7 +749,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -770,7 +772,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -796,7 +798,7 @@ RSpec.describe DeploymentsController, type: :controller do
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
@@ -820,7 +822,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
         end
       end
@@ -843,7 +845,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
         end
       end

@@ -54,7 +54,7 @@ RSpec.describe 'Feature Flags Request' do
     let(:headers) { headers_for(user) }
 
     context 'there is not an override' do
-      it 'returns details of the requested feature flag when ' do
+      it 'returns details of the requested feature flag when' do
         get '/v3/feature_flags/diego_docker', nil, headers
         expect(last_response.status).to eq 200
         expect(parsed_response).to be_a_response_like(
@@ -75,6 +75,7 @@ RSpec.describe 'Feature Flags Request' do
 
     context 'there is an override' do
       let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: 'error') }
+
       it 'returns details of the requested feature flag when there is an override' do
         get "/v3/feature_flags/#{feature_flag.name}", nil, headers
         expect(last_response.status).to eq 200

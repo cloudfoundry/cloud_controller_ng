@@ -80,7 +80,8 @@ module VCAP::CloudController::RestController
       raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}") if page_size > @max_results_per_page
 
       if !@max_total_results.nil? && page * page_size > @max_total_results
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "(page * per_page) must be less than #{@max_total_results}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter',
+                                                                 "(page * per_page) must be less than #{@max_total_results}")
       end
 
       return unless inline_relations_depth > @max_inline_relations_depth

@@ -63,6 +63,7 @@ module VCAP::CloudController::Diego
       before do
         allow(process).to receive(:database_uri).and_return('fake-database-uri')
       end
+
       it 'includes DATABASE_URL' do
         expect(Environment.new(process).as_json).to include('name' => 'DATABASE_URL', 'value' => 'fake-database-uri')
       end

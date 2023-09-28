@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     describe '#has_default_space' do
-      it 'should raise NotAuthorized if the user is nil' do
+      it 'raises NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
         api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect { api.has_default_space? }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
@@ -32,30 +32,30 @@ module VCAP::CloudController
           user.add_organization(org)
         end
 
-        it 'should return true if the user is in atleast one app space and the default_space is not set' do
+        it 'returns true if the user is in atleast one app space and the default_space is not set' do
           user.add_space(as)
-          expect(api.has_default_space?).to eq(true)
+          expect(api.has_default_space?).to be(true)
         end
 
-        it 'should return true if the default app space is set explicitly and the user is not in any app space' do
+        it 'returns true if the default app space is set explicitly and the user is not in any app space' do
           user.default_space = as
-          expect(api.has_default_space?).to eq(true)
+          expect(api.has_default_space?).to be(true)
         end
 
-        it 'should return false if the default app space is not set explicitly and the user is not in atleast one app space' do
-          expect(api.has_default_space?).to eq(false)
+        it 'returns false if the default app space is not set explicitly and the user is not in atleast one app space' do
+          expect(api.has_default_space?).to be(false)
         end
       end
     end
 
     describe '#default_space' do
-      it 'should raise NotAuthorized if the user is nil' do
+      it 'raises NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
         api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect { api.default_space }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
       end
 
-      it 'should raise LegacyApiWithoutDefaultSpace if the user has no app spaces' do
+      it 'raises LegacyApiWithoutDefaultSpace if the user has no app spaces' do
         SecurityContext.set(user)
         api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect do
@@ -78,13 +78,13 @@ module VCAP::CloudController
           user.add_space(as2)
         end
 
-        it 'should return the first app space a user is in if default_space is not set' do
+        it 'returns the first app space a user is in if default_space is not set' do
           expect(api.default_space).to eq(as1)
           user.remove_space(as1)
           expect(api.default_space).to eq(as2)
         end
 
-        it 'should return the explicitly set default app space if one is set' do
+        it 'returns the explicitly set default app space if one is set' do
           user.default_space = as2
           expect(api.default_space).to eq(as2)
         end

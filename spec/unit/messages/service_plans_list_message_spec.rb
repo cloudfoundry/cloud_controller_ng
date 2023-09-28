@@ -44,17 +44,17 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
 
-        expect(message.requested?(:available)).to be_truthy
-        expect(message.requested?(:broker_catalog_ids)).to be_truthy
-        expect(message.requested?(:include)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:service_broker_guids)).to be_truthy
-        expect(message.requested?(:service_broker_names)).to be_truthy
-        expect(message.requested?(:service_instance_guids)).to be_truthy
-        expect(message.requested?(:service_offering_guids)).to be_truthy
-        expect(message.requested?(:service_offering_names)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
+        expect(message).to be_requested(:available)
+        expect(message).to be_requested(:broker_catalog_ids)
+        expect(message).to be_requested(:include)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:service_broker_guids)
+        expect(message).to be_requested(:service_broker_names)
+        expect(message).to be_requested(:service_instance_guids)
+        expect(message).to be_requested(:service_offering_guids)
+        expect(message).to be_requested(:service_offering_names)
+        expect(message).to be_requested(:space_guids)
       end
 
       it 'accepts an empty set' do
@@ -73,7 +73,7 @@ module VCAP::CloudController
         it 'accepts `true`' do
           message = described_class.from_params({ available: 'true' }.with_indifferent_access)
           expect(message).to be_valid
-          expect(message.requested?(:available)).to be_truthy
+          expect(message).to be_requested(:available)
           expect(message.available).to eq('true')
           expect(message.available?).to be(true)
         end
@@ -81,7 +81,7 @@ module VCAP::CloudController
         it 'accepts `false`' do
           message = described_class.from_params({ available: 'false' }.with_indifferent_access)
           expect(message).to be_valid
-          expect(message.requested?(:available)).to be_truthy
+          expect(message).to be_requested(:available)
           expect(message.available).to eq('false')
           expect(message.available?).to be(false)
         end
@@ -89,7 +89,7 @@ module VCAP::CloudController
         it 'is false by default' do
           message = described_class.from_params({})
           expect(message).to be_valid
-          expect(message.requested?(:available)).to be_falsey
+          expect(message).not_to be_requested(:available)
           expect(message.available?).to be(false)
         end
 

@@ -4,6 +4,7 @@ require 'messages/route_update_destinations_message'
 module VCAP::CloudController
   RSpec.describe RouteUpdateDestinationsMessage do
     let(:replace) { false }
+
     subject(:message) { RouteUpdateDestinationsMessage.new(params, replace:) }
 
     context 'when the body has the correct structure' do
@@ -53,7 +54,7 @@ module VCAP::CloudController
       let(:params) { {} }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to contain_exactly(
           'Destinations must be an array containing between 1 and 100 destination objects.'
         )
@@ -64,7 +65,7 @@ module VCAP::CloudController
       let(:params) { { potato: '' } }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to contain_exactly(
           "Unknown field(s): 'potato'",
           'Destinations must be an array containing between 1 and 100 destination objects.'
@@ -76,7 +77,7 @@ module VCAP::CloudController
       let(:params) { { destinations: '' } }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to contain_exactly(
           'Destinations must be an array containing between 1 and 100 destination objects.'
         )
@@ -87,7 +88,7 @@ module VCAP::CloudController
       let(:params) { { destinations: [''] } }
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to contain_exactly(
           'Destinations[0]: must be an object.'
         )
@@ -99,7 +100,7 @@ module VCAP::CloudController
         let(:params) { { destinations: [{ potato: '' }] } }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to contain_exactly(
             'Destinations[0]: must have an "app".'
           )
@@ -108,8 +109,9 @@ module VCAP::CloudController
 
       context 'when an invalid key is alongside the app key' do
         let(:params) { { destinations: [{ app: '', potato: '' }] } }
+
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to contain_exactly(
             'Destinations[0]: must have only "app" and optionally "weight", "port" or "protocol".'
           )
@@ -120,7 +122,7 @@ module VCAP::CloudController
         let(:params) { { destinations: [{ app: '' }] } }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to contain_exactly(
             'Destinations[0]: app must have the structure {"guid": "app_guid"}'
           )
@@ -132,7 +134,7 @@ module VCAP::CloudController
           let(:params) { { destinations: [{ app: { process: { type: 'web' } } }] } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: app must have the structure {"guid": "app_guid"}'
             )
@@ -143,7 +145,7 @@ module VCAP::CloudController
           let(:params) { { destinations: [{ app: { guid: '', not_allowed: '' } }] } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: app must have the structure {"guid": "app_guid"}'
             )
@@ -154,7 +156,7 @@ module VCAP::CloudController
           let(:params) { { destinations: [{ app: { guid: 123 } }] } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: app must have the structure {"guid": "app_guid"}'
             )
@@ -166,7 +168,7 @@ module VCAP::CloudController
             let(:params) { { destinations: [{ app: { guid: 'guid', process: 3 } }] } }
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors.full_messages).to contain_exactly(
                 'Destinations[0]: process must have the structure {"type": "process_type"}'
               )
@@ -177,7 +179,7 @@ module VCAP::CloudController
             let(:params) { { destinations: [{ app: { guid: 'guid', process: { not_type: '' } } }] } }
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors.full_messages).to contain_exactly(
                 'Destinations[0]: process must have the structure {"type": "process_type"}'
               )
@@ -188,7 +190,7 @@ module VCAP::CloudController
             let(:params) { { destinations: [{ app: { guid: 'guid', process: { type: 4 } } }] } }
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors.full_messages).to contain_exactly(
                 'Destinations[0]: process must have the structure {"type": "process_type"}'
               )
@@ -199,7 +201,7 @@ module VCAP::CloudController
             let(:params) { { destinations: [{ app: { guid: 'guid', process: { type: '' } } }] } }
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors.full_messages).to contain_exactly(
                 'Destinations[0]: process must have the structure {"type": "process_type"}'
               )
@@ -221,7 +223,7 @@ module VCAP::CloudController
           end
 
           it 'returns all errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[1]: process must have the structure {"type": "process_type"}',
               'Destinations[1]: weight must be a positive integer between 1 and 100.',
@@ -250,26 +252,31 @@ module VCAP::CloudController
 
         context 'when port is a string' do
           let(:port) { 'some-string' }
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
             )
           end
         end
+
         context 'when port is less than 1024' do
           let(:port) { 1023 }
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
             )
           end
         end
+
         context 'when port is greater than 65535' do
           let(:port) { 65_536 }
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
             )
@@ -296,8 +303,9 @@ module VCAP::CloudController
 
         context 'when protocol is not a string' do
           let(:protocol) { 5 }
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               "Destinations[0]: protocol must be 'http1', 'http2' or 'tcp'."
             )
@@ -306,8 +314,9 @@ module VCAP::CloudController
 
         context 'when protocol is an invalid string' do
           let(:protocol) { 'not-a-protocol' }
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               "Destinations[0]: protocol must be 'http1', 'http2' or 'tcp'."
             )
@@ -334,7 +343,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Process must have at most 10 exposed ports.'
             )
@@ -381,7 +390,7 @@ module VCAP::CloudController
           end
 
           it 'is invalid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations must be an array containing between 1 and 100 destination objects.'
             )
@@ -405,7 +414,7 @@ module VCAP::CloudController
         let(:replace) { false }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to contain_exactly('Destinations must be an array containing between 1 and 100 destination objects.')
         end
       end
@@ -454,7 +463,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: weighted destinations can only be used when replacing all destinations.',
               'Destinations[1]: weighted destinations can only be used when replacing all destinations.'
@@ -529,8 +538,9 @@ module VCAP::CloudController
               ]
             }
           end
+
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: weight must be a positive integer between 1 and 100.'
             )
@@ -555,7 +565,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: weight must be a positive integer between 1 and 100.'
             )
@@ -580,7 +590,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[0]: weight must be a positive integer between 1 and 100.'
             )
@@ -600,7 +610,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations must have weights that sum to 100.'
             )
@@ -623,7 +633,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations cannot contain both weighted and unweighted destinations.'
             )
@@ -643,6 +653,7 @@ module VCAP::CloudController
           ]
         }
       end
+
       context 'inserting destinations with http1' do
         let(:protocol) { 'http1' }
 

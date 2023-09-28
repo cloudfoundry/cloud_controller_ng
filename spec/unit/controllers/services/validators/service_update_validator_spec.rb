@@ -25,14 +25,14 @@ module VCAP::CloudController
 
       context 'when the update to the service instance is valid' do
         it 'returns true' do
-          expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+          expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
         end
 
         context 'and when plan update requested on a service that allows update' do
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
           it 'returns true' do
-            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
           end
         end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
           let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0.0' } } }
 
           it 'returns true' do
-            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
           end
         end
 
@@ -109,6 +109,7 @@ module VCAP::CloudController
             ManagedServiceInstance.make(service_plan: old_service_plan, space: space)
             smol_space_quota.add_space(space)
           end
+
           let(:update_attrs) { { 'name' => 'new name' } }
 
           it 'raises a validation error with the specific message' do
@@ -139,7 +140,7 @@ module VCAP::CloudController
 
           context 'and service bindings do not exist' do
             it 'returns true' do
-              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
             end
           end
         end
@@ -161,7 +162,7 @@ module VCAP::CloudController
             let(:update_attrs) { { 'service_plan_guid' => old_service_plan.guid } }
 
             it 'returns true' do
-              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
             end
           end
 
@@ -171,7 +172,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
             end
           end
 
@@ -246,7 +247,7 @@ module VCAP::CloudController
             let(:update_attrs) { { 'name' => service_instance.name } }
 
             it 'succeeds' do
-              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
             end
           end
         end
@@ -255,7 +256,7 @@ module VCAP::CloudController
           let(:update_attrs) { { 'maintenance_info' => { 'version' => '1.0.0' } } }
 
           it 'succeeds' do
-            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+            expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
           end
         end
 
@@ -341,7 +342,7 @@ module VCAP::CloudController
               let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
               it 'succeeds' do
-                expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+                expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
               end
 
               it 'does not update the plan on the service instance' do
@@ -377,7 +378,7 @@ module VCAP::CloudController
             let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
             it 'succeeds for paid plans' do
-              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to eq(true)
+              expect(ServiceUpdateValidator.validate!(service_instance, **args)).to be(true)
             end
           end
         end

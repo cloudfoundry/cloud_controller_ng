@@ -71,7 +71,7 @@ module VCAP::CloudController
 
           it 'has the same guid' do
             app = app_create.create(message, lifecycle)
-            expect(ProcessModel.find(guid: app.guid)).to_not be_nil
+            expect(ProcessModel.find(guid: app.guid)).not_to be_nil
           end
 
           it 'has type "web"' do
@@ -89,7 +89,7 @@ module VCAP::CloudController
           it 'has nil command' do
             app = app_create.create(message, lifecycle)
             process = ProcessModel.find(guid: app.guid)
-            expect(process.command).to eq nil
+            expect(process.command).to be_nil
           end
 
           it 'has 1 instance' do

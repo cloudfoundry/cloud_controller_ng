@@ -9,6 +9,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
     let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
+
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
     end
@@ -92,7 +93,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
       context 'binding not retrievable' do
         let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
 
-        it 'it raises a BindingNotRetrievable error' do
+        it 'raises a BindingNotRetrievable error' do
           expect do
             action.bind(precursor, accepts_incomplete: true)
           end.to raise_error(VCAP::CloudController::V3::ServiceBindingCreate::BindingNotRetrievable)
@@ -219,7 +220,7 @@ RSpec.shared_examples 'polling service binding creation' do
         allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
 
-      it 'should stop polling for other errors' do
+      it 'stops polling for other errors' do
         expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload
@@ -336,6 +337,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
 
       context 'response says failed' do
         let(:state) { 'failed' }
+
         it 'does not create an audit event' do
           expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 

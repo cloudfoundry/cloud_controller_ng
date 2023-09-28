@@ -11,13 +11,13 @@ module VCAP::CloudController::Jobs
       timeout_job.perform
     end
 
-    context '#max_attempts' do
+    describe '#max_attempts' do
       it 'delegates to the handler' do
         expect(timeout_job.max_attempts).to eq(2)
       end
     end
 
-    context '#max_run_time' do
+    describe '#max_run_time' do
       it 'uses the timeout' do
         expect(timeout_job.max_run_time).to eq(timeout)
       end

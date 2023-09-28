@@ -27,7 +27,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
     it 'returns a 200' do
       get :show, params: { guid: app_model.guid }
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
 
     it 'returns a YAML manifest for the app' do

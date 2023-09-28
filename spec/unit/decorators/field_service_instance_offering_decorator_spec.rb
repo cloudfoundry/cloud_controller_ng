@@ -171,7 +171,7 @@ module VCAP::CloudController
       context 'for user provided service instances' do
         let!(:service_instance_3) { UserProvidedServiceInstance.make }
 
-        it 'should return the unchanged hash' do
+        it 'returns the unchanged hash' do
           undecorated_hash = { foo: 'bar' }
           decorator = described_class.new({ 'service_plan.service_offering': ['relationships.service_broker'] })
 
@@ -186,24 +186,24 @@ module VCAP::CloudController
 
       fields.each do |field|
         it "matches value `#{field}` for key symbol `service_plan.service_offering`" do
-          expect(described_class.match?({ 'service_plan.service_offering': [field], other: ['bar'] })).to be_truthy
+          expect(described_class).to be_match({ 'service_plan.service_offering': [field], other: ['bar'] })
         end
       end
 
       it 'matches all fields together for key symbol `service_plan.service_offering`' do
-        expect(described_class.match?({ 'service_plan.service_offering': fields, other: ['bar'] })).to be_truthy
+        expect(described_class).to be_match({ 'service_plan.service_offering': fields, other: ['bar'] })
       end
 
       it 'does not match other values for a valid key' do
-        expect(described_class.match?({ 'service_plan.service_offering': ['foo'] })).to be_falsey
+        expect(described_class).not_to be_match({ 'service_plan.service_offering': ['foo'] })
       end
 
       it 'does not match other key values' do
-        expect(described_class.match?({ other: ['bar'] })).to be_falsey
+        expect(described_class).not_to be_match({ other: ['bar'] })
       end
 
       it 'does not match non-hashes' do
-        expect(described_class.match?('foo')).to be_falsey
+        expect(described_class).not_to be_match('foo')
       end
     end
   end

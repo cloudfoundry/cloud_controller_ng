@@ -18,11 +18,11 @@ module VCAP::CloudController
     end
 
     context 'admin' do
-      include_context :admin_setup
+      include_context 'admin setup'
 
       before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
-      it_behaves_like :full_access
+      it_behaves_like 'full access'
 
       it 'admin always allowed' do
         expect(subject).to allow_op_on_object(:read_env, object)
@@ -35,11 +35,11 @@ module VCAP::CloudController
     end
 
     context 'global auditor only' do
-      include_context :global_auditor_setup
+      include_context 'global auditor setup'
 
       before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
 
       it 'does NOT allow the user to :read_permissions' do
         expect(subject).not_to allow_op_on_object(:read_permissions, object)
@@ -51,11 +51,11 @@ module VCAP::CloudController
     end
 
     context 'admin read only' do
-      include_context :admin_read_only_setup
+      include_context 'admin read only setup'
 
       before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
 
       it 'allows the user to :read_permissions' do
         expect(subject).to allow_op_on_object(:read_permissions, object)
@@ -71,7 +71,8 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_developer(user)
       end
-      it_behaves_like :full_access
+
+      it_behaves_like 'full access'
 
       it 'allows user to :read_env' do
         expect(subject).to allow_op_on_object(:read_env, object)
@@ -94,7 +95,8 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { object.space.organization.status = 'suspended' }
-        it_behaves_like :read_only_access
+
+        it_behaves_like 'read only access'
       end
 
       context 'when the app_scaling feature flag is disabled' do
@@ -107,64 +109,68 @@ module VCAP::CloudController
         end
 
         it 'allows unchanged fields to be specified' do
-          expect { subject.read_for_update?(object, { 'instances' => 1 }) }.to_not raise_error
+          expect { subject.read_for_update?(object, { 'instances' => 1 }) }.not_to raise_error
         end
 
         it 'allows changing other fields' do
-          expect(subject.read_for_update?(object, { 'buildpack' => 'http://foo.git' })).to be_truthy
+          expect(subject).to be_read_for_update(object, { 'buildpack' => 'http://foo.git' })
         end
       end
     end
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :read_only_access
+
+      it_behaves_like 'read only access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
     context 'organization user' do
       before { org.add_user(user) }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
     context 'organization auditor' do
       before { org.add_auditor(user) }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
     context 'billing manager' do
       before { org.add_billing_manager(user) }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -173,14 +179,15 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_manager(user)
       end
-      it_behaves_like :read_only_access
+
+      it_behaves_like 'read only access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -189,14 +196,15 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_auditor(user)
       end
-      it_behaves_like :read_only_access
+
+      it_behaves_like 'read only access'
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
       end
 
       it 'does not allow the user to :read_permissions' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -213,7 +221,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'any user using client without cloud_controller.read' do
@@ -229,20 +237,21 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
 
     context 'handles concurrent deletion of app' do
       let(:object) { VCAP::CloudController::ProcessModelFactory.make(space: nil) }
+
       # only using global_auditor as an example of a non-admin user
-      include_context :global_auditor_setup
+      include_context 'global auditor setup'
 
       before do
         allow(object).to receive(:in_suspended_org?).and_return(false)
       end
 
       it 'does NOT allow global_auditor to create' do
-        expect(subject.create?(object)).to be_falsey
+        expect(subject).not_to be_create(object)
       end
 
       it 'does NOT allow global_auditor to :read_env' do

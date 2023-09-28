@@ -76,7 +76,7 @@ module CloudController::Presenters::V2
           actual_entity_hash = space_presenter.entity_hash(controller, space, opts, depth, parents, orphans)
 
           expect(actual_entity_hash).to be_a_response_like(expected_entity_hash)
-          expect(actual_entity_hash).to_not include('isolation_segment_url')
+          expect(actual_entity_hash).not_to include('isolation_segment_url')
           expect(relations_presenter).to have_received(:to_hash).with(controller, space, opts, depth, parents, orphans)
         end
       end

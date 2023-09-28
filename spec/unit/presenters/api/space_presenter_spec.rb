@@ -2,8 +2,9 @@ require 'spec_helper'
 
 RSpec.describe SpacePresenter do
   describe '#to_hash' do
-    let(:space) { VCAP::CloudController::Space.make }
     subject { SpacePresenter.new(space) }
+
+    let(:space) { VCAP::CloudController::Space.make }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

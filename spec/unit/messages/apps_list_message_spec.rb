@@ -43,16 +43,16 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = AppsListMessage.from_params(params)
 
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:include)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
-        expect(message.requested?(:lifecycle_type)).to be_truthy
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:guids)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:order_by)
+        expect(message).to be_requested(:include)
+        expect(message).to be_requested(:label_selector)
+        expect(message).to be_requested(:lifecycle_type)
       end
     end
 
@@ -129,31 +129,31 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates names is an array' do
           message = AppsListMessage.from_params names: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
           message = AppsListMessage.from_params guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates organization_guids is an array' do
           message = AppsListMessage.from_params organization_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do
           message = AppsListMessage.from_params space_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:space_guids].length).to eq 1
         end
 
         it 'validates stacks is an array' do
           message = AppsListMessage.from_params stacks: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:stacks].length).to eq 1
         end
 
@@ -168,21 +168,21 @@ module VCAP::CloudController
           message = AppsListMessage.from_params 'include' => 'space.organization,space'
           expect(message).to be_valid
           message = AppsListMessage.from_params 'include' => 'borg,spaceship'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           message = AppsListMessage.from_params 'include' => 'space.organization,spaceship'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
 
         it 'invalidates duplicates in the includes field' do
           message = AppsListMessage.from_params 'include' => 'space.organization,space.organization'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:base].length).to eq 1
           expect(message.errors[:base][0]).to match(/Duplicate included resource: 'space.organization'/)
         end
 
         it 'validates lifecycle_type is one of two values' do
           message = AppsListMessage.from_params lifecycle_type: 'not-buildpack-or-docker'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:base].length).to eq 1
         end
 

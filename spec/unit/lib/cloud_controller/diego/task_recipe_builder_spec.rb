@@ -159,11 +159,7 @@ module VCAP::CloudController
 
             expect(timeout_action.action.run_action).to eq(buildpack_staging_action)
 
-            expect(result.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific
-            ])
+            expect(result.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
 
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
@@ -185,7 +181,7 @@ module VCAP::CloudController
           context 'when there is no isolation segment' do
             let(:isolation_segment) { nil }
 
-            it 'sets PlacementTags to  an empty array' do
+            it 'sets PlacementTags to an empty array' do
               result = task_recipe_builder.build_staging_task(config, staging_details)
 
               expect(result.placement_tags).to eq([])
@@ -269,11 +265,7 @@ module VCAP::CloudController
           it 'sets the egress rules' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
 
-            expect(result.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific
-            ])
+            expect(result.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
           end
 
           it 'sets the rootfs' do

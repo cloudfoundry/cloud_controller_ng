@@ -21,6 +21,7 @@ RSpec.describe 'Processes' do
       annotations: { 'checksum' => 'SHA' }
     }
   end
+
   before do
     allow_any_instance_of(Diego::Client).to receive(:build_client).and_return(build_client)
   end
@@ -235,7 +236,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([worker_process.guid])
+          expect(returned_guids).to contain_exactly(worker_process.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -277,7 +278,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([other_space_process.guid])
+          expect(returned_guids).to contain_exactly(other_space_process.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -317,7 +318,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([other_space_process.guid])
+          expect(returned_guids).to contain_exactly(other_space_process.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -352,7 +353,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([desired_process.guid])
+          expect(returned_guids).to contain_exactly(desired_process.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -375,7 +376,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([web_process.guid, worker_process.guid])
+          expect(returned_guids).to contain_exactly(web_process.guid, worker_process.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -1048,7 +1049,7 @@ RSpec.describe 'Processes' do
         }
       end
 
-      it 'should log the required fields when the process gets scaled' do
+      it 'logs the required fields when the process gets scaled' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -1077,6 +1078,7 @@ RSpec.describe 'Processes' do
     before do
       allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
     end
+
     it 'terminates a single instance of a process' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
 
@@ -1309,7 +1311,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([process2.guid])
+          expect(returned_guids).to contain_exactly(process2.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -1332,7 +1334,7 @@ RSpec.describe 'Processes' do
           parsed_response = MultiJson.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
-          expect(returned_guids).to match_array([process1.guid, process2.guid])
+          expect(returned_guids).to contain_exactly(process1.guid, process2.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
         end
       end
@@ -1410,6 +1412,7 @@ RSpec.describe 'Processes' do
         }
       }
     end
+
     it 'retrieves the process for an app with the requested type' do
       get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
 
@@ -1433,6 +1436,7 @@ RSpec.describe 'Processes' do
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
     end
+
     context 'permissions' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/processes/web", nil, user_headers } }
 
@@ -1744,7 +1748,7 @@ RSpec.describe 'Processes' do
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the process gets scaled' do
+      it 'logs the required fields when the process gets scaled' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',

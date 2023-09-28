@@ -37,16 +37,16 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
             can_read_route ||= s.has_member?(user)
           end
 
-          allow(queryer).to receive(:can_read_globally?).and_return(can_read_globally)
-          allow(queryer).to receive(:can_write_globally?).and_return(can_write_globally)
-
-          allow(queryer).to receive(:can_read_from_org?).and_return(can_read_from_org)
-          allow(queryer).to receive(:can_read_from_space?).and_return(can_read_from_space)
-          allow(queryer).to receive(:can_read_route?).and_return(can_read_route)
-
-          allow(queryer).to receive(:can_write_to_active_org?).and_return(can_write_to_active_org)
-          allow(queryer).to receive(:can_write_to_active_space?).and_return(can_write_to_active_space)
-          allow(queryer).to receive(:can_update_active_space?).and_return(can_update_active_space)
+          allow(queryer).to receive_messages(
+            can_read_globally?: can_read_globally,
+            can_write_globally?: can_write_globally,
+            can_read_from_org?: can_read_from_org,
+            can_read_from_space?: can_read_from_space,
+            can_read_route?: can_read_route,
+            can_write_to_active_org?: can_write_to_active_org,
+            can_write_to_active_space?: can_write_to_active_space,
+            can_update_active_space?: can_update_active_space
+          )
         end
 
         saved_error = nil

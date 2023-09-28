@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        expect(message.requested?(:include)).to be_truthy
+        expect(message).to be_requested(:include)
       end
     end
 

@@ -24,7 +24,7 @@ RSpec.describe 'Sidecars' do
     it 'creates a sidecar for an app' do
       expect do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
-      end.to change { VCAP::CloudController::SidecarModel.count }.by(1)
+      end.to change(VCAP::CloudController::SidecarModel, :count).by(1)
 
       expect(last_response.status).to eq(201), last_response.body
       sidecar = VCAP::CloudController::SidecarModel.last
@@ -213,6 +213,7 @@ RSpec.describe 'Sidecars' do
       let(:sidecar_params) do
         { command: 'bundle exec rackup' }
       end
+
       it 'partially updates the sidecar' do
         expected_response = {
           'guid' => sidecar.guid,
@@ -570,6 +571,7 @@ RSpec.describe 'Sidecars' do
         end
       end
     end
+
     describe 'permissions' do
       let(:api_call) { ->(user_headers) { get "/v3/processes/#{process1.guid}/sidecars", nil, user_headers } }
       let(:org) { app_model.organization }

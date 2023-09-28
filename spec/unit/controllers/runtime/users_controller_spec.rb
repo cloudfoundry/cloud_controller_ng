@@ -76,8 +76,10 @@ module VCAP::CloudController
 
       context 'normal user' do
         before { @obj_b = member_b }
+
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }
+
         include_examples 'permission enumeration', 'User',
                          name: 'user',
                          path: '/v2/users',
@@ -101,9 +103,8 @@ module VCAP::CloudController
       let(:greg) { User.make }
       let(:timothy) { User.make }
 
-      before { set_current_user(greg, admin: true) }
-
       before do
+        set_current_user(greg, admin: true)
         allow(uaa_client).to receive(:usernames_for_ids).and_return({
                                                                       greg.guid => 'Greg',
                                                                       timothy.guid => 'Timothy'
@@ -377,6 +378,7 @@ module VCAP::CloudController
           before do
             org.add_user(user)
           end
+
           it 'fails and does not create an audit event' do
             put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
             expect(last_response.status).to eq(403)
@@ -558,7 +560,7 @@ module VCAP::CloudController
 
           it 'removing yourself is not allowed' do
             delete "/v2/users/#{billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(decoded_response['code']).to eq(30_005)
           end
         end
@@ -590,7 +592,7 @@ module VCAP::CloudController
           it 'is not allowed' do
             set_current_user(billing_manager)
             delete "/v2/users/#{other_billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(decoded_response['code']).to eq(10_003)
           end
         end
@@ -641,7 +643,7 @@ module VCAP::CloudController
             set_current_user(org_manager)
 
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(decoded_response['code']).to eq(30_004)
           end
         end
@@ -667,6 +669,7 @@ module VCAP::CloudController
 
         context 'as a non-admin non-manager' do
           let(:user) { User.make }
+
           before do
             org.add_user user
             set_current_user user
@@ -674,7 +677,7 @@ module VCAP::CloudController
 
           it 'is not allowed' do
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eql(403)
+            expect(last_response.status).to be(403)
             expect(decoded_response['code']).to eq(10_003)
           end
         end

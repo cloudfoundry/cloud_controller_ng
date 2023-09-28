@@ -22,6 +22,18 @@ module VCAP::CloudController
           environment = instance_double(Environment)
           allow(Environment).to receive(:new).with(process, {}).and_return(environment)
           allow(environment).to receive(:as_json).and_return(environment_variables)
+          [
+            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
+            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }])
+          ].each { |security_group| security_group.add_space(process.space) }
+
+          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
+          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
+
+          app_model.update(droplet:)
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
+          process.desired_droplet.execution_metadata = execution_metadata
         end
 
         let(:environment_variables) { [{ 'name' => 'KEY', 'value' => 'running_value' }] }
@@ -188,21 +200,6 @@ module VCAP::CloudController
         let(:execution_metadata) { { user: execution_metadata_user }.to_json }
         let(:execution_metadata_user) { nil }
 
-        before do
-          [
-            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
-            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
-            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }])
-          ].each { |security_group| security_group.add_space(process.space) }
-
-          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
-          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
-
-          app_model.update(droplet:)
-          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
-          process.desired_droplet.execution_metadata = execution_metadata
-        end
-
         context 'when the lifecycle_type is "buildpack"' do
           let(:lifecycle_type) { :buildpack }
           let(:droplet) do
@@ -269,14 +266,8 @@ module VCAP::CloudController
             expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
             expect(lrp.disk_mb).to eq(256)
             expect(lrp.domain).to eq(APP_LRP_DOMAIN)
-            expect(lrp.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific
-            ])
-            expect(lrp.environment_variables).to match_array(
-              [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
-            )
+            expect(lrp.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
+            expect(lrp.environment_variables).to contain_exactly(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar'))
             expect(lrp.legacy_download_user).to eq('lrp-action-user')
             expect(lrp.instances).to eq(21)
             expect(lrp.log_guid).to eq(process.app.guid)
@@ -419,7 +410,7 @@ module VCAP::CloudController
               it 'does not add a monitor action' do
                 lrp = builder.build_app_lrp
 
-                expect(lrp.monitor).to eq(nil)
+                expect(lrp.monitor).to be_nil
               end
 
               it 'does not add healthcheck definitions' do
@@ -569,7 +560,7 @@ module VCAP::CloudController
               it 'adds a port healthcheck action for backwards compatibility' do
                 lrp = builder.build_app_lrp
 
-                expect(lrp.monitor).to eq(nil)
+                expect(lrp.monitor).to be_nil
               end
 
               it 'does not add healthcheck definitions' do
@@ -908,7 +899,7 @@ module VCAP::CloudController
           end
 
           context 'when the same builder is used twice' do
-            it 'should build the same app lrp' do
+            it 'builds the same app lrp' do
               lrp = builder.build_app_lrp
               expect(lrp.action).to eq(expected_action)
               lrp2 = builder.build_app_lrp
@@ -973,11 +964,7 @@ module VCAP::CloudController
             expect(lrp.instances).to eq(21)
             expect(lrp.disk_mb).to eq(256)
             expect(lrp.domain).to eq(APP_LRP_DOMAIN)
-            expect(lrp.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific
-            ])
+            expect(lrp.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
             expect(lrp.environment_variables).to eq([])
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.log_guid).to eq(process.app.guid)
@@ -1003,7 +990,7 @@ module VCAP::CloudController
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
-            expect(lrp.privileged).to eq false
+            expect(lrp.privileged).to be false
             expect(lrp.process_guid).to eq(ProcessGuid.from_process(process))
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
@@ -1040,7 +1027,7 @@ module VCAP::CloudController
 
               it 'app labels set custom tags' do
                 expect(lrp.metric_tags['DatadogValue'].static).to eq 'woof'
-                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+                expect(lrp.metric_tags['SomeotherValue']).to be_nil
               end
 
               context 'when app labels tags match existing custom metrics tags' do
@@ -1104,8 +1091,8 @@ module VCAP::CloudController
               end
 
               it 'app labels do not set custom tags' do
-                expect(lrp.metric_tags['DatadogValue']).to eq nil
-                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+                expect(lrp.metric_tags['DatadogValue']).to be_nil
+                expect(lrp.metric_tags['SomeotherValue']).to be_nil
               end
             end
           end
@@ -1122,6 +1109,7 @@ module VCAP::CloudController
 
             context 'when the memory limit is below the minimum' do
               before { process.memory = MIN_CPU_PROXY - 1 }
+
               it 'sets the cpu_weight to 100*min/max' do
                 lrp             = builder.build_app_lrp
                 expected_weight = (100 * MIN_CPU_PROXY / MAX_CPU_PROXY).to_i
@@ -1131,6 +1119,7 @@ module VCAP::CloudController
 
             context 'when the memory limit exceeds the maximum' do
               before { process.memory = MAX_CPU_PROXY + 1 }
+
               it 'sets the cpu_weight to 100' do
                 lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(100)
@@ -1170,7 +1159,7 @@ module VCAP::CloudController
             it 'adds a port healthcheck action for backwards compatibility' do
               lrp = builder.build_app_lrp
 
-              expect(lrp.monitor).to eq(nil)
+              expect(lrp.monitor).to be_nil
             end
           end
 

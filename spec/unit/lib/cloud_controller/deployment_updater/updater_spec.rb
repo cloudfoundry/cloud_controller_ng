@@ -192,7 +192,7 @@ module VCAP::CloudController
             deploying_web_process.update(revision: nil)
           end
 
-          it 'it leaves the non-web process commands alone' do
+          it 'leaves the non-web process commands alone' do
             subject.scale
 
             expect(logger).not_to have_received(:error)
@@ -214,9 +214,7 @@ module VCAP::CloudController
         it 'does not destroy any route mappings' do
           expect do
             subject.scale
-          end.not_to(change do
-            RouteMappingModel.count
-          end)
+          end.not_to(change(RouteMappingModel, :count))
         end
       end
 
@@ -252,7 +250,7 @@ module VCAP::CloudController
             subject.scale
           end.not_to(change { ProcessModel.find(guid: web_process.guid) })
           expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
-          expect(oldest_label.exists?).to be_falsey
+          expect(oldest_label).not_to exist
         end
       end
 
@@ -391,7 +389,7 @@ module VCAP::CloudController
             Timecop.travel(Time.now + 1.minute) do
               expect do
                 subject.scale
-              end.to_not(change { deployment.reload.last_healthy_at })
+              end.not_to(change { deployment.reload.last_healthy_at })
             end
           end
         end
@@ -503,7 +501,7 @@ module VCAP::CloudController
 
         it 'skips execution' do
           subject.scale
-          expect(deployment).to_not have_received(:update)
+          expect(deployment).not_to have_received(:update)
         end
       end
     end
@@ -556,7 +554,7 @@ module VCAP::CloudController
           )
         end
 
-        it 'it scales up the most recent interim web process' do
+        it 'scales up the most recent interim web process' do
           subject.cancel
           expect(interim_deploying_web_process.reload.instances).to eq(original_web_process_instance_count)
           expect(app.reload.web_processes.first.guid).to eq(interim_deploying_web_process.guid)
@@ -636,7 +634,7 @@ module VCAP::CloudController
 
         it 'skips execution' do
           subject.cancel
-          expect(deployment).to_not have_received(:update)
+          expect(deployment).not_to have_received(:update)
         end
       end
     end

@@ -12,7 +12,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
       expect(result[:created_at]).to eq(usage_event.created_at)
       expect(result[:updated_at]).to eq(usage_event.created_at)
       expect(result[:state][:current]).to eq usage_event.state
-      expect(result[:state][:previous]).to eq nil
+      expect(result[:state][:previous]).to be_nil
       expect(result[:app][:guid]).to eq usage_event.parent_app_guid
       expect(result[:app][:name]).to eq usage_event.parent_app_name
       expect(result[:process][:guid]).to eq usage_event.app_guid
@@ -20,15 +20,15 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
       expect(result[:space][:guid]).to eq usage_event.space_guid
       expect(result[:space][:name]).to eq usage_event.space_name
       expect(result[:organization][:guid]).to eq usage_event.org_guid
-      expect(result[:organization][:name]).to eq nil
+      expect(result[:organization][:name]).to be_nil
       expect(result[:buildpack][:guid]).to eq usage_event.buildpack_guid
       expect(result[:buildpack][:name]).to eq usage_event.buildpack_name
-      expect(result[:task][:guid]).to eq nil
-      expect(result[:task][:name]).to eq nil
+      expect(result[:task][:guid]).to be_nil
+      expect(result[:task][:name]).to be_nil
       expect(result[:memory_in_mb_per_instance][:current]).to eq usage_event.memory_in_mb_per_instance
-      expect(result[:memory_in_mb_per_instance][:previous]).to eq nil
+      expect(result[:memory_in_mb_per_instance][:previous]).to be_nil
       expect(result[:instance_count][:current]).to eq usage_event.instance_count
-      expect(result[:instance_count][:previous]).to eq nil
+      expect(result[:instance_count][:previous]).to be_nil
       expect(result[:links][:self][:href]).to eq "#{link_prefix}/v3/app_usage_events/#{usage_event.guid}"
     end
 
@@ -42,10 +42,10 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
         )
       end
 
-      it 'it displays null for the process.guid' do
+      it 'displays null for the process.guid' do
         expect(result[:guid]).to eq usage_event.guid
-        expect(result[:process][:guid]).to eq nil
-        expect(result[:process][:type]).to eq nil
+        expect(result[:process][:guid]).to be_nil
+        expect(result[:process][:type]).to be_nil
         expect(result[:task][:guid]).to eq 'task-guid'
         expect(result[:task][:name]).to eq 'some-task'
       end

@@ -25,7 +25,7 @@ module VCAP::CloudController
       BuildpackLifecycleDataModel.make(app: sad_app, stack: nil)
     end
 
-    context '#fetch_all' do
+    describe '#fetch_all' do
       it 'eager loads the specified resources for all apps' do
         results = fetcher.fetch_all(message, eager_loaded_associations: [:labels, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }]).all
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
           end
 
           it 'delegates filtering to the base class' do
-            expect(subject).to match_array([resource_1, resource_2])
+            expect(subject).to contain_exactly(resource_1, resource_2)
           end
         end
 
@@ -222,7 +222,7 @@ module VCAP::CloudController
           end
 
           it 'delegates filtering to the base class' do
-            expect(subject).to match_array([resource_1, resource_2])
+            expect(subject).to contain_exactly(resource_1, resource_2)
           end
         end
       end

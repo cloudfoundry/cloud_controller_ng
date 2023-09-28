@@ -54,8 +54,9 @@ module CloudController
       describe 'retries' do
         let(:wrapped_client) { instance_double(NullClient) }
 
-        context '#exists?' do
+        describe '#exists?' do
           let(:key) { 'some-key' }
+
           before { allow(wrapped_client).to receive(:exists?).and_raise(RetryableError) }
 
           it 'retries the operation' do
@@ -67,7 +68,7 @@ module CloudController
           end
         end
 
-        context '#download_from_blobstore' do
+        describe '#download_from_blobstore' do
           let(:source_key) { 'some-key' }
           let(:destination_path) { 'some-path' }
 
@@ -82,7 +83,7 @@ module CloudController
           end
         end
 
-        context '#cp_to_blobstore' do
+        describe '#cp_to_blobstore' do
           let(:source_path) { 'some-path' }
           let(:destination_key) { 'some-key' }
 
@@ -97,7 +98,7 @@ module CloudController
           end
         end
 
-        context '#cp_r_to_blobstore' do
+        describe '#cp_r_to_blobstore' do
           let(:source_dir) { 'some-dir' }
 
           before { allow(wrapped_client).to receive(:cp_r_to_blobstore).and_raise(RetryableError) }
@@ -111,7 +112,7 @@ module CloudController
           end
         end
 
-        context '#cp_file_between_keys' do
+        describe '#cp_file_between_keys' do
           let(:source_key) { 'some-key' }
           let(:destination_key) { 'some-destination-key' }
 
@@ -126,7 +127,7 @@ module CloudController
           end
         end
 
-        context '#delete_all' do
+        describe '#delete_all' do
           let(:page_size) { 123 }
 
           before { allow(wrapped_client).to receive(:delete_all).and_raise(RetryableError) }
@@ -140,7 +141,7 @@ module CloudController
           end
         end
 
-        context '#delete_all_in_path' do
+        describe '#delete_all_in_path' do
           let(:path) { 'some-path' }
 
           before { allow(wrapped_client).to receive(:delete_all_in_path).and_raise(RetryableError) }
@@ -154,7 +155,7 @@ module CloudController
           end
         end
 
-        context '#delete' do
+        describe '#delete' do
           let(:key) { 'some-key' }
 
           before { allow(wrapped_client).to receive(:delete).and_raise(RetryableError) }
@@ -168,7 +169,7 @@ module CloudController
           end
         end
 
-        context '#delete_blob' do
+        describe '#delete_blob' do
           let(:blob) { 'some-blob' }
 
           before { allow(wrapped_client).to receive(:delete_blob).and_raise(RetryableError) }
@@ -182,7 +183,7 @@ module CloudController
           end
         end
 
-        context '#blob' do
+        describe '#blob' do
           let(:key) { 'some-blob' }
 
           before { allow(wrapped_client).to receive(:blob).and_raise(RetryableError) }
@@ -196,7 +197,7 @@ module CloudController
           end
         end
 
-        context '#files_for' do
+        describe '#files_for' do
           let(:prefix) { 'pre' }
           let(:ignored_directory_prefixes) { ['no'] }
 

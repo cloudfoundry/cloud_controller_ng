@@ -57,7 +57,7 @@ module VCAP::CloudController
           get "/v2/apps/#{@process.app.guid}/summary"
         end
 
-        it 'should contain the basic app attributes' do
+        it 'contains the basic app attributes' do
           expect(last_response.status).to eq(200)
           expect(decoded_response['guid']).to eq(@process.app.guid)
           expect(decoded_response['environment_json']).to eq({ 'HELLO' => 'WORLD' })
@@ -67,7 +67,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'should return the app routes' do
+        it 'returns the app routes' do
           expect(decoded_response['routes']).to eq([{
                                                      'guid' => @route1.guid,
                                                      'host' => @route1.host,
@@ -89,13 +89,13 @@ module VCAP::CloudController
                                                    }])
         end
 
-        it 'should contain the running instances' do
+        it 'contains the running instances' do
           expect(decoded_response['running_instances']).to eq(@process.instances)
         end
 
-        it 'should contain list of both private domains and shared domains' do
+        it 'contains list of both private domains and shared domains' do
           domains = @process.space.organization.private_domains
-          expect(domains.count > 0).to eq(true)
+          expect(domains.count > 0).to be(true)
 
           private_domains = domains.collect do |domain|
             { 'guid' => domain.guid,
@@ -115,7 +115,7 @@ module VCAP::CloudController
           expect(decoded_response['available_domains']).to match_array(private_domains + shared_domains)
         end
 
-        it 'should return the correct info for services' do
+        it 'returns the correct info for services' do
           expect(decoded_response['services'].size).to eq(@num_services)
           svc_resp = decoded_response['services'][0]
           svc      = @services.find { |s| s.guid == svc_resp['guid'] }

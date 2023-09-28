@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       it 'does not enqueue a job to delete the blob' do
-        expect { BitsExpiration.new.expire_droplets!(app) }.not_to(change { Delayed::Job.count })
+        expect { BitsExpiration.new.expire_droplets!(app) }.not_to(change(Delayed::Job, :count))
       end
     end
 
@@ -113,8 +113,8 @@ module VCAP::CloudController
       end
 
       it 'enqueues a job to delete the blob' do
-        expect { BitsExpiration.new.expire_droplets!(app) }.to change { Delayed::Job.count }.from(0).to(5)
-        expect(Delayed::Job.all? { |j| j.handler.include?('DeleteExpiredDropletBlob') }).to be_truthy
+        expect { BitsExpiration.new.expire_droplets!(app) }.to change(Delayed::Job, :count).from(0).to(5)
+        expect(Delayed::Job).to(be_all { |j| j.handler.include?('DeleteExpiredDropletBlob') })
       end
     end
 
@@ -163,8 +163,8 @@ module VCAP::CloudController
       end
 
       it 'enqueues a job to delete the blob' do
-        expect { BitsExpiration.new.expire_packages!(app) }.to change { Delayed::Job.count }.from(0).to(5)
-        expect(Delayed::Job.all? { |j| j.handler.include?('DeleteExpiredPackageBlob') }).to be_truthy
+        expect { BitsExpiration.new.expire_packages!(app) }.to change(Delayed::Job, :count).from(0).to(5)
+        expect(Delayed::Job).to(be_all { |j| j.handler.include?('DeleteExpiredPackageBlob') })
       end
     end
   end

@@ -15,8 +15,7 @@ module VCAP::CloudController
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
-        allow(bbs_task_client).to receive(:fetch_task).and_return(nil)
-        allow(bbs_task_client).to receive(:fetch_tasks).and_return(bbs_tasks)
+        allow(bbs_task_client).to receive_messages(fetch_task: nil, fetch_tasks: bbs_tasks)
         allow(Steno).to receive(:logger).and_return(logger)
         allow(bbs_task_client).to receive(:bump_freshness)
       end
@@ -36,7 +35,7 @@ module VCAP::CloudController
           it 'does nothing to the task' do
             expect do
               subject.sync
-            end.to_not(change { task.reload.state })
+            end.not_to(change { task.reload.state })
           end
         end
 
@@ -84,7 +83,7 @@ module VCAP::CloudController
           let(:bbs_tasks) { [] }
 
           it 'does nothing to the task' do
-            expect { subject.sync }.to_not(change do
+            expect { subject.sync }.not_to(change do
               [pending_task.reload.state, succeeded_task.reload.state]
             end)
           end

@@ -1,9 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe UploadHandler do
+  subject(:uploader) { UploadHandler.new(config) }
+
   let(:key) { 'application' }
   let(:tmpdir) { '/some/tmp/dir' }
-  subject(:uploader) { UploadHandler.new(config) }
 
   context 'NGINX mode' do
     let(:config) do
@@ -39,6 +40,7 @@ RSpec.describe UploadHandler do
     context 'when the file exists but is not inside any of the temp directories' do
       context 'when the path is an absolute path' do
         let(:params) { { "#{key}_path" => "#{tmpdir}/../path" } }
+
         it 'raises an error' do
           expect do
             uploader.uploaded_file(params, key)
@@ -98,6 +100,7 @@ RSpec.describe UploadHandler do
     context 'when the file exists but is not inside any of the temp directories' do
       context 'when the path is an absolute path' do
         let(:params) { { key => { 'tempfile' => "#{tmpdir}/../path" } } }
+
         it 'raises an error' do
           expect do
             uploader.uploaded_file(params, key)

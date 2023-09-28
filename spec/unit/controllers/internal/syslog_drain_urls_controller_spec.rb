@@ -17,10 +17,10 @@ module VCAP::CloudController
         get '/internal/v4/syslog_drain_urls', '{}'
         expect(last_response).to be_successful
         expect(decoded_results.count).to eq(1)
-        expect(decoded_v5_available).to eq(true)
+        expect(decoded_v5_available).to be(true)
         expect(decoded_results).to include(
           {
-            app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+            app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                               'hostname' => 'org-1.space-1.app-1' }
           }
         )
@@ -35,10 +35,10 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                                 'hostname' => 'org-2.space-2.app-2' }
             }
           )
@@ -54,10 +54,10 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                                 'hostname' => 'org-3.space-3.app-3' }
             }
           )
@@ -73,10 +73,10 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                                 'hostname' => 'org-4.space-4.app-4' }
             }
           )
@@ -98,10 +98,10 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                                 'hostname' => "#{orgName}.#{spaceName}.#{appName}" }
             }
           )
@@ -120,10 +120,10 @@ module VCAP::CloudController
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results.count).to eq(1)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fish%2cfinger', 'foobar']),
+              app_obj.guid => { 'drains' => contain_exactly('fish%2cfinger', 'foobar'),
                                 'hostname' => "#{orgName}.#{spaceName}.#{appName}" }
             }
           )
@@ -136,7 +136,7 @@ module VCAP::CloudController
         it 'does not include that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).not_to have_key(app_no_binding.guid)
         end
       end
@@ -147,7 +147,7 @@ module VCAP::CloudController
         it 'does not include that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).not_to have_key(app_no_drain.guid)
         end
       end
@@ -158,7 +158,7 @@ module VCAP::CloudController
         it 'includes the app without the empty syslog_drain_urls' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results).not_to have_key(app_empty_drain.guid)
         end
       end
@@ -177,7 +177,7 @@ module VCAP::CloudController
         it 'includes all of the syslog_drain_urls for that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_results[app_obj.guid]['drains'].length).to eq(52)
         end
       end
@@ -195,7 +195,7 @@ module VCAP::CloudController
           [1, 3].each do |size|
             get '/internal/v4/syslog_drain_urls', { 'batch_size' => size }
             expect(last_response).to be_successful
-            expect(decoded_v5_available).to eq(true)
+            expect(decoded_v5_available).to be(true)
             expect(decoded_results.size).to eq(size)
           end
         end
@@ -222,7 +222,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'should eventually return entire collection, batch after batch' do
+        it 'eventuallies return entire collection, batch after batch' do
           apps       = {}
           total_size = AppModel.count
 
@@ -244,7 +244,7 @@ module VCAP::CloudController
             'next_id' => token
           }
           expect(decoded_results.size).to eq(0)
-          expect(decoded_v5_available).to eq(true)
+          expect(decoded_v5_available).to be(true)
           expect(decoded_response['next_id']).to be_nil
         end
 
@@ -261,12 +261,13 @@ module VCAP::CloudController
 
             saved_results = decoded_results.dup
             expect(saved_results.size).to eq(2)
-            expect(decoded_v5_available).to eq(true)
+            expect(decoded_v5_available).to be(true)
           end
         end
 
         context 'when an app has no syslog_drain_urls' do
           let(:app_with_first_ordered_guid) { AppModel.make(guid: '000', space: instance1.space) }
+
           before do
             ServiceBinding.make(syslog_drain_url: nil, app: app_with_first_ordered_guid, service_instance: instance1)
           end
@@ -279,7 +280,7 @@ module VCAP::CloudController
 
             saved_results = decoded_results.dup
             expect(saved_results.size).to eq(2)
-            expect(decoded_v5_available).to eq(true)
+            expect(decoded_v5_available).to be(true)
           end
         end
       end
@@ -527,7 +528,7 @@ module VCAP::CloudController
           'batch_size' => 2,
           'next_id' => decoded_next_id
         }
-        expect(decoded_next_id).to be(nil)
+        expect(decoded_next_id).to be_nil
         expect(decoded_results.length).to be(0)
       end
     end

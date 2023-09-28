@@ -104,7 +104,7 @@ RSpec.describe 'ServiceBindings' do
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to_not include(non_displayed_binding.guid)
+      expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_displayed_binding.guid)
     end
 
     describe 'inline-relations-depth=1' do
@@ -407,7 +407,7 @@ RSpec.describe 'ServiceBindings' do
     it 'deletes the service binding' do
       delete "/v2/service_bindings/#{service_binding.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(204)
-      expect(service_binding.exists?).to be_falsey
+      expect(service_binding).not_to exist
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.service_binding.delete')

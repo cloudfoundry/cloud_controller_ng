@@ -27,13 +27,13 @@ module VCAP::CloudController
           it 'marks the task as succeeded' do
             handler.complete_task(task, response)
             expect(task.reload.state).to eq TaskModel::SUCCEEDED_STATE
-            expect(task.reload.failure_reason).to eq(nil)
+            expect(task.reload.failure_reason).to be_nil
           end
 
           it 'creates an AppUsageEvent with state TASK_STOPPED' do
             expect do
               handler.complete_task(task, response)
-            end.to change { AppUsageEvent.count }.by(1)
+            end.to change(AppUsageEvent, :count).by(1)
 
             event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
             expect(event).not_to be_nil

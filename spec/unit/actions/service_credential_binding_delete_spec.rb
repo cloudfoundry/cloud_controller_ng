@@ -66,7 +66,7 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it 'should log audit start_create' do
+            it 'logs audit start_create' do
               action.delete(binding)
 
               expect(binding_event_repo).to have_received(:record_start_delete).with(
@@ -160,7 +160,7 @@ module VCAP::CloudController
           let(:last_operation_state) { 'initial' }
 
           it 'is blocking' do
-            expect(action.blocking_operation_in_progress?(binding)).to be_truthy
+            expect(action).to be_blocking_operation_in_progress(binding)
           end
         end
 
@@ -169,7 +169,7 @@ module VCAP::CloudController
           let(:last_operation_state) { 'in progress' }
 
           it 'is blocking' do
-            expect(action.blocking_operation_in_progress?(binding)).to be_truthy
+            expect(action).to be_blocking_operation_in_progress(binding)
           end
         end
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
           let(:last_operation_state) { 'in progress' }
 
           it 'is not blocking' do
-            expect(action.blocking_operation_in_progress?(binding)).to be_falsey
+            expect(action).not_to be_blocking_operation_in_progress(binding)
           end
         end
 
@@ -187,7 +187,7 @@ module VCAP::CloudController
           let(:last_operation_state) { 'failed' }
 
           it 'is not blocking' do
-            expect(action.blocking_operation_in_progress?(binding)).to be_falsey
+            expect(action).not_to be_blocking_operation_in_progress(binding)
           end
         end
       end

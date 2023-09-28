@@ -71,7 +71,7 @@ module Diego
 
         expect(serial_action).to be_a(Bbs::Models::Action)
         expect(serial_action['serial_action']).to be_a(Bbs::Models::SerialAction)
-        expect(serial_action['serial_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['serial_action'].actions).to contain_exactly(ActionBuilder.action(action1), ActionBuilder.action(action2))
       end
     end
 
@@ -84,7 +84,7 @@ module Diego
 
         expect(serial_action).to be_a(Bbs::Models::Action)
         expect(serial_action['parallel_action']).to be_a(Bbs::Models::ParallelAction)
-        expect(serial_action['parallel_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['parallel_action'].actions).to contain_exactly(ActionBuilder.action(action1), ActionBuilder.action(action2))
       end
     end
 
@@ -127,7 +127,7 @@ module Diego
 
         expect(serial_action).to be_a(Bbs::Models::Action)
         expect(serial_action['codependent_action']).to be_a(Bbs::Models::CodependentAction)
-        expect(serial_action['codependent_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['codependent_action'].actions).to contain_exactly(ActionBuilder.action(action1), ActionBuilder.action(action2))
       end
     end
 

@@ -39,24 +39,24 @@ module VCAP::CloudController
 
       it 'allows shared foo.com when private bar.foo.com exists' do
         PrivateDomain.make name: 'bar.foo.com'
-        expect { SharedDomain.make name: 'foo.com' }.to_not raise_error
+        expect { SharedDomain.make name: 'foo.com' }.not_to raise_error
       end
 
       it 'allows shared foo.com when shared bar.foo.com exists' do
         SharedDomain.make name: 'bar.foo.com'
-        expect { SharedDomain.make name: 'foo.com' }.to_not raise_error
+        expect { SharedDomain.make name: 'foo.com' }.not_to raise_error
       end
 
       it 'allows shared bar.foo.com a when shared baz.bar.foo.com and foo.com exist' do
         SharedDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'bar.foo.com' }.to_not raise_error
+        expect { SharedDomain.make name: 'bar.foo.com' }.not_to raise_error
       end
 
       it 'allows shared bar.foo.com a when private baz.bar.foo.com and shared foo.com exist' do
         PrivateDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'bar.foo.com' }.to_not raise_error
+        expect { SharedDomain.make name: 'bar.foo.com' }.not_to raise_error
       end
 
       it 'denies shared bar.foo.com when private foo.com exists' do
@@ -122,7 +122,7 @@ module VCAP::CloudController
         end
 
         it 'returns false' do
-          expect(shared_domain.tcp?).to be_falsy
+          expect(shared_domain).not_to be_tcp
           expect_any_instance_of(CloudController::DependencyLocator).not_to receive(:routing_api_client)
         end
       end
@@ -131,20 +131,21 @@ module VCAP::CloudController
         let(:router_group_type) { 'tcp' }
 
         it 'returns true' do
-          expect(shared_domain.tcp?).to be_truthy
+          expect(shared_domain).to be_tcp
         end
       end
 
       context 'when shared domain is not a tcp domain' do
         it 'returns false' do
-          expect(shared_domain.tcp?).to eq(false)
+          expect(shared_domain.tcp?).to be(false)
         end
       end
 
       context 'when there is no router group guid' do
         let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
+
         it 'returns false' do
-          expect(shared_domain.tcp?).to eq(false)
+          expect(shared_domain.tcp?).to be(false)
         end
       end
 
@@ -155,7 +156,7 @@ module VCAP::CloudController
         let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
 
         it 'returns false' do
-          expect(shared_domain.tcp?).to eq(false)
+          expect(shared_domain.tcp?).to be(false)
         end
 
         it 'when tcp? is called twice it only calls the routing api once' do
@@ -174,7 +175,7 @@ module VCAP::CloudController
 
     describe 'addable_to_organization!' do
       it 'does not raise error' do
-        expect { subject.addable_to_organization!(Organization.new) }.to_not raise_error
+        expect { subject.addable_to_organization!(Organization.new) }.not_to raise_error
       end
     end
 
@@ -250,7 +251,7 @@ module VCAP::CloudController
 
             expect do
               SharedDomain.find_or_create(**attrs.merge(internal: false))
-            end.not_to(change { existing_domain.reload })
+            end.not_to(change(existing_domain, :reload))
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
             expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -268,7 +269,7 @@ module VCAP::CloudController
 
             expect do
               SharedDomain.find_or_create(**attrs.merge(internal: true))
-            end.not_to(change { existing_domain.reload })
+            end.not_to(change(existing_domain, :reload))
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
             expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -284,7 +285,7 @@ module VCAP::CloudController
 
           expect do
             SharedDomain.find_or_create(**attrs.merge(router_group_guid: 'new rgg'))
-          end.not_to(change { existing_domain.reload })
+          end.not_to(change(existing_domain, :reload))
           expect(fake_logger).to have_received(:warn).
             with("Domain '#{domain_name}' already exists. Skipping updates of router_group_guid")
           expect(existing_domain.updated_at).to eq(before_updated_at)
@@ -299,7 +300,7 @@ module VCAP::CloudController
 
           expect do
             SharedDomain.find_or_create(**attrs)
-          end.not_to(change { existing_domain.reload })
+          end.not_to(change(existing_domain, :reload))
           expect(existing_domain.updated_at).to eq(before_updated_at)
           expect(fake_logger).to have_received(:info).with("reusing default serving domain: #{domain_name}")
           expect(fake_logger).not_to have_received(:info).with("creating shared serving domain: #{domain_name}")

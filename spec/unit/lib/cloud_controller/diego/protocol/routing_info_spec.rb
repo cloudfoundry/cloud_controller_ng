@@ -45,6 +45,7 @@ module VCAP::CloudController
                 RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED, protocol: 'http2')
                 RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
               end
+
               it 'returns the mapped http routes associated with the app with protocol' do
                 expected_http = [
                   { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 8080, 'protocol' => 'http2' },
@@ -55,6 +56,7 @@ module VCAP::CloudController
                 expect(ri['http_routes']).to match_array expected_http
               end
             end
+
             context 'with no app ports specified in route mapping' do
               before do
                 RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
@@ -348,7 +350,7 @@ module VCAP::CloudController
                 { 'hostname' => 'myroute.apps.internal' }
               ]
 
-              expect(ri.keys).to match_array(['internal_routes'])
+              expect(ri.keys).to contain_exactly('internal_routes')
               expect(ri['internal_routes']).to match_array expected_routes
             end
 

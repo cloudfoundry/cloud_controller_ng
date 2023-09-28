@@ -183,7 +183,7 @@ module VCAP::CloudController
         end
       end
 
-      context '#bind' do
+      describe '#bind' do
         let(:precursor) { action.precursor(service_instance, route, message:) }
         let(:binding_model) { RouteBinding }
         let(:bind_response) { { binding: { route_service_url: } } }
@@ -258,7 +258,7 @@ module VCAP::CloudController
               let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
               let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_async_response) }
 
-              it 'should log audit start_create' do
+              it 'logs audit start_create' do
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,
@@ -375,6 +375,7 @@ module VCAP::CloudController
 
           context 'response says failed' do
             let(:state) { 'failed' }
+
             it 'does not notify diego or create an audit event' do
               expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 

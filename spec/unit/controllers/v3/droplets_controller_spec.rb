@@ -55,7 +55,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns a 422' do
         post :create, params: { source_guid: source_droplet_guid, body: { super_duper: 'bad_request' } }, as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -69,7 +69,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a not found error' do
           post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -87,7 +87,7 @@ RSpec.describe DropletsController, type: :controller do
           it 'returns a 404 ResourceNotFound error' do
             post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
-            expect(response.status).to eq 404
+            expect(response).to have_http_status :not_found
             expect(response.body).to include 'ResourceNotFound'
           end
         end
@@ -101,7 +101,7 @@ RSpec.describe DropletsController, type: :controller do
           it 'returns a forbidden error' do
             post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
-            expect(response.status).to eq(403)
+            expect(response).to have_http_status(:forbidden)
             expect(response.body).to include('NotAuthorized')
           end
         end
@@ -113,30 +113,32 @@ RSpec.describe DropletsController, type: :controller do
         allow_any_instance_of(VCAP::CloudController::DropletCopy).to receive(:copy).and_raise(VCAP::CloudController::DropletCopy::InvalidCopyError.new('boom'))
       end
 
-      it 'returns an error ' do
+      it 'returns an error' do
         post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('boom')
       end
     end
 
     context 'when the source droplet does not exist' do
       let(:source_droplet_guid) { 'no-source-droplet-here' }
+
       it 'returns a not found error' do
         post :create, params: { source_guid: 'no droplet here' }.merge(body: request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
       end
     end
 
     context 'when the target application does not exist' do
       let(:target_app_guid) { 'not a real app guid' }
+
       it 'returns a not found error' do
         post :create, params: { source_guid: 'no droplet here' }.merge(body: request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
       end
     end
@@ -155,7 +157,7 @@ RSpec.describe DropletsController, type: :controller do
     it 'returns a 200 OK and the droplet' do
       get :show, params: { guid: droplet.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['guid']).to eq(droplet.guid)
     end
 
@@ -163,7 +165,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns a 404 Not Found' do
         get :show, params: { guid: 'shablam!' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -177,7 +179,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a 403 NotAuthorized error' do
           get :show, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -193,7 +195,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a 404 not found' do
           get :show, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -213,7 +215,7 @@ RSpec.describe DropletsController, type: :controller do
     it 'returns a 202 ACCEPTED and the job link in header' do
       delete :destroy, params: { guid: droplet.guid }
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(response.body).to be_empty
       expect(response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
     end
@@ -221,9 +223,7 @@ RSpec.describe DropletsController, type: :controller do
     it 'creates a job to track the deletion and returns it in the location header' do
       expect do
         delete :destroy, params: { guid: droplet.guid }
-      end.to change {
-        VCAP::CloudController::PollableJobModel.count
-      }.by(1)
+      end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
 
       job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
@@ -233,7 +233,7 @@ RSpec.describe DropletsController, type: :controller do
       expect(job.resource_guid).to eq(droplet.guid)
       expect(job.resource_type).to eq('droplet')
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
 
@@ -241,7 +241,7 @@ RSpec.describe DropletsController, type: :controller do
       delete :destroy, params: { guid: droplet.guid }
 
       job = VCAP::CloudController::PollableJobModel.find(resource_guid: droplet.guid)
-      expect(job).to_not be_nil, "Expected to find job with droplet guid '#{droplet.guid}' but did not"
+      expect(job).not_to be_nil, "Expected to find job with droplet guid '#{droplet.guid}' but did not"
       expect(job.state).to eq('PROCESSING')
 
       # one job to delete the model, which spawns another to delete the blob
@@ -254,7 +254,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns a 404 Not Found' do
         delete :destroy, params: { guid: 'not-found' }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -268,7 +268,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 403' do
           delete :destroy, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -282,7 +282,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           delete :destroy, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -295,7 +295,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 403 NotAuthorized' do
           delete :destroy, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -325,7 +325,7 @@ RSpec.describe DropletsController, type: :controller do
         get :index, params: { app_guid: app.guid }
 
         response_guids = parsed_body['resources'].pluck('guid')
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
       end
 
@@ -344,7 +344,7 @@ RSpec.describe DropletsController, type: :controller do
           get :index, params: { app_guid: app.guid }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
@@ -353,7 +353,7 @@ RSpec.describe DropletsController, type: :controller do
           get :index, params: { app_guid: 'made-up' }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -365,7 +365,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns droplets for the package' do
         get :index, params: { package_guid: package.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         response_guids = parsed_body['resources'].pluck('guid')
         expect(response_guids).to match_array([droplet_1].map(&:guid))
       end
@@ -385,7 +385,7 @@ RSpec.describe DropletsController, type: :controller do
           get :index, params: { package_guid: package.guid }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
@@ -394,7 +394,7 @@ RSpec.describe DropletsController, type: :controller do
           get :index, params: { package_guid: 'made-up' }
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -406,7 +406,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 400' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
         end
@@ -418,7 +418,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 400' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Unknown query parameter(s)')
           expect(response.body).to include('bad_param')
@@ -431,7 +431,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 400' do
           get(:index, params:)
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Per page must be between')
         end
@@ -448,7 +448,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a 403 Not Authorized error' do
           get :index
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -461,7 +461,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns all droplets' do
           get :index
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           response_guids = parsed_body['resources'].pluck('guid')
           expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
         end
@@ -473,6 +473,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
+
     before do
       set_current_user_as_admin
     end
@@ -485,9 +486,10 @@ RSpec.describe DropletsController, type: :controller do
           }
         }
       end
+
       it 'displays an informative error' do
         patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response).to have_error_message("labels' is not an object")
       end
     end
@@ -501,7 +503,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 403' do
           patch :update, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -515,7 +517,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           patch :update, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -530,7 +532,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 403 NotAuthorized' do
           patch :update, params: { guid: droplet.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -550,11 +552,12 @@ RSpec.describe DropletsController, type: :controller do
 
         it 'updates' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['guid']).to eq(droplet.guid)
           expect(parsed_body['metadata']['labels']['key']).to eq('value')
         end
       end
+
       context 'when the label is invalid' do
         let(:request_body) do
           {
@@ -569,7 +572,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -592,7 +595,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -618,7 +621,7 @@ RSpec.describe DropletsController, type: :controller do
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
@@ -642,7 +645,7 @@ RSpec.describe DropletsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
         end
       end
@@ -665,7 +668,7 @@ RSpec.describe DropletsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
         end
       end

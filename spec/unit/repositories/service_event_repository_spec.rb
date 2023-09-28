@@ -230,6 +230,7 @@ module VCAP::CloudController
 
         context 'when the service already exists' do
           let!(:service) { Service.make(service_broker: broker, description: 'description') }
+
           before do
             service.plan_updateable = true
             service.extra = { 'extra' => 'data' }.to_json
@@ -262,7 +263,7 @@ module VCAP::CloudController
 
             metadata = VCAP::CloudController::Event.first(type: 'audit.service.update').metadata
             expect(metadata.keys.length).to eq 2
-            expect(metadata['plan_updateable']).to eq true
+            expect(metadata['plan_updateable']).to be true
             expect(metadata['extra']).to eq({ 'extra' => 'data' }.to_json)
           end
         end
@@ -325,6 +326,7 @@ module VCAP::CloudController
 
         context 'when the service plan already exists' do
           let!(:plan) { ServicePlan.make(service: service, description: 'description') }
+
           before do
             plan.extra = { 'extra' => 'data' }.to_json
             plan.description = 'description'
@@ -523,7 +525,7 @@ module VCAP::CloudController
           event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
 
           expect(event.metadata.keys).to eq(['request'])
-          expect(event.metadata['request']).to eql(nil)
+          expect(event.metadata['request']).to be_nil
         end
 
         it 'allows parameters to not be hashy' do
@@ -588,7 +590,7 @@ module VCAP::CloudController
           event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.create')
 
           expect(event.metadata.keys).to eq(['request'])
-          expect(event.metadata['request']).to eql(nil)
+          expect(event.metadata['request']).to be_nil
         end
 
         context 'when the params contain credentials' do
@@ -653,6 +655,7 @@ module VCAP::CloudController
 
       describe '#record_service_purge_event' do
         let(:service) { VCAP::CloudController::Service.make }
+
         it 'records an event' do
           repository.record_service_purge_event(service)
           event = Event.first(type: 'audit.service.delete')
@@ -677,6 +680,7 @@ module VCAP::CloudController
 
       describe '#record_service_delete_event' do
         let(:service) { VCAP::CloudController::Service.make }
+
         it 'records an event' do
           repository.record_service_delete_event(service)
           event = Event.first(type: 'audit.service.delete')

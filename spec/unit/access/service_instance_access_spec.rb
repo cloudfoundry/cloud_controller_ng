@@ -15,14 +15,14 @@ module VCAP::CloudController
 
     before { set_current_user(user, scopes:) }
 
-    it_behaves_like :admin_read_only_access do
+    it_behaves_like 'admin read only access' do
       let(:object) { service_instance }
     end
 
     context 'admin' do
-      include_context :admin_setup
+      include_context 'admin setup'
 
-      it_behaves_like :full_access do
+      it_behaves_like 'full access' do
         let(:object) { service_instance }
       end
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
           FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
         end
 
-        it_behaves_like :full_access do
+        it_behaves_like 'full access' do
           let(:object) { service_instance }
         end
       end
@@ -67,13 +67,14 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it_behaves_like :full_access do
+      it_behaves_like 'full access' do
         let(:object) { service_instance }
       end
 
       context 'when the organization is suspended' do
         before { allow(service_instance).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only_access do
+
+        it_behaves_like 'read only access' do
           let(:object) { service_instance }
         end
       end
@@ -116,12 +117,12 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only_access do
+      it_behaves_like 'read only access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'allows the user to have read permissions of the service instance' do
@@ -142,12 +143,12 @@ module VCAP::CloudController
       end
 
       context 'when the space of the service instance is visible' do
-        it_behaves_like :read_only_access do
+        it_behaves_like 'read only access' do
           let(:object) { service_instance }
         end
 
         it 'does NOT allow the user to have manage permissions of the service instance' do
-          expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+          expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
         end
 
         it 'allows the user to have read permissions of the service instance' do
@@ -172,12 +173,12 @@ module VCAP::CloudController
           service_instance.space = nil
         end
 
-        it_behaves_like :read_only_access do
+        it_behaves_like 'read only access' do
           let(:object) { service_instance }
         end
 
         it 'does NOT allow the user to have manage permissions of the service instance' do
-          expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+          expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
         end
 
         it 'allows the user to have read permissions of the service instance' do
@@ -201,12 +202,12 @@ module VCAP::CloudController
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
 
-      it_behaves_like :read_only_access do
+      it_behaves_like 'read only access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'allows the user to have read permissions of the service instance' do
@@ -221,16 +222,16 @@ module VCAP::CloudController
     context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -241,16 +242,16 @@ module VCAP::CloudController
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -264,12 +265,12 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :read_only_access do
+      it_behaves_like 'read only access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'allows the user to have read permissions of the service instance' do
@@ -284,16 +285,16 @@ module VCAP::CloudController
     context 'organization user (defensive)' do
       before { org.add_user(user) }
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -307,16 +308,16 @@ module VCAP::CloudController
         different_organization.add_user(user)
       end
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -330,16 +331,16 @@ module VCAP::CloudController
         different_organization.add_manager(user)
       end
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -351,16 +352,16 @@ module VCAP::CloudController
       let(:user) { nil }
       let(:scopes) { [] }
 
-      it_behaves_like :no_access do
+      it_behaves_like 'no access' do
         let(:object) { service_instance }
       end
 
       it 'does NOT allow the user to have manage permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:manage_permissions, service_instance)
       end
 
       it 'does NOT the user to have read permissions of the service instance' do
-        expect(subject).to_not allow_op_on_object(:read_permissions, service_instance)
+        expect(subject).not_to allow_op_on_object(:read_permissions, service_instance)
       end
 
       it 'returns false for purge' do
@@ -381,7 +382,8 @@ module VCAP::CloudController
 
       context 'with only cloud_controller.read scope' do
         let(:scopes) { ['cloud_controller.read'] }
-        it_behaves_like :read_only_access do
+
+        it_behaves_like 'read only access' do
           let(:object) { service_instance }
         end
         it { is_expected.to allow_op_on_object(:manage_permissions, service_instance) }
@@ -400,7 +402,7 @@ module VCAP::CloudController
         end
 
         # All other actions are disallowed
-        it_behaves_like :no_access do
+        it_behaves_like 'no access' do
           let(:object) { service_instance }
         end
       end
@@ -408,7 +410,7 @@ module VCAP::CloudController
       context 'with no cloud_controller scopes' do
         let(:scopes) { [] }
 
-        it_behaves_like :no_access do
+        it_behaves_like 'no access' do
           let(:object) { service_instance }
         end
         it { is_expected.not_to allow_op_on_object(:manage_permissions, service_instance) }

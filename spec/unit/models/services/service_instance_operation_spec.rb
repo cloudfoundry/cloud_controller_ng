@@ -17,6 +17,7 @@ module VCAP::CloudController
     end
 
     let(:operation) { ServiceInstanceOperation.make(operation_attributes) }
+
     before do
       operation.this.update(updated_at: updated_at_time, created_at: created_at_time)
       operation.reload
@@ -36,7 +37,7 @@ module VCAP::CloudController
     end
 
     describe '#proposed_changes' do
-      it 'should correctly serialize & deserialize JSON' do
+      it 'correctlies serialize & deserialize JSON' do
         expected_value = operation_attributes[:proposed_changes].stringify_keys
         expect(operation.reload.proposed_changes).to eq(expected_value)
       end
@@ -55,6 +56,7 @@ module VCAP::CloudController
     describe 'when two are created with the same id' do
       describe 'when a ServiceInstanceOperation exists' do
         let(:service_instance) { ServiceInstance.make }
+
         before { ServiceInstanceOperation.make(service_instance_id: service_instance.id) }
 
         it 'raises an exception when creating another ServiceInstanceOperation' do

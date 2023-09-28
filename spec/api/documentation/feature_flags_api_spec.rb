@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-# rubocop:disable Layout/LineLength
 RSpec.resource 'Feature Flags', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
@@ -225,7 +224,8 @@ RSpec.resource 'Feature Flags', type: %i[api legacy_api] do
 
   get '/v2/config/feature_flags/app_scaling' do
     example 'Get the App Scaling feature flag' do
-      explanation 'When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admins can perform scaling operations.'
+      explanation 'When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). ' \
+                  'When disabled, only admins can perform scaling operations.'
       client.get '/v2/config/feature_flags/app_scaling', {}, headers
 
       expect(status).to eq(200)
@@ -363,7 +363,8 @@ RSpec.resource 'Feature Flags', type: %i[api legacy_api] do
 
   get '/v2/config/feature_flags/space_developer_env_var_visibility' do
     example 'Get the Space Developer Environment Variable Visibility feature flag (experimental)' do
-      explanation 'When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint, and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints.
+      explanation 'When enabled, space developers can perform a get on the /v2/apps/:guid/env endpoint,' \
+                    'and both space developers and space supporters can perform a get on the /v3/apps/:guid/env and /v3/apps/:guid/environment_variables endpoints.
                    When disabled, neither space developers nor space supporters can access these endpoints.'
       client.get '/v2/config/feature_flags/space_developer_env_var_visibility', {}, headers
 
@@ -433,4 +434,3 @@ RSpec.resource 'Feature Flags', type: %i[api legacy_api] do
     end
   end
 end
-# rubocop:enable Layout/LineLength

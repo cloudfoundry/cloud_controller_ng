@@ -41,12 +41,11 @@ module VCAP::CloudController
           }
         }.to_json
       end
+
       it 'creates a new organization with the given name' do
         expect do
           post '/v3/organizations', request_body, admin_header
-        end.to change {
-          Organization.count
-        }.by 1
+        end.to change(Organization, :count).by 1
 
         created_org = Organization.last
 
@@ -112,9 +111,7 @@ module VCAP::CloudController
         it 'lets ALL users create orgs' do
           expect do
             post '/v3/organizations', request_body, user_header
-          end.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
 
@@ -140,12 +137,11 @@ module VCAP::CloudController
             }
           )
         end
+
         it 'gives the user org manager and org user roles associated with the new org' do
           expect do
             post '/v3/organizations', request_body, user_header
-          end.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
           expect(OrganizationManager.first(organization_id: created_org.id, user_id: user.id)).to be_present
@@ -163,9 +159,7 @@ module VCAP::CloudController
         it 'does not give the user any roles associated with the new org' do
           expect do
             post '/v3/organizations', request_body, admin_header
-          end.to change {
-            Organization.count
-          }.by 1
+          end.to change(Organization, :count).by 1
 
           created_org = Organization.last
           expect(created_org.users.count).to be(0)
@@ -1328,38 +1322,6 @@ module VCAP::CloudController
         ServiceBroker.make(space:)
       end
 
-      it 'destroys the requested organization and sub resources (spaces)' do
-        expect do
-          delete "/v3/organizations/#{org.guid}", nil, admin_header
-          expect(last_response.status).to eq(202)
-          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
-
-          execute_all_jobs(expected_successes: 2, expected_failures: 0)
-          get "/v3/organizations/#{org.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
-          get "/v3/spaces/#{space.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
-        end.to change { Organization.count }.by(-1).
-          and change { Space.count }.by(-1).
-          and change { AppModel.count }.by(-1).
-          and change { Route.count }.by(-1).
-          and change { associated_user.reload.default_space }.to(be_nil).
-          and change { associated_user.reload.spaces }.to(be_empty).
-          and change { ServiceInstance.count }.by(-1).
-          and change { ServiceBroker.count }.by(-1).
-          and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
-      end
-
-      context 'deleting metadata' do
-        it_behaves_like 'resource with metadata' do
-          let(:resource) { org }
-          let(:api_call) do
-            -> { delete "/v3/organizations/#{org.guid}", nil, admin_header }
-          end
-        end
-      end
-
-      let(:api_call) { ->(user_headers) { delete "/v3/organizations/#{org.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
           expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
@@ -1371,6 +1333,38 @@ module VCAP::CloudController
 
           get "/v3/organizations/#{org.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
+        end
+      end
+      let(:api_call) { ->(user_headers) { delete "/v3/organizations/#{org.guid}", nil, user_headers } }
+
+      it 'destroys the requested organization and sub resources (spaces)' do
+        expect do
+          delete "/v3/organizations/#{org.guid}", nil, admin_header
+          expect(last_response.status).to eq(202)
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
+
+          execute_all_jobs(expected_successes: 2, expected_failures: 0)
+          get "/v3/organizations/#{org.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+          get "/v3/spaces/#{space.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end.to change(Organization, :count).by(-1).
+          and change(Space, :count).by(-1).
+          and change(AppModel, :count).by(-1).
+          and change(Route, :count).by(-1).
+          and change { associated_user.reload.default_space }.to(be_nil).
+          and change { associated_user.reload.spaces }.to(be_empty).
+          and change(ServiceInstance, :count).by(-1).
+          and change(ServiceBroker, :count).by(-1).
+          and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
+      end
+
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { org }
+          let(:api_call) do
+            -> { delete "/v3/organizations/#{org.guid}", nil, admin_header }
+          end
         end
       end
 

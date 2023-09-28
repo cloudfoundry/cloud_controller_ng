@@ -52,7 +52,7 @@ module VCAP::CloudController
         end
 
         it 'does not audit any share events' do
-          expect(Repositories::ServiceInstanceShareEventRepository).to_not receive(:record_share_event)
+          expect(Repositories::ServiceInstanceShareEventRepository).not_to receive(:record_share_event)
 
           expect do
             service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         it 'does not audit any share events' do
-          expect(Repositories::ServiceInstanceShareEventRepository).to_not receive(:record_share_event)
+          expect(Repositories::ServiceInstanceShareEventRepository).not_to receive(:record_share_event)
 
           expect do
             service_instance_share.create(service_instance, [target_space1, service_instance.space], user_audit_info)

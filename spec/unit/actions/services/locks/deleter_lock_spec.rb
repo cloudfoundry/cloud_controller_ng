@@ -99,7 +99,7 @@ module VCAP::CloudController
           end
 
           it 'visibly unlocks' do
-            expect(deleter_lock.needs_unlock?).to be_falsey
+            expect(deleter_lock).not_to be_needs_unlock
           end
         end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
           end
 
           it 'visibly unlocks' do
-            expect(deleter_lock.needs_unlock?).to be_falsey
+            expect(deleter_lock).not_to be_needs_unlock
           end
         end
 
@@ -144,22 +144,22 @@ module VCAP::CloudController
           end
 
           it 'visibly unlocks' do
-            expect(deleter_lock.needs_unlock?).to be_falsey
+            expect(deleter_lock).not_to be_needs_unlock
           end
         end
       end
 
       describe 'unlocking and destroying' do
         it 'destroys the service instance' do
-          expect(service_instance.exists?).to be_truthy
+          expect(service_instance).to exist
           deleter_lock.unlock_and_destroy!
-          expect(service_instance.exists?).to be_falsey
+          expect(service_instance).not_to exist
         end
 
         it 'destroys the last operation of the service instance' do
-          expect(service_instance.last_operation.exists?).to be_truthy
+          expect(service_instance.last_operation).to exist
           deleter_lock.unlock_and_destroy!
-          expect(service_instance.last_operation.exists?).to be_falsey
+          expect(service_instance.last_operation).not_to exist
         end
       end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
 
     describe 'tracking if unlock is needed' do
       it 'is false by default' do
-        expect(deleter_lock.needs_unlock?).to be_falsey
+        expect(deleter_lock).not_to be_needs_unlock
       end
 
       describe 'after it is locked' do
@@ -190,23 +190,23 @@ module VCAP::CloudController
         end
 
         it 'is true' do
-          expect(deleter_lock.needs_unlock?).to be_truthy
+          expect(deleter_lock).to be_needs_unlock
         end
 
         it 'is false if you unlock and fail' do
           deleter_lock.unlock_and_fail!
-          expect(deleter_lock.needs_unlock?).to be_falsey
+          expect(deleter_lock).not_to be_needs_unlock
         end
 
         it 'is false if you unlock and destroy' do
           deleter_lock.unlock_and_destroy!
-          expect(deleter_lock.needs_unlock?).to be_falsey
+          expect(deleter_lock).not_to be_needs_unlock
         end
 
         it 'is false if you enqueue an unlock' do
           job = double(Jobs::Services::ServiceInstanceStateFetch)
           deleter_lock.enqueue_and_unlock!({}, job)
-          expect(deleter_lock.needs_unlock?).to be_falsey
+          expect(deleter_lock).not_to be_needs_unlock
         end
       end
     end

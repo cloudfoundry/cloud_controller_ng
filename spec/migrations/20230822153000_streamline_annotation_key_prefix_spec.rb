@@ -22,10 +22,10 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect(b1[:guid]).to eq a1[:guid]
       expect(b1[:created_at]).to eq a1[:created_at]
-      expect(b1[:updated_at]).to_not eq a1[:updated_at]
+      expect(b1[:updated_at]).not_to eq a1[:updated_at]
       expect(b1[:resource_guid]).to eq a1[:resource_guid]
-      expect(b1[:key_prefix]).to_not eq a1[:key_prefix]
-      expect(b1[:key]).to_not eq a1[:key]
+      expect(b1[:key_prefix]).not_to eq a1[:key_prefix]
+      expect(b1[:key]).not_to eq a1[:key]
       expect(b1[:key_prefix]).to eq 'mylegacyprefix'
       expect(b1[:key]).to eq 'mykey'
     end

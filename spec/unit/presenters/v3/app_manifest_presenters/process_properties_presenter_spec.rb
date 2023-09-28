@@ -12,7 +12,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           )
         end
 
-        it 'should not include "command" in the output' do
+        it 'does not include "command" in the output' do
           expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first).
             not_to have_key('command')
         end
@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           )
         end
 
-        it 'should include the command in the output' do
+        it 'includes the command in the output' do
           expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first['command']).
             to eq('Do it now!')
         end

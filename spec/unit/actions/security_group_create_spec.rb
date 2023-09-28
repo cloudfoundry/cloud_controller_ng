@@ -23,13 +23,13 @@ module VCAP::CloudController
             created_group = nil
             expect do
               created_group = subject.create(message)
-            end.to change { SecurityGroup.count }.by(1)
+            end.to change(SecurityGroup, :count).by(1)
 
             expect(created_group.guid).to be_a_guid
             expect(created_group.name).to eq 'secure-group'
             expect(created_group.rules).to eq([])
-            expect(created_group.running_default).to eq(false)
-            expect(created_group.staging_default).to eq(false)
+            expect(created_group.running_default).to be(false)
+            expect(created_group.staging_default).to be(false)
             expect(created_group.spaces.count).to eq(0)
           end
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
             created_group = nil
             expect do
               created_group = subject.create(message)
-            end.to change { SecurityGroup.count }.by(1)
+            end.to change(SecurityGroup, :count).by(1)
 
             expect(created_group.guid).to be_a_guid
             expect(created_group.name).to eq 'secure-group'

@@ -7,6 +7,42 @@ require 'messages/service_broker_update_message'
 # The request specs test single actions.
 # The lifecycle tests are about combinations of actions
 RSpec.describe 'V3 service brokers' do
+  let(:catalog) do
+    {
+      'services' => [
+        {
+          'id' => 'catalog1',
+          'name' => 'service_name-1',
+          'description' => 'some description 1',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-1',
+              'name' => 'plan_name-1',
+              'description' => 'fake_plan_description 1',
+              'schemas' => nil
+            }
+          ]
+        },
+        {
+          'id' => 'catalog2',
+          'name' => 'route_volume_service_name-2',
+          'requires' => %w[volume_mount route_forwarding],
+          'description' => 'some description 2',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-2',
+              'name' => 'plan_name-2',
+              'description' => 'fake_plan_description 2',
+              'schemas' => nil
+            }
+          ]
+        }
+      ]
+    }.to_json
+  end
+
   describe 'POST /v3/service_brokers' do
     let(:create_request_body) do
       {
@@ -325,42 +361,6 @@ RSpec.describe 'V3 service brokers' do
       )
       expect(last_response['Location']).to be_nil
     end
-  end
-
-  let(:catalog) do
-    {
-      'services' => [
-        {
-          'id' => 'catalog1',
-          'name' => 'service_name-1',
-          'description' => 'some description 1',
-          'bindable' => true,
-          'plans' => [
-            {
-              'id' => 'fake_plan_id-1',
-              'name' => 'plan_name-1',
-              'description' => 'fake_plan_description 1',
-              'schemas' => nil
-            }
-          ]
-        },
-        {
-          'id' => 'catalog2',
-          'name' => 'route_volume_service_name-2',
-          'requires' => %w[volume_mount route_forwarding],
-          'description' => 'some description 2',
-          'bindable' => true,
-          'plans' => [
-            {
-              'id' => 'fake_plan_id-2',
-              'name' => 'plan_name-2',
-              'description' => 'fake_plan_description 2',
-              'schemas' => nil
-            }
-          ]
-        }
-      ]
-    }.to_json
   end
 
   def broker_response_from_job(job_url)

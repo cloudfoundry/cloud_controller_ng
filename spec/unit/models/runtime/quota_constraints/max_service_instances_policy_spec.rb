@@ -28,6 +28,7 @@ RSpec.describe MaxServiceInstancePolicy do
 
   context 'when quota is nil' do
     let(:quota) { nil }
+
     it 'does not add errors' do
       expect(policy).to validate_without_error(service_instance)
     end
@@ -50,6 +51,7 @@ RSpec.describe MaxServiceInstancePolicy do
 
   context 'when the quota is reached' do
     let(:existing_service_count) { total_services }
+
     before { total_services.times { make_service_instance } }
 
     context 'and the request is for a new service' do

@@ -1153,8 +1153,8 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(200)
         expect(security_group.reload.name).to eq('original-name')
-        expect(security_group.reload.running_default).to eq(false)
-        expect(security_group.reload.staging_default).to eq(true)
+        expect(security_group.reload.running_default).to be(false)
+        expect(security_group.reload.staging_default).to be(true)
         expect(security_group.reload.rules).to eq([])
       end
     end
@@ -1165,8 +1165,8 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(200)
         expect(security_group.reload.name).to eq('original-name')
-        expect(security_group.reload.running_default).to eq(false)
-        expect(security_group.reload.staging_default).to eq(false)
+        expect(security_group.reload.running_default).to be(false)
+        expect(security_group.reload.staging_default).to be(false)
         expect(security_group.reload.rules).to eq([])
       end
     end

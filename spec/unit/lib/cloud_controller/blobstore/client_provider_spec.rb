@@ -50,9 +50,9 @@ module CloudController
           end
 
           context 'fog methods' do
-            context '#download_from_blobstore' do
+            describe '#download_from_blobstore' do
               it 'receives all arguments' do
-                allow_any_instance_of(FogClient).to receive(:download_from_blobstore) { nil }
+                allow_any_instance_of(FogClient).to receive(:download_from_blobstore).and_return(nil)
 
                 client = ClientProvider.provide(options: options, directory_key: 'key')
                 expect_any_instance_of(FogClient).to receive(:download_from_blobstore).with('key', 'dest', mode: 775)

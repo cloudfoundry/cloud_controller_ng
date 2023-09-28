@@ -29,11 +29,11 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = OrgsListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:order_by)
+        expect(message).to be_requested(:guids)
       end
     end
 
@@ -80,19 +80,19 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates names is an array' do
           message = OrgsListMessage.from_params names: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
           message = OrgsListMessage.from_params guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates that order_by value is in the supported list' do
           message = OrgsListMessage.from_params order_by: 'invalid'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:order_by].length).to eq 1
         end
 

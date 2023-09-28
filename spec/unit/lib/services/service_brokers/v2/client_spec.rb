@@ -142,8 +142,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:developer) { make_developer_for_space(instance.space) }
 
       before do
-        allow(http_client).to receive(:put).and_return(response)
-        allow(http_client).to receive(:delete).and_return(response)
+        allow(http_client).to receive_messages(put: response, delete: response)
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
 
         instance.service_instance_operation = service_instance_operation
@@ -315,6 +314,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'and the response is 200' do
           let(:code) { 200 }
+
           it 'ignores the operation' do
             client = Client.new(client_attrs)
             attributes, = client.provision(instance, accepts_incomplete: true)
@@ -490,12 +490,13 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the broker operation id is specified' do
         let(:broker_provided_operation) { 'a_broker_provided_operation' }
+
         it 'makes a put request with correct path' do
           client.fetch_service_instance_last_operation(instance)
 
           expect(http_client).to have_received(:get) do |path|
             uri = URI.parse(path)
-            expect(uri.host).to be nil
+            expect(uri.host).to be_nil
             expect(uri.path).to eq("/v2/service_instances/#{instance.guid}/last_operation")
 
             query_params = Rack::Utils.parse_nested_query(uri.query)
@@ -923,6 +924,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'and the response is 200' do
           let(:code) { 200 }
+
           it 'ignores the operation' do
             client = Client.new(client_attrs)
             attributes, = client.update(instance, new_plan, accepts_incomplete: true)
@@ -966,12 +968,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'error handling' do
         let(:response_parser) { instance_double(ResponseParser) }
+
         before do
           allow(ResponseParser).to receive(:new).and_return(response_parser)
         end
 
         describe 'when the http client raises a ServiceBrokerApiTimeout error' do
           let(:error) { Errors::ServiceBrokerApiTimeout.new('some-uri.com', :patch, nil) }
+
           before do
             allow(http_client).to receive(:patch).and_raise(error)
           end
@@ -993,6 +997,7 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'when the response parser raises a ServiceBrokerBadResponse error' do
           let(:response) { instance_double(HttpResponse, code: 500, body: { description: 'BOOOO' }.to_json) }
           let(:error) { Errors::ServiceBrokerBadResponse.new('some-uri.com', :patch, response) }
+
           before do
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
@@ -1014,6 +1019,7 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'when the response parser raises a ServiceBrokerResponseMalformed error' do
           let(:response) { instance_double(HttpResponse, code: 200, body: 'some arbitrary body') }
           let(:error) { Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :patch, response, '') }
+
           before do
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
@@ -1035,6 +1041,7 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'when the response parser raises a ServiceBrokerRequestRejected error' do
           let(:response) { instance_double(HttpResponse, code: 422, body: { description: 'update not allowed' }.to_json) }
           let(:error) { Errors::ServiceBrokerRequestRejected.new('some-uri.com', :patch, response) }
+
           before do
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
@@ -1056,6 +1063,7 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'when the response parser raises an AsyncRequired error' do
           let(:response) { instance_double(HttpResponse, code: 422, body: { error: 'AsyncRequired', description: 'update not allowed' }.to_json) }
           let(:error) { Errors::AsyncRequired.new('some-uri.com', :patch, response) }
+
           before do
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
@@ -1402,7 +1410,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'returns async false for synchronous creation' do
         response = client.bind(binding)
-        expect(response[:async]).to eq(false)
+        expect(response[:async]).to be(false)
       end
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
@@ -1436,7 +1444,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'returns async true' do
               response = client.bind(binding, accepts_incomplete:)
-              expect(response[:async]).to eq(true)
+              expect(response[:async]).to be(true)
             end
 
             context 'and when the broker provides operation' do
@@ -1632,7 +1640,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not set the syslog_drain_url on the binding' do
           client.bind(binding)
-          expect(binding.syslog_drain_url).to_not be
+          expect(binding.syslog_drain_url).not_to be
         end
       end
 
@@ -1656,10 +1664,10 @@ module VCAP::Services::ServiceBrokers::V2
           binding.set(attributes[:binding])
           binding.save
 
-          expect(binding.volume_mounts).to match_array([
-            { 'device_type' => 'none', 'device' => { 'volume_id' => 'olympus' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' },
-            { 'device_type' => 'none', 'device' => { 'volume_id' => 'everest' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
-          ])
+          expect(binding.volume_mounts).to contain_exactly(
+            { 'device_type' => 'none', 'device' => { 'volume_id' => 'olympus' }, 'mode' => 'none', 'container_dir' => 'none',
+              'driver' => 'none' }, { 'device_type' => 'none', 'device' => { 'volume_id' => 'everest' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+          )
         end
 
         context 'when the volume mounts cause an error to be raised' do
@@ -1778,11 +1786,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'app binding' do
           let(:binding) { VCAP::CloudController::ServiceBinding.make }
+
           it_behaves_like 'binding error handling'
         end
 
         context 'key binding' do
           let(:binding) { VCAP::CloudController::ServiceKey.make }
+
           it_behaves_like 'binding error handling'
         end
       end
@@ -1853,7 +1863,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
         let(:response_body) { response_data.to_json }
 
-        it 're-raises the error ' do
+        it 're-raises the error' do
           expect do
             client.unbind(binding)
           end.to raise_error(Errors::ServiceBrokerBadResponse).
@@ -1864,18 +1874,18 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker responds synchronously' do
         let(:code) { 200 }
 
-        it 'should return async false' do
+        it 'returns async false' do
           unbind_response = client.unbind(binding)
-          expect(unbind_response[:async]).to eq(false)
+          expect(unbind_response[:async]).to be(false)
         end
       end
 
       context 'when the broker responds asynchronously' do
         let(:code) { 202 }
 
-        it 'should return async true' do
+        it 'returns async true' do
           unbind_response = client.unbind(binding)
-          expect(unbind_response[:async]).to eq(true)
+          expect(unbind_response[:async]).to be(true)
         end
       end
 
@@ -1896,7 +1906,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'returns async true' do
               response = client.unbind(binding)
-              expect(response[:async]).to eq(true)
+              expect(response[:async]).to be(true)
             end
 
             context 'and when the broker provides operation' do
@@ -2112,6 +2122,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'and the response is 200' do
           let(:code) { 200 }
+
           it 'ignores the operation' do
             client = Client.new(client_attrs)
             attributes = client.deprovision(instance)
@@ -2396,7 +2407,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           errors.each do |error|
             context "when error is #{error.class.name}" do
-              it 'should return state in progress' do
+              it 'returns state in progress' do
                 allow(http_client).to receive(:get).and_raise(error)
 
                 response = client.fetch_and_handle_service_binding_last_operation(service_binding)
@@ -2410,6 +2421,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'response parsing errors' do
           let(:response_parser) { instance_double(ResponseParser) }
+
           before do
             allow(ResponseParser).to receive(:new).and_return(response_parser)
           end
@@ -2425,7 +2437,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           errors.each do |error|
             context "when error is #{error.class.name}" do
-              it 'should return state in progress' do
+              it 'returns state in progress' do
                 allow(response_parser).to receive(:parse_fetch_service_binding_last_operation).and_raise(error)
 
                 response = client.fetch_and_handle_service_binding_last_operation(service_binding)
@@ -2449,7 +2461,7 @@ module VCAP::Services::ServiceBrokers::V2
             let(:code) { broker_response[:code] }
             let(:response_body) { broker_response[:body] }
 
-            it 'should return state failed' do
+            it 'returns state failed' do
               lo_result = client.fetch_and_handle_service_binding_last_operation(service_binding)
 
               expect(lo_result[:last_operation][:state]).to eq('failed')

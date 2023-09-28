@@ -14,6 +14,15 @@ module CloudController::Presenters::V2
     describe '#entity_hash' do
       before do
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
+        VCAP::CloudController::Buildpack.make(name: 'schmuby')
+        process.app.lifecycle_data.update(
+          buildpacks:
+        )
+        process.desired_droplet.update(
+          buildpack_receipt_detect_output: 'detected buildpack',
+          buildpack_receipt_buildpack_guid: 'i am a buildpack guid'
+        )
+        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
       end
 
       let(:space) { VCAP::CloudController::Space.make }
@@ -43,18 +52,6 @@ module CloudController::Presenters::V2
         VCAP::CloudController::RevisionModel.make(
           environment_variables: {}
         )
-      end
-
-      before do
-        VCAP::CloudController::Buildpack.make(name: 'schmuby')
-        process.app.lifecycle_data.update(
-          buildpacks:
-        )
-        process.desired_droplet.update(
-          buildpack_receipt_detect_output: 'detected buildpack',
-          buildpack_receipt_buildpack_guid: 'i am a buildpack guid'
-        )
-        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
       end
 
       it 'returns the app entity and associated urls' do
@@ -177,8 +174,8 @@ module CloudController::Presenters::V2
             actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_image']).to eq('someimage')
-            expect(actual_entity_hash['docker_credentials']['username']).to eq(nil)
-            expect(actual_entity_hash['docker_credentials']['password']).to eq(nil)
+            expect(actual_entity_hash['docker_credentials']['username']).to be_nil
+            expect(actual_entity_hash['docker_credentials']['password']).to be_nil
             expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
         end

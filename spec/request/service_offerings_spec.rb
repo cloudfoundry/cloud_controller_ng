@@ -309,6 +309,7 @@ RSpec.describe 'V3 service offerings' do
       let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
 
       let(:resources) { [service_offering_1, service_offering_2] }
+
       it_behaves_like 'paginated response', '/v3/service_offerings'
 
       it_behaves_like 'paginated fields response', '/v3/service_offerings', 'service_broker', 'guid,name'

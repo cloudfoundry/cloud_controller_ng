@@ -13,9 +13,9 @@ module VCAP::Services::ServiceBrokers
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
-      its(:broker) { should == broker }
-      its(:warnings) { should == [] }
-      its(:errors) { should == broker.errors }
+      its(:broker) { is_expected.to eq(broker) }
+      its(:warnings) { is_expected.to eq([]) }
+      its(:errors) { is_expected.to eq(broker.errors) }
     end
 
     describe '#create' do
@@ -97,13 +97,13 @@ module VCAP::Services::ServiceBrokers
           it 'does not create a new service broker' do
             expect do
               registration.create
-            end.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            end.not_to change(VCAP::CloudController::ServiceBroker, :count)
           end
 
           it 'does not fetch the catalog' do
             registration.create
 
-            expect(a_request(:get, /.*/)).to_not have_been_requested
+            expect(a_request(:get, /.*/)).not_to have_been_requested
           end
 
           it 'adds the broker errors to the registration errors' do
@@ -128,9 +128,9 @@ module VCAP::Services::ServiceBrokers
         context 'because the catalog has errors' do
           let(:errors) { double(:errors) }
           let(:formatter) { instance_double(VCAP::Services::ServiceBrokers::ValidationErrorsFormatter, format: 'something bad happened') }
+
           before do
-            allow(catalog).to receive(:valid?).and_return(false)
-            allow(catalog).to receive(:errors).and_return(errors)
+            allow(catalog).to receive_messages(valid?: false, errors: errors)
             allow(ValidationErrorsFormatter).to receive(:new).and_return(formatter)
           end
 
@@ -174,7 +174,7 @@ module VCAP::Services::ServiceBrokers
               registration.create
             rescue StandardError
               nil
-            end.to_not change(VCAP::CloudController::ServiceBroker, :count)
+            end.not_to change(VCAP::CloudController::ServiceBroker, :count)
           end
 
           it 'does not synchronize uaa clients' do
@@ -198,8 +198,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the dashboard client manager failed' do
           before do
-            allow(client_manager).to receive(:synchronize_clients_with_catalog).and_return(false)
-            allow(client_manager).to receive(:errors).and_return(validation_errors)
+            allow(client_manager).to receive_messages(synchronize_clients_with_catalog: false, errors: validation_errors)
             allow_any_instance_of(ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
@@ -235,7 +234,7 @@ module VCAP::Services::ServiceBrokers
           expect do
             registration.create
           rescue CloudController::Errors::ApiError
-          end.to change { VCAP::CloudController::ServiceBroker.count }.by(0)
+          end.not_to(change(VCAP::CloudController::ServiceBroker, :count))
         end
 
         it 'nullifies the service_broker_id field of the created dashboard clients' do
@@ -243,7 +242,7 @@ module VCAP::Services::ServiceBrokers
           expect do
             registration.create
           rescue CloudController::Errors::ApiError
-          end.to change { VCAP::CloudController::ServiceDashboardClient.count }.by(1)
+          end.to change(VCAP::CloudController::ServiceDashboardClient, :count).by(1)
 
           expect(VCAP::CloudController::ServiceDashboardClient.last.service_broker_id).to be_nil
         end
@@ -260,7 +259,7 @@ module VCAP::Services::ServiceBrokers
             registration.create
           rescue StandardError
             nil
-          end.to_not change(VCAP::CloudController::ServiceBroker, :count)
+          end.not_to change(VCAP::CloudController::ServiceBroker, :count)
         end
 
         it 'does not synchronize the catalog' do
@@ -276,8 +275,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the client manager has warnings' do
         before do
-          allow(client_manager).to receive(:warnings).and_return(%w[warning1 warning2])
-          allow(client_manager).to receive(:has_warnings?).and_return(true)
+          allow(client_manager).to receive_messages(warnings: %w[warning1 warning2], has_warnings?: true)
         end
 
         it 'adds the warnings' do
@@ -289,8 +287,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the service manager has warnings' do
         before do
-          allow(service_manager).to receive(:warnings).and_return(%w[warning1 warning2])
-          allow(service_manager).to receive(:has_warnings?).and_return(true)
+          allow(service_manager).to receive_messages(warnings: %w[warning1 warning2], has_warnings?: true)
         end
 
         it 'adds the warnings' do
@@ -375,8 +372,8 @@ module VCAP::Services::ServiceBrokers
           registration.update
 
           expect(broker.name).to eq new_name
-          expect(a_request(:get, "http://#{old_broker_host}/v2/catalog").with(basic_auth:)).to_not have_been_requested
-          expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth:)).to_not have_been_requested
+          expect(a_request(:get, "http://#{old_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
+          expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth:)).not_to have_been_requested
         end
       end
 
@@ -429,13 +426,13 @@ module VCAP::Services::ServiceBrokers
           it 'does not update the service broker' do
             expect do
               registration.update
-            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
+            end.not_to(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not fetch the catalog' do
             registration.update
 
-            expect(a_request(:get, /.*/)).to_not have_been_requested
+            expect(a_request(:get, /.*/)).not_to have_been_requested
           end
 
           it 'adds the broker errors to the registration errors' do
@@ -462,8 +459,7 @@ module VCAP::Services::ServiceBrokers
           let(:formatter) { instance_double(VCAP::Services::ServiceBrokers::ValidationErrorsFormatter, format: 'something bad happened') }
 
           before do
-            allow(catalog).to receive(:valid?).and_return(false)
-            allow(catalog).to receive(:errors).and_return(errors)
+            allow(catalog).to receive_messages(valid?: false, errors: errors)
             allow(ValidationErrorsFormatter).to receive(:new).and_return(formatter)
           end
 
@@ -506,7 +502,7 @@ module VCAP::Services::ServiceBrokers
               registration.update
             rescue StandardError
               nil
-            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
+            end.not_to(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not synchronize uaa clients' do
@@ -530,8 +526,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the dashboard client manager failed' do
           before do
-            allow(client_manager).to receive(:synchronize_clients_with_catalog).and_return(false)
-            allow(client_manager).to receive(:errors).and_return(validation_errors)
+            allow(client_manager).to receive_messages(synchronize_clients_with_catalog: false, errors: validation_errors)
             allow_any_instance_of(ValidationErrorsFormatter).to receive(:format).and_return(error_text)
           end
 
@@ -547,7 +542,7 @@ module VCAP::Services::ServiceBrokers
               registration.update
             rescue StandardError
               nil
-            end.to_not(change { VCAP::CloudController::ServiceBroker[broker.id].name })
+            end.not_to(change { VCAP::CloudController::ServiceBroker[broker.id].name })
           end
 
           it 'does not synchronize the catalog' do
@@ -608,8 +603,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the client manager has warnings' do
         before do
-          allow(client_manager).to receive(:warnings).and_return(%w[warning1 warning2])
-          allow(client_manager).to receive(:has_warnings?).and_return(true)
+          allow(client_manager).to receive_messages(warnings: %w[warning1 warning2], has_warnings?: true)
         end
 
         it 'adds the warnings' do
@@ -621,8 +615,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when the service manager has warnings' do
         before do
-          allow(service_manager).to receive(:warnings).and_return(%w[warning1 warning2])
-          allow(service_manager).to receive(:has_warnings?).and_return(true)
+          allow(service_manager).to receive_messages(warnings: %w[warning1 warning2], has_warnings?: true)
         end
 
         it 'adds the warnings' do

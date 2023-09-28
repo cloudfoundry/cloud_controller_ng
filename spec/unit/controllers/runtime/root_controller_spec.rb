@@ -73,7 +73,7 @@ module VCAP::CloudController
           it 'does not return a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expect(hash['links']['credhub']).to eq(nil)
+            expect(hash['links']['credhub']).to be_nil
           end
         end
       end
@@ -96,7 +96,7 @@ module VCAP::CloudController
           it 'does not return a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expect(hash['links']['routing']).to eq(nil)
+            expect(hash['links']['routing']).to be_nil
           end
         end
       end

@@ -32,11 +32,11 @@ module VCAP::CloudController
 
     it 'accepts the allowed keys' do
       expect(message).to be_valid
-      expect(message.requested?(:type)).to be_truthy
-      expect(message.requested?(:name)).to be_truthy
-      expect(message.requested?(:relationships)).to be_truthy
-      expect(message.requested?(:tags)).to be_truthy
-      expect(message.requested?(:parameters)).to be_truthy
+      expect(message).to be_requested(:type)
+      expect(message).to be_requested(:name)
+      expect(message).to be_requested(:relationships)
+      expect(message).to be_requested(:tags)
+      expect(message).to be_requested(:parameters)
     end
 
     it 'builds the right message' do
@@ -69,14 +69,14 @@ module VCAP::CloudController
     describe 'validations' do
       it 'is invalid when there are unknown keys' do
         body[:bogus] = 'field'
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
       describe 'type' do
         it 'must be `managed`' do
           body[:type] = 'user-provided'
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:type]).to include("must be 'managed'")
         end
       end
@@ -84,7 +84,7 @@ module VCAP::CloudController
       describe 'parameters' do
         it 'must be an object' do
           body[:parameters] = 42
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:parameters]).to include('must be an object')
         end
       end
@@ -93,7 +93,7 @@ module VCAP::CloudController
         it 'fails when not present' do
           body[:relationships][:service_plan] = nil
           message.valid?
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:relationships]).to include(
             "Service plan can't be blank",
             /Service plan must be structured like this.*/
@@ -105,7 +105,7 @@ module VCAP::CloudController
       describe 'space relationship' do
         it 'fails when not present' do
           body[:relationships][:space] = nil
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:relationships]).to include(
             "Space can't be blank",
             /Space must be structured like this.*/

@@ -11,6 +11,7 @@ RSpec.describe 'Stacks Request' do
 
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
+
     let(:user) { make_user }
     let(:user_header) { headers_for(user) }
     let(:api_call) { ->(user_header) { get '/v3/stacks', nil, user_header } }
@@ -428,6 +429,7 @@ RSpec.describe 'Stacks Request' do
     context 'as an admin user' do
       let!(:user) { make_user(admin: true) }
       let!(:headers) { admin_headers_for(user) }
+
       it 'return the list of all apps using the given stack' do
         get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
 
@@ -628,9 +630,7 @@ RSpec.describe 'Stacks Request' do
     it 'creates a new stack' do
       expect do
         post '/v3/stacks', request_body, headers
-      end.to change {
-        VCAP::CloudController::Stack.count
-      }.by 1
+      end.to change(VCAP::CloudController::Stack, :count).by 1
 
       created_stack = VCAP::CloudController::Stack.last
 
@@ -737,7 +737,7 @@ RSpec.describe 'Stacks Request' do
       delete "/v3/stacks/#{stack.guid}", {}, headers
 
       expect(last_response.status).to eq(204)
-      expect(stack).to_not exist
+      expect(stack).not_to exist
     end
 
     context 'deleting metadata' do

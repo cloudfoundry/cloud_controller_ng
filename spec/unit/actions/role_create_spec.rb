@@ -44,7 +44,7 @@ module VCAP::CloudController
         it 'records an audit event' do
           expect do
             subject.create_space_role(type:, user:, space:)
-          end.to change { Event.count }.by(1)
+          end.to change(Event, :count).by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])
@@ -131,7 +131,7 @@ module VCAP::CloudController
       end
     end
 
-    context '#create_organization_role' do
+    describe '#create_organization_role' do
       let(:message) do
         RoleCreateMessage.new({
                                 type: type,
@@ -155,7 +155,7 @@ module VCAP::CloudController
         it 'records an audit event' do
           expect do
             subject.create_organization_role(type: type, user: user, organization: org)
-          end.to change { Event.count }.by(1)
+          end.to change(Event, :count).by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])

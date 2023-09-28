@@ -60,7 +60,7 @@ module VCAP::CloudController
           expect(decoded_response['spaces'].size).to eq(num_spaces)
         end
 
-        it 'should return the correct info for all spaces' do
+        it 'returns the correct info for all spaces' do
           expect(decoded_response['spaces']).to include(
             'guid' => @spaces.first.guid,
             'name' => @spaces.first.name,
@@ -86,7 +86,7 @@ module VCAP::CloudController
           expect(decoded_response['spaces'].size).to eq(num_spaces)
         end
 
-        it 'should return the correct info for all spaces' do
+        it 'returns the correct info for all spaces' do
           expect(decoded_response['spaces']).to include(
             'guid' => @spaces.first.guid,
             'name' => @spaces.first.name,
@@ -120,7 +120,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a member of the space' do
-          it 'should only return spaces a user has access to' do
+          it 'onlies return spaces a user has access to' do
             set_current_user(member)
             get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(num_visible_spaces)
@@ -128,7 +128,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is not a member of the space (but is a member of the org)' do
-          it 'should only return spaces a user has access to' do
+          it 'onlies return spaces a user has access to' do
             set_current_user(non_member)
             get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(0)

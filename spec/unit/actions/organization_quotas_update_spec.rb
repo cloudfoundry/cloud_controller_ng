@@ -54,7 +54,7 @@ module VCAP::CloudController
 
           expect(updated_organization_quota.total_services).to eq(10)
           expect(updated_organization_quota.total_service_keys).to eq(20)
-          expect(updated_organization_quota.non_basic_services_allowed).to eq(false)
+          expect(updated_organization_quota.non_basic_services_allowed).to be(false)
 
           expect(updated_organization_quota.total_reserved_route_ports).to eq(6)
           expect(updated_organization_quota.total_routes).to eq(8)
@@ -118,6 +118,7 @@ module VCAP::CloudController
             before do
               create_orgs_with_unlimited_log_rate_process(1)
             end
+
             it 'errors with a message telling the user the affected org' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
@@ -125,10 +126,12 @@ module VCAP::CloudController
                                                                   "'org-name-1' which contains apps running with an unlimited log rate limit.")
             end
           end
+
           context 'and they are in two orgs' do
             before do
               create_orgs_with_unlimited_log_rate_process(2)
             end
+
             it 'errors with a message telling the user the affected orgs' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)
@@ -141,6 +144,7 @@ module VCAP::CloudController
             before do
               create_orgs_with_unlimited_log_rate_process(5)
             end
+
             it 'errors with a message telling the user some of the affected orgs and a total count' do
               expect do
                 OrganizationQuotasUpdate.update(org_quota, message)

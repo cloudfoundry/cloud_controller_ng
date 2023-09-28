@@ -11,14 +11,14 @@ module VCAP::CloudController
         stack = Stack.make
         process1 = ProcessModelFactory.make(stack:)
         process2 = ProcessModelFactory.make(stack:)
-        expect(stack.apps).to match_array([process1, process2])
+        expect(stack.apps).to contain_exactly(process1, process2)
       end
 
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
         process1 = ProcessModelFactory.make(type: 'web', stack: stack)
         ProcessModelFactory.make(type: 'other', stack: stack)
-        expect(stack.apps).to match_array([process1])
+        expect(stack.apps).to contain_exactly(process1)
       end
     end
 
@@ -141,12 +141,12 @@ module VCAP::CloudController
               Stack.populate
             end
 
-            it 'should not create duplicates' do
-              expect { Stack.populate }.not_to(change { Stack.count })
+            it 'does not create duplicates' do
+              expect { Stack.populate }.not_to(change(Stack, :count))
             end
 
             context 'and the config file would change an existing stack' do
-              it 'should warn and not update' do
+              it 'warns and not update' do
                 cider = Stack.find(name: 'cider')
                 cider.description = 'cider-description has changed'
                 cider.save
@@ -203,6 +203,7 @@ module VCAP::CloudController
 
     describe '#default?' do
       before { Stack.configure(file) }
+
       let(:stack) { Stack.make(name:) }
       let(:name) { 'mimi' }
 

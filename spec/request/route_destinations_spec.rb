@@ -57,7 +57,7 @@ RSpec.describe 'Route Destinations Request' do
         get "/v2/apps/#{app_model.guid}", nil, admin_header
         expect(last_response.status).to eq(200)
         expect(parsed_response['entity']['ports']).not_to be_nil
-        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+        expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
     end
   end
@@ -122,7 +122,7 @@ RSpec.describe 'Route Destinations Request' do
         get "/v2/apps/#{app_model.guid}", nil, admin_header
         expect(last_response.status).to eq(200)
         expect(parsed_response['entity']['ports']).not_to be_nil
-        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+        expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
     end
   end
@@ -394,6 +394,7 @@ RSpec.describe 'Route Destinations Request' do
           expect(last_response.status).to eq(200)
         end
       end
+
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
           let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -521,7 +522,7 @@ RSpec.describe 'Route Destinations Request' do
             }
           end
 
-          it 'returns a ' do
+          it 'returns a' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
@@ -650,6 +651,7 @@ RSpec.describe 'Route Destinations Request' do
           protocol: existing_protocol
         )
       end
+
       context 'http1/http2' do
         [
           %w[http2 http1 http1],
@@ -692,6 +694,7 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
     end
+
     context 'when removing a destination app' do
       let(:app_model_1) { VCAP::CloudController::AppModel.make(space:) }
       let(:app_model_2) { VCAP::CloudController::AppModel.make(space:) }
@@ -987,7 +990,7 @@ RSpec.describe 'Route Destinations Request' do
             }
           end
 
-          it 'returns a ' do
+          it 'returns a' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
@@ -1309,7 +1312,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'and the destination has a protocol of http1' do
-        it 'it returns 422 with a helpful message' do
+        it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http1' }.to_json, admin_header
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
@@ -1317,7 +1320,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'and the destination has a protocol of http2' do
-        it 'it returns 422 with a helpful message' do
+        it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http2' }.to_json, admin_header
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")

@@ -211,7 +211,7 @@ RSpec.describe 'Events' do
     let(:org) { space.organization }
     let(:api_call) { ->(user_headers) { get "/v3/audit_events/#{event.guid}", nil, user_headers } }
 
-    context 'when the audit_event does exist ' do
+    context 'when the audit_event does exist' do
       context 'when the event happens in a space' do
         let(:event) do
           VCAP::CloudController::Event.make(

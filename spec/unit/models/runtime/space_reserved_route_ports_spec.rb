@@ -32,7 +32,7 @@ module VCAP::CloudController
           Route.make(space:)
         end
 
-        it 'should have return the number of reserved ports' do
+        it 'has return the number of reserved ports' do
           expect(subject.count).to eq 3
         end
       end

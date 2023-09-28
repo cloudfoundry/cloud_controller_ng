@@ -42,6 +42,7 @@ module VCAP::CloudController
 
         context 'when the description is not provided' do
           let(:params) { { name: 'zakstack' } }
+
           it 'creates a stack' do
             post '/v2/stacks', MultiJson.dump(params)
             expect(last_response.status).to eq(201)

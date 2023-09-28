@@ -57,6 +57,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:org1_space) { VCAP::CloudController::Space.make(name: 'Alpaca', organization: org1) }
     let!(:org1_other_space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
     let!(:org2_space) { VCAP::CloudController::Space.make(name: 'Horse', organization: org2) }
+
     names_in_associated_org    = %w[Alpaca Lamb]
     names_in_associated_space  = %w[Alpaca]
     names_in_nonassociated_org = %w[Horse]
@@ -112,7 +113,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns 400' do
           get :index, params: { per_page: 'meow' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
@@ -122,7 +123,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns 400' do
           get :index, params: { meow: 'bad-val', nyan: 'mow' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Unknown query parameter(s)')
           expect(response.body).to include('nyan')
@@ -140,8 +141,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns all spaces they are a developer or manager' do
         get :index
 
-        expect(response.status).to eq(200)
-        expect(parsed_body['resources'].pluck('name')).to match_array([])
+        expect(response).to have_http_status(:ok)
+        expect(parsed_body['resources'].pluck('name')).to be_empty
       end
     end
 
@@ -156,10 +157,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns the spaces' do
         get :index
 
-        expect(response.status).to eq(200)
-        expect(parsed_body['resources'].pluck('name')).to match_array([
-          org1_space.name
-        ])
+        expect(response).to have_http_status(:ok)
+        expect(parsed_body['resources'].pluck('name')).to contain_exactly(org1_space.name)
       end
     end
 
@@ -175,10 +174,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns all spaces they are a space developer, space manager, or space auditor' do
         get :index
 
-        expect(response.status).to eq(200)
-        expect(parsed_body['resources'].pluck('name')).to match_array([
-          org1_space.name, org1_other_space.name, org2_space.name
-        ])
+        expect(response).to have_http_status(:ok)
+        expect(parsed_body['resources'].pluck('name')).to contain_exactly(org1_space.name, org1_other_space.name, org2_space.name)
       end
 
       it 'eager loads associated resources that the presenter specifies' do
@@ -188,7 +185,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         get :index
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -202,7 +199,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           it 'returns the list of matching spaces' do
             get :index, params: { names: 'Alpaca,Horse' }
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expect(parsed_body['resources'].pluck('name')).to match_array(%w[
               Alpaca Horse
             ])
@@ -213,10 +210,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
           it 'returns the list of matching spaces' do
             get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
-            expect(response.status).to eq(200)
-            expect(parsed_body['resources'].pluck('guid')).to match_array([
-              org1_space.guid, org2_space.guid
-            ])
+            expect(response).to have_http_status(:ok)
+            expect(parsed_body['resources'].pluck('guid')).to contain_exactly(org1_space.guid, org2_space.guid)
           end
         end
 
@@ -225,6 +220,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
             let(:params3) do
               { 'organization_guids' => org1.guid, 'label_selector' => 'jim' }
             end
+
             before do
               VCAP::CloudController::SpaceLabelModel.make(
                 key_name: 'jim',
@@ -241,10 +237,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
             it 'returns the list of matching spaces' do
               get :index, params: params3
 
-              expect(response.status).to eq(200)
-              expect(parsed_body['resources'].pluck('guid')).to match_array([
-                org1_space.guid
-              ])
+              expect(response).to have_http_status(:ok)
+              expect(parsed_body['resources'].pluck('guid')).to contain_exactly(org1_space.guid)
             end
           end
         end
@@ -259,20 +253,16 @@ RSpec.describe SpacesV3Controller, type: :controller do
           it 'returns the list of matching spaces' do
             get :index, params: { names: 'Alpaca,Horse' }
 
-            expect(response.status).to eq(200)
-            expect(parsed_body['resources'].pluck('name')).to match_array([
-              'Alpaca'
-            ])
+            expect(response).to have_http_status(:ok)
+            expect(parsed_body['resources'].pluck('name')).to contain_exactly('Alpaca')
           end
 
           describe 'guids' do
             it 'returns the list of readable matching spaces' do
               get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
-              expect(response.status).to eq(200)
-              expect(parsed_body['resources'].pluck('guid')).to match_array([
-                org1_space.guid
-              ])
+              expect(response).to have_http_status(:ok)
+              expect(parsed_body['resources'].pluck('guid')).to contain_exactly(org1_space.guid)
             end
           end
         end
@@ -317,7 +307,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns the spaces ordered by name in ascending order' do
           get :index, params: { order_by: 'name' }
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
 
           expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Alpaca Dog Horse Lamb
@@ -339,7 +329,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns the spaces ordered by name in descending order' do
           get :index, params: { order_by: '-name' }
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
 
           expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Lamb Horse Dog Alpaca
@@ -360,7 +350,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns the spaces ordered by created_at in ascending order' do
           get :index, params: { order_by: 'created_at' }
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
 
           expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Horse Lamb Alpaca Dog
@@ -381,7 +371,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns the spaces ordered by created_at in descending order' do
           get :index, params: { order_by: '-created_at' }
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
 
           expect(parsed_body['resources'].pluck('name')).to eq(%w[
             Dog Alpaca Lamb Horse
@@ -424,7 +414,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns the spaces ordered by updated_at in descending order' do
           get :index, params: { order_by: 'organization_guid' }
 
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           expect(response.body).to include 'BadQueryParameter'
           expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
         end
@@ -483,7 +473,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422' do
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
       end
@@ -494,7 +484,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         set_current_user(user_without_role)
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
       end
@@ -506,7 +496,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unknown field(s): 'invalid'"
       end
@@ -518,7 +508,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422 and a helpful error' do
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Name can't be blank"
       end
@@ -534,7 +524,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422 and a helpful error' do
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Name must be unique'
       end
@@ -559,7 +549,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       it 'displays an informative error' do
         post :create, params: request_body, as: :json
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response).to have_error_message(/is greater than 5000 characters/)
       end
     end
@@ -588,7 +578,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       it 'fails with a 422' do
         post :create, params: request_body, as: :json
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response).to have_error_message(/exceed maximum of 1/)
       end
     end
@@ -621,6 +611,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           }
         } }
     end
+
     before do
       VCAP::CloudController::LabelsUpdate.update(space, labels, VCAP::CloudController::SpaceLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(space, annotations, VCAP::CloudController::SpaceAnnotationModel)
@@ -634,7 +625,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'updates the space' do
         patch :update, params: { guid: space.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['name']).to eq('Sheep')
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
         expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'purple', 'beet' => 'golden' })
@@ -659,13 +650,14 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
 
           space.reload
           expect(space).to have_labels({ key_name: 'truck', value: 'mazda5' })
         end
       end
+
       context 'when an empty request is sent' do
         let(:request_body) do
           {}
@@ -673,7 +665,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'succeeds' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           space.reload
           expect(space.name).to eq('Lamb')
           expect(parsed_body['name']).to eq('Lamb')
@@ -685,11 +677,12 @@ RSpec.describe SpacesV3Controller, type: :controller do
         before do
           set_current_user_as_admin
         end
+
         let!(:update_message) { { name: 'Sheep', animals: 'Cows' } }
 
         it 'fails' do
           patch :update, params: { guid: space.guid }.merge(update_message), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 
@@ -701,7 +694,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'fails' do
           patch :update, params: { guid: "Greg's missing space" }.merge(update_message), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
         end
       end
 
@@ -718,7 +711,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'updates the metadata' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']['key']).to eq 'value'
         end
       end
@@ -736,7 +729,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message('label key error')
         end
       end
@@ -754,7 +747,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -777,7 +770,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -796,7 +789,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
 
           space.reload
@@ -851,7 +844,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'can assign an isolation segment to a space in org1' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           space1.reload
           expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
           expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
@@ -864,9 +857,9 @@ RSpec.describe SpacesV3Controller, type: :controller do
           expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
 
           patch :update_isolation_segment, params: { guid: space1.guid, data: nil }, as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           space1.reload
-          expect(space1.isolation_segment_guid).to eq(nil)
+          expect(space1.isolation_segment_guid).to be_nil
           expect(parsed_body['links']['self']['href']).to include("v3/spaces/#{space1.guid}/relationships/isolation_segment")
         end
       end
@@ -875,7 +868,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'will not assign an isolation segment to a space in a different org' do
           patch :update_isolation_segment, params: { guid: space3.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include(
             "Unable to assign isolation segment with guid '#{isolation_segment_model.guid}'. Ensure it has been entitled to the organization that this space belongs to."
           )
@@ -888,7 +881,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'raises an error' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include(
             "Unable to assign isolation segment with guid 'potato'. Ensure it has been entitled to the organization that this space belongs to."
           )
@@ -905,7 +898,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'throws ResourceNotFound error' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Space not found'
         end
@@ -920,7 +913,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns a successful response' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
         end
       end
 
@@ -932,7 +925,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'returns an Unauthorized error' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -953,7 +946,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'throws ResourceNotFound error' do
         get :show_isolation_segment, params: { guid: space.guid }
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Space not found'
       end

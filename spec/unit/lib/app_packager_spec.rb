@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'cloud_controller/app_packager'
 
 RSpec.describe AppPackager do
+  subject(:app_packager) { AppPackager.new(input_zip, logger:) }
+
   around do |example|
     Dir.mktmpdir('app_packager_spec') do |tmpdir|
       @tmpdir = tmpdir
@@ -10,7 +12,6 @@ RSpec.describe AppPackager do
   end
 
   let(:logger) { instance_double(Steno::Logger, error: nil) }
-  subject(:app_packager) { AppPackager.new(input_zip, logger:) }
 
   describe '#size' do
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
@@ -260,6 +261,7 @@ RSpec.describe AppPackager do
 
     context 'when there is an error deleting directories' do
       let(:input_zip) { File.join(@tmpdir, 'bad_directory_permissions.zip') }
+
       before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'bad_directory_permissions.zip'), input_zip) }
 
       it 'raises an exception' do

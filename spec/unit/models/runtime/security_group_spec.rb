@@ -79,7 +79,7 @@ module VCAP::CloudController
             let(:rule) { build_transport_rule('protocol' => protocol, 'log' => 3) }
 
             it 'is not valid' do
-              expect(subject).to_not be_valid
+              expect(subject).not_to be_valid
               expect(subject.errors[:rules].length).to eq 1
               expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid log'
             end
@@ -353,7 +353,7 @@ module VCAP::CloudController
         let(:rule) { build_transport_rule('foobar' => 'asdf') }
 
         it 'is not valid' do
-          expect(subject).to_not be_valid
+          expect(subject).not_to be_valid
           expect(subject.errors[:rules].length).to eq 1
           expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains the invalid field \'foobar\''
         end
@@ -395,35 +395,35 @@ module VCAP::CloudController
       context 'name' do
         subject(:sec_group) { SecurityGroup.make }
 
-        it 'should allow standard ascii characters' do
+        it 'allows standard ascii characters' do
           sec_group.name = "A -_- word 2!?()'\"&+."
           expect do
             sec_group.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           sec_group.name = 'a\\word'
           expect do
             sec_group.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           sec_group.name = 'Ω∂∂ƒƒß√˜˙∆ß'
           expect do
             sec_group.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           sec_group.name = "one\ntwo"
           expect do
             sec_group.save
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           sec_group.name = "a\e word"
           expect do
             sec_group.save
@@ -465,7 +465,7 @@ module VCAP::CloudController
                   let(:rule) { build_icmp_rule('type' => 'asdf') }
 
                   it 'is not valid' do
-                    expect(subject).to_not be_valid
+                    expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid type'
                   end
@@ -475,7 +475,7 @@ module VCAP::CloudController
                   let(:rule) { build_icmp_rule('type' => 256) }
 
                   it 'is not valid' do
-                    expect(subject).to_not be_valid
+                    expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid type'
                   end
@@ -521,7 +521,7 @@ module VCAP::CloudController
                   let(:rule) { build_icmp_rule('code' => 'asdf') }
 
                   it 'is not valid' do
-                    expect(subject).to_not be_valid
+                    expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid code'
                   end
@@ -531,7 +531,7 @@ module VCAP::CloudController
                   let(:rule) { build_icmp_rule('code' => 256) }
 
                   it 'is not valid' do
-                    expect(subject).to_not be_valid
+                    expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid code'
                   end
@@ -562,6 +562,7 @@ module VCAP::CloudController
                     expect(subject).to be_valid
                   end
                 end
+
                 context 'when it is a valid range' do
                   let(:rule) { build_icmp_rule('destination' => '1.1.1.1-2.2.2.2') }
 
@@ -652,7 +653,7 @@ module VCAP::CloudController
               let(:rule) { build_icmp_rule(foobar: 'asdf') }
 
               it 'is not valid' do
-                expect(subject).to_not be_valid
+                expect(subject).not_to be_valid
                 expect(subject.errors[:rules].length).to eq 1
                 expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains the invalid field \'foobar\''
               end
@@ -802,7 +803,7 @@ module VCAP::CloudController
                   let(:rule) { build_all_rule('log' => 3) }
 
                   it 'is not valid' do
-                    expect(subject).to_not be_valid
+                    expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid log'
                   end
@@ -814,7 +815,7 @@ module VCAP::CloudController
               let(:rule) { build_all_rule({ foobar: 'foobar' }) }
 
               it 'is not valid' do
-                expect(subject).to_not be_valid
+                expect(subject).not_to be_valid
                 expect(subject.errors[:rules].length).to eq 1
                 expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains the invalid field \'foobar\''
               end

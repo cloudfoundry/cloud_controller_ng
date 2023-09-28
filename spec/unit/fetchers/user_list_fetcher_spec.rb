@@ -14,7 +14,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'fetches all the users' do
-          expect(subject).to match_array([user1, user2])
+          expect(subject).to contain_exactly(user1, user2)
         end
       end
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
         let(:filters) { { guids: [user2.guid] } }
 
         it 'returns all of the desired users' do
-          expect(subject).to match_array([user2])
+          expect(subject).to contain_exactly(user2)
         end
       end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired users' do
-          expect(subject).to match_array([user2])
+          expect(subject).to contain_exactly(user2)
         end
       end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired users' do
-          expect(subject).to match_array([user2])
+          expect(subject).to contain_exactly(user2)
         end
       end
 
@@ -70,6 +70,7 @@ module VCAP::CloudController
           let(:message) do
             UsersListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
           end
+
           it 'returns only the user whose label matches' do
             expect(results.length).to eq(1)
             expect(results[0]).to eq(user1)

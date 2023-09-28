@@ -4,6 +4,7 @@ RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :
   let(:db) { Sequel::Model.db }
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
+
   org_roles = %w[
     organizations_auditors
     organizations_billing_managers

@@ -38,8 +38,7 @@ module CloudController::Packager
     before do
       TestConfig.override(directories: { tmpdir: local_tmp_dir })
 
-      allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
-      allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+      allow(CloudController::DependencyLocator.instance).to receive_messages(global_app_bits_cache:, package_blobstore:)
       allow(packer).to receive(:max_package_size).and_return(max_package_size)
 
       FileUtils.cp(input_zip, local_tmp_dir)
@@ -116,7 +115,7 @@ module CloudController::Packager
         end
       end
 
-      context 'when the package zip file is missing ' do
+      context 'when the package zip file is missing' do
         let(:uploaded_files_path) { File.join(local_tmp_dir, 'file_that_does_not_exist.zip') }
 
         context 'and there are NO cached files' do
@@ -203,7 +202,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -216,7 +215,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -229,7 +228,7 @@ module CloudController::Packager
           it 'is able to clean up all files regardless of their permissions in the zip' do
             expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            end.to_not(change do
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
             end)
           end
@@ -265,7 +264,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files exceeds the configured maximum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             sha_of_greetings_file_in_good_zip = '82693f9b3a4857415aeffccd535c375891d96f74'
             sha_of_bye_file_in_good_zip       = 'ee9e51458f4642f48efe956962058245ee7127b1'
@@ -275,7 +274,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files is less than the configured minimum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             sha_of_hi_file_in_good_zip  = '55ca6286e3e4f4fba5d0448333fa99fc5a404a73'
             sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'

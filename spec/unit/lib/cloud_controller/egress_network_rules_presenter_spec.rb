@@ -10,11 +10,12 @@ module VCAP::CloudController
 
     describe '#to_array' do
       it 'returns an aggregated array of rules' do
-        expect(subject.to_array).to match_array([
+        expected = [
           { 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' },
           { 'protocol' => 'tcp', 'ports' => '9090', 'destination' => '198.41.191.48/1', 'log' => true },
           { 'protocol' => 'udp', 'ports' => '1010', 'destination' => '198.41.191.49/1' }
-        ])
+        ]
+        expect(subject.to_array).to match_array(expected)
       end
     end
   end

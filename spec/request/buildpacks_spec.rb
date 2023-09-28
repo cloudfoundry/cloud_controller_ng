@@ -558,9 +558,9 @@ RSpec.describe 'buildpacks' do
 
       patch "/v3/buildpacks/#{buildpack.guid}", params.to_json, admin_headers
 
-      expect(parsed_response['enabled']).to eq(false)
+      expect(parsed_response['enabled']).to be(false)
       expect(last_response.status).to eq(200)
-      expect(buildpack.reload).to_not be_enabled
+      expect(buildpack.reload).not_to be_enabled
     end
   end
 end

@@ -6,9 +6,8 @@ module VCAP::CloudController
   RSpec.describe ServiceUsageEventsController do
     let(:event_guid1) { SecureRandom.uuid }
 
-    describe 'Query Parameters' do
-      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_instance_type) }
-      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_guid) }
+    after do
+      ServiceUsageEvent.each(&:delete)
     end
 
     before do
@@ -19,8 +18,9 @@ module VCAP::CloudController
       set_current_user_as_admin
     end
 
-    after do
-      ServiceUsageEvent.each(&:delete)
+    describe 'Query Parameters' do
+      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_instance_type) }
+      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_guid) }
     end
 
     describe 'GET /v2/service_usage_events' do
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
         it 'returns 400 when guid does not exist' do
           get '/v2/service_usage_events?after_guid=ABC'
-          expect(last_response.status).to eql(400)
+          expect(last_response.status).to be(400)
         end
       end
 
@@ -199,7 +199,7 @@ module VCAP::CloudController
 
         post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances'
 
-        expect(last_response.status).to eql(204)
+        expect(last_response.status).to be(204)
         expect(ServiceUsageEvent.count).to eq(0)
       end
 
@@ -219,9 +219,7 @@ module VCAP::CloudController
         set_current_user(user)
         expect do
           post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances'
-        end.to_not(change do
-          ServiceUsageEvent.count
-        end)
+        end.not_to(change(ServiceUsageEvent, :count))
 
         expect(last_response.status).to eq(403)
       end

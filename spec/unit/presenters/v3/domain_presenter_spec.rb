@@ -41,8 +41,7 @@ module VCAP::CloudController::Presenters::V3
 
         before do
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(nil)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
         end
 
         it 'presents the domain as json' do
@@ -177,8 +176,7 @@ module VCAP::CloudController::Presenters::V3
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           # allow(routing_api_client).to receive(:router_group).with(router_group_guid).and_return router_group
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
         let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
@@ -246,7 +244,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'does not include a link to the router group' do
-            expect(subject[:links][:router_group]).to eq(nil)
+            expect(subject[:links][:router_group]).to be_nil
           end
         end
       end

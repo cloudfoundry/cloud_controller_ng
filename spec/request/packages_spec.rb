@@ -39,7 +39,7 @@ RSpec.describe 'Packages' do
       it 'creates a package' do
         expect do
           post '/v3/packages', { type:, data:, relationships:, metadata: }.to_json, user_header
-        end.to change { VCAP::CloudController::PackageModel.count }.by(1)
+        end.to change(VCAP::CloudController::PackageModel, :count).by(1)
 
         package = VCAP::CloudController::PackageModel.last
 
@@ -97,6 +97,7 @@ RSpec.describe 'Packages' do
           space.remove_developer(user)
           space.organization.remove_user(user)
         end
+
         let(:api_call) { ->(user_headers) { post '/v3/packages', { type:, data:, relationships:, metadata: }.to_json, user_headers } }
         let(:space) { VCAP::CloudController::Space.make }
         let(:org) { space.organization }
@@ -114,7 +115,7 @@ RSpec.describe 'Packages' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-        context 'when organization is suspended ' do
+        context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
             h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -145,7 +146,7 @@ RSpec.describe 'Packages' do
                  }
                }.to_json,
                user_header
-        end.to change { VCAP::CloudController::PackageModel.count }.by(1)
+        end.to change(VCAP::CloudController::PackageModel, :count).by(1)
 
         package = VCAP::CloudController::PackageModel.last
 
@@ -200,6 +201,7 @@ RSpec.describe 'Packages' do
           space.remove_developer(user)
           space.organization.remove_user(user)
         end
+
         let(:api_call) do
           lambda { |user_headers|
             post "/v3/packages?source_guid=#{source_package.guid}",
@@ -223,7 +225,7 @@ RSpec.describe 'Packages' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-        context 'when target organization is suspended ' do
+        context 'when target organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
             h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -457,7 +459,7 @@ RSpec.describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
@@ -655,7 +657,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -679,7 +681,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].pluck('guid')).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -710,7 +712,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].pluck('guid')).to match_array([package_on_space2.guid, package_on_space1.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_on_space2.guid, package_on_space1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -748,7 +750,7 @@ RSpec.describe 'Packages' do
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].pluck('guid')).to match_array([package_in_org1.guid, package_in_org2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_in_org1.guid, package_in_org2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -850,7 +852,7 @@ RSpec.describe 'Packages' do
       TestConfig.override(**test_config_overrides)
     end
 
-    shared_examples :upload_bits_successfully do
+    shared_examples 'upload bits successfully' do
       it 'uploads the bits for the package' do
         expect(Delayed::Job.count).to eq 0
 
@@ -911,7 +913,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples :upload_bits_successfully
+      include_examples 'upload bits successfully'
     end
 
     context 'with v3 resources' do
@@ -925,11 +927,11 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples :upload_bits_successfully
+      include_examples 'upload bits successfully'
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the package uploads' do
+      it 'logs the required fields when the package uploads' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -952,6 +954,7 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
+
       let(:api_call) { ->(user_headers) { post "/v3/packages/#{guid}/upload", packages_params.to_json, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
@@ -990,7 +993,7 @@ RSpec.describe 'Packages' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -1068,6 +1071,7 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
+
       let(:api_call) { ->(user_headers) { get "/v3/packages/#{guid}/download", nil, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
@@ -1135,6 +1139,7 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
+
       let(:api_call) { ->(user_headers) { patch "/v3/packages/#{guid}", { metadata: }.to_json, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
@@ -1152,7 +1157,7 @@ RSpec.describe 'Packages' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -1226,6 +1231,7 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
+
       let(:api_call) { ->(user_headers) { delete "/v3/packages/#{guid}", nil, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
@@ -1242,7 +1248,7 @@ RSpec.describe 'Packages' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }

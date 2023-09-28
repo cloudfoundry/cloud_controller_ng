@@ -60,6 +60,7 @@ RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
 
     describe 'Spaces' do
       let!(:domain) { VCAP::CloudController::PrivateDomain.make }
+
       before do
         VCAP::CloudController::Space.make(organization: domain.owning_organization)
       end

@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     describe 'admin' do
       context 'readonly' do
-        include_context :admin_read_only_setup
+        include_context 'admin read only setup'
 
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }
@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       context 'full access' do
-        include_context :admin_setup
+        include_context 'admin setup'
 
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.to allow_op_on_object :read_for_update, object }
@@ -50,6 +50,7 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
+
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
@@ -58,6 +59,7 @@ module VCAP::CloudController
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
+
       it { is_expected.to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
@@ -67,6 +69,7 @@ module VCAP::CloudController
 
     context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
+
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
@@ -75,6 +78,7 @@ module VCAP::CloudController
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
+
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
@@ -83,6 +87,7 @@ module VCAP::CloudController
 
     context 'organization user (defensive)' do
       before { org.add_user(user) }
+
       it { is_expected.not_to allow_op_on_object :read, object }
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
       it { is_expected.not_to allow_op_on_object :update, object }
@@ -127,6 +132,7 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }
         it { is_expected.not_to allow_op_on_object :update, object }

@@ -19,7 +19,7 @@ module VCAP::CloudController
           returned_job = nil
           expect do
             returned_job = buildpack_upload.upload_async(message:, buildpack:, config:)
-          end.to change { Delayed::Job.count }.by(1)
+          end.to change(Delayed::Job, :count).by(1)
 
           job = Delayed::Job.last
           expect(returned_job.delayed_job_guid).to eq(job.guid)

@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:plan) { ServicePlan.make(service:) }
       let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: plan) }
 
-      it 'should return the instance, the space, the plan, and the service' do
+      it 'returns the instance, the space, the plan, and the service' do
         fetcher = ServiceInstanceFetcher.new
         instance, related_objects = fetcher.fetch(service_instance.guid)
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
       context 'when the instance is user-provided' do
         let(:service_instance) { UserProvidedServiceInstance.make(space:) }
 
-        it 'should return just the instance and the space' do
+        it 'returns just the instance and the space' do
           fetcher = ServiceInstanceFetcher.new
           expect(fetcher.fetch(service_instance.guid)).to eq([service_instance, { space: space, plan: nil, service: nil }])
         end

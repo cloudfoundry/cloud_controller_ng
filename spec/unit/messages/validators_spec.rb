@@ -49,13 +49,13 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not an array' do
         fake_class = array_class.new field: 'not array'
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be an array'
       end
 
       it 'does not add an error if the field is an array' do
         fake_class = array_class.new field: %w[an array]
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
     end
 
@@ -68,13 +68,13 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not a string' do
         fake_class = string_class.new field: {}
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be a string'
       end
 
       it 'does not add an error if the field is a string' do
         fake_class = string_class.new field: 'hi i am string'
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
     end
 
@@ -87,16 +87,16 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not a boolean' do
         instance = boolean_class.new field: {}
-        expect(instance.valid?).to be_falsey
+        expect(instance).not_to be_valid
         expect(instance.errors[:field]).to include 'must be a boolean'
       end
 
       it 'does not add an error if the field is a boolean' do
         instance = boolean_class.new field: true
-        expect(instance.valid?).to be_truthy
+        expect(instance).to be_valid
 
         instance = boolean_class.new field: false
-        expect(instance.valid?).to be_truthy
+        expect(instance).to be_valid
       end
     end
 
@@ -109,16 +109,16 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not a boolean string' do
         instance = boolean_class.new field: 'snarf'
-        expect(instance.valid?).to be_falsey
+        expect(instance).not_to be_valid
         expect(instance.errors[:field]).to include "must be 'true' or 'false'"
       end
 
       it 'does not add an error if the field is a boolean string' do
         instance = boolean_class.new field: 'true'
-        expect(instance.valid?).to be_truthy
+        expect(instance).to be_valid
 
         instance = boolean_class.new field: 'false'
-        expect(instance.valid?).to be_truthy
+        expect(instance).to be_valid
       end
     end
 
@@ -131,13 +131,13 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not an object' do
         fake_class = hash_class.new field: 'not an object'
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
       it 'does not add an error if the field is a hash' do
         fake_class = hash_class.new field: { totes: 'hash' }
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
     end
 
@@ -150,31 +150,31 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not a string' do
         fake_class = guid_class.new field: 4
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be a string'
       end
 
       it 'adds an error if the field is nil' do
         fake_class = guid_class.new field: nil
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be a string'
       end
 
       it 'adds an error if the field is too long' do
         fake_class = guid_class.new field: 'a' * 201
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be between 1 and 200 characters'
       end
 
       it 'adds an error if the field is empty' do
         fake_class = guid_class.new field: ''
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be between 1 and 200 characters'
       end
 
       it 'does not add an error if the field is a guid' do
         fake_class = guid_class.new field: 'such-a-guid-1234'
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
     end
 
@@ -187,13 +187,13 @@ module VCAP::CloudController::Validators
 
       it 'adds an error if the field is not a URI' do
         fake_class = uri_class.new field: 'not a URI'
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be a valid URI'
       end
 
       it 'does not add an error if the field is a URI' do
         fake_class = uri_class.new field: 'http://www.purple.com'
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
     end
 
@@ -206,60 +206,60 @@ module VCAP::CloudController::Validators
 
       it 'does not add an error if the environment variables are correct' do
         fake_class = environment_variables_class.new field: { VARIABLE: 'amazing' }
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
 
       it 'validates that the input is a hash' do
         fake_class = environment_variables_class.new field: 4
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
       it 'does not allow variables that start with VCAP_' do
         fake_class = environment_variables_class.new field: { VCAP_BANANA: 'woo' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
       it 'does not allow variables that start with vcap_' do
         fake_class = environment_variables_class.new field: { vcap_donkey: 'hee-haw' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
       it 'does not allow variables that start with VMC_' do
         fake_class = environment_variables_class.new field: { VMC_BANANA: 'woo' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
       end
 
       it 'does not allow variables that start with vmc_' do
         fake_class = environment_variables_class.new field: { vmc_donkey: 'hee-haw' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
       end
 
       it 'does not allow variables that are PORT' do
         fake_class = environment_variables_class.new field: { PORT: 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
 
       it 'does not allow variables that are port' do
         fake_class = environment_variables_class.new field: { port: 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
 
       it 'does not allow variables with zero key length' do
         fake_class = environment_variables_class.new field: { '': 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'key must be a minimum length of 1'
       end
 
       it 'does not allow variables with non-string keys' do
         fake_class = environment_variables_class.new field: { 1 => 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'key must be a string'
       end
     end
@@ -273,72 +273,72 @@ module VCAP::CloudController::Validators
 
       it 'does not add an error if the environment variables are correct' do
         fake_class = environment_variables_class.new field: { VARIABLE: 'amazing' }
-        expect(fake_class.valid?).to be_truthy
+        expect(fake_class).to be_valid
       end
 
       it 'validates that the input is a hash' do
         fake_class = environment_variables_class.new field: 4
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
       it 'does not allow variables that start with VCAP_' do
         fake_class = environment_variables_class.new field: { VCAP_BANANA: 'woo' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
       it 'does not allow variables that start with vcap_' do
         fake_class = environment_variables_class.new field: { vcap_donkey: 'hee-haw' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
       it 'does not allow variables that start with VMC_' do
         fake_class = environment_variables_class.new field: { VMC_BANANA: 'woo' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
       end
 
       it 'does not allow variables that start with vmc_' do
         fake_class = environment_variables_class.new field: { vmc_donkey: 'hee-haw' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
       end
 
       it 'does not allow variables that are PORT' do
         fake_class = environment_variables_class.new field: { PORT: 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
 
       it 'does not allow variables that are port' do
         fake_class = environment_variables_class.new field: { port: 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
 
       it 'does not allow variables with zero key length' do
         fake_class = environment_variables_class.new field: { '': 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'key must be a minimum length of 1'
       end
 
       it 'does not allow variables with non-string keys' do
         fake_class = environment_variables_class.new field: { 1 => 'el lunes nos ponemos camisetas naranjas' }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'key must be a string'
       end
 
       it 'does not allow variables with array values' do
         fake_class = environment_variables_class.new field: { fibonacci: [1, 1, 2, 3, 5, 8] }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'fibonacci', value '[1,1,2,3,5,8]'"]
       end
 
       it 'does not allow variables with object values' do
         fake_class = environment_variables_class.new field: { obj: { wow: 'cool' } }
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'obj', value '{\"wow\":\"cool\"}'"]
       end
     end
@@ -352,7 +352,7 @@ module VCAP::CloudController::Validators
 
       it 'rejects values that are not hashes' do
         fake_class = fields_class.new field: 'foo'
-        expect(fake_class.valid?).to be_falsey
+        expect(fake_class).not_to be_valid
         expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
@@ -365,17 +365,17 @@ module VCAP::CloudController::Validators
 
         it 'allows a multiple keys to be present' do
           fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2 fake-value-1] }
-          expect(fake_class.valid?).to be_truthy
+          expect(fake_class).to be_valid
         end
 
         it 'allows a subset of keys' do
           fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2] }
-          expect(fake_class.valid?).to be_truthy
+          expect(fake_class).to be_valid
         end
 
         it 'reject keys not in the list' do
           fake_class = fields_class_multiple_keys.new field: { 'some.resource': %w[fake-value-2 url] }
-          expect(fake_class.valid?).to be_falsy
+          expect(fake_class).not_to be_valid
           expect(fake_class.errors[:field]).to include "valid keys for 'some.resource' are: 'fake-value-1', 'fake-value-2'"
         end
       end
@@ -389,17 +389,17 @@ module VCAP::CloudController::Validators
 
         it 'allows a multiple resources to be present' do
           fake_class = fields_class_multiple_resources.new field: { 'a.resource': %w[fake-value], 'another.resource': %w[another-fake-value] }
-          expect(fake_class.valid?).to be_truthy
+          expect(fake_class).to be_valid
         end
 
         it 'allows a subset of the resources to be present' do
           fake_class = fields_class_multiple_resources.new field: { 'another.resource': %w[another-fake-value] }
-          expect(fake_class.valid?).to be_truthy
+          expect(fake_class).to be_valid
         end
 
         it 'rejects resources not specified' do
           fake_class = fields_class_multiple_resources.new field: { 'wrong.resource': %w[another-fake-value] }
-          expect(fake_class.valid?).to be_falsey
+          expect(fake_class).not_to be_valid
           expect(fake_class.errors[:field]).to include "[wrong.resource] valid resources are: 'a.resource', 'another.resource'"
         end
       end
@@ -421,7 +421,7 @@ module VCAP::CloudController::Validators
                                              health_check_http_endpoint: 'a-great-uri'
                                            })
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors_on(:health_check_type)).to include('must be "http" to set a health check HTTP endpoint')
         end
       end
@@ -467,7 +467,7 @@ module VCAP::CloudController::Validators
           it 'correctly adds the buildpack data message validation errors' do
             message = lifecycle_class.new({ lifecycle: { type: 'buildpack', data: { buildpacks: [123] } } })
 
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors_on(:lifecycle)).to include('Buildpacks can only contain strings')
           end
         end

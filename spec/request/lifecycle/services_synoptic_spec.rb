@@ -37,6 +37,10 @@ RSpec.describe 'V3 services synoptic' do
       to_return(status: 410, body: {}.to_json, headers: {})
   end
 
+  let(:empty_headers) do
+    {}
+  end
+
   it 'works end to end' do
     org_guid = create_org
     space_guid = create_space org_guid
@@ -140,10 +144,6 @@ RSpec.describe 'V3 services synoptic' do
     get '/v3/service_instances', nil, admin_headers
     expect(last_response).to have_status_code(200)
     parsed_response['resources']
-  end
-
-  let(:empty_headers) do
-    {}
   end
 end
 # rubocop:enable Naming/AccessorMethodName

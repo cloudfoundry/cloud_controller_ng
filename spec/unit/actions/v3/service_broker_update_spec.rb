@@ -33,7 +33,7 @@ module VCAP
           let(:request) { { name: 'new-name' } }
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
 
@@ -48,7 +48,7 @@ module VCAP
           end
 
           it 'is false' do
-            expect(action.update_broker_needed?).to be_falsey
+            expect(action).not_to be_update_broker_needed
           end
         end
 
@@ -56,7 +56,7 @@ module VCAP
           let(:request) { { url: 'new-url' } }
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
 
@@ -73,7 +73,7 @@ module VCAP
           end
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
       end

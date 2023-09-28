@@ -37,6 +37,18 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
                    %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}}).
         with(basic_auth: basic_auth(service_broker:)).
         to_return(status: 202, body: broker_response_body.to_json)
+      uri = URI(service_broker.broker_url)
+      uri.path += '/v2/service_instances/'
+      stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
+        with(basic_auth: basic_auth(service_broker:))
+      uri = URI(service_broker.broker_url)
+      uri.path += "/v2/service_instances/#{service_instance.guid}"
+      uri.query = 'accepts_incomplete=true'
+      stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
+        with(basic_auth: basic_auth(service_broker:))
+      uri = URI(service_broker.broker_url)
+      uri.path += "/v2/service_instances/#{service_instance.guid}"
+      stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).with(basic_auth: basic_auth(service_broker:))
     end
 
     response_field 'name', 'The human-readable name of the service instance.'
@@ -80,13 +92,6 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
       EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
-      before do
-        uri = URI(service_broker.broker_url)
-        uri.path += '/v2/service_instances/'
-        stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
-          with(basic_auth: basic_auth(service_broker:))
-      end
-
       example 'Creating a Service Instance' do
         space_guid   = VCAP::CloudController::Space.make.guid
         request_hash = {
@@ -121,14 +126,6 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
       EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
-
-      before do
-        uri = URI(service_broker.broker_url)
-        uri.path += "/v2/service_instances/#{service_instance.guid}"
-        uri.query = 'accepts_incomplete=true'
-        stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
-          with(basic_auth: basic_auth(service_broker:))
-      end
 
       example 'Update a Service Instance' do
         request_json = {
@@ -165,12 +162,6 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
       parameter :recursive, recursive_description, valid_values: [true, false]
       parameter :async, async_description, valid_values: [true, false]
 
-      before do
-        uri = URI(service_broker.broker_url)
-        uri.path += "/v2/service_instances/#{service_instance.guid}"
-        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).with(basic_auth: basic_auth(service_broker:))
-      end
-
       example 'Delete a Service Instance' do
         client.delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers
 
@@ -198,7 +189,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
       let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance:) }
 
       put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
-        before do
+        before do # rubocop:disable RSpec/ScatteredSetup
           stub_bind(service_instance)
         end
 
@@ -221,7 +212,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
       end
 
       delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
-        before do
+        before do # rubocop:disable RSpec/ScatteredSetup
           binding = VCAP::CloudController::RouteBinding.make(service_instance:, route:)
           stub_unbind(binding)
         end

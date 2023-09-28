@@ -32,6 +32,7 @@ module VCAP::CloudController
             VCAP::CloudController::Route.make(:tcp)
           end
           let!(:tcp_destination) { RouteMappingModel.make({ route: tcp_route }) }
+
           it 'does not update the destination record' do
             expect { RouteDestinationUpdate.update(tcp_destination, message) }.to raise_error(StandardError)
           end

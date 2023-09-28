@@ -193,7 +193,8 @@ class DomainsController < ApplicationController
     organizations = Organization.where(guid: message.shared_organizations_guids).all
 
     unless organizations.length == message.shared_organizations_guids.length
-      unprocessable!("Organization with guid '#{find_missing_guid(organizations, message.shared_organizations_guids)}' does not exist, or you do not have access to it.")
+      unprocessable!("Organization with guid '#{find_missing_guid(organizations,
+                                                                  message.shared_organizations_guids)}' does not exist, or you do not have access to it.")
     end
 
     organizations.each do |org|

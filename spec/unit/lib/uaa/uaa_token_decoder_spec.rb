@@ -55,6 +55,7 @@ module VCAP::CloudController
         Timecop.freeze(Time.now.utc)
         stub_request(:get, uaa_issuer_info_url).to_return(body: { 'issuer' => uaa_issuer_string }.to_json)
       end
+
       after { Timecop.return }
 
       let(:uaa_issuer_string) { 'https://uaa.my-cf.com/uaa/stuff/here' }
@@ -196,10 +197,12 @@ module VCAP::CloudController
       end
 
       context 'when asymmetric key is used' do
-        before { uaa_config[:symmetric_secret] = nil }
+        before do
+          uaa_config[:symmetric_secret] = nil
+          allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } })
+        end
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } }) }
 
         context 'when token is valid' do
           let(:token_content) do

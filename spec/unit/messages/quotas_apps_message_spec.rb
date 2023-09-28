@@ -11,7 +11,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
         end
       end
@@ -23,7 +23,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total memory in mb is not a number')
           end
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total memory in mb must be an integer')
           end
         end
@@ -45,7 +45,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total memory in mb must be greater than or equal to 0')
           end
         end
@@ -56,7 +56,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total memory in mb must be less than or equal to 2147483647')
           end
         end
@@ -68,6 +68,7 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the type is nil (unlimited)' do
           let(:params) do
             { total_memory_in_mb: nil }
@@ -84,27 +85,29 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per process memory in mb is not a number')
           end
         end
+
         context 'when the type is decimal' do
           let(:params) do
             { per_process_memory_in_mb: 1.1 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per process memory in mb must be an integer')
           end
         end
+
         context 'when the type is a negative integer' do
           let(:params) do
             { per_process_memory_in_mb: -1 }
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per process memory in mb must be greater than or equal to 0')
           end
         end
@@ -116,6 +119,7 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the type is nil (unlimited)' do
           let(:params) do
             { per_process_memory_in_mb: nil }
@@ -130,7 +134,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per process memory in mb must be less than or equal to 2147483647')
           end
         end
@@ -143,27 +147,29 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total instances is not a number')
           end
         end
+
         context 'when the type is decimal' do
           let(:params) do
             { total_instances: 1.1 }
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total instances must be an integer')
           end
         end
+
         context 'when the type is a negative integer' do
           let(:params) do
             { total_instances: -1 }
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total instances must be greater than or equal to 0')
           end
         end
@@ -175,6 +181,7 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
         context 'when the type is nil (unlimited)' do
           let(:params) do
             { total_instances: nil }
@@ -189,7 +196,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Total instances must be less than or equal to 2147483647')
           end
         end
@@ -202,7 +209,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per app tasks is not a number')
           end
         end
@@ -213,7 +220,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per app tasks must be an integer')
           end
         end
@@ -224,7 +231,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per app tasks must be greater than or equal to 0')
           end
         end
@@ -251,7 +258,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Per app tasks must be less than or equal to 2147483647')
           end
         end
@@ -264,7 +271,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Log rate limit in bytes per second is not a number')
           end
         end
@@ -275,7 +282,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be an integer')
           end
         end
@@ -286,7 +293,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be greater than or equal to 0')
           end
         end
@@ -313,7 +320,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors).to contain_exactly('Log rate limit in bytes per second must be less than or equal to 9223372036854775807')
           end
         end

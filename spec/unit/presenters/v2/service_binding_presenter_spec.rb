@@ -9,11 +9,13 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_url' => 'http://relationship.example.com' } }
+
     subject { ServiceBindingPresenter.new }
 
     describe '#entity_hash' do
       before do
         set_current_user_as_admin
+        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
@@ -23,10 +25,6 @@ module CloudController::Presenters::V2
           syslog_drain_url: 'syslog://drain.example.com',
           volume_mounts: volume_mount
         )
-      end
-
-      before do
-        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
       it 'returns the service binding entity' do
@@ -62,7 +60,7 @@ module CloudController::Presenters::V2
             service_binding.service_binding_operation = binding_operation
           end
 
-          it 'should return its attributes' do
+          it 'returns its attributes' do
             expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
               { 'last_operation' => {
                 'type' => 'create',
@@ -74,6 +72,7 @@ module CloudController::Presenters::V2
             )
           end
         end
+
         context 'and the operation type is delete' do
           let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(type: 'delete', state: 'in progress', description: '10% complete') }
 
@@ -81,7 +80,7 @@ module CloudController::Presenters::V2
             service_binding.service_binding_operation = binding_operation
           end
 
-          it 'should return its attributes' do
+          it 'returns its attributes' do
             expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
               { 'last_operation' => {
                 'type' => 'delete',
@@ -132,9 +131,8 @@ module CloudController::Presenters::V2
           end
 
           it 'whitelists fields' do
-            expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)['volume_mounts']).to match_array(
-              [{ 'container_dir' => 'val1', 'mode' => 'val2', 'device_type' => 'val3' }, {}]
-            )
+            expect(subject.entity_hash(controller, service_binding, opts, depth, parents,
+                                       orphans)['volume_mounts']).to contain_exactly({ 'container_dir' => 'val1', 'mode' => 'val2', 'device_type' => 'val3' }, {})
           end
         end
 

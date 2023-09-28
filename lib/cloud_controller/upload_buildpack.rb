@@ -55,12 +55,11 @@ module VCAP::CloudController
     private
 
     def raise_translated_api_error(buildpack)
-      if buildpack.errors.on(%i[name stack]).try(:include?, :unique)
-        raise CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', buildpack.name, buildpack.stack)
-      end
-      if buildpack.errors.on(:stack).try(:include?, :buildpack_cant_change_stacks)
-        raise CloudController::Errors::ApiError.new_from_details('BuildpackStacksDontMatch', buildpack.stack, buildpack.initial_value(:stack))
-      end
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', buildpack.name, buildpack.stack) if buildpack.errors.on(%i[name stack]).try(:include?,
+                                                                                                                                                                      :unique)
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackStacksDontMatch', buildpack.stack, buildpack.initial_value(:stack)) if buildpack.errors.on(:stack).try(
+        :include?, :buildpack_cant_change_stacks
+      )
       return unless buildpack.errors.on(:stack).try(:include?, :buildpack_stack_does_not_exist)
 
       raise CloudController::Errors::ApiError.new_from_details('BuildpackStackDoesNotExist', buildpack.stack)

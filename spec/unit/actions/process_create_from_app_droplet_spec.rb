@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:droplet) { nil }
     let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
+
     subject { ProcessCreateFromAppDroplet.new(user_audit_info) }
 
     describe '#create' do

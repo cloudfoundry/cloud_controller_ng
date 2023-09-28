@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'creates an event tied just to the organization' do
-          expect { Event.create(event_attrs) }.to_not raise_error
+          expect { Event.create(event_attrs) }.not_to raise_error
 
           an_event = Event.first(actor: 'frank')
           expect(an_event.actee).to eq('vlad')
@@ -71,9 +71,10 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it {
-        is_expected.to export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee, :actee_type, :actee_name,
-                                         :timestamp, :metadata, :space_guid, :organization_guid
+        expect(subject).to export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee, :actee_type, :actee_name,
+                                             :timestamp, :metadata, :space_guid, :organization_guid
       }
+
       it { is_expected.to import_attributes }
     end
 
@@ -136,7 +137,7 @@ module VCAP::CloudController
 
         it 'the event continues to exist' do
           expect(Space.find(id: new_space.id)).to be_nil
-          expect(Event.find(id: new_event.id)).to_not be_nil
+          expect(Event.find(id: new_event.id)).not_to be_nil
         end
 
         it 'returns nil' do

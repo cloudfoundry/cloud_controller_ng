@@ -33,7 +33,8 @@ module VCAP::CloudController
         raise_if_instance_locked(service_binding.service_instance)
 
         if service_binding.operation_in_progress? && service_binding.service_binding_operation.type != 'create'
-          raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
+          raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name,
+                                                                   service_binding.service_instance.name)
         end
 
         broker_response = remove_from_broker(service_binding)

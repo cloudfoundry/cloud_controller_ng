@@ -30,7 +30,7 @@ module VCAP::CloudController
         it 'returns nil' do
           expect do
             expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
-          end.not_to(change { RevisionModel.count })
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
           app.update(droplet_guid: nil)
           expect do
             expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
-          end.not_to(change { RevisionModel.count })
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
@@ -79,6 +79,7 @@ module VCAP::CloudController
 
         context 'when sidecars have been added' do
           let!(:sidecar) { SidecarModel.make(app:) }
+
           it 'creates a revision from the app values' do
             RevisionModel.make(
               app: app,
@@ -107,7 +108,7 @@ module VCAP::CloudController
           revision = nil
           expect do
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
-          end.to change { RevisionModel.where(app:).count }.by(0), RevisionModel.last.description
+          end.not_to change { RevisionModel.where(app:).count }, RevisionModel.last.description
 
           expect(revision).to eq(app.latest_revision)
         end
@@ -138,7 +139,7 @@ module VCAP::CloudController
         it 'return nil' do
           expect do
             expect(RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)).to be_nil
-          end.not_to(change { RevisionModel.count })
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
@@ -183,7 +184,7 @@ module VCAP::CloudController
               expect do
                 RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
               end.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
-            end.not_to(change { RevisionModel.count })
+            end.not_to(change(RevisionModel, :count))
           end
         end
       end

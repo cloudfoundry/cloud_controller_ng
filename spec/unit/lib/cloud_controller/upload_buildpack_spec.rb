@@ -67,7 +67,7 @@ module VCAP::CloudController
                 upload_buildpack.upload_buildpack(buildpack, zip_with_massive_manifest, filename)
               end.to raise_error(CloudController::Errors::ApiError, /Buildpack zip error/)
               bp = Buildpack.find(name: buildpack.name)
-              expect(bp).to_not be_nil
+              expect(bp).not_to be_nil
               expect(bp.stack).to eq('cider')
             end
           end
@@ -84,6 +84,7 @@ module VCAP::CloudController
 
           context 'different from buildpack' do
             let(:valid_zip_manifest_stack) { 'latkes' }
+
             before do
               VCAP::CloudController::Stack.create(name: valid_zip_manifest_stack)
             end
@@ -93,15 +94,17 @@ module VCAP::CloudController
                 upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
               end.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(latkes\) does not match cider/)
               bp = Buildpack.find(name: buildpack.name)
-              expect(bp).to_not be_nil
+              expect(bp).not_to be_nil
               expect(bp.stack).to eq('cider')
             end
           end
 
           context 'stack previously unknown' do
             let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
+
             context 'and the stack exists' do
               let(:valid_zip_manifest_stack) { 'cflinuxfs4_new' }
+
               before do
                 VCAP::CloudController::Stack.create(name: valid_zip_manifest_stack)
               end
@@ -111,7 +114,7 @@ module VCAP::CloudController
 
                 expect do
                   upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-                end.to change { buildpack.stack }.from(nil).to(valid_zip_manifest_stack)
+                end.to change(buildpack, :stack).from(nil).to(valid_zip_manifest_stack)
               end
 
               context 'buildpack with same name and stack exists' do
@@ -126,12 +129,13 @@ module VCAP::CloudController
 
             context "but the stack doesn't exist" do
               let(:valid_zip_manifest_stack) { 'new-and-unknown' }
+
               it 'raises an error' do
                 expect do
                   upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
                 end.to raise_error(CloudController::Errors::ApiError, /Uploaded buildpack stack \(#{valid_zip_manifest_stack}\) does not exist/)
                 bp = Buildpack.find(name: buildpack.name)
-                expect(bp).to_not be_nil
+                expect(bp).not_to be_nil
                 expect(bp.filename).to be_nil
               end
             end
@@ -160,7 +164,7 @@ module VCAP::CloudController
           end
 
           it 'does not attempt to delete the old buildpack blob when it does not exist' do
-            expect(VCAP::CloudController::BuildpackBitsDelete).to_not receive(:delete_when_safe)
+            expect(VCAP::CloudController::BuildpackBitsDelete).not_to receive(:delete_when_safe)
             upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
           end
 
@@ -180,7 +184,7 @@ module VCAP::CloudController
                 Buildpack.find(name: 'upload_binary_buildpack').update(key: expected_sha_valid_zip)
               end
 
-              expect(VCAP::CloudController::BuildpackBitsDelete).to_not receive(:delete_when_safe)
+              expect(VCAP::CloudController::BuildpackBitsDelete).not_to receive(:delete_when_safe)
               expect(upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)).to be true
             end
           end
@@ -198,7 +202,7 @@ module VCAP::CloudController
 
             it 'does not copy bits to the blobstore if nothing has changed' do
               expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
-              expect(VCAP::CloudController::BuildpackBitsDelete).to_not receive(:delete_when_safe)
+              expect(VCAP::CloudController::BuildpackBitsDelete).not_to receive(:delete_when_safe)
               expect(upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)).to be false
             end
           end
@@ -219,12 +223,12 @@ module VCAP::CloudController
         context 'when the same bits are uploaded twice' do
           let(:buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'buildpack2', stack: 'cflinuxfs4', position: 0 }) }
 
-          it 'should have different keys' do
+          it 'has different keys' do
             upload_buildpack.upload_buildpack(buildpack, valid_zip2, filename)
             upload_buildpack.upload_buildpack(buildpack2, valid_zip2, filename)
             bp1 = Buildpack.find(name: 'upload_binary_buildpack')
             bp2 = Buildpack.find(name: 'buildpack2')
-            expect(bp1.key).to_not eq(bp2.key)
+            expect(bp1.key).not_to eq(bp2.key)
           end
         end
       end
@@ -238,10 +242,10 @@ module VCAP::CloudController
           buildpack.update(key: previous_key, filename: previous_filename)
         end
 
-        it 'should not update the key and filename on the existing buildpack' do
+        it 'does not update the key and filename on the existing buildpack' do
           expect { upload_buildpack.upload_buildpack(buildpack, valid_zip, filename) }.to raise_error(RuntimeError)
           bp = Buildpack.find(name: buildpack.name)
-          expect(bp).to_not be_nil
+          expect(bp).not_to be_nil
           expect(bp.key).to eq(previous_key)
           expect(bp.filename).to eq(previous_filename)
         end
@@ -266,7 +270,7 @@ module VCAP::CloudController
         before { buildpack.update(locked: true) }
 
         it 'does nothing' do
-          expect(buildpack_blobstore).to_not receive(:cp_to_blobstore)
+          expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
           expect(upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)).to be false
         end
       end

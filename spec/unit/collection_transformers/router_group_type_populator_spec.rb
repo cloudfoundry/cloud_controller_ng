@@ -38,8 +38,8 @@ module VCAP::CloudController
         end
 
         context 'when there are no domains associated with router groups' do
-          it 'should not call the Routing API' do
-            expect(routing_api_client).to_not receive(:router_groups)
+          it 'does not call the Routing API' do
+            expect(routing_api_client).not_to receive(:router_groups)
             router_group_type_populator.transform([domain3, domain5])
           end
         end

@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'vcap/digester'
 
 RSpec.describe Digester do
+  subject(:digester) { Digester.new }
+
   let(:tempfile) do
     Tempfile.new('coolfile').tap do |f|
       f.write('I am a teapot!')
@@ -9,8 +11,6 @@ RSpec.describe Digester do
     end
   end
   let(:sha) { '5d10be7baa938c793756e79819866561abaae5b3' }
-
-  subject(:digester) { Digester.new }
 
   describe '#digest' do
     it 'digests the given bits' do
@@ -32,6 +32,7 @@ RSpec.describe Digester do
 
   describe 'changing the algorithm' do
     subject(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5) }
+
     let(:md5) { '9f3f3f57770f25cb8faa685d7336aa4c' }
 
     it 'uses the given algorithm' do
@@ -41,6 +42,7 @@ RSpec.describe Digester do
 
   describe 'changing the digest type' do
     subject(:digester) { Digester.new(type: :base64digest) }
+
     let(:sha) { 'XRC+e6qTjHk3VueYGYZlYauq5bM=' }
 
     it 'uses the given digest type' do

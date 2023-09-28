@@ -49,7 +49,7 @@ module VCAP::CloudController
             expect(run_action.path).to eq('/tmp/lifecycle/builder')
             expect(run_action.user).to eq('vcap')
             expect(run_action.env).to eq(generated_environment)
-            expect(run_action.args).to match_array(['-outputMetadataJSONFilename=/tmp/result.json', '-dockerRef=the-docker-image'])
+            expect(run_action.args).to contain_exactly('-outputMetadataJSONFilename=/tmp/result.json', '-dockerRef=the-docker-image')
             expect(run_action.resource_limits).to eq(::Diego::Bbs::Models::ResourceLimits.new(nofile: 4))
           end
 

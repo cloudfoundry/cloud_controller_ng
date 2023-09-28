@@ -61,7 +61,7 @@ module CloudController
       end
 
       describe '#exists?' do
-        it 'should return true for an object that already exists' do
+        it 'returns true for an object that already exists' do
           allow(response).to receive_messages(status: 200)
           allow(httpclient).to receive_messages(head: response)
 
@@ -69,7 +69,7 @@ module CloudController
           expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
-        it 'should return false for an object that does not exist' do
+        it 'returns false for an object that does not exist' do
           allow(response).to receive_messages(status: 404)
           allow(httpclient).to receive_messages(head: response)
 
@@ -77,7 +77,7 @@ module CloudController
           expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
-        it 'should raise a BlobstoreError if response status is neither 200 nor 404' do
+        it 'raises a BlobstoreError if response status is neither 200 nor 404' do
           allow(response).to receive_messages(status: 500, content: '')
           allow(httpclient).to receive_messages(head: response)
 
@@ -111,11 +111,12 @@ module CloudController
         before do
           allow(HTTPClient).to receive_messages(new: httpclient)
         end
+
         after do
           File.delete(destination_path) if File.exist?(destination_path)
         end
 
-        it 'should fetch an object' do
+        it 'fetches an object' do
           allow(response).to receive_messages(status: 200)
           allow(httpclient).to receive(:get).and_yield('content').and_return(response)
 
@@ -125,7 +126,7 @@ module CloudController
           expect(httpclient).to have_received(:get).with('http://localhost/admin/droplets/fo/ob/foobar', {}, {})
         end
 
-        it 'should raise an exception when there is an error fetching an object' do
+        it 'raises an exception when there is an error fetching an object' do
           allow(response).to receive_messages(status: 500, content: 'error message')
           allow(httpclient).to receive_messages(get: response)
 
@@ -197,7 +198,7 @@ module CloudController
           tmpfile.unlink
         end
 
-        it 'should create an object' do
+        it 'creates an object' do
           allow(response).to receive_messages(status: 201, content: '')
 
           expect(httpclient).to receive(:put) do |*args|
@@ -211,7 +212,7 @@ module CloudController
           client.cp_to_blobstore(tmpfile.path, 'foobar')
         end
 
-        it 'should overwrite an existing file' do
+        it 'overwrites an existing file' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive(:put).and_return(response)
 
@@ -226,7 +227,7 @@ module CloudController
           client.cp_to_blobstore(tmpfile.path, 'foobar')
         end
 
-        it 'should raise an exception when there is an error creating an object' do
+        it 'raises an exception when there is an error creating an object' do
           allow(response).to receive_messages(status: 500, content: nil)
           allow(httpclient).to receive_messages(put: response)
 
@@ -313,7 +314,7 @@ module CloudController
           FileUtils.rm_rf(source_dir)
         end
 
-        it 'should upload all the files in the directory and nested directories' do
+        it 'uploads all the files in the directory and nested directories' do
           allow(response).to receive_messages(status: 201, content: '')
           allow(httpclient).to receive(:put).and_return(response)
 
@@ -459,8 +460,7 @@ module CloudController
       describe '#cp_file_between_keys' do
         it 'creates an empty file at the destination location to ensure all folder paths are create before the copy' do
           allow(response).to receive_messages(status: 204, content: '')
-          allow(httpclient).to receive(:put).and_return(response)
-          allow(httpclient).to receive(:request).and_return(response)
+          allow(httpclient).to receive_messages(put: response, request: response)
 
           client.cp_file_between_keys('foobar', 'bazbar')
 
@@ -469,8 +469,7 @@ module CloudController
 
         it 'copies the file from the source key to the destination key' do
           allow(response).to receive_messages(status: 204, content: '')
-          allow(httpclient).to receive(:put).and_return(response)
-          allow(httpclient).to receive(:request).and_return(response)
+          allow(httpclient).to receive_messages(put: response, request: response)
 
           client.cp_file_between_keys('foobar', 'bazbar')
 
@@ -482,16 +481,15 @@ module CloudController
             )
         end
 
-        it 'should raise an exception when there is an error copying an object' do
+        it 'raises an exception when there is an error copying an object' do
           allow(response).to receive_messages(status: 500, content: 'Internal Server Error')
-          allow(httpclient).to receive(:put).and_return(instance_double(HTTP::Message, status: 204, content: ''))
-          allow(httpclient).to receive(:request).and_return(response)
+          allow(httpclient).to receive_messages(put: instance_double(HTTP::Message, status: 204, content: ''), request: response)
 
           expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /Could not copy object/
           expect(logger).to have_received(:error).with(/^Error with blobstore: Could not copy object/)
         end
 
-        it 'should raise an exception when there is an error creating the destination object' do
+        it 'raises an exception when there is an error creating the destination object' do
           allow(response).to receive_messages(status: 500, content: 'Internal Server Error')
           allow(httpclient).to receive(:put).and_return(response)
 
@@ -502,8 +500,7 @@ module CloudController
         context 'when the source key has no file associated with it' do
           it 'raises a FileNotFound Error' do
             allow(response).to receive_messages(status: 404, content: 'Not Found')
-            allow(httpclient).to receive(:put).and_return(instance_double(HTTP::Message, status: 204, content: ''))
-            allow(httpclient).to receive(:request).and_return(response)
+            allow(httpclient).to receive_messages(put: instance_double(HTTP::Message, status: 204, content: ''), request: response)
 
             expect do
               client.cp_file_between_keys('foobar', 'bazbar')
@@ -541,7 +538,7 @@ module CloudController
       end
 
       describe '#delete' do
-        it 'should delete an object' do
+        it 'deletes an object' do
           allow(response).to receive_messages(status: 204, content: '')
           allow(httpclient).to receive(:delete).and_return(response)
 
@@ -550,7 +547,7 @@ module CloudController
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
-        it 'should raise FileNotFound error when the file is not found in blobstore during deleting' do
+        it 'raises FileNotFound error when the file is not found in blobstore during deleting' do
           allow(response).to receive_messages(status: 404, content: 'Not Found')
           allow(httpclient).to receive(:delete).and_return(response)
 
@@ -559,7 +556,7 @@ module CloudController
           end.to raise_error CloudController::Blobstore::FileNotFound, /Could not find object 'foobar'/
         end
 
-        it 'should raise an exception when there is an error deleting an object' do
+        it 'raises an exception when there is an error deleting an object' do
           allow(response).to receive_messages(status: 500, content: '')
           expect(httpclient).to receive(:delete).and_return(response)
 
@@ -567,7 +564,7 @@ module CloudController
           expect(logger).to have_received(:error).with(/^Error with blobstore: Could not delete object/)
         end
 
-        it 'should raise a ConflictError when there is a conflict deleting an object' do
+        it 'raises a ConflictError when there is a conflict deleting an object' do
           allow(response).to receive_messages(status: 409, content: '')
           expect(httpclient).to receive(:delete).and_return(response)
 
@@ -901,7 +898,7 @@ module CloudController
 
           it 'does not enumerate ignored directories' do
             blob_keys = client.files_for('', %w[some-directory ignored-directory])
-            expect(blob_keys.first).to be(nil)
+            expect(blob_keys.first).to be_nil
           end
         end
 

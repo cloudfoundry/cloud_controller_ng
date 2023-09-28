@@ -24,7 +24,7 @@ module VCAP::CloudController
         it 'deletes only unmapped routes' do
           expect do
             subject.delete(space)
-          end.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change(VCAP::CloudController::Route, :count).by(-2)
 
           expect { unmapped_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unmapped_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -41,7 +41,7 @@ module VCAP::CloudController
         it 'deletes only unbound routes' do
           expect do
             subject.delete(space)
-          end.to change { VCAP::CloudController::Route.count }.by(-2)
+          end.to change(VCAP::CloudController::Route, :count).by(-2)
 
           expect { unbound_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { unbound_route_2.refresh }.to raise_error Sequel::Error, 'Record not found'
@@ -66,7 +66,7 @@ module VCAP::CloudController
         it 'deletes only BOTH unmapped and unbound routes' do
           expect do
             subject.delete(space)
-          end.to change { VCAP::CloudController::Route.count }.by(-1)
+          end.to change(VCAP::CloudController::Route, :count).by(-1)
 
           expect { unbound_and_unmapped_route.refresh }.to raise_error Sequel::Error, 'Record not found'
         end

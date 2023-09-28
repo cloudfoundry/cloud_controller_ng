@@ -60,7 +60,7 @@ module VCAP::CloudController
             commands_by_process_type: { 'web' => 'run my app' },
             user_audit_info: user_audit_info
           )
-        end.to change { Event.count }.by(1)
+        end.to change(Event, :count).by(1)
 
         event = VCAP::CloudController::Event.find(type: 'audit.app.revision.create')
         expect(event).not_to be_nil
@@ -82,7 +82,8 @@ module VCAP::CloudController
 
       context 'when there is no user_audit_info for the revision' do
         let(:user_audit_info) { nil }
-        it 'should not create a user audit event' do
+
+        it 'does not create a user audit event' do
           RevisionCreate.create(
             app: app,
             droplet_guid: app.droplet_guid,

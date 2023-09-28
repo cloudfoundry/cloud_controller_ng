@@ -4,6 +4,7 @@ require 'fluent_emitter'
 module VCAP
   RSpec.describe 'FluentEmitter' do
     let(:fluent_logger) { instance_double(::Fluent::Logger::FluentLogger) }
+
     subject { FluentEmitter.new(fluent_logger) }
 
     it 'emits app event logs to the fluent logger' do

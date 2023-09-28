@@ -19,6 +19,7 @@ module VCAP::CloudController
                                                           })
       end
       let(:visible_space_guids) { [] }
+
       context 'when applying quota to a space' do
         let(:visible_space_guids) { [space.guid] }
 

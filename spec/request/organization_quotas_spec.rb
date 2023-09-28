@@ -76,9 +76,7 @@ module VCAP::CloudController
         it 'creates a organization_quota' do
           expect do
             api_call.call(admin_header)
-          end.to change {
-            QuotaDefinition.count
-          }.by 1
+          end.to change(QuotaDefinition, :count).by 1
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -598,7 +596,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'the org quota is not  deleted and returns a 422' do
+        it 'the org quota is not deleted and returns a 422' do
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_headers
 
           delete "/v3/organization_quotas/#{org_quota.guid}", nil, admin_headers
@@ -646,7 +644,7 @@ def generate_org_quota_single_response(list_of_orgs)
     },
     relationships: {
       organizations: {
-        data: contain_exactly(*list_of_orgs)
+        data: match_array(list_of_orgs)
       }
     },
     links: {

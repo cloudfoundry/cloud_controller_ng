@@ -322,6 +322,7 @@ RSpec.describe 'Revisions' do
             expect(parsed_response['resources'].pluck('guid')).to contain_exactly(revisionB.guid, revisionC.guid)
           end
         end
+
         context 'filtering by guids' do
           before do
             VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: false

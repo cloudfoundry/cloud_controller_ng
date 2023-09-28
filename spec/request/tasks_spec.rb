@@ -98,6 +98,7 @@ RSpec.describe 'Tasks' do
 
     context 'pagination' do
       let(:user) { make_developer_for_space(space) }
+
       it 'returns a paginated list of tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
           name: 'task one',
@@ -926,6 +927,7 @@ RSpec.describe 'Tasks' do
 
     describe 'filtering' do
       let(:user) { make_developer_for_space(space) }
+
       it 'filters by name' do
         expected_task = VCAP::CloudController::TaskModel.make(name: 'task one', app: app_model)
         VCAP::CloudController::TaskModel.make(name: 'task two', app: app_model)
@@ -1034,6 +1036,7 @@ RSpec.describe 'Tasks' do
         }
       }
     end
+
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
       allow(bbs_task_client).to receive(:desire_task)
@@ -1205,6 +1208,7 @@ RSpec.describe 'Tasks' do
 
     context 'when the client specifies a template' do
       let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start') }
+
       it 'uses the command from the template process' do
         body = {
           name: 'best task ever',
@@ -1262,7 +1266,7 @@ RSpec.describe 'Tasks' do
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the task is created' do
+      it 'logs the required fields when the task is created' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',

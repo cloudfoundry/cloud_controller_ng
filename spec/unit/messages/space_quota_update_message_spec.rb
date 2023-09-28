@@ -106,7 +106,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (SpaceQuotaUpdateMessage::MAX_SPACE_QUOTA_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -115,7 +115,7 @@ module VCAP::CloudController
           let(:params) { { name: '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include("can't be blank")
           end
         end
@@ -131,7 +131,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Apps must be an object')
           end
         end
@@ -152,7 +152,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasAppsMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:apps]).to include('invalid_app_limits')
           end
         end
@@ -168,7 +168,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Services must be an object')
           end
         end
@@ -189,7 +189,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasServicesMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:services]).to include('invalid_services_limits')
           end
         end
@@ -205,7 +205,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Routes must be an object')
           end
         end
@@ -226,7 +226,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasRoutesMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:routes]).to include('invalid_routes_limits')
           end
         end

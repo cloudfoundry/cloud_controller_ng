@@ -132,7 +132,7 @@ module VCAP::CloudController
           EOS
         end
 
-        it 'should equal dumped job yaml' do
+        it 'equals dumped job yaml' do
           VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)

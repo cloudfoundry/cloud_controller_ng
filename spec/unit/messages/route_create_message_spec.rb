@@ -101,7 +101,7 @@ module VCAP::CloudController
           let(:params) { { host: 'B' * (RouteCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:host]).to include "is too long (maximum is #{RouteCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH} characters)"
           end
         end
@@ -110,7 +110,7 @@ module VCAP::CloudController
           let(:params) { { host: 'somethingwitha.' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:host]).to match ['must be either "*" or contain only alphanumeric characters, "_", or "-"']
           end
         end
@@ -166,7 +166,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:port]).to include 'must be less than or equal to 65535'
           end
         end
@@ -177,7 +177,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:port]).to include 'must be greater than or equal to 0'
           end
         end
@@ -230,7 +230,7 @@ module VCAP::CloudController
           let(:params) { { path: 'B' * (RouteCreateMessage::MAXIMUM_PATH_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:path]).to include "is too long (maximum is #{RouteCreateMessage::MAXIMUM_PATH_LENGTH} characters)"
           end
         end
@@ -239,7 +239,7 @@ module VCAP::CloudController
           let(:params) { { path: '/pathwith?' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:path]).to match ['cannot contain ?']
           end
         end
@@ -248,7 +248,7 @@ module VCAP::CloudController
           let(:params) { { path: '/' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:path]).to match ['cannot be exactly /']
           end
         end
@@ -257,7 +257,7 @@ module VCAP::CloudController
           let(:params) { { path: 'some-path/' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:path]).to match ['must begin with /']
           end
         end
@@ -268,7 +268,7 @@ module VCAP::CloudController
           let(:params) { { relationships: 'banana' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:relationships]).to include "'relationships' is not an object"
           end
         end

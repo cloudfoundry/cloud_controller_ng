@@ -23,6 +23,7 @@ module VCAP::CloudController::Diego
         before do
           allow(app_recipe_builder).to receive(:build_app_lrp).and_return(lrp)
         end
+
         it 'sends the lrp to diego' do
           client.desire_app(process)
           expect(bbs_client).to have_received(:desire_lrp).with(lrp)
@@ -74,6 +75,7 @@ module VCAP::CloudController::Diego
           end
         end
       end
+
       context 'app_recipe_builder fails' do
         let(:api_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'bad error!') }
 
@@ -98,6 +100,7 @@ module VCAP::CloudController::Diego
         end
       end
     end
+
     describe '#stop_app' do
       let(:bbs_client) { instance_double(::Diego::Client) }
       let(:bbs_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: lifecycle_error) }
@@ -109,7 +112,7 @@ module VCAP::CloudController::Diego
       end
 
       it 'does not raise error' do
-        expect { client.stop_app(process_guid) }.to_not raise_error
+        expect { client.stop_app(process_guid) }.not_to raise_error
         expect(bbs_client).to have_received(:remove_desired_lrp).with(process_guid)
       end
 
@@ -161,7 +164,7 @@ module VCAP::CloudController::Diego
       end
 
       it 'does not raise error' do
-        expect { client.stop_index(process_guid, index) }.to_not raise_error
+        expect { client.stop_index(process_guid, index) }.not_to raise_error
         expect(bbs_client).to have_received(:retire_actual_lrp).with(actual_lrp_key)
       end
 

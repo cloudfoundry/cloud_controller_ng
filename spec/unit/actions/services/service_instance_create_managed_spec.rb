@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:event_repository) { instance_double(Repositories::ServiceEventRepository, record_service_instance_event: nil, user_audit_info: user_audit_info) }
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:logger) { double(:logger) }
+
     subject(:create_action) { ServiceInstanceCreate.new(event_repository, logger) }
 
     describe '#create' do
@@ -32,7 +33,7 @@ module VCAP::CloudController
       it 'creates the service instance with the requested params' do
         expect do
           create_action.create(request_attrs, false)
-        end.to change { ServiceInstance.count }.from(0).to(1)
+        end.to change(ServiceInstance, :count).from(0).to(1)
         service_instance = ServiceInstance.where(name: 'my-instance').first
         expect(service_instance.credentials).to eq({})
         expect(service_instance.space.guid).to eq(space.guid)
@@ -80,7 +81,7 @@ module VCAP::CloudController
         it 'enqueues a fetch job' do
           expect do
             create_action.create(request_attrs, true)
-          end.to change { Delayed::Job.count }.from(0).to(1)
+          end.to change(Delayed::Job, :count).from(0).to(1)
 
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end
@@ -93,6 +94,7 @@ module VCAP::CloudController
 
       context 'when the instance fails to save to the db' do
         let(:mock_service_resource_cleanup) { double(:mock_service_resource_cleanup, attempt_deprovision_instance: nil) }
+
         before do
           allow(DatabaseErrorServiceResourceCleanup).to receive(:new).and_return(mock_service_resource_cleanup)
           allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
@@ -127,7 +129,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'should store it for the service instance' do
+        it 'stores it for the service instance' do
           create_action.create(request_attrs, false)
           service_instance = ManagedServiceInstance.last
 

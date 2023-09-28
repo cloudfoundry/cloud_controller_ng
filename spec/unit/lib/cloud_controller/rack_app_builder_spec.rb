@@ -39,7 +39,7 @@ module VCAP::CloudController
         it 'does not use Rack::CommonLogger when nginx is enabled' do
           builder.build(TestConfig.override(nginx: { use_nginx: true }), request_metrics, request_logs).to_app
 
-          expect(Rack::CommonLogger).to_not have_received(:new)
+          expect(Rack::CommonLogger).not_to have_received(:new)
         end
       end
 

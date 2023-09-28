@@ -73,7 +73,7 @@ module VCAP::CloudController
 
             expect(space_quota.total_services).to eq(-1)
             expect(space_quota.total_service_keys).to eq(-1)
-            expect(space_quota.non_basic_services_allowed).to eq(true)
+            expect(space_quota.non_basic_services_allowed).to be(true)
 
             expect(space_quota.total_routes).to eq(-1)
             expect(space_quota.total_reserved_route_ports).to eq(-1)
@@ -96,7 +96,7 @@ module VCAP::CloudController
 
             expect(space_quota.total_services).to eq(9)
             expect(space_quota.total_service_keys).to eq(10)
-            expect(space_quota.non_basic_services_allowed).to eq(false)
+            expect(space_quota.non_basic_services_allowed).to be(false)
 
             expect(space_quota.total_routes).to eq(47)
             expect(space_quota.total_reserved_route_ports).to eq(5)

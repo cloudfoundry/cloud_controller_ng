@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe V2::AppUpdate do
     let(:access_validator) { double('access_validator', validate_access: true) }
     let(:stagers) { instance_double(Stagers) }
+
     subject(:app_update) { V2::AppUpdate.new(access_validator:, stagers:) }
 
     describe 'update' do
@@ -32,7 +33,7 @@ module VCAP::CloudController
           it 'updates the process' do
             app_update.update(app, process, request_attrs)
 
-            expect(process.production).to eq(false)
+            expect(process.production).to be(false)
             expect(process.memory).to eq(4)
             expect(process.instances).to eq(2)
             expect(process.disk_quota).to eq(30)
@@ -40,7 +41,7 @@ module VCAP::CloudController
             expect(process.health_check_type).to eq('http')
             expect(process.health_check_timeout).to eq(20)
             expect(process.health_check_http_endpoint).to eq('/health')
-            expect(process.diego).to eq(true)
+            expect(process.diego).to be(true)
             expect(process.ports).to eq([8080])
             expect(process.route_guids).to eq([])
           end
@@ -110,7 +111,7 @@ module VCAP::CloudController
             it 'still updates the non-web processes' do
               app_update.update(app, process, request_attrs)
 
-              expect(process.production).to eq(false)
+              expect(process.production).to be(false)
               expect(process.memory).to eq(4)
               expect(process.instances).to eq(2)
               expect(process.disk_quota).to eq(30)
@@ -118,7 +119,7 @@ module VCAP::CloudController
               expect(process.health_check_type).to eq('http')
               expect(process.health_check_timeout).to eq(20)
               expect(process.health_check_http_endpoint).to eq('/health')
-              expect(process.diego).to eq(true)
+              expect(process.diego).to be(true)
               expect(process.ports).to eq([8080])
               expect(process.route_guids).to eq([])
             end
@@ -200,6 +201,7 @@ module VCAP::CloudController
             'state' => current_state
           }
         end
+
         context 'with a started bits app' do
           context 'not requesting a state change' do
             it 'updates the process' do
@@ -222,6 +224,7 @@ module VCAP::CloudController
             end
           end
         end
+
         context 'with a unstarted bits app' do
           let(:current_state) { 'STOPPED' }
 
@@ -345,12 +348,12 @@ module VCAP::CloudController
           end
 
           it 'marks the app for re-staging' do
-            expect(process.needs_staging?).to eq(false)
+            expect(process.needs_staging?).to be(false)
 
             app_update.update(app, process, request_attrs)
 
-            expect(process.needs_staging?).to eq(true)
-            expect(process.staged?).to eq(false)
+            expect(process.needs_staging?).to be(true)
+            expect(process.staged?).to be(false)
           end
         end
 
@@ -378,13 +381,13 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make }
 
           it 'does not mark the app for staging' do
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
 
             app_update.update(app, process, request_attrs)
             process.reload
 
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
           end
         end
@@ -474,7 +477,7 @@ module VCAP::CloudController
 
               expect(process.reload.docker_image).to eq('repo/original-image')
               expect(process.latest_package).to eq(original_package)
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
             end
           end
 
@@ -495,7 +498,7 @@ module VCAP::CloudController
               expect(process.docker_username).to eq('bob')
               expect(process.docker_password).to eq('secret')
               expect(process.latest_package).not_to eq(original_package)
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
             end
           end
         end
@@ -560,7 +563,7 @@ module VCAP::CloudController
             end
 
             it 'requests to be staged' do
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).to have_received(:stage)
             end
@@ -586,7 +589,7 @@ module VCAP::CloudController
 
           context 'when the app does not need staging' do
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end
@@ -621,7 +624,7 @@ module VCAP::CloudController
             end
 
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end
@@ -629,7 +632,7 @@ module VCAP::CloudController
 
           context 'when the app does not need staging' do
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end

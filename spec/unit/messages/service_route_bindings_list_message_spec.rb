@@ -32,12 +32,12 @@ module VCAP
         end
 
         it 'converts requested keys to symbols' do
-          expect(message.requested?(:page)).to be_truthy
-          expect(message.requested?(:per_page)).to be_truthy
-          expect(message.requested?(:service_instance_guids)).to be_truthy
-          expect(message.requested?(:service_instance_names)).to be_truthy
-          expect(message.requested?(:route_guids)).to be_truthy
-          expect(message.requested?(:label_selector)).to be_truthy
+          expect(message).to be_requested(:page)
+          expect(message).to be_requested(:per_page)
+          expect(message).to be_requested(:service_instance_guids)
+          expect(message).to be_requested(:service_instance_names)
+          expect(message).to be_requested(:route_guids)
+          expect(message).to be_requested(:label_selector)
         end
       end
 

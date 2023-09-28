@@ -68,7 +68,7 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
 
           build = BuildModel.last
-          expect(build).to_not be_nil
+          expect(build).not_to be_nil
           expect(build.lifecycle_type).to eq('docker')
 
           expect(last_response.status).to eq(200)
@@ -82,7 +82,7 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
 
           build = BuildModel.last
-          expect(build).to_not be_nil
+          expect(build).not_to be_nil
           expect(build.lifecycle_type).to eq('buildpack')
 
           expect(last_response.status).to eq(200)
@@ -287,8 +287,7 @@ module VCAP::CloudController
           expect(droplet_buildpacks&.size).to eq(2)
           buildback_lifecycle_buildpack1 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'valley')
           buildback_lifecycle_buildpack2 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'launderette')
-          expect(droplet_buildpacks).to match_array([buildback_lifecycle_buildpack1,
-                                                     buildback_lifecycle_buildpack2])
+          expect(droplet_buildpacks).to contain_exactly(buildback_lifecycle_buildpack1, buildback_lifecycle_buildpack2)
         end
 
         it 'emits a telemetry event for the completed build' do

@@ -90,7 +90,7 @@ module VCAP::CloudController
           end
 
           it 'sets the "binding_name" to null' do
-            expect(result[:binding_name]).to eq(nil)
+            expect(result[:binding_name]).to be_nil
           end
         end
       end

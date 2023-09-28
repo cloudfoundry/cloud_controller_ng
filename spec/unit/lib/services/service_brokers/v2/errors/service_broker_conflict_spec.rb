@@ -31,6 +31,7 @@ module VCAP::Services
                 'description' => 'Some error text' * 50_000
               }.to_json
             end
+
             it 'renders the correct status code to the user' do
               exception = ServiceBrokerConflict.new(uri, method, response)
               expect(exception.message.bytesize).to be < 2**15

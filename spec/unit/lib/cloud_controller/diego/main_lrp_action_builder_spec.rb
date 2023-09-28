@@ -16,8 +16,7 @@ module VCAP::CloudController
 
           environment = instance_double(Environment)
           allow(Environment).to receive(:new).with(process, {}).and_return(environment)
-          allow(environment).to receive(:as_json).and_return(environment_variables)
-          allow(environment).to receive(:as_json_for_sidecar).and_return(sidecar_environment_variables)
+          allow(environment).to receive_messages(as_json: environment_variables, as_json_for_sidecar: sidecar_environment_variables)
         end
 
         let(:ssh_key) { SSHKey.new }
@@ -101,7 +100,7 @@ module VCAP::CloudController
         it 'without a credhub uri, it not include the VCAP_PLATFORM_OPTIONS' do
           MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.
             map { |action| action.run_action.env }.
-            each { |env_vars| expect(env_vars).to_not include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
+            each { |env_vars| expect(env_vars).not_to include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
         end
 
         context 'sidecars' do
@@ -221,7 +220,7 @@ module VCAP::CloudController
               it 'does not include the VCAP_PLATFORM_OPTIONS' do
                 MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.
                   map { |action| action.run_action.env }.
-                  each { |env_vars| expect(env_vars).to_not include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
+                  each { |env_vars| expect(env_vars).not_to include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
               end
             end
           end

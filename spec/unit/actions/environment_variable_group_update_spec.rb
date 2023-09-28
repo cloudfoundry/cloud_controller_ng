@@ -75,7 +75,7 @@ module VCAP::CloudController
       context 'when a environment variable hash is empty' do
         let(:request_environment_variables) { {} }
 
-        it 'should not change the apps environment variables' do
+        it 'does not change the apps environment variables' do
           expect(env_var_group.environment_json).to eq(existing_environment_variables)
 
           subject.patch(env_var_group, message)

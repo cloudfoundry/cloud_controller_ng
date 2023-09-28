@@ -77,14 +77,14 @@ module VCAP::Services::SSO
             it 'claims the clients' do
               expect do
                 manager.synchronize_clients_with_catalog(catalog)
-              end.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 2
+              end.to change(VCAP::CloudController::ServiceDashboardClient, :count).by 2
 
-              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).to_not be_nil
-              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).to_not be_nil
+              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).not_to be_nil
+              expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).not_to be_nil
             end
 
             it 'returns true' do
-              expect(manager.synchronize_clients_with_catalog(catalog)).to eq(true)
+              expect(manager.synchronize_clients_with_catalog(catalog)).to be(true)
             end
 
             it 'records a create event for each dashboard client' do
@@ -154,10 +154,10 @@ module VCAP::Services::SSO
               it 'claims the clients' do
                 expect do
                   manager.synchronize_clients_with_catalog(catalog)
-                end.to change { VCAP::CloudController::ServiceDashboardClient.count }.by 1
+                end.to change(VCAP::CloudController::ServiceDashboardClient, :count).by 1
 
-                expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).to_not be_nil
-                expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).to_not be_nil
+                expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_1['id'])).not_to be_nil
+                expect(VCAP::CloudController::ServiceDashboardClient.find(uaa_id: dashboard_client_attrs_2['id'])).not_to be_nil
               end
 
               it 'records a create event for each new dashboard client' do
@@ -184,7 +184,7 @@ module VCAP::Services::SSO
               end
 
               it 'returns true' do
-                expect(manager.synchronize_clients_with_catalog(catalog)).to eq(true)
+                expect(manager.synchronize_clients_with_catalog(catalog)).to be(true)
               end
             end
 
@@ -192,16 +192,16 @@ module VCAP::Services::SSO
               it 'does not create any uaa clients' do
                 manager.synchronize_clients_with_catalog(catalog)
 
-                expect(client_manager).to_not have_received(:modify_transaction)
+                expect(client_manager).not_to have_received(:modify_transaction)
               end
 
               it 'does not claim any clients for CC' do
                 expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
-                expect { manager.synchronize_clients_with_catalog(catalog) }.not_to(change { VCAP::CloudController::ServiceDashboardClient.count })
+                expect { manager.synchronize_clients_with_catalog(catalog) }.not_to(change(VCAP::CloudController::ServiceDashboardClient, :count))
               end
 
               it 'returns false' do
-                expect(manager.synchronize_clients_with_catalog(catalog)).to eq(false)
+                expect(manager.synchronize_clients_with_catalog(catalog)).to be(false)
               end
 
               it 'has errors for the service' do
@@ -297,7 +297,7 @@ module VCAP::Services::SSO
             end
 
             it 'returns false' do
-              expect(manager.synchronize_clients_with_catalog(catalog)).to eq(false)
+              expect(manager.synchronize_clients_with_catalog(catalog)).to be(false)
             end
           end
         end
@@ -349,7 +349,7 @@ module VCAP::Services::SSO
               end
 
               dashboard_client = VCAP::CloudController::ServiceDashboardClient.find(uaa_id: unused_id)
-              expect(dashboard_client).to_not be_nil
+              expect(dashboard_client).not_to be_nil
             end
 
             it 'does not modify any of the claims' do
@@ -396,7 +396,7 @@ module VCAP::Services::SSO
               rescue StandardError
                 nil
               end
-              expect(client_manager).to_not have_received(:modify_transaction)
+              expect(client_manager).not_to have_received(:modify_transaction)
             end
 
             it 'does not record a create event' do
@@ -574,7 +574,7 @@ module VCAP::Services::SSO
             rescue StandardError
               nil
             end
-            expect(client_manager).to_not have_received(:modify_transaction)
+            expect(client_manager).not_to have_received(:modify_transaction)
           end
 
           it 'does not record any events' do

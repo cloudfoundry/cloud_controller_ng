@@ -41,6 +41,7 @@ module VCAP::CloudController
           type: VCAP::CloudController::ProcessTypes::WEB
         )
       end
+
       context 'setting' do
         it 'saves http2 as itself' do
           protocol = 'http2'
@@ -123,7 +124,7 @@ module VCAP::CloudController
               process_type: web_process.type,
               protocol: protocol
             )
-            expect(route_mapping.protocol).to eq(nil)
+            expect(route_mapping.protocol).to be_nil
           end
         end
 
@@ -275,7 +276,7 @@ module VCAP::CloudController
 
         expect do
           RouteMappingModel.make(valid_route_mapping_opts)
-        end.to change { RouteMappingModel.count }.by(1)
+        end.to change(RouteMappingModel, :count).by(1)
       end
 
       describe 'copilot integration', isolation: :truncation do
@@ -302,7 +303,7 @@ module VCAP::CloudController
             it 'only executes after the transaction is completed' do
               RouteMappingModel.db.transaction do
                 route_mapping.destroy
-                expect(Copilot::Adapter).to_not have_received(:unmap_route)
+                expect(Copilot::Adapter).not_to have_received(:unmap_route)
               end
               expect(Copilot::Adapter).to have_received(:unmap_route).with(route_mapping)
             end

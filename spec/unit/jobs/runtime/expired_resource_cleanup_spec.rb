@@ -16,21 +16,21 @@ module VCAP::CloudController
           it 'deletes droplets that are expired and have no checksum information' do
             droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: nil)
 
-            expect { job.perform }.to change { DropletModel.count }.by(-1)
-            expect(droplet).to_not exist
+            expect { job.perform }.to change(DropletModel, :count).by(-1)
+            expect(droplet).not_to exist
           end
 
           it 'does NOT delete droplets that are expired and has only a sha1 checksum' do
             droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: 'foo', sha256_checksum: nil)
 
-            expect { job.perform }.to_not(change { DropletModel.count })
+            expect { job.perform }.not_to(change(DropletModel, :count))
             expect(droplet).to exist
           end
 
           it 'does NOT delete droplets that are expired and has only a sha256 checksum' do
             droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: 'foo')
 
-            expect { job.perform }.to_not(change { DropletModel.count })
+            expect { job.perform }.not_to(change(DropletModel, :count))
             expect(droplet).to exist
           end
 
@@ -46,8 +46,8 @@ module VCAP::CloudController
       describe 'packages' do
         it 'deletes packages that are expired and have nil checksum information' do
           package = PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: nil, sha256_checksum: nil)
-          expect { job.perform }.to change { PackageModel.count }.by(-1)
-          expect(package).to_not exist
+          expect { job.perform }.to change(PackageModel, :count).by(-1)
+          expect(package).not_to exist
         end
 
         it 'does NOT delete packages that are expired but have a sha1 checksum' do

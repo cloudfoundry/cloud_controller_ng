@@ -95,7 +95,7 @@ module VCAP::CloudController
           it 'creates a revision and associates it to the processes' do
             expect do
               AppRestart.restart(app:, config:, user_audit_info:)
-            end.to change { RevisionModel.count }.by(1)
+            end.to change(RevisionModel, :count).by(1)
 
             expect(app.reload.desired_state).to eq('STARTED')
             expect(app.reload.latest_revision).not_to be_nil
@@ -167,7 +167,7 @@ module VCAP::CloudController
         it 'does not generate a STOP usage event' do
           expect do
             AppRestart.restart(app:, config:, user_audit_info:)
-          end.to_not(change { AppUsageEvent.where(state: 'STOPPED').count })
+          end.not_to(change { AppUsageEvent.where(state: 'STOPPED').count })
         end
       end
 

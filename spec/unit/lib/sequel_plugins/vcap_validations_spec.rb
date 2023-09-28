@@ -18,37 +18,37 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
       @c.define_validations { validates_url(:val) }
     end
 
-    it 'should allow a http url' do
+    it 'allows a http url' do
       @m.val = 'http://foo_bar.com/bla'
       expect(@m).to be_valid
     end
 
-    it 'should allow a https url' do
+    it 'allows a https url' do
       @m.val = 'https://foo_bar.com/bla'
       expect(@m).to be_valid
     end
 
-    it 'should not allow an invalid url' do
+    it 'does not allow an invalid url' do
       @m.val = 'bad url'
       expect(@m).not_to be_valid
     end
 
-    it 'should not allow a file url' do
+    it 'does not allow a file url' do
       @m.val = 'file://bla'
       expect(@m).not_to be_valid
     end
 
-    it 'should allow a nil url' do
+    it 'allows a nil url' do
       @m.val = nil
       expect(@m).to be_valid
     end
 
-    it 'should not allow an empty url' do
+    it 'does not allow an empty url' do
       @m.val = ''
       expect(@m).not_to be_valid
     end
 
-    it 'should not allow a url with only spaces' do
+    it 'does not allow a url with only spaces' do
       @m.val = ' '
       expect(@m).not_to be_valid
     end
@@ -69,37 +69,37 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
       @c.define_validations { validates_email(:val) }
     end
 
-    it 'should allow a valid email' do
+    it 'allows a valid email' do
       @m.val = 'some_guy@foo.com'
       expect(@m).to be_valid
     end
 
-    it 'should not allow an email with no domain' do
+    it 'does not allow an email with no domain' do
       @m.val = 'some_guy'
       expect(@m).not_to be_valid
     end
 
-    it 'should not allow an email with no user' do
+    it 'does not allow an email with no user' do
       @m.val = '@somedomain.com'
       expect(@m).not_to be_valid
     end
 
-    it 'should not allow a malformed email with multiple @' do
+    it 'does not allow a malformed email with multiple @' do
       @m.val = 'foo@some@domain.com'
       expect(@m).not_to be_valid
     end
 
-    it 'should allow a nil email' do
+    it 'allows a nil email' do
       @m.val = nil
       expect(@m).to be_valid
     end
 
-    it 'should not allow an empty email' do
+    it 'does not allow an empty email' do
       @m.val = ''
       expect(@m).not_to be_valid
     end
 
-    it 'should not allow an email with only spaces' do
+    it 'does not allow an email with only spaces' do
       @m.val = ' '
       expect(@m).not_to be_valid
     end

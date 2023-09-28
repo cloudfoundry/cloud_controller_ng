@@ -106,6 +106,7 @@ module VCAP::Services::ServiceBrokers
     before do
       VCAP::CloudController::SecurityContext.set(user, token)
     end
+
     after do
       VCAP::CloudController::SecurityContext.clear
     end
@@ -113,8 +114,8 @@ module VCAP::Services::ServiceBrokers
     describe 'initializing' do
       subject { ServiceManager.new(service_event_repository) }
 
-      its(:has_warnings?) { should eq false }
-      its(:warnings) { should eq [] }
+      its(:has_warnings?) { is_expected.to be false }
+      its(:warnings) { is_expected.to eq [] }
     end
 
     describe '#sync_services_and_plans' do
@@ -131,10 +132,10 @@ module VCAP::Services::ServiceBrokers
         expect(service.tags).to match_array(%w[mysql relational])
         expect(JSON.parse(service.extra)).to eq({ 'foo' => 'bar' })
         expect(service.requires).to eq(%w[ultimate power])
-        expect(service.plan_updateable).to eq true
-        expect(service.bindings_retrievable).to eq true
-        expect(service.instances_retrievable).to eq true
-        expect(service.allow_context_updates).to eq true
+        expect(service.plan_updateable).to be true
+        expect(service.bindings_retrievable).to be true
+        expect(service.instances_retrievable).to be true
+        expect(service.allow_context_updates).to be true
       end
 
       it 'records an audit event for each service and plan' do
@@ -235,7 +236,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.service).to eq(VCAP::CloudController::Service.last)
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
-          expect(plan.plan_updateable).to eq(true)
+          expect(plan.plan_updateable).to be(true)
           expect(plan.maximum_polling_duration).to eq(3600)
           expect(plan.maintenance_info).to eq(plan_maintenance_info)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
@@ -451,12 +452,12 @@ module VCAP::Services::ServiceBrokers
         end
 
         it 'updates the existing service' do
-          expect(service.label).to_not eq(service_name)
-          expect(service.description).to_not eq(service_description)
+          expect(service.label).not_to eq(service_name)
+          expect(service.description).not_to eq(service_description)
 
           expect do
             service_manager.sync_services_and_plans(catalog)
-          end.to_not change(VCAP::CloudController::Service, :count)
+          end.not_to change(VCAP::CloudController::Service, :count)
 
           service.reload
           expect(service.label).to eq(service_name)
@@ -500,7 +501,7 @@ module VCAP::Services::ServiceBrokers
             it 'updates the service for the correct broker' do
               expect do
                 service_manager.sync_services_and_plans(catalog)
-              end.to_not change(VCAP::CloudController::Service, :count)
+              end.not_to change(VCAP::CloudController::Service, :count)
 
               [service, service_2].map(&:reload)
 
@@ -598,8 +599,8 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'updates the existing plan' do
-            expect(plan.name).to_not eq(plan_name)
-            expect(plan.description).to_not eq(plan_description)
+            expect(plan.name).not_to eq(plan_name)
+            expect(plan.description).not_to eq(plan_description)
             expect(plan.free).to be true
             expect(plan.bindable).to be false
             expect(plan.plan_updateable).to be_nil
@@ -611,7 +612,7 @@ module VCAP::Services::ServiceBrokers
 
             expect do
               service_manager.sync_services_and_plans(catalog)
-            end.to_not change(VCAP::CloudController::ServicePlan, :count)
+            end.not_to change(VCAP::CloudController::ServicePlan, :count)
 
             plan.reload
             expect(plan.name).to eq(plan_name)
@@ -665,7 +666,7 @@ module VCAP::Services::ServiceBrokers
                 )
               end
 
-              it 'creates a new plan associated with the service and keeps the old unchanged ' do
+              it 'creates a new plan associated with the service and keeps the old unchanged' do
                 expect do
                   service_manager.sync_services_and_plans(catalog)
                 end.to change(VCAP::CloudController::ServicePlan, :count).by(1)
@@ -789,7 +790,7 @@ module VCAP::Services::ServiceBrokers
                 catalog_hash['services'].first['plans'].first.delete('maintenance_info')
               end
 
-              it 'should remove the maintenance_info information for the updated plan' do
+              it 'removes the maintenance_info information for the updated plan' do
                 expect(plan.maintenance_info).to eq({ version: '1.1' })
 
                 service_manager.sync_services_and_plans(catalog)
@@ -879,7 +880,7 @@ module VCAP::Services::ServiceBrokers
             context 'when there are no existing service instances' do
               it 'does not add a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-                expect(service_manager.warnings).to_not include(<<~HEREDOC)
+                expect(service_manager.warnings).not_to include(<<~HEREDOC)
                   Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 
                   Service Offering: #{service_name}
@@ -912,7 +913,7 @@ module VCAP::Services::ServiceBrokers
           )
         end
 
-        it 'should delete the service' do
+        it 'deletes the service' do
           service_manager.sync_services_and_plans(catalog)
           expect(VCAP::CloudController::Service.find(id: service.id)).to be_nil
         end
@@ -934,7 +935,7 @@ module VCAP::Services::ServiceBrokers
           expect(event.metadata).to be_empty
         end
 
-        it 'should not delete services owned by other brokers' do
+        it 'does not delete services owned by other brokers' do
           service_manager.sync_services_and_plans(catalog)
           expect(VCAP::CloudController::Service.find(id: service_owned_by_other_broker.id)).not_to be_nil
         end
@@ -973,19 +974,20 @@ module VCAP::Services::ServiceBrokers
           end
         end
       end
+
       context 'when a sql validtion error is thrown' do
         let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker, unique_id: service_id) }
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: plan_name, unique_id: Sham.guid) }
 
-        it 'should throw a sync error' do
-          expect do
-            service_manager.sync_services_and_plans(catalog)
-          end.to raise_error(ServiceManager::ServiceBrokerSyncError)
-        end
-
         after do
           service_plan.destroy
           service_offering.destroy
+        end
+
+        it 'throws a sync error' do
+          expect do
+            service_manager.sync_services_and_plans(catalog)
+          end.to raise_error(ServiceManager::ServiceBrokerSyncError)
         end
       end
     end

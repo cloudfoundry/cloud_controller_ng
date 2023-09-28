@@ -21,8 +21,9 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :service_plan }
       it { is_expected.to have_associated :space }
+
       it do
-        is_expected.to have_associated :service_bindings, associated_instance: lambda { |service_instance|
+        expect(subject).to have_associated :service_bindings, associated_instance: lambda { |service_instance|
           app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
@@ -30,12 +31,13 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
+      let(:max_tags) { ['a' * 1024, 'b' * 1024] }
+
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :service_plan }
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_uniqueness :space_id, :name, { error_key: :name } }
       it { is_expected.to strip_whitespace :name }
-      let(:max_tags) { ['a' * 1024, 'b' * 1024] }
 
       it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
         expect do
@@ -61,7 +63,7 @@ module VCAP::CloudController
         end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
-      it 'should not bind an app and a service instance from different app spaces' do
+      it 'does not bind an app and a service instance from different app spaces' do
         ProcessModelFactory.make(space: service_instance.space)
         service_binding = ServiceBinding.make
         expect do
@@ -75,7 +77,7 @@ module VCAP::CloudController
         max_memory_policies = service_instance.validation_policies.select { |policy| policy.instance_of? MaxServiceInstancePolicy }
         expect(max_memory_policies.length).to eq(2)
         targets = max_memory_policies.collect(&:quota_definition)
-        expect(targets).to match_array([space_quota_definition, service_instance.organization.quota_definition])
+        expect(targets).to contain_exactly(space_quota_definition, service_instance.organization.quota_definition)
       end
 
       it 'validates org and space quotas using PaidServiceInstancePolicy' do
@@ -84,7 +86,7 @@ module VCAP::CloudController
         policies = service_instance.validation_policies.select { |policy| policy.instance_of? PaidServiceInstancePolicy }
         expect(policies.length).to eq(2)
         targets = policies.collect(&:quota_definition)
-        expect(targets).to match_array([space_quota_definition, service_instance.organization.quota_definition])
+        expect(targets).to contain_exactly(space_quota_definition, service_instance.organization.quota_definition)
       end
     end
 
@@ -115,7 +117,7 @@ module VCAP::CloudController
         end
 
         it 'returns true' do
-          expect(service_instance.valid_with_plan?(new_plan)).to eq(true)
+          expect(service_instance.valid_with_plan?(new_plan)).to be(true)
         end
       end
 
@@ -128,7 +130,7 @@ module VCAP::CloudController
         end
 
         it 'returns false' do
-          expect(service_instance.valid_with_plan?(new_plan)).to eq(false)
+          expect(service_instance.valid_with_plan?(new_plan)).to be(false)
         end
       end
     end
@@ -146,7 +148,7 @@ module VCAP::CloudController
 
       it 'saves with is_gateway_service true' do
         instance = ManagedServiceInstance.make
-        expect(instance.refresh.is_gateway_service).to eq(true)
+        expect(instance.refresh.is_gateway_service).to be(true)
       end
 
       it 'creates a CREATED service usage event' do
@@ -239,15 +241,17 @@ module VCAP::CloudController
     describe '#route_service?' do
       context 'when the service instance is not a route service' do
         let!(:service_instance) { ManagedServiceInstance.make }
+
         it 'returns false' do
-          expect(service_instance.route_service?).to be_falsey
+          expect(service_instance).not_to be_route_service
         end
       end
 
       context 'when the service instance is a route service' do
         let!(:service_instance) { ManagedServiceInstance.make(:routing) }
+
         it 'returns false' do
-          expect(service_instance.route_service?).to be_truthy
+          expect(service_instance).to be_route_service
         end
       end
     end
@@ -265,7 +269,7 @@ module VCAP::CloudController
         let(:is_shareable) { false }
 
         it 'returns false' do
-          expect(service_instance).to_not be_shareable
+          expect(service_instance).not_to be_shareable
         end
       end
 
@@ -364,7 +368,7 @@ module VCAP::CloudController
       end
 
       context 'exceed quota' do
-        it 'should raise quota error when quota is exceeded' do
+        it 'raises quota error when quota is exceeded' do
           org = Organization.make(quota_definition: free_quota)
           space = Space.make(organization: org)
           ManagedServiceInstance.make(
@@ -380,7 +384,7 @@ module VCAP::CloudController
           end.to raise_error(Sequel::ValidationFailed, /quota service_instance_quota_exceeded/)
         end
 
-        it 'should not raise error when quota is not exceeded' do
+        it 'does not raise error when quota is not exceeded' do
           org = Organization.make(quota_definition: paid_quota)
           space = Space.make(organization: org)
           expect do
@@ -388,12 +392,12 @@ module VCAP::CloudController
               space: space,
               service_plan: free_plan
             )
-          end.to_not raise_error
+          end.not_to raise_error
         end
       end
 
       context 'create free services' do
-        it 'should not raise error when created in free quota' do
+        it 'does not raise error when created in free quota' do
           org = Organization.make(quota_definition: free_quota)
           space = Space.make(organization: org)
           expect do
@@ -401,10 +405,10 @@ module VCAP::CloudController
               space: space,
               service_plan: free_plan
             )
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not raise error when created in paid quota' do
+        it 'does not raise error when created in paid quota' do
           org = Organization.make(quota_definition: paid_quota)
           space = Space.make(organization: org)
           expect do
@@ -412,12 +416,12 @@ module VCAP::CloudController
               space: space,
               service_plan: free_plan
             )
-          end.to_not raise_error
+          end.not_to raise_error
         end
       end
 
       context 'create paid services' do
-        it 'should raise error when created in free quota' do
+        it 'raises error when created in free quota' do
           org = Organization.make(quota_definition: free_quota)
           space = Space.make(organization: org)
           expect do
@@ -429,7 +433,7 @@ module VCAP::CloudController
                              /service_plan paid_services_not_allowed_by_quota/)
         end
 
-        it 'should not raise error when created in paid quota' do
+        it 'does not raise error when created in paid quota' do
           org = Organization.make(quota_definition: paid_quota)
           space = Space.make(organization: org)
           expect do
@@ -437,7 +441,7 @@ module VCAP::CloudController
               space: space,
               service_plan: paid_plan
             )
-          end.to_not raise_error
+          end.not_to raise_error
         end
       end
     end
@@ -507,6 +511,7 @@ module VCAP::CloudController
 
         context 'when there are no tags' do
           let(:instance_tags) { nil }
+
           it 'returns an empty array' do
             expect(service_instance.tags).to eq []
           end
@@ -598,7 +603,7 @@ module VCAP::CloudController
       let(:expected_value) { { version: '1.0' }.stringify_keys }
       let(:maintenance_info) { { maintenance_info: expected_value } }
 
-      it 'should serialize and deserialize it as a JSON' do
+      it 'serializes and deserialize it as a JSON' do
         service_instance.update_service_instance(maintenance_info)
         service_instance.reload
         expect(service_instance.maintenance_info).to eq(expected_value)

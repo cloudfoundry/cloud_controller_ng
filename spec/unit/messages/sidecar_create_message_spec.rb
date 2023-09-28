@@ -22,7 +22,7 @@ module VCAP::CloudController
         body['bogus'] = 'field'
         message = SidecarCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
         body[:name] = ''
         message = SidecarCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Name can't be blank")
       end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
         body[:command] = ''
         message = SidecarCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Command can't be blank")
       end
 
@@ -46,14 +46,14 @@ module VCAP::CloudController
         body[:process_types] = []
         message = SidecarCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
       end
 
       it 'validates that there is a process_types field' do
         message = SidecarCreateMessage.new(body.reject { |x| x == :process_types })
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
       end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
         body[:memory_in_mb] = 'totes not a number'
         message = SidecarCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include('Memory in mb is not a number')
       end
     end

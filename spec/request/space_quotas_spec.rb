@@ -261,6 +261,7 @@ module VCAP::CloudController
           expect(last_response).to include_error_message("Unknown field(s): 'wat'")
         end
       end
+
       context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
         let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
         let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
@@ -467,9 +468,7 @@ module VCAP::CloudController
         it 'creates a space_quota' do
           expect do
             api_call.call(admin_header)
-          end.to change {
-            SpaceQuotaDefinition.count
-          }.by 1
+          end.to change(SpaceQuotaDefinition, :count).by 1
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -559,9 +558,7 @@ module VCAP::CloudController
         it 'creates a space_quota' do
           expect do
             api_call.call(admin_header)
-          end.to change {
-            SpaceQuotaDefinition.count
-          }.by 1
+          end.to change(SpaceQuotaDefinition, :count).by 1
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -824,6 +821,7 @@ module VCAP::CloudController
           expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[1] guid should be a string.')
         end
       end
+
       context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
         let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'space-quota-guid', organization: org, log_rate_limit: 100) }
         let!(:other_space) { VCAP::CloudController::Space.make(guid: 'other-space-guid', organization: org, space_quota_definition: space_quota) }

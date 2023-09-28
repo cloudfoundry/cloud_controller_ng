@@ -20,14 +20,14 @@ module CloudController::Errors::V3
       allow(Details).to receive('new').with(messageServiceInvalid).and_return(messageServiceInvalidDetails)
     end
 
-    context '.new_from_details' do
+    describe '.new_from_details' do
       subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
 
       it 'returns an ApiError' do
         expect(api_error).to be_a(ApiError)
       end
 
-      it 'should be an exception' do
+      it 'is an exception' do
         expect(api_error).to be_a(Exception)
       end
 
@@ -47,14 +47,14 @@ module CloudController::Errors::V3
     describe 'message' do
       subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
 
-      it 'should interpolate the message' do
+      it 'interpolates the message' do
         expect(api_error.message).to eq('Before foo bar after.')
       end
 
       context 'when initializing an api_error without new_from_details' do
         let(:api_error) { ApiError.new }
 
-        it 'should not explode' do
+        it 'does not explode' do
           expect do
             api_error.message
           end.not_to raise_error

@@ -23,7 +23,7 @@ module Diego
     end
 
     describe 'configuration' do
-      it "should set ENV['PB_IGNORE_DEPRECATIONS'] to true" do
+      it "sets ENV['PB_IGNORE_DEPRECATIONS'] to true" do
         # to supress warnings in stderr when BBS sends deprecated keys in responses
         ENV.delete('PB_IGNORE_DEPRECATIONS')
         expect { subject }.to change { ENV.fetch('PB_IGNORE_DEPRECATIONS', nil) }.from(nil).to('true')
@@ -677,6 +677,7 @@ module Diego
       end
       let(:actual_lrps) { [::Diego::Bbs::Models::ActualLRP.new] }
       let(:response_status) { 200 }
+
       before do
         stub_request(:post, "#{bbs_url}/v1/actual_lrps/list").to_return(status: response_status, body: response_body)
       end

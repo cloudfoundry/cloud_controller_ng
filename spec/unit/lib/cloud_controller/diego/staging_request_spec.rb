@@ -60,11 +60,11 @@ module VCAP::CloudController::Diego
         it 'does not raise an error' do
           expect do
             staging_request.message
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
         it 'omits isolation_segment data from the message' do
-          expect(staging_request.message.keys).to_not include(:isolation_segment)
+          expect(staging_request.message.keys).not_to include(:isolation_segment)
         end
       end
 
@@ -86,11 +86,11 @@ module VCAP::CloudController::Diego
         it 'does not raise an error' do
           expect do
             staging_request.message
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
         it 'omits lifecycle data from the message' do
-          expect(staging_request.message.keys).to_not include(:lifecycle_data)
+          expect(staging_request.message.keys).not_to include(:lifecycle_data)
         end
       end
 
@@ -102,11 +102,11 @@ module VCAP::CloudController::Diego
         it 'does not raise an error' do
           expect do
             staging_request.message
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
         it 'omits lifecycle data from the message' do
-          expect(staging_request.message.keys).to_not include(:egress_rules)
+          expect(staging_request.message.keys).not_to include(:egress_rules)
         end
       end
 

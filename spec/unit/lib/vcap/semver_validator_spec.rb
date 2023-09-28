@@ -83,7 +83,7 @@ module VCAP
     valid_versions.each do |version|
       describe "version #{version}" do
         it 'is valid' do
-          expect(SemverValidator.valid?(version)).to eq(true)
+          expect(SemverValidator.valid?(version)).to be(true)
         end
       end
     end
@@ -91,7 +91,7 @@ module VCAP
     invalid_versions.each do |version|
       describe "version #{version}" do
         it 'is invalid' do
-          expect(SemverValidator.valid?(version)).to eq(false)
+          expect(SemverValidator.valid?(version)).to be(false)
         end
       end
     end

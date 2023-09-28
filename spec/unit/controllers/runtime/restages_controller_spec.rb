@@ -5,6 +5,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RestagesController do
     let(:app_event_repository) { Repositories::AppEventRepository.new }
+
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'POST /v2/apps/:id/restage' do
@@ -14,16 +15,13 @@ module VCAP::CloudController
 
       before do
         allow(V2::AppStage).to receive(:new).and_return(app_stage)
-      end
-
-      before do
         set_current_user(account)
       end
 
       context 'as a user' do
         let(:account) { make_user_for_space(process.space) }
 
-        it 'should return 403' do
+        it 'returns 403' do
           restage_request
           expect(last_response.status).to eq(403)
         end
@@ -32,7 +30,7 @@ module VCAP::CloudController
       context 'as a space auditor' do
         let(:account) { make_auditor_for_space(process.space) }
 
-        it 'should return 403' do
+        it 'returns 403' do
           restage_request
           expect(last_response.status).to eq(403)
         end
@@ -155,6 +153,7 @@ module VCAP::CloudController
 
           context 'when the restage completes without error' do
             let(:user_audit_info) { UserAuditInfo.from_context(SecurityContext) }
+
             before do
               allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
             end
@@ -162,7 +161,7 @@ module VCAP::CloudController
             it 'generates an audit.app.restage event' do
               expect do
                 restage_request
-              end.to change { Event.count }.by(1)
+              end.to change(Event, :count).by(1)
 
               expect(last_response.status).to eq(201)
               expect(app_event_repository).to have_received(:record_app_restage).with(process,
@@ -179,7 +178,7 @@ module VCAP::CloudController
               expect do
                 restage_request
               end.to raise_error(/Error staging/) {
-                expect(app_event_repository).to_not have_received(:record_app_restage)
+                expect(app_event_repository).not_to have_received(:record_app_restage)
               }
             end
           end

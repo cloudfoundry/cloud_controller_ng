@@ -4,7 +4,7 @@ require 'vcap/config'
 RSpec.describe VCAP::Config do
   describe '.define_schema' do
     context 'with no parent schema' do
-      it 'should build the corresponding membrane schema' do
+      it 'builds the corresponding membrane schema' do
         class MyConfig < VCAP::Config
           define_schema do
             [Integer]

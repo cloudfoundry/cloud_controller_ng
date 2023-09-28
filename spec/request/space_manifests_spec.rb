@@ -187,7 +187,7 @@ RSpec.describe 'Space Manifests' do
         'k2' => 'pears',
         'k3' => 'watermelon'
       )
-      expect(app1_model.routes).to match_array([route, second_route])
+      expect(app1_model.routes).to contain_exactly(route, second_route)
       expect(route.route_mappings_dataset.first(app: app1_model).protocol).to eq('http1')
       expect(second_route.route_mappings_dataset.first(app: app1_model).protocol).to eq('http2')
 
@@ -206,7 +206,7 @@ RSpec.describe 'Space Manifests' do
         'k2' => 'radish',
         'k3' => 'fleas'
       )
-      expect(app2_model.routes).to match_array([route, second_route])
+      expect(app2_model.routes).to contain_exactly(route, second_route)
 
       expect(app2_model.service_bindings.length).to eq 1
       expect(app2_model.service_bindings.first.service_instance).to eq service_instance_1
@@ -291,7 +291,7 @@ RSpec.describe 'Space Manifests' do
         expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           expect(last_response.status).to eq(202), last_response.body
-        end.to change { VCAP::CloudController::AppModel.count }.by(1)
+        end.to change(VCAP::CloudController::AppModel, :count).by(1)
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
         expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
@@ -375,7 +375,7 @@ RSpec.describe 'Space Manifests' do
       it 'returns a 202 but fails on the job' do
         expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-        end.to change { VCAP::CloudController::AppModel.count }.by(0)
+        end.not_to(change(VCAP::CloudController::AppModel, :count))
 
         expect(last_response).to have_status_code(202)
         expect(last_response.status).to eq(202), last_response.body
@@ -404,7 +404,7 @@ RSpec.describe 'Space Manifests' do
         it 'returns a 202 and succeeds' do
           expect do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-          end.to change { VCAP::CloudController::AppModel.count }.by(0)
+          end.not_to(change(VCAP::CloudController::AppModel, :count))
 
           expect(last_response).to have_status_code(202)
           expect(last_response.status).to eq(202), last_response.body
@@ -415,7 +415,7 @@ RSpec.describe 'Space Manifests' do
           Delayed::Worker.new.work_off
           job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
           expect(job.complete?).to be true
-          expect(job.cf_api_error).to be nil
+          expect(job.cf_api_error).to be_nil
         end
       end
     end
@@ -543,10 +543,10 @@ RSpec.describe 'Space Manifests' do
         expect do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           Delayed::Worker.new.work_off
-        end.to change { VCAP::CloudController::Event.count }.by 10
+        end.to change(VCAP::CloudController::Event, :count).by 10
 
         manifest_triggered_events = VCAP::CloudController::Event.find_all { |event| event.metadata['manifest_triggered'] }
-        expect(manifest_triggered_events.map(&:type)).to match_array([
+        expect(manifest_triggered_events.map(&:type)).to contain_exactly(
           'audit.app.process.update',
           'audit.app.process.create',
           'audit.app.process.scale',
@@ -556,7 +556,7 @@ RSpec.describe 'Space Manifests' do
           'audit.route.create',
           'audit.app.map-route',
           'audit.service_binding.create'
-        ])
+        )
 
         other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest'])

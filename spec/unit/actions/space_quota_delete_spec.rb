@@ -11,7 +11,7 @@ module VCAP::CloudController
       it 'deletes the space quota' do
         expect do
           space_quota_delete.delete([quota])
-        end.to change { SpaceQuotaDefinition.count }.by(-1)
+        end.to change(SpaceQuotaDefinition, :count).by(-1)
 
         expect { quota.refresh }.to raise_error Sequel::Error, 'Record not found'
       end

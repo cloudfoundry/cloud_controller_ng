@@ -7,15 +7,15 @@ module VCAP::CloudController
       let(:perform_blob_cleanup) { true }
       let(:logger) { double(:logger, info: nil, error: nil) }
 
+      before do
+        TestConfig.override(perform_blob_cleanup:)
+        stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK', 20)
+      end
+
       it { is_expected.to be_a_valid_job }
 
       it 'has max_attempts 1' do
         expect(job.max_attempts).to eq 1
-      end
-
-      before do
-        TestConfig.override(perform_blob_cleanup:)
-        stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK', 20)
       end
 
       describe '#perform' do
@@ -63,10 +63,8 @@ module VCAP::CloudController
           TestConfig.config[:buildpacks][:buildpack_directory_key]   = 'buildpacks'
           TestConfig.config[:resource_pool][:resource_directory_key] = 'resources'
 
-          allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(droplet_blobstore)
-          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
-          allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
-          allow(CloudController::DependencyLocator.instance).to receive(:legacy_global_app_bits_cache).and_return(legacy_resources_blobstore)
+          allow(CloudController::DependencyLocator.instance).to receive_messages(droplet_blobstore: droplet_blobstore, package_blobstore: package_blobstore,
+                                                                                 buildpack_blobstore: buildpack_blobstore, legacy_global_app_bits_cache: legacy_resources_blobstore)
 
           allow(job).to receive(:daily_directory_subset).and_return(['00'])
         end
@@ -299,7 +297,7 @@ module VCAP::CloudController
           let(:legacy_resource_files) { some_files }
 
           context 'when all the blobstore buckets are different' do
-            it 'should create an OrphanedBlob record for each blob in each of the blobstores' do
+            it 'creates an OrphanedBlob record for each blob in each of the blobstores' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
 
@@ -335,7 +333,7 @@ module VCAP::CloudController
               TestConfig.config[:resource_pool][:resource_directory_key] = 'same'
             end
 
-            it 'it creates OrphanedBlobs for each file and marks them with the same directory_key and blobstore (as droplet_blobstore =/)' do
+            it 'creates OrphanedBlobs for each file and marks them with the same directory_key and blobstore (as droplet_blobstore =/)' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
 
@@ -362,7 +360,7 @@ module VCAP::CloudController
               TestConfig.config[:resource_pool][:resource_directory_key] = 'same'
             end
 
-            it 'should create an OrphanedBlob record for each blob in each of the different blobstores (but overwrites each other based on the order in #blobstores)' do
+            it 'creates an OrphanedBlob record for each blob in each of the different blobstores (but overwrites each other based on the order in #blobstores)' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
 
@@ -399,7 +397,7 @@ module VCAP::CloudController
               TestConfig.config[:resource_pool][:resource_directory_key] = 'same'
             end
 
-            it 'should create an OrphanedBlob record for each blob in each of the unique blobstores' do
+            it 'creates an OrphanedBlob record for each blob in each of the unique blobstores' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
 
@@ -436,7 +434,7 @@ module VCAP::CloudController
             it 'stops after marking NUMBER_OF_BLOBS_TO_MARK of blobs as dirty' do
               expect do
                 job.perform
-              end.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK)
+              end.to change(OrphanedBlob, :count).from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK)
             end
           end
         end
@@ -456,7 +454,7 @@ module VCAP::CloudController
             job.perform
 
             blob = OrphanedBlob.find(blob_key: 'so/me/file-to-be-deleted', blobstore_type: 'package_blobstore')
-            expect(blob).to_not be_nil
+            expect(blob).not_to be_nil
             expect(blob.dirty_count).to eq(2)
           end
 
@@ -484,10 +482,10 @@ module VCAP::CloudController
               expect(Jobs::Enqueuer).to have_received(:new).exactly(4).times.with(blobstore_delete, hash_including(queue: Jobs::Queues.generic, priority: 100))
               expect(enqueuer).to have_received(:enqueue).exactly(4).times
 
-              expect(packages_orphaned_blob.exists?).to be_falsey
-              expect(buildpacks_orphaned_blob.exists?).to be_falsey
-              expect(droplets_orphaned_blob.exists?).to be_falsey
-              expect(resources_orphaned_blob.exists?).to be_falsey
+              expect(packages_orphaned_blob).not_to exist
+              expect(buildpacks_orphaned_blob).not_to exist
+              expect(droplets_orphaned_blob).not_to exist
+              expect(resources_orphaned_blob).not_to exist
             end
 
             it 'creates an orphaned blob audit event' do
@@ -507,6 +505,7 @@ module VCAP::CloudController
               let!(:orphaned_blob) do
                 OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_type: 'package_blobstore')
               end
+
               before do
                 OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK.times do |i|
                   OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5, blobstore_type: 'package_blobstore')
@@ -522,13 +521,14 @@ module VCAP::CloudController
               it 'deletes by searching for the oldest orphaned blobs' do
                 job.perform
 
-                expect(orphaned_blob.exists?).to be_truthy
+                expect(orphaned_blob).to exist
               end
             end
           end
 
           context 'when a previously OrphanedBlob now matches an existing resource' do
             let(:package_files) { [double(:blob, key: 're/al/real-package-blob')] }
+
             before do
               allow(BlobstoreDelete).to receive(:new)
 
@@ -550,6 +550,7 @@ module VCAP::CloudController
 
         context 'when a BlobstoreError occurs' do
           let(:error) { CloudController::Blobstore::BlobstoreError.new('error') }
+
           before do
             allow(job).to receive(:logger).and_return(logger)
             allow(droplet_blobstore).to receive(:files_for).and_raise(error)

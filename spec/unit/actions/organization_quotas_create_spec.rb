@@ -62,7 +62,7 @@ module VCAP::CloudController
 
           expect(organization_quota.total_services).to eq(5)
           expect(organization_quota.total_service_keys).to eq(6)
-          expect(organization_quota.non_basic_services_allowed).to eq(false)
+          expect(organization_quota.non_basic_services_allowed).to be(false)
 
           expect(organization_quota.total_reserved_route_ports).to eq(7)
           expect(organization_quota.total_routes).to eq(8)
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
           expect(organization_quota.total_services).to eq(-1)
           expect(organization_quota.total_service_keys).to eq(-1)
-          expect(organization_quota.non_basic_services_allowed).to eq(true)
+          expect(organization_quota.non_basic_services_allowed).to be(true)
 
           expect(organization_quota.total_routes).to eq(-1)
           expect(organization_quota.total_reserved_route_ports).to eq(-1)
@@ -131,6 +131,7 @@ module VCAP::CloudController
             end.to raise_error(OrganizationQuotasCreate::Error, "Organization Quota '#{name}' already exists.")
           end
         end
+
         context 'when the org guid is invalid' do
           let(:invalid_org_guid) { 'invalid_org_guid' }
           let(:message_with_invalid_org_guid) do
@@ -139,6 +140,7 @@ module VCAP::CloudController
                                                                          'relationships' => { organizations: { data: [{ guid: invalid_org_guid }] } }
                                                                        })
           end
+
           it 'raises a human-friendly error' do
             expect do
               org_quotas_create.create(message_with_invalid_org_guid)

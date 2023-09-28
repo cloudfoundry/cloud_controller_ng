@@ -94,7 +94,7 @@ module VCAP::CloudController
     it_behaves_like('an access control', :reserved, reserved_table)
 
     describe 'in a suspended org' do
-      before(:each) do
+      before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
 
@@ -106,16 +106,16 @@ module VCAP::CloudController
 
     describe 'in an unsuspended org' do
       describe 'when route creation is enabled' do
-        before(:each) do
+        before do
           flag.enabled = true
           flag.save
         end
 
         describe 'in a shared domain' do
-          before(:each) { object.domain = SharedDomain.make }
+          before { object.domain = SharedDomain.make }
 
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table)
             it_behaves_like('an access control', :delete, restricted_write_table)
@@ -124,7 +124,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
         describe 'outside of a shared domain' do
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -144,7 +144,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -156,10 +156,10 @@ module VCAP::CloudController
 
       describe 'when route creation is disabled' do
         describe 'in a shared domain' do
-          before(:each) { object.domain = SharedDomain.make }
+          before { object.domain = SharedDomain.make }
 
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, restricted_write_table, CloudController::Errors::ApiError)
@@ -168,7 +168,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
@@ -179,7 +179,7 @@ module VCAP::CloudController
 
         describe 'outside of a shared domain' do
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
@@ -188,7 +188,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)

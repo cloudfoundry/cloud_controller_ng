@@ -60,7 +60,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array can have at most 5000 resources')
         end
       end
@@ -73,7 +73,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('must have at least 1 resource')
         end
       end
@@ -91,7 +91,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-object checksum')
         end
       end
@@ -109,7 +109,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string checksum value')
         end
       end
@@ -127,7 +127,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
         end
       end
@@ -144,7 +144,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
                                             ]
                                           })
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:resources]).to include('array contains at least one resource with a non-integer size_in_bytes')
           end
         end
@@ -161,7 +161,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
                                           ]
                                         })
 
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:resources]).to include('array contains at least one resource with a negative size_in_bytes')
         end
       end
@@ -180,7 +180,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string mode')
         end
       end
@@ -199,7 +199,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with an incorrect mode')
         end
       end
@@ -217,7 +217,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
           }
         end
 
-        it 'is valid ' do
+        it 'is valid' do
           expect(subject).to be_valid
         end
       end
@@ -235,7 +235,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
           }
         end
 
-        it 'is valid ' do
+        it 'is valid' do
           expect(subject).to be_valid
         end
       end
@@ -253,7 +253,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
           }
         end
 
-        it 'is valid ' do
+        it 'is valid' do
           expect(subject).to be_valid
         end
       end
@@ -275,7 +275,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'prints only a single error message for that violation' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
           expect(subject.errors[:resources]).to have(1).items
         end

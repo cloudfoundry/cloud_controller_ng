@@ -31,7 +31,7 @@ module VCAP::CloudController
             route_mapping = route_mapping_create.add
             expect(route_mapping.route.guid).to eq(route.guid)
             expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
-          end.to change { RouteMappingModel.count }.by(1)
+          end.to change(RouteMappingModel, :count).by(1)
         end
 
         it 'delegates to the route handler to update route information' do
@@ -118,6 +118,7 @@ module VCAP::CloudController
 
           context 'requesting available port' do
             let(:requested_port) { 5678 }
+
             it 'succeeds' do
               mapping = route_mapping_create.add
               expect(app.reload.routes).to eq([route])
@@ -127,6 +128,7 @@ module VCAP::CloudController
 
           context 'requesting unavailable' do
             let(:requested_port) { 8888 }
+
             it 'raises' do
               expect do
                 route_mapping_create.add
@@ -163,6 +165,7 @@ module VCAP::CloudController
 
             context 'when the process has an empty array of ports' do
               let(:ports) { [] }
+
               it 'raises' do
                 expect do
                   route_mapping_create.add
@@ -172,6 +175,7 @@ module VCAP::CloudController
 
             context 'when the process has nil ports' do
               let(:ports) { nil }
+
               it 'raises' do
                 expect do
                   route_mapping_create.add
@@ -185,6 +189,7 @@ module VCAP::CloudController
 
             context 'when the process has an empty array of ports' do
               let(:ports) { [] }
+
               it 'raises' do
                 expect do
                   route_mapping_create.add
@@ -194,6 +199,7 @@ module VCAP::CloudController
 
             context 'when the process has nil ports' do
               let(:ports) { nil }
+
               it 'raises' do
                 expect do
                   route_mapping_create.add
@@ -262,7 +268,7 @@ module VCAP::CloudController
               expect(route_mapping.route.guid).to eq(route.guid)
               expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid)
               expect(route_mapping.app_port).to eq(8888)
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
           end
         end
 
@@ -284,7 +290,7 @@ module VCAP::CloudController
               route_mapping = route_mapping_create.add
               expect(route_mapping.route.guid).to eq(route.guid)
               expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
           end
 
           context 'when the routing api is disabled' do

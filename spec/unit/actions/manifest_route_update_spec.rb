@@ -106,13 +106,14 @@ module VCAP::CloudController
               routes = app.reload.routes
               route = routes.first
               mapping = route.route_mappings_dataset.first(app:)
-              expect(mapping).to_not be_nil
+              expect(mapping).not_to be_nil
               expect(mapping.protocol).to eq('http2')
             end
           end
 
           context 'when the route and app are in different spaces' do
             let!(:outside_app) { AppModel.make }
+
             it 'raises a route invalid error' do
               expect do
                 ManifestRouteUpdate.update(outside_app.guid, message, user_audit_info)

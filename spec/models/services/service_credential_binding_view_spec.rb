@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module ServiceCredentialBinding
-    RSpec.describe View, type: :model do
+    RSpec.describe View do
       describe 'Associations' do
         describe 'service_instance_sti_eager_load' do
           it 'eager loads successfully' do

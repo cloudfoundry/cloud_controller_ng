@@ -8,6 +8,7 @@ module VCAP::CloudController
       let!(:buildpack1) { Buildpack.create(name: 'take-up-position-1', position: 1) }
       let!(:buildpack2) { Buildpack.create(name: 'take-up-position-2', position: 2) }
       let!(:buildpack3) { Buildpack.create(name: 'take-up-position-3', position: 3) }
+
       before do
         Stack.create(name: 'the-stack')
       end
@@ -25,8 +26,8 @@ module VCAP::CloudController
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
           expect(buildpack.position).to eq(1)
-          expect(buildpack.enabled).to eq(false)
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.enabled).to be(false)
+          expect(buildpack.locked).to be(true)
         end
       end
 
@@ -51,8 +52,8 @@ module VCAP::CloudController
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
           expect(buildpack.position).to eq(1)
-          expect(buildpack.enabled).to eq(false)
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.enabled).to be(false)
+          expect(buildpack.locked).to be(true)
           expect(buildpack.labels[0].key_name).to eq('fruit')
           expect(buildpack.annotations[0].value).to eq('adora')
         end
@@ -96,7 +97,7 @@ module VCAP::CloudController
           )
           buildpack = BuildpackCreate.new.create(message)
 
-          expect(buildpack.enabled).to eq(true)
+          expect(buildpack.enabled).to be(true)
         end
       end
 
@@ -109,7 +110,7 @@ module VCAP::CloudController
           )
           buildpack = BuildpackCreate.new.create(message)
 
-          expect(buildpack.locked).to eq(false)
+          expect(buildpack.locked).to be(false)
         end
       end
 

@@ -124,7 +124,7 @@ module CloudFoundry
                 expect(headers['Content-Type']).to eq('text/plain')
               end
 
-              it 'should return a Vary: Origin header to ensure response is not cached for different origins' do
+              it 'returns a Vary: Origin header to ensure response is not cached for different origins' do
                 _, headers, = middleware.call(request_headers)
                 expect(headers['Vary']).to eq('Origin')
               end
@@ -173,6 +173,7 @@ module CloudFoundry
 
               context 'when the request asks to allow additional request headers' do
                 let(:extra_headers) { { 'HTTP_ACCESS_CONTROL_REQUEST_HEADERS' => 'foo, bar, baz, Authorization' } }
+
                 it 'allows that by adding them to the Allow-Headers list' do
                   _, headers, = middleware.call(request_headers.merge(extra_headers))
                   expect(headers['Access-Control-Allow-Headers'].split(',')).to contain_exactly(

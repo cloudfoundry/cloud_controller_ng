@@ -9,21 +9,19 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_url' => 'http://relationship.example.com' } }
+
     subject { ServicePresenter.new }
 
     describe '#entity_hash' do
       before do
         set_current_user_as_admin
+        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'broker-1') }
       let(:service) do
         VCAP::CloudController::Service.make(service_broker:)
-      end
-
-      before do
-        allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
       it 'returns the service binding entity' do

@@ -4,6 +4,7 @@ require 'utils/time_utils'
 
 RSpec.describe Logcache::ContainerMetricBatcher do
   subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid, logcache_filter: filter) }
+
   let(:wrapped_logcache_client) { instance_double(Logcache::Client, container_metrics: logcache_response) }
 
   let(:num_instances) { 11 }
@@ -223,14 +224,14 @@ RSpec.describe Logcache::ContainerMetricBatcher do
       end
 
       it 'returns an array of one batched envelope' do
-        expect(subject.first.instance_index).to eql(1)
-        expect(subject.first.cpu_percentage).to eql(0.10)
-        expect(subject.first.memory_bytes).to eql(11)
-        expect(subject.first.disk_bytes).to eql(12)
-        expect(subject.first.log_rate).to eql(13)
-        expect(subject.first.disk_bytes_quota).to eql(24)
-        expect(subject.first.memory_bytes_quota).to eql(25)
-        expect(subject.first.log_rate_limit).to eql(26)
+        expect(subject.first.instance_index).to be(1)
+        expect(subject.first.cpu_percentage).to be(0.10)
+        expect(subject.first.memory_bytes).to be(11)
+        expect(subject.first.disk_bytes).to be(12)
+        expect(subject.first.log_rate).to be(13)
+        expect(subject.first.disk_bytes_quota).to be(24)
+        expect(subject.first.memory_bytes_quota).to be(25)
+        expect(subject.first.log_rate_limit).to be(26)
       end
     end
 

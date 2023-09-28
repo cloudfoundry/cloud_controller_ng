@@ -22,8 +22,8 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = RouteDestinationsListMessage.from_params(params)
 
-        expect(message.requested?(:guids)).to be_truthy
-        expect(message.requested?(:app_guids)).to be_truthy
+        expect(message).to be_requested(:guids)
+        expect(message).to be_requested(:app_guids)
       end
     end
 

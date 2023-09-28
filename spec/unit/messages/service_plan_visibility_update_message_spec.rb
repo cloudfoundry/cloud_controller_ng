@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         message = subject.from_params(params)
-        expect(message.requested?(:type)).to be_truthy
+        expect(message).to be_requested(:type)
       end
 
       it 'returns the correct message' do

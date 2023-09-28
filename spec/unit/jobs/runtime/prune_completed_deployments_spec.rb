@@ -4,6 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneCompletedDeployments, job_context: :worker do
       let(:max_retained_deployments_per_app) { 15 }
+
       subject(:job) { PruneCompletedDeployments.new(max_retained_deployments_per_app) }
 
       it { is_expected.to be_a_valid_job }

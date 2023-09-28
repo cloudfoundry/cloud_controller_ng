@@ -5,6 +5,14 @@ require 'jobs/v3/delete_binding_job'
 module VCAP::CloudController
   module V3
     RSpec.describe DeleteBindingJob do
+      let(:subject) do
+        described_class.new(
+          :any,
+          'foo',
+          user_audit_info: {}
+        )
+      end
+
       context 'route' do
         let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
@@ -42,14 +50,6 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'delete binding job', :credential
-      end
-
-      let(:subject) do
-        described_class.new(
-          :any,
-          'foo',
-          user_audit_info: {}
-        )
       end
 
       describe '#actor' do
@@ -92,6 +92,7 @@ module VCAP::CloudController
 
       describe '#resource_type' do
         let(:actor) { double('Actor', resource_type: 'super') }
+
         before do
           allow(VCAP::CloudController::V3::DeleteServiceBindingFactory).to receive(:for).and_return(actor)
         end

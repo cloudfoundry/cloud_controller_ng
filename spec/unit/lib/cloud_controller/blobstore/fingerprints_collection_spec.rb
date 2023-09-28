@@ -48,6 +48,7 @@ module CloudController
                 { 'fn' => "../../..#{root_path}/legit/path", 'size' => 'my_filesize', 'sha1' => 'mysha' }
               ]
             end
+
             it 'presents file path' do
               expect(fingerprint['fn']).to eq("../../..#{root_path}/legit/path")
             end
@@ -59,6 +60,7 @@ module CloudController
                 { 'fn' => '../incorrect/path', 'size' => 'my_filesize', 'sha1' => 'mysha' }
               ]
             end
+
             it 'raises an error' do
               expect do
                 fingerprint

@@ -140,31 +140,31 @@ module VCAP::CloudController
         end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
-      it 'should allow standard ascii characters' do
+      it 'allows standard ascii characters' do
         expect do
           IsolationSegmentModel.make(name: "A -_- word 2!?()'\"&+.")
-        end.to_not raise_error
+        end.not_to raise_error
       end
 
-      it 'should allow backslash characters' do
+      it 'allows backslash characters' do
         expect do
           IsolationSegmentModel.make(name: 'a \\ word')
-        end.to_not raise_error
+        end.not_to raise_error
       end
 
-      it 'should allow unicode characters' do
+      it 'allows unicode characters' do
         expect do
           IsolationSegmentModel.make(name: '防御力¡')
-        end.to_not raise_error
+        end.not_to raise_error
       end
 
-      it 'should not allow newline characters' do
+      it 'does not allow newline characters' do
         expect do
           IsolationSegmentModel.make(name: "a \n word")
         end.to raise_error(Sequel::ValidationFailed)
       end
 
-      it 'should not allow escape characters' do
+      it 'does not allow escape characters' do
         expect do
           IsolationSegmentModel.make(name: "a \e word")
         end.to raise_error(Sequel::ValidationFailed)
@@ -191,8 +191,8 @@ module VCAP::CloudController
 
       it 'deletes metadata on destroy' do
         isolation_segment_model.destroy
-        expect(label.exists?).to be_falsey
-        expect(annotation.exists?).to be_falsey
+        expect(label).not_to exist
+        expect(annotation).not_to exist
       end
 
       it 'complains when we delete the iso seg' do

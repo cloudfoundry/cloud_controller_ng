@@ -19,7 +19,7 @@ module VCAP::CloudController
         it 'deletes the correct role' do
           expect do
             subject.delete(Role.where(guid: role.guid))
-          end.to change { Role.count }.by(-1)
+          end.to change(Role, :count).by(-1)
 
           expect { role.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -27,7 +27,7 @@ module VCAP::CloudController
         it 'records an audit event' do
           expect do
             subject.delete(Role.where(guid: role.guid))
-          end.to change { Event.count }.by(1)
+          end.to change(Event, :count).by(1)
 
           event = Event.last
           expect(event.type).to eq(opts[:event_type])

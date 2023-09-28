@@ -90,8 +90,8 @@ module VCAP::CloudController
             it 'does not update metric tags for each process on the backend' do
               app_update.update(app_model, message, lifecycle)
 
-              expect(runners).to_not have_received(:runner_for_process)
-              expect(runner).to_not have_received(:update_metric_tags)
+              expect(runners).not_to have_received(:runner_for_process)
+              expect(runner).not_to have_received(:update_metric_tags)
             end
           end
 
@@ -144,8 +144,8 @@ module VCAP::CloudController
 
                 it 'does not update the process updated_at timestamps' do
                   expect { app_update.update(app_model, message, lifecycle) }.not_to raise_error
-                  expect(web_process).to_not have_received(:save)
-                  expect(worker_process).to_not have_received(:save)
+                  expect(web_process).not_to have_received(:save)
+                  expect(worker_process).not_to have_received(:save)
                 end
               end
 
@@ -166,7 +166,7 @@ module VCAP::CloudController
               expect { app_update.update(app_model, message, lifecycle) }.to raise_error(RuntimeError, 'some-other-error')
 
               expect(runners).to have_received(:runner_for_process).with(web_process)
-              expect(runners).to_not have_received(:runner_for_process).with(worker_process)
+              expect(runners).not_to have_received(:runner_for_process).with(worker_process)
             end
 
             it 'still modifies the app' do
@@ -212,8 +212,8 @@ module VCAP::CloudController
           it 'does not update the metric tags' do
             app_update.update(app_model, message, lifecycle)
 
-            expect(runners).to_not have_received(:runner_for_process)
-            expect(runner).to_not have_received(:update_metric_tags)
+            expect(runners).not_to have_received(:runner_for_process)
+            expect(runner).not_to have_received(:update_metric_tags)
           end
         end
       end
@@ -239,7 +239,7 @@ module VCAP::CloudController
           expect(app_model.name).to eq('original name')
           expect(app_model.lifecycle_data.buildpacks).to eq(['http://new-buildpack.url', 'ruby'])
           expect(app_model.lifecycle_data.stack).to eq(stack.name)
-          expect(runner).to_not have_received(:update_metric_tags)
+          expect(runner).not_to have_received(:update_metric_tags)
         end
 
         context 'when the lifecycle is invalid' do

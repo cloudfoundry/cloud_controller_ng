@@ -45,7 +45,7 @@ module VCAP::CloudController
             created_user = nil
             expect do
               created_user = subject.create(message:)
-            end.to change { User.count }.by(1)
+            end.to change(User, :count).by(1)
 
             expect(created_user.guid).to eq guid
             expect(created_user).to have_labels(
@@ -67,7 +67,7 @@ module VCAP::CloudController
             created_user = nil
             expect do
               created_user = subject.create(message:)
-            end.to change { User.count }.by(1)
+            end.to change(User, :count).by(1)
 
             expect(created_user.guid).to eq client_id
           end

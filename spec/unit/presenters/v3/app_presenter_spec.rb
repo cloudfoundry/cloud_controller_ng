@@ -106,7 +106,7 @@ module VCAP::CloudController::Presenters::V3
         let(:result) { AppPresenter.new(app, decorators: [banana_decorator]).to_hash }
 
         it 'runs the decorators' do
-          expect(result[:included][:bananas]).to match_array(['Davis is bananas'])
+          expect(result[:included][:bananas]).to contain_exactly('Davis is bananas')
         end
       end
     end

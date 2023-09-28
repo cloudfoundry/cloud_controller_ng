@@ -24,7 +24,7 @@ module VCAP::CloudController
         RouteMappingModel.make(route: route2)
 
         results = fetcher.fetch_for_route(route: route1).all
-        expect(results).to match_array([dest1_for_route1, dest2_for_route1])
+        expect(results).to contain_exactly(dest1_for_route1, dest2_for_route1)
       end
 
       context 'filter' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
           it 'only returns destinations for the requested app guids' do
             results = fetcher.fetch_for_route(route: route1).all
-            expect(results).to match_array([destination1])
+            expect(results).to contain_exactly(destination1)
             expect(results).not_to include(destination2)
           end
         end
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
           it 'only returns destinations for the requested destination guids' do
             results = fetcher.fetch_for_route(route: route1).all
-            expect(results).to match_array([destination1, destination2])
+            expect(results).to contain_exactly(destination1, destination2)
             expect(results).not_to include(destination3)
           end
         end

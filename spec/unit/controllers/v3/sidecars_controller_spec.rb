@@ -102,11 +102,11 @@ RSpec.describe SidecarsController, type: :controller do
     it 'creates a sidecar for a process' do
       expect do
         post :create, params: sidecar_params, as: :json
-      end.to change { VCAP::CloudController::SidecarModel.count }.by(1)
+      end.to change(VCAP::CloudController::SidecarModel, :count).by(1)
 
       sidecar = VCAP::CloudController::SidecarModel.last
 
-      expect(response.status).to eq 201
+      expect(response).to have_http_status :created
 
       expected_response = {
         'guid' => sidecar.guid,
@@ -136,7 +136,7 @@ RSpec.describe SidecarsController, type: :controller do
       it 'returns a 404 ResourceNotFound' do
         post :create, params: sidecar_params, as: :json
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
         expect(response.body).to include 'ResourceNotFound'
       end
     end
@@ -180,7 +180,7 @@ RSpec.describe SidecarsController, type: :controller do
 
       it 'returns 422' do
         post :create, params: sidecar_params, as: :json
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Sidecar with name \'my_sidecar\' already exists for given app'
       end
@@ -190,7 +190,7 @@ RSpec.describe SidecarsController, type: :controller do
       it 'returns 404' do
         sidecar_params[:guid] = '1234'
         post :create, params: sidecar_params, as: :json
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
       end
     end
   end
@@ -245,7 +245,7 @@ RSpec.describe SidecarsController, type: :controller do
       it 'returns a 404' do
         get :show, params: { guid: 'nope' }, as: :json
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
       end
     end
 
@@ -278,14 +278,14 @@ RSpec.describe SidecarsController, type: :controller do
       it 'deletes the sidecar' do
         expect do
           delete :destroy, params: { guid: sidecar.guid }, as: :json
-        end.to change { VCAP::CloudController::SidecarModel.count }.by(-1)
+        end.to change(VCAP::CloudController::SidecarModel, :count).by(-1)
       end
 
       context 'the sidecar is not found' do
         it 'returns a 404' do
           delete :destroy, params: { guid: 'nope' }, as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end

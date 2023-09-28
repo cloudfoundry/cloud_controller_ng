@@ -37,14 +37,14 @@ module VCAP::CloudController
 
         it 'can delete a single route mapping' do
           route_mapping_delete.delete(route_mapping)
-          expect(route_mapping.exists?).to be_falsey
+          expect(route_mapping).not_to exist
         end
 
         it 'can delete multiple route mappings' do
           route_mapping_2 = RouteMappingModel.make(app:)
           route_mapping_delete.delete([route_mapping, route_mapping_2])
-          expect(route_mapping.exists?).to be_falsey
-          expect(route_mapping_2.exists?).to be_falsey
+          expect(route_mapping).not_to exist
+          expect(route_mapping_2).not_to exist
         end
 
         it 'updates all processes mapped to the route via the route handler' do
@@ -91,7 +91,7 @@ module VCAP::CloudController
         it 'deletes only present route mappings' do
           route_mapping_2 = RouteMappingModel.make(app:)
           expect { route_mapping_delete.delete([route_mapping, route_mapping_2]) }.not_to raise_error
-          expect(route_mapping_2.exists?).to be_falsey
+          expect(route_mapping_2).not_to exist
         end
 
         it 'does not delegate to the route handler to update route information' do

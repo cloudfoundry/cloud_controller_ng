@@ -7,17 +7,17 @@ module VCAP::CloudController
       let(:factory) { subject }
 
       describe '#for' do
-        it 'should return route job actor when type is route' do
+        it 'returns route job actor when type is route' do
           actor = CreateServiceBindingFactory.for(:route)
           expect(actor).to be_an_instance_of(CreateServiceRouteBindingJobActor)
         end
 
-        it 'should return credential job actor when type is credential' do
+        it 'returns credential job actor when type is credential' do
           actor = CreateServiceBindingFactory.for(:credential)
           expect(actor).to be_an_instance_of(CreateServiceCredentialBindingJobActor)
         end
 
-        it 'should return key job actor when type is key' do
+        it 'returns key job actor when type is key' do
           actor = CreateServiceBindingFactory.for(:key)
           expect(actor).to be_an_instance_of(CreateServiceKeyBindingJobActor)
         end
@@ -28,17 +28,17 @@ module VCAP::CloudController
       end
 
       describe '#action' do
-        it 'should return route action when type is route' do
+        it 'returns route action when type is route' do
           actor = CreateServiceBindingFactory.action(:route, {}, {})
           expect(actor).to be_an_instance_of(ServiceRouteBindingCreate)
         end
 
-        it 'should return credential binding action when type is credential' do
+        it 'returns credential binding action when type is credential' do
           actor = CreateServiceBindingFactory.action(:credential, {}, {})
           expect(actor).to be_an_instance_of(ServiceCredentialBindingAppCreate)
         end
 
-        it 'should return credential binding action when type is key' do
+        it 'returns credential binding action when type is key' do
           actor = CreateServiceBindingFactory.action(:key, {}, {})
           expect(actor).to be_an_instance_of(ServiceCredentialBindingKeyCreate)
         end

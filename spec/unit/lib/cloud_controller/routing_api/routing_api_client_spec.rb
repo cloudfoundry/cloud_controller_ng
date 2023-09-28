@@ -22,7 +22,7 @@ module VCAP::CloudController::RoutingApi
 
     describe '.enabled?' do
       it 'returns true' do
-        expect(routing_api.enabled?).to be_truthy
+        expect(routing_api).to be_enabled
       end
     end
 
@@ -37,6 +37,7 @@ module VCAP::CloudController::RoutingApi
 
       context 'when the routing api url does not exist' do
         let(:routing_api_url) { nil }
+
         it 'raises a RoutingApiUnavailable error' do
           expect do
             routing_api.router_groups
@@ -64,7 +65,7 @@ module VCAP::CloudController::RoutingApi
         end
 
         it 'does not set the HTTPClient::SSLConfig' do
-          expect_any_instance_of(HTTPClient::SSLConfig).to_not receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
+          expect_any_instance_of(HTTPClient::SSLConfig).not_to receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
           routing_api.router_groups
         end
 

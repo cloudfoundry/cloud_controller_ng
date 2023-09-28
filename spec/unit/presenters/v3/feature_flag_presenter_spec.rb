@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
 
         it 'presents the feature flag with updated_at and custom error message as nil' do
           expect(result[:name]).to eq('feature_flag')
-          expect(result[:enabled]).to eq(true)
+          expect(result[:enabled]).to be(true)
           expect(result[:updated_at]).to be_nil
           expect(result[:custom_error_message]).to be_nil
         end

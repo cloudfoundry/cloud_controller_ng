@@ -31,7 +31,7 @@ module VCAP::CloudController
           found_instance1 = eager_loaded_instances.detect { |instance| instance.id == instance1.id }
           found_instance2 = eager_loaded_instances.detect { |instance| instance.id == instance2.id }
           expect(found_instance1.service_plan).to eq(service_plan)
-          expect(found_instance2.service_plan).to_not eq(service_plan)
+          expect(found_instance2.service_plan).not_to eq(service_plan)
         end
       end
 
@@ -46,6 +46,7 @@ module VCAP::CloudController
     describe 'validations' do
       context 'when the name is longer than 255 characters' do
         let(:very_long_name) { 's' * 256 }
+
         it 'refuses to create this service instance' do
           service_instance_attrs[:name] = very_long_name
           expect { service_instance }.to raise_error Sequel::ValidationFailed
@@ -196,7 +197,7 @@ module VCAP::CloudController
       it 'creates a DELETED service usage event' do
         expect do
           service_instance.destroy
-        end.to change { ServiceUsageEvent.count }.by(1)
+        end.to change(ServiceUsageEvent, :count).by(1)
         event = ServiceUsageEvent.last
         expect(event.state).to eq(Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
@@ -213,7 +214,7 @@ module VCAP::CloudController
           expect do
             service_instance.set(service_plan:)
             service_instance.save_changes
-          end.to change { ServiceUsageEvent.count }.by 1
+          end.to change(ServiceUsageEvent, :count).by 1
 
           event = ServiceUsageEvent.last
           expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
@@ -223,11 +224,12 @@ module VCAP::CloudController
 
       context 'updating the service instance name' do
         let(:new_name) { 'some-new-name' }
+
         it 'creates an UPDATE service usage event' do
           expect do
             service_instance.set(name: new_name)
             service_instance.save_changes
-          end.to change { ServiceUsageEvent.count }.by 1
+          end.to change(ServiceUsageEvent, :count).by 1
 
           event = ServiceUsageEvent.last
           expect(event.state).to eq(Repositories::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
@@ -268,7 +270,7 @@ module VCAP::CloudController
 
       it 'stores and returns a nil value' do
         service_instance.credentials = nil
-        expect(service_instance.credentials).to eq(nil)
+        expect(service_instance.credentials).to be_nil
       end
     end
 
@@ -290,18 +292,18 @@ module VCAP::CloudController
     describe '#user_provided_instance?' do
       it 'returns true for ManagedServiceInstance instances' do
         managed_instance = VCAP::CloudController::ManagedServiceInstance.new
-        expect(managed_instance.user_provided_instance?).to eq(false)
+        expect(managed_instance.user_provided_instance?).to be(false)
       end
 
       it 'returns false for ManagedServiceInstance instances' do
         user_provided_instance = VCAP::CloudController::UserProvidedServiceInstance.new
-        expect(user_provided_instance.user_provided_instance?).to eq(true)
+        expect(user_provided_instance.user_provided_instance?).to be(true)
       end
     end
 
     describe '#route_service?' do
       it 'returns false' do
-        expect(service_instance.route_service?).to be_falsey
+        expect(service_instance).not_to be_route_service
       end
     end
 
@@ -311,7 +313,7 @@ module VCAP::CloudController
 
     describe '#shareable?' do
       it 'returns false' do
-        expect(service_instance.shareable?).to be_falsey
+        expect(service_instance).not_to be_shareable
       end
     end
 
@@ -334,10 +336,12 @@ module VCAP::CloudController
 
     describe '#in_suspended_org?' do
       let(:space) { VCAP::CloudController::Space.make }
+
       subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space:) }
 
       context 'when in a suspended organization' do
         before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+
         it 'is true' do
           expect(service_instance).to be_in_suspended_org
         end
@@ -345,6 +349,7 @@ module VCAP::CloudController
 
       context 'when in an unsuspended organization' do
         before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+
         it 'is false' do
           expect(service_instance).not_to be_in_suspended_org
         end
@@ -544,8 +549,8 @@ module VCAP::CloudController
       it 'can access a service_instance from its metadata' do
         expect(annotation.resource_guid).to eq(service_instance.guid)
         expect(label.resource_guid).to eq(service_instance.guid)
-        expect(service_instance.labels).to match_array([label])
-        expect(service_instance.annotations).to match_array([annotation])
+        expect(service_instance.labels).to contain_exactly(label)
+        expect(service_instance.annotations).to contain_exactly(annotation)
       end
     end
   end

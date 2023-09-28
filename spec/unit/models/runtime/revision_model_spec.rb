@@ -19,7 +19,7 @@ module VCAP::CloudController
           RevisionModel.new(droplet_guid: nil, app: AppModel.make)
         end
 
-        it 'it is not valid' do
+        it 'is not valid' do
           expect(revision.valid?).to be false
         end
       end
@@ -27,7 +27,7 @@ module VCAP::CloudController
       context 'when a app_guid is not present' do
         let(:revision) { RevisionModel.make }
 
-        it 'it is not valid' do
+        it 'is not valid' do
           revision.app_guid = nil
           expect(revision.valid?).to be false
         end
@@ -67,7 +67,7 @@ module VCAP::CloudController
         it 'creates a RevisionProcessCommandModel' do
           expect do
             revision.add_command_for_process_type('other_process', 'doing some stuff')
-          end.to change { RevisionProcessCommandModel.count }.by(1)
+          end.to change(RevisionProcessCommandModel, :count).by(1)
 
           command = RevisionProcessCommandModel.last
           expect(command.process_type).to eq 'other_process'
@@ -80,6 +80,7 @@ module VCAP::CloudController
       let(:env_vars) { { 'foo' => SecureRandom.base64(12_000) } }
       let(:app) { AppModel.make(environment_variables: env_vars) }
       let(:revision) { RevisionModel.make(environment_variables: env_vars) }
+
       it 'allows it' do
         expect(app.environment_variables).to eq(revision.environment_variables)
       end

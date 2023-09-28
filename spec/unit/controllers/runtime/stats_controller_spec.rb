@@ -33,7 +33,7 @@ module VCAP::CloudController
         end
 
         context 'because they are a developer' do
-          it 'should return the stats' do
+          it 'returns the stats' do
             set_current_user(developer)
 
             process.state     = 'STARTED'
@@ -66,7 +66,7 @@ module VCAP::CloudController
         end
 
         context 'because they are an auditor' do
-          it 'should return the stats' do
+          it 'returns the stats' do
             set_current_user(auditor)
 
             process.state     = 'STARTED'
@@ -100,7 +100,7 @@ module VCAP::CloudController
         context 'when the instances reporter returns warnings' do
           let(:warnings) { %w[s0mjgnbha full_moon_with_s0mjgnbha] }
 
-          it 'should return the stats with an X-Cf-Warnings header' do
+          it 'returns the stats with an X-Cf-Warnings header' do
             set_current_user(developer)
 
             process.state     = 'STARTED'
@@ -230,7 +230,7 @@ module VCAP::CloudController
               }
             end
 
-            it 'should include the isolation segment name for the app' do
+            it 'includes the isolation segment name for the app' do
               set_current_user(developer)
 
               process.state = 'STARTED'
@@ -246,7 +246,7 @@ module VCAP::CloudController
             end
           end
 
-          it 'should return the stats without the net_info field' do
+          it 'returns the stats without the net_info field' do
             set_current_user(developer)
 
             process.state     = 'STARTED'
@@ -290,7 +290,7 @@ module VCAP::CloudController
 
       context 'when the client cannot see stats' do
         context 'because they are a user' do
-          it 'should return 403' do
+          it 'returns 403' do
             set_current_user(user)
 
             get "/v2/apps/#{process.app.guid}/stats"

@@ -320,7 +320,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
                                           })
           end
 
-          context 'fetching binding fails ' do
+          context 'fetching binding fails' do
             let(:fetch_binding_status_code) { 404 }
             let(:fetch_binding_body) {}
 

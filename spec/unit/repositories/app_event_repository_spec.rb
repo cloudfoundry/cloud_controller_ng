@@ -52,7 +52,7 @@ module VCAP::CloudController
           expect(event.actor_username).to eq user_name
 
           expect(event.metadata.fetch('request')).to eq(expected_request_field)
-          expect(event.metadata.key?('manifest_triggered')).to eq(false)
+          expect(event.metadata.key?('manifest_triggered')).to be(false)
         end
 
         context 'when the event is manifest triggered' do
@@ -61,7 +61,7 @@ module VCAP::CloudController
           it 'tags the event for manifest triggered as true' do
             event = app_event_repository.record_app_update(process, space, user_audit_info, attrs, manifest_triggered:).reload
 
-            expect(event.metadata.fetch('manifest_triggered')).to eq(true)
+            expect(event.metadata.fetch('manifest_triggered')).to be(true)
           end
         end
       end
@@ -130,7 +130,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(process.name)
           expect(event.actor_username).to eq user_name
-          expect(event.metadata['request']['recursive']).to eq(false)
+          expect(event.metadata['request']['recursive']).to be(false)
         end
 
         it 'does not record metadata when recursive is not passed' do
@@ -209,7 +209,7 @@ module VCAP::CloudController
           expect(event.actee).to eq(exiting_process.guid)
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(exiting_process.name)
-          expect(event.metadata['unknown_key']).to eq(nil)
+          expect(event.metadata['unknown_key']).to be_nil
           expect(event.metadata['instance']).to eq('abc')
           expect(event.metadata['cell_id']).to eq('some-cell')
           expect(event.metadata['index']).to eq('2')
@@ -242,7 +242,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee).to eq(app.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -251,7 +251,7 @@ module VCAP::CloudController
           it 'tags the event for manifest triggered as true' do
             event = app_event_repository.record_map_route(user_audit_info, route_mapping, manifest_triggered:)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -272,6 +272,7 @@ module VCAP::CloudController
 
         context 'when given route mapping information' do
           let(:app) { AppModel.make(space: route.space) }
+
           context 'when the route mapping is unweighted' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
@@ -284,6 +285,7 @@ module VCAP::CloudController
               expect(event.metadata[:weight]).to be_nil
             end
           end
+
           context 'when the route mapping has a weight' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', weight: 100) }
 
@@ -296,6 +298,7 @@ module VCAP::CloudController
               expect(event.metadata[:weight]).to eq(100)
             end
           end
+
           context 'when the route mapping has no protocol' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
@@ -308,6 +311,7 @@ module VCAP::CloudController
               expect(event.metadata[:protocol]).to eq('http1')
             end
           end
+
           context 'when the route mapping has a protocol' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', protocol: 'http2') }
 
@@ -341,7 +345,7 @@ module VCAP::CloudController
           expect(event.metadata[:route_guid]).to eq(route.guid)
           expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
           expect(event.metadata[:process_type]).to eq('potato')
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -351,7 +355,7 @@ module VCAP::CloudController
             expect(event.metadata[:route_guid]).to eq(route.guid)
             expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
             expect(event.metadata[:process_type]).to eq('potato')
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 

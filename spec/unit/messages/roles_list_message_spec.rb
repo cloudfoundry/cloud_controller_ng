@@ -87,7 +87,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array guids param' do
         message = RolesListMessage.from_params({ guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:guids]).to include('must be an array')
       end
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array organization_guids param' do
         message = RolesListMessage.from_params({ organization_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:organization_guids]).to include('must be an array')
       end
 
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array space_guids param' do
         message = RolesListMessage.from_params({ space_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:space_guids]).to include('must be an array')
       end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array user_guids param' do
         message = RolesListMessage.from_params({ user_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:user_guids]).to include('must be an array')
       end
 
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array types param' do
         message = RolesListMessage.from_params({ types: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:types]).to include('must be an array')
       end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
       it 'does not accept an include param that is invalid' do
         message = RolesListMessage.from_params({ include: ['garbage'] })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:base]).to contain_exactly(include("Invalid included resource: 'garbage'"))
       end
 

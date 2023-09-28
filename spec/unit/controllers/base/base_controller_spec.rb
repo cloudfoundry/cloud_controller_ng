@@ -90,12 +90,12 @@ module VCAP::CloudController
       context 'when the dispatch is successful' do
         before { set_current_user(user) }
 
-        it 'should dispatch the request' do
+        it 'dispatches the request' do
           get '/test_endpoint'
           expect(last_response.body).to eq 'test_response'
         end
 
-        it 'should log a debug message' do
+        it 'logs a debug message' do
           expect(logger).to receive(:debug).with('cc.dispatch', endpoint: :test_endpoint, args: [])
           get '/test_endpoint'
         end
@@ -237,11 +237,13 @@ module VCAP::CloudController
       context 'when the recursive flag is present' do
         context 'and the flag is true' do
           let(:params) { { 'recursive' => 'true' } }
+
           it { is_expected.to be_recursive_delete }
         end
 
         context 'and the flag is false' do
           let(:params) { { 'recursive' => 'false' } }
+
           it { is_expected.not_to be_recursive_delete }
         end
       end
@@ -258,11 +260,13 @@ module VCAP::CloudController
       context 'when the async flag is present' do
         context 'and the flag is true' do
           let(:params) { { 'async' => 'true' } }
+
           it { is_expected.to be_async }
         end
 
         context 'and the flag is false' do
           let(:params) { { 'async' => 'false' } }
+
           it { is_expected.not_to be_async }
         end
       end
@@ -279,19 +283,19 @@ module VCAP::CloudController
 
       context 'when flag is true' do
         it 'returns true' do
-          expect(base_controller.convert_flag_to_bool('true')).to eq(true)
+          expect(base_controller.convert_flag_to_bool('true')).to be(true)
         end
       end
 
       context 'when flag is false' do
         it 'returns false' do
-          expect(base_controller.convert_flag_to_bool('false')).to eq(false)
+          expect(base_controller.convert_flag_to_bool('false')).to be(false)
         end
       end
 
       context 'when flag is nil' do
         it 'returns false' do
-          expect(base_controller.convert_flag_to_bool(nil)).to eq(false)
+          expect(base_controller.convert_flag_to_bool(nil)).to be(false)
         end
       end
 
@@ -323,8 +327,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false))
-        allow(SecurityContext).to receive(:scopes).and_return([])
+        allow(SecurityContext).to receive_messages(roles: double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false), scopes: [])
       end
 
       context 'when the user is an admin' do
@@ -390,8 +393,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false))
-        allow(SecurityContext).to receive(:scopes).and_return([])
+        allow(SecurityContext).to receive_messages(roles: double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false), scopes: [])
       end
 
       context 'when the user is an admin' do

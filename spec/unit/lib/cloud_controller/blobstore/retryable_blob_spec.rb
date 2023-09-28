@@ -29,7 +29,7 @@ module CloudController
       end
 
       describe 'retries' do
-        context '#internal_download_url' do
+        describe '#internal_download_url' do
           before { allow(wrapped_blob).to receive(:internal_download_url).and_raise(RetryableError) }
 
           it 'retries the operation' do
@@ -41,7 +41,7 @@ module CloudController
           end
         end
 
-        context '#public_download_url' do
+        describe '#public_download_url' do
           before { allow(wrapped_blob).to receive(:public_download_url).and_raise(RetryableError) }
 
           it 'retries the operation' do
@@ -53,8 +53,9 @@ module CloudController
           end
         end
 
-        context '#attributes' do
+        describe '#attributes' do
           before { allow(wrapped_blob).to receive(:attributes).and_raise(RetryableError) }
+
           let(:keys)  { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123_455 } }
 
           it 'retries the operation' do
@@ -66,7 +67,7 @@ module CloudController
           end
         end
 
-        context '#local_path' do
+        describe '#local_path' do
           before { allow(wrapped_blob).to receive(:local_path).and_raise(RetryableError) }
 
           it 'retries the operation' do

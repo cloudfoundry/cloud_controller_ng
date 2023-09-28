@@ -210,8 +210,8 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
         app_guid = parsed_response['guid']
-        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
-        expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
+        expect(VCAP::CloudController::AppModel.find(guid: app_guid)).not_to be_nil
+        expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).not_to be_nil
       end
 
       context 'telemetry' do
@@ -221,7 +221,7 @@ RSpec.describe 'Apps' do
           allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
         end
 
-        it 'should log the required fields when the app is created' do
+        it 'logs the required fields when the app is created' do
           Timecop.freeze do
             post '/v3/apps', create_request.to_json, user_header
 
@@ -886,6 +886,7 @@ RSpec.describe 'Apps' do
       before do
         space.add_developer(user)
       end
+
       it 'can order by name' do
         VCAP::CloudController::AppModel.make(space: space, name: 'zed')
         VCAP::CloudController::AppModel.make(space: space, name: 'alpha')
@@ -1240,7 +1241,7 @@ RSpec.describe 'Apps' do
       it 'does not include spaces if no one asks for them' do
         get '/v3/apps', nil, admin_header
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to_not have_key('included')
+        expect(parsed_response).not_to have_key('included')
       end
     end
   end
@@ -1742,6 +1743,7 @@ RSpec.describe 'Apps' do
         }
       }
     end
+
     describe 'permissions' do
       let(:api_call) do
         ->(headers) { get "/v3/apps/#{app_model.guid}/builds", nil, headers }
@@ -1918,11 +1920,11 @@ RSpec.describe 'Apps' do
 
       Delayed::Worker.new.work_off
 
-      expect(app_model.exists?).to be_falsey
-      expect(package.exists?).to be_falsey
-      expect(droplet.exists?).to be_falsey
-      expect(process.exists?).to be_falsey
-      expect(deployment.exists?).to be_falsey
+      expect(app_model).not_to exist
+      expect(package).not_to exist
+      expect(droplet).not_to exist
+      expect(process).not_to exist
+      expect(deployment).not_to exist
 
       event = VCAP::CloudController::Event.last(2).first
       expect(event.values).to include({
@@ -1974,6 +1976,7 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
         space.add_developer(user)
       end
+
       it_behaves_like 'resource with metadata' do
         let(:resource) { app_model }
         let(:api_call) do
@@ -2093,7 +2096,7 @@ RSpec.describe 'Apps' do
     it 'updates an app' do
       space.organization.add_user(user)
       space.add_developer(user)
-      expect_any_instance_of(VCAP::CloudController::Diego::Runner).to_not receive(:update_metric_tags)
+      expect_any_instance_of(VCAP::CloudController::Diego::Runner).not_to receive(:update_metric_tags)
       patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
@@ -2191,7 +2194,8 @@ RSpec.describe 'Apps' do
         space.organization.add_user(user)
         space.add_developer(user)
       end
-      it 'should log the required fields when the app gets updated' do
+
+      it 'logs the required fields when the app gets updated' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -2474,7 +2478,7 @@ RSpec.describe 'Apps' do
           space.add_developer(user)
         end
 
-        it 'should issue the required events when the app starts' do
+        it 'issues the required events when the app starts' do
           post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
 
           event = VCAP::CloudController::Event.last
@@ -2499,7 +2503,7 @@ RSpec.describe 'Apps' do
           space.add_developer(user)
         end
 
-        it 'should log the required fields when the app starts' do
+        it 'logs the required fields when the app starts' do
           Timecop.freeze do
             expected_json = {
               'telemetry-source' => 'cloud_controller_ng',
@@ -2539,12 +2543,12 @@ RSpec.describe 'Apps' do
         expect do
           patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", { data: { guid: droplet.guid } }.to_json, user_header
           expect(last_response.status).to eq(200)
-        end.to change { VCAP::CloudController::RevisionModel.count }.by(0)
+        end.not_to(change(VCAP::CloudController::RevisionModel, :count))
 
         expect do
           post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
           expect(last_response.status).to eq(200), last_response.body
-        end.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+        end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
       end
     end
   end
@@ -2662,7 +2666,7 @@ RSpec.describe 'Apps' do
         space.add_developer(user)
       end
 
-      it 'should issue the required events when the app stops' do
+      it 'issues the required events when the app stops' do
         post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
 
         event = VCAP::CloudController::Event.last
@@ -2687,7 +2691,7 @@ RSpec.describe 'Apps' do
         space.add_developer(user)
       end
 
-      it 'should log the required fields when the app stops' do
+      it 'logs the required fields when the app stops' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -2825,7 +2829,7 @@ RSpec.describe 'Apps' do
           space.add_developer(user)
         end
 
-        it 'should log the required fields when the app is restarted' do
+        it 'logs the required fields when the app is restarted' do
           Timecop.freeze do
             expected_json = {
               'telemetry-source' => 'cloud_controller_ng',
@@ -2933,6 +2937,7 @@ RSpec.describe 'Apps' do
       h['org_auditor'] = { code: 404 }
       h
     end
+
     before do
       droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       app_model.droplet_guid = droplet_model.guid
@@ -3214,6 +3219,7 @@ RSpec.describe 'Apps' do
       }
       h
     end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
     context 'when organization is suspended' do

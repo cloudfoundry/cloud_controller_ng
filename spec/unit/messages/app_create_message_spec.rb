@@ -36,6 +36,7 @@ module VCAP::CloudController
             }
           }
         end
+
         it 'is not valid' do
           message = AppCreateMessage.new(params)
 
@@ -306,7 +307,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = AppCreateMessage.new(params)
 
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors_on(:lifecycle_type)).to include('must be a string')
             end
           end

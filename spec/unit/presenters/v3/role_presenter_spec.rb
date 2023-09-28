@@ -23,6 +23,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{role.space.guid}")
         end
       end
+
       describe 'the role is space developer' do
         let(:role) { VCAP::CloudController::SpaceDeveloper.make }
         let(:result) { presenter.to_hash }
@@ -40,6 +41,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{role.space.guid}")
         end
       end
+
       describe 'the role is space developer' do
         let(:role) { VCAP::CloudController::SpaceManager.make }
         let(:result) { presenter.to_hash }
@@ -57,6 +59,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{role.space.guid}")
         end
       end
+
       describe 'the role is organization auditor' do
         let(:role) { VCAP::CloudController::OrganizationAuditor.make }
         let(:result) { presenter.to_hash }
@@ -74,6 +77,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{role.organization.guid}")
         end
       end
+
       describe 'the role is organization manager' do
         let(:role) { VCAP::CloudController::OrganizationManager.make }
         let(:result) { presenter.to_hash }
@@ -91,6 +95,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{role.organization.guid}")
         end
       end
+
       describe 'the role is organization billing manager' do
         let(:role) { VCAP::CloudController::OrganizationBillingManager.make }
         let(:result) { presenter.to_hash }
@@ -108,6 +113,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{role.organization.guid}")
         end
       end
+
       describe 'the role is organization user' do
         let(:role) { VCAP::CloudController::OrganizationUser.make }
         let(:result) { presenter.to_hash }

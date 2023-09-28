@@ -83,6 +83,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when build_related is false' do
         let(:build_related) { false }
+
         it 'does not include a related field in links' do
           expect(result[:links]).to eq({
                                          self: {

@@ -35,13 +35,13 @@ module CloudFoundry
       let(:frozen_time) { Time.utc(2015, 10, 21, 7, 28) + Time.zone_offset('PDT') }
       let(:frozen_epoch) { frozen_time.to_i }
 
-      before(:each) do
+      before do
         middleware.instance_variable_set('@expiring_request_counter', expiring_request_counter)
         allow(expiring_request_counter).to receive(:increment).and_return([1, expires_in])
         Timecop.freeze frozen_time
       end
 
-      after(:each) do
+      after do
         Timecop.return
       end
 
@@ -227,9 +227,9 @@ module CloudFoundry
               allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
               expect(expiring_request_counter).to receive(:increment).with('forwarded_ip', interval, logger).and_return([0, expires_in])
               _, response_headers, = middleware.call(unauthenticated_env)
-              expect(response_headers['X-RateLimit-Limit-V2-API']).to_not be_nil
-              expect(response_headers['X-RateLimit-Remaining-V2-API']).to_not be_nil
-              expect(response_headers['X-RateLimit-Reset-V2-API']).to_not be_nil
+              expect(response_headers['X-RateLimit-Limit-V2-API']).not_to be_nil
+              expect(response_headers['X-RateLimit-Remaining-V2-API']).not_to be_nil
+              expect(response_headers['X-RateLimit-Reset-V2-API']).not_to be_nil
             end
           end
         end
@@ -272,7 +272,7 @@ module CloudFoundry
       context 'when limit has exceeded' do
         let(:path_info) { '/v2/foo' }
 
-        before(:each) do
+        before do
           allow(expiring_request_counter).to receive(:increment).and_return([per_process_general_limit + 1, expires_in])
         end
 

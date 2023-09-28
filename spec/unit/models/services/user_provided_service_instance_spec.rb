@@ -21,8 +21,9 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :space }
+
       it do
-        is_expected.to have_associated :service_bindings, associated_instance: lambda { |service_instance|
+        expect(subject).to have_associated :service_bindings, associated_instance: lambda { |service_instance|
           app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
@@ -31,12 +32,13 @@ module VCAP::CloudController
 
     describe 'Validations' do
       let(:max_tags) { ['a' * 1024, 'b' * 1024] }
+
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :space }
       it { is_expected.to strip_whitespace :name }
       it { is_expected.to strip_whitespace :syslog_drain_url }
 
-      it 'should not bind an app and a service instance from different app spaces' do
+      it 'does not bind an app and a service instance from different app spaces' do
         service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
         VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
         service_binding = VCAP::CloudController::ServiceBinding.make
@@ -116,7 +118,7 @@ module VCAP::CloudController
         expect(event).to match_service_instance(instance)
       end
 
-      it 'should create the service instance if the route_service_url is empty' do
+      it 'creates the service instance if the route_service_url is empty' do
         VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: '')
         expect(ServiceInstance.count).to eq(1)
       end
@@ -145,6 +147,7 @@ module VCAP::CloudController
 
       context 'when there are no tags' do
         let(:instance_tags) { nil }
+
         it 'returns an empty array' do
           expect(service_instance.tags).to eq []
         end

@@ -99,7 +99,7 @@ module VCAP::CloudController
         let(:service_key) { ServiceKey.make }
 
         it 'returns true' do
-          expect(service_key.credhub_reference?).to eq(false)
+          expect(service_key.credhub_reference?).to be(false)
         end
       end
 
@@ -112,7 +112,7 @@ module VCAP::CloudController
         let(:service_key) { ServiceKey.make(credentials: credhub_ref) }
 
         it 'returns false' do
-          expect(service_key.credhub_reference?).to eq(true)
+          expect(service_key.credhub_reference?).to be(true)
         end
       end
     end
@@ -193,7 +193,7 @@ module VCAP::CloudController
           allow(ServiceKeyOperation).to receive(:create).and_raise(Sequel::DatabaseError, 'failed to create new-binding operation')
         end
 
-        it 'should rollback the binding' do
+        it 'rollbacks the binding' do
           expect { binding.save_with_attributes_and_new_operation({}, { state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
           expect(ServiceKey.where(guid: binding.guid).count).to eq(0)
         end
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
           expect(binding.last_operation.state).to eq 'in progress'
           expect(binding.last_operation.type).to eq 'delete'
-          expect(binding.last_operation.description).to eq nil
+          expect(binding.last_operation.description).to be_nil
           expect(ServiceKey.where(guid: binding.guid).count).to eq(1)
           expect(ServiceKeyOperation.where(service_key_id: binding.id).count).to eq(1)
         end

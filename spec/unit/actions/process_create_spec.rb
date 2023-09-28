@@ -41,7 +41,7 @@ module VCAP::CloudController
           expect(app.processes.count).to eq(1)
           expect(app.processes.first.guid).to eq(process.guid)
           expect(process.type).to eq('web')
-          expect(process.command).to eq(nil)
+          expect(process.command).to be_nil
         end
       end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
           event = Event.last
           expect(event.type).to eq('audit.app.process.create')
           expect(event.metadata['process_guid']).to eq(process.guid)
-          expect(event.metadata['manifest_triggered']).to eq(nil)
+          expect(event.metadata['manifest_triggered']).to be_nil
         end
 
         context 'when the create is manifest triggered' do
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
             event = Event.last
             expect(event.type).to eq('audit.app.process.create')
-            expect(event.metadata['manifest_triggered']).to eq(true)
+            expect(event.metadata['manifest_triggered']).to be(true)
           end
         end
       end
@@ -124,7 +124,7 @@ module VCAP::CloudController
 
           expect(process.instances).to eq(1)
           expect(process.health_check_type).to eq('port')
-          expect(process.ports).to eq(nil)
+          expect(process.ports).to be_nil
           expect(process.diego).to be_truthy
         end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
           expect(process.instances).to eq(0)
           expect(process.health_check_type).to eq('process')
-          expect(process.ports).to eq(nil)
+          expect(process.ports).to be_nil
           expect(process.diego).to be_truthy
         end
       end

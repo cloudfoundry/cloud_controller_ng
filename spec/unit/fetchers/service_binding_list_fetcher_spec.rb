@@ -17,7 +17,7 @@ module VCAP::CloudController
       context 'when there are no bindings' do
         it 'returns an empty dataset' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
-          expect(results.count).to eql(0)
+          expect(results.count).to be(0)
         end
       end
 
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         it 'returns the binding for the correct space' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
-          expect(results.count).to eql(1)
+          expect(results.count).to be(1)
         end
       end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
         it 'returns the bindings for the correct space' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
-          expect(results.count).to eql(2)
+          expect(results.count).to be(2)
         end
       end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
         it 'returns the binding for the correct service instance' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
-          expect(results.count).to eql(1)
+          expect(results.count).to be(1)
         end
       end
     end

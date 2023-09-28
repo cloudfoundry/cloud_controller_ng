@@ -18,30 +18,24 @@ module VCAP::CloudController
       wreathless_hash = { foo: 'bar' }
       hash = subject.decorate(wreathless_hash, roles)
       expect(hash[:foo]).to eq('bar')
-      expect(hash[:included][:spaces]).to match_array([
-        Presenters::V3::SpacePresenter.new(space1).to_hash,
-        Presenters::V3::SpacePresenter.new(space2).to_hash
-      ])
+      expect(hash[:included][:spaces]).to contain_exactly(Presenters::V3::SpacePresenter.new(space1).to_hash, Presenters::V3::SpacePresenter.new(space2).to_hash)
     end
 
     it 'does not overwrite other included fields' do
       wreathless_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
       hash = subject.decorate(wreathless_hash, roles)
       expect(hash[:foo]).to eq('bar')
-      expect(hash[:included][:spaces]).to match_array([
-        Presenters::V3::SpacePresenter.new(space1).to_hash,
-        Presenters::V3::SpacePresenter.new(space2).to_hash
-      ])
+      expect(hash[:included][:spaces]).to contain_exactly(Presenters::V3::SpacePresenter.new(space1).to_hash, Presenters::V3::SpacePresenter.new(space2).to_hash)
       expect(hash[:included][:monkeys]).to match_array(%w[zach greg])
     end
 
     describe '.match?' do
       it 'matches include arrays containing "space"' do
-        expect(decorator.match?(%w[potato space turnip])).to be_truthy
+        expect(decorator).to be_match(%w[potato space turnip])
       end
 
       it 'does not match other include arrays' do
-        expect(decorator.match?(%w[potato turnip])).to be_falsey
+        expect(decorator).not_to be_match(%w[potato turnip])
       end
     end
   end

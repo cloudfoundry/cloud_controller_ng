@@ -34,7 +34,7 @@ module CloudController::Presenters::V2
         it 'does not include to_one relationship link when association content is nil' do
           test_model_many_to_one.test_model
           hash = subject.to_hash(VCAP::CloudController::TestModelManyToOnesController, test_model_many_to_one, opts, 0, [])
-          expect(hash).to_not have_key('test_model_url')
+          expect(hash).not_to have_key('test_model_url')
         end
 
         it 'raises NotLoadedAssociationError when association is not loaded and will be included so that this object is not responsible for checking authorization' do
@@ -46,6 +46,7 @@ module CloudController::Presenters::V2
 
       describe 'to_many relationship' do
         let(:test_model_many_to_many) { VCAP::CloudController::TestModelManyToMany.make }
+
         it 'includes to_many relationship link when association is set' do
           test_model.add_test_model_many_to_many(test_model_many_to_many)
           hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts, 0, [])
@@ -68,7 +69,7 @@ module CloudController::Presenters::V2
           test_model.add_test_model_many_to_many(test_model_many_to_many)
           hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 1), 0, [])
           expect(hash.fetch('test_model_many_to_manies_link_only_url')).to be
-          expect(hash).to_not have_key('test_model_many_to_manies_link_only')
+          expect(hash).not_to have_key('test_model_many_to_manies_link_only')
         end
 
         it 'raises NotLoadedAssociationError when association is not loaded and will be included so that this object is not responsible for checking authorization' do
@@ -121,7 +122,7 @@ module CloudController::Presenters::V2
 
           orphans = {}
           hash = subject.to_hash(VCAP::CloudController::TestModelsController, test_model, opts.merge(inline_relations_depth: 2), 0, [], orphans)
-          expect(orphans.keys.size).to eql(2)
+          expect(orphans.keys.size).to be(2)
           expect(hash.fetch('test_model_many_to_manies')).to eql([test_model_many_to_many.guid])
           expect(orphans[test_model_many_to_many.guid]).to eql(
             'metadata' => {
@@ -151,7 +152,7 @@ module CloudController::Presenters::V2
           orphans = {}
           hash = subject.to_hash(VCAP::CloudController::TestModelManyToOnesController, test_model_many_to_one, opts.merge(inline_relations_depth: 1), 0, [], orphans)
           expect(hash).not_to have_key 'test_model'
-          expect(orphans.keys.size).to eql(1)
+          expect(orphans.keys.size).to be(1)
           expect(orphans[test_model_many_to_one.test_model.guid]).to eql(
             'metadata' => {
               'guid' => test_model_many_to_one.test_model.guid,

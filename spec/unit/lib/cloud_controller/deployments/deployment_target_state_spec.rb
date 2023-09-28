@@ -245,7 +245,7 @@ module VCAP::CloudController
             subject.apply_to_app(app, user_audit_info)
 
             expect(app.reload.sidecars).to have(0).items
-            expect(sidecar.exists?).to be_falsey
+            expect(sidecar).not_to exist
           end
         end
       end

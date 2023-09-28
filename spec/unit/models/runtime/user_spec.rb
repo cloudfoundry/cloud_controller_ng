@@ -7,27 +7,31 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :organizations }
       it { is_expected.to have_associated :default_space, class: Space }
+
       it do
-        is_expected.to have_associated :managed_organizations, associated_instance: lambda { |user|
+        expect(subject).to have_associated :managed_organizations, associated_instance: lambda { |user|
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
+
       it do
-        is_expected.to have_associated :billing_managed_organizations, associated_instance: lambda { |user|
+        expect(subject).to have_associated :billing_managed_organizations, associated_instance: lambda { |user|
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
+
       it do
-        is_expected.to have_associated :audited_organizations, associated_instance: lambda { |user|
+        expect(subject).to have_associated :audited_organizations, associated_instance: lambda { |user|
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
+
       it { is_expected.to have_associated :spaces }
       it { is_expected.to have_associated :managed_spaces, class: Space }
       it { is_expected.to have_associated :audited_spaces, class: Space }
@@ -64,10 +68,11 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :admin, :active, :default_space_guid }
+
       it {
-        is_expected.to import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
-                                         :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
-                                         :managed_space_guids, :audited_space_guids, :default_space_guid
+        expect(subject).to import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
+                                             :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
+                                             :managed_space_guids, :audited_space_guids, :default_space_guid
       }
     end
 
@@ -82,22 +87,22 @@ module VCAP::CloudController
       end
 
       context 'when a user is not assigned to any space' do
-        it "should not alter a user's developer space" do
+        it "does not alter a user's developer space" do
           expect do
             user.remove_spaces space
-          end.to_not(change { user.spaces })
+          end.not_to(change(user, :spaces))
         end
 
-        it "should not alter a user's managed space" do
+        it "does not alter a user's managed space" do
           expect do
             user.remove_spaces space
-          end.to_not(change { user.managed_spaces })
+          end.not_to(change(user, :managed_spaces))
         end
 
-        it "should not alter a user's audited spaces" do
+        it "does not alter a user's audited spaces" do
           expect do
             user.remove_spaces space
-          end.to_not(change { user.audited_spaces })
+          end.not_to(change(user, :audited_spaces))
         end
       end
 
@@ -110,40 +115,40 @@ module VCAP::CloudController
           space.refresh
         end
 
-        it "should remove the space from the user's developer spaces" do
+        it "removes the space from the user's developer spaces" do
           expect do
             user.remove_spaces space
-          end.to change { user.spaces }.from([space]).to([])
+          end.to change(user, :spaces).from([space]).to([])
         end
 
-        it "should remove the space from the user's managed spaces" do
+        it "removes the space from the user's managed spaces" do
           expect do
             user.remove_spaces space
-          end.to change { user.managed_spaces }.from([space]).to([])
+          end.to change(user, :managed_spaces).from([space]).to([])
         end
 
-        it "should remove the space form the user's auditor spaces" do
+        it "removes the space form the user's auditor spaces" do
           expect do
             user.remove_spaces space
-          end.to change { user.audited_spaces }.from([space]).to([])
+          end.to change(user, :audited_spaces).from([space]).to([])
         end
 
-        it "should remove the user from the space's developers role" do
+        it "removes the user from the space's developers role" do
           expect do
             user.remove_spaces space
-          end.to change { space.developers }.from([user]).to([])
+          end.to change(space, :developers).from([user]).to([])
         end
 
-        it "should remove the user from the space's managers role" do
+        it "removes the user from the space's managers role" do
           expect do
             user.remove_spaces space
-          end.to change { space.managers }.from([user]).to([])
+          end.to change(space, :managers).from([user]).to([])
         end
 
-        it "should remove the user from the space's auditors role" do
+        it "removes the user from the space's auditors role" do
           expect do
             user.remove_spaces space
-          end.to change { space.auditors }.from([user]).to([])
+          end.to change(space, :auditors).from([user]).to([])
         end
       end
     end
@@ -157,19 +162,19 @@ module VCAP::CloudController
           user.add_organization(org)
         end
 
-        it 'should allow becoming an organization manager' do
+        it 'allows becoming an organization manager' do
           expect do
             user.add_managed_organization(org)
           end.to change { user.managed_organizations.size }.by(1)
         end
 
-        it 'should allow becoming an organization billing manager' do
+        it 'allows becoming an organization billing manager' do
           expect do
             user.add_billing_managed_organization(org)
           end.to change { user.billing_managed_organizations.size }.by(1)
         end
 
-        it 'should allow becoming an organization auditor' do
+        it 'allows becoming an organization auditor' do
           expect do
             user.add_audited_organization(org)
           end.to change { user.audited_organizations.size }.by(1)
@@ -177,19 +182,19 @@ module VCAP::CloudController
       end
 
       context 'when a user is not a member of organization' do
-        it 'should NOT allow becoming an organization manager' do
+        it 'does not allow becoming an organization manager' do
           expect do
             user.add_audited_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
         end
 
-        it 'should NOT allow becoming an organization billing manager' do
+        it 'does not allow becoming an organization billing manager' do
           expect do
             user.add_billing_managed_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
         end
 
-        it 'should NOT allow becoming an organization auditor' do
+        it 'does not allow becoming an organization auditor' do
           expect do
             user.add_audited_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
@@ -202,7 +207,7 @@ module VCAP::CloudController
           user.add_managed_organization(org)
         end
 
-        it 'should fail to remove user from organization' do
+        it 'fails to remove user from organization' do
           expect do
             user.remove_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
@@ -215,7 +220,7 @@ module VCAP::CloudController
           user.add_billing_managed_organization(org)
         end
 
-        it 'should fail to remove user from organization' do
+        it 'fails to remove user from organization' do
           expect do
             user.remove_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
@@ -228,7 +233,7 @@ module VCAP::CloudController
           user.add_audited_organization(org)
         end
 
-        it 'should fail to remove user from organization' do
+        it 'fails to remove user from organization' do
           expect do
             user.remove_organization(org)
           end.to raise_error User::InvalidOrganizationRelation
@@ -240,7 +245,7 @@ module VCAP::CloudController
           user.add_organization(org)
         end
 
-        it 'should remove user from organization' do
+        it 'removes user from organization' do
           expect do
             user.remove_organization(org)
           end.to change { user.organizations.size }.by(-1)
@@ -252,7 +257,7 @@ module VCAP::CloudController
       let(:user) { User.make }
 
       it 'does not include username when username has not been set' do
-        expect(user.export_attrs).to_not include(:username)
+        expect(user.export_attrs).not_to include(:username)
       end
 
       it 'includes username when username has been set' do
@@ -262,7 +267,7 @@ module VCAP::CloudController
 
       context 'organization_roles' do
         it 'does not include organization_roles when organization_roles has not been set' do
-          expect(user.export_attrs).to_not include(:organization_roles)
+          expect(user.export_attrs).not_to include(:organization_roles)
         end
 
         it 'includes organization_roles when organization_roles has been set' do
@@ -273,7 +278,7 @@ module VCAP::CloudController
 
       context 'space_roles' do
         it 'does not include space_roles when space_roles has not been set' do
-          expect(user.export_attrs).to_not include(:space_roles)
+          expect(user.export_attrs).not_to include(:space_roles)
         end
 
         it 'includes space_roles when space_roles has been set' do
@@ -336,6 +341,7 @@ module VCAP::CloudController
         SpaceDeveloper.make(user: space_2b_developer, space: space_2b)
         OrganizationUser.make(user: space_2b_developer, organization: org_2)
       end
+
       context 'when an {admin, read_only_admin, global_auditor} lists users' do
         it 'sees all the org users in managed org' do
           expect(User.make(guid: 'global-user').readable_users(true).map(&:guid)).
@@ -375,36 +381,43 @@ module VCAP::CloudController
 
       context 'when the user is an org manager' do
         let(:role) { org_1_manager }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is an org billing manager' do
         let(:role) { org_1_billing_manager }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is an org auditor' do
         let(:role) { org_1_auditor }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is an org user' do
         let(:role) { org_1_user }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is a space manager' do
         let(:role) { space_1a_manager }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is a space auditor' do
         let(:role) { space_1a_auditor }
+
         it_behaves_like 'an org_user'
       end
 
       context 'when the user is a space developer' do
         let(:role) { space_1a_developer }
+
         it_behaves_like 'an org_user'
       end
 
@@ -527,29 +540,13 @@ module VCAP::CloudController
         billing_manager_organization.add_billing_manager(org_billing_manager)
 
         user_result = user.visible_users_in_my_orgs.select_map(:user_id)
-        expect(user_result).to match_array([user.id, other_user1.id])
+        expect(user_result).to contain_exactly(user.id, other_user1.id)
         manager_result = org_manager.visible_users_in_my_orgs.select_map(:user_id)
-        expect(manager_result).to match_array(
-          [
-            org_manager.id,
-            other_user1.id,
-            other_user2.id
-          ]
-        )
+        expect(manager_result).to contain_exactly(org_manager.id, other_user1.id, other_user2.id)
         auditor_result = org_auditor.visible_users_in_my_orgs.select_map(:user_id)
-        expect(auditor_result).to match_array(
-          [
-            org_auditor.id,
-            other_user3.id
-          ]
-        )
+        expect(auditor_result).to contain_exactly(org_auditor.id, other_user3.id)
         billing_manager_result = org_billing_manager.visible_users_in_my_orgs.select_map(:user_id)
-        expect(billing_manager_result).to match_array(
-          [
-            org_billing_manager.id,
-            other_user4.id
-          ]
-        )
+        expect(billing_manager_result).to contain_exactly(org_billing_manager.id, other_user4.id)
       end
     end
   end

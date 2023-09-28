@@ -64,8 +64,8 @@ module VCAP::CloudController
 
       it 'returns all of the deployments' do
         results = fetcher.fetch_all(message)
-        expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded,
-                                        deployment_for_app2_space1, deployment_for_app3_space2, deployment_for_app4_space3])
+        expect(results).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app2_space1, deployment_for_app3_space2,
+                                           deployment_for_app4_space3)
       end
 
       context 'filtering app guids' do
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested app guids' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
+          expect(results).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2)
         end
       end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
+          expect(results).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2)
         end
       end
 
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded])
+          expect(results).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded)
         end
       end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app2_space1, deployment_for_app4_space3])
+          expect(results).to contain_exactly(deployment_for_app2_space1, deployment_for_app4_space3)
         end
       end
 
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app2_space1, deployment_for_app3_space2, deployment_for_app4_space3])
+          expect(results).to contain_exactly(deployment_for_app2_space1, deployment_for_app3_space2, deployment_for_app4_space3)
         end
       end
 
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2])
+          expect(results).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app3_space2)
         end
       end
 
@@ -142,12 +142,7 @@ module VCAP::CloudController
 
       it 'returns only the deployments in spaces requested' do
         results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-        expect(results.all).to match_array([
-          deployment_for_app1_space1,
-          deployment_for_app1_space1_superseded,
-          deployment_for_app2_space1,
-          deployment_for_app4_space3
-        ])
+        expect(results.all).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app2_space1, deployment_for_app4_space3)
       end
 
       describe 'filtering on app guids' do
@@ -155,7 +150,7 @@ module VCAP::CloudController
 
         it 'returns all the deployments associated with the requested app guid' do
           results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-          expect(results.all).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app4_space3])
+          expect(results.all).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded, deployment_for_app4_space3)
         end
       end
 
@@ -164,7 +159,7 @@ module VCAP::CloudController
 
         it 'returns all the deployments associated with the requested states' do
           results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-          expect(results.all).to match_array([deployment_for_app1_space1, deployment_for_app1_space1_superseded])
+          expect(results.all).to contain_exactly(deployment_for_app1_space1, deployment_for_app1_space1_superseded)
         end
       end
 

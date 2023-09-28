@@ -26,11 +26,11 @@ module VCAP::CloudController
         subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: nil) }
 
         it 'constructs without issue' do
-          expect(uaa_client).not_to eq(nil)
+          expect(uaa_client).not_to be_nil
           expect(uaa_client.uaa_target).to eq(url)
           expect(uaa_client.client_id).to eq(client_id)
           expect(uaa_client.secret).to eq(secret)
-          expect(uaa_client.ca_file).to eq(nil)
+          expect(uaa_client.ca_file).to be_nil
         end
       end
     end
@@ -216,8 +216,7 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'returns an empty hash' do
@@ -384,8 +383,7 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'returns an empty hash' do
@@ -738,6 +736,7 @@ module VCAP::CloudController
     describe '#origins_for_username' do
       let(:userid_1) { '111' }
       let(:username) { 'user_1' }
+
       context 'when no exception is thrown' do
         it 'gets the origins for the user' do
           response_body = {
@@ -804,8 +803,7 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'raises an exception' do

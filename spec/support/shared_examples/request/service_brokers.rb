@@ -9,7 +9,7 @@ RSpec.shared_examples 'a successful broker delete' do
   end
 
   it 'deletes the broker' do
-    is_expected.to_not find_broker(broker_guid: broker.guid, with: user_headers)
+    expect(subject).not_to find_broker(broker_guid: broker.guid, with: user_headers)
   end
 
   it 'deletes the service offerings and plans' do

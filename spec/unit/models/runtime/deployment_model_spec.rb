@@ -20,7 +20,7 @@ module VCAP::CloudController
       expect(deployment.deploying_web_process).to eq(deploying_web_process)
     end
 
-    context '#processes' do
+    describe '#processes' do
       before do
         DeploymentProcessModel.make(
           deployment: deployment,

@@ -285,6 +285,7 @@ module VCAP::CloudController
           before do
             VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
           end
+
           it 'continues to raise an InvalidAuthToken error' do
             set_current_user(User.make, token: :invalid_token)
             get '/v2/services'
@@ -340,6 +341,7 @@ module VCAP::CloudController
       let(:user) { User.make }
 
       before { set_current_user(user, { email: email, admin: true }) }
+
       context 'when no purge parameter is given' do
         it 'gives error info to user' do
           delete "/v2/services/#{service.guid}", '{}', admin_headers

@@ -44,6 +44,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when create-service-broker' do
           after { delete_broker }
+
           before do
             UAARequests.stub_all
 
@@ -90,6 +91,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           after { delete_broker }
+
           before do
             setup_broker(catalog)
             stub_catalog_fetch(broker_response_status, catalog_with_updated_secret)

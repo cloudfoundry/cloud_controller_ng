@@ -4,11 +4,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SharedDomainsController do
+    before { set_current_user_as_admin }
+
     describe 'Query Parameters' do
       it { expect(SharedDomainsController).to be_queryable_by(:name) }
     end
-
-    before { set_current_user_as_admin }
 
     describe 'Attributes' do
       it do
@@ -40,6 +40,7 @@ module VCAP::CloudController
 
     context 'router groups' do
       let(:routing_api_client) { double('routing_api_client') }
+
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
           and_return(routing_api_client)
@@ -85,7 +86,7 @@ module VCAP::CloudController
 
             domain_hash = JSON.parse(last_response.body)['entity']
             expect(domain_hash['name']).to eq('shareddomain.com')
-            expect(domain_hash['internal']).to eq(false)
+            expect(domain_hash['internal']).to be(false)
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
             expect(domain_hash['router_group_type']).to eq('tcp')
           end
@@ -120,6 +121,7 @@ module VCAP::CloudController
 
           context 'when the router_group_guid does not exist in the Routing API' do
             let(:router_group) { nil }
+
             it 'returns a 400 error' do
               post '/v2/shared_domains', body
 
@@ -154,8 +156,7 @@ module VCAP::CloudController
         let!(:domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
 
         before do
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_groups: router_groups)
           allow(routing_api_client).to receive(:router_group).with('router-group-guid1').
             and_return(RoutingApi::RouterGroup.new({ 'guid' => 'router-group-guid1', 'type' => 'tcp' }))
         end
@@ -167,7 +168,7 @@ module VCAP::CloudController
 
           domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
-          expect(domain_hash['internal']).to eq(false)
+          expect(domain_hash['internal']).to be(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
           expect(domain_hash['router_group_type']).to eq('tcp')
         end
@@ -193,7 +194,7 @@ module VCAP::CloudController
 
           domain_hash = JSON.parse(last_response.body)['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
-          expect(domain_hash['internal']).to eq(false)
+          expect(domain_hash['internal']).to be(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
           expect(domain_hash['router_group_type']).to eq('tcp')
         end
@@ -230,6 +231,7 @@ module VCAP::CloudController
             allow(routing_api_client).to receive(:router_group).
               and_raise(RoutingApi::RoutingApiUnavailable)
           end
+
           it 'returns a 503 Service Unavailable' do
             get '/v2/shared_domains'
 
@@ -268,7 +270,7 @@ module VCAP::CloudController
             domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
 
             expect(domain_hash['name']).to eq('shareddomain.com')
-            expect(domain_hash['internal']).to eq(false)
+            expect(domain_hash['internal']).to be(false)
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
             expect(domain_hash.key?('router_group_type')).to be true
             expect(domain_hash['router_group_type']).to be_nil

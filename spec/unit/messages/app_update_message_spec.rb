@@ -34,12 +34,10 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(2)
-          expect(message.errors.full_messages).to match_array([
-            'Name must be a string',
-            "Unknown field(s): 'unexpected'"
-          ])
+          expect(message.errors.full_messages).to contain_exactly('Name must be a string', "Unknown field(s): 'unexpected'")
         end
       end
+
       describe 'lifecycle' do
         context 'when lifecycle is provided' do
           let(:params) do
@@ -109,7 +107,7 @@ module VCAP::CloudController
           it 'does not supply defaults' do
             message = AppUpdateMessage.new(params)
             expect(message).to be_valid
-            expect(message.lifecycle).to eq(nil)
+            expect(message.lifecycle).to be_nil
           end
         end
 
@@ -157,12 +155,13 @@ module VCAP::CloudController
 
           it 'is not valid' do
             message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
 
             expect(message.errors_on(:lifecycle_data)).to include('must be an object')
           end
         end
       end
+
       describe 'metadata' do
         it 'can parse labels' do
           params =
@@ -188,6 +187,7 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors_on(:metadata)).to include("'labels' is not an object")
         end
+
         it 'can parse annotations' do
           params =
             {

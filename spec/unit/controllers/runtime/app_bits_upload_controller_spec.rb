@@ -5,6 +5,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppBitsUploadController do
     let(:app_event_repository) { Repositories::AppEventRepository.new }
+
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'PUT /v2/app/:id/bits' do
@@ -83,6 +84,7 @@ module VCAP::CloudController
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
               headers[:multipart] = false
             end
+
             it 'fails to upload' do
               make_request
 
@@ -102,6 +104,7 @@ module VCAP::CloudController
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
               headers[:multipart] = false
             end
+
             it 'fails to upload' do
               make_request
 
@@ -125,7 +128,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(process.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).not_to be_nil
             end
           end
 
@@ -135,7 +138,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(process.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).not_to be_nil
             end
           end
 
@@ -162,7 +165,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(process.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).not_to be_nil
             end
           end
 
@@ -205,11 +208,11 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(process.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).not_to be_nil
             end
 
             it 'records audit events' do
-              expect { make_request }.to change { Event.count }.by(1)
+              expect { make_request }.to change(Event, :count).by(1)
               event = Event.find(type: 'audit.app.upload-bits')
               expect(event.actee).to eq(process.app.guid)
             end
@@ -316,9 +319,7 @@ module VCAP::CloudController
         it 'creates a delayed job' do
           expect do
             put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, headers_for(user)
-          end.to change {
-            Delayed::Job.count
-          }.by(1)
+          end.to change(Delayed::Job, :count).by(1)
 
           response_body = JSON.parse(last_response.body, symbolize_names: true)
           job = Delayed::Job.last
@@ -346,9 +347,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               expect do
                 put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-              end.to change {
-                Delayed::Job.count
-              }.by(1)
+              end.to change(Delayed::Job, :count).by(1)
 
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
@@ -369,9 +368,7 @@ module VCAP::CloudController
               it 'fails to upload' do
                 expect do
                   put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-                end.to change {
-                  Delayed::Job.count
-                }.by(1)
+                end.to change(Delayed::Job, :count).by(1)
 
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
@@ -387,9 +384,7 @@ module VCAP::CloudController
               it 'fails to upload' do
                 expect do
                   put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
-                end.to change {
-                  Delayed::Job.count
-                }.by(1)
+                end.to change(Delayed::Job, :count).by(1)
 
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
@@ -458,9 +453,7 @@ module VCAP::CloudController
         it 'returns a delayed job' do
           expect do
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
-          end.to change {
-            Delayed::Job.count
-          }.by(1)
+          end.to change(Delayed::Job, :count).by(1)
 
           job = Delayed::Job.last
           expected_response = {
@@ -483,9 +476,7 @@ module VCAP::CloudController
         it 'records audit events on the source and destination apps' do
           expect do
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
-          end.to change {
-            Event.count
-          }.by(2)
+          end.to change(Event, :count).by(2)
 
           source_event = Event.find(actee: src_process.app.guid)
           dest_event = Event.find(actee: dest_process.app.guid)

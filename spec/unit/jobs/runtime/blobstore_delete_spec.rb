@@ -56,7 +56,7 @@ module VCAP::CloudController
         it 'does not delete the blob' do
           expect do
             job.perform
-          end.to_not(change do
+          end.not_to(change do
             blobstore.exists?(key)
           end)
         end

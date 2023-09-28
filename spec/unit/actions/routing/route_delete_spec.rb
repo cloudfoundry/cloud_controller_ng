@@ -20,7 +20,7 @@ module VCAP::CloudController
       it 'deletes the route' do
         route_delete_action.delete_unmapped_route(route:)
 
-        expect(route.exists?).to eq(false)
+        expect(route.exists?).to be(false)
       end
 
       it 'creates a route delete audit event' do
@@ -36,9 +36,9 @@ module VCAP::CloudController
 
           route_delete_action.delete_unmapped_route(route:)
 
-          expect(route.exists?).to eq(true)
-          expect(route_mapping.exists?).to eq(true)
-          expect(route_mapping_2.exists?).to eq(true)
+          expect(route.exists?).to be(true)
+          expect(route_mapping.exists?).to be(true)
+          expect(route_mapping_2.exists?).to be(true)
         end
       end
 
@@ -49,8 +49,8 @@ module VCAP::CloudController
         it 'does not delete the route' do
           route_delete_action.delete_unmapped_route(route:)
 
-          expect(route.exists?).to eq(true)
-          expect(route_binding.exists?).to eq(true)
+          expect(route.exists?).to be(true)
+          expect(route_binding.exists?).to be(true)
         end
       end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
         it 'does not delete the route' do
           route_delete_action.delete_unmapped_route(route:)
-          expect(route.exists?).to eq(true)
+          expect(route.exists?).to be(true)
         end
       end
     end
@@ -70,7 +70,7 @@ module VCAP::CloudController
       it 'deletes the route' do
         route_delete_action.delete_sync(route:, recursive:)
 
-        expect(route.exists?).to be_falsey
+        expect(route).not_to exist
       end
 
       it 'creates a route delete audit event' do
@@ -86,8 +86,8 @@ module VCAP::CloudController
         it 'deletes the mappings' do
           route_delete_action.delete_sync(route:, recursive:)
 
-          expect(route_mapping.exists?).to be_falsey
-          expect(route_mapping_2.exists?).to be_falsey
+          expect(route_mapping).not_to exist
+          expect(route_mapping_2).not_to exist
         end
 
         it 'creates an unmap-route audit event for each mapping' do
@@ -134,7 +134,7 @@ module VCAP::CloudController
         expect(job).to be_a_fully_wrapped_job_of(Jobs::Runtime::ModelDeletion)
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        expect(route.exists?).to be_falsey
+        expect(route).not_to exist
       end
     end
   end

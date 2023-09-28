@@ -5,6 +5,7 @@ module RegistryBuddy
   RSpec.describe Client do
     let(:registry_buddy_host) { '127.0.0.1' }
     let(:registry_buddy_port) { 8080 }
+
     subject(:client) { RegistryBuddy::Client.new(registry_buddy_host, registry_buddy_port) }
 
     describe '#post_package' do

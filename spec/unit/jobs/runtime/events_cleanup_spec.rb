@@ -6,6 +6,7 @@ module VCAP::CloudController
       let(:cutoff_age_in_days) { 2 }
       let!(:old_event) { Event.make(created_at: 3.days.ago) }
       let!(:event) { Event.make(created_at: 1.day.ago) }
+
       subject(:job) { EventsCleanup.new(cutoff_age_in_days) }
 
       it { is_expected.to be_a_valid_job }

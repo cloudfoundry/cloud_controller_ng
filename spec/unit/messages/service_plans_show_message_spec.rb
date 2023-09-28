@@ -23,8 +23,8 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
-        expect(message.requested?(:fields)).to be_truthy
-        expect(message.requested?(:include)).to be_truthy
+        expect(message).to be_requested(:fields)
+        expect(message).to be_requested(:include)
       end
 
       it 'accepts an empty set' do

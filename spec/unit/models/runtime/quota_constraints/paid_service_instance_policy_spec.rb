@@ -15,6 +15,7 @@ RSpec.describe PaidServiceInstancePolicy do
 
   context 'when quota is nil' do
     let(:quota) { nil }
+
     it 'does not add errors' do
       expect(policy).to validate_without_error(service_instance)
     end

@@ -18,7 +18,7 @@ module VCAP::CloudController
       describe 'urls' do
         it 'validates format of info_url' do
           service = Service.make_unsaved(info_url: 'bogus_url', service_broker: nil)
-          expect(service).to_not be_valid
+          expect(service).not_to be_valid
           expect(service.errors.on(:info_url)).to include 'must be a valid url'
         end
       end
@@ -35,14 +35,15 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it {
-        is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
-                                         :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
-                                         :instances_retrievable, :allow_context_updates
+        expect(subject).to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
+                                             :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
+                                             :instances_retrievable, :allow_context_updates
       }
+
       it {
-        is_expected.to import_attributes :label, :description, :long_description, :info_url,
-                                         :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
-                                         :instances_retrievable, :allow_context_updates
+        expect(subject).to import_attributes :label, :description, :long_description, :info_url,
+                                             :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
+                                             :instances_retrievable, :allow_context_updates
       }
     end
 
@@ -67,6 +68,7 @@ module VCAP::CloudController
       let(:admin_user) { User.make }
       let(:nonadmin_user) { User.make }
       let!(:private_plan) { ServicePlan.make service: private_service, public: false }
+
       before do
         ServicePlan.make service: public_service, public: true
         ServicePlan.make service: public_service, public: false
@@ -347,7 +349,7 @@ module VCAP::CloudController
 
       let(:expected_service_names) { [@private_service, @visible_service].map(&:label) }
 
-      before(:each) do
+      before do
         @private_broker = ServiceBroker.make(space:)
         @private_service = Service.make(service_broker: @private_broker, active: true, label: 'Private Service')
         @private_plan = ServicePlan.make(service: @private_service, public: false, name: 'Private Plan')
@@ -385,7 +387,7 @@ module VCAP::CloudController
       it 'only returns private broker services to Organization<Users>' do
         user = make_user_for_org(space.organization)
         visible_services = Service.space_or_org_visible_for_user(space, user).all
-        expect(visible_services.map(&:label)).to match_array [@visible_service.label]
+        expect(visible_services.map(&:label)).to contain_exactly(@visible_service.label)
       end
     end
 
@@ -413,7 +415,7 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: ['route_forwarding']) }
 
         it 'returns true' do
-          expect(service.route_service?).to be_truthy
+          expect(service).to be_route_service
         end
       end
 
@@ -421,7 +423,7 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: []) }
 
         it 'returns false' do
-          expect(service.route_service?).to be_falsey
+          expect(service).not_to be_route_service
         end
       end
     end
@@ -439,7 +441,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"shareable":false}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -447,7 +449,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"other-key": "value"}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -455,7 +457,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: nil) }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -463,7 +465,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"not-json"}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
     end

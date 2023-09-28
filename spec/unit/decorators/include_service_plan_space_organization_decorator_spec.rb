@@ -27,15 +27,9 @@ module VCAP::CloudController
         expect(hash[:included][:monkeys]).to contain_exactly('zach', 'greg')
         expect(hash[:included].keys).to have(3).keys
 
-        expect(hash[:included][:spaces]).to match_array([
-          Presenters::V3::SpacePresenter.new(space1).to_hash,
-          Presenters::V3::SpacePresenter.new(space2).to_hash
-        ])
+        expect(hash[:included][:spaces]).to contain_exactly(Presenters::V3::SpacePresenter.new(space1).to_hash, Presenters::V3::SpacePresenter.new(space2).to_hash)
 
-        expect(hash[:included][:organizations]).to match_array([
-          Presenters::V3::OrganizationPresenter.new(org1).to_hash,
-          Presenters::V3::OrganizationPresenter.new(org2).to_hash
-        ])
+        expect(hash[:included][:organizations]).to contain_exactly(Presenters::V3::OrganizationPresenter.new(org1).to_hash, Presenters::V3::OrganizationPresenter.new(org2).to_hash)
       end
 
       it 'only includes the spaces and orgs from the specified service plans' do
@@ -66,11 +60,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches arrays containing "space.organization"' do
-        expect(described_class.match?(['potato', 'space.organization', 'turnip'])).to be_truthy
+        expect(described_class).to be_match(['potato', 'space.organization', 'turnip'])
       end
 
       it 'does not match other arrays' do
-        expect(described_class.match?(%w[potato turnip])).to be_falsey
+        expect(described_class).not_to be_match(%w[potato turnip])
       end
     end
   end

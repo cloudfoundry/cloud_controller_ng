@@ -107,7 +107,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
       end
 
       it 'presents the service plan with available false' do
-        expect(result[:available]).to eq(false)
+        expect(result[:available]).to be(false)
       end
     end
 
@@ -117,7 +117,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
       end
 
       it 'presents the service plan with free false' do
-        expect(result[:free]).to eq(false)
+        expect(result[:free]).to be(false)
       end
     end
 
@@ -137,7 +137,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
       end
 
       it 'presents the service plan with bindable false' do
-        expect(result[:broker_catalog][:features][:bindable]).to eq(false)
+        expect(result[:broker_catalog][:features][:bindable]).to be(false)
       end
     end
 
@@ -147,7 +147,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
       end
 
       it 'presents the service plan with plan_updateable false' do
-        expect(result[:broker_catalog][:features][:plan_updateable]).to eq(false)
+        expect(result[:broker_catalog][:features][:plan_updateable]).to be(false)
       end
     end
 

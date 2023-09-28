@@ -24,6 +24,7 @@ module VCAP::CloudController
 
       context 'when no params are given' do
         let(:params) {}
+
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors[:guid]).to include('must be between 1 and 200 characters')
@@ -60,7 +61,7 @@ module VCAP::CloudController
           let(:params) { { guid: '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:guid]).to include 'must be between 1 and 200 characters'
           end
         end
@@ -69,7 +70,7 @@ module VCAP::CloudController
           let(:params) { { guid: 'B' * (250 + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:guid]).to include 'must be between 1 and 200 characters'
           end
         end

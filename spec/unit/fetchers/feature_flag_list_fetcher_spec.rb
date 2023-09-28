@@ -4,6 +4,7 @@ module VCAP::CloudController
   RSpec.describe FeatureFlagListFetcher do
     subject(:fetcher) { FeatureFlagListFetcher }
     let(:message) { FeatureFlagsListMessage.from_params(filters) }
+
     describe '#fetch_all' do
       let(:filters) { {} }
 
@@ -23,7 +24,7 @@ module VCAP::CloudController
       context 'when not filtering' do
         it 'returns an array of all FeatureFlags' do
           flag_names = VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS.keys.sort.map(&:to_s)
-          expect(subject.fetch_all(message).map(&:name)).to contain_exactly(*flag_names)
+          expect(subject.fetch_all(message).map(&:name)).to match_array(flag_names)
         end
       end
 
@@ -31,7 +32,8 @@ module VCAP::CloudController
         let(:filters) do
           { updated_ats: { gt: '2020-05-26T18:47:02Z' } }
         end
-        it 'it only returns records that have been updated in the time range' do
+
+        it 'only returns records that have been updated in the time range' do
           expect(subject.fetch_all(message).map(&:name)).to contain_exactly('unset_roles_by_username', 'user_org_creation')
         end
       end

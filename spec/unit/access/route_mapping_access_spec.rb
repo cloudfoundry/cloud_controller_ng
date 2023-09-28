@@ -15,12 +15,12 @@ module VCAP::CloudController
 
     before { set_current_user(user, scopes:) }
 
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin read only access'
 
     context 'admin' do
-      include_context :admin_setup
+      include_context 'admin setup'
 
-      it_behaves_like :full_access
+      it_behaves_like 'full access'
     end
 
     context 'space developer' do
@@ -29,7 +29,7 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it_behaves_like :full_access
+      it_behaves_like 'full access'
 
       context 'when the organization is suspended' do
         before do
@@ -37,7 +37,7 @@ module VCAP::CloudController
           org.save
         end
 
-        it_behaves_like :read_only_access
+        it_behaves_like 'read only access'
       end
     end
   end

@@ -122,7 +122,7 @@ module VCAP::CloudController
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         it 'returns true' do
-          expect(app_model.staging_in_progress?).to eq(true)
+          expect(app_model.staging_in_progress?).to be(true)
         end
       end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
 
         it 'returns false' do
-          expect(app_model.staging_in_progress?).to eq(false)
+          expect(app_model.staging_in_progress?).to be(false)
         end
       end
     end
@@ -153,8 +153,8 @@ module VCAP::CloudController
           app_model.update(buildpack_lifecycle_data: lifecycle_data)
           expect do
             app_model.destroy
-          end.to change { BuildpackLifecycleDataModel.count }.by(-1).
-            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+          end.to change(BuildpackLifecycleDataModel, :count).by(-1).
+            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         end
       end
     end
@@ -174,35 +174,35 @@ module VCAP::CloudController
           end.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
         end
 
-        it 'should allow standard ascii characters' do
+        it 'allows standard ascii characters' do
           app.name = "A -_- word 2!?()'\"&+."
           expect do
             app.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           app.name = 'a \\ word'
           expect do
             app.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           app.name = '防御力¡'
           expect do
             app.save
-          end.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           app.name = "a \n word"
           expect do
             app.save
           end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           app.name = "a \e word"
           expect do
             app.save
@@ -378,10 +378,10 @@ module VCAP::CloudController
       context 'when enable_ssh is set explicitly' do
         it 'does not overwrite it with the default' do
           app1 = AppModel.make(enable_ssh: true)
-          expect(app1.enable_ssh).to eq(true)
+          expect(app1.enable_ssh).to be(true)
 
           app2 = AppModel.make(enable_ssh: false)
-          expect(app2.enable_ssh).to eq(false)
+          expect(app2.enable_ssh).to be(false)
         end
       end
 
@@ -392,7 +392,7 @@ module VCAP::CloudController
 
         it 'sets enable_ssh to true' do
           app = AppModel.make
-          expect(app.enable_ssh).to eq(true)
+          expect(app.enable_ssh).to be(true)
         end
       end
 
@@ -403,7 +403,7 @@ module VCAP::CloudController
 
         it 'sets enable_ssh to false' do
           app = AppModel.make
-          expect(app.enable_ssh).to eq(false)
+          expect(app.enable_ssh).to be(false)
         end
       end
     end

@@ -116,7 +116,7 @@ module VCAP::CloudController
                 subject.sync
                 expect(workpool).to have_received(:submit)
                 expect(bbs_apps_client).to have_received(:bump_freshness)
-                expect(logger).to_not have_received(:error)
+                expect(logger).not_to have_received(:error)
                 expect(logger).to have_received(:info).with(
                   'ignore-deleted-resource', error: error.name, error_message: error.message
                 )
@@ -236,7 +236,7 @@ module VCAP::CloudController
             subject.sync
             expect(workpool).to have_received(:submit)
             expect(bbs_apps_client).to have_received(:bump_freshness)
-            expect(logger).to_not have_received(:error)
+            expect(logger).not_to have_received(:error)
             expect(logger).to have_received(:info).with(
               'ignore-existing-resource', error: error.name, error_message: error.message
             )
@@ -286,6 +286,7 @@ module VCAP::CloudController
             # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
             # the background job doesn't have to deal with API concerns
             let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
+
             before do
               allow(bbs_apps_client).to receive(:fetch_scheduling_infos).and_raise(error)
             end
@@ -298,6 +299,7 @@ module VCAP::CloudController
 
           context 'when an error occurs while updating an individual LRP' do
             let(:error) { VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack.new("no compiler defined for requested stack 'schmidlap'") }
+
             before do
               allow_any_instance_of(WorkPool).to receive(:exceptions).and_return([error])
             end

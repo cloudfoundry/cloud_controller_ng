@@ -112,7 +112,7 @@ RSpec.describe 'match_json_response matcher' do
   it 'does not display the submatchers when another field errors' do
     expect do
       expect({ 'a' => %w[a b], 'b' => 1 }).to match_json_response({ a: contain_exactly('a', 'b'), b: 2 })
-    end.to raise_error(RSpec::Expectations::ExpectationNotMetError) { |error| expect(error.message).to_not match(/!\s*a:/) }
+    end.to raise_error(RSpec::Expectations::ExpectationNotMetError) { |error| expect(error.message).not_to match(/!\s*a:/) }
   end
 
   def raise_expectation_not_met_with_summary(ptn)

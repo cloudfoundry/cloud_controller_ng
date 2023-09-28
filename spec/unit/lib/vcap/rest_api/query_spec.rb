@@ -41,7 +41,7 @@ module VCAP::RestAPI
 
     describe '#filtered_dataset_from_query_params' do
       describe 'no query' do
-        it 'should return the full dataset' do
+        it 'returns the full dataset' do
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, {})
           expect(ds.count).to eq(@num_authors)
@@ -166,13 +166,7 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
 
-          expect(ds.all).to match_array([
-            Author[num_val: 6],
-            Author[num_val: 7],
-            Author[num_val: 8],
-            Author[num_val: 9],
-            Author[str_val: 'no num']
-          ])
+          expect(ds.all).to contain_exactly(Author[num_val: 6], Author[num_val: 7], Author[num_val: 8], Author[num_val: 9], Author[str_val: 'no num'])
         end
 
         it 'returns correct results for a greater-than-or-equal-to comparison query' do
@@ -327,14 +321,14 @@ module VCAP::RestAPI
       end
 
       describe 'querying multiple values' do
-        it 'should return the correct record' do
+        it 'returns the correct record' do
           q = 'num_val:5;str_val:str 4'
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
           expect(ds.all).to eq([Author[num_val: 5, str_val: 'str 4']])
         end
 
-        it "should support multiple 'q' parameters" do
+        it "supports multiple 'q' parameters" do
           q = ['num_val:5', 'str_val:str 4']
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
@@ -343,7 +337,7 @@ module VCAP::RestAPI
       end
 
       describe 'exact query with nil value' do
-        it 'should return records with nil entries' do
+        it 'returns records with nil entries' do
           q = 'num_val:'
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
@@ -414,7 +408,7 @@ module VCAP::RestAPI
             q = "subscriber_guid IN #{subscriber1_magazine1.guid},#{subscriber1_magazine2.guid}"
             ds = Query.filtered_dataset_from_query_params(Magazine, Magazine.dataset,
                                                           Set.new(['subscriber_guid']), q:)
-            expect(ds.all).to match_array([magazine1, magazine2])
+            expect(ds.all).to contain_exactly(magazine1, magazine2)
           end
         end
 
@@ -423,7 +417,7 @@ module VCAP::RestAPI
             q = "magazine_guid:#{magazine1.guid}"
             ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
                                                           Set.new(['magazine_guid']), q:)
-            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1])
+            expect(ds.all).to contain_exactly(subscriber1_magazine1, subscriber2_magazine1)
           end
         end
 
@@ -432,7 +426,7 @@ module VCAP::RestAPI
             q = "magazine_guid IN #{magazine1.guid}"
             ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
                                                           Set.new(['magazine_guid']), q:)
-            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1])
+            expect(ds.all).to contain_exactly(subscriber1_magazine1, subscriber2_magazine1)
           end
         end
 
@@ -441,7 +435,7 @@ module VCAP::RestAPI
             q = "magazine_guid IN #{magazine1.guid},#{magazine2.guid}"
             ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
                                                           Set.new(['magazine_guid']), q:)
-            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1, subscriber1_magazine2])
+            expect(ds.all).to contain_exactly(subscriber1_magazine1, subscriber2_magazine1, subscriber1_magazine2)
           end
         end
       end
@@ -466,7 +460,7 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
 
-          expect(ds.all).to match_array([author1, author2])
+          expect(ds.all).to contain_exactly(author1, author2)
         end
 
         it 'returns all of the matching records when using integers' do
@@ -476,7 +470,7 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, q:)
 
-          expect(ds.all).to match_array([author1, author2])
+          expect(ds.all).to contain_exactly(author1, author2)
         end
       end
     end

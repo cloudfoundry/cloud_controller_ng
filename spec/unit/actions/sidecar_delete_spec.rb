@@ -12,8 +12,8 @@ module VCAP::CloudController
       it 'deletes the sidecars' do
         sidecar_delete.delete([sidecar, sidecar2])
 
-        expect(sidecar.exists?).to eq(false), 'Expected sidecar to not exist, but it does'
-        expect(sidecar2.exists?).to eq(false), 'Expected sidecar2 to not exist, but it does'
+        expect(sidecar.exists?).to be(false), 'Expected sidecar to not exist, but it does'
+        expect(sidecar2.exists?).to be(false), 'Expected sidecar2 to not exist, but it does'
       end
 
       it 'deletes associated sidecar_process_commands' do
@@ -21,10 +21,10 @@ module VCAP::CloudController
 
         expect do
           sidecar_delete.delete(sidecar)
-        end.to change { SidecarProcessTypeModel.count }.by(-1)
+        end.to change(SidecarProcessTypeModel, :count).by(-1)
 
-        expect(process_type.exists?).to be_falsey
-        expect(sidecar.exists?).to be_falsey
+        expect(process_type).not_to exist
+        expect(sidecar).not_to exist
       end
     end
   end

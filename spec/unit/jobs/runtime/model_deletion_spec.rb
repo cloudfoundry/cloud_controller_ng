@@ -7,6 +7,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe ModelDeletion, job_context: :worker do
       let!(:space) { Space.make }
+
       subject(:job) { ModelDeletion.new(Space, space.guid) }
 
       it { is_expected.to be_a_valid_job }
@@ -14,20 +15,19 @@ module VCAP::CloudController
       describe '#perform' do
         context 'deleting a space' do
           it 'can delete the space' do
-            expect { job.perform }.to change { Space.count }.by(-1)
+            expect { job.perform }.to change(Space, :count).by(-1)
           end
         end
 
         context 'deleting an app' do
           let!(:process) { ProcessModelFactory.make(space:) }
+
           subject(:job) { ModelDeletion.new(ProcessModel, process.guid) }
 
           it 'can delete an app' do
             expect do
               job.perform
-            end.to change {
-              ProcessModel.count
-            }.by(-1)
+            end.to change(ProcessModel, :count).by(-1)
           end
         end
 
@@ -38,12 +38,13 @@ module VCAP::CloudController
             it 'just returns' do
               expect do
                 job.perform
-              end.not_to(change { Space.count })
+              end.not_to(change(Space, :count))
             end
           end
 
           context 'when the model is deleted by a parallel job after it is loaded, but before it is deleted' do
             let(:space) { Space.new }
+
             subject(:job) { ModelDeletion.new(Space, 'guid') }
 
             before do
@@ -54,7 +55,7 @@ module VCAP::CloudController
             it 'just returns' do
               expect do
                 job.perform
-              end.to change { Space.count }.by 0
+              end.not_to(change(Space, :count))
             end
           end
         end

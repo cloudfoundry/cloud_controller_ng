@@ -28,7 +28,7 @@ module VCAP
           AnnotationsUpdate.update(credential_binding, { 'prefix/key' => 'bar' }, ServiceBindingAnnotationModel)
         end
 
-        it 'should include the binding fields plus links and relationships' do
+        it 'includes the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
           expect(presenter.to_hash.with_indifferent_access).to match(
             {
@@ -89,7 +89,7 @@ module VCAP
           let(:instance) { ServiceInstance.make(name: 'smashed-avocado') }
           let(:credential_binding) { ServiceBinding.make(service_instance: instance) }
 
-          it 'should return null as the binding name' do
+          it 'returns null as the binding name' do
             presenter = described_class.new(credential_binding)
             expect(presenter.to_hash[:name]).to be_nil
           end
@@ -134,7 +134,7 @@ module VCAP
           AnnotationsUpdate.update(credential_binding, { 'prefix/key' => 'bar' }, ServiceKeyAnnotationModel)
         end
 
-        it 'should include the binding fields plus links and relationships' do
+        it 'includes the binding fields plus links and relationships' do
           presenter = described_class.new(credential_binding)
           expect(presenter.to_hash.with_indifferent_access).to match(
             {
@@ -207,9 +207,9 @@ module VCAP
         let(:instance) { UserProvidedServiceInstance.make(guid: 'instance-guid') }
         let(:credential_binding) { ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance) }
 
-        it 'should not include links.parameters' do
+        it 'does not include links.parameters' do
           presenter = described_class.new(credential_binding)
-          expect(presenter.to_hash[:links]).to_not have_key(:parameters)
+          expect(presenter.to_hash[:links]).not_to have_key(:parameters)
         end
       end
 

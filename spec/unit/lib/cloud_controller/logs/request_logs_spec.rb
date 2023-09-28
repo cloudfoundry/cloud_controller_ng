@@ -22,7 +22,7 @@ module VCAP::CloudController::Logs
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
       end
 
-      context '#start_request' do
+      describe '#start_request' do
         it 'logs the start of the request' do
           request_logs.start_request(request_id, env)
           expect(logger).to have_received(:info).with(/Started.+user: user-guid.+with vcap-request-id: ID/, additional_fields)
@@ -38,7 +38,7 @@ module VCAP::CloudController::Logs
         end
       end
 
-      context '#complete_request' do
+      describe '#complete_request' do
         context 'with a matching start request' do
           before do
             request_logs.instance_variable_set(:@incomplete_requests, { request_id => {} })
@@ -58,7 +58,7 @@ module VCAP::CloudController::Logs
         end
       end
 
-      context '#incomplete_request' do
+      describe '#incomplete_request' do
         it 'logs the incomplete request' do
           request_logs.start_request(request_id, env)
           request_logs.log_incomplete_requests

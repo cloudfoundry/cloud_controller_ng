@@ -41,6 +41,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when create-service-broker' do
           after { delete_broker }
+
           before do
             stub_catalog_fetch(broker_response_status, catalog)
 
@@ -60,6 +61,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when update-service-broker' do
           after { delete_broker }
+
           before do
             setup_broker(catalog)
 

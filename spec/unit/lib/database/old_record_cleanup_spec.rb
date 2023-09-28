@@ -13,7 +13,7 @@ RSpec.describe Database::OldRecordCleanup do
 
       expect do
         record_cleanup.delete
-      end.to change { VCAP::CloudController::Event.count }.by(-2)
+      end.to change(VCAP::CloudController::Event, :count).by(-2)
 
       expect(fresh_event.reload).to be_present
       expect { stale_event1.reload }.to raise_error(Sequel::NoExistingObject)
@@ -40,7 +40,7 @@ RSpec.describe Database::OldRecordCleanup do
 
       expect do
         record_cleanup.delete
-      end.to change { VCAP::CloudController::Event.count }.by(-2)
+      end.to change(VCAP::CloudController::Event, :count).by(-2)
 
       expect(fresh_event.reload).to be_present
       expect { stale_event1.reload }.to raise_error(Sequel::NoExistingObject)

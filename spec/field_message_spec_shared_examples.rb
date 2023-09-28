@@ -5,7 +5,7 @@ RSpec.shared_examples 'field query parameter' do |resource, keys|
     message = described_class.from_params({ 'fields' => { "#{resource}": keys.to_s } })
 
     expect(message).to be_valid
-    expect(message.requested?(:fields)).to be_truthy
+    expect(message).to be_requested(:fields)
     expect(message.fields).to match({ "#{resource}": keys_list })
   end
 
@@ -14,7 +14,7 @@ RSpec.shared_examples 'field query parameter' do |resource, keys|
       message = described_class.from_params({ 'fields' => { "#{resource}": key.to_s } })
 
       expect(message).to be_valid
-      expect(message.requested?(:fields)).to be_truthy
+      expect(message).to be_requested(:fields)
       expect(message.fields).to match({ "#{resource}": [key] })
     end
   end

@@ -195,7 +195,7 @@ RSpec.describe 'RouteMappings' do
       delete "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(204), last_response.body
 
-      expect(route_mapping.exists?).to be_falsey
+      expect(route_mapping).not_to exist
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.unmap-route')

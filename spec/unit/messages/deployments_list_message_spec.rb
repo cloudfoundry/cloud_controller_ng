@@ -26,7 +26,7 @@ module VCAP::CloudController
         expect(message.app_guids).to match_array(%w[appguid1 appguid2])
         expect(message.states).to match_array(%w[CANCELED DEPLOYED])
         expect(message.status_values).to match_array(%w[red green])
-        expect(message.status_reasons).to match_array([''])
+        expect(message.status_reasons).to contain_exactly('')
         expect(message.order_by).to eq('created_at')
         expect(message.label_selector).to eq('key=value')
         expect(message).to be_valid
@@ -81,25 +81,25 @@ module VCAP::CloudController
 
       it 'validates app_guids is an array' do
         message = DeploymentsListMessage.from_params app_guids: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:app_guids].length).to eq 1
       end
 
       it 'validates states is an array' do
         message = DeploymentsListMessage.from_params states: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:states].length).to eq 1
       end
 
       it 'validates status_reasons is an array' do
         message = DeploymentsListMessage.from_params status_reasons: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:status_reasons].length).to eq 1
       end
 
       it 'validates status_values is an array' do
         message = DeploymentsListMessage.from_params status_values: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:status_values].length).to eq 1
       end
 

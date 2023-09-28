@@ -41,16 +41,16 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
-        expect(message.requested?(:type)).to be_truthy
-        expect(message.requested?(:service_plan_guids)).to be_truthy
-        expect(message.requested?(:service_plan_names)).to be_truthy
-        expect(message.requested?(:fields)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:order_by)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:label_selector)
+        expect(message).to be_requested(:type)
+        expect(message).to be_requested(:service_plan_guids)
+        expect(message).to be_requested(:service_plan_names)
+        expect(message).to be_requested(:fields)
       end
 
       it 'accepts an empty set' do
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
         it 'does not allow other values' do
           message = described_class.from_params({ type: 'magic' }.with_indifferent_access)
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:type]).to include("must be one of 'managed', 'user-provided'")
         end
       end

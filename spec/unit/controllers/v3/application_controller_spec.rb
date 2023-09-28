@@ -70,14 +70,14 @@ RSpec.describe ApplicationController, type: :controller do
     it 'is required on index' do
       get :index
 
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     it 'is required on show' do
       get :show, params: { id: 1 }
 
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
@@ -88,12 +88,12 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'grants reading access' do
         get :index
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
-      it 'should show a specific item' do
+      it 'shows a specific item' do
         get :show, params: { id: 1 }
-        expect(response.status).to eq(204)
+        expect(response).to have_http_status(:no_content)
       end
     end
 
@@ -104,12 +104,12 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'grants reading access' do
         get :index
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
-      it 'should show a specific item' do
+      it 'shows a specific item' do
         get :show, params: { id: 1 }
-        expect(response.status).to eq(204)
+        expect(response).to have_http_status(:no_content)
       end
     end
 
@@ -120,12 +120,12 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'grants reading access' do
         get :index
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
-      it 'should show a specific item' do
+      it 'shows a specific item' do
         get :show, params: { id: 1 }
-        expect(response.status).to eq(204)
+        expect(response).to have_http_status(:no_content)
       end
     end
 
@@ -133,10 +133,10 @@ RSpec.describe ApplicationController, type: :controller do
       set_current_user_as_admin
 
       get :show, params: { id: 1 }
-      expect(response.status).to eq(204)
+      expect(response).to have_http_status(:no_content)
 
       get :index
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
 
     context 'post' do
@@ -147,7 +147,7 @@ RSpec.describe ApplicationController, type: :controller do
       it 'is not required on other actions' do
         post :create
 
-        expect(response.status).to eq(201)
+        expect(response).to have_http_status(:created)
       end
     end
   end
@@ -159,19 +159,19 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'cannot index' do
       get :index
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     it 'cannot show' do
       get :show, params: { id: 1 }
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     it 'cannot create' do
       post :create
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
   end
@@ -183,17 +183,17 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'is not required on index' do
       get :index
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
 
     it 'is not required on show' do
       get :show, params: { id: 1 }
-      expect(response.status).to eq(204)
+      expect(response).to have_http_status(:no_content)
     end
 
     it 'is required on other actions' do
       post :create
-      expect(response.status).to eq(403)
+      expect(response).to have_http_status(:forbidden)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
@@ -201,7 +201,7 @@ RSpec.describe ApplicationController, type: :controller do
       set_current_user_as_admin
 
       post :create
-      expect(response.status).to eq(201)
+      expect(response).to have_http_status(:created)
     end
   end
 
@@ -213,14 +213,14 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'allows the operation' do
         get :index
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
     end
 
     context 'when there is no token' do
       it 'raises NotAuthenticated' do
         get :index
-        expect(response.status).to eq(401)
+        expect(response).to have_http_status(:unauthorized)
         expect(response).to have_error_message('Authentication error')
       end
     end
@@ -232,7 +232,7 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'raises InvalidAuthToken' do
         get :index
-        expect(response.status).to eq(401)
+        expect(response).to have_http_status(:unauthorized)
         expect(response).to have_error_message('Invalid Auth Token')
       end
     end
@@ -245,7 +245,7 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'raises InvalidAuthToken' do
         get :index
-        expect(response.status).to eq(401)
+        expect(response).to have_http_status(:unauthorized)
         expect(response).to have_error_message('Invalid Auth Token')
       end
     end
@@ -258,7 +258,7 @@ RSpec.describe ApplicationController, type: :controller do
       allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
       routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
       get :blobstore_error
-      expect(response.status).to eq(500)
+      expect(response).to have_http_status(:internal_server_error)
       expect(response).to have_error_message(/three retries/)
     end
   end
@@ -269,7 +269,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'api_explode' => 'anonymous#api_explode' }
       get :api_explode
-      expect(response.status).to eq(400)
+      expect(response).to have_http_status(:bad_request)
       expect(response).to have_error_message('The request is invalid')
     end
   end
@@ -280,7 +280,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'rescues from CompoundErrors and renders an error presenter' do
       routes.draw { get 'compound_error' => 'anonymous#compound_error' }
       get :compound_error
-      expect(response.status).to eq(400)
+      expect(response).to have_http_status(:bad_request)
       expect(parsed_body['errors'].length).to eq 2
     end
   end
@@ -291,7 +291,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'rescues from NotFound error and renders an error presenter' do
       routes.draw { get 'not_found' => 'anonymous#not_found' }
       get :not_found
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
       expect(response).to have_error_message('Unknown request')
     end
   end
@@ -309,13 +309,13 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'rescues from Sequel::DatabaseConnectionError and renders an error presenter' do
       get :db_connection_error
-      expect(response.status).to eq(503)
+      expect(response).to have_http_status(:service_unavailable)
       expect(response).to have_error_message(/Database connection failure/)
     end
 
     it 'rescues from Sequel::DatabaseDisconnectError and renders an error presenter' do
       get :db_disconnect_error
-      expect(response.status).to eq(503)
+      expect(response).to have_http_status(:service_unavailable)
       expect(response).to have_error_message(/Database connection failure/)
     end
   end
@@ -326,8 +326,8 @@ RSpec.describe ApplicationController, type: :controller do
     it 'does nothing when warnings is nil' do
       routes.draw { get 'warnings_is_nil' => 'anonymous#warnings_is_nil' }
       get :warnings_is_nil
-      expect(response.status).to eq(200)
-      expect(response.headers['X-Cf-Warnings']).to be(nil)
+      expect(response).to have_http_status(:ok)
+      expect(response.headers['X-Cf-Warnings']).to be_nil
     end
 
     it 'throws argument error when warnings is not an array' do
@@ -340,7 +340,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'does nothing when warnings is nil' do
       routes.draw { get 'multiple_warnings' => 'anonymous#multiple_warnings' }
       get :multiple_warnings
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       warnings = response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
       expect(warnings).to eq([
         'warning,a',

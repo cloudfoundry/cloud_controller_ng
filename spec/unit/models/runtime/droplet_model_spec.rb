@@ -120,8 +120,8 @@ module VCAP::CloudController
         it 'deletes the dependent buildpack_lifecycle_data_models when a droplet is deleted' do
           expect do
             droplet_model.destroy
-          end.to change { BuildpackLifecycleDataModel.count }.by(-1).
-            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+          end.to change(BuildpackLifecycleDataModel, :count).by(-1).
+            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         end
       end
 
@@ -148,7 +148,7 @@ module VCAP::CloudController
         it 'deletes the dependent kpack_lifecycle_data_models when a droplet is deleted' do
           expect do
             droplet_model.destroy
-          end.to change { KpackLifecycleDataModel.count }.by(-1)
+          end.to change(KpackLifecycleDataModel, :count).by(-1)
         end
       end
 
@@ -219,7 +219,7 @@ module VCAP::CloudController
       subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE) }
 
       it 'sets the state to FAILED' do
-        expect { droplet.fail_to_stage! }.to change { droplet.state }.to(DropletModel::FAILED_STATE)
+        expect { droplet.fail_to_stage! }.to change(droplet, :state).to(DropletModel::FAILED_STATE)
       end
 
       context 'when a valid reason is specified' do
@@ -227,24 +227,24 @@ module VCAP::CloudController
           it 'sets the requested staging failed reason' do
             expect do
               droplet.fail_to_stage!(reason)
-            end.to change { droplet.error_id }.to(reason)
+            end.to change(droplet, :error_id).to(reason)
           end
         end
       end
 
       context 'when an unexpected reason is specifed' do
-        it 'should use the default, generic reason' do
+        it 'uses the default, generic reason' do
           expect do
             droplet.fail_to_stage!('bogus')
-          end.to change { droplet.error_id }.to('StagingError')
+          end.to change(droplet, :error_id).to('StagingError')
         end
       end
 
       context 'when a reason is not specified' do
-        it 'should use the default, generic reason' do
+        it 'uses the default, generic reason' do
           expect do
             droplet.fail_to_stage!
-          end.to change { droplet.error_id }.to('StagingError')
+          end.to change(droplet, :error_id).to('StagingError')
         end
       end
 
@@ -252,20 +252,20 @@ module VCAP::CloudController
         it 'sets the staging_failed_description to the v2.yml description of the error type' do
           expect do
             droplet.fail_to_stage!('NoAppDetectedError')
-          end.to change { droplet.error_description }.to('An app was not successfully detected by any available buildpack')
+          end.to change(droplet, :error_description).to('An app was not successfully detected by any available buildpack')
         end
 
         it 'provides a string for interpolation on errors that require it' do
           expect do
             droplet.fail_to_stage!('StagingError')
-          end.to change { droplet.error_description }.to('Staging error: staging failed')
+          end.to change(droplet, :error_description).to('Staging error: staging failed')
         end
 
         DropletModel::STAGING_FAILED_REASONS.each do |reason|
           it "successfully sets staging_failed_description for reason: #{reason}" do
             expect do
               droplet.fail_to_stage!(reason)
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
       end

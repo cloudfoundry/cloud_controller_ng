@@ -27,7 +27,7 @@ module VCAP::CloudController
         body['bogus'] = 'field'
         message = TaskCreateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Memory in mb is not a number')
         end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Memory in mb must be an integer')
         end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
         end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
         end
       end
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Disk in mb is not a number')
         end
 
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Disk in mb must be an integer')
         end
 
@@ -127,7 +127,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
         end
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
         end
       end
@@ -155,7 +155,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Log rate limit in bytes per second is not a number')
         end
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Log rate limit in bytes per second must be an integer')
         end
 
@@ -189,7 +189,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Log rate limit in bytes per second must be greater than -2')
         end
 
@@ -198,7 +198,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Log rate limit in bytes per second must be less than or equal to 9223372036854775807')
         end
       end
@@ -218,7 +218,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
 
         it 'must be an object' do
@@ -226,7 +226,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
 
         it 'must contain a process key' do
@@ -234,7 +234,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
 
         it 'must contain a process hash' do
@@ -242,7 +242,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
 
         it 'must contain a process has with a guid' do
@@ -250,7 +250,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
 
         it 'must contain a process has with a valid guid' do
@@ -258,7 +258,7 @@ module VCAP::CloudController
 
           message = TaskCreateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
         end
       end
 

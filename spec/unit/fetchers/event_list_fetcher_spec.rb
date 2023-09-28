@@ -24,7 +24,7 @@ module VCAP::CloudController
         let!(:space_scoped_event) { Event.make(space_guid: space.guid, organization_guid: org.guid, actee: app_model.guid, type: 'audit.app.restart') }
 
         it 'returns all of the events without any filters' do
-          expect(subject).to match_array([unscoped_event, org_scoped_event, space_scoped_event])
+          expect(subject).to contain_exactly(unscoped_event, org_scoped_event, space_scoped_event)
         end
 
         context 'filtering by type' do
@@ -33,7 +33,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect(subject).to match_array([space_scoped_event])
+            expect(subject).to contain_exactly(space_scoped_event)
           end
         end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect(subject).to match_array([space_scoped_event])
+            expect(subject).to contain_exactly(space_scoped_event)
           end
         end
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect(subject).to match_array([unscoped_event, org_scoped_event])
+            expect(subject).to contain_exactly(unscoped_event, org_scoped_event)
           end
         end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect(subject).to match_array([space_scoped_event])
+            expect(subject).to contain_exactly(space_scoped_event)
           end
         end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect(subject).to match_array([org_scoped_event, space_scoped_event])
+            expect(subject).to contain_exactly(org_scoped_event, space_scoped_event)
           end
         end
       end

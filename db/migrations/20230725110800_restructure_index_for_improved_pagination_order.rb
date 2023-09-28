@@ -553,7 +553,8 @@ Sequel.migration do
     index_migration_data.each do |index_migration|
       transaction do
         if index_migration[:old_index].present? && index_migration[:old_columns].present?
-          drop_index index_migration[:table], nil, name: index_migration[:old_index], if_exists: true
+          drop_index index_migration[:table], nil, name: index_migration[:old_index],
+                                                   if_exists: true
         end
         add_index index_migration[:table], index_migration[:new_columns], name: index_migration[:new_index] if indexes(index_migration[:table])[index_migration[:new_index]].nil?
       end
@@ -565,7 +566,8 @@ Sequel.migration do
       transaction do
         drop_index index_migration[:table], nil, name: index_migration[:new_index], if_exists: true
         if index_migration[:old_index].present? && index_migration[:old_columns].present? && indexes(index_migration[:table])[index_migration[:old_index]].nil?
-          add_index index_migration[:table], index_migration[:old_columns], name: index_migration[:old_index]
+          add_index index_migration[:table], index_migration[:old_columns],
+                    name: index_migration[:old_index]
         end
       end
     end

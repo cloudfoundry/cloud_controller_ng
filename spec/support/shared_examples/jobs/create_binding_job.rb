@@ -76,6 +76,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
             end
           end
         end
+
         it 'calls bind and then poll' do
           subject.perform
 

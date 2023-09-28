@@ -198,7 +198,7 @@ module VCAP::CloudController
               it 'records it on the droplet' do
                 handler.staging_complete(payload)
                 build.reload
-                expect(build.droplet).to_not be_nil
+                expect(build.droplet).not_to be_nil
                 expect(build.droplet.docker_receipt_image).to eq('cached-docker-image')
               end
             end
@@ -212,12 +212,12 @@ module VCAP::CloudController
             end
 
             context 'when the staging fails' do
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 handler.staging_complete(payload)
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
 
-              it 'should not create a droplet' do
+              it 'does not create a droplet' do
                 handler.staging_complete(payload)
                 expect(build.reload.droplet).to be_nil
               end
@@ -228,7 +228,7 @@ module VCAP::CloudController
                 expect(build.reload.error_description).to eq('Insufficient resources')
               end
 
-              it 'should emit a loggregator error' do
+              it 'emits a loggregator error' do
                 expect(VCAP::AppLogEmitter).to receive(:emit_error).with(build.app_guid, /Insufficient resources/)
                 handler.staging_complete(payload)
               end
@@ -266,7 +266,7 @@ module VCAP::CloudController
                 expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
             end
@@ -278,7 +278,7 @@ module VCAP::CloudController
                 }
               end
 
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 expect do
                   handler.staging_complete(payload)
                 end.to raise_error(CloudController::Errors::ApiError)

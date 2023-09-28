@@ -110,6 +110,7 @@ module VCAP::CloudController::Validators
             _a: 'value4'
           }
         end
+
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).to include("label key error: '-a' starts or ends with invalid characters")
@@ -126,6 +127,7 @@ module VCAP::CloudController::Validators
             'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE => 'value2'
           }
         end
+
         it 'is valid' do
           expect(subject).to be_valid
         end
@@ -137,6 +139,7 @@ module VCAP::CloudController::Validators
             'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3'
           }
         end
+
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
@@ -270,6 +273,7 @@ module VCAP::CloudController::Validators
               'key5' => '_a'
             }
           end
+
           it 'is invalid' do
             expect(subject).not_to be_valid
             expect(subject.errors_on(:metadata)).to include("label value error: '-a' starts or ends with invalid characters")
@@ -286,6 +290,7 @@ module VCAP::CloudController::Validators
               'key' => 'a' * MetadataValidatorHelper::MAX_METADATA_KEY_SIZE
             }
           end
+
           it 'is valid' do
             expect(subject).to be_valid
           end
@@ -297,7 +302,8 @@ module VCAP::CloudController::Validators
               'key' => 'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1)
             }
           end
-          it 'is labeldinvalivalue error: ' do
+
+          it 'is labeldinvalivalue error:' do
             expect(subject).not_to be_valid
             expect(subject.errors_on(:metadata)).
               to include("label value error: '#{'b' * 8}...' is greater than #{MetadataValidatorHelper::MAX_METADATA_KEY_SIZE} characters")
@@ -339,6 +345,7 @@ module VCAP::CloudController::Validators
             'b' * (MetadataValidatorHelper::MAX_METADATA_KEY_SIZE + 1) => 'value3'
           }
         end
+
         it 'its invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
@@ -377,6 +384,7 @@ module VCAP::CloudController::Validators
             'key' => ('a' * (MetadataValidator::MAX_ANNOTATION_VALUE_SIZE + 1))
           }
         end
+
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).

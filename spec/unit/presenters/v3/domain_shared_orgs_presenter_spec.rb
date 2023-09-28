@@ -15,6 +15,7 @@ module VCAP::CloudController::Presenters::V3
           owning_organization: org
         )
       end
+
       subject do
         DomainSharedOrgsPresenter.new(
           domain,

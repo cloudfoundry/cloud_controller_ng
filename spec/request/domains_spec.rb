@@ -85,7 +85,7 @@ RSpec.describe 'Domains Request' do
               data: { guid: org.guid }
             },
             shared_organizations: {
-              data: contain_exactly(*shared_visible_orgs)
+              data: match_array(shared_visible_orgs)
             }
           },
           links: {
@@ -627,6 +627,7 @@ RSpec.describe 'Domains Request' do
     let!(:domain) do
       VCAP::CloudController::PrivateDomain.make(guid: 'visible', name: 'visibledomain.com', owning_organization: org)
     end
+
     context 'no route matches' do
       let(:api_call) { ->(user_headers) { get "/v3/domains/#{domain.guid}/route_reservations?host=my-host&path=/somepath", nil, user_headers } }
 
@@ -720,8 +721,7 @@ RSpec.describe 'Domains Request' do
             external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
         let!(:other_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain, port: 123) }
@@ -1014,6 +1014,7 @@ RSpec.describe 'Domains Request' do
 
           context 'when the user is an admin' do
             let(:headers) { set_user_with_header_as_role(role: 'admin') }
+
             it 'allows creation' do
               post '/v3/domains', private_domain_params.to_json, headers
 
@@ -1264,6 +1265,7 @@ RSpec.describe 'Domains Request' do
 
     context 'when the params are invalid' do
       let(:headers) { set_user_with_header_as_role(role: 'admin') }
+
       context 'creating a sub domain of a domain owned by another organization' do
         let(:organization_to_scope_to) { VCAP::CloudController::Organization.make }
         let(:existing_private_domain) { VCAP::CloudController::PrivateDomain.make }
@@ -1772,6 +1774,7 @@ RSpec.describe 'Domains Request' do
 
       context "when domain exists but user doesn't have read permissions for it" do
         let(:user_headers) { set_user_with_header_as_role(role: 'org_billing_manager', org: org) }
+
         it 'returns a 404' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers
           expect(last_response.status).to eq(404)
@@ -2029,6 +2032,7 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:api_call) { ->(user_headers) { get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
@@ -2063,7 +2067,7 @@ RSpec.describe 'Domains Request' do
                 }
               },
               shared_organizations: {
-                data: contain_exactly(*shared_organizations)
+                data: match_array(shared_organizations)
               }
             },
             links: {

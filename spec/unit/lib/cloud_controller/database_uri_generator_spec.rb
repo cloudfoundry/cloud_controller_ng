@@ -16,16 +16,19 @@ RSpec.describe VCAP::CloudController::DatabaseUriGenerator do
 
       context 'and there uri is for mysql2' do
         let(:service_uris) { ['mysql2://username:password@host/db'] }
+
         it { is_expected.to eq 'mysql2://username:password@host/db' }
       end
 
       context 'and there uri is for postgres' do
         let(:service_uris) { ['postgres://username:password@host/db'] }
+
         it { is_expected.to eq 'postgres://username:password@host/db' }
       end
 
       context 'and there uri is for postgresql' do
         let(:service_uris) { ['postgresql://username:password@host/db'] }
+
         it { is_expected.to eq 'postgres://username:password@host/db' }
       end
 
@@ -46,11 +49,13 @@ RSpec.describe VCAP::CloudController::DatabaseUriGenerator do
 
     context 'when there are non relational databse services' do
       let(:service_uris) { ['sendgrid://foo:bar@host/db'] }
+
       it { is_expected.to be_nil }
     end
 
     context 'when there are no services' do
       let(:service_uris) { nil }
+
       it { is_expected.to be_nil }
     end
   end

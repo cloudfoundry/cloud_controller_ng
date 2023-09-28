@@ -118,6 +118,7 @@ module VCAP::CloudController
 
             context 'when the bbs task client throws an error' do
               let(:error) { CloudController::Errors::ApiError.new }
+
               before { allow(bbs_client).to receive(:desire_task).and_raise(error) }
 
               it 'marks the task as failed and re-raises' do

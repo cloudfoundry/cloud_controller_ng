@@ -9,22 +9,22 @@ RSpec.describe VCAP::HostSystem do
 
     describe 'with an invalid pid' do
       it 'returns false with negative pid' do
-        expect(subject.process_running?(-5)).to be_falsey
+        expect(subject).not_to be_process_running(-5)
       end
 
       it 'returns false with nil pid' do
-        expect(subject.process_running?(nil)).to be_falsey
+        expect(subject).not_to be_process_running(nil)
       end
     end
 
     it 'is true with a running process' do
       expect(subject).to receive(:`).with('ps -o rss= -p 12').and_return('some output')
-      expect(subject.process_running?(12)).to be_truthy
+      expect(subject).to be_process_running(12)
     end
 
     it 'is false without a running process' do
       expect(subject).to receive(:`).with('ps -o rss= -p 12').and_return('')
-      expect(subject.process_running?(12)).to be_falsey
+      expect(subject).not_to be_process_running(12)
     end
   end
 end

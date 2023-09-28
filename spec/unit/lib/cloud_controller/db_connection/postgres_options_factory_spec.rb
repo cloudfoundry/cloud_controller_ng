@@ -17,7 +17,7 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
       )
     end
 
-    it 'should set the timezone via a Proc' do
+    it 'sets the timezone via a Proc' do
       connection = double('connection', exec: '')
       postgres_options[:after_connect].call(connection)
       expect(connection).to have_received(:exec).with("SET time zone 'UTC'")
@@ -34,6 +34,7 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
 
     describe 'when the CA cert path is set' do
       let(:ca_cert_path) { '/path/to/db_ca.crt' }
+
       it 'sets the ssl root cert' do
         expect(postgres_options[:sslrootcert]).to eq('/path/to/db_ca.crt')
       end
@@ -46,6 +47,7 @@ RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
             expect(postgres_options[:sslmode]).to eq('verify-full')
           end
         end
+
         context 'when ssl_verify_hostname is falsey' do
           let(:ssl_verify_hostname) { false }
 

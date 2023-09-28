@@ -44,7 +44,7 @@ module VCAP::CloudController
         let(:filters) { { guids: [space_1_role_1.guid] } }
 
         it 'returns all of the desired roles' do
-          expect(subject.map(&:guid)).to match_array([space_1_role_1.guid])
+          expect(subject.map(&:guid)).to contain_exactly(space_1_role_1.guid)
         end
       end
 

@@ -13,6 +13,7 @@ module VCAP::CloudController
           expect(subject).to be_valid
         end
       end
+
       context 'when unexpected keys are requested' do
         let(:params) { { unexpected: 'meow', name: 'the-name' } }
 
@@ -51,7 +52,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (OrganizationQuotasUpdateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -60,7 +61,7 @@ module VCAP::CloudController
           let(:params) { { name: '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to eq ['is too short (minimum is 1 character)']
           end
         end
@@ -76,7 +77,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Apps must be an object')
           end
         end
@@ -97,7 +98,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasAppsMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:apps]).to include('invalid_app_limits')
           end
         end
@@ -113,7 +114,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Services must be an object')
           end
         end
@@ -134,7 +135,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasServicesMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:services]).to include('invalid_services_limits')
           end
         end
@@ -150,10 +151,11 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Routes must be an object')
           end
         end
+
         context 'invalid keys are passed in' do
           let(:params) do
             {
@@ -163,7 +165,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
           end
         end
@@ -178,10 +180,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total routes is not a number')
             end
           end
+
           context 'when the type is decimal' do
             let(:params) do
               {
@@ -191,10 +194,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total routes must be an integer')
             end
           end
+
           context 'when the type is a negative integer' do
             let(:params) do
               {
@@ -204,10 +208,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total routes must be greater than or equal to 0')
             end
           end
+
           context 'when the type is zero' do
             let(:params) do
               {
@@ -218,6 +223,7 @@ module VCAP::CloudController
 
             it { is_expected.to be_valid }
           end
+
           context 'when the type is nil (unlimited)' do
             let(:params) do
               {
@@ -240,10 +246,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total reserved ports is not a number')
             end
           end
+
           context 'when the type is decimal' do
             let(:params) do
               {
@@ -253,10 +260,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total reserved ports must be an integer')
             end
           end
+
           context 'when the type is a negative integer' do
             let(:params) do
               {
@@ -266,10 +274,11 @@ module VCAP::CloudController
             end
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-              expect(subject).to be_invalid
+              expect(subject).not_to be_valid
               expect(subject.errors[:routes]).to contain_exactly('Total reserved ports must be greater than or equal to 0')
             end
           end
+
           context 'when the type is zero' do
             let(:params) do
               {
@@ -280,6 +289,7 @@ module VCAP::CloudController
 
             it { is_expected.to be_valid }
           end
+
           context 'when the type is nil (unlimited)' do
             let(:params) do
               {
@@ -303,10 +313,11 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Domains must be an object')
           end
         end
+
         context 'invalid keys are passed in' do
           let(:params) do
             {
@@ -316,7 +327,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
           end
 
@@ -330,10 +341,11 @@ module VCAP::CloudController
               end
 
               it 'is not valid' do
-                expect(subject).to be_invalid
+                expect(subject).not_to be_valid
                 expect(subject.errors[:domains]).to contain_exactly('Total domains is not a number')
               end
             end
+
             context 'when the type is decimal' do
               let(:params) do
                 {
@@ -343,10 +355,11 @@ module VCAP::CloudController
               end
 
               it 'is not valid' do
-                expect(subject).to be_invalid
+                expect(subject).not_to be_valid
                 expect(subject.errors[:domains]).to contain_exactly('Total domains must be an integer')
               end
             end
+
             context 'when the type is a negative integer' do
               let(:params) do
                 {
@@ -356,10 +369,11 @@ module VCAP::CloudController
               end
 
               it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-                expect(subject).to be_invalid
+                expect(subject).not_to be_valid
                 expect(subject.errors[:domains]).to contain_exactly('Total domains must be greater than or equal to 0')
               end
             end
+
             context 'when the type is zero' do
               let(:params) do
                 {
@@ -370,6 +384,7 @@ module VCAP::CloudController
 
               it { is_expected.to be_valid }
             end
+
             context 'when the type is nil (unlimited)' do
               let(:params) do
                 {

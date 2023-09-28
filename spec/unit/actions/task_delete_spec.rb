@@ -15,9 +15,9 @@ module VCAP::CloudController
       it 'deletes the tasks' do
         expect do
           task_delete.delete(task_dataset)
-        end.to change { TaskModel.count }.by(-2)
-        expect(task1.exists?).to be_falsey
-        expect(task2.exists?).to be_falsey
+        end.to change(TaskModel, :count).by(-2)
+        expect(task1).not_to exist
+        expect(task2).not_to exist
       end
 
       context 'when the task is running' do
@@ -93,11 +93,11 @@ module VCAP::CloudController
 
         expect do
           task_delete.delete(task_dataset)
-        end.to change { TaskLabelModel.count }.by(-2)
-        expect(label1.exists?).to be_falsey
-        expect(task1.exists?).to be_falsey
-        expect(label2.exists?).to be_falsey
-        expect(task2.exists?).to be_falsey
+        end.to change(TaskLabelModel, :count).by(-2)
+        expect(label1).not_to exist
+        expect(task1).not_to exist
+        expect(label2).not_to exist
+        expect(task2).not_to exist
       end
 
       it 'deletes associated annotations' do
@@ -106,9 +106,9 @@ module VCAP::CloudController
 
         expect do
           task_delete.delete(task_dataset)
-        end.to change { TaskAnnotationModel.count }.by(-2)
-        expect(annotation1.exists?).to be_falsey
-        expect(annotation2.exists?).to be_falsey
+        end.to change(TaskAnnotationModel, :count).by(-2)
+        expect(annotation1).not_to exist
+        expect(annotation2).not_to exist
       end
     end
   end

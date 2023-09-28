@@ -4,7 +4,7 @@ RSpec.shared_context 'migration' do
   let(:migration_to_test) { Dir.mktmpdir }
   let(:db) { Sequel::Model.db }
 
-  before(:each) do
+  before do
     Sequel.extension :migration
     # Find all migrations
     migration_files = Dir.glob(sprintf('%s/*.rb', DBMigrator::SEQUEL_MIGRATIONS))
@@ -20,7 +20,7 @@ RSpec.shared_context 'migration' do
     Sequel::Migrator.run(db, down_migrations, target: 0, allow_missing_migration_files: true)
   end
 
-  after(:each) do
+  after do
     FileUtils.rm_rf(migration_to_test)
     FileUtils.rm_rf(down_migrations)
 

@@ -17,7 +17,8 @@ module VCAP::CloudController
         end
 
         if message.requested?(:service_plan_names) || message.requested?(:service_plan_guids)
-          dataset = dataset.left_join(:service_plans, id: Sequel[:service_instances][:service_plan_id])
+          dataset = dataset.left_join(:service_plans,
+                                      id: Sequel[:service_instances][:service_plan_id])
         end
 
         filter(dataset, message).

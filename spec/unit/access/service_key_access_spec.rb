@@ -14,11 +14,11 @@ module VCAP::CloudController
 
     before { set_current_user(user, scopes:) }
 
-    it_behaves_like :admin_full_access
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin full access'
+    it_behaves_like 'admin read only access'
 
     context 'for a logged in user (defensive)' do
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -26,7 +26,7 @@ module VCAP::CloudController
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -34,7 +34,7 @@ module VCAP::CloudController
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -42,7 +42,7 @@ module VCAP::CloudController
     context 'organization billing manager (defensive)' do
       before { org.add_billing_manager(user) }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -50,7 +50,7 @@ module VCAP::CloudController
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -58,7 +58,7 @@ module VCAP::CloudController
     context 'organization user (defensive)' do
       before { org.add_user(user) }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -69,7 +69,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -80,7 +80,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
 
       it { is_expected.not_to allow_op_on_object(:read_env, object) }
     end
@@ -100,7 +100,7 @@ module VCAP::CloudController
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
 
-        it_behaves_like :read_only_access
+        it_behaves_like 'read only access'
       end
     end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'any user using client without cloud_controller.read' do
@@ -133,7 +133,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
   end
 end

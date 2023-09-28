@@ -15,7 +15,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = IsolationSegmentUpdateMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
         end
 

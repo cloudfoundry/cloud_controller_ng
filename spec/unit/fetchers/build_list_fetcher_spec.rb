@@ -47,8 +47,8 @@ module VCAP::CloudController
 
       it 'returns all of the builds' do
         results = fetcher.fetch_all(message)
-        expect(results).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1,
-                                        staged_build_for_app2_space1, staging_build_for_app3_space2, staging_build_for_app4_space3])
+        expect(results).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1, staged_build_for_app2_space1, staging_build_for_app3_space2,
+                                           staging_build_for_app4_space3)
       end
 
       context 'filtering app guids' do
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
         it 'returns all of the builds with the requested app guids' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+          expect(results).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1)
         end
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
         it 'returns all of the builds with the requested package guids' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_build_for_app1_space1])
+          expect(results).to contain_exactly(staged_build_for_app1_space1)
         end
       end
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
         it 'returns all of the builds with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1, staged_build_for_app2_space1, failed_build_for_other_app])
+          expect(results).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1, staged_build_for_app2_space1, failed_build_for_other_app)
         end
       end
 
@@ -105,12 +105,7 @@ module VCAP::CloudController
 
       it 'returns only the builds in spaces requested' do
         results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-        expect(results.all).to match_array([
-          staged_build_for_app1_space1,
-          failed_build_for_app1_space1,
-          staged_build_for_app2_space1,
-          staging_build_for_app4_space3
-        ])
+        expect(results.all).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1, staged_build_for_app2_space1, staging_build_for_app4_space3)
       end
 
       describe 'eager loading associated resources' do
@@ -138,11 +133,7 @@ module VCAP::CloudController
 
             it 'returns all of the builds with the requested states' do
               results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-              expect(results.all).to match_array([
-                staged_build_for_app1_space1,
-                failed_build_for_app1_space1,
-                staged_build_for_app2_space1
-              ])
+              expect(results.all).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1, staged_build_for_app2_space1)
             end
           end
 
@@ -151,7 +142,7 @@ module VCAP::CloudController
 
             it 'returns all of the builds with the requested states' do
               results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-              expect(results.all).to match_array([failed_build_for_app1_space1, staging_build_for_app4_space3])
+              expect(results.all).to contain_exactly(failed_build_for_app1_space1, staging_build_for_app4_space3)
             end
           end
         end
@@ -161,7 +152,7 @@ module VCAP::CloudController
 
           it 'returns all the builds associated with the requested app guid' do
             results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-            expect(results.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+            expect(results.all).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1)
           end
         end
 
@@ -170,7 +161,7 @@ module VCAP::CloudController
 
           it 'returns all the builds associated with the requested package guid' do
             results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-            expect(results.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+            expect(results.all).to contain_exactly(staged_build_for_app1_space1, failed_build_for_app1_space1)
           end
         end
 
@@ -179,7 +170,7 @@ module VCAP::CloudController
 
           it 'returns all the STAGED builds associated with the requested package guids' do
             results = fetcher.fetch_for_spaces(message, space_guids: [space1.guid, space3.guid])
-            expect(results.all).to match_array([staged_build_for_app1_space1])
+            expect(results.all).to contain_exactly(staged_build_for_app1_space1)
           end
         end
       end

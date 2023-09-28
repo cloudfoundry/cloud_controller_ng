@@ -26,6 +26,7 @@ module VCAP::CloudController
         }
       }
     end
+
     describe 'Validate' do
       let(:message) { ServiceBrokerUpdateMessage.new(request_body) }
 

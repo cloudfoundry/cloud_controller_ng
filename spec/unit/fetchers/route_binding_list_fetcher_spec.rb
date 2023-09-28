@@ -8,7 +8,8 @@ module VCAP
 
       describe 'fetch_all' do
         let!(:route_bindings) { Array.new(3) { RouteBinding.make } }
-        it 'should return all route bindings' do
+
+        it 'returns all route bindings' do
           fetched_route_bindings = fetcher.fetch_all(
             ServiceRouteBindingsListMessage.from_params({})
           )
@@ -85,7 +86,7 @@ module VCAP
           make_other_route_bindings
         end
 
-        it 'should return route bindings related to a set of space guids' do
+        it 'returns route bindings related to a set of space guids' do
           service_instance_in_target_space = UserProvidedServiceInstance.make(:routing, space: target_space)
           route_bindings_in_target_space = Array.new(3) { RouteBinding.make(service_instance: service_instance_in_target_space) }
 

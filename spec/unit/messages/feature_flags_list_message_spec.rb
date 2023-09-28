@@ -58,13 +58,13 @@ module VCAP::CloudController
 
       it 'validates that order_by value is in the supported list' do
         message = FeatureFlagsListMessage.from_params order_by: 'created_at'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:order_by].length).to eq 1
       end
 
       it 'validates that created_ats is invalid' do
         message = FeatureFlagsListMessage.from_params({ created_ats: 'created_at' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:base][0]).to eq "Filtering by 'created_ats' is not allowed on this resource."
       end
     end

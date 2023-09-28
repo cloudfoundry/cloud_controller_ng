@@ -79,7 +79,7 @@ module VCAP::CloudController
             })
           end
 
-          it 'should mark the service instance as failed' do
+          it 'marks the service instance as failed' do
             expect do
               Timeout.timeout(0.5.seconds) do
                 service_instance_update.update_service_instance(service_instance, { 'parameters' => { 'foo' => 'bar' } })
@@ -216,7 +216,7 @@ module VCAP::CloudController
         context "but didn't change" do
           let(:request_attrs) { { 'service_plan_guid' => old_service_plan.guid } }
 
-          it 'should not update the broker' do
+          it 'does not update the broker' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
 
             expect(
@@ -231,7 +231,7 @@ module VCAP::CloudController
                                        }
                                      })
               )
-            ).to_not have_been_made
+            ).not_to have_been_made
           end
         end
 
@@ -242,7 +242,7 @@ module VCAP::CloudController
             }
           end
 
-          it 'should update the broker' do
+          it 'updates the broker' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
 
             expect(
@@ -266,7 +266,7 @@ module VCAP::CloudController
             let(:new_plan_maintenance_info) { { 'version' => '1.0', 'extra' => 'something' } }
             let(:maintenance_info_without_extra) { { 'version' => '1.0' } }
 
-            it 'should update the service instance maintenance_info to its new plan maintenance_info' do
+            it 'updates the service instance maintenance_info to its new plan maintenance_info' do
               service_instance_update.update_service_instance(service_instance, request_attrs)
 
               expect(service_instance.reload.maintenance_info).to eq(maintenance_info_without_extra)
@@ -276,12 +276,12 @@ module VCAP::CloudController
           context 'new plan does not have maintenance_info' do
             let(:new_plan_maintenance_info) {}
 
-            it 'should reset the service instance maintenance_info to nil' do
+            it 'resets the service instance maintenance_info to nil' do
               service_instance.maintenance_info = { 'version' => '0.1' }
               service_instance.save
               service_instance_update.update_service_instance(service_instance, request_attrs)
 
-              expect(service_instance.reload.maintenance_info).to eq(nil)
+              expect(service_instance.reload.maintenance_info).to be_nil
             end
           end
         end
@@ -409,7 +409,7 @@ module VCAP::CloudController
 
           service_instance.reload
 
-          expect(service_instance.dashboard_url).to eq nil
+          expect(service_instance.dashboard_url).to be_nil
         end
       end
     end

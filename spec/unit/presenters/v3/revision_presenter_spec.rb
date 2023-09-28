@@ -96,7 +96,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:sidecars][0][:memory_in_mb]).to eq(300)
         expect(result[:sidecars][0][:process_types]).to eq(['web'])
         expect(result[:description]).to eq('Initial revision')
-        expect(result[:deployable]).to eq(true)
+        expect(result[:deployable]).to be(true)
       end
 
       context 'when the droplet is not staged' do
@@ -113,7 +113,7 @@ module VCAP::CloudController::Presenters::V3
 
         it 'returns deployable is false' do
           result = RevisionPresenter.new(revision).to_hash
-          expect(result[:deployable]).to eq(false)
+          expect(result[:deployable]).to be(false)
         end
       end
     end

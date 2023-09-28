@@ -439,6 +439,7 @@ module VCAP::CloudController
             expect(process.command).to eq('null')
           end
         end
+
         context 'when the new command is default' do
           let(:message) { ProcessUpdateMessage.new({ command: 'default' }) }
 

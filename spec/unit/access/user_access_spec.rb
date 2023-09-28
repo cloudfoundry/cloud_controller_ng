@@ -8,16 +8,17 @@ module VCAP::CloudController
 
     before { set_current_user(user) }
 
-    it_behaves_like :admin_full_access
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin full access'
+    it_behaves_like 'admin read only access'
 
     context 'a user' do
       context 'has no_access to other users' do
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'has read access' do
         let(:user) { object }
+
         it { is_expected.not_to allow_op_on_object :create, object }
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }
@@ -31,15 +32,15 @@ module VCAP::CloudController
     context 'for a non-logged in user' do
       let(:user) { nil }
 
-      it_behaves_like :no_access
-      it { should_not allow_op_on_object :index, object.class }
+      it_behaves_like 'no access'
+      it { is_expected.not_to allow_op_on_object :index, object.class }
     end
 
     context 'any user using client without cloud_controller.read' do
       before { set_current_user(user, scopes: []) }
 
-      it_behaves_like :no_access
-      it { should_not allow_op_on_object :index, object.class }
+      it_behaves_like 'no access'
+      it { is_expected.not_to allow_op_on_object :index, object.class }
     end
   end
 end

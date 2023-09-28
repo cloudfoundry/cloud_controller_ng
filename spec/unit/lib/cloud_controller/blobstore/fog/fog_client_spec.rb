@@ -24,10 +24,14 @@ module CloudController
                       directory_key:)
       end
 
+      after do
+        Fog::Mock.reset
+      end
+
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { instance_double(FogBlob, file: nil) }
 
-        before :each do
+        before do
           client.ensure_bucket_exists
           client.cp_to_blobstore(tmpfile.path, key)
         end
@@ -43,10 +47,6 @@ module CloudController
         end
       end
 
-      after do
-        Fog::Mock.reset
-      end
-
       context 'for a remote blobstore backed by a CDN' do
         let(:cdn) { double(:cdn) }
         let(:url_from_cdn) { 'http://some_distribution.cloudfront.net/ab/cd/abcdef' }
@@ -58,14 +58,14 @@ module CloudController
                         cdn:)
         end
 
-        before :each do
+        before do
           client.ensure_bucket_exists
           upload_tmpfile(client, key)
           allow(cdn).to receive(:download_uri).and_return(url_from_cdn)
         end
 
         it 'is not local' do
-          expect(client).to_not be_local
+          expect(client).not_to be_local
         end
 
         it 'downloads through the CDN' do
@@ -85,9 +85,11 @@ module CloudController
 
       context 'a local blobstore' do
         let(:connection_config) { { provider: 'Local', local_root: '/' } }
-        before :each do
+
+        before do
           client.ensure_bucket_exists
         end
+
         it 'is true if the provider is local' do
           expect(client).to be_local
         end
@@ -99,9 +101,11 @@ module CloudController
           FogClient.new(connection_config:,
                         directory_key:)
         end
-        before :each do
+
+        before do
           client.ensure_bucket_exists
         end
+
         context 'with existing files' do
           before do
             upload_tmpfile(client, sha_of_content)
@@ -272,7 +276,7 @@ module CloudController
 
             client.cp_to_blobstore(path, 'foobar')
 
-            expect(directory.files.head('fo/ob/foobar').public?).to be_falsey
+            expect(directory.files.head('fo/ob/foobar')).not_to be_public
           end
 
           it 'uploads the files with the specified key' do
@@ -294,7 +298,7 @@ module CloudController
           end
 
           it 'can copy as a public file' do
-            allow(client).to receive(:local?) { true }
+            allow(client).to receive(:local?).and_return(true)
             path = File.join(local_dir, 'empty_file')
             FileUtils.touch(path)
             key = 'abcdef12345'
@@ -504,11 +508,11 @@ module CloudController
             expect(client.exists?('abcdef123456')).to be false
           end
 
-          it 'should be ok if there are no files' do
+          it 'is ok if there are no files' do
             expect(directory.files).to have(0).items
             expect do
               client.delete_all
-            end.to_not raise_error
+            end.not_to raise_error
           end
 
           context 'when the underlying blobstore allows multiple deletes in a single request' do
@@ -520,12 +524,12 @@ module CloudController
               }
             end
 
-            it 'should be ok if there are no files' do
+            it 'is ok if there are no files' do
               Fog.mock!
               expect(directory.files).to have(0).items
               expect do
                 client.delete_all
-              end.to_not raise_error
+              end.not_to raise_error
             end
 
             it 'deletes in groups of the page_size' do
@@ -539,9 +543,9 @@ module CloudController
               client.cp_to_blobstore(file, 'abcdef1')
               client.cp_to_blobstore(file, 'abcdef2')
               client.cp_to_blobstore(file, 'abcdef3')
-              expect(client.exists?('abcdef1')).to be_truthy
-              expect(client.exists?('abcdef2')).to be_truthy
-              expect(client.exists?('abcdef3')).to be_truthy
+              expect(client).to exist('abcdef1')
+              expect(client).to exist('abcdef2')
+              expect(client).to exist('abcdef3')
 
               page_size = 2
               client.delete_all(page_size)
@@ -560,7 +564,7 @@ module CloudController
                             root_dir:)
             end
 
-            before :each do
+            before do
               client_with_root.ensure_bucket_exists
             end
 
@@ -619,11 +623,11 @@ module CloudController
             expect(client.exists?(remote_key_3)).to be true
           end
 
-          it 'should be ok if there are no files' do
+          it 'is ok if there are no files' do
             expect(directory.files).to have(0).items
             expect do
               client.delete_all_in_path('nonsense_path')
-            end.to_not raise_error
+            end.not_to raise_error
           end
 
           context 'when the underlying blobstore allows multiple deletes in a single request' do
@@ -635,12 +639,12 @@ module CloudController
               }
             end
 
-            it 'should be ok if there are no files' do
+            it 'is ok if there are no files' do
               Fog.mock!
               expect(directory.files).to have(0).items
               expect do
                 client.delete_all_in_path('path!')
-              end.to_not raise_error
+              end.not_to raise_error
             end
           end
 
@@ -653,7 +657,7 @@ module CloudController
                             root_dir:)
             end
 
-            before :each do
+            before do
               client_with_root.ensure_bucket_exists
             end
 
@@ -696,11 +700,11 @@ module CloudController
             expect(client.exists?('abcdef123456')).to be false
           end
 
-          it "should be ok if the file doesn't exist" do
+          it "is ok if the file doesn't exist" do
             expect(directory.files).to have(0).items
             expect do
               client.delete('non-existent-file')
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
 
@@ -710,19 +714,19 @@ module CloudController
             FileUtils.touch(path)
 
             client.cp_to_blobstore(path, 'abcdef123456')
-            expect(client.exists?('abcdef123456')).to eq(true)
+            expect(client.exists?('abcdef123456')).to be(true)
 
             blob = client.blob('abcdef123456')
 
             client.delete_blob(blob)
-            expect(client.exists?('abcdef123456')).to eq(false)
+            expect(client.exists?('abcdef123456')).to be(false)
           end
 
-          it "should be ok if the file doesn't exist" do
+          it "is ok if the file doesn't exist" do
             blob = FogBlob.new(nil, nil)
             expect do
               client.delete_blob(blob)
-            end.to_not raise_error
+            end.not_to raise_error
           end
         end
 
@@ -762,7 +766,7 @@ module CloudController
                         root_dir:)
         end
 
-        before :each do
+        before do
           client_with_root.ensure_bucket_exists
         end
 
@@ -800,7 +804,7 @@ module CloudController
                           cdn:)
           end
 
-          around(:each) do |example|
+          around do |example|
             WebMock.disable_net_connect!(allow_localhost: true)
             example.run
             WebMock.disable_net_connect!
@@ -835,7 +839,8 @@ module CloudController
           let(:local_root) { File.expand_path('../../../../../', File.dirname(__FILE__)) }
           let(:connection_config) { { provider: 'Local', local_root: local_root } }
           let(:directory_key) { 'fixtures' }
-          around(:each) do |example|
+
+          around do |example|
             Fog.unmock!
             example.run
             Fog.mock!

@@ -114,7 +114,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
           expect(entity).to have_key('shared_organizations_url')
-          expect(entity).to_not have_key('shared_organizations')
+          expect(entity).not_to have_key('shared_organizations')
         end
       end
     end

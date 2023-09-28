@@ -137,8 +137,8 @@ module VCAP::CloudController::Presenters
 
           it 'decorates the hash with them' do
             result = presenter.to_hash
-            expect(result[:included][:bananas]).to match_array(["bobo's banana", "george's banana"])
-            expect(result[:included][:tails]).to match_array(["bobo's tail", "george's tail"])
+            expect(result[:included][:bananas]).to contain_exactly("bobo's banana", "george's banana")
+            expect(result[:included][:tails]).to contain_exactly("bobo's tail", "george's tail")
           end
         end
       end

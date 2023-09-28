@@ -20,6 +20,7 @@ module VCAP::CloudController::Presenters::V3
     let(:related_instance_guid) { '1' }
     let(:related_instance) { book_class.new(related_instance_guid) }
     let(:relationship_name) { 'favorite_book' }
+
     subject(:relationship_presenter) do
       ToOneRelationshipPresenter.new(
         resource_path:,

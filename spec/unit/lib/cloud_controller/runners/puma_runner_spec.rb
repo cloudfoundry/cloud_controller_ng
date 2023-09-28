@@ -103,13 +103,13 @@ module VCAP::CloudController
     end
 
     describe '#stop!' do
-      it 'should stop puma and EM, logs incomplete requests' do
+      it 'stops puma and EM, logs incomplete requests' do
         expect(request_logs).to receive(:log_incomplete_requests)
         expect(EM).to receive(:stop)
         subject.stop!
       end
 
-      it 'should get called when the launcher stops' do
+      it 'gets called when the launcher stops' do
         expect(subject).to receive(:stop!)
         subject.instance_variable_get(:@puma_launcher).events.fire(:on_stopped)
       end

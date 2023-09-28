@@ -36,14 +36,14 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = PackagesListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:states)).to be_truthy
-        expect(message.requested?(:types)).to be_truthy
-        expect(message.requested?(:app_guids)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:states)
+        expect(message).to be_requested(:types)
+        expect(message).to be_requested(:app_guids)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:label_selector)
       end
     end
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
       context 'types' do
         it 'validates types to be an array' do
           message = PackagesListMessage.from_params(types: 'not array at all')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:types]).to include('must be an array')
         end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
       context 'states' do
         it 'validates states to be an array' do
           message = PackagesListMessage.from_params(states: 'not array at all')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:states]).to include('must be an array')
         end
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
       context 'app guids' do
         it 'validates app_guids is an array' do
           message = PackagesListMessage.from_params app_guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:app_guids]).to include('must be an array')
         end
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
           context 'user provides app_guids' do
             it 'is not valid' do
               message = PackagesListMessage.from_params({ app_guid: 'blah', app_guids: %w[app1 app2] })
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'app_guids'")
             end
           end
@@ -144,7 +144,7 @@ module VCAP::CloudController
           context 'user provides organization_guids' do
             it 'is not valid' do
               message = PackagesListMessage.from_params({ app_guid: 'blah', organization_guids: %w[orgguid1 orgguid2] })
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
             end
           end
@@ -152,7 +152,7 @@ module VCAP::CloudController
           context 'user provides space guids' do
             it 'is not valid' do
               message = PackagesListMessage.from_params({ app_guid: 'blah', space_guids: %w[space1 space2] })
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
             end
           end
@@ -162,7 +162,7 @@ module VCAP::CloudController
       context 'guids' do
         it 'is not valid if guids is not an array' do
           message = PackagesListMessage.from_params guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids]).to include('must be an array')
         end
 
@@ -175,7 +175,7 @@ module VCAP::CloudController
       context 'space_guids' do
         it 'validates space_guids to be an array' do
           message = PackagesListMessage.from_params(space_guids: 'not an array at all')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:space_guids]).to include('must be an array')
         end
 
@@ -188,7 +188,7 @@ module VCAP::CloudController
       context 'organization_guids' do
         it 'validates organization_guids to be an array' do
           message = PackagesListMessage.from_params(organization_guids: 'not an array at all')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:organization_guids]).to include('must be an array')
         end
 

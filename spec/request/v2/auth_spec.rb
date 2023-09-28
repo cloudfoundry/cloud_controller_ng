@@ -29,6 +29,7 @@ RSpec.describe 'Auth' do
       expect(last_response.body).to match(/InvalidAuthToken/)
     end
   end
+
   context 'when user has a global token inaddtion to the space supporter role' do
     let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }

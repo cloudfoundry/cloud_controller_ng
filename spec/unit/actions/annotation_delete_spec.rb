@@ -12,8 +12,8 @@ module VCAP::CloudController
       it 'deletes and cancels the annotation' do
         annotation_delete.delete([annotation, annotation2])
 
-        expect(annotation.exists?).to eq(false), 'Expected annotation to not exist, but it does'
-        expect(annotation2.exists?).to eq(false), 'Expected annotation2 to not exist, but it does'
+        expect(annotation.exists?).to be(false), 'Expected annotation to not exist, but it does'
+        expect(annotation2.exists?).to be(false), 'Expected annotation2 to not exist, but it does'
       end
     end
   end

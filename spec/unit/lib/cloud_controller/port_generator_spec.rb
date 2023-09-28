@@ -22,7 +22,7 @@ module VCAP::CloudController
       it 'generates a port' do
         port = PortGenerator.generate_port(domain_guid1, Array(1024..65_535))
 
-        expect((1024..65_535).cover?(port)).to eq(true)
+        expect((1024..65_535).cover?(port)).to be(true)
       end
 
       it 'runs out of ports' do

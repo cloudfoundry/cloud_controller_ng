@@ -74,7 +74,7 @@ RSpec.describe 'V3 service credential bindings synoptic' do
 
   def can_query_parameters(binding_guid, create_request)
     get "#{LifecycleSpecHelper::BINDINGS_ENDPOINT}#{binding_guid}/parameters", nil, admin_headers
-    expect(parsed_response).to contain_exactly(*create_request[:parameters].with_indifferent_access)
+    expect(parsed_response).to match_array(create_request[:parameters].with_indifferent_access)
   end
 
   def updates_metadata(binding_guid, create_request)
@@ -86,8 +86,8 @@ RSpec.describe 'V3 service credential bindings synoptic' do
     }
     patch "#{LifecycleSpecHelper::BINDINGS_ENDPOINT}#{binding_guid}", update_request.to_json, admin_headers
     expect(last_response).to have_status_code(200)
-    expect(parsed_response['metadata']['annotations']).to contain_exactly(*update_request[:metadata][:annotations].merge(create_request[:metadata][:annotations]).stringify_keys)
-    expect(parsed_response['metadata']['labels']).to contain_exactly(*update_request[:metadata][:labels].merge(create_request[:metadata][:labels]).stringify_keys)
+    expect(parsed_response['metadata']['annotations']).to match_array(update_request[:metadata][:annotations].merge(create_request[:metadata][:annotations]).stringify_keys)
+    expect(parsed_response['metadata']['labels']).to match_array(update_request[:metadata][:labels].merge(create_request[:metadata][:labels]).stringify_keys)
   end
 
   def deletes_binding(binding_guid)

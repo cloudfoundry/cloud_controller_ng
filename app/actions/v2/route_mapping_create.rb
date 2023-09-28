@@ -50,9 +50,8 @@ module VCAP::CloudController
 
         route_mapping
       rescue Sequel::ValidationFailed => e
-        if e.errors && e.errors.on(%i[app_guid route_guid process_type app_port]) && e.errors.on(%i[app_guid route_guid process_type app_port]).include?(:unique)
-          raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE)
-        end
+        raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE) if e.errors && e.errors.on(%i[app_guid route_guid process_type
+                                                                                         app_port]) && e.errors.on(%i[app_guid route_guid process_type app_port]).include?(:unique)
 
         raise InvalidRouteMapping.new(e.message)
       end

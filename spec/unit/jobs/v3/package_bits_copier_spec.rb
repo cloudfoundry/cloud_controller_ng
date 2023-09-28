@@ -32,11 +32,11 @@ module VCAP::CloudController
         end
 
         it 'copies the source package zip to the package blob store for the destination package' do
-          expect(package_blobstore.exists?(destination_package.guid)).to be_falsey
+          expect(package_blobstore).not_to exist(destination_package.guid)
 
           job.perform
 
-          expect(package_blobstore.exists?(destination_package.guid)).to be_truthy
+          expect(package_blobstore).to exist(destination_package.guid)
         end
 
         it 'updates the destination package_hash, sha256_checksum and state' do

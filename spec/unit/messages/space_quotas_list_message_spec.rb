@@ -30,12 +30,12 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = SpaceQuotasListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:guids)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:space_guids)
       end
 
       context 'guids, names, organization_guids, space_guids are nil' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         it 'is invalid' do
           message = SpaceQuotasListMessage.from_params(params)
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors_on(:guids)).to include('must be an array')
           expect(message.errors_on(:names)).to include('must be an array')
           expect(message.errors_on(:organization_guids)).to include('must be an array')
@@ -86,7 +86,7 @@ module VCAP::CloudController
         it 'fails to validate' do
           message = SpaceQuotasListMessage.from_params(params)
 
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
       end
     end

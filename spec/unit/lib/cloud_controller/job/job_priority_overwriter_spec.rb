@@ -23,19 +23,19 @@ module VCAP::CloudController
 
     context 'when a job is NOT specified in the config' do
       it 'returns nil' do
-        expect(JobPriorityOverwriter.new(config).get(:'res1.bommel')).to eq(nil)
+        expect(JobPriorityOverwriter.new(config).get(:'res1.bommel')).to be_nil
       end
     end
 
     context 'when the job_name is nil' do
       it 'returns nil' do
-        expect(JobPriorityOverwriter.new(config).get(nil)).to eq(nil)
+        expect(JobPriorityOverwriter.new(config).get(nil)).to be_nil
       end
     end
 
     context 'when the config is empty' do
       it 'returns nil' do
-        expect(JobPriorityOverwriter.new(Config.new({})).get(:'res1.bommel')).to eq(nil)
+        expect(JobPriorityOverwriter.new(Config.new({})).get(:'res1.bommel')).to be_nil
       end
     end
   end

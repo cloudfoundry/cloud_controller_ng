@@ -43,7 +43,7 @@ module VCAP::CloudController
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
 
-          expect(buildpack.enabled).to eq(false)
+          expect(buildpack.enabled).to be(false)
         end
       end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
 
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.locked).to be(true)
         end
       end
 

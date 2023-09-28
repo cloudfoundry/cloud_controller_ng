@@ -29,7 +29,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:version) { 'draft-04' }
         let(:raw_schema) { { '$schema' => draft_schema } }
 
-        it 'should be valid' do
+        it 'is valid' do
           expect(schema.validate).to be true
           expect(schema.errors.full_messages.length).to be 0
         end
@@ -39,7 +39,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:version) { 'draft-06' }
         let(:raw_schema) { { '$schema' => draft_schema } }
 
-        it 'should be valid' do
+        it 'is valid' do
           expect(schema.validate).to be true
           expect(schema.errors.full_messages.length).to eq 0
         end
@@ -56,7 +56,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
         end
 
-        it 'should be valid' do
+        it 'is valid' do
           expect(schema.validate).to be true
           expect(schema.errors.full_messages.length).to be 0
         end
@@ -94,7 +94,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when there are multiple errors' do
           let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', properties: true, anyOf: true } }
 
-          it 'should have more than one error message' do
+          it 'has more than one error message' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 2
             expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
@@ -109,7 +109,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the schema raises a SchemaError' do
           let(:raw_schema) { { '$schema' => 'blahblahblah' } }
 
-          it 'should a schema error message with the error' do
+          it 'as schema error message with the error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to eq 'Custom meta schemas are not supported.'
@@ -120,7 +120,7 @@ module VCAP::Services::ServiceBrokers::V2
           context 'when $ref is an external reference' do
             let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', '$ref' => 'http://example.com/ref' } }
 
-            it 'should add a schema error message with the error' do
+            it 'adds a schema error message with the error' do
               expect(schema.validate).to be false
               expect(schema.errors.full_messages.length).to eq 1
               expect(schema.errors.full_messages.first).to eq 'No external references are allowed: Read of URI at http://example.com/ref refused'
@@ -130,7 +130,7 @@ module VCAP::Services::ServiceBrokers::V2
           context 'when custom schema is not recognized by the library' do
             let(:raw_schema) { { '$schema' => 'http://example.com/schema' } }
 
-            it 'should not be valid' do
+            it 'is not valid' do
               expect(schema.validate).to be false
               expect(schema.errors.full_messages.length).to eq 1
               expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported.'
@@ -141,7 +141,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the schema has an external file reference' do
           let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', '$ref': 'path/to/schema.json' } }
 
-          it 'should not be valid' do
+          it 'is not valid' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to match 'No external references are allowed.+path/to/schema.json'
@@ -155,7 +155,7 @@ module VCAP::Services::ServiceBrokers::V2
             allow(JSON::Validator).to receive(:validate!).and_raise('some unknown error')
           end
 
-          it 'should a schema error message with the error' do
+          it 'as schema error message with the error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to eq 'some unknown error'
@@ -236,7 +236,7 @@ module VCAP::Services::ServiceBrokers::V2
             context "when the schema json is #{desc}" do
               let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
 
-              it 'should be valid' do
+              it 'is valid' do
                 expect(schema.validate).to be true
                 expect(schema.errors.full_messages.length).to eq 0
               end
@@ -266,7 +266,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the schema is a different draft version' do
           let(:version) { 'some-random-schema' }
 
-          it 'should return a helpful error' do
+          it 'returns a helpful error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported'
@@ -276,7 +276,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when no schema has been specified' do
           let(:raw_schema) { {} }
 
-          it 'should return a helpful error' do
+          it 'returns a helpful error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to match 'Schema must have $schema key but was not present'
@@ -286,7 +286,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when an unknown schema has been specified' do
           let(:draft_schema) { 'http://example.com/someschema' }
 
-          it 'should return a helpful error' do
+          it 'returns a helpful error' do
             expect(schema.validate).to be false
             expect(schema.errors.full_messages.length).to eq 1
             expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported'
@@ -294,6 +294,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
     end
+
     def create_schema_of_size(bytes)
       surrounding_bytes = 62
       {

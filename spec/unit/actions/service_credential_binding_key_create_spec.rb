@@ -43,7 +43,7 @@ module VCAP::CloudController
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, message:)
 
-            expect(binding).to_not be_nil
+            expect(binding).not_to be_nil
             expect(binding).to eq(ServiceKey.where(guid: binding.guid).first)
             expect(binding.service_instance).to eq(service_instance)
             expect(binding.name).to eq(name)
@@ -75,7 +75,7 @@ module VCAP::CloudController
                 b = action.precursor(service_instance, message:)
 
                 expect(b.guid).not_to eq(binding.guid)
-                expect(b.create_in_progress?).to be_truthy
+                expect(b).to be_create_in_progress
                 expect { binding.reload }.to raise_error Sequel::NoExistingObject
               end
             end
@@ -170,7 +170,7 @@ module VCAP::CloudController
               end
 
               it 'does not raise an error' do
-                expect { action.precursor(service_instance, message:) }.to_not raise_error
+                expect { action.precursor(service_instance, message:) }.not_to raise_error
               end
             end
 
@@ -252,7 +252,7 @@ module VCAP::CloudController
         end
       end
 
-      context '#bind' do
+      describe '#bind' do
         let(:app) { nil }
         let(:precursor) { action.precursor(service_instance, message:) }
         let(:specific_fields) { {} }
@@ -283,7 +283,7 @@ module VCAP::CloudController
               let(:bind_async_response) { { async: true, operation: broker_provided_operation } }
               let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_async_response) }
 
-              it 'should log audit start_create' do
+              it 'logs audit start_create' do
                 action.bind(precursor)
                 expect(binding_event_repo).to have_received(:record_start_create).with(
                   precursor,

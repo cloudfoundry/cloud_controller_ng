@@ -177,7 +177,7 @@ RSpec.describe 'Builds' do
         allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
       end
 
-      it 'should log the required fields when the build is created' do
+      it 'logs the required fields when the build is created' do
         Timecop.freeze do
           post '/v3/builds', create_request.merge(metadata:).to_json, developer_headers
           created_build = VCAP::CloudController::BuildModel.last

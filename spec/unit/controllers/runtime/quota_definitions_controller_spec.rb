@@ -114,6 +114,8 @@ module VCAP::CloudController
     describe 'Validation messages' do
       let(:quota_definition) { QuotaDefinition.make }
 
+      let(:quota_definition) { QuotaDefinition.make }
+
       it 'allows a memory_limit of -1 (unlimited)' do
         set_current_user_as_admin
 
@@ -121,7 +123,6 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(201)
       end
-      let(:quota_definition) { QuotaDefinition.make }
 
       it 'returns QuotaDefinitionMemoryLimitInvalid error correctly' do
         set_current_user_as_admin

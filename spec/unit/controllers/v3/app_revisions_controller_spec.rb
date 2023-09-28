@@ -23,7 +23,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     it 'returns 200 and shows the revisions' do
       get :index, params: { guid: app_model.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision2.guid)
     end
 
@@ -33,7 +33,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       it 'by version' do
         get :index, params: { guid: app_model.guid, versions: '808,810' }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision3.guid)
       end
     end
@@ -41,14 +41,14 @@ RSpec.describe AppRevisionsController, type: :controller do
     it 'raises an ApiError with a 404 code when the app does not exist' do
       get :index, params: { guid: 'hahaha' }
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status :not_found
       expect(response.body).to include 'ResourceNotFound'
     end
 
     it 'returns an empty array when the app has no revisions' do
       get :index, params: { guid: app_without_revisions.guid }
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(parsed_body['resources']).to be_empty
     end
 
@@ -62,7 +62,7 @@ RSpec.describe AppRevisionsController, type: :controller do
           get :index, params: { guid: app_model.guid }
 
           expect(response.body).to include 'NotAuthorized'
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
         end
       end
 
@@ -76,7 +76,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           get :index, params: { guid: app_model.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -97,14 +97,14 @@ RSpec.describe AppRevisionsController, type: :controller do
     it 'returns the deployed revisions' do
       get :deployed, params: { guid: app_model.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['resources'].pluck('guid')).to contain_exactly(revision1.guid, revision2.guid)
     end
 
     it 'raises an ApiError with a 404 code when the app does not exist' do
       get :deployed, params: { guid: 'hahaha' }
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status :not_found
       expect(response.body).to include 'ResourceNotFound'
     end
 
@@ -118,7 +118,7 @@ RSpec.describe AppRevisionsController, type: :controller do
           get :deployed, params: { guid: app_model.guid }
 
           expect(response.body).to include 'NotAuthorized'
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
         end
       end
 
@@ -132,7 +132,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         it 'returns a 404 ResourceNotFound error' do
           get :deployed, params: { guid: app_model.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end

@@ -68,7 +68,7 @@ module VCAP::CloudController
         it 'adds all the destinations and updates the routing' do
           expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          end.to change { RouteMappingModel.count }.by(2)
+          end.to change(RouteMappingModel, :count).by(2)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port, protocol: rm.protocol }
@@ -105,7 +105,7 @@ module VCAP::CloudController
             end.to raise_error(
               UpdateRouteDestinations::Error,
               'Destinations cannot be inserted when there are weighted destinations already configured.'
-            ).and change { RouteMappingModel.count }.by(0)
+            ).and change(RouteMappingModel, :count).by(0)
           end
         end
 
@@ -152,7 +152,7 @@ module VCAP::CloudController
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).not_to have_received(:map_route).with(have_attributes(process_type: 'existing'))
-            end.to change { RouteMappingModel.count }.by(2)
+            end.to change(RouteMappingModel, :count).by(2)
           end
         end
       end
@@ -181,7 +181,7 @@ module VCAP::CloudController
           it "doesn't add the new destination" do
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(0)
+            end.to change(RouteMappingModel, :count).by(0)
           end
 
           describe 'audit events' do
@@ -220,7 +220,7 @@ module VCAP::CloudController
           it "doesn't add the new destination" do
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(0)
+            end.to change(RouteMappingModel, :count).by(0)
           end
 
           describe 'audit events' do
@@ -251,7 +251,7 @@ module VCAP::CloudController
         it 'adds all the destinations and updates the routing' do
           expect do
             subject.add(params, route, apps_hash, user_audit_info)
-          end.to change { RouteMappingModel.count }.by(1)
+          end.to change(RouteMappingModel, :count).by(1)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port }
@@ -325,6 +325,7 @@ module VCAP::CloudController
             }
           ]
         end
+
         before do
           99.times do |i|
             VCAP::CloudController::RouteMappingModel.make(
@@ -342,7 +343,7 @@ module VCAP::CloudController
           end.to raise_error(
             UpdateRouteDestinations::Error,
             'Routes can be mapped to at most 100 destinations.'
-          ).and change { RouteMappingModel.count }.by(0)
+          ).and change(RouteMappingModel, :count).by(0)
           expect(RouteMappingModel.count).to eq(100)
         end
       end
@@ -361,7 +362,7 @@ module VCAP::CloudController
             ]
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
             route.reload
             query = RouteMappingModel.where(route: route,
                                             process_type: process_type,
@@ -383,7 +384,7 @@ module VCAP::CloudController
             ]
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
             route.reload
             query = RouteMappingModel.where(route: route,
                                             process_type: process_type,
@@ -433,7 +434,7 @@ module VCAP::CloudController
             ]
             expect do
               subject.add(params, tcp_route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
             route.reload
             query = RouteMappingModel.where(route: tcp_route,
                                             process_type: process_type,
@@ -570,7 +571,7 @@ module VCAP::CloudController
         it 'replaces all the route_mappings' do
           expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          end.to change { RouteMappingModel.count }.by(1)
+          end.to change(RouteMappingModel, :count).by(1)
           route.reload
           mappings = route.route_mappings.collect do |rm|
             { app_guid: rm.app_guid, process_type: rm.process_type, app_port: rm.app_port }
@@ -613,6 +614,7 @@ module VCAP::CloudController
                 expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: false)
               end
             end
+
             it 'records an audit event for each new route unmapping' do
               expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
             end
@@ -632,6 +634,7 @@ module VCAP::CloudController
                 expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: true)
               end
             end
+
             it 'records an audit event for each new route unmapping' do
               expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: true)
             end
@@ -650,7 +653,7 @@ module VCAP::CloudController
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
-            end.to change { RouteMappingModel.count }.by(1)
+            end.to change(RouteMappingModel, :count).by(1)
           end
         end
 
@@ -660,7 +663,7 @@ module VCAP::CloudController
           it 'removes the mapping port from the process' do
             expect do
               subject.replace(params, route, apps_hash, user_audit_info)
-            end.to change { RouteMappingModel.count }.by(-1)
+            end.to change(RouteMappingModel, :count).by(-1)
 
             expect(process3_route_handler).to have_received(:update_route_information).with(
               perform_validation: false,
@@ -695,7 +698,7 @@ module VCAP::CloudController
         it 'removes the non-matching destination and preserves the matching destination' do
           expect do
             subject.replace(params, route, apps_hash, user_audit_info)
-          end.to change { RouteMappingModel.count }.by(-1)
+          end.to change(RouteMappingModel, :count).by(-1)
         end
 
         describe 'audit events' do
@@ -759,7 +762,7 @@ module VCAP::CloudController
           end.to raise_error(
             UpdateRouteDestinations::Error,
             'Routes can be mapped to at most 100 destinations.'
-          ).and change { RouteMappingModel.count }.by(0)
+          ).and change(RouteMappingModel, :count).by(0)
         end
       end
     end
@@ -768,7 +771,7 @@ module VCAP::CloudController
       it 'deletes the route mapping record' do
         expect do
           subject.delete(existing_destination, route, user_audit_info)
-        end.to change { RouteMappingModel.count }.by(-1)
+        end.to change(RouteMappingModel, :count).by(-1)
         expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
@@ -783,7 +786,7 @@ module VCAP::CloudController
           end.to raise_error(
             UpdateRouteDestinations::Error,
             'Weighted destinations cannot be deleted individually.'
-          ).and change { RouteMappingModel.count }.by(0)
+          ).and change(RouteMappingModel, :count).by(0)
         end
       end
 
@@ -803,7 +806,7 @@ module VCAP::CloudController
           allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(process3_route_handler)
         end
 
-        it 'should not remove the process ports because they are still needed for the other destination' do
+        it 'does not remove the process ports because they are still needed for the other destination' do
           subject.delete(existing_destination, route, user_audit_info)
 
           expect(process3_route_handler).to have_received(:update_route_information).with(

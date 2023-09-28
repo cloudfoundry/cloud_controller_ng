@@ -46,7 +46,7 @@ module VCAP::CloudController
               configurer.configure(auth_token)
               expect(SecurityContext.current_user.id).to eq(user.id)
               expect(SecurityContext.current_user.guid).to eq(user.guid)
-              expect(SecurityContext.current_user.is_oauth_client?).to be_falsey
+              expect(SecurityContext.current_user).not_to be_is_oauth_client
               expect(SecurityContext.current_user.is_oauth_client?).not_to be_nil
             end
           end
@@ -66,11 +66,11 @@ module VCAP::CloudController
             it 'creates an active user with that id' do
               expect do
                 configurer.configure(auth_token)
-              end.to change { User.count }.by(1)
+              end.to change(User, :count).by(1)
               expect(SecurityContext.current_user.guid).to eq(user_id)
               expect(SecurityContext.current_user).to be_active
-              expect(SecurityContext.current_user.is_oauth_client?).to be_falsey
-              expect(SecurityContext.current_user.is_oauth_client?).not_to eq(nil)
+              expect(SecurityContext.current_user).not_to be_is_oauth_client
+              expect(SecurityContext.current_user.is_oauth_client?).not_to be_nil
             end
           end
 
@@ -91,6 +91,7 @@ module VCAP::CloudController
           let(:token_information) { { 'client_id' => user_id } }
           let!(:user) { User.make(guid: user_id) }
           let(:uaa_client) { double(UaaClient) }
+
           before do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).
               and_return(uaa_client)
@@ -98,7 +99,7 @@ module VCAP::CloudController
 
           it 'records that the user is a client' do
             configurer.configure(auth_token)
-            expect(SecurityContext.current_user.is_oauth_client?).to be_truthy
+            expect(SecurityContext.current_user).to be_is_oauth_client
           end
 
           it 'uses the client_id to set the user_id' do
@@ -143,6 +144,7 @@ module VCAP::CloudController
 
             context 'theres a user with the same id' do
               let!(:user) { User.make(guid: user_id, is_oauth_client: false) }
+
               before do
                 expect(uaa_client).not_to receive(:usernames_for_ids)
               end

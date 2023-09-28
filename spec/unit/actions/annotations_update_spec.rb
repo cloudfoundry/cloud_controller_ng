@@ -33,7 +33,7 @@ module VCAP::CloudController
         it 'does not change any annotations' do
           expect do
             subject
-          end.not_to(change { AppAnnotationModel.count })
+          end.not_to(change(AppAnnotationModel, :count))
         end
       end
 
@@ -71,8 +71,8 @@ module VCAP::CloudController
             AnnotationsUpdate.update(app, annotations, AppAnnotationModel, destroy_nil: false)
           end
 
-          expect(annotation_to_be_deleted.reload.value).to eq nil
-          expect(prefixed_annotation_to_be_deleted.reload.value).to eq nil
+          expect(annotation_to_be_deleted.reload.value).to be_nil
+          expect(prefixed_annotation_to_be_deleted.reload.value).to be_nil
           expect(old_annotation.reload.value).to eq 'stable'
         end
       end
@@ -95,7 +95,7 @@ module VCAP::CloudController
               expect do
                 subject
               end.to raise_error(CloudController::Errors::ApiError, /Failed to add 4 annotations because it would exceed maximum of 2/)
-            end.not_to(change { AppAnnotationModel.count })
+            end.not_to(change(AppAnnotationModel, :count))
           end
         end
 
@@ -119,7 +119,7 @@ module VCAP::CloudController
                 expect do
                   subject
                 end.to raise_error(CloudController::Errors::ApiError, /Failed to add 1 annotations because it would exceed maximum of 2/)
-              end.not_to(change { AppAnnotationModel.count })
+              end.not_to(change(AppAnnotationModel, :count))
             end
           end
         end

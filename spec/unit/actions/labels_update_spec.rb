@@ -42,7 +42,7 @@ module VCAP::CloudController
               expect do
                 subject
               end.to raise_error(CloudController::Errors::ApiError, /Failed to add 4 labels because it would exceed maximum of 2/)
-            end.not_to(change { AppLabelModel.count })
+            end.not_to(change(AppLabelModel, :count))
           end
         end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
                 expect do
                   subject
                 end.to raise_error(CloudController::Errors::ApiError, 'Failed to add 1 labels because it would exceed maximum of 2')
-              end.not_to(change { AppLabelModel.count })
+              end.not_to(change(AppLabelModel, :count))
             end
           end
         end
@@ -117,7 +117,7 @@ module VCAP::CloudController
         it 'does not change any labels' do
           expect do
             subject
-          end.not_to(change { AppLabelModel.count })
+          end.not_to(change(AppLabelModel, :count))
         end
       end
 
@@ -175,7 +175,7 @@ module VCAP::CloudController
             LabelsUpdate.update(app, labels, AppLabelModel, destroy_nil: false)
           end
 
-          expect(delete_me_label.reload.value).to eq nil
+          expect(delete_me_label.reload.value).to be_nil
           expect(keep_me_label.reload.value).to eq 'mashed'
         end
       end
@@ -204,7 +204,7 @@ module VCAP::CloudController
         it 'does not change any labels' do
           expect do
             subject
-          end.not_to(change { OrganizationLabelModel.count })
+          end.not_to(change(OrganizationLabelModel, :count))
         end
       end
 

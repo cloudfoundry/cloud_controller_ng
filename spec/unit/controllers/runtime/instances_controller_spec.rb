@@ -17,7 +17,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(process.space) }
       let(:process) { ProcessModelFactory.make }
 
-      before :each do
+      before do
         set_current_user(user)
       end
 

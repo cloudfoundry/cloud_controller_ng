@@ -27,6 +27,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       let(:result) { BuildPresenter.new(build).to_hash }
+
       context 'buildpack lifecycle' do
         it 'presents the build as a hash' do
           links = {
@@ -36,14 +37,14 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:guid]).to eq(build.guid)
           expect(result[:state]).to eq('STAGING')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
           expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack', 'http://***:***@example.com/happy'])
           expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
 
           expect(result[:package][:guid]).to eq(package.guid)
-          expect(result[:droplet]).to eq(nil)
+          expect(result[:droplet]).to be_nil
 
           expect(result[:staging_memory_in_mb]).to eq(1024)
           expect(result[:staging_disk_in_mb]).to eq(1024)
@@ -91,13 +92,13 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:guid]).to eq(build.guid)
           expect(result[:state]).to eq('STAGING')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
 
           expect(result[:lifecycle][:type]).to eq('docker')
           expect(result[:lifecycle][:data]).to eq({})
 
           expect(result[:package][:guid]).to eq(package.guid)
-          expect(result[:droplet]).to eq(nil)
+          expect(result[:droplet]).to be_nil
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -125,7 +126,7 @@ module VCAP::CloudController::Presenters::V3
 
         it 'shows the droplet guid and state as STAGED' do
           expect(result[:state]).to eq('STAGED')
-          expect(result[:error]).to eq(nil)
+          expect(result[:error]).to be_nil
           expect(result[:droplet][:guid]).to eq(droplet.guid)
           expect(result[:links][:droplet][:href]).to eq("#{link_prefix}/v3/droplets/#{droplet.guid}")
         end

@@ -268,7 +268,7 @@ RSpec.shared_examples 'polling service binding deletion' do
         allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
 
-      it 'should stop polling for other errors' do
+      it 'stops polling for other errors' do
         expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload

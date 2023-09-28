@@ -8,13 +8,17 @@ require 'actions/v3/service_instance_create_managed'
 module VCAP::CloudController
   module V3
     RSpec.describe CreateServiceInstanceJob do
-      it_behaves_like 'delayed job', described_class
-
-      it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
-
-      let(:params) { { some_data: 'some_value' } }
-      let(:maintenance_info) { { 'version' => '1.2.0' } }
-      let(:plan) { ServicePlan.make(maintenance_info:) }
+      let(:job) do
+        described_class.new(
+          service_instance.guid,
+          arbitrary_parameters: params,
+          user_audit_info: user_info,
+          audit_hash: audit_hash
+        )
+      end
+      let(:audit_hash) { { request: 'some_value' } }
+      let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
+      let(:user_guid) { Sham.uaa_id }
       let(:service_instance) do
         si = ManagedServiceInstance.make(service_plan: plan)
         si.save_with_new_operation(
@@ -26,18 +30,13 @@ module VCAP::CloudController
         )
         si
       end
-      let(:user_guid) { Sham.uaa_id }
-      let(:user_info) { instance_double(UserAuditInfo, { user_guid: }) }
-      let(:audit_hash) { { request: 'some_value' } }
+      let(:plan) { ServicePlan.make(maintenance_info:) }
+      let(:maintenance_info) { { 'version' => '1.2.0' } }
+      let(:params) { { some_data: 'some_value' } }
 
-      let(:job) do
-        described_class.new(
-          service_instance.guid,
-          arbitrary_parameters: params,
-          user_audit_info: user_info,
-          audit_hash: audit_hash
-        )
-      end
+      it_behaves_like 'delayed job', described_class
+
+      it { expect(described_class).to be < VCAP::CloudController::Jobs::ReoccurringJob }
 
       describe '#perform' do
         let(:provision_response) {}

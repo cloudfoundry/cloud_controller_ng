@@ -63,7 +63,7 @@ module VCAP
         expect(broker.broker_url).to eq(broker_url)
         expect(broker.auth_username).to eq(auth_username)
         expect(broker.auth_password).to eq(auth_password)
-        expect(broker.space_guid).to eq(nil)
+        expect(broker.space_guid).to be_nil
 
         expect(broker.labels[0].key_name).to eq('potato')
         expect(broker.labels[0].value).to eq('yam')
@@ -100,7 +100,7 @@ module VCAP
           )
       end
 
-      describe 'concurrent behaviour', stepper: true do
+      describe 'concurrent behaviour', :stepper do
         let(:stepper) { Stepper.new(self) }
 
         before do

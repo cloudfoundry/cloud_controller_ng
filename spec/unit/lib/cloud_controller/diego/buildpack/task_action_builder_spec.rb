@@ -246,6 +246,7 @@ module VCAP::CloudController
 
           context 'when the stack does not exist in the database' do
             let(:stack) { 'does-not-exist' }
+
             it 'raises an error' do
               expect do
                 builder.stack

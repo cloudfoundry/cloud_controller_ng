@@ -49,10 +49,10 @@ module VCAP::CloudController
             job.perform
 
             buildpack.reload
-            expect(buildpack).to_not be_nil
+            expect(buildpack).not_to be_nil
             expect(buildpack.enabled).to be false
             expect(buildpack.filename).to end_with(File.basename(zipfile2))
-            expect(buildpack.key).to_not eql(existing_buildpack.key)
+            expect(buildpack.key).not_to eql(existing_buildpack.key)
             expect(buildpack.stack).to eq(existing_stack.name)
           end
 

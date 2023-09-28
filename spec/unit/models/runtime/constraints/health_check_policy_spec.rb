@@ -1,6 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe HealthCheckPolicy do
+  subject(:validator) do
+    HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
+  end
+
   let(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:health_check_type) {}
   let(:health_check_timeout) {}
@@ -9,10 +13,6 @@ RSpec.describe HealthCheckPolicy do
   let(:health_check_http_endpoint) {}
 
   let(:max_health_check_timeout) { 512 }
-
-  subject(:validator) do
-    HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
-  end
 
   describe 'health_check_type' do
     context 'defaults' do
@@ -163,11 +163,12 @@ RSpec.describe HealthCheckPolicy do
   end
 
   describe 'empty ports and health_check_type' do
-    let(:ports) { [] }
     subject(:validator) do
       process.ports = ports
       HealthCheckPolicy.new(process, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval)
     end
+
+    let(:ports) { [] }
 
     describe 'health check type is not "ports"' do
       let(:health_check_type) { VCAP::CloudController::HealthCheckTypes::PROCESS }

@@ -44,7 +44,7 @@ module VCAP::CloudController
 
         it 'returns 400 when guid does not exist' do
           get '/v2/app_usage_events?after_guid=ABC'
-          expect(last_response.status).to eql(400)
+          expect(last_response.status).to be(400)
         end
       end
     end
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       it 'returns 404 when he guid does nos exist' do
         get '/v2/app_usage_events/bogus'
-        expect(last_response.status).to eql(404)
+        expect(last_response.status).to be(404)
       end
     end
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
       it 'purge all existing events' do
         expect(AppUsageEvent.count).not_to eq(0)
         post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
-        expect(last_response.status).to eql(204)
+        expect(last_response.status).to be(204)
         expect(AppUsageEvent.count).to eq(0)
       end
 
@@ -87,9 +87,7 @@ module VCAP::CloudController
 
         expect do
           post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
-        end.to_not(change do
-          AppUsageEvent.count
-        end)
+        end.not_to(change(AppUsageEvent, :count))
         expect(last_response.status).to eq(403)
       end
     end

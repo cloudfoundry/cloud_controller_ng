@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         it 'deletes the uploaded file' do
           job.perform
-          expect(File.exist?(local_file.path)).to be_falsey
+          expect(File).not_to exist(local_file.path)
         end
 
         it 'knows its job name' do
@@ -74,7 +74,7 @@ module VCAP::CloudController
             DropletUpload.new(local_file.path, 'bad-guid', skip_state_transition:)
           end
 
-          it 'should not try to upload the droplet' do
+          it 'does not try to upload the droplet' do
             digest = Digester.new.digest_file(local_file)
             job.perform
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
           it 'deletes the local file' do
             job.perform
-            expect(File.exist?(local_file.path)).to be_falsey
+            expect(File).not_to exist(local_file.path)
           end
         end
 
@@ -131,12 +131,12 @@ module VCAP::CloudController
 
             context 'retrying' do
               it 'does not delete the file' do
-                expect(File.exist?(local_file.path)).to be_truthy
+                expect(File).to exist(local_file.path)
               end
             end
 
             context 'when its the final attempt' do
-              it 'it deletes the file' do
+              it 'deletes the file' do
                 worker.work_off 1
 
                 expect do

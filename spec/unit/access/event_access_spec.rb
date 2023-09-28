@@ -12,8 +12,8 @@ module VCAP::CloudController
 
     before { set_current_user(user, scopes:) }
 
-    it_behaves_like :admin_full_access
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin full access'
+    it_behaves_like 'admin read only access'
 
     context 'space developer' do
       before do
@@ -21,7 +21,7 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'space auditor' do
@@ -30,17 +30,19 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
     end
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only_access
+
+      it_behaves_like 'read only access'
     end
 
     context 'space manager (defensive)' do
@@ -49,12 +51,13 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
 
     context 'organization user (defensive)' do
       before { org.add_user(user) }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
     end
 
     context 'user in a different organization (defensive)' do
@@ -63,7 +66,7 @@ module VCAP::CloudController
         different_organization.add_user(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
 
     context 'manager in a different organization (defensive)' do
@@ -72,12 +75,13 @@ module VCAP::CloudController
         different_organization.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      it_behaves_like :no_access
+
+      it_behaves_like 'no access'
     end
 
     describe 'finding permissions when the related space is deleted' do
@@ -86,7 +90,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_should_behave_like :admin_full_access
+        it_behaves_like 'admin full access'
       end
 
       context 'space developer (before space was deleted)' do
@@ -96,7 +100,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'space auditor' do
@@ -106,7 +110,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'organization manager (defensive)' do
@@ -115,7 +119,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'organization auditor (defensive)' do
@@ -124,7 +128,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :read_only_access
+        it_behaves_like 'read only access'
       end
 
       context 'space manager (defensive)' do
@@ -134,7 +138,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'organization user (defensive)' do
@@ -142,7 +146,8 @@ module VCAP::CloudController
           org.add_user(user)
           space.destroy
         end
-        it_behaves_like :no_access
+
+        it_behaves_like 'no access'
       end
 
       context 'user in a different organization (defensive)' do
@@ -152,7 +157,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'manager in a different organization (defensive)' do
@@ -162,7 +167,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
 
       context 'a user that isnt logged in (defensive)' do
@@ -172,7 +177,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like 'no access'
       end
     end
 
@@ -189,7 +194,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'any user using client without cloud_controller.read' do
@@ -205,7 +210,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
   end
 end

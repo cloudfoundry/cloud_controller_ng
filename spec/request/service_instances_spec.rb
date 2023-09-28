@@ -1119,6 +1119,7 @@ RSpec.describe 'V3 service instances' do
 
           context 'when the service broker is being deleted' do
             let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+
             it 'fails to create a service instance' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
@@ -1134,6 +1135,7 @@ RSpec.describe 'V3 service instances' do
 
           context 'when the service broker is synchronising the catalog' do
             let(:broker_state) { VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING }
+
             it 'fails to create a service instance' do
               api_call.call(space_dev_headers)
               expect(last_response).to have_status_code(422)
@@ -1527,6 +1529,7 @@ RSpec.describe 'V3 service instances' do
 
           context 'when the paid services quota has been reached' do
             let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+
             before do
               quota = VCAP::CloudController::SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: org)
               quota.add_space(space)
@@ -1569,6 +1572,7 @@ RSpec.describe 'V3 service instances' do
 
           context 'when the paid services quota has been reached' do
             let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+
             before do
               quota = VCAP::CloudController::QuotaDefinition.make(non_basic_services_allowed: false)
               quota.add_organization(org)
@@ -2406,7 +2410,7 @@ RSpec.describe 'V3 service instances' do
           let!(:other_si) { VCAP::CloudController::ServiceInstance.make(name:, space:) }
           let(:request_body) { { name: } }
 
-          it 'should fail' do
+          it 'fails' do
             api_call.call(admin_headers)
 
             expect(last_response).to have_status_code(422)
@@ -2443,7 +2447,7 @@ RSpec.describe 'V3 service instances' do
           }
         end
 
-        it 'should fail' do
+        it 'fails' do
           api_call.call(space_dev_headers)
 
           expect(last_response).to have_status_code(422)
@@ -2848,6 +2852,7 @@ RSpec.describe 'V3 service instances' do
 
       context 'with purge' do
         let(:query_params) { 'purge=true' }
+
         before do
           @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
           @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
@@ -2939,7 +2944,7 @@ RSpec.describe 'V3 service instances' do
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
               instance.reload
 
-              expect(instance.last_operation).to_not be_nil
+              expect(instance.last_operation).not_to be_nil
               expect(instance.last_operation.type).to eq('delete')
               expect(instance.last_operation.state).to eq('failed')
             end
@@ -3011,7 +3016,7 @@ RSpec.describe 'V3 service instances' do
 
             instance.reload
 
-            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation).not_to be_nil
             expect(instance.last_operation.type).to eq('delete')
             expect(instance.last_operation.state).to eq('in progress')
           end
@@ -3503,7 +3508,7 @@ RSpec.describe 'V3 service instances' do
 
             instance.reload
 
-            expect(instance.last_operation).to_not be_nil
+            expect(instance.last_operation).not_to be_nil
             expect(instance.last_operation.type).to eq('delete')
             expect(instance.last_operation.state).to eq('in progress')
             expect(instance.last_operation.broker_provided_operation).to eq('some delete operation')
@@ -3522,7 +3527,7 @@ RSpec.describe 'V3 service instances' do
             job = VCAP::CloudController::PollableJobModel.last
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-            expect(job.cf_api_error).to_not be_nil
+            expect(job.cf_api_error).not_to be_nil
             api_error = YAML.safe_load(job.cf_api_error)['errors'].first
             expect(api_error['title']).to eql('CF-AsyncServiceInstanceOperationInProgress')
             expect(api_error['detail']).to eql("An operation for service instance #{instance.name} is in progress.")
@@ -3544,6 +3549,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'when the service instance does not exist' do
       let(:instance) { Struct.new(:guid).new('some-fake-guid') }
+
       it 'returns a 404' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
@@ -3667,7 +3673,7 @@ RSpec.describe 'V3 service instances' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -3692,7 +3698,7 @@ RSpec.describe 'V3 service instances' do
           }
         end
 
-        it 'should respond with 422' do
+        it 'responds with 422' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -3761,7 +3767,7 @@ RSpec.describe 'V3 service instances' do
           )
 
           service_instance.reload
-          expect(service_instance.shared?).to be_falsey
+          expect(service_instance).not_to be_shared
         end
       end
 
@@ -3791,7 +3797,7 @@ RSpec.describe 'V3 service instances' do
           )
 
           service_instance.reload
-          expect(service_instance.shared?).to be_falsey
+          expect(service_instance).not_to be_shared
         end
       end
     end
@@ -3800,7 +3806,7 @@ RSpec.describe 'V3 service instances' do
       context 'service instance is user provided' do
         let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
-        it 'should respond with 422 and the error' do
+        it 'responds with 422 and the error' do
           api_call.call(space_dev_headers)
 
           expect(last_response.status).to eq(422)
@@ -3840,7 +3846,7 @@ RSpec.describe 'V3 service instances' do
       let(:db_check) do
         lambda {
           si = VCAP::CloudController::ServiceInstance.first(guid:)
-          expect(si.shared?).to be_falsey
+          expect(si).not_to be_shared
         }
       end
 
@@ -3887,8 +3893,8 @@ RSpec.describe 'V3 service instances' do
           expect(last_response.status).to eq(204)
 
           service_instance.reload
-          expect(service_instance.shared?).to be_falsey
-          expect(service_instance.has_bindings?).to be_falsey
+          expect(service_instance).not_to be_shared
+          expect(service_instance).not_to have_bindings
         end
       end
 
@@ -3912,7 +3918,7 @@ RSpec.describe 'V3 service instances' do
             )
           )
 
-          expect(service_instance.shared?).to be_truthy
+          expect(service_instance).to be_shared
         end
       end
     end
@@ -4116,6 +4122,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'when the instance does not exist' do
       let(:guid) { 'a-fake-guid' }
+
       it 'responds with 404 Not Found' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)

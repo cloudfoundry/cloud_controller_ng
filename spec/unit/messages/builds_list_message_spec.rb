@@ -40,8 +40,8 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be true
         expect(message.requested?(:per_page)).to be true
         expect(message.requested?(:order_by)).to be true
-        expect(message.requested?(:created_ats)).to be_truthy
-        expect(message.requested?(:updated_ats)).to be_truthy
+        expect(message).to be_requested(:created_ats)
+        expect(message).to be_requested(:updated_ats)
       end
     end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
         context 'when the request contains space_guids' do
           it 'is invalid' do
             message = BuildsListMessage.from_params({ app_guids: ['blah'], space_guids: %w[app1 app2] })
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
           end
         end
@@ -89,26 +89,26 @@ module VCAP::CloudController
         context 'when the request contains organization_guids' do
           it 'is invalid' do
             message = BuildsListMessage.from_params({ app_guids: ['blah'], organization_guids: %w[app1 app2] })
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
           end
         end
 
         it 'validates app_guids is an array' do
           message = BuildsListMessage.from_params app_guids: 'tricked you, not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:app_guids].length).to eq 1
         end
 
         it 'validates package_guids is an array' do
           message = BuildsListMessage.from_params package_guids: 'also not an array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:package_guids].length).to eq 1
         end
 
         it 'validates states is an array' do
           message = BuildsListMessage.from_params states: 'not array at all'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:states].length).to eq 1
         end
 

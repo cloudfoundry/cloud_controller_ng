@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     it 'converts requested keys to symbols' do
       message = DropletCopyMessage.new(body)
-      expect(message.requested?(:relationships)).to be_truthy
+      expect(message).to be_requested(:relationships)
     end
 
     describe 'validations' do
@@ -59,7 +59,7 @@ module VCAP::CloudController
           message = DropletCopyMessage.new({ relationships: { app: { data: { guid: 876 } } } })
           expect(message.app_guid).not_to be_nil
           expect(message).not_to be_valid
-          expect(message.errors_on(:app_guid)).to_not be_empty
+          expect(message.errors_on(:app_guid)).not_to be_empty
         end
 
         it 'is valid when there is a valid app guid' do

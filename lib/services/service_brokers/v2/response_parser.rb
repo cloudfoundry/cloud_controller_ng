@@ -443,7 +443,8 @@ module VCAP::Services
             parsed_response ||= MultiJson.load(response.body)
 
             if !parsed_response['volume_mounts'].nil? && service.requires.exclude?('volume_mount')
-              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, not_required_error_description)
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response,
+                                                                 not_required_error_description)
             end
 
             if !parsed_response['volume_mounts'].nil? &&
@@ -471,11 +472,13 @@ module VCAP::Services
             end
 
             unless mount_info['device'].is_a?(Hash)
-              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device' must be an object but is " + mount_info['device'].class.to_s)
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response,
+                                                                 "required field 'device' must be an object but is " + mount_info['device'].class.to_s)
             end
 
             if mount_info['device']['volume_id'].class != String || mount_info['device']['volume_id'].empty?
-              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device.volume_id' must be a non-empty string")
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response,
+                                                                 "required field 'device.volume_id' must be a non-empty string")
             end
 
             return unless mount_info['device'].key?('mount_config') && !mount_info['device']['mount_config'].nil? && mount_info['device']['mount_config'].class != Hash
