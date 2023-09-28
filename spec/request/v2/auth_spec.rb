@@ -47,26 +47,26 @@ RSpec.describe 'Auth' do
   context 'developer without read token' do
     let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:no_read_headers) {headers_for(user, scopes: %w(cloud_controller.user))}
+    let(:no_read_headers) { headers_for(user, scopes: %w[cloud_controller.user]) }
+
     before do
       space.organization.add_user(user)
       space.add_developer(user)
     end
+
     describe 'GET /v2 endpoints' do
-      it 'errors on apps request' do
+      it 'errors on request' do
         get '/v2/apps', nil, no_read_headers
         expect(last_response.status).to eq(403)
-        expect(last_response.body).to match %r(Your token lacks the necessary scopes to access this resource.)
-      end
-      it 'errors on orgs request' do
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
+
         get '/v2/organizations', nil, no_read_headers
         expect(last_response.status).to eq(403)
-        expect(last_response.body).to match %r(Your token lacks the necessary scopes to access this resource.)
-      end
-      it 'errors on spaces request' do
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
+
         get '/v2/spaces', nil, no_read_headers
         expect(last_response.status).to eq(403)
-        expect(last_response.body).to match %r(Your token lacks the necessary scopes to access this resource.)
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
       end
     end
   end

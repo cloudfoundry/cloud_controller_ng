@@ -30,7 +30,7 @@ module VCAP::CloudController
       admin_user?
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       admin_user? || admin_read_only_user? || has_read_scope? || global_auditor?
     end
 
