@@ -36,6 +36,12 @@ RSpec.describe AppFeaturesController, type: :controller do
       end
     end
 
+    describe 'performance', :perf do
+      it 'returns in reasonable time' do
+        expect { get :index, params: { app_guid: app_model.guid } }.to perform_under(10).ms
+      end
+    end
+
     it 'returns app features' do
       get :index, params: { app_guid: app_model.guid }
       expect(parsed_body).to eq(

@@ -11,6 +11,12 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user_as_admin(user:)
     end
 
+    context 'performance', :perf do
+      it 'returns in reasonable time' do
+        expect { get :index, params: {} }.to perform_under(10).ms
+      end
+    end
+
     context 'query params' do
       context 'invalid param format' do
         it 'returns 400' do

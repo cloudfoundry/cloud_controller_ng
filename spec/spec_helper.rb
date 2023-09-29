@@ -79,6 +79,7 @@ init_block = proc do
   require 'rspec/collection_matchers'
   require 'rspec/its'
   require 'rspec/wait'
+  require 'rspec-benchmark'
 end
 
 each_run_block = proc do
@@ -93,6 +94,7 @@ each_run_block = proc do
       mocks.verify_partial_doubles = true
     end
     rspec_config.filter_run_excluding :stepper
+    rspec_config.filter_run_excluding :perf
     rspec_config.expose_dsl_globally = false
     rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
 
@@ -126,6 +128,8 @@ each_run_block = proc do
     rspec_config.include IntegrationSetup, type: :integration
 
     rspec_config.include SpaceRestrictedResponseGenerators
+
+    rspec_config.include RSpec::Benchmark::Matchers
 
     rspec_config.before(:all) { WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs]) }
     rspec_config.before(:all, type: :integration) do
