@@ -103,6 +103,9 @@ GEM
     base64 (0.1.1)
     beefcake (1.0.0)
     benchmark (0.2.1)
+    benchmark-malloc (0.2.0)
+    benchmark-perf (0.6.0)
+    benchmark-trend (0.4.0)
     bigdecimal (3.1.4)
     bit-struct (0.17)
     builder (3.2.4)
@@ -415,6 +418,11 @@ GEM
       rspec-core (~> 3.12.0)
       rspec-expectations (~> 3.12.0)
       rspec-mocks (~> 3.12.0)
+    rspec-benchmark (0.6.0)
+      benchmark-malloc (~> 0.2)
+      benchmark-perf (~> 0.6)
+      benchmark-trend (~> 0.4)
+      rspec (>= 3.0)
     rspec-collection_matchers (1.2.0)
       rspec-expectations (>= 2.99.0.beta1)
     rspec-core (3.12.2)
@@ -630,6 +638,7 @@ DEPENDENCIES
   rfc822
   roodi
   rspec (~> 3.12.0)
+  rspec-benchmark (~> 0.6.0)
   rspec-collection_matchers
   rspec-instafail
   rspec-its

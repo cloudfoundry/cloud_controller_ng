@@ -84,6 +84,7 @@ group :test do
   gem 'rack-test'
   gem 'rspec', '~> 3.12.0'
   gem 'rspec_api_documentation', '>= 6.1.0'
+  gem 'rspec-benchmark', '~> 0.6.0'
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
