@@ -15,11 +15,11 @@ module VCAP::CloudController
         @manifest_triggered = manifest_triggered
       end
 
-      PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
+      PERMITTED_BINDING_ATTRIBUTES = %i[credentials syslog_drain_url volume_mounts].freeze
 
-      def precursor(service_instance, app: nil, volume_mount_services_enabled: false, message:)
+      def precursor(service_instance, message:, app: nil, volume_mount_services_enabled: false)
         validate_service_instance!(app, service_instance, volume_mount_services_enabled)
-        binding = ServiceBinding.first(service_instance: service_instance, app: app)
+        binding = ServiceBinding.first(service_instance:, app:)
         validate_binding!(binding)
 
         binding_details = {
@@ -47,21 +47,21 @@ module VCAP::CloudController
       private
 
       def validate_service_instance!(app, service_instance, volume_mount_services_enabled)
-        app_is_required! unless app.present?
+        app_is_required! if app.blank?
         space_mismatch! unless all_space_guids(service_instance).include? app.space_guid
-        if service_instance.managed_instance?
-          service_not_bindable! unless service_instance.service_plan.bindable?
-          volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
-          service_instance_not_found! if service_instance.create_failed?
-          operation_in_progress! if service_instance.operation_in_progress?
-        end
+        return unless service_instance.managed_instance?
+
+        service_not_bindable! unless service_instance.service_plan.bindable?
+        volume_mount_not_enabled! if service_instance.volume_service? && !volume_mount_services_enabled
+        service_instance_not_found! if service_instance.create_failed?
+        operation_in_progress! if service_instance.operation_in_progress?
       end
 
       def validate_binding!(binding)
-        if binding
-          already_bound! if binding.create_succeeded? || binding.create_in_progress?
-          incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
-        end
+        return unless binding
+
+        already_bound! if binding.create_succeeded? || binding.create_in_progress?
+        incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
       end
 
       def permitted_binding_attributes
@@ -74,7 +74,8 @@ module VCAP::CloudController
 
       def event_repository
         @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
-          Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING)
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+        )
       end
 
       def app_is_required!

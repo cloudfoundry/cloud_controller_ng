@@ -33,6 +33,7 @@ module VCAP::Services
 
         context 'when binding to a service with a route_service_url' do
           let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+
           it 'sets relevant attributes of the instance' do
             attributes = client.bind(binding)
             # save to the database to ensure attributes match tables
@@ -73,7 +74,7 @@ module VCAP::Services
       end
 
       it 'always returns async false' do
-        expect(client.unbind(binding)[:async]).to eq(false)
+        expect(client.unbind(binding)[:async]).to be(false)
       end
     end
 

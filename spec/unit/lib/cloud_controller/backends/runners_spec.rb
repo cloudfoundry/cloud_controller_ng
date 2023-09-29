@@ -7,10 +7,10 @@ module VCAP::CloudController
 
     let(:config) do
       Config.new({
-        staging: {
-          timeout_in_seconds: 90
-        }
-      })
+                   staging: {
+                     timeout_in_seconds: 90
+                   }
+                 })
     end
     let(:package_hash) { 'fake-package-hash' }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
@@ -137,10 +137,10 @@ module VCAP::CloudController
           process = ProcessModel.where(diego: true).order(:id).first
           process_guid = Diego::ProcessGuid.from_process(process)
 
-          expect {
+          expect do
             process.set_new_version
             process.save
-          }.to change {
+          end.to change {
             runners.processes_from_diego_process_guids(process_guid)
           }.from([process]).to([])
         end
@@ -176,7 +176,7 @@ module VCAP::CloudController
         unstaged_process.desired_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
-        app_ids = batch.map { |data| data[0] }
+        app_ids = batch.pluck(0)
 
         expect(app_ids).not_to include(unstaged_process.id)
       end
@@ -185,15 +185,15 @@ module VCAP::CloudController
         stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
         batch   = runners.diego_apps_cache_data(100, 0)
-        app_ids = batch.map { |data| data[0] }
+        app_ids = batch.pluck(0)
 
         expect(app_ids).not_to include(stopped_process.id)
       end
 
       it 'acquires the data in one select' do
-        expect {
+        expect do
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT.*FROM.*processes.*/, 1)
+        end.to have_queried_db_times(/SELECT.*FROM.*processes.*/, 1)
       end
 
       context 'with Docker app' do
@@ -212,7 +212,7 @@ module VCAP::CloudController
 
           it 'returns docker apps' do
             batch   = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
+            app_ids = batch.pluck(0)
 
             expect(app_ids).to include(docker_process.id)
           end
@@ -225,7 +225,7 @@ module VCAP::CloudController
 
           it 'does not return docker apps' do
             batch   = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
+            app_ids = batch.pluck(0)
 
             expect(app_ids).not_to include(docker_process.id)
           end
@@ -238,7 +238,7 @@ module VCAP::CloudController
         let(:input) do
           [{
             app_guid: 'app_guid_1',
-            id: 1,
+            id: 1
           }]
         end
 
@@ -252,12 +252,12 @@ module VCAP::CloudController
             [
               {
                 app_guid: 'app_guid_1',
-                id: 1,
+                id: 1
               },
               {
                 app_guid: 'app_guid_2',
-                id: 2,
-              },
+                id: 2
+              }
             ]
           end
 
@@ -279,12 +279,12 @@ module VCAP::CloudController
                 {
                   app_guid: 'app_guid_1',
                   id: 1,
-                  created_at: time,
+                  created_at: time
                 },
                 {
                   app_guid: 'app_guid_1',
                   id: 2,
-                  created_at: time,
+                  created_at: time
                 }
               ]
             end

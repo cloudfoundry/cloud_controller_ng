@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class OrganizationUserRolesFetcher
     def self.fetch(org, user_guid: nil)
-      new(user_guid: user_guid).fetch(org)
+      new(user_guid:).fetch(org)
     end
 
     attr_reader :user_guid

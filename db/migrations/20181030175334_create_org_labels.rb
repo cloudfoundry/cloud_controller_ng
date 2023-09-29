@@ -10,7 +10,7 @@ Sequel.migration do
 
       foreign_key [:org_guid], :organizations, key: :guid, name: :fk_org_labels_org_guid
       index [:org_guid], name: :fk_org_labels_org_guid_index
-      index [:key_prefix, :key_name, :value], name: :org_labels_compound_index
+      index %i[key_prefix key_name value], name: :org_labels_compound_index
     end
   end
 end

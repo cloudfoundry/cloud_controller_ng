@@ -1,6 +1,6 @@
 namespace :route_syncer do
   desc 'Start a recurring route sync'
-  task :start do
+  task start: :environment do
     require 'cloud_controller/copilot/scheduler'
 
     RakeConfig.context = :route_syncer

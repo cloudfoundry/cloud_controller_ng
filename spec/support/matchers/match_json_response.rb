@@ -21,13 +21,19 @@ RSpec::Matchers.define :match_json_response do |expected|
           when '+'
             summary << "+ #{key}: #{expected_value}"
           when '~'
-            next if expected_value.is_a?(Regexp) && expected_value.match(actual_value) rescue false
-            next if expected_value.matches?(actual_value) rescue false
+            begin
+              next if expected_value.is_a?(Regexp) && expected_value.match(actual_value)
+            rescue StandardError
+              false
+            end
+            begin
+              next if expected_value.matches?(actual_value)
+            rescue StandardError
+              false
+            end
 
             summary << "! #{key}:"
-            if expected_value.is_a?(Regexp)
-              expected_value = expected_value.inspect
-            end
+            expected_value = expected_value.inspect if expected_value.is_a?(Regexp)
 
             if expected_value.respond_to?(:failure_message)
               expected_value.failure_message.split("\n").each { |l| summary << l }
@@ -38,17 +44,17 @@ RSpec::Matchers.define :match_json_response do |expected|
           end
         end
       end
-    rescue => ex
-      exception = "Error in hashdiff: #{ex} \n #{ex.backtrace[0..5].join("\n")}"
+    rescue StandardError => e
+      exception = "Error in hashdiff: #{e} \n #{e.backtrace[0..5].join("\n")}"
     end
 
     result = []
-    if !summary.empty?
+    unless summary.empty?
       result << "Expected:\n#{JSON.pretty_generate(expected)}\nto equal:\n#{JSON.pretty_generate(actual)}\n"
       result << "Summary:\n#{summary.map { |s| '      ' + s }.join("\n")}\n"
     end
     if exception
-      result << '' if !result.empty?
+      result << '' unless result.empty?
       result << 'Exception:'
       result << exception
     end

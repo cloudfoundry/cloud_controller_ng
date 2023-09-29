@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'versions' => '1,3',
-          'page'     => 1,
+          'page' => 1,
           'per_page' => 5,
           'label_selector' => 'key=value',
           'deployable' => true
@@ -20,50 +20,50 @@ module VCAP::CloudController
         expect(message).to be_a(AppRevisionsListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.versions).to eq(['1', '3'])
-        expect(message.deployable).to eq(true)
+        expect(message.versions).to eq(%w[1 3])
+        expect(message.deployable).to be(true)
         expect(message.label_selector).to eq('key=value')
       end
 
       it 'converts requested keys to symbols' do
         message = AppRevisionsListMessage.from_params(params)
 
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:versions)).to be_truthy
-        expect(message.requested?(:deployable)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:versions)
+        expect(message).to be_requested(:deployable)
+        expect(message).to be_requested(:label_selector)
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          versions: ['1', '3'],
-          label_selector:     'key=value',
-          page:               1,
-          per_page:           5,
-          deployable: true,
+          versions: %w[1 3],
+          label_selector: 'key=value',
+          page: 1,
+          per_page: 5,
+          deployable: true
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:versions, :label_selector, :deployable]
+        expected_params = %i[versions label_selector deployable]
         expect(AppRevisionsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           AppRevisionsListMessage.from_params({
-            page:               1,
-            per_page:           5,
-            versions:           ['1'],
-            deployable:         true,
-            label_selector:     'key=value',
-          })
-        }.not_to raise_error
+                                                page: 1,
+                                                per_page: 5,
+                                                versions: ['1'],
+                                                deployable: true,
+                                                label_selector: 'key=value'
+                                              })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
       context 'versions' do
         it 'validates versions to be an array' do
           message = AppRevisionsListMessage.from_params(versions: 'not array at all')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:versions]).to include('must be an array')
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
       context 'deployable' do
         it 'validates deployable to be a boolean' do
           message = AppRevisionsListMessage.from_params(deployable: 'not a boolean')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:deployable]).to include('must be a boolean')
         end
 

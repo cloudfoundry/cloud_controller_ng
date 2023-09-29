@@ -42,9 +42,9 @@ class JobPresenter < ApiPresenter
   end
 
   def job_exception_or_nil
-    if job_has_exception?
-      VCAP::CloudController::ExceptionMarshaler.unmarshal(@object.cf_api_error)
-    end
+    return unless job_has_exception?
+
+    VCAP::CloudController::ExceptionMarshaler.unmarshal(@object.cf_api_error)
   end
 
   def job_has_exception?

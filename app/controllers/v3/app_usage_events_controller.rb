@@ -3,23 +3,13 @@ require 'messages/app_usage_events_list_message'
 require 'fetchers/app_usage_event_list_fetcher'
 
 class AppUsageEventsController < ApplicationController
-  def show
-    app_usage_event_not_found! unless permission_queryer.can_read_globally?
-    app_usage_event = AppUsageEvent.first(guid: hashed_params[:guid])
-    app_usage_event_not_found! unless app_usage_event
-
-    render status: :ok, json: Presenters::V3::AppUsageEventPresenter.new(app_usage_event)
-  end
-
   def index
     message = AppUsageEventsListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app_usage_events = AppUsageEvent.where(guid: [])
 
-    if permission_queryer.can_read_globally?
-      app_usage_events = AppUsageEventListFetcher.fetch_all(message, AppUsageEvent.dataset)
-    end
+    app_usage_events = AppUsageEventListFetcher.fetch_all(message, AppUsageEvent.dataset) if permission_queryer.can_read_globally?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::AppUsageEventPresenter,
@@ -27,6 +17,14 @@ class AppUsageEventsController < ApplicationController
       path: '/v3/app_usage_events',
       message: message
     )
+  end
+
+  def show
+    app_usage_event_not_found! unless permission_queryer.can_read_globally?
+    app_usage_event = AppUsageEvent.first(guid: hashed_params[:guid])
+    app_usage_event_not_found! unless app_usage_event
+
+    render status: :ok, json: Presenters::V3::AppUsageEventPresenter.new(app_usage_event)
   end
 
   def destructively_purge_all_and_reseed

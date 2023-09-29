@@ -1,7 +1,7 @@
 Sequel.migration do
   up do
     if database_type == :postgres
-      run <<-SQL
+      run <<-SQL.squish
         ALTER TABLE events DROP COLUMN IF EXISTS space_id;
       SQL
     elsif dataset.db['select * from information_schema.columns where table_name = \'events\' and column_name = \'space_id\''].any?

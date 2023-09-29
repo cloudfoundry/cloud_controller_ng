@@ -17,7 +17,7 @@ RSpec.describe 'Service Broker API integration' do
       let(:create_instance_schema) { { '$schema' => draft_schema } }
       let(:update_instance_schema) { { '$schema' => draft_schema } }
       let(:create_binding_schema) { { '$schema' => draft_schema } }
-      let(:schemas) {
+      let(:schemas) do
         {
           'service_instance' => {
             'create' => {
@@ -33,7 +33,7 @@ RSpec.describe 'Service Broker API integration' do
             }
           }
         }
-      }
+      end
 
       let(:catalog) { default_catalog(plan_schemas: schemas) }
 
@@ -46,8 +46,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_instance']['create']
@@ -56,16 +56,16 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           context 'with a valid update schema' do
-            let(:update_instance_schema) {
+            let(:update_instance_schema) do
               {
                 '$schema' => draft_schema
               }
-            }
+            end
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               update_schema = parsed_body['entity']['schemas']['service_instance']['update']
@@ -81,7 +81,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.create must be a hash, but has value true')
             end
           end
@@ -94,7 +94,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.update must be a hash, but has value true')
             end
           end
@@ -106,8 +106,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_binding']['create']
@@ -123,7 +123,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_binding.create must be a hash, but has value true')
             end
           end
@@ -132,9 +132,8 @@ RSpec.describe 'Service Broker API integration' do
         context 'when the broker catalog defines a plan without plan schemas' do
           it 'responds with an empty schema' do
             get("/v2/service_plans/#{@large_plan_guid}",
-              {}.to_json,
-              json_headers(admin_headers)
-            )
+                {}.to_json,
+                json_headers(admin_headers))
 
             parsed_body = MultiJson.load(last_response.body)
             expect(parsed_body['entity']['schemas']).
@@ -178,11 +177,11 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           context 'with a valid update schema' do
-            let(:update_instance_schema) {
+            let(:update_instance_schema) do
               {
                 '$schema' => draft_schema
               }
-            }
+            end
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
@@ -203,7 +202,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.create must be a hash, but has value true')
             end
           end
@@ -216,7 +215,7 @@ RSpec.describe 'Service Broker API integration' do
             it 'returns an error' do
               parsed_body = MultiJson.load(last_response.body)
 
-              expect(parsed_body['code']).to eq(270012)
+              expect(parsed_body['code']).to eq(270_012)
               expect(parsed_body['description']).to include('Schemas service_instance.update must be a hash, but has value true')
             end
           end
@@ -229,6 +228,7 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service broker registration' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           setup_broker_with_user(user)
           @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
@@ -247,8 +247,9 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service provision request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
-          provision_service(user: user)
+          provision_service(user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -266,8 +267,8 @@ RSpec.describe 'Service Broker API integration' do
         let(:user) { VCAP::CloudController::User.make }
 
         before do
-          provision_service(user: user)
-          deprovision_service(user: user)
+          provision_service(user:)
+          deprovision_service(user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -283,9 +284,10 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service update request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
-          provision_service(user: user)
-          update_service_instance(200, user: user)
+          provision_service(user:)
+          update_service_instance(200, user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -301,10 +303,11 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service binding request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
           create_app
-          bind_service(user: user)
+          bind_service(user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -326,7 +329,7 @@ RSpec.describe 'Service Broker API integration' do
           provision_service
           create_app
           bind_service
-          unbind_service(user: user, async: async)
+          unbind_service(user:, async:)
           VCAP::CloudController::SecurityContext.clear
           Delayed::Worker.new.work_off
         end
@@ -346,7 +349,7 @@ RSpec.describe 'Service Broker API integration' do
 
           it 'reports the request as enqueued' do
             parsed_body = MultiJson.load(last_response.body)
-            expect(parsed_body).to_not be_empty
+            expect(parsed_body).not_to be_empty
             expect(parsed_body).to include('entity')
             expect(parsed_body['entity']).to include('status' => 'queued')
           end
@@ -365,9 +368,10 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'create service key request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
-          create_service_key(user: user)
+          create_service_key(user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -383,10 +387,11 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'delete service key request' do
         let(:user) { VCAP::CloudController::User.make }
+
         before do
           provision_service
           create_service_key
-          delete_key(user: user)
+          delete_key(user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -407,7 +412,7 @@ RSpec.describe 'Service Broker API integration' do
 
         before do
           provision_service
-          create_route_binding(route, user: user)
+          create_route_binding(route, user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -428,8 +433,8 @@ RSpec.describe 'Service Broker API integration' do
 
         before do
           provision_service
-          create_route_binding(route, user: user)
-          delete_route_binding(route, user: user)
+          create_route_binding(route, user:)
+          delete_route_binding(route, user:)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -503,10 +508,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -531,16 +537,18 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
       context 'for bind route service' do
         let(:catalog) { default_catalog(requires: ['route_forwarding']) }
         let(:route) { VCAP::CloudController::Route.make(space: @space) }
+
         before do
           provision_service
           create_route_binding(route)
@@ -561,10 +569,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
     end

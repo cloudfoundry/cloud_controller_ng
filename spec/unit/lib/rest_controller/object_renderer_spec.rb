@@ -14,19 +14,23 @@ module VCAP::CloudController::RestController
       let(:instance) { VCAP::CloudController::TestModelSecondLevel.make }
 
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 11) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 11)
+        end
 
         it 'raises BadQueryParameter error' do
-          expect {
+          expect do
             subject.render_json(controller, instance, opts)
-          }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
+          end.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
         end
       end
 
       context 'when asked inline_relations_depth equals to max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 10) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 10)
+        end
 
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)
@@ -35,8 +39,10 @@ module VCAP::CloudController::RestController
       end
 
       context 'when asked inline_relations_depth is less than max inline_relations_depth' do
-        before { renderer_opts.merge!(max_inline_relations_depth: 10) }
-        before { opts.merge!(inline_relations_depth: 9) }
+        before do
+          renderer_opts.merge!(max_inline_relations_depth: 10)
+          opts.merge!(inline_relations_depth: 9)
+        end
 
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)
@@ -66,7 +72,7 @@ module VCAP::CloudController::RestController
       context 'service_plan renderer' do
         let(:user) { VCAP::CloudController::User.make }
         let(:organization) { VCAP::CloudController::Organization.make }
-        let(:space) { VCAP::CloudController::Space.make(organization: organization) }
+        let(:space) { VCAP::CloudController::Space.make(organization:) }
         let(:controller) { VCAP::CloudController::ServicePlansController }
         let(:opts) { {} }
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -80,7 +86,7 @@ module VCAP::CloudController::RestController
         end
 
         it 'renders a service plan accessible via user\'s service instance only' do
-          VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan)
+          VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:)
           set_current_user(user)
           result = MultiJson.load(subject.render_json_with_read_privileges(controller, service_plan, opts))
           expect(result['entity']['service_guid']).to eq(service.guid)

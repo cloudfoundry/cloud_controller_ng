@@ -2,11 +2,11 @@ require 'spec_helper'
 require 'presenters/api/api_presenter'
 
 RSpec.describe ApiPresenter do
+  subject(:presenter) { ApiPresenter.new(record) }
+
   let(:created_at) { 10.minutes.ago }
   let(:updated_at) { 5.minutes.ago }
   let(:record) { double('record', guid: '12345ac', created_at: created_at, updated_at: updated_at) }
-
-  subject(:presenter) { ApiPresenter.new(record) }
 
   describe '#to_hash' do
     describe '[:metadata]' do

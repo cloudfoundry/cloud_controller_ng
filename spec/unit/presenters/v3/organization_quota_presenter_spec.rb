@@ -14,8 +14,9 @@ module VCAP::CloudController::Presenters::V3
       organization_quota.add_organization(org)
       organization_quota.add_organization(org2)
     end
+
     describe '#to_hash' do
-      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids_query: visible_org_guids_query, all_orgs_visible: all_orgs_visible).to_hash }
+      let(:result) { OrganizationQuotaPresenter.new(organization_quota, visible_org_guids_query:, all_orgs_visible:).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(organization_quota.guid)
@@ -23,19 +24,19 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:updated_at]).to eq(organization_quota.updated_at)
         expect(result[:name]).to eq(organization_quota.name)
 
-        expect(result[:apps][:total_memory_in_mb]).to eq(20480)
-        expect(result[:apps][:per_process_memory_in_mb]).to eq(nil)
-        expect(result[:apps][:total_instances]).to eq(nil)
-        expect(result[:apps][:per_app_tasks]).to eq(nil)
+        expect(result[:apps][:total_memory_in_mb]).to eq(20_480)
+        expect(result[:apps][:per_process_memory_in_mb]).to be_nil
+        expect(result[:apps][:total_instances]).to be_nil
+        expect(result[:apps][:per_app_tasks]).to be_nil
 
-        expect(result[:services][:paid_services_allowed]).to eq(true)
+        expect(result[:services][:paid_services_allowed]).to be(true)
         expect(result[:services][:total_service_instances]).to eq(60)
-        expect(result[:services][:total_service_keys]).to eq(nil)
+        expect(result[:services][:total_service_keys]).to be_nil
 
         expect(result[:routes][:total_routes]).to eq(1000)
         expect(result[:routes][:total_reserved_ports]).to eq(5)
 
-        expect(result[:domains][:total_domains]).to eq(nil)
+        expect(result[:domains][:total_domains]).to be_nil
 
         expect(result[:relationships][:organizations][:data]).to eq([{ guid: org.guid }])
         expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
@@ -46,10 +47,7 @@ module VCAP::CloudController::Presenters::V3
         let(:visible_org_guids) { [] }
 
         it 'displays all orgs' do
-          expect(result[:relationships][:organizations][:data]).to match_array([
-            { guid: org.guid },
-            { guid: org2.guid }
-          ])
+          expect(result[:relationships][:organizations][:data]).to contain_exactly({ guid: org.guid }, { guid: org2.guid })
         end
       end
     end

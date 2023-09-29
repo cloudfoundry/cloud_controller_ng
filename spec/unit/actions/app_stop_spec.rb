@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppStop do
     let(:user_guid) { 'diug' }
     let(:user_email) { 'guy@place.io' }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
     let(:app) { AppModel.make(desired_state: 'STARTED') }
     let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
@@ -13,23 +13,23 @@ module VCAP::CloudController
 
     describe '#stop' do
       it 'sets the desired state on the app' do
-        AppStop.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app:, user_audit_info:)
         expect(app.desired_state).to eq('STOPPED')
       end
 
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_stop).with(
           app,
-          user_audit_info,
+          user_audit_info
         )
 
-        AppStop.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app:, user_audit_info:)
       end
 
       it 'prepares the sub-processes of the app' do
-        AppStop.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app:, user_audit_info:)
         app.processes.each do |process|
-          expect(process.started?).to eq(false)
+          expect(process.started?).to be(false)
           expect(process.state).to eq('STOPPED')
         end
       end
@@ -39,7 +39,7 @@ module VCAP::CloudController
         allow(process1).to receive(:lock!).and_call_original
         allow(process2).to receive(:lock!).and_call_original
 
-        AppStop.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app:, user_audit_info:)
         expect(process1).to have_received(:lock!)
         expect(process2).to have_received(:lock!)
       end
@@ -50,9 +50,9 @@ module VCAP::CloudController
         end
 
         it 'raises a InvalidApp exception' do
-          expect {
-            AppStop.stop(app: app, user_audit_info: user_audit_info)
-          }.to raise_error(AppStop::InvalidApp, 'some message')
+          expect do
+            AppStop.stop(app:, user_audit_info:)
+          end.to raise_error(AppStop::InvalidApp, 'some message')
         end
       end
     end

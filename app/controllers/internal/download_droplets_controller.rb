@@ -4,7 +4,7 @@ require 'cloud_controller/blobstore/client'
 module VCAP::CloudController
   class DownloadDropletsController < RestController::BaseController
     def self.dependencies
-      [:droplet_blobstore, :blobstore_url_generator, :missing_blob_handler, :blob_sender, :droplet_url_generator]
+      %i[droplet_blobstore blobstore_url_generator missing_blob_handler blob_sender droplet_url_generator]
     end
 
     include CloudController::Errors
@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     def download_droplet(guid, droplet_checksum)
-      process = ProcessModel.find(guid: guid)
+      process = ProcessModel.find(guid:)
       check_app_exists(process, guid)
       raise ApiError.new_from_details('NotFound', droplet_checksum) unless process.actual_droplet.checksum == droplet_checksum
 

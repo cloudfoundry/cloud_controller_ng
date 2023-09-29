@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe AppEventRepository do
       subject(:app_event_repository) { AppEventRepository.new }
-      let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_name: user_name, user_guid: user_guid) }
+      let(:user_audit_info) { UserAuditInfo.new(user_email:, user_name:, user_guid:) }
       let(:user_guid) { 'user guid' }
       let(:user_email) { 'user email' }
       let(:user_name) { 'user name' }
@@ -34,7 +34,7 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => '[PRIVATE DATA HIDDEN]',
-            'docker_credentials' => '[PRIVATE DATA HIDDEN]',
+            'docker_credentials' => '[PRIVATE DATA HIDDEN]'
           }
 
           expect(VCAP::AppLogEmitter).to receive(:emit).with(process.guid, "Updated app with guid #{process.guid} (#{expected_request_field})")
@@ -52,16 +52,16 @@ module VCAP::CloudController
           expect(event.actor_username).to eq user_name
 
           expect(event.metadata.fetch('request')).to eq(expected_request_field)
-          expect(event.metadata.key?('manifest_triggered')).to eq(false)
+          expect(event.metadata.key?('manifest_triggered')).to be(false)
         end
 
         context 'when the event is manifest triggered' do
           let(:manifest_triggered) { true }
 
           it 'tags the event for manifest triggered as true' do
-            event = app_event_repository.record_app_update(process, space, user_audit_info, attrs, manifest_triggered: manifest_triggered).reload
+            event = app_event_repository.record_app_update(process, space, user_audit_info, attrs, manifest_triggered:).reload
 
-            expect(event.metadata.fetch('manifest_triggered')).to eq(true)
+            expect(event.metadata.fetch('manifest_triggered')).to be(true)
           end
         end
       end
@@ -103,7 +103,7 @@ module VCAP::CloudController
             'state' => 'STOPPED',
             'environment_json' => '[PRIVATE DATA HIDDEN]',
             'docker_image' => 'image',
-            'docker_credentials' => '[PRIVATE DATA HIDDEN]',
+            'docker_credentials' => '[PRIVATE DATA HIDDEN]'
           )
         end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
       describe '#record_app_delete' do
         let(:space) { Space.make }
-        let(:process) { ProcessModelFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space:) }
 
         it 'creates a new audit.app.delete-request event' do
           event = app_event_repository.record_app_delete_request(process, space, user_audit_info, false)
@@ -130,7 +130,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(process.name)
           expect(event.actor_username).to eq user_name
-          expect(event.metadata['request']['recursive']).to eq(false)
+          expect(event.metadata['request']['recursive']).to be(false)
         end
 
         it 'does not record metadata when recursive is not passed' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
 
       describe '#record_app_map_droplet' do
         let(:space) { Space.make }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { AppModel.make(space:) }
 
         it 'creates a new audit.app.droplet.mapped event' do
           event = app_event_repository.record_app_map_droplet(app, space, user_audit_info, { a: 1 })
@@ -167,7 +167,7 @@ module VCAP::CloudController
 
       describe '#record_app_apply_manifest' do
         let(:space) { Space.make }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { AppModel.make(space:) }
         let(:metadata) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] }.to_yaml }
 
         it 'creates a new audit.app.apply_manifest event' do
@@ -188,7 +188,7 @@ module VCAP::CloudController
       describe '#create_app_crash_event' do
         let(:exiting_process) { ProcessModelFactory.make }
         let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
-        let(:droplet_exited_payload) {
+        let(:droplet_exited_payload) do
           {
             'instance' => 'abc',
             'index' => '2',
@@ -198,7 +198,7 @@ module VCAP::CloudController
             'reason' => 'evacuation',
             'unknown_key' => 'something'
           }
-        }
+        end
 
         it 'creates a new app exit event' do
           event = app_event_repository.create_app_crash_event(exiting_process, droplet_exited_payload)
@@ -209,7 +209,7 @@ module VCAP::CloudController
           expect(event.actee).to eq(exiting_process.guid)
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(exiting_process.name)
-          expect(event.metadata['unknown_key']).to eq(nil)
+          expect(event.metadata['unknown_key']).to be_nil
           expect(event.metadata['instance']).to eq('abc')
           expect(event.metadata['cell_id']).to eq('some-cell')
           expect(event.metadata['index']).to eq('2')
@@ -228,7 +228,7 @@ module VCAP::CloudController
 
       describe '#record_map_route' do
         let(:space) { Space.make }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { AppModel.make(space:) }
         let(:route) { Route.make }
         let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
@@ -242,16 +242,16 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee).to eq(app.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
           let(:manifest_triggered) { true }
 
           it 'tags the event for manifest triggered as true' do
-            event = app_event_repository.record_map_route(user_audit_info, route_mapping, manifest_triggered: manifest_triggered)
+            event = app_event_repository.record_map_route(user_audit_info, route_mapping, manifest_triggered:)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -272,6 +272,7 @@ module VCAP::CloudController
 
         context 'when given route mapping information' do
           let(:app) { AppModel.make(space: route.space) }
+
           context 'when the route mapping is unweighted' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
@@ -284,6 +285,7 @@ module VCAP::CloudController
               expect(event.metadata[:weight]).to be_nil
             end
           end
+
           context 'when the route mapping has a weight' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', weight: 100) }
 
@@ -296,6 +298,7 @@ module VCAP::CloudController
               expect(event.metadata[:weight]).to eq(100)
             end
           end
+
           context 'when the route mapping has no protocol' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
@@ -308,6 +311,7 @@ module VCAP::CloudController
               expect(event.metadata[:protocol]).to eq('http1')
             end
           end
+
           context 'when the route mapping has a protocol' do
             let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', protocol: 'http2') }
 
@@ -325,7 +329,7 @@ module VCAP::CloudController
 
       describe '#record_unmap_route' do
         let(:space) { Space.make }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { AppModel.make(space:) }
         let(:route) { Route.make }
         let(:route_mapping) { RouteMappingModel.make(route: route, guid: 'twice_baked', app: app, process_type: 'potato', weight: 100) }
 
@@ -341,7 +345,7 @@ module VCAP::CloudController
           expect(event.metadata[:route_guid]).to eq(route.guid)
           expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
           expect(event.metadata[:process_type]).to eq('potato')
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -351,7 +355,7 @@ module VCAP::CloudController
             expect(event.metadata[:route_guid]).to eq(route.guid)
             expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
             expect(event.metadata[:process_type]).to eq('potato')
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -531,8 +535,8 @@ module VCAP::CloudController
           let(:app) { AppModel.make(:buildpack) }
           let(:request_attrs) do
             {
-              'name'             => 'new',
-              'space_guid'       => 'space-guid',
+              'name' => 'new',
+              'space_guid' => 'space-guid',
               'environment_variables' => { 'super' => 'secret ' }
             }
           end
@@ -547,7 +551,7 @@ module VCAP::CloudController
             expect(request).to eq(
               'name' => 'new',
               'space_guid' => 'space-guid',
-              'environment_variables' => '[PRIVATE DATA HIDDEN]',
+              'environment_variables' => '[PRIVATE DATA HIDDEN]'
             )
           end
         end

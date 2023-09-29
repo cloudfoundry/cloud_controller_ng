@@ -9,7 +9,7 @@ module VCAP::Services
             {
               async: false,
               binding: {
-                route_service_url: binding.service_instance.route_service_url,
+                route_service_url: binding.service_instance.route_service_url
               }
             }
           else
@@ -17,7 +17,7 @@ module VCAP::Services
               async: false,
               binding: {
                 credentials: binding.service_instance.credentials,
-                syslog_drain_url: binding.service_instance.syslog_drain_url,
+                syslog_drain_url: binding.service_instance.syslog_drain_url
               }
             }
           end

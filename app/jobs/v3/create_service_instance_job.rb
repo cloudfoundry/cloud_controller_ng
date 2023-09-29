@@ -8,9 +8,7 @@ module VCAP::CloudController
 
       def initialize(
         service_instance_guid,
-        arbitrary_parameters: {},
-        user_audit_info:,
-        audit_hash:
+        user_audit_info:, audit_hash:, arbitrary_parameters: {}
       )
         super()
         @service_instance_guid = service_instance_guid
@@ -66,19 +64,15 @@ module VCAP::CloudController
 
           polling_status = action.poll(service_instance)
 
-          if polling_status[:finished]
-            finish
-          end
+          finish if polling_status[:finished]
 
-          if polling_status[:retry_after].present?
-            self.polling_interval_seconds = polling_status[:retry_after]
-          end
+          self.polling_interval_seconds = polling_status[:retry_after] if polling_status[:retry_after].present?
         rescue ServiceInstanceCreateManaged::LastOperationFailedState => e
           raise e
         rescue CloudController::Errors::ApiError => e
           save_failure(e)
           raise e
-        rescue => e
+        rescue StandardError => e
           save_failure(e)
           raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'provision', e.message)
         end
@@ -90,19 +84,17 @@ module VCAP::CloudController
           {
             type: 'create',
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time.",
+            description: "Service Broker failed to #{operation} within the required time."
           }
         )
       end
 
       def compatibility_checks
-        if service_instance.service_plan.service.volume_service? && volume_services_disabled?
-          @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING })
-        end
+        @warnings.push({ detail: ServiceInstance::VOLUME_SERVICE_WARNING }) if service_instance.service_plan.service.volume_service? && volume_services_disabled?
 
-        if service_instance.service_plan.service.route_service? && route_services_disabled?
-          @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
-        end
+        return unless service_instance.service_plan.service.route_service? && route_services_disabled?
+
+        @warnings.push({ detail: ServiceInstance::ROUTE_SERVICE_WARNING })
       end
 
       def volume_services_disabled?
@@ -124,9 +116,9 @@ module VCAP::CloudController
       def raise_if_other_operations_in_progress!
         last_operation_type = service_instance.last_operation&.type
 
-        if service_instance.operation_in_progress? && last_operation_type != operation_type
-          cancelled!(last_operation_type)
-        end
+        return unless service_instance.operation_in_progress? && last_operation_type != operation_type
+
+        cancelled!(last_operation_type)
       end
 
       def compute_maximum_duration
@@ -135,16 +127,16 @@ module VCAP::CloudController
       end
 
       def save_failure(error_message)
-        if service_instance.reload.last_operation.state != 'failed'
-          service_instance.save_with_new_operation(
-            {},
-            {
-              type: 'create',
-              state: 'failed',
-              description: error_message,
-            }
-          )
-        end
+        return unless service_instance.reload.last_operation.state != 'failed'
+
+        service_instance.save_with_new_operation(
+          {},
+          {
+            type: 'create',
+            state: 'failed',
+            description: error_message
+          }
+        )
       end
 
       def not_found!

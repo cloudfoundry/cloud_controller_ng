@@ -21,11 +21,11 @@ module CloudController::Presenters::V2
         def entity_hash(controller, obj, opts, depth, parents, orphans)
           {
             'controller' => controller,
-            'obj'        => obj,
-            'opts'       => opts,
-            'depth'      => depth,
-            'parents'    => parents,
-            'orphans'    => orphans,
+            'obj' => obj,
+            'opts' => opts,
+            'depth' => depth,
+            'parents' => parents,
+            'orphans' => orphans
           }
         end
       end
@@ -37,8 +37,8 @@ module CloudController::Presenters::V2
 
         expect(response['metadata']).to eq(
           {
-            'guid'       => 'obj-guid',
-            'url'        => 'controller-url',
+            'guid' => 'obj-guid',
+            'url' => 'controller-url',
             'created_at' => 'obj-created-at',
             'updated_at' => 'obj-updated-at'
           }
@@ -63,11 +63,11 @@ module CloudController::Presenters::V2
         expect(response['entity']).to eq(
           {
             'controller' => controller,
-            'obj'        => obj,
-            'opts'       => opts,
-            'depth'      => depth,
-            'parents'    => parents,
-            'orphans'    => orphans,
+            'obj' => obj,
+            'opts' => opts,
+            'depth' => depth,
+            'parents' => parents,
+            'orphans' => orphans
           }
         )
 

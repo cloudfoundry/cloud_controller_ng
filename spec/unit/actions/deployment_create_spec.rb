@@ -17,16 +17,16 @@ module VCAP::CloudController
 
     let(:message) do
       DeploymentCreateMessage.new({
-        relationships: { app: { data: { guid: app.guid } } },
-        droplet: { guid: next_droplet.guid },
-      })
+                                    relationships: { app: { data: { guid: app.guid } } },
+                                    droplet: { guid: next_droplet.guid }
+                                  })
     end
 
     let(:restart_message) do
       DeploymentCreateMessage.new({
-        relationships: { app: { data: { guid: app.guid } } },
-        droplet: { guid: original_droplet.guid },
-      })
+                                    relationships: { app: { data: { guid: app.guid } } },
+                                    droplet: { guid: original_droplet.guid }
+                                  })
     end
 
     before do
@@ -47,8 +47,9 @@ module VCAP::CloudController
             resource_guid: web_process.guid
           )
         end
+
         it 'assigns the old process metadata to the new process' do
-          deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
           deploying_web_process = deployment.deploying_web_process
 
           expect(deploying_web_process).to have_labels({ key_name: 'freaky', value: 'wednesday' })
@@ -61,9 +62,9 @@ module VCAP::CloudController
           it 'creates a deployment with the provided droplet' do
             deployment = nil
 
-            expect {
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-            }.to change { DeploymentModel.count }.by(1)
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
             expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
@@ -76,9 +77,9 @@ module VCAP::CloudController
           end
 
           it 'creates a revision associated with the provided droplet' do
-            expect {
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-            }.to change { RevisionModel.count }.by(1)
+            expect do
+              DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(RevisionModel, :count).by(1)
 
             revision = RevisionModel.last
             expect(revision.droplet_guid).to eq(next_droplet.guid)
@@ -88,7 +89,7 @@ module VCAP::CloudController
           end
 
           it 'records the created revision on the deployment' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
 
@@ -97,7 +98,7 @@ module VCAP::CloudController
           end
 
           it 'has the reason for the initial revision' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
 
@@ -106,7 +107,7 @@ module VCAP::CloudController
 
           it 'has the reason for a droplet changed' do
             RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
 
@@ -114,7 +115,7 @@ module VCAP::CloudController
           end
 
           it 'keeps a record of the revision even if it is deleted' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
             revision_guid = revision.guid
@@ -128,7 +129,7 @@ module VCAP::CloudController
           end
 
           it 'records an audit event for the deployment with the revision' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
             expect(event).not_to be_nil
@@ -143,22 +144,22 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(app.space_guid)
             expect(event.organization_guid).to eq(app.space.organization.guid)
             expect(event.metadata).to eq({
-              'droplet_guid' => next_droplet.guid,
-              'deployment_guid' => deployment.guid,
-              'type' =>  nil,
-              'revision_guid' => RevisionModel.last.guid,
-              'request' => message.audit_hash
-            })
+                                           'droplet_guid' => next_droplet.guid,
+                                           'deployment_guid' => deployment.guid,
+                                           'type' => nil,
+                                           'revision_guid' => RevisionModel.last.guid,
+                                           'request' => message.audit_hash
+                                         })
           end
 
           it 'sets the current droplet of the app to be the provided droplet' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             expect(app.droplet).to eq(next_droplet)
           end
 
           it 'creates a process of web type with the same characteristics as the existing web process' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             deploying_web_process = app.reload.newest_web_process
 
@@ -219,7 +220,7 @@ module VCAP::CloudController
                 readiness_health_check_interval: 11,
                 log_rate_limit: 11,
                 enable_ssh: true,
-                ports: [],
+                ports: []
               )
             end
 
@@ -246,7 +247,7 @@ module VCAP::CloudController
                 readiness_health_check_interval: 15,
                 log_rate_limit: 12,
                 enable_ssh: false,
-                ports: nil,
+                ports: nil
               )
             end
 
@@ -295,7 +296,7 @@ module VCAP::CloudController
           end
 
           it 'records an audit event for the deployment' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
             expect(event).not_to be_nil
@@ -310,16 +311,16 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(app.space_guid)
             expect(event.organization_guid).to eq(app.space.organization.guid)
             expect(event.metadata).to eq({
-              'droplet_guid' => next_droplet.guid,
-              'deployment_guid' => deployment.guid,
-              'type' =>  nil,
-              'revision_guid' => app.latest_revision.guid,
-              'request' => message.audit_hash
-            })
+                                           'droplet_guid' => next_droplet.guid,
+                                           'deployment_guid' => deployment.guid,
+                                           'type' => nil,
+                                           'revision_guid' => app.latest_revision.guid,
+                                           'request' => message.audit_hash
+                                         })
           end
 
           it 'creates a DeploymentProcessModel to save historical information about the deploying processes' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             expect(
               deployment.historical_related_processes.map(&:deployment_guid)
@@ -348,7 +349,7 @@ module VCAP::CloudController
             it 'has a nil previous droplet' do
               deployment = DeploymentCreate.create(app: app_without_current_droplet, message: message, user_audit_info: user_audit_info)
 
-              expect(deployment.previous_droplet).to eq(nil)
+              expect(deployment.previous_droplet).to be_nil
             end
 
             it 'records an audit event for the deployment' do
@@ -367,27 +368,28 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(app_without_current_droplet.space_guid)
               expect(event.organization_guid).to eq(app_without_current_droplet.space.organization.guid)
               expect(event.metadata).to eq({
-                'droplet_guid' => next_droplet.guid,
-                'deployment_guid' => deployment.guid,
-                'type' => nil,
-                'revision_guid' => app_without_current_droplet.latest_revision.guid,
-                'request' => message.audit_hash
-              })
+                                             'droplet_guid' => next_droplet.guid,
+                                             'deployment_guid' => deployment.guid,
+                                             'type' => nil,
+                                             'revision_guid' => app_without_current_droplet.latest_revision.guid,
+                                             'request' => message.audit_hash
+                                           })
             end
           end
 
           context 'when the current droplet assignment fails' do
             let(:unaffiliated_droplet) { DropletModel.make }
-            let(:message) { DeploymentCreateMessage.new({
-              relationships: { app: { data: { guid: app.guid } } },
-              droplet: { guid: unaffiliated_droplet.guid },
-            })
-            }
+            let(:message) do
+              DeploymentCreateMessage.new({
+                                            relationships: { app: { data: { guid: app.guid } } },
+                                            droplet: { guid: unaffiliated_droplet.guid }
+                                          })
+            end
 
             it 'raises a AppAssignDroplet error' do
-              expect {
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to raise_error DeploymentCreate::Error, /Ensure the droplet exists and belongs to this app/
+              expect do
+                DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to raise_error DeploymentCreate::Error, /Ensure the droplet exists and belongs to this app/
             end
           end
 
@@ -399,7 +401,7 @@ module VCAP::CloudController
                 state: existing_state,
                 droplet: nil,
                 previous_droplet: original_droplet,
-                original_web_process_instance_count: originally_desired_instance_count,
+                original_web_process_instance_count: originally_desired_instance_count
               )
             end
 
@@ -414,9 +416,9 @@ module VCAP::CloudController
               it 'creates a new deployment with the instance count from the existing deployment' do
                 deployment = nil
 
-                expect {
-                  deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-                }.to change { DeploymentModel.count }.by(1)
+                expect do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                end.to change(DeploymentModel, :count).by(1)
 
                 expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
                 expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
@@ -428,7 +430,7 @@ module VCAP::CloudController
               end
 
               it 'sets the existing deployment to DEPLOYED, with reason SUPERSEDED' do
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                DeploymentCreate.create(app:, message:, user_audit_info:)
                 existing_deployment.reload
 
                 expect(existing_deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
@@ -441,7 +443,7 @@ module VCAP::CloudController
               let(:existing_state) { DeploymentModel::CANCELING_STATE }
 
               it 'sets the existing deployment to CANCELED, with reason SUPERSEDED' do
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                DeploymentCreate.create(app:, message:, user_audit_info:)
                 existing_deployment.reload
 
                 expect(existing_deployment.state).to eq(DeploymentModel::CANCELED_STATE)
@@ -454,21 +456,21 @@ module VCAP::CloudController
           context 'when the message specifies metadata' do
             let(:message) do
               DeploymentCreateMessage.new({
-              'metadata' => {
-                labels: {
-                  release: 'stable',
-                  'seriouseats.com/potato': 'mashed'
-                },
-                annotations: {
-                  superhero: 'Bummer-boy',
-                  superpower: 'Bums you out',
-                }
-              },
-            })
+                                            'metadata' => {
+                                              labels: {
+                                                release: 'stable',
+                                                'seriouseats.com/potato': 'mashed'
+                                              },
+                                              annotations: {
+                                                superhero: 'Bummer-boy',
+                                                superpower: 'Bums you out'
+                                              }
+                                            }
+                                          })
             end
 
             it 'saves the metadata to the new deployment' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
               expect(deployment).to have_labels(
                 { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
@@ -488,13 +490,13 @@ module VCAP::CloudController
             end
 
             it 'sets the current droplet of the app to be the provided droplet' do
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              DeploymentCreate.create(app:, message:, user_audit_info:)
 
               expect(app.droplet).to eq(next_droplet)
             end
 
             it 'starts the app' do
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              DeploymentCreate.create(app:, message:, user_audit_info:)
 
               expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
             end
@@ -502,9 +504,9 @@ module VCAP::CloudController
             it 'creates a deployment with the provided droplet in DEPLOYED state' do
               deployment = nil
 
-              expect {
-                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to change { DeploymentModel.count }.by(1)
+              expect do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to change(DeploymentModel, :count).by(1)
 
               expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
               expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
@@ -517,7 +519,7 @@ module VCAP::CloudController
             end
 
             it 'records an audit event for the deployment' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
               event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
               expect(event).not_to be_nil
@@ -532,32 +534,32 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(app.space_guid)
               expect(event.organization_guid).to eq(app.space.organization.guid)
               expect(event.metadata).to eq({
-                'droplet_guid' => next_droplet.guid,
-                'deployment_guid' => deployment.guid,
-                'type' =>  nil,
-                'revision_guid' => app.latest_revision.guid,
-                'request' => message.audit_hash
-              })
+                                             'droplet_guid' => next_droplet.guid,
+                                             'deployment_guid' => deployment.guid,
+                                             'type' => nil,
+                                             'revision_guid' => app.latest_revision.guid,
+                                             'request' => message.audit_hash
+                                           })
             end
 
             context 'when the message specifies metadata' do
               let(:message) do
                 DeploymentCreateMessage.new({
-                  'metadata' => {
-                    labels: {
-                      release: 'stable',
-                      'seriouseats.com/potato': 'mashed'
-                    },
-                    annotations: {
-                      superhero: 'Bummer-boy',
-                      superpower: 'Bums you out',
-                    }
-                  },
-                })
+                                              'metadata' => {
+                                                labels: {
+                                                  release: 'stable',
+                                                  'seriouseats.com/potato': 'mashed'
+                                                },
+                                                annotations: {
+                                                  superhero: 'Bummer-boy',
+                                                  superpower: 'Bums you out'
+                                                }
+                                              }
+                                            })
               end
 
               it 'saves the metadata to the new deployment' do
-                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
                 expect(deployment).to have_labels(
                   { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
@@ -576,7 +578,7 @@ module VCAP::CloudController
               end
 
               it 'raises a DeploymentCreate::Error' do
-                expect { DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
               end
             end
           end
@@ -588,12 +590,12 @@ module VCAP::CloudController
           end
 
           it 'does NOT creates a revision' do
-            web_process.update(revision: revision)
+            web_process.update(revision:)
             app.update(revisions_enabled: true)
 
-            expect {
+            expect do
               DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-            }.not_to change { RevisionModel.count }
+            end.not_to(change(RevisionModel, :count))
 
             deploying_web_process = app.reload.newest_web_process
             expect(deploying_web_process.revision.guid).to eq(revision.guid)
@@ -602,18 +604,18 @@ module VCAP::CloudController
           context 'but the environment variables have changed' do
             let(:new_environment_variables) do
               {
-                  'new-key' => 'another-new-value',
+                'new-key' => 'another-new-value'
               }
             end
 
             it 'does create a new revision' do
-              web_process.update(revision: revision)
+              web_process.update(revision:)
               app.update(revisions_enabled: true)
               app.update(environment_variables: new_environment_variables)
 
-              expect {
+              expect do
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              }.to change { RevisionModel.count }.by(1)
+              end.to change(RevisionModel, :count).by(1)
 
               current_revision = RevisionModel.last
               expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
@@ -632,9 +634,9 @@ module VCAP::CloudController
               web_process.update(command: new_command)
               app.update(revisions_enabled: true)
 
-              expect {
+              expect do
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              }.to change { RevisionModel.count }.by(1)
+              end.to change(RevisionModel, :count).by(1)
 
               current_revision = RevisionModel.last
               expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
@@ -648,12 +650,12 @@ module VCAP::CloudController
               web_process.update(command: new_command)
               app.update(revisions_enabled: true)
 
-              expect {
+              expect do
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
                 app.reload.newest_web_process.update(command: 'something else')
                 app.reload
                 DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-              }.to change { RevisionModel.count }.by(2)
+              end.to change(RevisionModel, :count).by(2)
 
               expect(app.reload.newest_web_process.command).to eq 'something else'
             end
@@ -666,7 +668,7 @@ module VCAP::CloudController
             end
 
             it 'starts the app' do
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              DeploymentCreate.create(app:, message:, user_audit_info:)
 
               expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
             end
@@ -674,9 +676,9 @@ module VCAP::CloudController
             it 'creates a deployment with the provided droplet in DEPLOYED state' do
               deployment = nil
 
-              expect {
-                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to change { DeploymentModel.count }.by(1)
+              expect do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to change(DeploymentModel, :count).by(1)
 
               expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
               expect(deployment.app_guid).to eq(app.guid)
@@ -687,7 +689,7 @@ module VCAP::CloudController
             end
 
             it 'records an audit event for the deployment' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
               event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
               expect(event).not_to be_nil
@@ -702,32 +704,32 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(app.space_guid)
               expect(event.organization_guid).to eq(app.space.organization.guid)
               expect(event.metadata).to eq({
-                'droplet_guid' => next_droplet.guid,
-                'deployment_guid' => deployment.guid,
-                'type' =>  nil,
-                'revision_guid' =>  app.latest_revision.guid,
-                'request' => message.audit_hash
-              })
+                                             'droplet_guid' => next_droplet.guid,
+                                             'deployment_guid' => deployment.guid,
+                                             'type' => nil,
+                                             'revision_guid' => app.latest_revision.guid,
+                                             'request' => message.audit_hash
+                                           })
             end
 
             context 'when the message specifies metadata' do
               let(:message) do
                 DeploymentCreateMessage.new({
-                  'metadata' => {
-                    labels: {
-                      release: 'stable',
-                      'seriouseats.com/potato': 'mashed'
-                    },
-                    annotations: {
-                      superhero: 'Bummer-boy',
-                      superpower: 'Bums you out',
-                    }
-                  },
-                })
+                                              'metadata' => {
+                                                labels: {
+                                                  release: 'stable',
+                                                  'seriouseats.com/potato': 'mashed'
+                                                },
+                                                annotations: {
+                                                  superhero: 'Bummer-boy',
+                                                  superpower: 'Bums you out'
+                                                }
+                                              }
+                                            })
               end
 
               it 'saves the metadata to the new deployment' do
-                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
                 expect(deployment).to have_labels(
                   { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
                   { prefix: nil, key_name: 'release', value: 'stable' }
@@ -766,12 +768,12 @@ module VCAP::CloudController
           )
         end
 
-        let(:message) {
+        let(:message) do
           DeploymentCreateMessage.new({
-            relationships: { app: { data: { guid: app.guid } } },
-            revision: { guid: rollback_revision.guid },
-          })
-        }
+                                        relationships: { app: { data: { guid: app.guid } } },
+                                        revision: { guid: rollback_revision.guid }
+                                      })
+        end
 
         before do
           app.update(revisions_enabled: true)
@@ -780,9 +782,9 @@ module VCAP::CloudController
         it 'creates a deployment with the droplet associated with the given revision' do
           deployment = nil
 
-          expect {
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-          }.to change { DeploymentModel.count }.by(1)
+          expect do
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+          end.to change(DeploymentModel, :count).by(1)
 
           expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
           expect(deployment.app_guid).to eq(app.guid)
@@ -792,9 +794,9 @@ module VCAP::CloudController
         end
 
         it 'creates a revision associated with the droplet from the associated revision' do
-          expect {
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-          }.to change { RevisionModel.count }.by(1)
+          expect do
+            DeploymentCreate.create(app:, message:, user_audit_info:)
+          end.to change(RevisionModel, :count).by(1)
 
           revision = RevisionModel.last
           expect(revision.droplet_guid).to eq(rollback_droplet.guid)
@@ -804,13 +806,13 @@ module VCAP::CloudController
         end
 
         it 'sets the current droplet of the app to be the droplet associated with the revision' do
-          DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          DeploymentCreate.create(app:, message:, user_audit_info:)
 
           expect(app.droplet).to eq(rollback_droplet)
         end
 
         it 'sets the environment variables of the app to those of the associated revision' do
-          DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          DeploymentCreate.create(app:, message:, user_audit_info:)
 
           expect(app.environment_variables).to eq({ 'foo' => 'var2' })
         end
@@ -821,16 +823,16 @@ module VCAP::CloudController
           end
 
           it 'sets the process command of the new web process to that of the associated revision' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             expect(app.reload.newest_web_process.command).to eq('bundle exec earlier_app')
           end
         end
 
         it 'creates a revision associated with the environment variables of the associated revision' do
-          expect {
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-          }.to change { RevisionModel.count }.by(1)
+          expect do
+            DeploymentCreate.create(app:, message:, user_audit_info:)
+          end.to change(RevisionModel, :count).by(1)
 
           revision = RevisionModel.last
           expect(revision.environment_variables).to eq({ 'foo' => 'var2' })
@@ -840,13 +842,13 @@ module VCAP::CloudController
         end
 
         it 'sets the rollback description' do
-          DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          DeploymentCreate.create(app:, message:, user_audit_info:)
           revision = RevisionModel.last
           expect(revision.description).to include('Rolled back to revision 2.')
         end
 
         it 'records a rollback deployment event' do
-          deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
           event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
           expect(event).not_to be_nil
@@ -861,28 +863,28 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space_guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
           expect(event.metadata).to eq({
-            'droplet_guid' => rollback_droplet.guid,
-            'deployment_guid' => deployment.guid,
-            'type' => 'rollback',
-            'revision_guid' => RevisionModel.last.guid,
-            'request' => message.audit_hash
-          })
+                                         'droplet_guid' => rollback_droplet.guid,
+                                         'deployment_guid' => deployment.guid,
+                                         'type' => 'rollback',
+                                         'revision_guid' => RevisionModel.last.guid,
+                                         'request' => message.audit_hash
+                                       })
         end
 
         it 'fails if the droplet does not exist' do
           rollback_droplet.delete
 
-          expect {
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
+          expect do
+            DeploymentCreate.create(app:, message:, user_audit_info:)
+          end.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
         end
 
         it 'fails if the droplet is expired' do
           rollback_droplet.update(state: DropletModel::EXPIRED_STATE)
 
-          expect {
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
+          expect do
+            DeploymentCreate.create(app:, message:, user_audit_info:)
+          end.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
         end
 
         context 'when trying to roll back to a revision where the code and config has not changed' do
@@ -895,19 +897,19 @@ module VCAP::CloudController
             )
           end
 
-          let(:message) {
+          let(:message) do
             DeploymentCreateMessage.new({
-              relationships: { app: { data: { guid: app.guid } } },
-              revision: { guid: initial_revision.guid },
-            })
-          }
+                                          relationships: { app: { data: { guid: app.guid } } },
+                                          revision: { guid: initial_revision.guid }
+                                        })
+          end
 
           it 'will raise a DeploymentCreate::Error with the correct message' do
-            expect {
-              expect {
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to raise_error(DeploymentCreate::Error, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
-            }.not_to change { RevisionModel.count }
+            expect do
+              expect do
+                DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to raise_error(DeploymentCreate::Error, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
+            end.not_to(change(RevisionModel, :count))
           end
         end
 
@@ -918,13 +920,13 @@ module VCAP::CloudController
           end
 
           it 'sets the current droplet of the app to be the droplet associated with the revision' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             expect(app.droplet).to eq(rollback_droplet)
           end
 
           it 'starts the app' do
-            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app:, message:, user_audit_info:)
 
             expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
           end
@@ -932,9 +934,9 @@ module VCAP::CloudController
           it 'creates a deployment with the provided droplet in DEPLOYED state' do
             deployment = nil
 
-            expect {
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-            }.to change { DeploymentModel.count }.by(1)
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
             expect(deployment.app_guid).to eq(app.guid)
@@ -945,7 +947,7 @@ module VCAP::CloudController
           end
 
           it 'records an audit event for the deployment' do
-            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
             event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
@@ -961,32 +963,32 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(app.space_guid)
             expect(event.organization_guid).to eq(app.space.organization.guid)
             expect(event.metadata).to eq({
-              'droplet_guid' => rollback_droplet.guid,
-              'deployment_guid' => deployment.guid,
-              'type' =>  'rollback',
-              'revision_guid' => revision.guid,
-              'request' => message.audit_hash
-            })
+                                           'droplet_guid' => rollback_droplet.guid,
+                                           'deployment_guid' => deployment.guid,
+                                           'type' => 'rollback',
+                                           'revision_guid' => revision.guid,
+                                           'request' => message.audit_hash
+                                         })
           end
 
           context 'when the message specifies metadata' do
             let(:message) do
               DeploymentCreateMessage.new({
-                'metadata' => {
-                  labels: {
-                    release: 'stable',
-                    'seriouseats.com/potato': 'mashed'
-                  },
-                  annotations: {
-                    superhero: 'Bummer-boy',
-                    superpower: 'Bums you out',
-                  }
-                },
-              })
+                                            'metadata' => {
+                                              labels: {
+                                                release: 'stable',
+                                                'seriouseats.com/potato': 'mashed'
+                                              },
+                                              annotations: {
+                                                superhero: 'Bummer-boy',
+                                                superpower: 'Bums you out'
+                                              }
+                                            }
+                                          })
             end
 
             it 'saves the metadata to the new deployment' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
               expect(deployment).to have_labels(
                 { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
                 { prefix: nil, key_name: 'release', value: 'stable' }

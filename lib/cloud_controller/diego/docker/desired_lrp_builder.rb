@@ -18,7 +18,7 @@ module VCAP::CloudController
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[:docker]),
             to: '/tmp/lifecycle',
-            cache_key: 'docker-lifecycle',
+            cache_key: 'docker-lifecycle'
           )]
         end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
             url: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[:docker]),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
           )]
         end
 
@@ -47,14 +47,10 @@ module VCAP::CloudController
         end
 
         def ports
-          if !@ports.empty?
-            return @ports
-          end
+          return @ports unless @ports.empty?
 
           execution_metadata = MultiJson.load(@execution_metadata)
-          if execution_metadata['ports'].blank?
-            return [DEFAULT_APP_PORT]
-          end
+          return [DEFAULT_APP_PORT] if execution_metadata['ports'].blank?
 
           tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
           raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'No tcp ports found in image metadata') if tcp_ports.empty?
@@ -64,7 +60,7 @@ module VCAP::CloudController
 
         def port_environment_variables
           [
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s)
           ]
         end
 

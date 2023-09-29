@@ -15,7 +15,7 @@ Sequel.migration do
       drop_index :blob_key, name: :orphaned_blobs_blob_key_index, type: :unique
       drop_column :directory_key
       add_column :blobstore_type, String
-      add_index [:blob_key, :blobstore_type], name: :orphaned_blobs_unique_blob_index, unique: true
+      add_index %i[blob_key blobstore_type], name: :orphaned_blobs_unique_blob_index, unique: true
     end
   end
 end

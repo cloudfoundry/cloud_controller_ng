@@ -11,7 +11,7 @@ module VCAP::CloudController::Presenters
           paginated_result: paginated_result,
           path: path,
           message: message,
-          extra_presenter_args: extra_presenter_args,
+          extra_presenter_args: extra_presenter_args
         )
       end
 
@@ -32,18 +32,18 @@ module VCAP::CloudController::Presenters
       class MonkeyPresenter < BasePresenter
         def initialize(
           resource,
-            show_secrets: false,
-            censored_message: Censorship::REDACTED_CREDENTIAL,
-            banana: false
+          show_secrets: false,
+          censored_message: Censorship::REDACTED_CREDENTIAL,
+          banana: false
         )
           @banana = banana
 
-          super(resource, show_secrets: show_secrets, censored_message: censored_message)
+          super(resource, show_secrets:, censored_message:)
         end
 
         def to_hash
           {
-            name: @resource.name,
+            name: @resource.name
           }
         end
       end
@@ -53,19 +53,19 @@ module VCAP::CloudController::Presenters
 
         it 'returns a paginated response for the set, with path only used in pagination' do
           expect(presenter.to_hash).to eq({
-            pagination: {
-              total_results: 2,
-              total_pages: 1,
-              first: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
-              last: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
-              next: nil,
-              previous: nil
-            },
-            resources: [
-              { name: 'bobo' },
-              { name: 'george' },
-            ]
-          })
+                                            pagination: {
+                                              total_results: 2,
+                                              total_pages: 1,
+                                              first: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
+                                              last: { href: "#{link_prefix}/some/path?order_by=%2Bmonkeys&page=1&per_page=50" },
+                                              next: nil,
+                                              previous: nil
+                                            },
+                                            resources: [
+                                              { name: 'bobo' },
+                                              { name: 'george' }
+                                            ]
+                                          })
         end
 
         it 'sends false for show_secrets' do
@@ -137,8 +137,8 @@ module VCAP::CloudController::Presenters
 
           it 'decorates the hash with them' do
             result = presenter.to_hash
-            expect(result[:included][:bananas]).to match_array(["bobo's banana", "george's banana"])
-            expect(result[:included][:tails]).to match_array(["bobo's tail", "george's tail"])
+            expect(result[:included][:bananas]).to contain_exactly("bobo's banana", "george's banana")
+            expect(result[:included][:tails]).to contain_exactly("bobo's tail", "george's tail")
           end
         end
       end
@@ -148,7 +148,7 @@ module VCAP::CloudController::Presenters
         let(:per_page) { 1 }
         let(:total_results) { 2 }
         let(:total_pages) { 2 }
-        let(:options) { { page: page, per_page: per_page } }
+        let(:options) { { page:, per_page: } }
         let(:pagination_options) { VCAP::CloudController::PaginationOptions.new(options) }
         let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(double(:results), total_results, pagination_options) }
         let(:path) { '/v3/cloudfoundry/is-great' }
@@ -250,7 +250,7 @@ module VCAP::CloudController::Presenters
           let(:total_results) { 3 }
           let(:order_by) { nil }
           let(:order_direction) { nil }
-          let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
+          let(:options) { { page:, per_page:, order_by:, order_direction: } }
 
           it 'does not set order information if both order options are default' do
             result = presenter.present_pagination_hash

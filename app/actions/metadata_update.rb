@@ -7,8 +7,8 @@ module VCAP::CloudController
       def update(resource, message, destroy_nil: true)
         return unless message.requested?(:metadata)
 
-        LabelsUpdate.update(resource, message.labels, labels_klass(resource), destroy_nil: destroy_nil)
-        AnnotationsUpdate.update(resource, message.annotations, annotations_klass(resource), destroy_nil: destroy_nil)
+        LabelsUpdate.update(resource, message.labels, labels_klass(resource), destroy_nil:)
+        AnnotationsUpdate.update(resource, message.annotations, annotations_klass(resource), destroy_nil:)
       end
 
       private

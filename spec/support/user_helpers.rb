@@ -38,7 +38,7 @@ module UserHelpers
   def set_current_user_as_reader_and_writer(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.read cloud_controller.write) }
+    scopes = { scopes: %w[cloud_controller.read cloud_controller.write] }
     set_current_user(user, scopes.merge(opts))
   end
 
@@ -46,7 +46,7 @@ module UserHelpers
   def set_current_user_as_reader(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.read) }
+    scopes = { scopes: %w[cloud_controller.read] }
     set_current_user(user, scopes.merge(opts))
   end
 
@@ -54,7 +54,7 @@ module UserHelpers
   def set_current_user_as_writer(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller.write) }
+    scopes = { scopes: %w[cloud_controller.write] }
     set_current_user(user, scopes.merge(opts))
   end
 
@@ -62,7 +62,7 @@ module UserHelpers
   def set_current_user_as_service_permissions_reader(opts = {})
     # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
-    scopes = { scopes: %w(cloud_controller_service_permissions.read) }
+    scopes = { scopes: %w[cloud_controller_service_permissions.read] }
     set_current_user(user, scopes.merge(opts))
   end
 
@@ -70,12 +70,10 @@ module UserHelpers
   def set_current_user_as_role(role:, org: nil, space: nil, user: nil, scopes: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
-    current_user = set_current_user(current_user, scopes: scopes)
+    current_user = set_current_user(current_user, scopes:)
 
-    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader)
-    if org && !scope_roles.include?(role)
-      org.add_user(current_user)
-    end
+    scope_roles = %w[admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader]
+    org.add_user(current_user) if org && scope_roles.exclude?(role)
 
     # rubocop:disable Lint/DuplicateBranch
     case role.to_s
@@ -121,37 +119,27 @@ module UserHelpers
     when 'no_role'
       nil
     else
-      fail("Unknown role '#{role}'")
+      raise("Unknown role '#{role}'")
     end
     # rubocop:enable Lint/DuplicateBranch
   end
 
   def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
-      skey: TestConfig.config[:uaa][:symmetric_secret],
-      pkey: nil)
+                                          skey: TestConfig.config[:uaa][:symmetric_secret],
+                                          pkey: nil)
 
     if user
       scopes = opts[:scopes]
-      if scopes.nil?
-        scopes = %w(cloud_controller.read cloud_controller.write)
-      end
+      scopes = %w[cloud_controller.read cloud_controller.write] if scopes.nil?
 
-      if opts[:admin]
-        scopes << 'cloud_controller.admin'
-      end
+      scopes << 'cloud_controller.admin' if opts[:admin]
 
-      if opts[:admin_read_only]
-        scopes << 'cloud_controller.admin_read_only'
-      end
+      scopes << 'cloud_controller.admin_read_only' if opts[:admin_read_only]
 
-      if opts[:global_auditor]
-        scopes << 'cloud_controller.global_auditor'
-      end
+      scopes << 'cloud_controller.global_auditor' if opts[:global_auditor]
 
-      if opts[:update_build_state]
-        scopes << 'cloud_controller.update_build_state'
-      end
+      scopes << 'cloud_controller.update_build_state' if opts[:update_build_state]
 
       encoding_opts = {
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
@@ -175,26 +163,18 @@ module UserHelpers
 
   def client_token(cloud_controller_user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
-      skey: TestConfig.config[:uaa][:symmetric_secret],
-      pkey: nil)
+                                          skey: TestConfig.config[:uaa][:symmetric_secret],
+                                          pkey: nil)
 
     if cloud_controller_user
       scopes = opts[:scopes]
-      if scopes.nil?
-        scopes = %w(cloud_controller.read cloud_controller.write)
-      end
+      scopes = %w[cloud_controller.read cloud_controller.write] if scopes.nil?
 
-      if opts[:admin]
-        scopes << 'cloud_controller.admin'
-      end
+      scopes << 'cloud_controller.admin' if opts[:admin]
 
-      if opts[:admin_read_only]
-        scopes << 'cloud_controller.admin_read_only'
-      end
+      scopes << 'cloud_controller.admin_read_only' if opts[:admin_read_only]
 
-      if opts[:global_auditor]
-        scopes << 'cloud_controller.global_auditor'
-      end
+      scopes << 'cloud_controller.global_auditor' if opts[:global_auditor]
 
       encoding_opts = {
         client_id: cloud_controller_user ? cloud_controller_user.guid : (rand * 1_000_000_000).ceil,

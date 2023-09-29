@@ -387,7 +387,7 @@ module VCAP::CloudController
         'timeout' => :health_check_timeout,
         'health_check_http_endpoint' => :health_check_endpoint,
         'health_check_type' => :health_check_type,
-        'command' => :command,
+        'command' => :command
       }
 
       attribute_mappings.each do |manifest_attribute, message_attribute|

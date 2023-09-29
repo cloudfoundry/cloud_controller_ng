@@ -113,7 +113,7 @@ module VCAP::CloudController
       context 'when given nil' do
         it 'sets bits_path to nil' do
           upload_message.bits_path = nil
-          expect(upload_message.bits_path).to eq(nil)
+          expect(upload_message.bits_path).to be_nil
         end
       end
     end
@@ -131,7 +131,7 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = PackageUploadMessage.create_from_params(params)
 
-        expect(message.requested?(:bits_path)).to be_truthy
+        expect(message).to be_requested(:bits_path)
       end
 
       context 'when rack is handling the file upload' do

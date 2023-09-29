@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def self.dependencies
-      [:services_event_repository, :service_key_credential_object_renderer, :service_key_credential_collection_renderer]
+      %i[services_event_repository service_key_credential_object_renderer service_key_credential_collection_renderer]
     end
 
     def inject_dependencies(dependencies)
@@ -40,8 +40,7 @@ module VCAP::CloudController
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_key.guid}" },
-       object_renderer.render_json(self.class, service_key, @opts)
-      ]
+       object_renderer.render_json(self.class, service_key, @opts)]
     rescue ServiceKeyManager::ServiceInstanceNotFound
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
     rescue ServiceKeyManager::ServiceInstanceNotBindable
@@ -76,8 +75,7 @@ module VCAP::CloudController
 
       [HTTP::OK,
        { 'Location' => "#{self.class.path}/#{service_key.guid}" },
-       object_renderer.render_json(self.class, service_key, @opts)
-      ]
+       object_renderer.render_json(self.class, service_key, @opts)]
     end
 
     get '/v2/service_keys/:guid/parameters', :parameters
@@ -96,7 +94,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      unique_errors = e.errors.on([:name, :service_instance_id])
+      unique_errors = e.errors.on(%i[name service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServiceKeyNameTaken', attributes['name'])
       elsif e.errors.on(:service_instance) && e.errors.on(:service_instance).include?(:presence)

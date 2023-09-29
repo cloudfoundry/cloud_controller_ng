@@ -4,7 +4,7 @@ module VCAP
   module CloudController
     class ServiceCredentialBindingFetcher
       def fetch(guid, readable_spaces_query: nil)
-        list_fetcher.fetch(readable_spaces_query: readable_spaces_query).first(guid: guid)
+        list_fetcher.fetch(readable_spaces_query:).first(guid:)
       end
 
       private

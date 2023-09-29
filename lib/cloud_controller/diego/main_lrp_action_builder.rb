@@ -6,7 +6,7 @@ module VCAP::CloudController
 
       class << self
         def build(process, lrp_builder, ssh_key)
-          self.new(process, lrp_builder, ssh_key).build
+          new(process, lrp_builder, ssh_key).build
         end
       end
 
@@ -56,13 +56,13 @@ module VCAP::CloudController
         launcher_args = ['app', start_command || '', process.execution_metadata]
 
         action(::Diego::Bbs::Models::RunAction.new(
-                 user:            user,
-                 path:            '/tmp/lifecycle/launcher',
-                 args:            launcher_args,
-                 env:             environment_variables,
-                 log_source:      "APP/PROC/#{process.type.upcase}",
-                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
-          ))
+                 user: user,
+                 path: '/tmp/lifecycle/launcher',
+                 args: launcher_args,
+                 env: environment_variables,
+                 log_source: "APP/PROC/#{process.type.upcase}",
+                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors)
+               ))
       end
 
       def allow_ssh?
@@ -77,34 +77,35 @@ module VCAP::CloudController
 
       def generate_sidecar_actions(user)
         process.sidecars.
-          map { |sidecar| action(
+          map do |sidecar|
+          action(
             ::Diego::Bbs::Models::RunAction.new(
-              user:            user,
-              path:            '/tmp/lifecycle/launcher',
-              args:            ['app', sidecar.command, process.execution_metadata],
-              env:             generate_sidecar_environment_variables(sidecar),
+              user: user,
+              path: '/tmp/lifecycle/launcher',
+              args: ['app', sidecar.command, process.execution_metadata],
+              env: generate_sidecar_environment_variables(sidecar),
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
-              log_source:      "APP/PROC/#{process.type.upcase}/SIDECAR/#{sidecar.name.upcase}",
+              log_source: "APP/PROC/#{process.type.upcase}/SIDECAR/#{sidecar.name.upcase}"
             )
           )
-        }
+        end
       end
 
       def generate_ssh_action(user, environment_variables)
         action(::Diego::Bbs::Models::RunAction.new(
-                 user:            user,
-                 path:            '/tmp/lifecycle/diego-sshd',
-                 args:            [
+                 user: user,
+                 path: '/tmp/lifecycle/diego-sshd',
+                 args: [
                    "-address=#{sprintf('0.0.0.0:%<port>d', port: DEFAULT_SSH_PORT)}",
                    "-hostKey=#{ssh_key.private_key}",
                    "-authorizedKey=#{ssh_key.authorized_key}",
                    '-inheritDaemonEnv',
-                   '-logLevel=fatal',
+                   '-logLevel=fatal'
                  ],
-                 env:             environment_variables,
+                 env: environment_variables,
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
-                 log_source:      SSHD_LOG_SOURCE,
-          ))
+                 log_source: SSHD_LOG_SOURCE
+               ))
       end
     end
   end

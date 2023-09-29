@@ -30,24 +30,18 @@ module VCAP::CloudController
       def filter(message, dataset)
         dataset = dataset.where(type: message.types) if message.requested?(:types)
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(Sequel.qualify(:space, :guid) => message.space_guids)
-        end
+        dataset = dataset.where(Sequel.qualify(:space, :guid) => message.space_guids) if message.requested?(:space_guids)
 
-        if message.requested?(:organization_guids)
-          dataset = dataset.where(Sequel.qualify(:organization, :guid) => message.organization_guids)
-        end
+        dataset = dataset.where(Sequel.qualify(:organization, :guid) => message.organization_guids) if message.requested?(:organization_guids)
 
-        if message.requested?(:app_guids)
-          dataset = dataset.where(app_guid: message.app_guids)
-        end
+        dataset = dataset.where(app_guid: message.app_guids) if message.requested?(:app_guids)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ProcessLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: ProcessModel,
+            resource_klass: ProcessModel
           )
         end
 

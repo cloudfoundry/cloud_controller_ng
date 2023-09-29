@@ -6,7 +6,7 @@ module VCAP::RestAPI
   class EventQuery < Query
     private
 
-    def foreign_key_association(key)
+    def foreign_key_association(_key)
       # Don't admit events have an fkey association with spaces, as events can live
       # after an associated spaces has been deleted.
       nil

@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       it 'returns all of the events' do
         expect(subject.count).to eq(3)
-        expect(subject).to match_array([app_usage_event, app_usage_event_2, app_usage_event_3])
+        expect(subject).to contain_exactly(app_usage_event, app_usage_event_2, app_usage_event_3)
       end
 
       context 'filtering by after_guid' do
@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'returns filtered events' do
-          expect(subject).to match_array([app_usage_event_3])
+          expect(subject).to contain_exactly(app_usage_event_3)
         end
 
         context 'when the given guid is invalid' do
@@ -37,7 +37,7 @@ module VCAP::CloudController
           end
 
           it 'returns filtered events' do
-            expect { subject }.to raise_error /After guid filter must be a valid app usage event guid./
+            expect { subject }.to raise_error(/After guid filter must be a valid app usage event guid./)
           end
         end
       end
@@ -48,7 +48,7 @@ module VCAP::CloudController
         end
 
         it 'returns filtered events' do
-          expect(subject).to match_array([app_usage_event])
+          expect(subject).to contain_exactly(app_usage_event)
         end
       end
     end

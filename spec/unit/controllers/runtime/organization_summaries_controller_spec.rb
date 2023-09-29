@@ -30,7 +30,7 @@ module VCAP::CloudController
           production: false,
           instances: 1,
           memory: free_mem_size,
-          state: 'STARTED',
+          state: 'STARTED'
         )
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
           production: true,
           instances: 1,
           memory: prod_mem_size,
-          state: 'STARTED',
+          state: 'STARTED'
         )
       end
     end
@@ -60,14 +60,14 @@ module VCAP::CloudController
           expect(decoded_response['spaces'].size).to eq(num_spaces)
         end
 
-        it 'should return the correct info for all spaces' do
+        it 'returns the correct info for all spaces' do
           expect(decoded_response['spaces']).to include(
             'guid' => @spaces.first.guid,
             'name' => @spaces.first.name,
             'app_count' => num_apps,
             'service_count' => num_services,
             'mem_dev_total' => free_mem_size * num_free_apps,
-            'mem_prod_total' => prod_mem_size * num_prod_apps,
+            'mem_prod_total' => prod_mem_size * num_prod_apps
           )
         end
       end
@@ -86,14 +86,14 @@ module VCAP::CloudController
           expect(decoded_response['spaces'].size).to eq(num_spaces)
         end
 
-        it 'should return the correct info for all spaces' do
+        it 'returns the correct info for all spaces' do
           expect(decoded_response['spaces']).to include(
             'guid' => @spaces.first.guid,
             'name' => @spaces.first.name,
             'app_count' => num_apps,
             'service_count' => num_services,
             'mem_dev_total' => free_mem_size * num_free_apps,
-            'mem_prod_total' => prod_mem_size * num_prod_apps,
+            'mem_prod_total' => prod_mem_size * num_prod_apps
           )
         end
       end
@@ -120,7 +120,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a member of the space' do
-          it 'should only return spaces a user has access to' do
+          it 'onlies return spaces a user has access to' do
             set_current_user(member)
             get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(num_visible_spaces)
@@ -128,7 +128,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is not a member of the space (but is a member of the org)' do
-          it 'should only return spaces a user has access to' do
+          it 'onlies return spaces a user has access to' do
             set_current_user(non_member)
             get "/v2/organizations/#{org.guid}/summary"
             expect(decoded_response['spaces'].size).to eq(0)

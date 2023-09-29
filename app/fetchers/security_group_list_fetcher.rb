@@ -22,9 +22,7 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:names)
-          dataset = dataset.where(name: message.names)
-        end
+        dataset = dataset.where(name: message.names) if message.requested?(:names)
 
         if message.requested?(:staging_space_guids)
           space_dataset = Space.where(guid: message.staging_space_guids)
@@ -36,13 +34,9 @@ module VCAP::CloudController
           dataset = dataset.where(spaces: space_dataset)
         end
 
-        if message.requested?(:globally_enabled_running)
-          dataset = dataset.where(running_default: ActiveModel::Type::Boolean.new.cast(message.globally_enabled_running))
-        end
+        dataset = dataset.where(running_default: ActiveModel::Type::Boolean.new.cast(message.globally_enabled_running)) if message.requested?(:globally_enabled_running)
 
-        if message.requested?(:globally_enabled_staging)
-          dataset = dataset.where(staging_default: ActiveModel::Type::Boolean.new.cast(message.globally_enabled_staging))
-        end
+        dataset = dataset.where(staging_default: ActiveModel::Type::Boolean.new.cast(message.globally_enabled_staging)) if message.requested?(:globally_enabled_staging)
 
         super(message, dataset, SecurityGroup)
       end

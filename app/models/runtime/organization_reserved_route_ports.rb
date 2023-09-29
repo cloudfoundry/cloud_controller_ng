@@ -4,9 +4,7 @@ module VCAP::CloudController
       @organization = organization
     end
 
-    def count
-      dataset.count
-    end
+    delegate :count, to: :dataset
 
     private
 

@@ -122,7 +122,7 @@ module VCAP::CloudController
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         it 'returns true' do
-          expect(app_model.staging_in_progress?).to eq(true)
+          expect(app_model.staging_in_progress?).to be(true)
         end
       end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
 
         it 'returns false' do
-          expect(app_model.staging_in_progress?).to eq(false)
+          expect(app_model.staging_in_progress?).to be(false)
         end
       end
     end
@@ -151,10 +151,10 @@ module VCAP::CloudController
 
         it 'destroys the buildpack_lifecycle_data and associated buildpack_lifecycle_buildpacks' do
           app_model.update(buildpack_lifecycle_data: lifecycle_data)
-          expect {
+          expect do
             app_model.destroy
-          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
-            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+          end.to change(BuildpackLifecycleDataModel, :count).by(-1).
+            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         end
       end
     end
@@ -169,44 +169,44 @@ module VCAP::CloudController
         it 'uniqueness is case insensitive' do
           AppModel.make(name: 'lowercase', space_guid: space_guid)
 
-          expect {
+          expect do
             AppModel.make(name: 'lowerCase', space_guid: space_guid)
-          }.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
+          end.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
         end
 
-        it 'should allow standard ascii characters' do
-          app.name = "A -_- word 2!?()\'\"&+."
-          expect {
+        it 'allows standard ascii characters' do
+          app.name = "A -_- word 2!?()'\"&+."
+          expect do
             app.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           app.name = 'a \\ word'
-          expect {
+          expect do
             app.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           app.name = '防御力¡'
-          expect {
+          expect do
             app.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           app.name = "a \n word"
-          expect {
+          expect do
             app.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           app.name = "a \e word"
-          expect {
+          expect do
             app.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
       end
 
@@ -218,9 +218,9 @@ module VCAP::CloudController
           space2 = Space.make
 
           AppModel.make(name: name, space_guid: space1.guid)
-          expect {
+          expect do
             AppModel.make(name: name, space_guid: space2.guid)
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it 'name is unique in the same space' do
@@ -230,17 +230,17 @@ module VCAP::CloudController
 
           AppModel.make(name: name, space_guid: space.guid)
 
-          expect {
+          expect do
             AppModel.make(name: name, space_guid: space.guid)
-          }.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
+          end.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
         end
       end
 
       describe 'environment_variables' do
         it 'validates them' do
-          expect {
+          expect do
             AppModel.make(environment_variables: '')
-          }.to raise_error(Sequel::ValidationFailed, /must be an object/)
+          end.to raise_error(Sequel::ValidationFailed, /must be an object/)
         end
       end
 
@@ -251,10 +251,10 @@ module VCAP::CloudController
           states = DropletModel::DROPLET_STATES - [DropletModel::STAGED_STATE]
           states.each do |state|
             droplet.state = state
-            expect {
+            expect do
               app_model.droplet = droplet
               app_model.save
-            }.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
+            end.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
           end
         end
 
@@ -378,10 +378,10 @@ module VCAP::CloudController
       context 'when enable_ssh is set explicitly' do
         it 'does not overwrite it with the default' do
           app1 = AppModel.make(enable_ssh: true)
-          expect(app1.enable_ssh).to eq(true)
+          expect(app1.enable_ssh).to be(true)
 
           app2 = AppModel.make(enable_ssh: false)
-          expect(app2.enable_ssh).to eq(false)
+          expect(app2.enable_ssh).to be(false)
         end
       end
 
@@ -392,7 +392,7 @@ module VCAP::CloudController
 
         it 'sets enable_ssh to true' do
           app = AppModel.make
-          expect(app.enable_ssh).to eq(true)
+          expect(app.enable_ssh).to be(true)
         end
       end
 
@@ -403,7 +403,7 @@ module VCAP::CloudController
 
         it 'sets enable_ssh to false' do
           app = AppModel.make
-          expect(app.enable_ssh).to eq(false)
+          expect(app.enable_ssh).to be(false)
         end
       end
     end
@@ -457,7 +457,7 @@ module VCAP::CloudController
         let(:package) { PackageModel.make }
 
         before do
-          app_model.update(droplet: DropletModel.make(package: package))
+          app_model.update(droplet: DropletModel.make(package:))
         end
 
         it 'returns the package from the current droplet' do

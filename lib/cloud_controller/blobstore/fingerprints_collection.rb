@@ -2,15 +2,13 @@ module CloudController
   module Blobstore
     class FingerprintsCollection
       def initialize(fingerprints, root_path)
-        unless fingerprints.is_a?(Array)
-          raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources')
-        end
+        raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources') unless fingerprints.is_a?(Array)
 
         @fingerprints = fingerprints
         @root_path = root_path
       end
 
-      DEFAULT_FILE_MODE = 0744
+      DEFAULT_FILE_MODE = 0o744
 
       def fingerprints
         @fingerprints.map do |fingerprint|
@@ -39,9 +37,9 @@ module CloudController
 
       def parse_mode(raw_mode, filename)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
-        unless (mode & 0600) == 0600
+        unless (mode & 0o600) == 0o600
           raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
-            "File mode '#{raw_mode}' with path '#{filename}' is invalid. Minimum file mode is '0600'")
+                                                                   "File mode '#{raw_mode}' with path '#{filename}' is invalid. Minimum file mode is '0600'")
         end
         mode
       end

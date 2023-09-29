@@ -15,15 +15,17 @@ module VCAP::CloudController
           if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::SPACE
             visibility[:space] = {
               guid: service_plan.service_broker.space.guid,
-              name: service_plan.service_broker.space.name,
+              name: service_plan.service_broker.space.name
             }
           end
 
           if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::ORGANIZATION && !@visible_in_orgs.nil?
-            visibility[:organizations] = @visible_in_orgs.map { |org| { guid: org.guid, name: org.name } }
+            visibility[:organizations] = @visible_in_orgs.map do |org|
+              { guid: org.guid, name: org.name }
+            end
           end
 
-          return visibility
+          visibility
         end
 
         private

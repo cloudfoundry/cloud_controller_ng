@@ -24,7 +24,7 @@ module VCAP::CloudController
           process_type: process_type,
           app_port: dst[:port],
           weight: weight,
-          protocol: protocol,
+          protocol: protocol
         }
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
           next
         end
 
-        unless (dst.keys - [:app, :weight, :port, :protocol]).empty?
+        unless (dst.keys - %i[app weight port protocol]).empty?
           add_destination_error(index, 'must have only "app" and optionally "weight", "port" or "protocol".')
           next
         end
@@ -94,25 +94,25 @@ module VCAP::CloudController
         return
       end
 
-      unless weight.is_a?(Integer) && weight > 0 && weight <= 100
-        add_destination_error(destination_index, 'weight must be a positive integer between 1 and 100.')
-      end
+      return if weight.is_a?(Integer) && weight > 0 && weight <= 100
+
+      add_destination_error(destination_index, 'weight must be a positive integer between 1 and 100.')
     end
 
     def validate_protocol(destination_index, protocol)
       return unless protocol
 
-      unless protocol.is_a?(String) && RouteMappingModel::VALID_PROTOCOLS.include?(protocol)
-        add_destination_error(destination_index, "protocol must be 'http1', 'http2' or 'tcp'.")
-      end
+      return if protocol.is_a?(String) && RouteMappingModel::VALID_PROTOCOLS.include?(protocol)
+
+      add_destination_error(destination_index, "protocol must be 'http1', 'http2' or 'tcp'.")
     end
 
     def validate_port(destination_index, port)
       return unless port
 
-      unless port.is_a?(Integer) && port >= 1024 && port <= 65535
-        add_destination_error(destination_index, 'port must be a positive integer between 1024 and 65535 inclusive.')
-      end
+      return if port.is_a?(Integer) && port >= 1024 && port <= 65_535
+
+      add_destination_error(destination_index, 'port must be a positive integer between 1024 and 65535 inclusive.')
     end
 
     def validate_weights(destinations)
@@ -125,9 +125,9 @@ module VCAP::CloudController
         return
       end
 
-      if weights.sum != 100
-        errors.add(:destinations, 'must have weights that sum to 100.')
-      end
+      return unless weights.sum != 100
+
+      errors.add(:destinations, 'must have weights that sum to 100.')
     end
 
     def validate_app(destination_index, app)
@@ -136,9 +136,9 @@ module VCAP::CloudController
         return
       end
 
-      unless valid_process?(app[:process])
-        add_destination_error(destination_index, 'process must have the structure {"type": "process_type"}')
-      end
+      return if valid_process?(app[:process])
+
+      add_destination_error(destination_index, 'process must have the structure {"type": "process_type"}')
     end
 
     def valid_process?(process)

@@ -6,17 +6,17 @@ module VCAP::CloudController
       class JobPresenter < BasePresenter
         def to_hash
           {
-            guid:       job.guid,
+            guid: job.guid,
             created_at: job.created_at,
             updated_at: job.updated_at,
 
-            operation:  job.operation,
-            state:      job.state,
+            operation: job.operation,
+            state: job.state,
 
-            errors:     build_errors,
-            warnings:   build_warnings,
+            errors: build_errors,
+            warnings: build_warnings,
 
-            links:      build_links,
+            links: build_links
           }
         end
 

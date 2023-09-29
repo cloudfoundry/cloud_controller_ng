@@ -5,7 +5,7 @@ module VCAP::CloudController
     def delete(isolation_segment_model)
       if isolation_segment_model.is_shared_segment?
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-          "Cannot delete the #{isolation_segment_model.name} Isolation Segment")
+                                                                 "Cannot delete the #{isolation_segment_model.name} Isolation Segment")
       end
 
       association_not_empty! unless isolation_segment_model.spaces.empty? && isolation_segment_model.organizations.empty?

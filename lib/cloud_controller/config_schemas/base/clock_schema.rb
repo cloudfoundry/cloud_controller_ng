@@ -13,7 +13,7 @@ module VCAP::CloudController
             external_protocol: String,
             internal_service_hostname: String,
             readiness_port: {
-              clock: Integer,
+              clock: Integer
             },
             app_usage_events: {
               cutoff_age_in_days: Integer
@@ -24,7 +24,7 @@ module VCAP::CloudController
             failed_jobs: {
               cutoff_age_in_days: Integer,
               optional(:max_number_of_failed_delayed_jobs) => Integer,
-              frequency_in_seconds: Integer,
+              frequency_in_seconds: Integer
             },
             completed_tasks: {
               cutoff_age_in_days: Integer
@@ -34,13 +34,13 @@ module VCAP::CloudController
             uaa: {
               internal_url: String,
               optional(:ca_file) => String,
-              client_timeout: Integer,
+              client_timeout: Integer
             },
 
             logging: {
               level: String, # debug, info, etc.
               file: String, # Log file to use
-              syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
+              syslog: String # Name to associate with syslog messages (should start with 'vcap.')
             },
 
             pid_filename: String, # Pid filename to use
@@ -56,11 +56,11 @@ module VCAP::CloudController
               log_db_queries: bool,
               ssl_verify_hostname: bool,
               connection_validation_timeout: Integer,
-              optional(:ca_cert_path) => String,
+              optional(:ca_cert_path) => String
             },
 
             staging: {
-              timeout_in_seconds: Integer,
+              timeout_in_seconds: Integer
             },
 
             index: Integer, # Component index (cc-0, cc-1, etc)
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
             nginx: {
               use_nginx: bool,
-              instance_socket: String,
+              instance_socket: String
             },
 
             resource_pool: {
@@ -119,12 +119,12 @@ module VCAP::CloudController
             optional(:uaa_client_scope) => String,
 
             optional(:loggregator) => {
-              router: String,
+              router: String
             },
 
             optional(:fluent) => {
               optional(:host) => String,
-              optional(:port) => Integer,
+              optional(:port) => Integer
             },
 
             skip_cert_verify: bool,
@@ -132,12 +132,12 @@ module VCAP::CloudController
             optional(:routing_api) => {
               url: String,
               routing_client_name: String,
-              routing_client_secret: String,
+              routing_client_secret: String
             },
 
             optional(:credhub_api) => {
               internal_url: String,
-              ca_cert_path: String,
+              ca_cert_path: String
             },
 
             credential_references: {
@@ -157,11 +157,11 @@ module VCAP::CloudController
 
             pending_builds: {
               expiration_in_seconds: Integer,
-              frequency_in_seconds: Integer,
+              frequency_in_seconds: Integer
             },
             pending_droplets: {
               expiration_in_seconds: Integer,
-              frequency_in_seconds: Integer,
+              frequency_in_seconds: Integer
             },
 
             service_usage_events: { cutoff_age_in_days: Integer },
@@ -172,12 +172,12 @@ module VCAP::CloudController
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },
-              optional(:priorities) => Hash,
+              optional(:priorities) => Hash
             },
 
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
-            custom_metric_tag_prefix_list: Array,
+            custom_metric_tag_prefix_list: Array
           }
         end
         # rubocop:enable Metrics/BlockLength

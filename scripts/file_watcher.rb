@@ -22,7 +22,7 @@ end
 listener = Listen.to('app', 'lib', 'spec', only: /.*\.rb$/) do |modified, added, removed|
   files = (modified + added + removed)
   spec_files = gather_spec_files(files)
-  system("bundle exec rspec --drb #{spec_files.join(' ')}") if !spec_files.empty?
+  system("bundle exec rspec --drb #{spec_files.join(' ')}") unless spec_files.empty?
 end
 listener.start # not blocking
 sleep

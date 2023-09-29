@@ -24,11 +24,9 @@ module VCAP::CloudController
       end
 
       it 'does not add a job' do
-        expect {
+        expect do
           post bad_droplet_url, upload_req
-        }.not_to change {
-          Delayed::Job.count
-        }
+        end.not_to(change(Delayed::Job, :count))
       end
 
       context 'when the upload path is nil' do
@@ -37,11 +35,9 @@ module VCAP::CloudController
         end
 
         it 'does not add a job' do
-          expect {
+          expect do
             post url, upload_req
-          }.not_to change {
-            Delayed::Job.count
-          }
+          end.not_to(change(Delayed::Job, :count))
         end
       end
     end
@@ -49,9 +45,9 @@ module VCAP::CloudController
 
   RSpec.shared_examples 'a Build to Droplet stager' do
     it 'schedules a job to upload the droplet to the blobstore' do
-      expect {
+      expect do
         post url, upload_req
-      }.to change {
+      end.to change {
         [Delayed::Job.count, DropletModel.count]
       }.by([1, 1])
 
@@ -70,11 +66,9 @@ module VCAP::CloudController
     end
 
     it 'creates an audit.app.droplet.create event' do
-      expect {
+      expect do
         post url, upload_req
-      }.to change {
-        Event.count
-      }.by(1)
+      end.to change(Event, :count).by(1)
 
       event = Event.last
       droplet = DropletModel.last
@@ -90,19 +84,17 @@ module VCAP::CloudController
       expect(event.space_guid).to eq(process.space_guid)
       expect(event.organization_guid).to eq(process.space.organization.guid)
       expect(event.metadata).to eq({
-        'droplet_guid' => droplet.guid,
-        'package_guid' => package.guid,
-      })
+                                     'droplet_guid' => droplet.guid,
+                                     'package_guid' => package.guid
+                                   })
     end
   end
 
   RSpec.shared_examples 'a legacy Droplet stager to support rolling deploys' do
     it 'schedules a job to upload the existing droplet to the blobstore' do
-      expect {
+      expect do
         post url, upload_req
-      }.to change {
-        Delayed::Job.count
-      }.by(1)
+      end.to change(Delayed::Job, :count).by(1)
 
       expect(last_response.status).to eq 200
 
@@ -134,39 +126,39 @@ module VCAP::CloudController
       {
         external_host: cc_addr,
         tls_port: tls_port,
-        staging:       {
+        staging: {
           auth: {
-            user:     staging_user,
+            user: staging_user,
             password: staging_password
           }
         },
-        nginx:         { use_nginx: true },
+        nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'cc-resources',
-          fog_connection:         {
-            provider:   'Local',
+          fog_connection: {
+            provider: 'Local',
             local_root: Dir.mktmpdir('resourse_pool', workspace)
           }
         },
-        packages:      {
-          fog_connection:            {
-            provider:   'Local',
+        packages: {
+          fog_connection: {
+            provider: 'Local',
             local_root: Dir.mktmpdir('packages', workspace)
           },
-          app_package_directory_key: 'cc-packages',
+          app_package_directory_key: 'cc-packages'
         },
-        droplets:      {
+        droplets: {
           droplet_directory_key: 'cc-droplets',
-          fog_connection:        {
-            provider:   'Local',
+          fog_connection: {
+            provider: 'Local',
             local_root: Dir.mktmpdir('droplets', workspace)
           }
         },
-        directories:   {
+        directories: {
           tmpdir: Dir.mktmpdir('tmpdir', workspace)
         },
-        index:         99,
-        name:          'api_z1'
+        index: 99,
+        name: 'api_z1'
       }
     end
     let(:staging_config) { original_staging_config }
@@ -188,7 +180,7 @@ module VCAP::CloudController
     after { FileUtils.rm_rf(workspace) }
 
     shared_examples 'staging bad auth' do |verb, path|
-      it 'should return 401 for bad credentials' do
+      it 'returns 401 for bad credentials' do
         authorize 'hacker', 'sw0rdf1sh'
         send(verb, "/staging/#{path}/#{process.guid}")
         expect(last_response.status).to eq(401)
@@ -211,6 +203,7 @@ module VCAP::CloudController
     describe 'GET /staging/packages/:guid' do
       let(:package_without_bits) { PackageModel.make }
       let(:package) { PackageModel.make }
+
       before { authorize(staging_user, staging_password) }
 
       def create_test_blob
@@ -278,14 +271,15 @@ module VCAP::CloudController
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: process) }
-        let(:build) { BuildModel.make(
-          package:               package,
-          app:                   process,
-          created_by_user_guid:  '1234',
-          created_by_user_email: 'joe@joe.com',
-          created_by_user_name:  'briggs',
-        )
-        }
+        let(:build) do
+          BuildModel.make(
+            package: package,
+            app: process,
+            created_by_user_guid: '1234',
+            created_by_user_email: 'joe@joe.com',
+            created_by_user_name: 'briggs'
+          )
+        end
         let(:droplet) { nil }
 
         let(:upload_req) do
@@ -349,11 +343,9 @@ module VCAP::CloudController
         end
 
         it 'stores file path in handle.buildpack_cache_upload_path' do
-          expect {
+          expect do
             post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
+          end.to change(Delayed::Job, :count).by(1)
 
           job = Delayed::Job.last
           expect(job.handler).to include(app_model.guid)
@@ -390,11 +382,9 @@ module VCAP::CloudController
           end
 
           it 'does not create an upload job' do
-            expect {
+            expect do
               post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req
-            }.not_to change {
-              Delayed::Job.count
-            }
+            end.not_to(change(Delayed::Job, :count))
           end
         end
       end
@@ -437,7 +427,7 @@ module VCAP::CloudController
             original_staging_config.merge({ nginx: { use_nginx: false } })
           end
 
-          it 'should return the buildpack cache' do
+          it 'returns the buildpack cache' do
             buildpack_cache_blobstore.cp_to_blobstore(
               buildpack_cache.path,
               "#{app_model.guid}/#{stack}"
@@ -451,14 +441,14 @@ module VCAP::CloudController
       end
 
       context 'with a valid buildpack cache but no file' do
-        it 'should return an error' do
+        it 'returns an error' do
           make_request
           expect(last_response.status).to eq(400)
         end
       end
 
       context 'with an invalid buildpack cache' do
-        it 'should return an error' do
+        it 'returns an error' do
           make_request('bad_guid')
           expect(last_response.status).to eq(404)
         end
@@ -467,6 +457,7 @@ module VCAP::CloudController
 
     describe 'GET /staging/v3/droplets/:guid/download' do
       let(:droplet) { DropletModel.make }
+
       before { authorize(staging_user, staging_password) }
 
       def upload_droplet

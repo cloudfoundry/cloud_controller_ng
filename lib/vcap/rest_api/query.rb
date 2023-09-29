@@ -58,7 +58,7 @@ module VCAP::RestAPI
                                                 dataset,
                                                 queryable_attributes,
                                                 query_params)
-      self.new(model, dataset, queryable_attributes, query_params).filtered_dataset
+      new(model, dataset, queryable_attributes, query_params).filtered_dataset
     end
 
     private
@@ -90,9 +90,7 @@ module VCAP::RestAPI
 
         comparison = '=' if comparison == ':'
 
-        unless queryable_attributes.include?(key)
-          raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', key)
-        end
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', key) unless queryable_attributes.include?(key)
 
         [key.to_sym, comparison, value]
       end
@@ -100,21 +98,19 @@ module VCAP::RestAPI
 
     def query_filter(key, comparison, val)
       foreign_key_association = foreign_key_association(key)
-      values = (comparison == ' IN ') ? val.split(',') : [val]
+      values = comparison == ' IN ' ? val.split(',') : [val]
 
       return clean_up_foreign_key(key, values, foreign_key_association) if foreign_key_association
 
       col_type = column_type(key)
 
-      if col_type == :datetime
-        return query_datetime_values(key, values, comparison)
+      return query_datetime_values(key, values, comparison) if col_type == :datetime
+
+      values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
+      if values.empty?
+        { key => nil }
       else
-        values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
-        if values.empty?
-          { key => nil }
-        else
-          Sequel.lit("#{key} #{comparison} ?", values)
-        end
+        Sequel.lit("#{key} #{comparison} ?", values)
       end
     end
 
@@ -137,9 +133,7 @@ module VCAP::RestAPI
       #                          A                       A* A+1
       #
       values = values.map { |value| value.empty? ? nil : Time.parse(value).utc }.compact
-      if values.empty?
-        return { key => nil }
-      end
+      return { key => nil } if values.empty?
 
       value = values.first
       if ['<', '>='].include?(comparison)
@@ -195,7 +189,7 @@ module VCAP::RestAPI
     # Sequel uses tinyint(1) to store booleans in Mysql.
     # Mysql does not support using 't'/'f' for querying.
     def clean_up_boolean(_, q_val)
-      %w(t true).include? q_val
+      %w[t true].include? q_val
     end
 
     def clean_up_integer(q_val)

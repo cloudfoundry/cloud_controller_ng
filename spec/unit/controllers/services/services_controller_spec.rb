@@ -23,20 +23,20 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(ServicesController).to have_creatable_attributes({
-          service_plan_guids: { type: '[string]' }
-        })
+                                                                  service_plan_guids: { type: '[string]' }
+                                                                })
       end
 
       it do
         expect(ServicesController).to have_updatable_attributes({
-          service_plan_guids: { type: '[string]' }
-        })
+                                                                  service_plan_guids: { type: '[string]' }
+                                                                })
       end
     end
 
     describe 'Associations' do
       it do
-        expect(ServicesController).to have_nested_routes({ service_plans: [:get, :put, :delete] })
+        expect(ServicesController).to have_nested_routes({ service_plans: %i[get put delete] })
       end
     end
 
@@ -105,9 +105,9 @@ module VCAP::CloudController
 
     describe 'GET /v2/services/:guid/service_plans' do
       let!(:organization) { Organization.make }
-      let!(:space) { Space.make(organization: organization) }
+      let!(:space) { Space.make(organization:) }
       let!(:user) { User.make }
-      let!(:broker) { ServiceBroker.make(space: space) }
+      let!(:broker) { ServiceBroker.make(space:) }
       let!(:service) { Service.make(service_broker: broker) }
       let!(:service_plan) { ServicePlan.make(service: service, public: false) }
 
@@ -136,7 +136,7 @@ module VCAP::CloudController
     describe 'GET /v2/services/:guid' do
       let(:broker_name) { 'broker-1' }
       let!(:organization) { Organization.make }
-      let!(:space) { Space.make(organization: organization) }
+      let!(:space) { Space.make(organization:) }
       let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
       let!(:service) { Service.make(service_broker: broker) }
@@ -246,10 +246,10 @@ module VCAP::CloudController
 
       context 'with private brokers' do
         it 'returns plans visible in any space they are a member of' do
-          space = Space.make(organization: organization)
-          private_broker = ServiceBroker.make(space: space)
+          space = Space.make(organization:)
+          private_broker = ServiceBroker.make(space:)
           service = Service.make(service_broker: private_broker, active: true)
-          ServicePlan.make(service: service)
+          ServicePlan.make(service:)
           space.add_developer(user)
 
           get '/v2/services'
@@ -285,6 +285,7 @@ module VCAP::CloudController
           before do
             VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
           end
+
           it 'continues to raise an InvalidAuthToken error' do
             set_current_user(User.make, token: :invalid_token)
             get '/v2/services'
@@ -322,7 +323,7 @@ module VCAP::CloudController
         it 'does not allow the unauthed user to use inline-relations-depth' do
           set_current_user(nil)
           get '/v2/services?inline-relations-depth=1'
-          services = decoded_response.fetch('resources').map { |service| service['entity'] }
+          services = decoded_response.fetch('resources').pluck('entity')
           services.each do |service|
             expect(service['service_plans']).to be_nil
           end
@@ -332,20 +333,21 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/services/:guid' do
       let!(:service) { Service.make(:v2) }
-      let!(:service_plan) { ServicePlan.make(service: service) }
-      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
-      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
-      let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+      let!(:service_plan) { ServicePlan.make(service:) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+      let!(:service_binding) { ServiceBinding.make(service_instance:) }
+      let!(:service_key) { ServiceKey.make(service_instance:) }
       let(:email) { 'admin@example.com' }
       let(:user) { User.make }
 
       before { set_current_user(user, { email: email, admin: true }) }
+
       context 'when no purge parameter is given' do
         it 'gives error info to user' do
           delete "/v2/services/#{service.guid}", '{}', admin_headers
 
           expect(last_response).to have_status_code 400
-          expect(last_response.body).to match /AssociationNotEmpty/
+          expect(last_response.body).to match(/AssociationNotEmpty/)
         end
       end
 
@@ -370,10 +372,10 @@ module VCAP::CloudController
           expect(event.space_guid).to be_empty
           expect(event.organization_guid).to be_empty
           expect(event.metadata).to include({
-            'request' => {
-              'purge' => true,
-            }
-          })
+                                              'request' => {
+                                                'purge' => true
+                                              }
+                                            })
         end
 
         it 'requires admin headers' do

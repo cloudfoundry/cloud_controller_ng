@@ -12,7 +12,7 @@ module VCAP::CloudController
     end
 
     def update(guid, params)
-      broker = ServiceBroker.find(guid: guid)
+      broker = ServiceBroker.find(guid:)
       return nil unless broker
 
       ServiceBroker.db.transaction do
@@ -26,15 +26,11 @@ module VCAP::CloudController
           @volume_services_enabled
         )
 
-        unless registration.update
-          raise get_exception_from_errors(registration)
-        end
+        raise get_exception_from_errors(registration) unless registration.update
 
         @services_event_repository.record_broker_event(:update, old_broker, params)
 
-        if !registration.warnings.empty?
-          registration.warnings.each { |warning| @warning_observer.add_warning(warning) }
-        end
+        registration.warnings.each { |warning| @warning_observer.add_warning(warning) } unless registration.warnings.empty?
       end
 
       broker

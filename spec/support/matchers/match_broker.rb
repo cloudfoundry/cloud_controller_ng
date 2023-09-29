@@ -39,7 +39,7 @@ RSpec::Matchers.define :match_broker do |expected|
     problems.empty?
   end
 
-  failure_message do |actual_event|
+  failure_message do |_actual_event|
     "Expect brokers to match, but it did not. Problems were:\n" + problems.join("\n")
   end
 end

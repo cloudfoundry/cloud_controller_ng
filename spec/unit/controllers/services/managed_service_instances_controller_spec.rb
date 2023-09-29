@@ -5,14 +5,14 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstancesController, :services do
     describe 'GET', '/v2/managed_service_instances' do
-      it 'should be deprecated' do
+      it 'is deprecated' do
         get '/v2/managed_service_instances'
         expect(last_response).to be_a_deprecated_response
       end
     end
 
     describe 'GET', '/v2/managed_service_instances/:guid' do
-      it 'should be deprecated' do
+      it 'is deprecated' do
         get '/v2/managed_service_instances/abcd'
         expect(last_response).to be_a_deprecated_response
       end

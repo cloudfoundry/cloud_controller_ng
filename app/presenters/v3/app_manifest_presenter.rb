@@ -19,7 +19,7 @@ module VCAP::CloudController
           AppManifestPresenters::RoutePropertiesPresenter.new,
           AppManifestPresenters::MetadataPresenter.new,
           AppManifestPresenters::ProcessPropertiesPresenter.new,
-          AppManifestPresenters::SidecarPropertiesPresenter.new,
+          AppManifestPresenters::SidecarPropertiesPresenter.new
         ].freeze
 
         def initialize(app, service_bindings, route_mappings)
@@ -32,7 +32,7 @@ module VCAP::CloudController
           {
             applications: [
               PROPERTY_PRESENTERS.each_with_object({}) do |presenter, acc|
-                acc.merge!(presenter.to_hash(app: app, service_bindings: service_bindings, route_mappings: route_mappings))
+                acc.merge!(presenter.to_hash(app:, service_bindings:, route_mappings:))
               end.compact
             ]
           }

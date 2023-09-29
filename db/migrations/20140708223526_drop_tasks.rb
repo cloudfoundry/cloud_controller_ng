@@ -16,8 +16,6 @@ Sequel.migration do
       foreign_key [:app_id], :apps, name: :fk_tasks_app_id
     end
 
-    if self.class.name.match?(/mysql/i)
-      run 'ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT'
-    end
+    run 'ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT' if self.class.name.match?(/mysql/i)
   end
 end

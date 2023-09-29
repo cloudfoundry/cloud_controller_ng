@@ -14,7 +14,7 @@ module VCAP::CloudController
         it 'returns an error' do
           message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include("can't be blank")
         end
       end
@@ -36,45 +36,45 @@ module VCAP::CloudController
       end
 
       context 'when unexpected keys are requested' do
-        let(:symbolized_body) {
+        let(:symbolized_body) do
           {
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
         end
 
         context 'when there are unexpected keys inside data hash' do
-          let(:symbolized_body) {
+          let(:symbolized_body) do
             {
-              data: { blah: 'awesome-guid' },
+              data: { blah: 'awesome-guid' }
             }
-          }
+          end
 
           it 'is not valid' do
             message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors[:data]).to include("can only accept key 'guid'")
           end
         end
 
         context 'when there are multiple keys inside data hash' do
-          let(:symbolized_body) {
+          let(:symbolized_body) do
             {
-              data: { blah: 'awesome-guid', glob: 'super-guid' },
+              data: { blah: 'awesome-guid', glob: 'super-guid' }
             }
-          }
+          end
 
           it 'is not valid' do
             message = OrgDefaultIsoSegUpdateMessage.new(symbolized_body)
 
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors[:data]).to include('can only accept one key')
           end
         end

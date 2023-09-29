@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class OrganizationAccess < BaseAccess
-    def create?(org, params=nil)
+    def create?(_org, _params=nil)
       return true if context.queryer.can_write_globally?
 
       FeatureFlag.enabled?(:user_org_creation)
@@ -11,9 +11,7 @@ module VCAP::CloudController
       return false unless org.active?
       return false unless context.queryer.can_write_to_active_org?(org.id)
 
-      if params.present?
-        return false if params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s)
-      end
+      return false if params.present? && (params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s))
 
       true
     end
@@ -30,18 +28,18 @@ module VCAP::CloudController
       user_acting_on_themselves || read_for_update?(org, params)
     end
 
-    def update?(org, params=nil)
+    def update?(org, _params=nil)
       return true if context.queryer.can_write_globally?
       return false unless org.active?
 
       context.queryer.can_write_to_active_org?(org.id)
     end
 
-    def delete?(object)
+    def delete?(_object)
       context.queryer.can_write_globally?
     end
 
-    def index?(_, params=nil)
+    def index?(_, _params=nil)
       true
     end
 
@@ -57,12 +55,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)
@@ -81,7 +79,7 @@ module VCAP::CloudController
     private
 
     def user_acting_on_themselves?(options)
-      [:auditors, :billing_managers, :managers, :users].include?(options[:relation]) && context.user&.guid == options[:related_guid]
+      %i[auditors billing_managers managers users].include?(options[:relation]) && context.user&.guid == options[:related_guid]
     end
 
     def validate!(org, params)
@@ -103,17 +101,13 @@ module VCAP::CloudController
     end
 
     def validate_remove_user_by_guid!(org, user_guid)
-      if org.managers_dataset.count == 1 && org.managers.first.guid == user_guid
-        raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg') if org.managers_dataset.count == 1 && org.managers.first.guid == user_guid
 
-      if org.billing_managers_dataset.count == 1 && org.billing_managers.first.guid == user_guid
-        raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg') if org.billing_managers_dataset.count == 1 && org.billing_managers.first.guid == user_guid
 
-      if org.users_dataset.count == 1 && org.users.first.guid == user_guid && org.managers_dataset.count <= 1 && org.billing_managers_dataset.count <= 1
-        raise CloudController::Errors::ApiError.new_from_details('LastUserInOrg')
-      end
+      return unless org.users_dataset.count == 1 && org.users.first.guid == user_guid && org.managers_dataset.count <= 1 && org.billing_managers_dataset.count <= 1
+
+      raise CloudController::Errors::ApiError.new_from_details('LastUserInOrg')
     end
   end
 end

@@ -7,19 +7,19 @@ module VCAP::CloudController
     let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: object) }
     let(:object) { VCAP::CloudController::Service.make }
 
-    it_behaves_like :admin_full_access
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin full access'
+    it_behaves_like 'admin read only access'
 
     context 'for a logged in user' do
       before { set_current_user(user) }
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
     end
 
     context 'any user using client without cloud_controller.read' do
       before { set_current_user(user, scopes: []) }
 
-      it_behaves_like :no_access
+      it_behaves_like 'no access'
     end
 
     context 'space developer' do
@@ -31,7 +31,7 @@ module VCAP::CloudController
         space.add_developer user
       end
 
-      it_behaves_like :read_only_access
+      it_behaves_like 'read only access'
 
       context 'when the broker for the service is space scoped' do
         before do

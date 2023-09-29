@@ -18,19 +18,19 @@ module VCAP::CloudController
       @services = []
 
       @process = ProcessModelFactory.make(
-        space:      @space,
+        space: @space,
         production: false,
-        instances:  1,
-        memory:     @free_mem_size,
-        state:      'STARTED',
+        instances: 1,
+        memory: @free_mem_size,
+        state: 'STARTED',
         environment_json: @environment_json
       )
 
       @num_services.times do
         instance                            = ManagedServiceInstance.make(space: @space)
         instance.service_instance_operation = ServiceInstanceOperation.make(
-          type:        'create',
-          state:       'in progress',
+          type: 'create',
+          state: 'in progress',
           description: 'description goes here'
         )
         @services << instance
@@ -57,7 +57,7 @@ module VCAP::CloudController
           get "/v2/apps/#{@process.app.guid}/summary"
         end
 
-        it 'should contain the basic app attributes' do
+        it 'contains the basic app attributes' do
           expect(last_response.status).to eq(200)
           expect(decoded_response['guid']).to eq(@process.app.guid)
           expect(decoded_response['environment_json']).to eq({ 'HELLO' => 'WORLD' })
@@ -67,83 +67,82 @@ module VCAP::CloudController
           end
         end
 
-        it 'should return the app routes' do
+        it 'returns the app routes' do
           expect(decoded_response['routes']).to eq([{
-            'guid'   => @route1.guid,
-            'host'   => @route1.host,
-            'port'   => @route1.port,
-            'path'   => @route1.path,
-            'domain' => {
-              'guid' => @route1.domain.guid,
-              'name' => @route1.domain.name
-            }
-          }, {
-            'guid'   => @route2.guid,
-            'host'   => @route2.host,
-            'port'   => @route2.port,
-            'path'   => @route2.path,
-            'domain' => {
-              'guid' => @route2.domain.guid,
-              'name' => @route2.domain.name }
-          }])
+                                                     'guid' => @route1.guid,
+                                                     'host' => @route1.host,
+                                                     'port' => @route1.port,
+                                                     'path' => @route1.path,
+                                                     'domain' => {
+                                                       'guid' => @route1.domain.guid,
+                                                       'name' => @route1.domain.name
+                                                     }
+                                                   }, {
+                                                     'guid' => @route2.guid,
+                                                     'host' => @route2.host,
+                                                     'port' => @route2.port,
+                                                     'path' => @route2.path,
+                                                     'domain' => {
+                                                       'guid' => @route2.domain.guid,
+                                                       'name' => @route2.domain.name
+                                                     }
+                                                   }])
         end
 
-        it 'should contain the running instances' do
+        it 'contains the running instances' do
           expect(decoded_response['running_instances']).to eq(@process.instances)
         end
 
-        it 'should contain list of both private domains and shared domains' do
+        it 'contains list of both private domains and shared domains' do
           domains = @process.space.organization.private_domains
-          expect(domains.count > 0).to eq(true)
+          expect(domains.count > 0).to be(true)
 
           private_domains = domains.collect do |domain|
-            { 'guid'                     => domain.guid,
-              'name'                     => domain.name,
+            { 'guid' => domain.guid,
+              'name' => domain.name,
               'owning_organization_guid' =>
-                domain.owning_organization.guid
-            }
+                domain.owning_organization.guid }
           end
 
           shared_domains = SharedDomain.all.collect do |domain|
-            { 'guid'              => domain.guid,
-              'name'              => domain.name,
+            { 'guid' => domain.guid,
+              'name' => domain.name,
               'internal' => domain.internal,
               'router_group_guid' => domain.router_group_guid,
-              'router_group_type' => domain.router_group_type,
-            }
+              'router_group_type' => domain.router_group_type }
           end
 
           expect(decoded_response['available_domains']).to match_array(private_domains + shared_domains)
         end
 
-        it 'should return the correct info for services' do
+        it 'returns the correct info for services' do
           expect(decoded_response['services'].size).to eq(@num_services)
           svc_resp = decoded_response['services'][0]
           svc      = @services.find { |s| s.guid == svc_resp['guid'] }
 
           expect(svc_resp).to include({
-            'guid'            => svc.guid,
-            'name'            => svc.name,
-            'bound_app_count' => 1,
-            'dashboard_url'   => svc.dashboard_url,
-            'service_plan'    => {
-              'guid'    => svc.service_plan.guid,
-              'name'    => svc.service_plan.name,
-              'maintenance_info' => {},
-              'service' => {
-                'guid'     => svc.service_plan.service.guid,
-                'label'    => svc.service_plan.service.label,
-                'provider' => svc.service_plan.service.provider,
-                'version'  => svc.service_plan.service.version,
-              }
-            }
-          })
+                                        'guid' => svc.guid,
+                                        'name' => svc.name,
+                                        'bound_app_count' => 1,
+                                        'dashboard_url' => svc.dashboard_url,
+                                        'service_plan' => {
+                                          'guid' => svc.service_plan.guid,
+                                          'name' => svc.service_plan.name,
+                                          'maintenance_info' => {},
+                                          'service' => {
+                                            'guid' => svc.service_plan.service.guid,
+                                            'label' => svc.service_plan.service.label,
+                                            'provider' => svc.service_plan.service.provider,
+                                            'version' => svc.service_plan.service.version
+                                          }
+                                        }
+                                      })
 
           expect(svc_resp['last_operation']).to include({
-            'type'        => 'create',
-            'state'       => 'in progress',
-            'description' => 'description goes here',
-          })
+                                                          'type' => 'create',
+                                                          'state' => 'in progress',
+                                                          'description' => 'description goes here'
+                                                        })
 
           expect(svc_resp['last_operation']['updated_at']).to be
         end

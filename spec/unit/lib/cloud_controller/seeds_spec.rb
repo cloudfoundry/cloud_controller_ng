@@ -18,9 +18,9 @@ module VCAP::CloudController
       end
 
       it 'creates the shared isolation segment' do
-        expect {
+        expect do
           Seeds.create_seed_shared_isolation_segment(config)
-        }.to change { IsolationSegmentModel.count }.from(0).to(1)
+        end.to change(IsolationSegmentModel, :count).from(0).to(1)
 
         shared_isolation_segment_model = IsolationSegmentModel.first
         expect(shared_isolation_segment_model.name).to eq('shared')
@@ -34,16 +34,16 @@ module VCAP::CloudController
 
         context 'and the name does not change' do
           it 'does not update the isolation segment' do
-            expect_any_instance_of(IsolationSegmentModel).to_not receive(:update)
+            expect_any_instance_of(IsolationSegmentModel).not_to receive(:update)
             Seeds.create_seed_shared_isolation_segment(config)
           end
         end
 
         context 'and the name changes' do
           it 'sets the name of the shared segment to the new value' do
-            expect {
+            expect do
               Seeds.create_seed_shared_isolation_segment(Config.new({ shared_isolation_segment_name: 'original-name' }))
-            }.to_not change { IsolationSegmentModel.count }
+            end.not_to(change(IsolationSegmentModel, :count))
 
             shared_isolation_segment_model = IsolationSegmentModel.first
             expect(shared_isolation_segment_model.name).to eq('original-name')
@@ -56,9 +56,9 @@ module VCAP::CloudController
             # this means that it will fail our deployment. To correct this issue we could
             # redeploy with what the old 'shared' isolation segment name
             it 'raises some kind of error TBD' do
-              expect {
+              expect do
                 Seeds.create_seed_shared_isolation_segment(Config.new({ shared_isolation_segment_name: isolation_segment_model.name }))
-              }.to raise_error(Sequel::ValidationFailed, /must be unique/)
+              end.to raise_error(Sequel::ValidationFailed, /must be unique/)
             end
           end
         end
@@ -68,24 +68,24 @@ module VCAP::CloudController
     describe '.create_seed_quota_definitions' do
       let(:config) do
         Config.new({
-          quota_definitions: {
-            'small' => {
-              non_basic_services_allowed: false,
-              total_routes: 10,
-              total_services: 10,
-              memory_limit: 1024,
-              total_reserved_route_ports: 10,
-            },
-            'default' => {
-              non_basic_services_allowed: true,
-              total_routes: 1000,
-              total_services: 20,
-              memory_limit: 1_024_000,
-              total_reserved_route_ports: 5,
-            },
-          },
-          default_quota_definition: 'default',
-        })
+                     quota_definitions: {
+                       'small' => {
+                         non_basic_services_allowed: false,
+                         total_routes: 10,
+                         total_services: 10,
+                         memory_limit: 1024,
+                         total_reserved_route_ports: 10
+                       },
+                       'default' => {
+                         non_basic_services_allowed: true,
+                         total_routes: 1000,
+                         total_services: 20,
+                         memory_limit: 1_024_000,
+                         total_reserved_route_ports: 5
+                       }
+                     },
+                     default_quota_definition: 'default'
+                   })
       end
 
       before do
@@ -95,19 +95,19 @@ module VCAP::CloudController
 
       context 'when there are no quota definitions' do
         it 'makes them all' do
-          expect {
+          expect do
             Seeds.create_seed_quota_definitions(config)
-          }.to change { QuotaDefinition.count }.from(0).to(2)
+          end.to change(QuotaDefinition, :count).from(0).to(2)
 
           small_quota = QuotaDefinition[name: 'small']
-          expect(small_quota.non_basic_services_allowed).to eq(false)
+          expect(small_quota.non_basic_services_allowed).to be(false)
           expect(small_quota.total_routes).to eq(10)
           expect(small_quota.total_services).to eq(10)
           expect(small_quota.memory_limit).to eq(1024)
           expect(small_quota.total_reserved_route_ports).to eq(10)
 
           default_quota = QuotaDefinition[name: 'default']
-          expect(default_quota.non_basic_services_allowed).to eq(true)
+          expect(default_quota.non_basic_services_allowed).to be(true)
           expect(default_quota.total_routes).to eq(1000)
           expect(default_quota.total_services).to eq(20)
           expect(default_quota.memory_limit).to eq(1_024_000)
@@ -122,19 +122,19 @@ module VCAP::CloudController
 
         context 'when the existing records exactly match the config' do
           it 'does not create duplicates' do
-            expect {
+            expect do
               Seeds.create_seed_quota_definitions(config)
-            }.not_to change { QuotaDefinition.count }
+            end.not_to(change(QuotaDefinition, :count))
 
             small_quota = QuotaDefinition[name: 'small']
-            expect(small_quota.non_basic_services_allowed).to eq(false)
+            expect(small_quota.non_basic_services_allowed).to be(false)
             expect(small_quota.total_routes).to eq(10)
             expect(small_quota.total_services).to eq(10)
             expect(small_quota.memory_limit).to eq(1024)
             expect(small_quota.total_reserved_route_ports).to eq(10)
 
             default_quota = QuotaDefinition[name: 'default']
-            expect(default_quota.non_basic_services_allowed).to eq(true)
+            expect(default_quota.non_basic_services_allowed).to be(true)
             expect(default_quota.total_routes).to eq(1000)
             expect(default_quota.total_services).to eq(20)
             expect(default_quota.memory_limit).to eq(1_024_000)
@@ -147,7 +147,7 @@ module VCAP::CloudController
             mock_logger = double
             allow(Steno).to receive(:logger).and_return(mock_logger)
             config.set(:quota_definitions,
-              config.get(:quota_definitions).deep_merge('small' => { total_routes: 2 }))
+                       config.get(:quota_definitions).deep_merge('small' => { total_routes: 2 }))
 
             expect(mock_logger).to receive(:warn).with('seeds.quota-collision', hash_including(name: 'small'))
 
@@ -163,9 +163,9 @@ module VCAP::CloudController
           config_without_org = config.clone
           config_without_org.set(:system_domain_organization, nil)
 
-          expect {
+          expect do
             Seeds.create_seed_organizations(config_without_org)
-          }.not_to change { Organization.count }
+          end.not_to(change(Organization, :count))
         end
       end
 
@@ -189,9 +189,9 @@ module VCAP::CloudController
           end
 
           it 'creates the system organization when the organization does not already exist' do
-            expect {
+            expect do
               Seeds.create_seed_organizations(config)
-            }.to change { Organization.count }.from(0).to(1)
+            end.to change(Organization, :count).from(0).to(1)
 
             org = Organization.first
             expect(org.quota_definition.name).to eq('default')
@@ -219,19 +219,19 @@ module VCAP::CloudController
     describe '.create_seed_domains' do
       let(:config) do
         Config.new({
-          app_domains: app_domains,
-          system_domain: system_domain,
-          system_domain_organization: 'the-system-org',
-          quota_definitions: {
-            'default' => {
-              non_basic_services_allowed: true,
-              total_routes: 1000,
-              total_services: 20,
-              memory_limit: 1_024_000,
-            },
-          },
-          default_quota_definition: 'default'
-        })
+                     app_domains: app_domains,
+                     system_domain: system_domain,
+                     system_domain_organization: 'the-system-org',
+                     quota_definitions: {
+                       'default' => {
+                         non_basic_services_allowed: true,
+                         total_routes: 1000,
+                         total_services: 20,
+                         memory_limit: 1_024_000
+                       }
+                     },
+                     default_quota_definition: 'default'
+                   })
       end
       let(:system_org) { Organization.find(name: 'the-system-org') }
       let(:system_domain) { 'system.example.com' }
@@ -282,7 +282,7 @@ module VCAP::CloudController
 
           it 'creates an internal shared domain' do
             Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-            expect(Domain.shared_domains.map(&:name)).to match_array(['app.some-other-domain.com', 'internal.domain.name'])
+            expect(Domain.shared_domains.map(&:name)).to contain_exactly('app.some-other-domain.com', 'internal.domain.name')
             expect(SharedDomain.first(name: 'internal.domain.name')).to be_internal
           end
         end
@@ -293,7 +293,7 @@ module VCAP::CloudController
 
           it 'adds both as shared domains' do
             Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-            expect(Domain.shared_domains.map(&:name)).to match_array(['app.example.com', 'example.com'])
+            expect(Domain.shared_domains.map(&:name)).to contain_exactly('app.example.com', 'example.com')
             expect(Domain.private_domains.map(&:name)).to eq([])
           end
         end
@@ -308,7 +308,7 @@ module VCAP::CloudController
 
           it 'that shared domain is not modified' do
             Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-            expect(Domain.shared_domains.map(&:name)).to match_array(['app.example.com', 'system.example.com'])
+            expect(Domain.shared_domains.map(&:name)).to contain_exactly('app.example.com', 'system.example.com')
             expect(Domain.private_domains.map(&:name)).to eq([])
           end
         end
@@ -318,7 +318,7 @@ module VCAP::CloudController
           let(:system_domain) { 'example.com' }
 
           before do
-            TestConfig.override(system_hostnames: ['api', 'uaa'])
+            TestConfig.override(system_hostnames: %w[api uaa])
             SharedDomain.make(name: 'example.com')
           end
 
@@ -379,6 +379,7 @@ module VCAP::CloudController
         context 'when a nonexistent router group name is specified' do
           let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'not-there' }] }
           let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+
           before do
             locator = CloudController::DependencyLocator.instance
             allow(locator).to receive(:routing_api_client).and_return(client)
@@ -386,9 +387,9 @@ module VCAP::CloudController
           end
 
           it 'raises and error' do
-            expect {
+            expect do
               Seeds.create_seed_domains(config, system_org)
-            }.to raise_error('Unknown router_group_name specified: not-there')
+            end.to raise_error('Unknown router_group_name specified: not-there')
           end
         end
 
@@ -402,9 +403,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               Seeds.create_seed_domains(config, system_org)
-            }.to raise_error(RoutingApi::RoutingApiDisabled)
+            end.to raise_error(RoutingApi::RoutingApiDisabled)
           end
         end
       end
@@ -413,23 +414,23 @@ module VCAP::CloudController
     describe '.create_seed_security_groups' do
       let(:config) do
         Config.new({
-          security_group_definitions: [
-            {
-              'name' => 'staging_default',
-              'rules' => []
-            },
-            {
-              'name' => 'running_default',
-              'rules' => []
-            },
-            {
-              'name' => 'non_default',
-              'rules' => []
-            }
-          ],
-          default_staging_security_groups: ['staging_default'],
-          default_running_security_groups: ['running_default']
-        })
+                     security_group_definitions: [
+                       {
+                         'name' => 'staging_default',
+                         'rules' => []
+                       },
+                       {
+                         'name' => 'running_default',
+                         'rules' => []
+                       },
+                       {
+                         'name' => 'non_default',
+                         'rules' => []
+                       }
+                     ],
+                     default_staging_security_groups: ['staging_default'],
+                     default_running_security_groups: ['running_default']
+                   })
       end
 
       context 'when there are no security groups configured in the system' do
@@ -438,9 +439,9 @@ module VCAP::CloudController
         end
 
         it 'creates the security groups specified and sets the correct defaults' do
-          expect {
+          expect do
             Seeds.create_seed_security_groups(config)
-          }.to change { SecurityGroup.count }.by(3)
+          end.to change(SecurityGroup, :count).by(3)
 
           staging_def = SecurityGroup.find(name: 'staging_default')
           expect(staging_def.staging_default).to be true
@@ -461,9 +462,9 @@ module VCAP::CloudController
           end
 
           it 'creates the security groups specified and sets the correct defaults' do
-            expect {
+            expect do
               Seeds.create_seed_security_groups(config)
-            }.to change { SecurityGroup.count }.by(3)
+            end.to change(SecurityGroup, :count).by(3)
 
             staging_def = SecurityGroup.find(name: 'staging_default')
             expect(staging_def.staging_default).to be true
@@ -486,9 +487,9 @@ module VCAP::CloudController
           end
 
           it 'creates the security groups specified and sets the correct defaults' do
-            expect {
+            expect do
               Seeds.create_seed_security_groups(config)
-            }.to change { SecurityGroup.count }.by(3)
+            end.to change(SecurityGroup, :count).by(3)
 
             staging_def = SecurityGroup.find(name: 'staging_default')
             expect(staging_def.staging_default).to be false
@@ -506,14 +507,14 @@ module VCAP::CloudController
 
         context 'when there are more than one default staging and running groups' do
           before do
-            config.set(:default_running_security_groups, ['running_default', 'non_default'])
-            config.set(:default_staging_security_groups, ['staging_default', 'non_default'])
+            config.set(:default_running_security_groups, %w[running_default non_default])
+            config.set(:default_staging_security_groups, %w[staging_default non_default])
           end
 
           it 'creates the security groups specified and sets the correct defaults' do
-            expect {
+            expect do
               Seeds.create_seed_security_groups(config)
-            }.to change { SecurityGroup.count }.by(3)
+            end.to change(SecurityGroup, :count).by(3)
 
             staging_def = SecurityGroup.find(name: 'staging_default')
             expect(staging_def.staging_default).to be true
@@ -535,9 +536,9 @@ module VCAP::CloudController
           end
 
           it 'does nothing' do
-            expect {
+            expect do
               Seeds.create_seed_security_groups(config)
-            }.not_to change { SecurityGroup.count }
+            end.not_to(change(SecurityGroup, :count))
           end
         end
       end
@@ -548,9 +549,9 @@ module VCAP::CloudController
         end
 
         it 'does nothing' do
-          expect {
+          expect do
             Seeds.create_seed_security_groups(config)
-          }.not_to change { SecurityGroup.count }
+          end.not_to(change(SecurityGroup, :count))
         end
       end
     end
@@ -573,17 +574,17 @@ module VCAP::CloudController
           it 'continues gracefully when running already exists' do
             allow(EnvironmentVariableGroup).to receive(:running).and_raise(Sequel::UniqueConstraintViolation.new)
 
-            expect {
+            expect do
               Seeds.create_seed_environment_variable_groups
-            }.not_to raise_error
+            end.not_to raise_error
           end
 
           it 'continues gracefully when staging already exists' do
             allow(EnvironmentVariableGroup).to receive(:staging).and_raise(Sequel::UniqueConstraintViolation.new)
 
-            expect {
+            expect do
               Seeds.create_seed_environment_variable_groups
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end
@@ -598,11 +599,14 @@ module VCAP::CloudController
           expect(Seeds.parsed_domains(app_domains)).to eq(expected_result)
         end
       end
+
       context 'when app domains is an array of hashes' do
-        let(:app_domains) { [{ 'name' => 'string1.com',
-          'router_group_name' => 'some-name' },
-                             { 'name' => 'string2.com' }]
-        }
+        let(:app_domains) do
+          [{ 'name' => 'string1.com',
+             'router_group_name' => 'some-name' },
+           { 'name' => 'string2.com' }]
+        end
+
         it 'returns in the same format' do
           expected_result = [{ 'name' => 'string1.com', 'router_group_name' => 'some-name' },
                              { 'name' => 'string2.com' }]
@@ -622,10 +626,9 @@ module VCAP::CloudController
             {
               label1.to_sym => 'secret_key1',
               label2.to_sym => 'secret_key2',
-              label3.to_sym => 'secret_key3',
+              label3.to_sym => 'secret_key3'
             },
-            current_key_label: label2,
-          }
+                                 current_key_label: label2 }
         }
       end
 
@@ -659,10 +662,9 @@ module VCAP::CloudController
                 {
                   label1.to_sym => 'new_secret_1',
                   label2.to_sym => 'new_secret_2',
-                  label3.to_sym => 'new_secret_3',
+                  label3.to_sym => 'new_secret_3'
                 },
-                current_key_label: label2,
-              }
+                                     current_key_label: label2 }
             }
           end
 
@@ -694,9 +696,9 @@ module VCAP::CloudController
         let(:config) { Config.new({}) }
 
         it 'does not break' do
-          expect {
+          expect do
             Seeds.seed_encryption_key_sentinels(config)
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
     end

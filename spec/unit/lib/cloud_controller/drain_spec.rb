@@ -13,14 +13,12 @@ module VCAP::CloudController
       end
     end
 
-    let(:pid) { 23456 }
+    let(:pid) { 23_456 }
     let(:pid_dir) { Dir.mktmpdir }
     let(:pid_path) { File.join(pid_dir, 'pidfile') }
 
     before do
-      File.open(pid_path, 'w') do |file|
-        file.write(pid)
-      end
+      File.write(pid_path, pid)
 
       # Kernel methods must be stubbed on the object instance that uses them
       allow(drain).to receive(:sleep)
@@ -44,7 +42,7 @@ module VCAP::CloudController
       it 'sleeps while it waits for the process to stop' do
         getpgid_returns = [1, 1, nil, nil]
         allow(Process).to receive(:getpgid).with(pid) { getpgid_returns.shift || raise(Errno::ESRCH) }
-        expect(drain).to receive(:sleep).exactly(2).times
+        expect(drain).to receive(:sleep).twice
 
         drain.shutdown_nginx(pid_path)
       end

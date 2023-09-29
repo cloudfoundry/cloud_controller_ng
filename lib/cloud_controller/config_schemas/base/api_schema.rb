@@ -27,7 +27,7 @@ module VCAP::CloudController
               optional(:min_cli_version) => enum(String, NilClass),
               optional(:min_recommended_cli_version) => enum(String, NilClass),
               optional(:app_ssh_host_key_fingerprint) => String,
-              optional(:custom) => Hash,
+              optional(:custom) => Hash
             },
 
             system_domain: String,
@@ -55,7 +55,7 @@ module VCAP::CloudController
               optional(:ca_file) => String,
               :client_timeout => Integer,
               optional(:symmetric_secret) => String,
-              optional(:symmetric_secret2) => String,
+              optional(:symmetric_secret2) => String
             },
 
             logging: {
@@ -64,8 +64,8 @@ module VCAP::CloudController
               syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
               optional(:anonymize_ips) => bool,
               optional(:format) => {
-                optional(:timestamp) => String,
-              },
+                optional(:timestamp) => String
+              }
             },
 
             log_audit_events: bool,
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
             directories: {
               tmpdir: String,
-              diagnostics: String,
+              diagnostics: String
             },
 
             stacks_file: String,
@@ -94,7 +94,7 @@ module VCAP::CloudController
               optional(:connection_expiration_timeout) => Integer,
               optional(:connection_expiration_random_delay) => Integer,
               optional(:ssl_verify_hostname) => bool,
-              optional(:ca_cert_path) => String,
+              optional(:ca_cert_path) => String
             },
 
             optional(:redis) => {
@@ -105,7 +105,7 @@ module VCAP::CloudController
               timeout_in_seconds: Integer,
               minimum_staging_memory_mb: Integer,
               minimum_staging_disk_mb: Integer,
-              minimum_staging_file_descriptor_limit: Integer,
+              minimum_staging_file_descriptor_limit: Integer
             },
 
             index: Integer, # Component index (cc-0, cc-1, etc)
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
             nginx: {
               use_nginx: bool,
-              instance_socket: String,
+              instance_socket: String
             },
 
             quota_definitions: Hash,
@@ -131,7 +131,7 @@ module VCAP::CloudController
                     optional('type') => Integer,
                     optional('code') => Integer,
                     optional('log') => bool,
-                    optional('description') => String,
+                    optional('description') => String
                   }
                 ]
               }
@@ -145,14 +145,14 @@ module VCAP::CloudController
               resource_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
-              fog_gcp_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             buildpacks: {
               buildpack_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
-              fog_gcp_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             packages: {
@@ -172,7 +172,7 @@ module VCAP::CloudController
               max_staged_droplets_stored: Integer,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
-              fog_gcp_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             optional(:registry_buddy) => {
@@ -208,7 +208,7 @@ module VCAP::CloudController
             optional(:credhub_api) => {
               optional(:external_url) => String,
               internal_url: String,
-              ca_cert_path: String,
+              ca_cert_path: String
             },
 
             credential_references: {
@@ -219,12 +219,12 @@ module VCAP::CloudController
               max_results_per_page: Integer,
               default_results_per_page: Integer,
               max_inline_relations_depth: Integer,
-              optional(:max_total_results) => Integer,
+              optional(:max_total_results) => Integer
             },
 
             logcache: {
               host: String,
-              port: Integer,
+              port: Integer
             },
 
             optional(:logcache_tls) => {
@@ -236,12 +236,12 @@ module VCAP::CloudController
 
             optional(:loggregator) => {
               router: String,
-              internal_url: String,
+              internal_url: String
             },
 
             optional(:fluent) => {
               optional(:host) => String,
-              optional(:port) => Integer,
+              optional(:port) => Integer
             },
 
             doppler: {
@@ -263,7 +263,7 @@ module VCAP::CloudController
             webserver: String, # thin or puma
             optional(:puma) => {
               workers: Integer,
-              max_threads: Integer,
+              max_threads: Integer
             },
 
             install_buildpacks: [
@@ -273,7 +273,7 @@ module VCAP::CloudController
                 optional('file') => String,
                 optional('enabled') => bool,
                 optional('locked') => bool,
-                optional('position') => Integer,
+                optional('position') => Integer
               }
             ],
 
@@ -283,7 +283,7 @@ module VCAP::CloudController
             optional(:routing_api) => {
               url: String,
               routing_client_name: String,
-              routing_client_secret: String,
+              routing_client_secret: String
             },
 
             route_services_enabled: bool,
@@ -293,7 +293,7 @@ module VCAP::CloudController
 
             security_event_logging: {
               enabled: bool,
-              file: String,
+              file: String
             },
 
             rate_limiter: {
@@ -302,7 +302,7 @@ module VCAP::CloudController
               global_general_limit: Integer,
               per_process_unauthenticated_limit: Integer,
               global_unauthenticated_limit: Integer,
-              reset_interval_in_minutes: Integer,
+              reset_interval_in_minutes: Integer
             },
             max_concurrent_service_broker_requests: Integer,
             shared_isolation_segment_name: String,
@@ -313,7 +313,7 @@ module VCAP::CloudController
               global_general_limit: Integer,
               per_process_admin_limit: Integer,
               global_admin_limit: Integer,
-              reset_interval_in_minutes: Integer,
+              reset_interval_in_minutes: Integer
             },
 
             allow_app_ssh_access: bool,
@@ -330,7 +330,7 @@ module VCAP::CloudController
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },
-              optional(:priorities) => Hash,
+              optional(:priorities) => Hash
             },
 
             # perm settings no longer have any effect but are preserved here
@@ -342,7 +342,7 @@ module VCAP::CloudController
               optional(:port) => Integer,
               optional(:timeout_in_milliseconds) => Integer,
               optional(:ca_cert_path) => String,
-              optional(:query_raise_on_mismatch) => bool,
+              optional(:query_raise_on_mismatch) => bool
             },
 
             optional(:copilot) => {
@@ -352,7 +352,7 @@ module VCAP::CloudController
               optional(:client_ca_file) => String,
               optional(:client_key_file) => String,
               optional(:client_chain_file) => String,
-              optional(:temporary_istio_domains) => Array,
+              optional(:temporary_istio_domains) => Array
             },
 
             max_labels_per_resource: Integer,
@@ -368,7 +368,7 @@ module VCAP::CloudController
 
             optional(:honeycomb) => {
               write_key: String,
-              dataset: String,
+              dataset: String
             },
 
             update_metric_tags_on_rename: bool

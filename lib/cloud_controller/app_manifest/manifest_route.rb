@@ -2,8 +2,8 @@ require 'addressable/uri'
 
 module VCAP::CloudController
   class ManifestRoute
-    SUPPORTED_HTTP_SCHEMES = %w{http https unspecified}.freeze
-    SUPPORTED_TCP_SCHEMES = %w{tcp unspecified}.freeze
+    SUPPORTED_HTTP_SCHEMES = %w[http https unspecified].freeze
+    SUPPORTED_TCP_SCHEMES = %w[tcp unspecified].freeze
     WILDCARD_HOST = '*'.freeze
 
     def self.parse(string)
@@ -22,9 +22,7 @@ module VCAP::CloudController
     def valid?
       return false if @attrs[:host].blank?
 
-      if @attrs[:port]
-        return SUPPORTED_TCP_SCHEMES.include?(@attrs[:scheme])
-      end
+      return SUPPORTED_TCP_SCHEMES.include?(@attrs[:scheme]) if @attrs[:port]
 
       SUPPORTED_HTTP_SCHEMES.include?(@attrs[:scheme])
     end
@@ -36,7 +34,7 @@ module VCAP::CloudController
       pairs = [
         {
           host: route_segments[0],
-          domain: route_segments[1],
+          domain: route_segments[1]
         }
       ]
 

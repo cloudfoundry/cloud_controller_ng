@@ -19,7 +19,7 @@ module VCAP::CloudController
         ::VCAP::Request.current_id = nil
       end
 
-      context '#perform' do
+      describe '#perform' do
         it 'delegates to the handler' do
           expect(logging_context_job.perform).to eq('fake-perform')
         end
@@ -63,20 +63,20 @@ module VCAP::CloudController
           it 'wraps the error in an ApiError' do
             allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
 
-            expect {
+            expect do
               logging_context_job.perform
-            }.to raise_error(CloudController::Errors::ApiError, /three retries/)
+            end.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
         end
       end
 
-      context '#max_attempts' do
+      describe '#max_attempts' do
         it 'delegates to the handler' do
           expect(logging_context_job.max_attempts).to eq(1)
         end
       end
 
-      context '#success(job)' do
+      describe '#success(job)' do
         it "sets the thread-local VCAP Request ID during execution of the wrapped job's success method" do
           expect(handler).to receive(:success) do
             expect(::VCAP::Request.current_id).to eq request_id
@@ -108,7 +108,7 @@ module VCAP::CloudController
         end
       end
 
-      context '#error(job, exception)' do
+      describe '#error(job, exception)' do
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
 
         before do
@@ -199,8 +199,8 @@ module VCAP::CloudController
 
           it 'renders the exception in V3 error format' do
             expect(YAML).to receive(:dump).with(hash_including({
-              'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
-            }))
+                                                                 'errors' => [hash_including('title' => 'CF-UnprocessableEntity', 'detail' => 'message')]
+                                                               }))
             logging_context_job.error(job, error)
           end
         end

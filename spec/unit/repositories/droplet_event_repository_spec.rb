@@ -43,8 +43,7 @@ module VCAP::CloudController
                                                                   app.guid,
                                                                   app.name,
                                                                   package.space.guid,
-                                                                  package.space.organization.guid
-                                                                 )
+                                                                  package.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.droplet.create')

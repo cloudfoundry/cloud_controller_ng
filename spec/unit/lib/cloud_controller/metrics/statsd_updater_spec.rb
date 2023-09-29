@@ -48,7 +48,7 @@ module VCAP::CloudController::Metrics
         total                   = expected_local_length + expected_generic_length
 
         pending_job_count_by_queue = {
-          cc_local:   expected_local_length,
+          cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
@@ -74,7 +74,7 @@ module VCAP::CloudController::Metrics
         total                   = expected_local_length + expected_generic_length
 
         failed_jobs_by_queue = {
-          cc_local:   expected_local_length,
+          cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
@@ -94,20 +94,20 @@ module VCAP::CloudController::Metrics
         allow(batch).to receive(:gauge)
       end
 
-      it 'should contain EventMachine data' do
+      it 'contains EventMachine data' do
         thread_info = {
-          thread_count:  5,
+          thread_count: 5,
           event_machine: {
             connection_count: 10,
-            threadqueue:      {
-              size:        19,
-              num_waiting: 2,
+            threadqueue: {
+              size: 19,
+              num_waiting: 2
             },
             resultqueue: {
-              size:        8,
-              num_waiting: 1,
-            },
-          },
+              size: 8,
+              num_waiting: 1
+            }
+          }
         }
 
         updater.update_thread_info(thread_info)
@@ -131,13 +131,13 @@ module VCAP::CloudController::Metrics
 
       it 'sends vitals to statsd' do
         vitals = {
-          uptime:         33,
-          cpu_load_avg:   0.5,
+          uptime: 33,
+          cpu_load_avg: 0.5,
           mem_used_bytes: 542,
           mem_free_bytes: 927,
-          mem_bytes:      1,
-          cpu:            2.0,
-          num_cores:      4,
+          mem_bytes: 1,
+          cpu: 2.0,
+          num_cores: 4
         }
 
         updater.update_vitals(vitals)
@@ -162,15 +162,15 @@ module VCAP::CloudController::Metrics
 
       it 'sends log counts to statsd' do
         counts = {
-          off:    1,
-          fatal:  2,
-          error:  3,
-          warn:   4,
-          info:   5,
-          debug:  6,
+          off: 1,
+          fatal: 2,
+          error: 3,
+          warn: 4,
+          info: 5,
+          debug: 6,
           debug1: 7,
           debug2: 8,
-          all:    9
+          all: 9
         }
 
         updater.update_log_counts(counts)

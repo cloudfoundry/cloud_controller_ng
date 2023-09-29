@@ -18,7 +18,7 @@ module VCAP::CloudController
     query_parameters :name, :space_guid
 
     def self.dependencies
-      [:service_manager, :services_event_repository]
+      %i[service_manager services_event_repository]
     end
 
     def inject_dependencies(dependencies)
@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      broker = ServiceBroker.find(guid: guid)
+      broker = ServiceBroker.find(guid:)
       return HTTP::NOT_FOUND unless broker
 
       validate_access(:update, broker)
@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      broker = ServiceBroker.find(guid: guid)
+      broker = ServiceBroker.find(guid:)
       return HTTP::NOT_FOUND unless broker
 
       validate_access(:delete, broker)

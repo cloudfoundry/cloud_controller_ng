@@ -7,8 +7,8 @@ module VCAP::CloudController
       {
         name: 'my sidecar',
         command: 'bundle exec rackup',
-        process_types: ['web', 'worker'],
-        memory_in_mb: 300,
+        process_types: %w[web worker],
+        memory_in_mb: 300
       }
     end
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
         body[:updated_at] = 'field'
         message = SidecarUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'updated_at'")
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
         body[:name] = ''
         message = SidecarUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Name can't be blank")
       end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
         body[:command] = ''
         message = SidecarUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Command can't be blank")
       end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
         body[:process_types] = []
         message = SidecarUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
         body[:memory_in_mb] = 'totes not a number'
         message = SidecarUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include('Memory in mb is not a number')
       end
     end

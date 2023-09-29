@@ -25,7 +25,8 @@ RSpec.describe 'Service Broker API integration' do
           stub_async_last_operation
 
           expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 

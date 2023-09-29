@@ -17,19 +17,17 @@ module VCAP::RestAPI
     private
 
     def query_filter(key, comparison, val)
-      values = (comparison == ' IN ') ? val.split(',') : [val]
+      values = comparison == ' IN ' ? val.split(',') : [val]
 
       col_type = column_type(key)
 
-      if col_type == :datetime
-        return query_datetime_values(key, values, comparison)
+      return query_datetime_values(key, values, comparison) if col_type == :datetime
+
+      values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
+      if values.empty?
+        { key => nil }
       else
-        values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
-        if values.empty?
-          { key => nil }
-        else
-          Sequel.lit("#{key} #{comparison} ?", values)
-        end
+        Sequel.lit("#{key} #{comparison} ?", values)
       end
     end
   end

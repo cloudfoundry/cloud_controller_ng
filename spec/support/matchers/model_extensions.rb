@@ -9,13 +9,13 @@ RSpec::Matchers.define :strip_whitespace do |attribute|
 end
 
 RSpec::Matchers.define :export_attributes do |*attributes|
-  failure_message do |actual|
+  failure_message do |_actual|
     instance = described_class.make
     actual_keys = instance.to_hash.keys.collect(&:to_sym)
     "expected #{described_class} to have exported attributes #{expected}, got: #{actual_keys}"
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     instance = described_class.make
     actual_keys = instance.to_hash.keys.collect(&:to_sym)
     "expected #{described_class} to not have exported attributes #{expected}, got: #{actual_keys}"

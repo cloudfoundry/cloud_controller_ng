@@ -26,11 +26,11 @@ module VCAP::CloudController
         subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: nil) }
 
         it 'constructs without issue' do
-          expect(uaa_client).not_to eq(nil)
+          expect(uaa_client).not_to be_nil
           expect(uaa_client.uaa_target).to eq(url)
           expect(uaa_client.client_id).to eq(client_id)
           expect(uaa_client.secret).to eq(secret)
-          expect(uaa_client.ca_file).to eq(nil)
+          expect(uaa_client.ca_file).to be_nil
         end
       end
     end
@@ -130,7 +130,7 @@ module VCAP::CloudController
         allow(scim).to receive(:get).with(:client, 'existing-id').and_return({ 'client_id' => 'existing-id' })
         allow(scim).to receive(:get).with(:client, 'non-existing-id').and_raise(CF::UAA::NotFound.new)
         allow(uaa_client).to receive(:scim).and_return(scim)
-        result = uaa_client.get_clients(['existing-id', 'non-existing-id'])
+        result = uaa_client.get_clients(%w[existing-id non-existing-id])
 
         expect(scim).to have_received(:get).with(:client, 'existing-id').once
         expect(scim).to have_received(:get).with(:client, 'non-existing-id').once
@@ -148,14 +148,16 @@ module VCAP::CloudController
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: { 'client_id' => client_id, name: 'My Client Name' }.to_json)
+              body: { 'client_id' => client_id, name: 'My Client Name' }.to_json
+            )
 
           WebMock::API.stub_request(:get, "#{url}/oauth/clients/client_id").
             with(headers: { 'Authorization' => 'bearer invalid' }).
             to_return(
               status: 403,
               headers: { 'content-type' => 'application/json' },
-              body: { 'error' => 'invalid_token' }.to_json)
+              body: { 'error' => 'invalid_token' }.to_json
+            )
         end
 
         it 'successfully refreshes the token' do
@@ -177,14 +179,16 @@ module VCAP::CloudController
           'schemas' => ['urn:scim:schemas:core:1.0'],
           'startindex' => 1,
           'itemsperpage' => 100,
-          'totalresults' => 2 }
+          'totalresults' => 2
+        }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+            body: response_body.to_json
+          )
 
         mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
         expect(mapping[userid_1]).to eq('user_1')
@@ -212,8 +216,7 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'returns an empty hash' do
@@ -238,21 +241,24 @@ module VCAP::CloudController
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 2 }
+            'totalresults' => 2
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer STUFF' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer invalid' }).
             to_return(
               status: 403,
               headers: { 'content-type' => 'application/json' },
-              body: { 'error' => 'invalid_token' }.to_json)
+              body: { 'error' => 'invalid_token' }.to_json
+            )
         end
 
         context 'when token is invalid or expired one time' do
@@ -286,14 +292,16 @@ module VCAP::CloudController
           'schemas' => ['urn:scim:schemas:core:1.0'],
           'startindex' => 1,
           'itemsperpage' => 100,
-          'totalresults' => 2 }
+          'totalresults' => 2
+        }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+            body: response_body.to_json
+          )
 
         mapping = uaa_client.users_for_ids([userid_1, userid_2])
         expect(mapping[userid_1]).to eq({ 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' })
@@ -343,26 +351,28 @@ module VCAP::CloudController
         before do
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: {
-            'filter' => user_ids.slice(0, 200).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
-            'count' => 200
-          }).to_return(
-            status: 200,
-            headers: { 'content-type' => 'application/json' },
-            body: response_body1.to_json)
+                   'filter' => user_ids.slice(0, 200).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
+                   'count' => 200
+                 }).to_return(
+                   status: 200,
+                   headers: { 'content-type' => 'application/json' },
+                   body: response_body1.to_json
+                 )
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: {
-            'filter' => user_ids.slice(200, 100).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
-            'count' => 100
-          }).to_return(
-            status: 200,
-            headers: { 'content-type' => 'application/json' },
-            body: response_body2.to_json)
+                   'filter' => user_ids.slice(200, 100).map { |user_id| %(id eq "#{user_id}") }.join(' or '),
+                   'count' => 100
+                 }).to_return(
+                   status: 200,
+                   headers: { 'content-type' => 'application/json' },
+                   body: response_body2.to_json
+                 )
         end
 
         it 'returns the list of users after making batch requests' do
           results = uaa_client.users_for_ids(user_ids)
-          expect(results).to eq(actual_users.map { |user| [user['id'], user] }.to_h)
+          expect(results).to eq(actual_users.index_by { |user| user['id'] })
         end
       end
 
@@ -373,8 +383,7 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'returns an empty hash' do
@@ -399,21 +408,24 @@ module VCAP::CloudController
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 2 }
+            'totalresults' => 2
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer STUFF' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'filter' => 'id eq "111" or id eq "222"', 'count' => 2 }, headers: { 'Authorization' => 'bearer invalid' }).
             to_return(
               status: 403,
               headers: { 'content-type' => 'application/json' },
-              body: { 'error' => 'invalid_token' }.to_json)
+              body: { 'error' => 'invalid_token' }.to_json
+            )
         end
 
         context 'when token is invalid or expired one time' do
@@ -441,18 +453,21 @@ module VCAP::CloudController
         it 'returns the id for the username' do
           response_body = {
             'resources' => [
-              { 'id' => '123', 'origin' => 'ldap', 'username' => 'user@example.com' }],
+              { 'id' => '123', 'origin' => 'ldap', 'username' => 'user@example.com' }
+            ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'includeInactive' => true, 'filter' => 'origin eq "ldap" and username eq "user@example.com"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           expect(uaa_client.id_for_username(username, origin: 'ldap')).to eq('123')
         end
@@ -462,18 +477,21 @@ module VCAP::CloudController
         it 'returns the id for the username' do
           response_body = {
             'resources' => [
-              { 'id' => '123', 'origin' => 'uaa', 'username' => 'user@example.com' }],
+              { 'id' => '123', 'origin' => 'uaa', 'username' => 'user@example.com' }
+            ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'includeInactive' => true, 'filter' => 'username eq "user@example.com"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           expect(uaa_client.id_for_username(username)).to eq('123')
         end
@@ -485,14 +503,16 @@ module VCAP::CloudController
           'schemas' => ['urn:scim:schemas:core:1.0'],
           'startindex' => 1,
           'itemsperpage' => 100,
-          'totalresults' => 0 }
+          'totalresults' => 0
+        }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'includeInactive' => true, 'filter' => 'username eq "user@example.com"' }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+            body: response_body.to_json
+          )
 
         expect(uaa_client.id_for_username(username)).to be_nil
       end
@@ -503,9 +523,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.id_for_username(username)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
 
@@ -517,9 +537,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.id_for_username(username)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
     end
@@ -535,21 +555,23 @@ module VCAP::CloudController
             'resources' => [
               { 'id' => '123', 'origin' => 'uaa', 'username' => username1 },
               { 'id' => '456', 'origin' => 'Okta', 'username' => username1 },
-              { 'id' => '789', 'origin' => 'Okta', 'username' => username2 },
+              { 'id' => '789', 'origin' => 'Okta', 'username' => username2 }
             ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users"). # 'id eq "111" or id eq "222"'
             with(query: { 'includeInactive' => true, 'filter' => "username eq \"#{username1}\" or username eq \"#{username2}\"" }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
-          expect(uaa_client.ids_for_usernames_and_origins([username1, username2], nil)).to eq(%w(123 456 789))
+          expect(uaa_client.ids_for_usernames_and_origins([username1, username2], nil)).to eq(%w[123 456 789])
         end
       end
 
@@ -559,12 +581,13 @@ module VCAP::CloudController
             'resources' => [
               { 'id' => '123' },
               { 'id' => '456' },
-              { 'id' => '789' },
+              { 'id' => '789' }
             ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/Users").
             with(query: { 'filter' => "username co \"#{partial_username}\"",
@@ -572,9 +595,10 @@ module VCAP::CloudController
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
-          expect(uaa_client.ids_for_usernames_and_origins([partial_username], nil, false)).to eq(%w(123 456 789))
+          expect(uaa_client.ids_for_usernames_and_origins([partial_username], nil, false)).to eq(%w[123 456 789])
         end
       end
 
@@ -583,19 +607,21 @@ module VCAP::CloudController
           response_body = {
             'resources' => [
               { 'id' => '456', 'origin' => 'Okta', 'username' => username1 },
-              { 'id' => '789', 'origin' => 'Okta', 'username' => username2 },
+              { 'id' => '789', 'origin' => 'Okta', 'username' => username2 }
             ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users"). # 'id eq "111" or id eq "222"'
             with(query: { 'includeInactive' => true, 'filter' => "( username eq \"#{username1}\" or username eq \"#{username2}\" ) and ( origin eq \"Okta\" )" }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           uaa_client.ids_for_usernames_and_origins([username1, username2], ['Okta'])
         end
@@ -606,12 +632,13 @@ module VCAP::CloudController
           response_body = {
             'resources' => [
               { 'id' => '456' },
-              { 'id' => '789' },
+              { 'id' => '789' }
             ],
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 1 }
+            'totalresults' => 1
+          }
 
           WebMock::API.stub_request(:get, "#{url}/Users").
             with(query: { 'filter' => "( username co \"#{partial_username}\" ) and ( origin eq \"Okta\" )",
@@ -619,9 +646,10 @@ module VCAP::CloudController
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
-          expect(uaa_client.ids_for_usernames_and_origins([partial_username], ['Okta'], false)).to eq(%w(456 789))
+          expect(uaa_client.ids_for_usernames_and_origins([partial_username], ['Okta'], false)).to eq(%w[456 789])
         end
       end
 
@@ -631,14 +659,16 @@ module VCAP::CloudController
           'schemas' => ['urn:scim:schemas:core:1.0'],
           'startindex' => 1,
           'itemsperpage' => 100,
-          'totalresults' => 0 }
+          'totalresults' => 0
+        }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'includeInactive' => true, 'filter' => 'username eq "non-existent-user"' }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+            body: response_body.to_json
+          )
 
         expect(uaa_client.ids_for_usernames_and_origins(['non-existent-user'], nil)).to eq([])
       end
@@ -649,9 +679,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.ids_for_usernames_and_origins([username1], nil)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
 
@@ -663,9 +693,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.ids_for_usernames_and_origins([username1], nil)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
 
@@ -677,9 +707,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.ids_for_usernames_and_origins([username1], nil)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
     end
@@ -706,6 +736,7 @@ module VCAP::CloudController
     describe '#origins_for_username' do
       let(:userid_1) { '111' }
       let(:username) { 'user_1' }
+
       context 'when no exception is thrown' do
         it 'gets the origins for the user' do
           response_body = {
@@ -716,14 +747,16 @@ module VCAP::CloudController
             'schemas' => ['urn:scim:schemas:core:1.0'],
             'startindex' => 1,
             'itemsperpage' => 100,
-            'totalresults' => 2 }
+            'totalresults' => 2
+          }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'includeInactive' => true, 'filter' => 'username eq "user_1"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+              body: response_body.to_json
+            )
 
           origins = uaa_client.origins_for_username(username)
           expect(origins).to contain_exactly('larrys_origin', 'larrys_other_origin')
@@ -736,14 +769,16 @@ module VCAP::CloudController
           'schemas' => ['urn:scim:schemas:core:1.0'],
           'startindex' => 1,
           'itemsperpage' => 100,
-          'totalresults' => 0 }
+          'totalresults' => 0
+        }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'includeInactive' => true, 'filter' => 'username eq "user_1"' }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+            body: response_body.to_json
+          )
 
         origins = uaa_client.origins_for_username('user_1')
         expect(origins.size).to eq(0)
@@ -755,9 +790,9 @@ module VCAP::CloudController
         end
 
         it 'raises UaaUnavailable' do
-          expect {
+          expect do
             uaa_client.id_for_username(username)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
         end
       end
 
@@ -768,14 +803,13 @@ module VCAP::CloudController
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
-          allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
 
         it 'raises an exception' do
-          expect {
+          expect do
             uaa_client.origins_for_username(username)
-          }.to raise_error(UaaUnavailable)
+          end.to raise_error(UaaUnavailable)
           expect(mock_logger).to have_received(:error).with("Failed to retrieve origins from UAA: #{uaa_error.inspect}")
         end
       end

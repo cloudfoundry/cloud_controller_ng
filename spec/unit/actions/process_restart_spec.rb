@@ -11,19 +11,19 @@ module VCAP::CloudController
       let(:app) do
         AppModel.make(
           :docker,
-          desired_state:         desired_state,
-          environment_variables: environment_variables
+          desired_state:,
+          environment_variables:
         )
       end
 
       let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
-      let!(:droplet) { DropletModel.make(app: app) }
+      let!(:droplet) { DropletModel.make(app:) }
       let!(:process) { ProcessModel.make(:process, state: desired_state, app: app) }
       let(:runner) { instance_double(VCAP::CloudController::Diego::Runner) }
 
       before do
-        app.update(droplet: droplet)
+        app.update(droplet:)
 
         allow(runner).to receive(:stop)
         allow(runner).to receive(:start)
@@ -55,15 +55,15 @@ module VCAP::CloudController
         end
 
         it 'generates a STOP usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-          }.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(1)
         end
 
         it 'generates a START usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
         end
 
         context 'when submitting the stop request to the backend fails' do
@@ -72,9 +72,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing STARTED state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-stop-error')
+            end.to raise_error('some-stop-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
           end
@@ -86,18 +86,18 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
           end
 
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: true)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
           end
@@ -113,7 +113,7 @@ module VCAP::CloudController
         end
 
         it 'does NOT attempt to stop the process in the runtime' do
-          expect(runner).to_not receive(:stop)
+          expect(runner).not_to receive(:stop)
 
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
         end
@@ -125,15 +125,15 @@ module VCAP::CloudController
         end
 
         it 'generates a START usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-          }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
+          end.to change { AppUsageEvent.where(state: 'STARTED').count }.by(1)
         end
 
         it 'does not generate a STOP usage event' do
-          expect {
+          expect do
             ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-          }.to_not change { AppUsageEvent.where(state: 'STOPPED').count }
+          end.not_to(change { AppUsageEvent.where(state: 'STOPPED').count })
         end
 
         context 'when submitting the start request to the backend fails' do
@@ -142,18 +142,18 @@ module VCAP::CloudController
           end
 
           it 'raises an error and keeps the existing state' do
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STOPPED')
           end
 
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
-            expect {
+            expect do
               ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
-            }.to raise_error('some-start-error')
+            end.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
           end
@@ -170,7 +170,7 @@ module VCAP::CloudController
         end
 
         it 'leaves the old revision if not passed in' do
-          process.update(revision: revision)
+          process.update(revision:)
 
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
 

@@ -13,27 +13,27 @@ module VCAP::CloudController
     let(:old_annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let(:new_labels) do
       {
         cuisine: 'thai',
         'doordash.com/potato' => 'mashed',
-        fruit: 'strawberries',
+        fruit: 'strawberries'
       }
     end
     let(:new_annotations) do
       {
-        potato: 'idaho',
+        potato: 'idaho'
       }
     end
     let(:body) do
       {
         metadata: {
           labels: new_labels,
-          annotations: new_annotations,
-        },
+          annotations: new_annotations
+        }
       }
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
           it 'adds no metadata' do
             expect(message).to be_valid
-            subject.update(route: route, message: message)
+            subject.update(route:, message:)
             route.reload
             expect(route.labels.size).to eq(0)
             expect(route.annotations.size).to eq(0)
@@ -60,13 +60,13 @@ module VCAP::CloudController
         context 'when metadata is specified' do
           it 'updates the route metadata' do
             expect(message).to be_valid
-            subject.update(route: route, message: message)
+            subject.update(route:, message:)
 
             route.reload
             expect(route).to have_labels(
               { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
               { prefix: nil, key_name: 'fruit', value: 'strawberries' },
-              { prefix: nil, key_name: 'cuisine', value: 'thai' },
+              { prefix: nil, key_name: 'cuisine', value: 'thai' }
             )
             expect(route).to have_annotations(
               { key_name: 'potato', value: 'idaho' }
@@ -88,15 +88,15 @@ module VCAP::CloudController
 
           it 'adds no metadata' do
             expect(message).to be_valid
-            subject.update(route: route, message: message)
+            subject.update(route:, message:)
             route.reload
             expect(route).to have_labels(
               { prefix: nil, key_name: 'fruit', value: 'peach' },
-              { prefix: nil, key_name: 'clothing', value: 'blouse' },
+              { prefix: nil, key_name: 'clothing', value: 'blouse' }
             )
             expect(route).to have_annotations(
               { key_name: 'potato', value: 'celandine' },
-              { key_name: 'beet', value: 'formanova' },
+              { key_name: 'beet', value: 'formanova' }
             )
           end
         end
@@ -106,25 +106,25 @@ module VCAP::CloudController
             {
               metadata: {
                 labels: new_labels.merge(fruit: nil, newstuff: 'here'),
-                annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy'),
-              },
+                annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy')
+              }
             }
           end
 
           it 'updates some, deletes nils, leaves unspecified fields alone' do
             expect(message).to be_valid
-            subject.update(route: route, message: message)
+            subject.update(route:, message:)
             route.reload
 
             expect(route).to have_labels(
               { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
               { prefix: nil, key_name: 'clothing', value: 'blouse' },
               { prefix: nil, key_name: 'newstuff', value: 'here' },
-              { prefix: nil, key_name: 'cuisine', value: 'thai' },
+              { prefix: nil, key_name: 'cuisine', value: 'thai' }
             )
             expect(route).to have_annotations(
               { key_name: 'potato', value: 'idaho' },
-              { key_name: 'asparagus', value: 'crunchy' },
+              { key_name: 'asparagus', value: 'crunchy' }
             )
           end
         end

@@ -35,12 +35,12 @@ RSpec.describe PortsPolicy do
 
   context 'valid processes' do
     it 'does not require ports' do
-      expect(process.valid?).to eq(true)
+      expect(process.valid?).to be(true)
     end
 
     it 'does not register error if valid ports are requested' do
       process.diego = true
-      process.ports = [2000, 3000, 65535]
+      process.ports = [2000, 3000, 65_535]
       expect(validator).to validate_without_error(process)
     end
   end

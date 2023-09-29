@@ -10,7 +10,7 @@ module CloudController::Presenters::V2
           {
             'space_guid' => space.guid,
             'space_name' => space.name,
-            'organization_name' => space.organization.name,
+            'organization_name' => space.organization.name
           }
         )
       end

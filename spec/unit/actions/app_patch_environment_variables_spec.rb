@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:app_model) { AppModel.make(name: app_name, environment_variables: existing_environment_variables) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
     let(:app_name) { 'original name' }
     let(:existing_environment_variables) do
       {
@@ -21,8 +21,8 @@ module VCAP::CloudController
       let(:request_environment_variables) { { override: 'new-value', new: 'env' } }
       let(:message) do
         UpdateEnvironmentVariablesMessage.new({
-          var: request_environment_variables,
-        })
+                                                var: request_environment_variables
+                                              })
       end
 
       describe 'app events' do
@@ -32,7 +32,7 @@ module VCAP::CloudController
             app_model.space,
             user_audit_info,
             { 'environment_variables' => request_environment_variables.deep_stringify_keys },
-            manifest_triggered: false,
+            manifest_triggered: false
           )
 
           app_update.patch(app_model, message)
@@ -62,16 +62,17 @@ module VCAP::CloudController
         app_model.reload
 
         expect(app_model.environment_variables).to eq({
-          'override' => 'new-value',
-          'preserve' => 'value-to-keep',
-          'new' => 'env',
-        })
+                                                        'override' => 'new-value',
+                                                        'preserve' => 'value-to-keep',
+                                                        'new' => 'env'
+                                                      })
       end
 
       context 'when the app does not have any existing environment variables' do
         let(:existing_environment_variables) do
           nil
         end
+
         it 'patches the apps environment_variables' do
           expect(app_model.environment_variables).to eq(existing_environment_variables)
 
@@ -79,9 +80,9 @@ module VCAP::CloudController
           app_model.reload
 
           expect(app_model.environment_variables).to eq({
-            'override' => 'new-value',
-            'new' => 'env',
-          })
+                                                          'override' => 'new-value',
+                                                          'new' => 'env'
+                                                        })
         end
       end
 
@@ -95,15 +96,15 @@ module VCAP::CloudController
           app_model.reload
 
           expect(app_model.environment_variables).to eq({
-            'preserve' => 'value-to-keep',
-          })
+                                                          'preserve' => 'value-to-keep'
+                                                        })
         end
       end
 
       context 'when a environment variable hash is empty' do
         let(:request_environment_variables) { {} }
 
-        it 'should not change the apps environment variables' do
+        it 'does not change the apps environment variables' do
           expect(app_model.environment_variables).to eq(existing_environment_variables)
 
           app_update.patch(app_model, message)

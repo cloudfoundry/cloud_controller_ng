@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe MinMemoryPolicy do
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 64) }
-
   subject(:validator) { MinMemoryPolicy.new(process) }
+
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 64) }
 
   it 'registers error when requested memory is 0' do
     process.memory = 0

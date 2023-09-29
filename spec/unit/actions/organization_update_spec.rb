@@ -13,16 +13,16 @@ module VCAP::CloudController
       context 'when a name and label are requested' do
         let(:message) do
           VCAP::CloudController::OrganizationUpdateMessage.new({
-            name: 'new-org-name',
-            metadata: {
-              labels: {
-                freaky: 'wednesday',
-              },
-              annotations: {
-                hello: 'there'
-              }
-            },
-          })
+                                                                 name: 'new-org-name',
+                                                                 metadata: {
+                                                                   labels: {
+                                                                     freaky: 'wednesday'
+                                                                   },
+                                                                   annotations: {
+                                                                     hello: 'there'
+                                                                   }
+                                                                 }
+                                                               })
         end
 
         it 'updates a organization' do
@@ -65,9 +65,9 @@ module VCAP::CloudController
             expect(org).to receive(:save).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect {
+            expect do
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, 'blork is busted')
+            end.to raise_error(OrganizationUpdate::Error, 'blork is busted')
           end
         end
 
@@ -75,9 +75,9 @@ module VCAP::CloudController
           it 'errors usefully' do
             VCAP::CloudController::Organization.make(name: 'new-org-name')
 
-            expect {
+            expect do
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
+            end.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
           end
         end
       end
@@ -85,9 +85,9 @@ module VCAP::CloudController
       context 'when suspended is requested' do
         let(:message) do
           VCAP::CloudController::OrganizationUpdateMessage.new({
-            name: 'new-org-name',
-            suspended: true
-          })
+                                                                 name: 'new-org-name',
+                                                                 suspended: true
+                                                               })
         end
 
         it 'updates a organization' do
@@ -108,9 +108,9 @@ module VCAP::CloudController
             expect(org).to receive(:save).
               and_raise(Sequel::ValidationFailed.new(errors))
 
-            expect {
+            expect do
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, 'blork is busted')
+            end.to raise_error(OrganizationUpdate::Error, 'blork is busted')
           end
         end
 
@@ -118,9 +118,9 @@ module VCAP::CloudController
           it 'errors usefully' do
             VCAP::CloudController::Organization.make(name: 'new-org-name')
 
-            expect {
+            expect do
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
+            end.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
           end
         end
       end

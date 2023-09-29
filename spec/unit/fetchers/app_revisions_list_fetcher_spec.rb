@@ -14,13 +14,14 @@ module VCAP::CloudController
 
     describe '#fetch' do
       let(:message) { AppRevisionsListMessage.from_params(filters) }
+
       subject { fetcher.fetch(app, message) }
 
       context 'when no filters are specified' do
         let(:filters) { {} }
 
         it 'fetches all the revisions' do
-          expect(subject).to match_array([revision1, revision2])
+          expect(subject).to contain_exactly(revision1, revision2)
         end
       end
 
@@ -29,7 +30,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired revisions' do
           expect(subject).to include(revision1)
-          expect(subject).to_not include(revision2)
+          expect(subject).not_to include(revision2)
         end
       end
 
@@ -38,7 +39,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired revisions' do
           expect(subject).to include(revision1)
-          expect(subject).to_not include(revision2)
+          expect(subject).not_to include(revision2)
         end
       end
 
@@ -63,12 +64,12 @@ module VCAP::CloudController
       subject { fetcher.fetch_deployed(app) }
 
       it 'fetches all the deployed revisions' do
-        expect(subject).to match_array([revision1])
+        expect(subject).to contain_exactly(revision1)
       end
 
       it 'handles processes with no revisions' do
         VCAP::CloudController::ProcessModel.make(app: app, type: 'web', state: 'STARTED')
-        expect(subject).to match_array([revision1])
+        expect(subject).to contain_exactly(revision1)
       end
     end
   end

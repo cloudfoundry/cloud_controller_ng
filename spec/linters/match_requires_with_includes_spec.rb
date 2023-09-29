@@ -7,6 +7,8 @@ require 'linters/match_requires_with_includes'
 RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   include CopHelper
 
+  subject(:cop) { RuboCop::Cop::MatchRequiresWithIncludes.new(RuboCop::Config.new({})) }
+
   let(:missing_metadata_presentation_helper) do
     "Included 'VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers' but need to require 'presenters/mixins/metadata_presentation_helpers'"
   end
@@ -15,9 +17,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
     "Included 'SubResource' but need to require 'controllers/v3/mixins/sub_resource'"
   end
 
-  subject(:cop) { RuboCop::Cop::MatchRequiresWithIncludes.new(RuboCop::Config.new({})) }
-
-  it 'registers an offense if MetadataPresentationHelpers is included without requiring it', focus: true do
+  it 'registers an offense if MetadataPresentationHelpers is included without requiring it' do
     inspect_source(<<~RUBY)
       require 'cows'
       module M
@@ -44,7 +44,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
     expect(cop.offenses.size).to eq(0)
   end
 
-  it 'registers an offense if SubResource is included without requiring it', focus: true do
+  it 'registers an offense if SubResource is included without requiring it' do
     inspect_source(<<~RUBY)
       require 'cows'
       module M
@@ -71,7 +71,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
     expect(cop.offenses.size).to eq(0)
   end
 
-  it 'finds multiple offences', focus: true do
+  it 'finds multiple offences' do
     inspect_source(<<~RUBY)
       require 'cows'
       module M
@@ -82,6 +82,6 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
     RUBY
     expect(cop.offenses.size).to eq(2)
-    expect(cop.messages).to match_array([missing_metadata_presentation_helper, missing_sub_resource])
+    expect(cop.messages).to contain_exactly(missing_metadata_presentation_helper, missing_sub_resource)
   end
 end

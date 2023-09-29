@@ -7,8 +7,9 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
   describe '#bind' do
     let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
     let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
+
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
     end
@@ -43,9 +44,9 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
         end
 
         it 'marks the binding as failed' do
-          expect {
+          expect do
             action.bind(precursor)
-          }.to raise_error(BadError)
+          end.to raise_error(BadError)
 
           binding = precursor.reload
           expect(binding.last_operation.type).to eq('create')
@@ -92,10 +93,10 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
       context 'binding not retrievable' do
         let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
 
-        it 'it raises a BindingNotRetrievable error' do
-          expect {
+        it 'raises a BindingNotRetrievable error' do
+          expect do
             action.bind(precursor, accepts_incomplete: true)
-          }.to raise_error(VCAP::CloudController::V3::ServiceBindingCreate::BindingNotRetrievable)
+          end.to raise_error(VCAP::CloudController::V3::ServiceBindingCreate::BindingNotRetrievable)
         end
       end
     end
@@ -106,7 +107,7 @@ RSpec.shared_examples 'polling service binding creation' do
   describe '#poll' do
     let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
     let(:broker_provided_operation) { Sham.guid }
     let(:bind_response) { { async: true, operation: broker_provided_operation } }
     let(:description) { Sham.description }
@@ -114,9 +115,9 @@ RSpec.shared_examples 'polling service binding creation' do
     let(:fetch_last_operation_response) do
       {
         last_operation: {
-          state: state,
-          description: description,
-        },
+          state:,
+          description:
+        }
       }
     end
     let(:broker_client) do
@@ -139,7 +140,7 @@ RSpec.shared_examples 'polling service binding creation' do
     it 'fetches the last operation' do
       action.poll(binding)
 
-      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid: user_guid)
+      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid:)
     end
 
     context 'last operation state is complete' do
@@ -163,7 +164,7 @@ RSpec.shared_examples 'polling service binding creation' do
       it 'fetches the service binding' do
         action.poll(binding)
 
-        expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid: user_guid)
+        expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid:)
       end
 
       context 'fails while fetching binding' do
@@ -219,7 +220,7 @@ RSpec.shared_examples 'polling service binding creation' do
         allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
 
-      it 'should stop polling for other errors' do
+      it 'stops polling for other errors' do
         expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload
@@ -241,10 +242,10 @@ RSpec.shared_examples 'polling service binding creation' do
         let(:fetch_last_operation_response) do
           {
             last_operation: {
-              state: state,
-              description: description,
+              state:,
+              description:
             },
-            retry_after: 10,
+            retry_after: 10
           }
         end
 
@@ -268,7 +269,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
     describe 'credential bindings specific behaviour' do
       let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
       let(:broker_provided_operation) { Sham.guid }
       let(:bind_response) { { async: true, operation: broker_provided_operation } }
       let(:description) { Sham.description }
@@ -276,9 +277,9 @@ RSpec.shared_examples 'polling service credential binding creation' do
       let(:fetch_last_operation_response) do
         {
           last_operation: {
-            state: state,
-            description: description,
-          },
+            state:,
+            description:
+          }
         }
       end
       let(:broker_client) do
@@ -287,7 +288,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
           {
             bind: bind_response,
             fetch_and_handle_service_binding_last_operation: fetch_last_operation_response,
-            fetch_service_binding: fetch_binding_response,
+            fetch_service_binding: fetch_binding_response
           }
         )
       end
@@ -305,7 +306,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
         it 'fetches the service binding and updates only the credentials, volume_mounts and syslog_drain_url' do
           action.poll(binding)
 
-          expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid: user_guid)
+          expect(broker_client).to have_received(:fetch_service_binding).with(binding, user_guid:)
 
           binding.reload
           expect(binding.credentials).to eq(credentials)
@@ -336,6 +337,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
 
       context 'response says failed' do
         let(:state) { 'failed' }
+
         it 'does not create an audit event' do
           expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
 

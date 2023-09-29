@@ -7,12 +7,12 @@ module CloudController::Errors
       double(Details,
              name: message,
              response_code: 400,
-             code: 12345,
+             code: 12_345,
              message_format: 'Before %s %s after.')
     end
 
     let(:messageServiceInvalid) { 'ServiceInvalid' }
-    let(:args) { ['foo', 'bar'] }
+    let(:args) { %w[foo bar] }
 
     let(:messageServiceInvalidDetails) { create_details(messageServiceInvalid) }
 
@@ -20,14 +20,14 @@ module CloudController::Errors
       allow(Details).to receive('new').with(messageServiceInvalid).and_return(messageServiceInvalidDetails)
     end
 
-    context '.new_from_details' do
+    describe '.new_from_details' do
       subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
 
       it 'returns an ApiError' do
         expect(api_error).to be_a(ApiError)
       end
 
-      it 'should be an exception' do
+      it 'is an exception' do
         expect(api_error).to be_a(Exception)
       end
 
@@ -47,17 +47,17 @@ module CloudController::Errors
     describe 'message' do
       subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
 
-      it 'should interpolate the message' do
+      it 'interpolates the message' do
         expect(api_error.message).to eq('Before foo bar after.')
       end
 
       context 'when initializing an api_error without new_from_details' do
         let(:api_error) { ApiError.new }
 
-        it 'should not explode' do
-          expect {
+        it 'does not explode' do
+          expect do
             api_error.message
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
@@ -80,7 +80,7 @@ module CloudController::Errors
       end
 
       it 'exposes the code' do
-        expect(api_error.code).to eq(12345)
+        expect(api_error.code).to eq(12_345)
       end
 
       it 'exposes the http code' do

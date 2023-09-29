@@ -7,18 +7,19 @@ require 'permissions_spec_helper'
 RSpec.describe StacksController, type: :controller do
   describe '#index' do
     before { VCAP::CloudController::Stack.dataset.destroy }
+
     let(:user) { VCAP::CloudController::User.make }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'reader_and_writer' => 200,
+        'reader_and_writer' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             get :index
 
@@ -30,7 +31,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns 401 when logged out' do
         get :index
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
@@ -60,7 +61,7 @@ RSpec.describe StacksController, type: :controller do
         it 'returns an error' do
           get :index, params: { per_page: 'whoops' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
@@ -70,16 +71,17 @@ RSpec.describe StacksController, type: :controller do
 
   describe '#show' do
     let(:user) { VCAP::CloudController::User.make }
+
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'reader_and_writer' => 200,
+        'reader_and_writer' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             get :index
 
@@ -91,7 +93,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns 401 when logged out' do
         get :index
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
@@ -106,7 +108,7 @@ RSpec.describe StacksController, type: :controller do
         it 'renders a single stack details' do
           get :show, params: { guid: stack.guid }
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(parsed_body['guid']).to eq(stack.guid)
         end
       end
@@ -114,7 +116,7 @@ RSpec.describe StacksController, type: :controller do
       context 'when the stack doesnt exist' do
         it 'errors' do
           get :show, params: { guid: 'psych!' }
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -128,19 +130,19 @@ RSpec.describe StacksController, type: :controller do
     end
 
     before do
-      set_current_user_as_admin(user: user)
+      set_current_user_as_admin(user:)
     end
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 201,
-        'reader_and_writer' => 403,
+        'reader_and_writer' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             post :create, params: req_body, as: :json
 
@@ -156,7 +158,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns a 422 with the error message' do
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(parsed_body['errors'].first['detail']).to eq 'Name can\'t be blank'
       end
     end
@@ -171,7 +173,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns a 422 with the error message' do
         post :create, params: req_body, as: :json
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(parsed_body['errors'].first['detail']).to eq 'that did not work'
       end
     end
@@ -190,7 +192,7 @@ RSpec.describe StacksController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           delete :destroy, params: { guid: stack.guid }
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -212,7 +214,7 @@ RSpec.describe StacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               delete :destroy, params: { guid: stack.guid }, as: :json
 
@@ -225,7 +227,7 @@ RSpec.describe StacksController, type: :controller do
       context 'permissions by role when the stack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -235,10 +237,10 @@ RSpec.describe StacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               delete :destroy, params: { guid: 'non-existent' }, as: :json
 
@@ -251,26 +253,26 @@ RSpec.describe StacksController, type: :controller do
       it 'returns 401 when logged out' do
         delete :destroy, params: { guid: stack.guid }, as: :json
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
     context 'when the user is logged in with sufficient permissions' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when stack is not found' do
         it 'returns a 404' do
           delete :destroy, params: { guid: 'not-a-real-guid' }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
       context 'when stack has apps associated with it' do
         before do
-          VCAP::CloudController::ProcessModelFactory.make(stack: stack)
+          VCAP::CloudController::ProcessModelFactory.make(stack:)
         end
 
         it 'does not delete the stack' do
@@ -282,13 +284,13 @@ RSpec.describe StacksController, type: :controller do
         it 'returns 422' do
           delete :destroy, params: { guid: stack.guid }
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
         end
 
         it 'returns 10008 UnprocessableEntity' do
           delete :destroy, params: { guid: stack.guid }
 
-          expect(parsed_body['errors'].first['code']).to eq 10008
+          expect(parsed_body['errors'].first['code']).to eq 10_008
         end
       end
     end
@@ -317,7 +319,7 @@ RSpec.describe StacksController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let!(:update_message) do
@@ -346,7 +348,7 @@ RSpec.describe StacksController, type: :controller do
       it 'updates the stack' do
         patch :update, params: { guid: stack.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'hino' })
         expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'adora', 'beet' => 'formanova' })
 
@@ -375,11 +377,12 @@ RSpec.describe StacksController, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'hino' })
           expect(stack).to have_labels({ key_name: 'truck', value: 'hino' })
         end
       end
+
       context 'when an empty request is sent' do
         let(:request_body) do
           {}
@@ -387,7 +390,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'succeeds' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           stack.reload
           expect(parsed_body['guid']).to eq(stack.guid)
         end
@@ -397,11 +400,12 @@ RSpec.describe StacksController, type: :controller do
         before do
           set_current_user_as_admin
         end
+
         let!(:update_message2) { update_message.merge({ animals: 'Cows' }) }
 
         it 'fails' do
           patch :update, params: { guid: stack.guid }.merge(update_message2), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 
@@ -409,7 +413,7 @@ RSpec.describe StacksController, type: :controller do
         it 'fails' do
           patch :update, params: { guid: "Greg's missing stack" }.merge(update_message), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
         end
       end
 
@@ -426,7 +430,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -444,7 +448,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -467,7 +471,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -486,7 +490,7 @@ RSpec.describe StacksController, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'formanova' })
 
           stack.reload
@@ -504,7 +508,7 @@ RSpec.describe StacksController, type: :controller do
         it 'returns a 404' do
           patch :update, params: { guid: 'bogus-stack-gyud' }.merge({}), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
         end
       end
     end
@@ -521,10 +525,10 @@ RSpec.describe StacksController, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 403,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: stack.guid }.merge(update_message), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: stack.guid }.merge(update_message), as: :json } }
       end
     end
   end

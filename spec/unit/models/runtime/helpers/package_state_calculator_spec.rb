@@ -6,6 +6,7 @@ module VCAP::CloudController
     describe '#calculate' do
       let(:parent_app) { AppModel.make }
       let(:process) { ProcessModel.make(app: parent_app) }
+
       subject(:calculator) { PackageStateCalculator.new(process) }
 
       context 'when no package or droplet exists' do
@@ -53,7 +54,7 @@ module VCAP::CloudController
           package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
           build = BuildModel.make(app: parent_app, package: package, state: BuildModel::STAGED_STATE)
           droplet = DropletModel.make(app: parent_app, package: package, build: build, state: DropletModel::STAGED_STATE)
-          parent_app.update(droplet: droplet)
+          parent_app.update(droplet:)
         end
 
         it 'is STAGED' do
@@ -98,7 +99,7 @@ module VCAP::CloudController
         before do
           package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
           droplet = DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
-          parent_app.update(droplet: droplet)
+          parent_app.update(droplet:)
           PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE, created_at: droplet.created_at + 10.seconds)
         end
 
@@ -111,7 +112,7 @@ module VCAP::CloudController
         let(:droplet) { DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE, package: nil) }
 
         before do
-          parent_app.update(droplet: droplet)
+          parent_app.update(droplet:)
         end
 
         it 'is STAGED' do
@@ -123,7 +124,7 @@ module VCAP::CloudController
         before do
           previous_package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::FAILED_STATE)
           droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE, created_at: previous_package.created_at + 10.seconds)
-          parent_app.update(droplet: droplet)
+          parent_app.update(droplet:)
         end
 
         it 'is STAGED' do

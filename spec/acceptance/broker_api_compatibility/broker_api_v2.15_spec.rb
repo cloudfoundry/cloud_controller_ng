@@ -41,7 +41,7 @@ RSpec.describe 'Service Broker API integration' do
 
       describe 'service instances' do
         context 'when provisioning a service instance' do
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_provision_service).to have_status_code(202)
 
             expect(
@@ -65,7 +65,7 @@ RSpec.describe 'Service Broker API integration' do
             @service_instance_guid = service_instance.guid
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_delete_service).to have_status_code(202)
 
             expect(
@@ -87,11 +87,12 @@ RSpec.describe 'Service Broker API integration' do
             @service_instance_guid = service_instance.guid
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_update_service).to have_status_code(202)
 
             expect(
-              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_instance_last_operation(
               service_instance,
@@ -111,11 +112,12 @@ RSpec.describe 'Service Broker API integration' do
             create_app
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_bind_service(status: 202)).to have_status_code(202)
 
             expect(
-              a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
+              a_request(:put, bind_url(service_instance, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_binding_last_operation(
               service_instance,
@@ -134,13 +136,14 @@ RSpec.describe 'Service Broker API integration' do
             bind_service
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_unbind_service(status: 202)).to have_status_code(202)
 
             service_binding = VCAP::CloudController::ServiceBinding.last
 
             expect(
-              a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+              a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))
+            ).to have_been_made
 
             assert_cc_polls_service_binding_last_operation(
               service_instance,
@@ -164,7 +167,7 @@ RSpec.describe 'Service Broker API integration' do
 
       describe 'service instances' do
         context 'when creating a service instance' do
-          it 'should stop polling the broker after the given maximum_polling_duration' do
+          it 'stops polling the broker after the given maximum_polling_duration' do
             expect(async_provision_service).to have_status_code(202)
 
             expect(
@@ -185,7 +188,7 @@ RSpec.describe 'Service Broker API integration' do
             @service_instance_guid = service_instance.guid
           end
 
-          it 'should stop polling the broker after the given maximum_polling_duration' do
+          it 'stops polling the broker after the given maximum_polling_duration' do
             expect(async_update_service).to have_status_code(202)
 
             expect(a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
@@ -204,7 +207,7 @@ RSpec.describe 'Service Broker API integration' do
             @service_instance_guid = service_instance.guid
           end
 
-          it 'should stop polling the broker after the given maximum_polling_duration' do
+          it 'stops polling the broker after the given maximum_polling_duration' do
             expect(async_delete_service).to have_status_code(202)
 
             expect(a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))).to have_been_made
@@ -226,7 +229,7 @@ RSpec.describe 'Service Broker API integration' do
             create_app
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_bind_service(status: 202)).to have_status_code(202)
 
             expect(a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
@@ -245,7 +248,7 @@ RSpec.describe 'Service Broker API integration' do
             bind_service
           end
 
-          it 'should poll the broker at the given retry interval' do
+          it 'polls the broker at the given retry interval' do
             expect(async_unbind_service(status: 202)).to have_status_code(202)
 
             service_binding = VCAP::CloudController::ServiceBinding.last
@@ -260,6 +263,7 @@ RSpec.describe 'Service Broker API integration' do
 
     context 'service instance context hash' do
       let(:catalog) { default_catalog(plan_updateable: true) }
+
       before do
         setup_broker(catalog)
         @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
@@ -278,10 +282,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -301,10 +306,11 @@ RSpec.describe 'Service Broker API integration' do
           }
 
           expect(
-            a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -327,10 +333,11 @@ RSpec.describe 'Service Broker API integration' do
             }
 
             expect(
-              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
                 context = JSON.parse(req.body)['context']
                 context >= expected_context_attributes
-              }).to have_been_made
+              end
+            ).to have_been_made
           end
         end
 
@@ -348,14 +355,15 @@ RSpec.describe 'Service Broker API integration' do
 
     context 'service bindings context hash' do
       let(:catalog) { default_catalog(requires: ['route_forwarding']) }
-      let(:expected_context_attributes) { {
-        'platform' => 'cloudfoundry',
-        'organization_guid' => @org_guid,
-        'space_guid' => @space_guid,
-        'organization_name' => @space.organization.name,
-        'space_name' => @space.name
-      }
-      }
+      let(:expected_context_attributes) do
+        {
+          'platform' => 'cloudfoundry',
+          'organization_guid' => @org_guid,
+          'space_guid' => @space_guid,
+          'organization_name' => @space.organization.name,
+          'space_name' => @space.name
+        }
+      end
 
       before do
         setup_broker(catalog)
@@ -371,10 +379,11 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
@@ -385,25 +394,28 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
 
       context 'for bind route service' do
         let(:route) { VCAP::CloudController::Route.make(space: @space) }
+
         before do
           create_route_binding(route)
         end
 
         it 'receives the correct attributes in the context' do
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
-            }).to have_been_made
+            end
+          ).to have_been_made
         end
       end
     end
@@ -436,7 +448,7 @@ RSpec.describe 'Service Broker API integration' do
           expect { service_instance.reload }.to raise_error(Sequel::Error)
         end
 
-        it 'should not delete the instance if the broker rejects the request' do
+        it 'does not delete the instance if the broker rejects the request' do
           async_provision_service
           expect(
             a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
@@ -505,14 +517,15 @@ RSpec.describe 'Service Broker API integration' do
           VCAP::CloudController::ManagedServiceInstance.make(
             space_guid: @space_guid,
             service_plan_guid: @plan_guid,
-            maintenance_info: { 'version' => '1.0.0' })
+            maintenance_info: { 'version' => '1.0.0' }
+          )
         end
 
         before do
           @service_instance_guid = service_instance.guid
         end
 
-        it 'should forward the maintanance info to the broker (only version)' do
+        it 'forwards the maintanance info to the broker (only version)' do
           response = async_update_service(maintenance_info: { 'version' => '2.0.0', 'description' => 'Test description' })
           expect(response).to have_status_code(202)
           expect(
@@ -564,7 +577,7 @@ RSpec.describe 'Service Broker API integration' do
             expect(a_request(:delete, unbind_url(service_binding))).to have_been_made
 
             expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
-              'audit.service_binding.start_create',
+              'audit.service_binding.start_create'
             )
 
             expect(service_binding.reload).not_to be_nil

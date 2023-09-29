@@ -22,7 +22,7 @@ module VCAP::CloudController::Jobs
 
       context 'when overriden' do
         class CustomErrorTranslator < ErrorTranslatorJob
-          def translate_error(e)
+          def translate_error(_e)
             StandardError.new('translated-oops')
           end
         end

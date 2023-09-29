@@ -14,9 +14,7 @@ module VCAP::CloudController
     private
 
     def fetch_from_broker(service_instance)
-      if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
-        raise NotSupportedError.new
-      end
+      raise NotSupportedError.new if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
 
       raise_if_instance_locked(service_instance)
 

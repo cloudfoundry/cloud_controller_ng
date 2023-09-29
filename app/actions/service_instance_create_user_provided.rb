@@ -20,12 +20,12 @@ module VCAP::CloudController
         tags: message.tags,
         credentials: message.credentials,
         syslog_drain_url: message.syslog_drain_url,
-        route_service_url: message.route_service_url,
+        route_service_url: message.route_service_url
       }
       last_operation = {
         type: 'create',
         state: 'succeeded',
-        description: 'Operation succeeded',
+        description: 'Operation succeeded'
       }
 
       UserProvidedServiceInstance.db.transaction do

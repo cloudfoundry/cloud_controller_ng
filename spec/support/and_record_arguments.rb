@@ -12,6 +12,7 @@ module RSpec
 
     class ArgumentRecorder < ArgumentListMatcher
       attr_reader :arguments
+
       def initialize
         @arguments = []
       end

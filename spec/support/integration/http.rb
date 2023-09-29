@@ -9,7 +9,7 @@ module IntegrationHttp
       'exp' => Time.now.utc.to_i + 10_000,
       'scope' => opts[:scope],
       'iss' => UAAIssuer::ISSUER,
-      'jti' => 'valid-jti',
+      'jti' => 'valid-jti'
     }
     CF::UAA::TokenCoder.encode(token, skey: 'tokensecret', algorithm: 'HS256')
   end
@@ -17,14 +17,14 @@ module IntegrationHttp
   def admin_token
     auth_token(
       user_id: Sham.guid,
-      scope: ['cloud_controller.admin', 'cloud_controller.read', 'cloud_controller.write'],
+      scope: ['cloud_controller.admin', 'cloud_controller.read', 'cloud_controller.write']
     )
   end
 
   def user_auth_token(user_id)
     auth_token(
       user_id: user_id,
-      scope: %w(cloud_controller.read cloud_controller.write)
+      scope: %w[cloud_controller.read cloud_controller.write]
     )
   end
 

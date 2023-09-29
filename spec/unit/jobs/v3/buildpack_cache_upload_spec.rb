@@ -47,7 +47,7 @@ module VCAP::CloudController
 
         it 'deletes the uploaded file' do
           job.perform
-          expect(File.exist?(local_file.path)).to be_falsey
+          expect(File).not_to exist(local_file.path)
         end
 
         it 'knows its job name' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
         context 'when the app record no longer exists' do
           before { app.destroy }
 
-          it 'should not try to upload the droplet' do
+          it 'does not try to upload the droplet' do
             job.perform
 
             downloaded_file = Tempfile.new('downloaded_file')
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
           it 'deletes the local file' do
             job.perform
-            expect(File.exist?(local_file.path)).to be_falsey
+            expect(File).not_to exist(local_file.path)
           end
         end
 
@@ -126,22 +126,22 @@ module VCAP::CloudController
             end
 
             it 'records the failure' do
-              expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
+              expect(Delayed::Job.last.last_error).to match(/Something Terrible Happened/)
             end
 
             context 'retrying' do
               it 'does not delete the file' do
-                expect(File.exist?(local_file.path)).to be_truthy
+                expect(File).to exist(local_file.path)
               end
             end
 
             context 'when its the final attempt' do
-              it 'it deletes the file' do
+              it 'deletes the file' do
                 worker.work_off 1
 
-                expect {
+                expect do
                   worker.work_off 1
-                }.to change {
+                end.to change {
                   File.exist?(local_file.path)
                 }.from(true).to(false)
               end
@@ -155,7 +155,7 @@ module VCAP::CloudController
             end
 
             it 'receives an error' do
-              expect(Delayed::Job.last.last_error).to match /No such file or directory/
+              expect(Delayed::Job.last.last_error).to match(/No such file or directory/)
             end
 
             it 'does not retry' do

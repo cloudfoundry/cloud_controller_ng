@@ -6,7 +6,7 @@ RSpec.describe 'Auth' do
   let(:user_header) { headers_for(user) }
 
   before do
-    @test_mode = ENV['CC_TEST']
+    @test_mode = ENV.fetch('CC_TEST', nil)
     ENV['CC_TEST'] = nil
   end
 
@@ -26,13 +26,14 @@ RSpec.describe 'Auth' do
       get '/v2/organizations', nil, headers_for(user, expired: true)
 
       expect(last_response.status).to eq 401
-      expect(last_response.body).to match /InvalidAuthToken/
+      expect(last_response.body).to match(/InvalidAuthToken/)
     end
   end
+
   context 'when user has a global token inaddtion to the space supporter role' do
     let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:api_call) { lambda { |user_headers| get '/v2/apps', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v2/apps', nil, user_headers } }
     let(:expected_codes_and_responses) { Hash.new(code: 200) }
 
     before do
@@ -58,15 +59,15 @@ RSpec.describe 'Auth' do
         it 'errors on request' do
           get '/v2/apps', nil, user_header
           expect(last_response.status).to eq(403)
-          expect(last_response.body).to match %r(You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html)
+          expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 
           get '/v2/orgs', nil, user_header
           expect(last_response.status).to eq(403)
-          expect(last_response.body).to match %r(You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html)
+          expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 
           get '/v2/spaces', nil, user_header
           expect(last_response.status).to eq(403)
-          expect(last_response.body).to match %r(You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html)
+          expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
         end
 
         it 'does not error when hitting info' do
@@ -88,7 +89,7 @@ RSpec.describe 'Auth' do
           it 'still throws a 403' do
             get '/v2/spaces', nil, user_header
             expect(last_response.status).to eq(403)
-            expect(last_response.body).to match %r(You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html)
+            expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
           end
         end
       end

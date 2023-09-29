@@ -35,11 +35,11 @@ module VCAP::CloudController
     end
 
     def in_transitional_state?
-      [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(self.state)
+      [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(state)
     end
 
     def available?
-      self.state.blank? || self.state == ServiceBrokerStateEnum::AVAILABLE
+      state.blank? || state == ServiceBrokerStateEnum::AVAILABLE
     end
 
     def space_scoped?

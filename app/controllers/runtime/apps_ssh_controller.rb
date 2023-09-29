@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     # Allow unauthenticated access so that we can take action if authentication
     # fails
-    allow_unauthenticated_access only: [:ssh_access, :ssh_access_with_index]
+    allow_unauthenticated_access only: %i[ssh_access ssh_access_with_index]
 
     def self.dependencies
       [:app_event_repository]
@@ -24,20 +24,18 @@ module VCAP::CloudController
     get '/internal/apps/:guid/ssh_access/:index', :ssh_access_with_index
 
     def ssh_access_with_index(guid, index)
-      index = index.nil? ? 'unknown' : index
+      index = 'unknown' if index.nil?
 
       check_authentication(:ssh_access_internal)
       process = find_guid_and_validate_access(:update, guid)
-      unless VCAP::CloudController::AppSshEnabled.new(process).enabled?
-        raise ApiError.new_from_details('InvalidRequest')
-      end
+      raise ApiError.new_from_details('InvalidRequest') unless VCAP::CloudController::AppSshEnabled.new(process).enabled?
 
       record_ssh_authorized_event(process, index)
 
       response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_process(process) }
       [HTTP::OK, MultiJson.dump(response_body)]
-    rescue => e
-      process = ProcessModel.find(guid: guid)
+    rescue StandardError => e
+      process = ProcessModel.find(guid:)
       record_ssh_unauthorized_event(process, index) unless process.nil?
       raise e
     end

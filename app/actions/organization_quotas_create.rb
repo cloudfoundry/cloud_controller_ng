@@ -28,7 +28,7 @@ module VCAP::CloudController
           total_reserved_route_ports: message.total_reserved_ports || QuotaDefinition::UNLIMITED,
 
           # Domains
-          total_private_domains: message.total_domains || QuotaDefinition::UNLIMITED,
+          total_private_domains: message.total_domains || QuotaDefinition::UNLIMITED
         )
 
         orgs = valid_orgs(message.organization_guids)
@@ -43,9 +43,7 @@ module VCAP::CloudController
     private
 
     def validation_error!(error, message)
-      if error.errors.on(:name)&.include?(:unique)
-        error!("Organization Quota '#{message.name}' already exists.")
-      end
+      error!("Organization Quota '#{message.name}' already exists.") if error.errors.on(:name)&.include?(:unique)
 
       error!(error.message)
     end

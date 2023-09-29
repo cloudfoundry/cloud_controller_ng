@@ -7,6 +7,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#create' do
     let(:user) { VCAP::CloudController::User.make }
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
     before do
       set_current_user(user)
       allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
@@ -19,18 +20,18 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       role_to_expected_http_response = {
         'admin' => 201,
         'admin_read_only' => 403,
-        'global_auditor' => 403,
+        'global_auditor' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role:, user:)
 
             post :create, params: { name: 'my-sweet-org' }, as: :json
 
             expect(response.status).to eq(expected_return_value),
-              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+                                       "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
             if expected_return_value == 200
               expect(parsed_body['guid']).to eq(org.guid)
               expect(parsed_body['name']).to eq('Eric\'s Farm')
@@ -69,20 +70,20 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'does not create the org and fails' do
           post :create, params: { name: 'bad-org' }, as: :json
           expect(response.status).to eq(422), "Got #{response.status}"
-          expect(VCAP::CloudController::Organization.first(name: 'bad-org')).to be(nil)
+          expect(VCAP::CloudController::Organization.first(name: 'bad-org')).to be_nil
         end
       end
     end
 
     context 'when the user is admin' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when there is a message validation failure' do
         it 'displays an informative error' do
           post :create, params: { name: '' }, as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message("Name can't be blank")
         end
       end
@@ -91,12 +92,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         let(:name) { 'not-unique' }
 
         before do
-          VCAP::CloudController::Organization.make name: name
+          VCAP::CloudController::Organization.make name:
         end
 
         it 'responds with 422' do
-          post :create, params: { name: name }, as: :json
-          expect(response.status).to eq(422)
+          post :create, params: { name: }, as: :json
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message("Organization '#{name}' already exists.")
         end
       end
@@ -117,7 +118,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             }
           }, as: :json
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -142,12 +143,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     it 'eager loads associated resources that the presenter specifies' do
       expect(VCAP::CloudController::OrgListFetcher).to receive(:fetch).with(
-        hash_including(eager_loaded_associations: [:labels, :annotations, :quota_definition])
+        hash_including(eager_loaded_associations: %i[labels annotations quota_definition])
       ).and_call_original
 
       get :index
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
 
     describe 'query params' do
@@ -155,9 +156,9 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns orgs with matching names' do
           get :index, params: { names: 'Marmot,Beaver' }, as: :json
 
-          expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
-            'Marmot', 'Beaver'
+          expect(response).to have_http_status(:ok)
+          expect(parsed_body['resources'].pluck('name')).to match_array(%w[
+            Marmot Beaver
           ])
         end
       end
@@ -166,12 +167,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns orgs sorted alphabetically by name' do
           get :index, params: { order_by: 'name' }, as: :json
 
-          expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['name'] }).to eql([
-            'Beaver',
-            'Capybara',
-            'Marmot',
-            'Rat',
+          expect(response).to have_http_status(:ok)
+          expect(parsed_body['resources'].pluck('name')).to eql(%w[
+            Beaver
+            Capybara
+            Marmot
+            Rat
           ])
         end
       end
@@ -180,19 +181,15 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns orgs with matching guids' do
           get :index, params: { guids: "#{billing_manager_org.guid},#{member_org.guid}" }, as: :json
 
-          expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
-            billing_manager_org.guid, member_org.guid
-          ])
+          expect(response).to have_http_status(:ok)
+          expect(parsed_body['resources'].pluck('guid')).to contain_exactly(billing_manager_org.guid, member_org.guid)
         end
 
         it 'does not return orgs that the user does not have access to' do
           get :index, params: { guids: "#{billing_manager_org.guid},#{member_org.guid},#{other_org.guid}" }, as: :json
 
-          expect(response.status).to eq(200)
-          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
-            billing_manager_org.guid, member_org.guid
-          ])
+          expect(response).to have_http_status(:ok)
+          expect(parsed_body['resources'].pluck('guid')).to contain_exactly(billing_manager_org.guid, member_org.guid)
         end
       end
     end
@@ -202,7 +199,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns 400' do
           get :index, params: { per_page: 'meow' }, as: :json
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
@@ -212,7 +209,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns 400' do
           get :index, params: { meow: 'bad-val', nyan: 'mow' }, as: :json
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('BadQueryParameter')
           expect(response.body).to include('Unknown query parameter(s)')
           expect(response.body).to include('nyan')
@@ -239,14 +236,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'uses the isolation_segment as a filter' do
         get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
 
-        expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([org1.guid, org2.guid])
+        expect(response).to have_http_status(:ok)
+        response_guids = parsed_body['resources'].pluck('guid')
+        expect(response_guids).to contain_exactly(org1.guid, org2.guid)
       end
 
       it 'provides the correct base url in the pagination links' do
         get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['pagination']['first']['href']).to include("/v3/isolation_segments/#{isolation_segment_model.guid}/organizations")
       end
 
@@ -259,7 +256,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: params, as: :json
 
           parsed_response = parsed_body
-          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          response_guids = parsed_response['resources'].pluck('guid')
           expect(parsed_response['pagination']['total_results']).to eq(2)
           expect(response_guids.length).to eq(per_page)
         end
@@ -269,7 +266,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'returns a 404 Resource Not Found' do
           get :index, params: { isolation_segment_guid: 'not-an-iso-seg' }, as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -284,7 +281,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
 
           expect(response.body).to include 'ResourceNotFound'
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
@@ -298,9 +295,9 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'only displays to me the organizations that the user can see' do
           get :index, params: { isolation_segment_guid: isolation_segment_model.guid }, as: :json
 
-          expect(response.status).to eq 200
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response_guids).to match_array([org1.guid, org2.guid])
+          expect(response).to have_http_status :ok
+          response_guids = parsed_body['resources'].pluck('guid')
+          expect(response_guids).to contain_exactly(org1.guid, org2.guid)
         end
       end
     end
@@ -327,7 +324,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'presents the default isolation segment' do
         get :show_default_isolation_segment, params: { guid: org.guid }
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['data']['guid']).to eq(isolation_segment.guid)
       end
 
@@ -335,7 +332,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'throws ResourceNotFound error' do
           get :show_default_isolation_segment, params: { guid: 'cest-ne-pas-un-org' }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Organization not found'
         end
@@ -349,8 +346,8 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'presents a null guid' do
           get :show_default_isolation_segment, params: { guid: org.guid }
 
-          expect(response.status).to eq(200)
-          expect(parsed_body['data']).to eq(nil)
+          expect(response).to have_http_status(:ok)
+          expect(parsed_body['data']).to be_nil
         end
       end
     end
@@ -364,7 +361,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'throws a NotAuthorized error' do
           get :show_default_isolation_segment, params: { guid: org.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -378,7 +375,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'throws ResourceNotFound error' do
           get :show_default_isolation_segment, params: { guid: org.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Organization not found'
         end
@@ -405,12 +402,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
 
     it 'updates the organization' do
-      expect(org.default_isolation_segment_guid).to eq(nil)
+      expect(org.default_isolation_segment_guid).to be_nil
 
       patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
       org.reload
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(org.default_isolation_segment_guid).to eq(isolation_segment.guid)
       expect(parsed_body['data']['guid']).to eq(isolation_segment.guid)
     end
@@ -425,13 +422,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       before do
         org.default_isolation_segment_guid = 'prev-iso-seg'
       end
-      it 'should update the org default iso seg guid to null' do
+
+      it 'updates the org default iso seg guid to null' do
         expect(org.default_isolation_segment_guid).to eq('prev-iso-seg')
 
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
         org.reload
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(org.default_isolation_segment_guid).to be_nil
         expect(parsed_body['data']).to be_nil
       end
@@ -439,17 +437,18 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     context 'when the requested isolation segment has not been entitled to the org' do
       let(:org2) { VCAP::CloudController::Organization.make }
+
       before do
         allow_user_read_access_for(user, orgs: [org2])
       end
 
-      it 'throws an UnprocessableEntity error ' do
+      it 'throws an UnprocessableEntity error' do
         patch :update_default_isolation_segment, params: { guid: org2.guid }.merge(request_body), as: :json
 
         org.reload
         error_string = "Unable to assign isolation segment with guid '#{isolation_segment.guid}'. Ensure it has been entitled to the organization."
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include(error_string)
       end
@@ -459,7 +458,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'throws ResourceNotFound error' do
         patch :update_default_isolation_segment, params: { guid: 'cest-ne-pas-un-org' }.merge(request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Organization not found'
       end
@@ -475,7 +474,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'throws UnprocessableEntity error' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unable to assign isolation segment with guid 'garbage-guid'. Ensure it has been entitled to the organization."
       end
@@ -484,13 +483,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     context 'when the assignment fails' do
       before do
         allow_any_instance_of(VCAP::CloudController::SetDefaultIsolationSegment).to receive(:set).and_raise(
-          VCAP::CloudController::SetDefaultIsolationSegment::Error.new('bad thing happened!'))
+          VCAP::CloudController::SetDefaultIsolationSegment::Error.new('bad thing happened!')
+        )
       end
 
       it 'returns 422' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('bad thing happened!')
       end
@@ -506,7 +506,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'returns 422' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('123 must be a string')
       end
@@ -521,7 +521,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'throws ResourceNotFound error' do
           patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include 'ResourceNotFound'
           expect(response.body).to include 'Organization not found'
         end
@@ -538,7 +538,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
           expect(org.managers).not_to include(user)
           expect(user.admin).to be_falsey
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -547,9 +547,11 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     context 'when the org is suspended' do
       let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
       before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
+
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do
           {
@@ -561,10 +563,10 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 403,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json } }
+        let(:api_call) { -> { patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json } }
       end
     end
   end
@@ -580,7 +582,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     let(:annotations) do
       {
         potato: 'yellow',
-        beet: 'golden',
+        beet: 'golden'
       }
     end
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -598,6 +600,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         }
       }
     end
+
     before do
       VCAP::CloudController::LabelsUpdate.update(org, labels, VCAP::CloudController::OrganizationLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(org, annotations, VCAP::CloudController::OrganizationAnnotationModel)
@@ -611,7 +614,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'updates the organization' do
         patch :update, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['name']).to eq('Fire')
         expect(parsed_body['guid']).to eq(org.guid)
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
@@ -634,7 +637,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         patch :update, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
 
         org.reload
@@ -655,7 +658,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'succeeds' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
 
           org.reload
@@ -670,7 +673,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'succeeds' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           org.reload
           expect(org.name).to eq('Water')
           expect(parsed_body['name']).to eq('Water')
@@ -687,7 +690,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message('Name is too short (minimum is 1 character)')
         end
       end
@@ -705,7 +708,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'updates the metadata' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['metadata']['labels']['key']).to eq 'value'
         end
       end
@@ -723,7 +726,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -746,7 +749,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -764,16 +767,17 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             'space_auditor' => 403,
             'org_manager' => 200,
             'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_billing_manager' => 403
           }
         end
-        let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+        let(:api_call) { -> { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
       end
 
       context 'when the org is suspended' do
         before do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
+
         it_behaves_like 'permissions endpoint' do
           let(:roles_to_http_responses) do
             {
@@ -785,10 +789,10 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
               'space_auditor' => 403,
               'org_manager' => 403,
               'org_auditor' => 403,
-              'org_billing_manager' => 403,
+              'org_billing_manager' => 403
             }
           end
-          let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+          let(:api_call) { -> { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
         end
       end
     end
@@ -802,7 +806,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'throws ResourceNotFound error' do
         patch :update, params: { guid: 'not-a-real-guid' }.merge(request_body), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Organization not found'
       end

@@ -38,9 +38,7 @@ RSpec.describe 'Metrics' do
   context 'cc_total_users' do
     before do
       cc_total_users = Prometheus::Client.registry.get(:cc_total_users)
-      if !cc_total_users.nil?
-        cc_total_users.set(0)
-      end
+      cc_total_users.set(0) unless cc_total_users.nil?
 
       # Prometheus::Client::Config::data_store = nil
       10.times do

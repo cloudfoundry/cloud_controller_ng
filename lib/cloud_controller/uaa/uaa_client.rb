@@ -53,7 +53,7 @@ module VCAP::CloudController
 
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
-      filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
+      filter_string = %(origin eq "#{origin}" and #{filter_string}) if origin.present?
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
@@ -70,13 +70,13 @@ module VCAP::CloudController
 
       filter_string = construct_filter_string(username_filter_string, origin_filter_string)
 
-      if precise_username_match
-        results = query(:user_id, includeInactive: true, filter: filter_string)
-      else
-        results = query(:user, filter: filter_string, attributes: 'id')
-      end
+      results = if precise_username_match
+                  query(:user_id, includeInactive: true, filter: filter_string)
+                else
+                  query(:user, filter: filter_string, attributes: 'id')
+                end
 
-      results['resources'].map { |r| r['id'] }
+      results['resources'].pluck('id')
     rescue CF::UAA::UAAError => e
       logger.error("Failed to retrieve user ids from UAA: #{e.inspect}")
       raise UaaUnavailable
@@ -94,7 +94,7 @@ module VCAP::CloudController
       filter_string = %(username eq "#{username}")
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
-      results['resources'].map { |resource| resource['origin'] }
+      results['resources'].pluck('origin')
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
       raise UaaUnavailable
@@ -106,8 +106,8 @@ module VCAP::CloudController
 
     private
 
-    def query(type, **opts)
-      with_cache_retry { scim.query(type, **opts) }
+    def query(type, **)
+      with_cache_retry { scim.query(type, **) }
     end
 
     def get(type, id)
@@ -126,7 +126,7 @@ module VCAP::CloudController
     end
 
     def fetch_users(user_ids)
-      return {} unless user_ids.present?
+      return {} if user_ids.blank?
 
       results_hash = {}
 

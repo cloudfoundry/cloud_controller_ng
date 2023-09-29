@@ -4,7 +4,7 @@ require 'utils/workpool'
 module VCAP::CloudController
   module Diego
     RSpec.describe ProcessesSync, job_context: :clock do
-      subject { ProcessesSync.new(config: config, statsd_updater: statsd_updater) }
+      subject { ProcessesSync.new(config:, statsd_updater:) }
       let(:config) { instance_double(Config) }
 
       let(:bbs_apps_client) { instance_double(BbsAppsClient) }
@@ -36,9 +36,9 @@ module VCAP::CloudController
           let(:good_lrp_scheduling_info) do
             ::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new(
               desired_lrp_key: ::Diego::Bbs::Models::DesiredLRPKey.new({
-                process_guid: ProcessGuid.from_process(good_process),
-              }),
-              annotation:      good_process.updated_at.to_f.to_s,
+                                                                         process_guid: ProcessGuid.from_process(good_process)
+                                                                       }),
+              annotation: good_process.updated_at.to_f.to_s
             )
           end
           let(:good_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: 'good-lrp') }
@@ -63,17 +63,17 @@ module VCAP::CloudController
           let(:stale_lrp_scheduling_info) do
             ::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new(
               desired_lrp_key: ::Diego::Bbs::Models::DesiredLRPKey.new({
-                process_guid: ProcessGuid.from_process(stale_process),
-              }),
-              annotation:      'outdated',
+                                                                         process_guid: ProcessGuid.from_process(stale_process)
+                                                                       }),
+              annotation: 'outdated'
             )
           end
           let(:stale_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: 'stale-lrp') }
           let(:stale_lrp_update) do
             ::Diego::Bbs::Models::DesiredLRPUpdate.new(
-              instances:  stale_process.instances,
+              instances: stale_process.instances,
               annotation: stale_process.updated_at.to_f.to_s,
-              routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: [])
+              routes: ::Diego::Bbs::Models::ProtoRoutes.new(routes: [])
             )
           end
           let!(:stale_process) { ProcessModel.make(:diego_runnable) }
@@ -116,7 +116,7 @@ module VCAP::CloudController
                 subject.sync
                 expect(workpool).to have_received(:submit)
                 expect(bbs_apps_client).to have_received(:bump_freshness)
-                expect(logger).to_not have_received(:error)
+                expect(logger).not_to have_received(:error)
                 expect(logger).to have_received(:info).with(
                   'ignore-deleted-resource', error: error.name, error_message: error.message
                 )
@@ -130,9 +130,9 @@ module VCAP::CloudController
                 expect { subject.sync }.not_to raise_error
                 expect(fake_logger).to have_received(:error).with(
                   'error-updating-lrp-state',
-                    error: 'RunnerError',
-                    error_message: 'Runner error: some error',
-                    error_backtrace: anything
+                  error: 'RunnerError',
+                  error_message: 'Runner error: some error',
+                  error_backtrace: anything
                 )
                 expect(bbs_apps_client).not_to have_received(:bump_freshness)
               end
@@ -175,9 +175,9 @@ module VCAP::CloudController
                 expect { subject.sync }.not_to raise_error
                 expect(fake_logger).to have_received(:error).with(
                   'error-updating-lrp-state',
-                    error: 'RunnerError',
-                    error_message: 'Runner error: some error',
-                    error_backtrace: anything
+                  error: 'RunnerError',
+                  error_message: 'Runner error: some error',
+                  error_backtrace: anything
                 )
                 expect(bbs_apps_client).not_to have_received(:bump_freshness)
               end
@@ -236,7 +236,7 @@ module VCAP::CloudController
             subject.sync
             expect(workpool).to have_received(:submit)
             expect(bbs_apps_client).to have_received(:bump_freshness)
-            expect(logger).to_not have_received(:error)
+            expect(logger).not_to have_received(:error)
             expect(logger).to have_received(:info).with(
               'ignore-existing-resource', error: error.name, error_message: error.message
             )
@@ -248,8 +248,8 @@ module VCAP::CloudController
           let(:deleted_lrp_scheduling_info) do
             ::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new(
               desired_lrp_key: ::Diego::Bbs::Models::DesiredLRPKey.new({
-                process_guid: 'deleted',
-              }),
+                                                                         process_guid: 'deleted'
+                                                                       })
             )
           end
 
@@ -272,9 +272,9 @@ module VCAP::CloudController
               expect { subject.sync }.not_to raise_error
               expect(fake_logger).to have_received(:error).with(
                 'error-updating-lrp-state',
-                  error: 'RunnerError',
-                  error_message: 'Runner error: some error',
-                  error_backtrace: anything
+                error: 'RunnerError',
+                error_message: 'Runner error: some error',
+                error_backtrace: anything
               )
               expect(bbs_apps_client).not_to have_received(:bump_freshness)
             end
@@ -286,6 +286,7 @@ module VCAP::CloudController
             # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
             # the background job doesn't have to deal with API concerns
             let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
+
             before do
               allow(bbs_apps_client).to receive(:fetch_scheduling_infos).and_raise(error)
             end
@@ -298,6 +299,7 @@ module VCAP::CloudController
 
           context 'when an error occurs while updating an individual LRP' do
             let(:error) { VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack.new("no compiler defined for requested stack 'schmidlap'") }
+
             before do
               allow_any_instance_of(WorkPool).to receive(:exceptions).and_return([error])
             end
@@ -306,9 +308,9 @@ module VCAP::CloudController
               subject.sync
               expect(fake_logger).to have_received(:error).with(
                 'error-updating-lrp-state',
-                  error: 'VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack',
-                  error_message: "no compiler defined for requested stack 'schmidlap'",
-                  error_backtrace: ''
+                error: 'VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack',
+                error_message: "no compiler defined for requested stack 'schmidlap'",
+                error_backtrace: ''
               )
               expect(bbs_apps_client).not_to have_received(:bump_freshness)
             end
@@ -381,9 +383,9 @@ module VCAP::CloudController
             expect { subject.sync }.not_to raise_error
             expect(fake_logger).to have_received(:error).with(
               'error-updating-lrp-state',
-                error: 'RunnerError',
-                error_message: 'Runner error: some error',
-                error_backtrace: anything
+              error: 'RunnerError',
+              error_message: 'Runner error: some error',
+              error_backtrace: anything
             )
             expect(bbs_apps_client).not_to have_received(:bump_freshness)
           end
@@ -410,7 +412,11 @@ module VCAP::CloudController
           end
 
           it 'continues to attempt to update all necessary lrps' do
-            subject.sync rescue nil
+            begin
+              subject.sync
+            rescue StandardError
+              nil
+            end
             expect(bbs_apps_client).to have_received(:desire_app).with(missing_process4)
           end
         end

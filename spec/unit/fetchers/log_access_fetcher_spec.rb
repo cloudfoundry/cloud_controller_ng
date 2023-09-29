@@ -15,7 +15,7 @@ module VCAP::CloudController
         let(:app_model) { AppModel.make }
 
         it 'returns true' do
-          expect(fetcher.app_exists?(app_model.guid)).to eq(true)
+          expect(fetcher.app_exists?(app_model.guid)).to be(true)
         end
       end
 
@@ -23,12 +23,12 @@ module VCAP::CloudController
         let(:app_v2) { ProcessModel.make }
 
         it 'returns true' do
-          expect(fetcher.app_exists?(app_v2.guid)).to eq(true)
+          expect(fetcher.app_exists?(app_v2.guid)).to be(true)
         end
       end
 
       it 'returns false if the guid cannot be found' do
-        expect(fetcher.app_exists?('garbage_guid!')).to eq(false)
+        expect(fetcher.app_exists?('garbage_guid!')).to be(false)
       end
     end
 
@@ -36,24 +36,25 @@ module VCAP::CloudController
       context 'when the user has access' do
         context 'to the v3 app guid' do
           it 'returns true' do
-            expect(fetcher.app_exists_by_space?(process.guid, space_guids)).to eq(true)
+            expect(fetcher.app_exists_by_space?(process.guid, space_guids)).to be(true)
           end
         end
 
         context 'to the v2 app guid' do
-          let(:process) { ProcessModelFactory.make(space: space) }
+          let(:process) { ProcessModelFactory.make(space:) }
+
           it 'returns true' do
-            expect(fetcher.app_exists_by_space?(process.guid, space_guids)).to eq(true)
+            expect(fetcher.app_exists_by_space?(process.guid, space_guids)).to be(true)
           end
         end
       end
 
       it 'returns false if the user does not have access to the app' do
-        expect(fetcher.app_exists_by_space?(sad_process.guid, space_guids)).to eq(false)
+        expect(fetcher.app_exists_by_space?(sad_process.guid, space_guids)).to be(false)
       end
 
       it 'returns false if the guid cannot be found' do
-        expect(fetcher.app_exists_by_space?('garbage_guid!', space_guids)).to eq(false)
+        expect(fetcher.app_exists_by_space?('garbage_guid!', space_guids)).to be(false)
       end
     end
   end

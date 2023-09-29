@@ -21,9 +21,9 @@ module VCAP::CloudController
         errors.add(:data, "#{space_guid} must be a string")
         return
       end
-      if space_guid && space_guid.empty?
-        errors.add(:data, "guid can't be blank")
-      end
+      return unless space_guid && space_guid.empty?
+
+      errors.add(:data, "guid can't be blank")
     end
   end
 end

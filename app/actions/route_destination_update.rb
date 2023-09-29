@@ -20,9 +20,7 @@ module VCAP::CloudController
 
       def validate_protocol_matches_route!(destination, message)
         if destination.route&.protocol == 'tcp'
-          unless message.protocol == 'tcp'
-            raise Error.new("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
-          end
+          raise Error.new("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'") unless message.protocol == 'tcp'
         elsif message.protocol == 'tcp'
           raise Error.new("Destination protocol must be 'http1' or 'http2' if the parent route's protocol is 'http'")
         end

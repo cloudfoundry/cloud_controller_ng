@@ -5,9 +5,8 @@ module VCAP::CloudController::Presenters::V3
   class RouteDestinationsPresenter < BasePresenter
     def initialize(
       resource,
-      show_secrets: false,
-      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-      route:
+      route:, show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL
     )
       @route = route
       super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: [])
@@ -38,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
       links = {
         self: {
           href: url_builder.build_url(path: "/v3/routes/#{route.guid}/destinations")
-        },
+        }
       }
 
       links[:route] = {

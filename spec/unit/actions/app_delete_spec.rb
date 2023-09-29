@@ -13,10 +13,10 @@ module VCAP::CloudController
 
     describe '#delete' do
       it 'deletes the app record' do
-        expect {
+        expect do
           app_delete.delete(app_dataset)
-        }.to change { AppModel.count }.by(-1)
-        expect(app.exists?).to be_falsey
+        end.to change(AppModel, :count).by(-1)
+        expect(app).not_to exist
       end
 
       context 'when the app no longer exists' do
@@ -25,9 +25,9 @@ module VCAP::CloudController
         end
 
         it 'throws an exception' do
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to raise_error(Sequel::NoExistingObject, 'Record not found')
+          end.to raise_error(Sequel::NoExistingObject, 'Record not found')
         end
       end
 
@@ -43,23 +43,23 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated packages' do
-          package = PackageModel.make(app: app)
+          package = PackageModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { PackageModel.count }.by(-1)
-          expect(package.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(PackageModel, :count).by(-1)
+          expect(package).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated builds' do
-          build = BuildModel.make(app: app)
+          build = BuildModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { BuildModel.count }.by(-1)
-          expect(build.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(BuildModel, :count).by(-1)
+          expect(build).not_to exist
+          expect(app).not_to exist
         end
 
         context 'when the builds have metadata' do
@@ -72,10 +72,10 @@ module VCAP::CloudController
           let(:old_annotations) do
             {
               potato: 'celandine',
-              beet: 'formanova',
+              beet: 'formanova'
             }
           end
-          let(:build) { BuildModel.make(app: app) }
+          let(:build) { BuildModel.make(app:) }
 
           before do
             LabelsUpdate.update(build, old_labels, BuildLabelModel)
@@ -86,72 +86,72 @@ module VCAP::CloudController
             befores = [BuildLabelModel.count, BuildAnnotationModel.count]
             app_delete.delete(app_dataset)
             afters = [BuildLabelModel.count, BuildAnnotationModel.count]
-            expect(build.exists?).to be_falsey
-            expect(app.exists?).to be_falsey
+            expect(build).not_to exist
+            expect(app).not_to exist
             expect(befores - afters).to eq([2, 2])
           end
         end
 
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(app: app)
+          droplet = DropletModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { DropletModel.count }.by(-1)
-          expect(droplet.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(DropletModel, :count).by(-1)
+          expect(droplet).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated processes' do
-          process = ProcessModel.make(app: app)
+          process = ProcessModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { ProcessModel.count }.by(-1)
-          expect(process.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(ProcessModel, :count).by(-1)
+          expect(process).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated sidecars' do
-          sidecar = SidecarModel.make(app: app)
-          sidecar_process_type = SidecarProcessTypeModel.make(sidecar: sidecar)
+          sidecar = SidecarModel.make(app:)
+          sidecar_process_type = SidecarProcessTypeModel.make(sidecar:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { SidecarModel.count }.by(-1)
-          expect(sidecar.exists?).to be_falsey
-          expect(sidecar_process_type.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(SidecarModel, :count).by(-1)
+          expect(sidecar).not_to exist
+          expect(sidecar_process_type).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated deployments' do
-          deployment = DeploymentModel.make(app: app)
+          deployment = DeploymentModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { DeploymentModel.count }.by(-1)
-          expect(deployment.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(DeploymentModel, :count).by(-1)
+          expect(deployment).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated labels' do
-          label = AppLabelModel.make(app: app)
+          label = AppLabelModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { AppLabelModel.count }.by(-1)
-          expect(label.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(AppLabelModel, :count).by(-1)
+          expect(label).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated annotations' do
-          annotation = AppAnnotationModel.make(app: app)
+          annotation = AppAnnotationModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { AppAnnotationModel.count }.by(-1)
-          expect(annotation.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(AppAnnotationModel, :count).by(-1)
+          expect(annotation).not_to exist
+          expect(app).not_to exist
         end
 
         describe 'deleting associated routes' do
@@ -161,11 +161,11 @@ module VCAP::CloudController
           let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type, app_port: 8080) }
 
           it 'deletes associated route mappings' do
-            expect {
+            expect do
               app_delete.delete(app_dataset)
-            }.to change { RouteMappingModel.count }.by(-1)
-            expect(route_mapping.exists?).to be_falsey
-            expect(app.exists?).to be_falsey
+            end.to change(RouteMappingModel, :count).by(-1)
+            expect(route_mapping).not_to exist
+            expect(app).not_to exist
           end
 
           context 'when copilot is enabled', isolation: :truncation do
@@ -194,21 +194,21 @@ module VCAP::CloudController
         it 'deletes associated tasks' do
           task_model = TaskModel.make(app: app, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { TaskModel.count }.by(-1)
-          expect(task_model.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(TaskModel, :count).by(-1)
+          expect(task_model).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes associated revisions' do
-          revision = RevisionModel.make(app: app)
+          revision = RevisionModel.make(app:)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { RevisionModel.count }.by(-1)
-          expect(revision.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(RevisionModel, :count).by(-1)
+          expect(revision).not_to exist
+          expect(app).not_to exist
         end
 
         it 'deletes the buildpack caches' do
@@ -218,17 +218,17 @@ module VCAP::CloudController
 
           expect(job.handler).to include(app.guid)
           expect(job.queue).to eq(Jobs::Queues.generic)
-          expect(app.exists?).to be_falsey
+          expect(app).not_to exist
         end
 
         it 'deletes the associated sidecars' do
           sidecar = SidecarModel.make(name: 'name', app: app)
 
-          expect {
+          expect do
             app_delete.delete(app_dataset)
-          }.to change { SidecarModel.count }.by(-1)
-          expect(sidecar.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          end.to change(SidecarModel, :count).by(-1)
+          expect(sidecar).not_to exist
+          expect(app).not_to exist
         end
 
         describe 'deleting service bindings' do
@@ -237,11 +237,11 @@ module VCAP::CloudController
 
             binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
 
-            expect {
+            expect do
               app_delete.delete(app_dataset)
-            }.to change { ServiceBinding.count }.by(-1)
-            expect(binding.exists?).to be_falsey
-            expect(app.exists?).to be_falsey
+            end.to change(ServiceBinding, :count).by(-1)
+            expect(binding).not_to exist
+            expect(app).not_to exist
           end
 
           context 'when service binding delete occurs asynchronously' do
@@ -255,7 +255,7 @@ module VCAP::CloudController
             context 'with a single service binding' do
               let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
 
-              it 'should always call the broker with accepts_incomplete true' do
+              it 'alwayses call the broker with accepts_incomplete true' do
                 expect(client).to receive(:unbind).with(binding1, user_guid: user_audit_info.user_guid, accepts_incomplete: true)
 
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
@@ -269,13 +269,13 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should not delete the app' do
+              it 'does not delete the app' do
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
-                expect(binding1.exists?).to be_truthy
-                expect(app.exists?).to be_truthy
+                expect(binding1).to exist
+                expect(app).to exist
               end
 
-              it 'should not rollback the enqueuing of a job to delete the service binding' do
+              it 'does not rollback the enqueuing of a job to delete the service binding' do
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
                 expect(Delayed::Job.count).to eq 1
               end
@@ -289,7 +289,7 @@ module VCAP::CloudController
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
                   expect(err.underlying_errors.map(&:message)).to contain_exactly(
                     "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress.",
-                        "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
+                    "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
                   )
                 end
               end
@@ -310,9 +310,9 @@ module VCAP::CloudController
             end
 
             it 'raises the errors wrapped into a SubResourceError' do
-              expect {
+              expect do
                 app_delete.delete(app_dataset)
-              }.to raise_error(AppDelete::SubResourceError) do |err|
+              end.to raise_error(AppDelete::SubResourceError) do |err|
                 expect(err.underlying_errors).to have(2).items
                 expect(err.underlying_errors).to all(be_a(StandardError))
                 expect(err.underlying_errors.map(&:message)).to eq(['error 1', 'error 2'])
@@ -325,10 +325,10 @@ module VCAP::CloudController
 
     describe '#delete_without_event' do
       it 'deletes the app record' do
-        expect {
+        expect do
           app_delete.delete_without_event(app_dataset)
-        }.to change { AppModel.count }.by(-1)
-        expect(app.exists?).to be_falsey
+        end.to change(AppModel, :count).by(-1)
+        expect(app).not_to exist
       end
 
       it 'creates an audit event' do

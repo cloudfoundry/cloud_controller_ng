@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:user_guid) { 'user-guid' }
       let(:user_email) { 'some-email' }
       let(:user_name) { 'some-username' }
-      let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_name: user_name, user_email: user_email) }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid:, user_name:, user_email:) }
       let(:service_binding) { ServiceBinding.make(name: 'some-binding-name') }
 
       describe '.record_start_create' do
@@ -38,11 +38,11 @@ module VCAP::CloudController
 
           expect(event.metadata[:request]).to eq(
             {
-              'big'  => 'data',
+              'big' => 'data',
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
             request = { 'big' => 'data' }
             event   = ServiceBindingEventRepository.record_start_create(service_binding, user_audit_info, request, manifest_triggered: true)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -92,11 +92,11 @@ module VCAP::CloudController
 
           expect(event.metadata[:request]).to eq(
             {
-              'big'  => 'data',
+              'big' => 'data',
               'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
-          expect(event.metadata[:manifest_triggered]).to eq(nil)
+          expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
         context 'when the event is manifest triggered' do
@@ -104,7 +104,7 @@ module VCAP::CloudController
             request = { 'big' => 'data' }
             event   = ServiceBindingEventRepository.record_create(service_binding, user_audit_info, request, manifest_triggered: true)
 
-            expect(event.metadata[:manifest_triggered]).to eq(true)
+            expect(event.metadata[:manifest_triggered]).to be(true)
           end
         end
 
@@ -135,8 +135,8 @@ module VCAP::CloudController
           expect(event.metadata).to eq(
             request: {
               app_guid: service_binding.app_guid,
-              service_instance_guid: service_binding.service_instance_guid,
-            },
+              service_instance_guid: service_binding.service_instance_guid
+            }
           )
         end
 
@@ -167,8 +167,8 @@ module VCAP::CloudController
           expect(event.metadata).to eq(
             request: {
               app_guid: service_binding.app_guid,
-              service_instance_guid: service_binding.service_instance_guid,
-            },
+              service_instance_guid: service_binding.service_instance_guid
+            }
           )
         end
 

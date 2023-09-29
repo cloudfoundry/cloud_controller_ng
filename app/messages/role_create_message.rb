@@ -3,16 +3,16 @@ require 'models/helpers/role_types'
 
 module VCAP::CloudController
   class RoleCreateMessage < BaseMessage
-    register_allowed_keys [:type, :relationships]
+    register_allowed_keys %i[type relationships]
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
     validates :type,
-      inclusion: {
-        in: VCAP::CloudController::RoleTypes::ALL_ROLES,
-        message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
-      }
+              inclusion: {
+                in: VCAP::CloudController::RoleTypes::ALL_ROLES,
+                message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
+              }
 
     delegate :space_guid, :user_guid, :organization_guid, :username, :user_origin, to: :relationships_message
 
@@ -22,7 +22,8 @@ module VCAP::CloudController
 
     class Relationships < BaseMessage
       attr_reader :type
-      register_allowed_keys [:space, :user, :organization]
+
+      register_allowed_keys %i[space user organization]
 
       def initialize(role_type, params)
         @type = role_type
@@ -72,9 +73,9 @@ module VCAP::CloudController
 
       private
 
-      [:user, :space, :organization].each do |symbol|
+      %i[user space organization].each do |symbol|
         define_method "#{symbol}_data" do
-          HashUtils.dig(self.send(symbol), :data)
+          HashUtils.dig(send(symbol), :data)
         end
       end
 
@@ -97,39 +98,27 @@ module VCAP::CloudController
       end
 
       def user_input_combinations
-        if has_user_guid? && has_username?
-          errors.add(:username, 'cannot be specified when identifying user by guid')
-        end
+        errors.add(:username, 'cannot be specified when identifying user by guid') if has_user_guid? && has_username?
 
-        if has_user_guid? && has_user_origin?
-          errors.add(:user_origin, 'cannot be specified when identifying user by guid')
-        end
+        errors.add(:user_origin, 'cannot be specified when identifying user by guid') if has_user_guid? && has_user_origin?
 
-        if !has_username? && has_user_origin?
-          errors.add(:user_origin, 'cannot be specified without specifying the username')
-        end
+        errors.add(:user_origin, 'cannot be specified without specifying the username') if !has_username? && has_user_origin?
 
-        if !has_username? && !has_user_guid?
-          errors.add(:user, 'must have a username or guid specified')
-        end
+        return unless !has_username? && !has_user_guid?
+
+        errors.add(:user, 'must have a username or guid specified')
       end
 
       def organization_or_space_input_combinations
-        if space_data.nil? && organization_data.nil?
-          errors.add(:base, 'must specify either a space or an organization.')
-        end
+        errors.add(:base, 'must specify either a space or an organization.') if space_data.nil? && organization_data.nil?
 
-        if space_data && VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.include?(type)
-          errors.add(:space, "cannot be provided with the organization role type: '#{type}'.")
-        end
+        errors.add(:space, "cannot be provided with the organization role type: '#{type}'.") if space_data && VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.include?(type)
 
-        if organization_data && VCAP::CloudController::RoleTypes::SPACE_ROLES.include?(type)
-          errors.add(:organization, "cannot be provided with the space role type: '#{type}'.")
-        end
+        errors.add(:organization, "cannot be provided with the space role type: '#{type}'.") if organization_data && VCAP::CloudController::RoleTypes::SPACE_ROLES.include?(type)
 
-        if space_data && organization_data
-          errors.add(:base, 'cannot specify both an organization and a space.')
-        end
+        return unless space_data && organization_data
+
+        errors.add(:base, 'cannot specify both an organization and a space.')
       end
     end
   end

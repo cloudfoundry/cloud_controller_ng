@@ -21,7 +21,7 @@ Sequel.migration do
             mode: mount['mode'],
             device: {
               volume_id: mount['private']['group_id'],
-              config: mount['private']['config'],
+              config: mount['private']['config']
             }
           }
         end
@@ -49,7 +49,7 @@ Sequel.migration do
             private: {
               driver: mount['driver'],
               group_id: mount['device']['volume_id'],
-              config: mount['device']['config'],
+              config: mount['device']['config']
             }
           }
         end

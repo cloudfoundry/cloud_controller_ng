@@ -56,12 +56,12 @@ class ApplicationController < ActionController::Base
   include V3ErrorsHelper
   include VCAP::CloudController::ParamsHashifier
 
-  ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request', 'v3_info'].map(&:freeze).freeze
-  UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root', 'v3_info'].map(&:freeze).freeze
-  READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
+  ANONYMOUSLY_AVAILABLE = %w[not_found internal_error bad_request v3_info].map(&:freeze).freeze
+  UNSCOPED_PAGES = %w[not_found internal_error bad_request v3_root v3_info].map(&:freeze).freeze
+  READ_SCOPE_HTTP_METHODS = %w[GET HEAD].map(&:freeze).freeze
   YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 
-  wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
+  wrap_parameters :body, format: %i[json url_encoded_form multipart_form]
 
   before_action :validate_token!, if: :enforce_authentication?
   before_action :check_read_permissions!, if: :enforce_read_scope?
@@ -94,7 +94,7 @@ class ApplicationController < ActionController::Base
     allow_yaml_aliases = false
     yaml = Psych.safe_load(request.body.read, permitted_classes: [], permitted_symbols: [], aliases: allow_yaml_aliases, strict_integer: true)
 
-    message_parse_error!('invalid request body') if !yaml.is_a? Hash
+    message_parse_error!('invalid request body') unless yaml.is_a? Hash
     @parsed_yaml = yaml
   rescue Psych::BadAlias
     bad_request!('Manifest does not support Anchors and Aliases')
@@ -152,7 +152,7 @@ class ApplicationController < ActionController::Base
   ###
 
   def enforce_authentication?
-    !ANONYMOUSLY_AVAILABLE.include?(action_name)
+    ANONYMOUSLY_AVAILABLE.exclude?(action_name)
   end
 
   def enforce_read_scope?
@@ -164,7 +164,7 @@ class ApplicationController < ActionController::Base
   def enforce_write_scope?
     return false if UNSCOPED_PAGES.include?(action_name)
 
-    !READ_SCOPE_HTTP_METHODS.include?(request.method)
+    READ_SCOPE_HTTP_METHODS.exclude?(request.method)
   end
 
   def read_scope
@@ -186,9 +186,7 @@ class ApplicationController < ActionController::Base
   def validate_token!
     return if current_user
 
-    if VCAP::CloudController::SecurityContext.missing_token?
-      raise CloudController::Errors::NotAuthenticated
-    end
+    raise CloudController::Errors::NotAuthenticated if VCAP::CloudController::SecurityContext.missing_token?
 
     raise CloudController::Errors::InvalidAuthToken
   end

@@ -20,13 +20,13 @@ module VCAP::CloudController::Diego
     end
 
     describe 'cc_process_guid' do
-      it 'it returns the CC ProcessModel guid from the versioned Diego process guid' do
+      it 'returns the CC ProcessModel guid from the versioned Diego process guid' do
         expect(ProcessGuid.cc_process_guid(ProcessGuid.from_process(process))).to eq(process.guid)
       end
     end
 
     describe 'cc_process_version' do
-      it 'it returns the CC ProcessModel version from the versioned Diego process guid' do
+      it 'returns the CC ProcessModel version from the versioned Diego process guid' do
         expect(ProcessGuid.cc_process_version(ProcessGuid.from_process(process))).to eq(process.version)
       end
     end

@@ -1,8 +1,8 @@
 module VCAP::CloudController
   class LogAccessFetcher
     def app_exists?(guid)
-      AppModel.where(guid: guid).any? ||
-        ProcessModel.where(guid: guid).any?
+      AppModel.where(guid:).any? ||
+        ProcessModel.where(guid:).any?
     end
 
     def app_exists_by_space?(guid, space_guids)

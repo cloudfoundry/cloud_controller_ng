@@ -50,7 +50,7 @@ module VCAP::CloudController
 
     describe 'default values' do
       let(:pagination_options) { PaginationOptions.new(options) }
-      let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
+      let(:options) { { page:, per_page:, order_by:, order_direction: } }
       let(:page) { 2 }
       let(:per_page) { 5 }
       let(:order_by) { 'anything' }
@@ -145,19 +145,19 @@ module VCAP::CloudController
     end
 
     describe 'ordering_configured?' do
-      let(:pagination_options) { PaginationOptions.new(order_by: order_by, order_direction: order_direction) }
+      let(:pagination_options) { PaginationOptions.new(order_by:, order_direction:) }
       let(:order_by) { 'anything' }
       let(:order_direction) { 'desc' }
 
       it 'returns true when both are configured' do
-        expect(pagination_options.ordering_configured?).to be_truthy
+        expect(pagination_options).to be_ordering_configured
       end
 
       context 'when order_by is not configured' do
         let(:order_by) { nil }
 
         it 'returns true' do
-          expect(pagination_options.ordering_configured?).to be_truthy
+          expect(pagination_options).to be_ordering_configured
         end
       end
 
@@ -165,7 +165,7 @@ module VCAP::CloudController
         let(:order_direction) { nil }
 
         it 'returns true' do
-          expect(pagination_options.ordering_configured?).to be_truthy
+          expect(pagination_options).to be_ordering_configured
         end
       end
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
         let(:order_direction) { nil }
 
         it 'returns false' do
-          expect(pagination_options.ordering_configured?).to be_falsey
+          expect(pagination_options).not_to be_ordering_configured
         end
       end
     end

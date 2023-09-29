@@ -28,7 +28,7 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::PackageAnnotationModel.make(
           key_name: 'altitude',
           value: '14,412',
-          resource_guid: package.guid,
+          resource_guid: package.guid
         )
       end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::PackageAnnotationModel.make(
           key_name: 'maize',
           value: 'hfcs',
-          resource_guid: package.guid,
+          resource_guid: package.guid
         )
       end
 
@@ -98,7 +98,7 @@ module VCAP::CloudController::Presenters::V3
           let(:package) do
             VCAP::CloudController::PackageModel.make(
               type: 'docker',
-              docker_image: 'registry/image:latest',
+              docker_image: 'registry/image:latest'
             )
           end
 

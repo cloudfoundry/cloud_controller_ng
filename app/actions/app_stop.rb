@@ -28,7 +28,7 @@ module VCAP::CloudController
       def record_audit_event(app, user_audit_info)
         Repositories::AppEventRepository.new.record_app_stop(
           app,
-          user_audit_info,
+          user_audit_info
         )
       end
     end

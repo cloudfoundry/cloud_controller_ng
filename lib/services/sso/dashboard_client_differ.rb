@@ -13,9 +13,7 @@ module VCAP::Services::SSO
 
       delete_commands = existing_cc_clients.map do |client|
         client_id = client.uaa_id
-        unless requested_ids.include?(client_id)
-          Commands::UnclaimClientCommand.new(client_id)
-        end
+        Commands::UnclaimClientCommand.new(client_id) unless requested_ids.include?(client_id)
       end.compact
 
       create_and_update_commands + delete_commands
@@ -35,9 +33,7 @@ module VCAP::Services::SSO
       end
 
       delete_commands = existing_uaa_clients.map do |client_id|
-        unless requested_ids.include?(client_id)
-          Commands::DeleteClientCommand.new(client_id)
-        end
+        Commands::DeleteClientCommand.new(client_id) unless requested_ids.include?(client_id)
       end.compact
 
       create_and_update_commands + delete_commands

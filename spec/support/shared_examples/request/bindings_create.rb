@@ -42,8 +42,8 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       let(:broker_base_url) { service_instance.service_broker.broker_url }
       let(:broker_bind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
       let(:broker_status_code) { 201 }
-      let(:broker_response) { { credentials: credentials } }
-      let(:app_binding_attributes) {
+      let(:broker_response) { { credentials: } }
+      let(:app_binding_attributes) do
         if check_app
           {
             app_guid: app_to_bind_to.guid,
@@ -56,7 +56,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         else
           {}
         end
-      }
+      end
       let(:client_body) do
         {
           context: {
@@ -66,18 +66,18 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             organization_annotations: { 'pre.fix/foo': 'bar' },
             space_guid: space.guid,
             space_name: space.name,
-            space_annotations: { 'pre.fix/baz': 'wow' },
+            space_annotations: { 'pre.fix/baz': 'wow' }
           },
           service_id: service_instance.service_plan.service.unique_id,
           plan_id: service_instance.service_plan.unique_id,
           bind_resource: {
-            credential_client_id: 'cc_service_key_client',
-          },
+            credential_client_id: 'cc_service_key_client'
+          }
         }.merge(app_binding_attributes)
       end
 
       before do
-        api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+        api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
         expect(last_response).to have_status_code(202)
 
         stub_request(:put, broker_bind_url).
@@ -94,7 +94,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             with(
               body: client_body,
               query: { accepts_incomplete: true },
-              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+              headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
             )
         ).to have_been_made.once
       end
@@ -139,8 +139,8 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           expect(event.actee).to eq(binding.guid)
           expect(event.actee_name).to eq(binding.name)
           expect(event.data).to include({
-            'request' => create_body.with_indifferent_access
-          })
+                                          'request' => create_body.with_indifferent_access
+                                        })
         end
       end
 
@@ -166,23 +166,23 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
       context 'when the binding completes asynchronously' do
         let(:broker_status_code) { 202 }
         let(:operation) { Sham.guid }
-        let(:broker_response) { { operation: operation } }
+        let(:broker_response) { { operation: } }
         let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
         let(:last_operation_status_code) { 200 }
         let(:description) { Sham.description }
         let(:state) { 'in progress' }
         let(:last_operation_body) do
           {
-            description: description,
-            state: state,
+            description:,
+            state:
           }
         end
 
         before do
           stub_request(:get, broker_binding_last_operation_url).
             with(query: hash_including({
-              operation: operation
-            })).
+                                         operation:
+                                       })).
             to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
         end
 
@@ -196,9 +196,9 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
                 query: {
                   operation: operation,
                   service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
+                  plan_id: service_instance.service_plan.unique_id
                 },
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
         end
@@ -220,8 +220,8 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           expect(event).to be
           expect(event.actee).to eq(binding.guid)
           expect(event.data).to include({
-            'request' => create_body.with_indifferent_access
-          })
+                                          'request' => create_body.with_indifferent_access
+                                        })
         end
 
         it 'enqueues the next fetch last operation job' do
@@ -241,11 +241,11 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             a_request(:get, broker_binding_last_operation_url).
               with(
                 query: {
-                operation: operation,
-                service_id: service_instance.service_plan.service.unique_id,
-                plan_id: service_instance.service_plan.unique_id,
-              },
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  operation: operation,
+                  service_id: service_instance.service_plan.service.unique_id,
+                  plan_id: service_instance.service_plan.unique_id
+                },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.twice
         end
@@ -256,22 +256,22 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           let(:credentials) { { password: 'foo' } }
           let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
 
-          let(:app_binding_attributes) {
+          let(:app_binding_attributes) do
             if check_app
               {
-                syslog_drain_url: syslog_drain_url,
+                syslog_drain_url:
               }
             else
               {}
             end
-          }
+          end
 
           let(:fetch_binding_body) do
             {
               credentials: credentials,
               parameters: parameters,
               service_id: 'extra-field-service_id-should-ignore',
-              name: 'extra-field-name-should-not-update',
+              name: 'extra-field-name-should-not-update'
             }.merge(app_binding_attributes)
           end
 
@@ -286,7 +286,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, broker_bind_url).with(
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
             ).to have_been_made.once
           end
@@ -316,11 +316,11 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             expect(event).to be
             expect(event.actee).to eq(binding.guid)
             expect(event.data).to include({
-              'request' => create_body.with_indifferent_access
-            })
+                                            'request' => create_body.with_indifferent_access
+                                          })
           end
 
-          context 'fetching binding fails ' do
+          context 'fetching binding fails' do
             let(:fetch_binding_status_code) { 404 }
             let(:fetch_binding_body) {}
 
@@ -335,10 +335,10 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
               expect(job.cf_api_error).not_to be_nil
               error = YAML.safe_load(job.cf_api_error)
               expect(error['errors'].first).to include({
-                'code' => 10009,
-                'title' => 'CF-UnableToPerform',
-                'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null',
-              })
+                                                         'code' => 10_009,
+                                                         'title' => 'CF-UnableToPerform',
+                                                         'detail' => 'bind could not be completed: The service broker rejected the request. Status Code: 404 Not Found, Body: null'
+                                                       })
             end
           end
         end
@@ -360,10 +360,10 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             error = YAML.safe_load(job.cf_api_error)
             # TODO: check error message
             expect(error['errors'].first).to include({
-              'code' => 90001,
-              'title' => 'CF-ServiceBindingInvalid',
-              'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data',
-            })
+                                                       'code' => 90_001,
+                                                       'title' => 'CF-ServiceBindingInvalid',
+                                                       'detail' => 'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data'
+                                                     })
           end
         end
       end

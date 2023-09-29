@@ -48,15 +48,17 @@ module VCAP::CloudController
           api_error = convert_to_v3_api_error(exception)
           save_error(api_error, job)
         rescue Sequel::DatabaseError
-          if (exception.backtrace.size rescue 0) > 0
-            exception.backtrace.slice!((exception.backtrace.size / 2)..-1)
-            retry
-          else
-            raise
-          end
+          raise unless begin
+            exception.backtrace.size
+          rescue StandardError
+            0
+          end > 0
+
+          exception.backtrace.slice!((exception.backtrace.size / 2)..-1)
+          retry
         end
-      rescue StandardError => ex
-        logger.error("can't yaml-encode exception #{exception}: #{ex.message}")
+      rescue StandardError => e
+        logger.error("can't yaml-encode exception #{exception}: #{e.message}")
         raise
       end
 
@@ -77,11 +79,11 @@ module VCAP::CloudController
       end
 
       def persist_warnings(job)
-        if handler.respond_to?(:warnings)
-          handler.warnings&.each do |warning|
-            find_pollable_job(job).each do |pollable_job|
-              JobWarningModel.create(job: pollable_job, detail: warning[:detail])
-            end
+        return unless handler.respond_to?(:warnings)
+
+        handler.warnings&.each do |warning|
+          find_pollable_job(job).each do |pollable_job|
+            JobWarningModel.create(job: pollable_job, detail: warning[:detail])
           end
         end
       end

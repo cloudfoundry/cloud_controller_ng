@@ -14,12 +14,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)
@@ -35,7 +35,7 @@ module VCAP::CloudController
       true
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -44,7 +44,7 @@ module VCAP::CloudController
       read_for_update?(space, params)
     end
 
-    def create?(space, params=nil)
+    def create?(space, _params=nil)
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
 
@@ -57,7 +57,7 @@ module VCAP::CloudController
       user_acting_on_themselves?(params) || read_for_update?(space, params)
     end
 
-    def read_for_update?(space, params=nil)
+    def read_for_update?(space, _params=nil)
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
     private
 
     def user_acting_on_themselves?(options)
-      [:auditors, :developers, :managers].include?(options[:relation]) && context.user.guid == options[:related_guid]
+      %i[auditors developers managers].include?(options[:relation]) && context.user.guid == options[:related_guid]
     end
   end
 end

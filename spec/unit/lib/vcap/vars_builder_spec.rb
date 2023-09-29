@@ -22,7 +22,7 @@ module VCAP::CloudController
             limits: {
               mem: process.memory,
               disk: process.disk_quota,
-              fds: process.file_descriptors,
+              fds: process.file_descriptors
             },
             application_id: v3_app_model.guid,
             application_version: process.version,
@@ -54,7 +54,7 @@ module VCAP::CloudController
                 limits: {
                   mem: 1234,
                   disk: 5555,
-                  fds: 8888,
+                  fds: 8888
                 },
                 application_id: v3_app_model.guid,
                 application_name: 'v3-app-name',
@@ -113,7 +113,7 @@ module VCAP::CloudController
               limits: {
                 mem: process.memory,
                 disk: process.disk_quota,
-                fds: process.file_descriptors,
+                fds: process.file_descriptors
               },
               application_id: process.guid,
               application_version: process.version,
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
             vars_builder = VCAP::VarsBuilder.new(
               process,
-              space: space
+              space:
             )
             expect(vars_builder.to_hash).to eq(expected_hash)
           end
@@ -146,7 +146,7 @@ module VCAP::CloudController
               limits: {
                 mem: process.memory,
                 disk: process.disk_quota,
-                fds: process.file_descriptors,
+                fds: process.file_descriptors
               },
               application_id: process.guid,
               application_version: process.version,

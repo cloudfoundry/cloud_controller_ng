@@ -44,7 +44,7 @@ module VCAP::Services::ServiceBrokers::V2
     def human_readable_attr_name(name)
       {
         create: 'Schemas service_instance.create',
-        update: 'Schemas service_instance.update',
+        update: 'Schemas service_instance.update'
       }.fetch(name) { raise NotImplementedError }
     end
   end

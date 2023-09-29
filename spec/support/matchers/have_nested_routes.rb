@@ -1,4 +1,4 @@
-RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
+RSpec::Matchers.define :have_nested_routes do |association_routes, _options={}|
   errors = []
   match do |controller|
     actual_to_manies = controller.send(:to_many_relationships)

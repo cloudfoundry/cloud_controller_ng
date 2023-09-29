@@ -12,7 +12,7 @@ module VCAP::CloudController
         message = ::VCAP::CloudController::InternalPackageUpdateMessage.new(payload)
         unprocessable!(message.errors.full_messages) unless message.valid?
 
-        package = ::VCAP::CloudController::PackageModel.find(guid: guid)
+        package = ::VCAP::CloudController::PackageModel.find(guid:)
         package_not_found! unless package
 
         InternalPackageUpdate.new.update(package, message)

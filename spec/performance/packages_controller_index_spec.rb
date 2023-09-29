@@ -19,8 +19,8 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
     before do
       TestConfig.override(
         db: {
-          log_level: 'fatal',
-      }
+          log_level: 'fatal'
+        }
         # logging.level: 'debug2'
       )
       allow_user_read_access_for(user, spaces: user_spaces)
@@ -36,7 +36,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
       runs = 10
 
       search_time = 0
-      runs.times do |i|
+      runs.times do |_i|
         app_guid_num = rand(n)
         app = VCAP::CloudController::AppModel.find(guid: "app-guid-#{app_guid_num}")
 
@@ -48,7 +48,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
 
       avg_time = (search_time * 1.0) / runs
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['resources'].size).to be(3)
 
       expect(avg_time).to be <= 0.2

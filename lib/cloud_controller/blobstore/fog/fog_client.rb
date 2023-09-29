@@ -76,8 +76,7 @@ module CloudController
         logger.info(log_entry,
                     destination_key: destination_key,
                     duration_seconds: duration,
-                    size: size,
-                   )
+                    size: size)
       end
 
       def cp_file_between_keys(source_key, destination_key)
@@ -118,7 +117,7 @@ module CloudController
           directory = connection.directories.get(File.join(dir.key, prefix || ''))
           directory ? directory.files : []
         else
-          connection.directories.get(dir.key, prefix: prefix).files
+          connection.directories.get(dir.key, prefix:).files
         end
       end
 
@@ -176,9 +175,9 @@ module CloudController
           end
         end
 
-        if !batch.empty?
-          yield(batch)
-        end
+        return if batch.empty?
+
+        yield(batch)
       end
 
       def file(key)
@@ -195,7 +194,7 @@ module CloudController
         options = options.merge(endpoint: '') if local?
         connection_options = options[:connection_options] || {}
         connection_options = connection_options.merge(read_timeout: blobstore_timeout, write_timeout: blobstore_timeout)
-        options = options.merge(connection_options: connection_options)
+        options = options.merge(connection_options:)
         @connection ||= Fog::Storage.new(options)
       end
 

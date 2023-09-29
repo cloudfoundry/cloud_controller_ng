@@ -7,13 +7,9 @@ module VCAP::CloudController
       def fetch(message:, permitted_space_guids: nil, eager_loaded_associations: [])
         dataset = ServiceBroker.dataset.eager(eager_loaded_associations)
 
-        if permitted_space_guids || message.requested?(:space_guids)
-          dataset = dataset.join(:spaces, id: Sequel[:service_brokers][:space_id])
-        end
+        dataset = dataset.join(:spaces, id: Sequel[:service_brokers][:space_id]) if permitted_space_guids || message.requested?(:space_guids)
 
-        if permitted_space_guids
-          dataset = dataset.where { Sequel[:spaces][:guid] =~ permitted_space_guids }
-        end
+        dataset = dataset.where { Sequel[:spaces][:guid] =~ permitted_space_guids } if permitted_space_guids
 
         filter(message, dataset).select_all(:service_brokers)
       end
@@ -21,20 +17,16 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:space_guids)
-          dataset = dataset.where { Sequel[:spaces][:guid] =~ message.space_guids }
-        end
+        dataset = dataset.where { Sequel[:spaces][:guid] =~ message.space_guids } if message.requested?(:space_guids)
 
-        if message.requested?(:names)
-          dataset = dataset.where { Sequel[:service_brokers][:name] =~ message.names }
-        end
+        dataset = dataset.where { Sequel[:service_brokers][:name] =~ message.names } if message.requested?(:names)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: ServiceBrokerLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: ServiceBroker,
+            resource_klass: ServiceBroker
           )
         end
 

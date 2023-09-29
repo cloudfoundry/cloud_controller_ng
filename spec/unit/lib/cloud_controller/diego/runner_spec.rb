@@ -9,8 +9,8 @@ module VCAP::CloudController
       let(:default_health_check_timeout) { 9999 }
       let(:config) do
         Config.new({
-          default_health_check_timeout: default_health_check_timeout,
-        })
+                     default_health_check_timeout:
+                   })
       end
 
       subject(:runner) { Runner.new(process, config) }
@@ -32,7 +32,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
           it 'does not desire an app and raises an exception' do
-            expect(messenger).to_not receive(:send_desire_request)
+            expect(messenger).not_to receive(:send_desire_request)
             expect { runner.scale }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end
@@ -43,8 +43,8 @@ module VCAP::CloudController
           end
 
           it 'does not send the desired LRP request' do
-            expect(messenger).to_not receive(:send_desire_request)
-            expect { runner.scale }.to_not raise_error
+            expect(messenger).not_to receive(:send_desire_request)
+            expect { runner.scale }.not_to raise_error
           end
         end
       end
@@ -99,12 +99,12 @@ module VCAP::CloudController
             process.reload
           end
 
-          it 'should not update metric tags' do
+          it 'does not update metric tags' do
             allow(messenger).to receive(:send_desire_request)
 
             runner.update_metric_tags
 
-            expect(messenger).to_not have_received(:send_desire_request)
+            expect(messenger).not_to have_received(:send_desire_request)
           end
         end
 
@@ -112,7 +112,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
           it 'does not desire an app and raises an exception' do
-            expect(messenger).to_not receive(:send_desire_request)
+            expect(messenger).not_to receive(:send_desire_request)
             expect { runner.update_metric_tags }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end
@@ -134,12 +134,12 @@ module VCAP::CloudController
             process.reload
           end
 
-          it 'should not update routes' do
+          it 'does not update routes' do
             allow(messenger).to receive(:send_desire_request)
 
             runner.update_routes
 
-            expect(messenger).to_not have_received(:send_desire_request)
+            expect(messenger).not_to have_received(:send_desire_request)
           end
         end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
           it 'does not desire an app and raises an exception' do
-            expect(messenger).to_not receive(:send_desire_request)
+            expect(messenger).not_to receive(:send_desire_request)
             expect { runner.update_routes }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
         end

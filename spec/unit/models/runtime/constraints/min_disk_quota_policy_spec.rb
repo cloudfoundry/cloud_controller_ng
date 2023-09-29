@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe MinDiskQuotaPolicy do
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
-
   subject(:validator) { MinDiskQuotaPolicy.new(process) }
+
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
 
   it 'when requested size is negative' do
     allow(process).to receive(:disk_quota).and_return(-1)

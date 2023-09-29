@@ -12,22 +12,22 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::AppEventsController).to have_creatable_attributes({
-          instance_guid: { type: 'string', required: true },
-          instance_index: { type: 'integer', required: true },
-          exit_status: { type: 'integer', required: true },
-          timestamp: { type: 'string', required: true },
-          app_guid: { type: 'string', required: true },
-        })
+                                                                                          instance_guid: { type: 'string', required: true },
+                                                                                          instance_index: { type: 'integer', required: true },
+                                                                                          exit_status: { type: 'integer', required: true },
+                                                                                          timestamp: { type: 'string', required: true },
+                                                                                          app_guid: { type: 'string', required: true }
+                                                                                        })
       end
 
       it do
         expect(VCAP::CloudController::AppEventsController).to have_updatable_attributes({
-          instance_guid: { type: 'string' },
-          instance_index: { type: 'integer' },
-          exit_status: { type: 'integer' },
-          timestamp: { type: 'string' },
-          app_guid: { type: 'string' },
-        })
+                                                                                          instance_guid: { type: 'string' },
+                                                                                          instance_index: { type: 'integer' },
+                                                                                          exit_status: { type: 'integer' },
+                                                                                          timestamp: { type: 'string' },
+                                                                                          app_guid: { type: 'string' }
+                                                                                        })
       end
 
       it 'is deprecated' do

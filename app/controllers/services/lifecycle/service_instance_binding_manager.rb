@@ -22,9 +22,7 @@ module VCAP::CloudController
       route = Route.find(guid: route_guid)
       raise RouteNotFound unless route
 
-      if route.try(:internal?)
-        raise CloudController::Errors::ApiError.new_from_details('RouteServiceCannotBeBoundToInternalRoute')
-      end
+      raise CloudController::Errors::ApiError.new_from_details('RouteServiceCannotBeBoundToInternalRoute') if route.try(:internal?)
 
       instance = ServiceInstance.find(guid: instance_guid)
 
@@ -82,7 +80,7 @@ module VCAP::CloudController
       service_instance = binding_obj.service_instance
       raise_if_instance_locked(service_instance)
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
-      broker_response = client.bind(binding_obj, arbitrary_parameters: arbitrary_parameters)
+      broker_response = client.bind(binding_obj, arbitrary_parameters:)
       broker_response[:binding]
     end
 
@@ -95,7 +93,7 @@ module VCAP::CloudController
       route_binding.db.transaction do
         route_binding.save
       end
-    rescue => e
+    rescue StandardError => e
       @logger.error "Failed to save binding for route: #{route_binding.route.guid} and service instance: #{route_binding.service_instance.guid} with exception: #{e}"
       cleanup_binding_without_db(route_binding)
       raise e
@@ -113,7 +111,7 @@ module VCAP::CloudController
 
     def notify_diego(route_binding, attributes_to_update)
       route_binding.notify_diego if attributes_to_update[:route_service_url]
-    rescue => e
+    rescue StandardError => e
       @logger.error "Failed to update route: #{route_binding.route.guid} and service_instance: #{route_binding.service_instance.guid} with exception: #{e}"
       cleanup_binding_without_db(route_binding)
       route_binding.destroy

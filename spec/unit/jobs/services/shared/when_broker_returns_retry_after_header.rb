@@ -2,7 +2,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
   context 'when brokers return Retry-After header' do
     let(:state) { 'in progress' }
     let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
-    let(:last_operation_response) { { last_operation: { state: state, description: description }, retry_after: broker_polling_interval } }
+    let(:last_operation_response) { { last_operation: { state:, description: }, retry_after: broker_polling_interval } }
 
     before do
       allow(client).to receive(last_operation_method_name).and_return(last_operation_response)
@@ -51,7 +51,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
       end
 
       context 'when the interval is greater than the max value (24 hours)' do
-        let(:broker_polling_interval) { 24.hours.seconds + 1.minutes }
+        let(:broker_polling_interval) { 24.hours.seconds + 1.minute }
 
         it 'the polling interval should not exceed the max' do
           Timecop.freeze(Time.now)

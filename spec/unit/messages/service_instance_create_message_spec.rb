@@ -7,7 +7,7 @@ module VCAP::CloudController
       {
         type: 'user-provided',
         name: 'my-service-instance',
-        tags: %w(foo bar baz),
+        tags: %w[foo bar baz],
         relationships: {
           space: {
             data: {
@@ -30,10 +30,10 @@ module VCAP::CloudController
 
     it 'accepts the allowed keys' do
       expect(message).to be_valid
-      expect(message.requested?(:type)).to be_truthy
-      expect(message.requested?(:name)).to be_truthy
-      expect(message.requested?(:relationships)).to be_truthy
-      expect(message.requested?(:tags)).to be_truthy
+      expect(message).to be_requested(:type)
+      expect(message).to be_requested(:name)
+      expect(message).to be_requested(:relationships)
+      expect(message).to be_requested(:tags)
     end
 
     it 'builds the right message' do
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       describe 'type' do
         it 'accepts the valid types' do
-          %w{managed user-provided}.each do |t|
+          %w[managed user-provided].each do |t|
             body[:type] = t
             message = described_class.new(body)
             expect(message).to be_valid
@@ -63,13 +63,13 @@ module VCAP::CloudController
 
         it 'is invalid when is not set' do
           message = described_class.new({})
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Type must be one of 'managed', 'user-provided'")
         end
 
         it 'is invalid when is not one of the valid types' do
           message = described_class.new({ 'type' => 'banana' })
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Type must be one of 'managed', 'user-provided'")
         end
       end
@@ -103,7 +103,7 @@ module VCAP::CloudController
         it 'is invalid when there is no space relationship' do
           body['relationships'] = { foo: {} }
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Space can't be blank")
         end
       end

@@ -19,7 +19,7 @@ module VCAP::CloudController
         body['bogus'] = 'field'
         message = SpaceUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
@@ -28,13 +28,13 @@ module VCAP::CloudController
           body = { name: 1 }
           message = SpaceUpdateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Name must be a string')
         end
 
         describe 'allowed special characters' do
           it 'allows standard ascii characters' do
-            body = { name: "A -_- word 2!?()\'\"&+." }
+            body = { name: "A -_- word 2!?()'\"&+." }
             message = SpaceUpdateMessage.new(body)
             expect(message).to be_valid
           end
@@ -54,14 +54,14 @@ module VCAP::CloudController
           it 'does NOT allow newline characters' do
             body = { name: "one\ntwo" }
             message = SpaceUpdateMessage.new(body)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors.full_messages).to include('Name must not contain escaped characters')
           end
 
           it 'does NOT allow escape characters' do
             body = { name: "a\e word" }
             message = SpaceUpdateMessage.new(body)
-            expect(message).to_not be_valid
+            expect(message).not_to be_valid
             expect(message.errors.full_messages).to include('Name must not contain escaped characters')
           end
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
         it 'must be >= 1 characters long' do
           body = { name: '' }
           message = SpaceUpdateMessage.new(body)
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Name is too short (minimum is 1 character)')
 
           body = { name: 'a' * 255 }
@@ -80,7 +80,7 @@ module VCAP::CloudController
         it 'must be <= 255 characters long' do
           body = { name: 'a' * 256 }
           message = SpaceUpdateMessage.new(body)
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Name is too long (maximum is 255 characters)')
 
           body = { name: 'a' * 255 }

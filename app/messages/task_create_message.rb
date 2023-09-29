@@ -2,7 +2,7 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class TaskCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:name, :command, :disk_in_mb, :memory_in_mb, :log_rate_limit_in_bytes_per_second, :droplet_guid, :template]
+    register_allowed_keys %i[name command disk_in_mb memory_in_mb log_rate_limit_in_bytes_per_second droplet_guid template]
 
     validates_with NoAdditionalKeysValidator
 
@@ -29,9 +29,9 @@ module VCAP::CloudController
     end
 
     def has_command
-      if !command && !template
-        errors.add(:command, 'No command or template provided')
-      end
+      return unless !command && !template
+
+      errors.add(:command, 'No command or template provided')
     end
   end
 end

@@ -10,32 +10,32 @@ module VCAP::CloudController
 
         AppModel.db.transaction do
           app = AppModel.create(
-            name:                  request_attrs['name'],
-            space_guid:            request_attrs['space_guid'],
+            name: request_attrs['name'],
+            space_guid: request_attrs['space_guid'],
             environment_variables: request_attrs['environment_json'],
-            enable_ssh:                 request_attrs['enable_ssh'],
+            enable_ssh: request_attrs['enable_ssh']
           )
 
           validate_lifecycle!(request_attrs)
           create_lifecycle(app, request_attrs)
 
           process = ProcessModel.new(
-            guid:                       app.guid,
-            production:                 request_attrs['production'],
-            memory:                     request_attrs['memory'],
-            instances:                  request_attrs['instances'],
-            disk_quota:                 request_attrs['disk_quota'],
-            state:                      request_attrs['state'],
-            command:                    request_attrs['command'],
-            console:                    request_attrs['console'],
-            debug:                      request_attrs['debug'],
+            guid: app.guid,
+            production: request_attrs['production'],
+            memory: request_attrs['memory'],
+            instances: request_attrs['instances'],
+            disk_quota: request_attrs['disk_quota'],
+            state: request_attrs['state'],
+            command: request_attrs['command'],
+            console: request_attrs['console'],
+            debug: request_attrs['debug'],
             health_check_http_endpoint: request_attrs['health_check_http_endpoint'],
-            health_check_type:          request_attrs['health_check_type'],
-            health_check_timeout:       request_attrs['health_check_timeout'],
-            diego:                      request_attrs['diego'],
-            ports:                      request_attrs['ports'],
-            route_guids:                request_attrs['route_guids'],
-            app:                        app
+            health_check_type: request_attrs['health_check_type'],
+            health_check_timeout: request_attrs['health_check_timeout'],
+            diego: request_attrs['diego'],
+            ports: request_attrs['ports'],
+            route_guids: request_attrs['route_guids'],
+            app: app
           )
 
           validate_custom_buildpack!(process)
@@ -63,39 +63,38 @@ module VCAP::CloudController
           end
 
           create_message = PackageCreateMessage.new({
-            type:          'docker',
-            relationships: relationships,
-            data:          docker_data
-          })
+                                                      type: 'docker',
+                                                      relationships: relationships,
+                                                      data: docker_data
+                                                    })
           PackageCreate.create_without_event(create_message)
         else
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
           # because mysql will deadlock when requests happen concurrently otherwise.
           BuildpackLifecycleDataModel.create(
             buildpacks: Array(request_attrs['buildpack'].presence),
-            stack:     get_stack_name(request_attrs['stack_guid']),
-            app:       app
+            stack: get_stack_name(request_attrs['stack_guid']),
+            app: app
           )
           app.buildpack_lifecycle_data(reload: true)
         end
       end
 
       def get_stack_name(stack_guid)
-        stack      = Stack.find(guid: stack_guid)
-        stack_name = stack.present? ? stack.name : Stack.default.name
-        stack_name
+        stack = Stack.find(guid: stack_guid)
+        stack.present? ? stack.name : Stack.default.name
       end
 
       def validate_lifecycle!(request_attrs)
-        if request_attrs['docker_credentials'].present? && !request_attrs.key?('docker_image')
-          raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
-        end
+        return unless request_attrs['docker_credentials'].present? && !request_attrs.key?('docker_image')
+
+        raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
       end
 
       def validate_custom_buildpack!(process)
-        if process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
-          raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
-        end
+        return unless process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
+
+        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
       end
 
       def custom_buildpacks_disabled?
@@ -103,9 +102,9 @@ module VCAP::CloudController
       end
 
       def validate_package_exists!(process, request_attrs)
-        if request_attrs['state'] == 'STARTED' && !process.package_available?
-          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-        end
+        return unless request_attrs['state'] == 'STARTED' && !process.package_available?
+
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
     end
   end

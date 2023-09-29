@@ -4,7 +4,7 @@ module UriUtils
 
   def self.is_uri?(candidate)
     !!(candidate.is_a?(String) && /\A#{URI::DEFAULT_PARSER.make_regexp}\Z/ =~ candidate && URI(candidate))
-  rescue
+  rescue StandardError
     false
   end
 
@@ -24,14 +24,14 @@ module UriUtils
     parts = uri.split('?', 2)
     return uri if parts.size == 1
 
-    query = parts[1].split('&').map { |subquery|
+    query = parts[1].split('&').map do |subquery|
       subparts = subquery.split('=', 2)
       if subparts.size == 1
         CGI.escape(subparts[0])
       else
         [subparts[0], CGI.escape(subparts[1])].join('=')
       end
-    }.join('&')
+    end.join('&')
     [parts[0].tr(' ', '+'), query].join('?')
   end
 end

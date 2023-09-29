@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe DockerPolicy do
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make(:docker, docker_image: 'some-image:latest') }
-
   subject(:validator) { DockerPolicy.new(process) }
+
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(:docker, docker_image: 'some-image:latest') }
 
   context 'when a buildpack is specified' do
     before do

@@ -22,6 +22,7 @@ module VCAP::CloudController
 
         context 'when the current user is not authorized' do
           let(:unauthorized_user) { make_user_for_space(space) }
+
           it 'returns 403 Forbidden' do
             set_current_user(unauthorized_user)
             get "/v2/users/#{user.guid}/summary"
@@ -33,6 +34,7 @@ module VCAP::CloudController
           before do
             set_current_user(user)
           end
+
           it 'lists all the organizations the user belongs to' do
             get "/v2/users/#{user.guid}/summary"
             expect(last_response.status).to eq 200

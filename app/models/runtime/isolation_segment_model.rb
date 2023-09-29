@@ -10,11 +10,11 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::IsolationSegmentAnnotationModel', key: :resource_guid, primary_key: :guid
 
     many_to_many :organizations,
-      left_key: :isolation_segment_guid,
-      left_primary_key: :guid,
-      right_key: :organization_guid,
-      right_primary_key: :guid,
-      join_table: :organizations_isolation_segments, without_guid_generation: true
+                 left_key: :isolation_segment_guid,
+                 left_primary_key: :guid,
+                 right_key: :organization_guid,
+                 right_primary_key: :guid,
+                 join_table: :organizations_isolation_segments, without_guid_generation: true
 
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy

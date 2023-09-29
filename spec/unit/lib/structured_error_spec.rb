@@ -11,7 +11,7 @@ RSpec.describe StructuredError do
       expect(exception.to_h).to eq({
                                      'description' => 'some msg',
                                      'backtrace' => ['/foo:1', '/bar:2'],
-                                     'source' => source,
+                                     'source' => source
                                    })
     end
   end
@@ -26,7 +26,7 @@ RSpec.describe StructuredError do
       expect(exception.to_h).to eq({
                                      'description' => 'some msg',
                                      'backtrace' => ['/foo:1', '/bar:2'],
-                                     'source' => {},
+                                     'source' => {}
                                    })
     end
 
@@ -40,7 +40,7 @@ RSpec.describe StructuredError do
         expect(exception.to_h).to eq({
                                        'description' => 'some msg',
                                        'backtrace' => ['/foo:1', '/bar:2'],
-                                       'source' => '[{}]',
+                                       'source' => '[{}]'
                                      })
       end
     end

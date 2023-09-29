@@ -4,6 +4,7 @@ require 'actions/services/service_key_delete'
 module VCAP::CloudController
   RSpec.describe ServiceKeyDelete do
     let(:guid_pattern) { '[[:alnum:]-]+' }
+
     subject(:service_key_delete) { ServiceKeyDelete.new }
 
     def broker_url(broker)

@@ -11,7 +11,7 @@ RSpec.describe 'Feature Flags Request' do
       get '/v3/feature_flags', nil, headers
 
       expect(last_response.status).to eq(200)
-      flag_names_in_response = parsed_response['resources'].map { |flag| flag['name'] }
+      flag_names_in_response = parsed_response['resources'].pluck('name')
       expect(flag_names_in_response).to eq(flag_names_sorted.map(&:to_s))
     end
 
@@ -35,7 +35,7 @@ RSpec.describe 'Feature Flags Request' do
         get '/v3/feature_flags?updated_ats[gt]=2020-05-26T18:47:02Z', nil, admin_headers
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('user_org_creation', 'unset_roles_by_username')
+        expect(parsed_response['resources'].pluck('name')).to contain_exactly('user_org_creation', 'unset_roles_by_username')
       end
     end
 
@@ -54,7 +54,7 @@ RSpec.describe 'Feature Flags Request' do
     let(:headers) { headers_for(user) }
 
     context 'there is not an override' do
-      it 'returns details of the requested feature flag when ' do
+      it 'returns details of the requested feature flag when' do
         get '/v3/feature_flags/diego_docker', nil, headers
         expect(last_response.status).to eq 200
         expect(parsed_response).to be_a_response_like(
@@ -75,6 +75,7 @@ RSpec.describe 'Feature Flags Request' do
 
     context 'there is an override' do
       let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: 'error') }
+
       it 'returns details of the requested feature flag when there is an override' do
         get "/v3/feature_flags/#{feature_flag.name}", nil, headers
         expect(last_response.status).to eq 200
@@ -97,11 +98,10 @@ RSpec.describe 'Feature Flags Request' do
 
   describe 'PATCH /v3/feature_flags/:name' do
     let(:feature_flag) { VCAP::CloudController::FeatureFlag.new(name: 'diego_docker', enabled: true, error_message: 'error') }
-    let(:patch_body) {
+    let(:patch_body) do
       { 'enabled' => feature_flag.enabled,
-        'custom_error_message' => feature_flag.error_message,
-      }
-    }
+        'custom_error_message' => feature_flag.error_message }
+    end
 
     context 'user is not admin' do
       let(:user) { make_user }

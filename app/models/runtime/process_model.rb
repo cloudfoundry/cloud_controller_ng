@@ -45,46 +45,46 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::ProcessAnnotationModel', key: :resource_guid, primary_key: :guid
 
     one_through_one :space,
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :guid, right_key: :space_guid
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :guid, right_key: :space_guid
 
     one_through_one :stack,
-      join_table:        BuildpackLifecycleDataModel.table_name,
-      left_primary_key:  :app_guid, left_key: :app_guid,
-      right_primary_key: :name, right_key: :stack,
-      after_load:        :convert_nil_to_default_stack
+                    join_table: BuildpackLifecycleDataModel.table_name,
+                    left_primary_key: :app_guid, left_key: :app_guid,
+                    right_primary_key: :name, right_key: :stack,
+                    after_load: :convert_nil_to_default_stack
 
     def convert_nil_to_default_stack(stack)
-      self.associations[:stack] = Stack.default unless stack
+      associations[:stack] = Stack.default unless stack
     end
 
     one_through_one :latest_package,
-      class:             'VCAP::CloudController::PackageModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :app_guid, right_key: :guid,
-      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+                    class: 'VCAP::CloudController::PackageModel',
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :app_guid, right_key: :guid,
+                    order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
     one_through_one :latest_build,
-      class:             'VCAP::CloudController::BuildModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :app_guid, right_key: :guid,
-      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+                    class: 'VCAP::CloudController::BuildModel',
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :app_guid, right_key: :guid,
+                    order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
     one_through_one :latest_droplet,
-      class:             'VCAP::CloudController::DropletModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :app_guid, right_key: :guid,
-      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+                    class: 'VCAP::CloudController::DropletModel',
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :app_guid, right_key: :guid,
+                    order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
     one_through_one :desired_droplet,
-      class:             '::VCAP::CloudController::DropletModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :guid, right_key: :droplet_guid
+                    class: '::VCAP::CloudController::DropletModel',
+                    join_table: AppModel.table_name,
+                    left_primary_key: :app_guid, left_key: :guid,
+                    right_primary_key: :guid, right_key: :droplet_guid
 
     dataset_module do
       def staged
@@ -118,49 +118,49 @@ module VCAP::CloudController
     end
 
     one_through_many :organization,
-      [
-        [ProcessModel.table_name, :id, :app_guid],
-        [AppModel.table_name, :guid, :space_guid],
-        [:spaces, :guid, :organization_id]
-      ]
+                     [
+                       [ProcessModel.table_name, :id, :app_guid],
+                       [AppModel.table_name, :guid, :space_guid],
+                       %i[spaces guid organization_id]
+                     ]
 
     many_to_many :routes,
-      join_table: RouteMappingModel.table_name,
-      left_primary_key: [:app_guid, :type], left_key: [:app_guid, :process_type],
-      right_primary_key: :guid, right_key: :route_guid,
-      distinct:     true,
-      order:        Sequel.asc(:id),
-      eager:        :domain
+                 join_table: RouteMappingModel.table_name,
+                 left_primary_key: %i[app_guid type], left_key: %i[app_guid process_type],
+                 right_primary_key: :guid, right_key: :route_guid,
+                 distinct: true,
+                 order: Sequel.asc(:id),
+                 eager: :domain
 
     many_to_many :sidecars,
-      class:             'VCAP::CloudController::SidecarModel',
-      join_table: SidecarProcessTypeModel.table_name,
-      left_primary_key: [:app_guid, :type], left_key: [:app_guid, :type],
-      right_primary_key: :guid, right_key: :sidecar_guid,
-      distinct:     true,
-      order:        Sequel.asc(:id)
+                 class: 'VCAP::CloudController::SidecarModel',
+                 join_table: SidecarProcessTypeModel.table_name,
+                 left_primary_key: %i[app_guid type], left_key: %i[app_guid type],
+                 right_primary_key: :guid, right_key: :sidecar_guid,
+                 distinct: true,
+                 order: Sequel.asc(:id)
 
-    one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
+    one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: %i[app_guid type], key: %i[app_guid process_type]
 
     add_association_dependencies events: :delete
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-      :detected_buildpack, :detected_buildpack_guid, :environment_json,
-      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version,
-      :command, :console, :debug, :staging_task_id, :package_state,
-      :health_check_type, :health_check_timeout, :health_check_http_endpoint,
-      :staging_failed_reason, :staging_failed_description, :diego,
-      :docker_image, :package_updated_at, :detected_start_command, :enable_ssh,
-      :ports
+                      :detected_buildpack, :detected_buildpack_guid, :environment_json,
+                      :memory, :instances, :disk_quota, :log_rate_limit, :state, :version,
+                      :command, :console, :debug, :staging_task_id, :package_state,
+                      :health_check_type, :health_check_timeout, :health_check_http_endpoint,
+                      :staging_failed_reason, :staging_failed_description, :diego,
+                      :docker_image, :package_updated_at, :detected_start_command, :enable_ssh,
+                      :ports
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
-      :service_binding_guids, :route_guids, :health_check_type,
-      :health_check_http_endpoint, :health_check_timeout, :diego,
-      :docker_image, :app_guid, :enable_ssh, :ports
+                      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
+                      :log_rate_limit, :state, :command, :console, :debug, :staging_task_id,
+                      :service_binding_guids, :route_guids, :health_check_type,
+                      :health_check_http_endpoint, :health_check_timeout, :diego,
+                      :docker_image, :app_guid, :enable_ssh, :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
@@ -172,7 +172,7 @@ module VCAP::CloudController
       HealthCheckTypes::PORT,
       HealthCheckTypes::PROCESS,
       HealthCheckTypes::HTTP,
-      HealthCheckTypes::NONE,
+      HealthCheckTypes::NONE
     ].freeze
 
     # Last staging response which will contain streaming log url
@@ -269,7 +269,7 @@ module VCAP::CloudController
         AppMaxLogRateLimitPolicy.new(self, organization, 'exceeds organization log rate quota'),
         HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout, health_check_type, health_check_http_endpoint, health_check_interval),
         ReadinessHealthCheckPolicy.new(self, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint,
-readiness_health_check_interval),
+                                       readiness_health_check_interval),
         DockerPolicy.new(self),
         PortsPolicy.new(self)
       ]
@@ -287,9 +287,9 @@ readiness_health_check_interval),
     end
 
     def validate_sidecar_memory
-      if !SidecarMemoryLessThanProcessMemoryPolicy.new([self]).valid?
-        errors.add(:memory, :process_memory_insufficient_for_sidecars)
-      end
+      return if SidecarMemoryLessThanProcessMemoryPolicy.new([self]).valid?
+
+      errors.add(:memory, :process_memory_insufficient_for_sidecars)
     end
 
     def before_create
@@ -309,9 +309,7 @@ readiness_health_check_interval),
 
     def before_validation
       # This is in before_validation because we need to validate ports based on diego flag
-      if diego.nil?
-        self.diego = true
-      end
+      self.diego = true if diego.nil?
 
       # column_changed?(:ports) reports false here for reasons unknown
       @ports_changed_by_user = changed_columns.include?(:ports)
@@ -346,13 +344,11 @@ readiness_health_check_interval),
         (column_changed?(:health_check_http_endpoint) && !skip_process_version_update) ||
         (column_changed?(:readiness_health_check_http_endpoint) && !skip_process_version_update) ||
         (@ports_changed_by_user && !skip_process_version_update)
-      )
+        )
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
-    def enable_ssh
-      app.enable_ssh
-    end
+    delegate :enable_ssh, to: :app
 
     def set_new_version
       self.version = SecureRandom.uuid
@@ -362,9 +358,7 @@ readiness_health_check_interval),
       started?
     end
 
-    def in_suspended_org?
-      space.in_suspended_org?
-    end
+    delegate :in_suspended_org?, to: :space
 
     def being_started?
       column_changed?(:state) && started?
@@ -443,20 +437,16 @@ readiness_health_check_interval),
     def debug=(value)
       self.metadata ||= {}
       # We don't support sending nil through API
-      self.metadata['debug'] = (value == 'none') ? nil : value
+      self.metadata['debug'] = value == 'none' ? nil : value
     end
 
     def debug
       self.metadata && self.metadata['debug']
     end
 
-    def name
-      app.name
-    end
+    delegate :name, to: :app
 
-    def docker?
-      app.docker?
-    end
+    delegate :docker?, to: :app
 
     def database_uri
       service_binding_uris = service_bindings.map do |binding|
@@ -509,9 +499,8 @@ readiness_health_check_interval),
     end
 
     def active?
-      if docker?
-        return false unless FeatureFlag.enabled?(:diego_docker)
-      end
+      return false if docker? && !FeatureFlag.enabled?(:diego_docker)
+
       true
     end
 
@@ -542,9 +531,7 @@ readiness_health_check_interval),
     end
 
     def to_hash(opts={})
-      opts[:redact] = if !VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self)
-                        %w(environment_json system_env_json)
-                      end
+      opts[:redact] = (%w[environment_json system_env_json] unless VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self))
       super(opts)
     end
 
@@ -553,9 +540,7 @@ readiness_health_check_interval),
     end
 
     def docker_ports
-      if desired_droplet.present? && desired_droplet.staged?
-        return desired_droplet.docker_ports
-      end
+      return desired_droplet.docker_ports if desired_droplet.present? && desired_droplet.staged?
 
       []
     end
@@ -567,13 +552,9 @@ readiness_health_check_interval),
         has_mapping_without_port = route_mappings_dataset.where(app_port: ProcessModel::NO_APP_PORT_SPECIFIED).any?
         needs_docker_ports = docker_ports.present? && (has_mapping_without_port || open_ports.empty?)
 
-        if needs_docker_ports
-          open_ports += docker_ports
-        end
+        open_ports += docker_ports if needs_docker_ports
 
-        if !docker_ports.present? && has_mapping_without_port
-          open_ports += DEFAULT_PORTS
-        end
+        open_ports += DEFAULT_PORTS if docker_ports.blank? && has_mapping_without_port
       end
 
       open_ports += DEFAULT_PORTS if web? && open_ports.empty?

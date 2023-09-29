@@ -6,12 +6,8 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     unless actual_event.org_guid == space.organization_guid
       problems << "event.org_guid: #{actual_event.org_guid}, service_instance.space.organization_guid: #{space.organization_guid}"
     end
-    unless actual_event.space_guid == space.guid
-      problems << "event.space_guid: #{actual_event.space_guid}, service_instance.space.guid: #{space.guid}"
-    end
-    unless actual_event.space_name == space.name
-      problems << "event.space_name: #{actual_event.space_name}, service_instance.space.name: #{space.name}"
-    end
+    problems << "event.space_guid: #{actual_event.space_guid}, service_instance.space.guid: #{space.guid}" unless actual_event.space_guid == space.guid
+    problems << "event.space_name: #{actual_event.space_name}, service_instance.space.name: #{space.name}" unless actual_event.space_name == space.name
     unless actual_event.service_instance_guid == expected_service_instance.guid
       problems << "event.service_instance_guid: #{actual_event.service_instance_guid}, service_instance.guid: #{expected_service_instance.guid}"
     end
@@ -35,12 +31,8 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
       unless actual_event.service_plan_name == service_plan.name
         problems << "event.service_plan_name: #{actual_event.service_plan_name}, service_instance.service_plan.name: #{service_plan.name}"
       end
-      unless actual_event.service_guid == service.guid
-        problems << "event.service_guid: #{actual_event.service_guid}, service_instance.service.guid: #{service.guid}"
-      end
-      unless actual_event.service_label == service.label
-        problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}"
-      end
+      problems << "event.service_guid: #{actual_event.service_guid}, service_instance.service.guid: #{service.guid}" unless actual_event.service_guid == service.guid
+      problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}" unless actual_event.service_label == service.label
       unless actual_event.service_broker_name == broker.name
         problems << "event.service_broker_name: #{actual_event.service_broker_name}, service_instance.service_broker.name: #{broker.name}"
       end
@@ -51,7 +43,7 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     end
   end
 
-  failure_message do |actual_event|
+  failure_message do |_actual_event|
     "Expect event to match service_instance, but did not. Problems were:\n" + problems.join("\n")
   end
 end

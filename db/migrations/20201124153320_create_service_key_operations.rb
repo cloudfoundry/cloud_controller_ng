@@ -6,8 +6,8 @@ Sequel.migration do
       Integer :service_key_id
       String :state, size: 255, null: false
       String :type, size: 255, null: false
-      String :description, size: 10000
-      String :broker_provided_operation, size: 10000
+      String :description, size: 10_000
+      String :broker_provided_operation, size: 10_000
 
       index :service_key_id, name: :svc_key_id_index, unique: true
       primary_key :id, name: :id

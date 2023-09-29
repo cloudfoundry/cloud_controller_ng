@@ -52,9 +52,9 @@ module VCAP::CloudController
 
       it 'includes cli version info when confgired' do
         TestConfig.override(info: {
-          min_cli_version: 'min_cli_version',
-          min_recommended_cli_version: 'min_recommended_cli_version'
-        })
+                              min_cli_version: 'min_cli_version',
+                              min_recommended_cli_version: 'min_recommended_cli_version'
+                            })
         get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['min_cli_version']).to eq('min_cli_version')

@@ -4,9 +4,9 @@ module VCAP::CloudController::Presenters::V3
   class SpaceSshFeaturePresenter < BasePresenter
     def to_hash
       {
-        name:        'ssh',
+        name: 'ssh',
         description: 'Enable SSHing into apps in the space.',
-        enabled:     space.allow_ssh,
+        enabled: space.allow_ssh
       }
     end
 

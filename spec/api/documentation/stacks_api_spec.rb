@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Stacks', type: [:api, :legacy_api] do
+RSpec.resource 'Stacks', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
 
@@ -26,10 +26,10 @@ RSpec.resource 'Stacks', type: [:api, :legacy_api] do
           client.post '/v2/stacks', fields_json, headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :stack,
-            expected_values: {
-              name:        'example_stack',
-              description: 'Description for the example stack'
-            }
+                                   expected_values: {
+                                     name: 'example_stack',
+                                     description: 'Description for the example stack'
+                                   }
         end
 
         context 'without a description' do
@@ -39,10 +39,10 @@ RSpec.resource 'Stacks', type: [:api, :legacy_api] do
             client.post '/v2/stacks', fields_json, headers
             expect(status).to eq 201
             standard_entity_response parsed_response, :stack,
-              expected_values: {
-                name:        'example_stack',
-                description: nil
-              }
+                                     expected_values: {
+                                       name: 'example_stack',
+                                       description: nil
+                                     }
           end
         end
       end

@@ -14,25 +14,25 @@ module VCAP
 
         def record_event(task, user_audit_info, type)
           Event.create(
-            type:              type,
-            actor:             user_audit_info.user_guid,
-            actor_type:        'user',
-            actor_name:        user_audit_info.user_email,
-            actor_username:    user_audit_info.user_name,
-            actee:             task.app_guid,
-            actee_type:        'app',
-            actee_name:        task.app.name,
-            timestamp:         Sequel::CURRENT_TIMESTAMP,
-            metadata:          {
+            type: type,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            actee: task.app_guid,
+            actee_type: 'app',
+            actee_name: task.app.name,
+            timestamp: Sequel::CURRENT_TIMESTAMP,
+            metadata: {
               task_guid: task.guid,
-              request:   {
-                name:                  task.name,
-                memory_in_mb:          task.memory_in_mb,
-                command:               Presenters::Censorship::PRIVATE_DATA_HIDDEN
+              request: {
+                name: task.name,
+                memory_in_mb: task.memory_in_mb,
+                command: Presenters::Censorship::PRIVATE_DATA_HIDDEN
               }
             },
-            space_guid:        task.space.guid,
-            organization_guid: task.space.organization.guid,
+            space_guid: task.space.guid,
+            organization_guid: task.space.organization.guid
           )
         end
       end

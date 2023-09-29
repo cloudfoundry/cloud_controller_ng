@@ -5,7 +5,7 @@ module VCAP::CloudController
     include VCAP::CloudController::BrokerApiHelper
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
-    let(:basic_auth) { ['username', 'password'] }
+    let(:basic_auth) { %w[username password] }
 
     before do
       setup_cc
@@ -20,28 +20,28 @@ module VCAP::CloudController
       let(:plan_guid) { @plan_guid }
 
       before do
-        stub_request(:put, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).to_return { |request|
+        stub_request(:put, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).to_return do |_request|
           raise HTTPClient::TimeoutError.new('fake-timeout')
-        }
+        end
 
         stub_request(:delete, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).
           to_return(status: 200, body: '{}')
 
         post('/v2/service_instances',
-        {
-          name:              'test-service',
-          space_guid:        space_guid,
-          service_plan_guid: plan_guid
-        }.to_json,
-        admin_headers)
+             {
+               name: 'test-service',
+               space_guid: space_guid,
+               service_plan_guid: plan_guid
+             }.to_json,
+             admin_headers)
       end
 
       it 'makes the request to the broker and deprovisions' do
-        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: basic_auth)).to have_been_made
+        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth:)).to have_been_made
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        expect(a_request(:delete, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: basic_auth)).to have_been_made
+        expect(a_request(:delete, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth:)).to have_been_made
       end
 
       it 'responds to user with 504' do
@@ -57,20 +57,20 @@ module VCAP::CloudController
         provision_service
         create_app
 
-        stub_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).to_return { |request|
+        stub_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).to_return do |_request|
           raise HTTPClient::TimeoutError.new('fake-timeout')
-        }
+        end
 
         stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).
           to_return(status: 200, body: '{}')
 
         post('/v2/service_bindings',
-          { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-          admin_headers)
+             { app_guid:, service_instance_guid: }.to_json,
+             admin_headers)
       end
 
       it 'makes the request to the broker and unbinds' do
-        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).with(basic_auth: basic_auth)).
+        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).with(basic_auth:)).
           to have_been_made
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)

@@ -33,9 +33,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.desire_task(task, domain)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
         end
@@ -46,15 +46,17 @@ module VCAP::CloudController::Diego
           allow(bbs_client).to receive(:desire_task).and_return(
             ::Diego::Bbs::Models::TaskLifecycleResponse.new(
               error: ::Diego::Bbs::Models::Error.new(
-                type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
+                type: ::Diego::Bbs::Models::Error::Type::InvalidRecord,
                 message: 'error message'
-              )))
+              )
+            )
+          )
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.desire_task(task, domain)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
         end
@@ -77,9 +79,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.cancel_task(task.guid)
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
         end
@@ -90,9 +92,11 @@ module VCAP::CloudController::Diego
           allow(bbs_client).to receive(:cancel_task).and_return(
             ::Diego::Bbs::Models::TaskLifecycleResponse.new(
               error: ::Diego::Bbs::Models::Error.new(
-                type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
+                type: ::Diego::Bbs::Models::Error::Type::InvalidRecord,
                 message: 'error message'
-              )))
+              )
+            )
+          )
         end
 
         context 'when the task is not in Diego' do
@@ -100,22 +104,24 @@ module VCAP::CloudController::Diego
             allow(bbs_client).to receive(:cancel_task).and_return(
               ::Diego::Bbs::Models::TaskLifecycleResponse.new(
                 error: ::Diego::Bbs::Models::Error.new(
-                  type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+                  type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
                   message: 'error message'
-                )))
+                )
+              )
+            )
           end
 
           it 'succeeds without error' do
-            expect {
+            expect do
               client.cancel_task(task.guid)
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.cancel_task(task.guid)
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
         end
@@ -136,7 +142,7 @@ module VCAP::CloudController::Diego
         before do
           error_response = ::Diego::Bbs::Models::TaskResponse.new(
             task: nil,
-            error: ::Diego::Bbs::Models::Error.new(message: 'error message'),
+            error: ::Diego::Bbs::Models::Error.new(message: 'error message')
           )
           allow(bbs_client).to receive(:task_by_guid).and_return(error_response)
         end
@@ -146,25 +152,26 @@ module VCAP::CloudController::Diego
             allow(bbs_client).to receive(:task_by_guid).and_return(
               ::Diego::Bbs::Models::TaskResponse.new(
                 error: ::Diego::Bbs::Models::Error.new(
-                  type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+                  type: ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
                   message: 'error message'
                 ),
                 task: nil
-              ))
+              )
+            )
           end
 
           it 'returns nil without error' do
-            expect {
+            expect do
               fetched_task = client.fetch_task(task.guid)
               expect(fetched_task).to be_nil
-            }.to_not raise_error
+            end.not_to raise_error
           end
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_task('some-task-guid')
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
         end
@@ -176,9 +183,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_task('some-task-guid')
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
         end
@@ -204,9 +211,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_tasks
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
         end
@@ -218,9 +225,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.fetch_tasks
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
         end
@@ -228,7 +235,7 @@ module VCAP::CloudController::Diego
     end
 
     describe '#bump_freshness' do
-      let(:bbs_response) { ::Diego::Bbs::Models::UpsertDomainResponse.new(error: error) }
+      let(:bbs_response) { ::Diego::Bbs::Models::UpsertDomainResponse.new(error:) }
       let(:error) { nil }
 
       before do
@@ -244,9 +251,9 @@ module VCAP::CloudController::Diego
         let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::UnknownError, message: 'error message') }
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.bump_freshness
-          }.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('TaskError')
           end
         end
@@ -258,9 +265,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises an api error' do
-          expect {
+          expect do
             client.bump_freshness
-          }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
+          end.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('TaskWorkersUnavailable')
           end
         end

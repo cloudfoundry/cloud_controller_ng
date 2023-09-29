@@ -17,11 +17,11 @@ module VCAP::CloudController
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+                      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+                      :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                      :total_service_keys, :total_reserved_route_ports, :log_rate_limit
 
     add_association_dependencies spaces: :nullify
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
       validates_presence :total_routes
       validates_presence :memory_limit
       validates_presence :organization
-      validates_unique [:organization_id, :name]
+      validates_unique %i[organization_id name]
 
       validates_limit(:memory_limit, memory_limit)
       validates_limit(:instance_memory_limit, instance_memory_limit)
@@ -70,8 +70,8 @@ module VCAP::CloudController
       return unless total_reserved_route_ports
 
       if reserved_ports_outside_of_valid_range? ||
-          total_reserved_route_ports_greater_than_orgs_ports? ||
-          total_reserved_route_ports_greater_than_total_routes?
+         total_reserved_route_ports_greater_than_orgs_ports? ||
+         total_reserved_route_ports_greater_than_total_routes?
         errors.add(:total_reserved_route_ports, RESERVED_PORT_ERROR)
       end
     end

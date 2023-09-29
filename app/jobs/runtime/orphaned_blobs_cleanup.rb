@@ -7,10 +7,10 @@ module VCAP::CloudController
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
         DIRTY_THRESHOLD = 3
-        NUMBER_OF_BLOBS_TO_MARK = 10000
+        NUMBER_OF_BLOBS_TO_MARK = 10_000
         IGNORED_DIRECTORY_PREFIXES = [
           CloudController::DependencyLocator::BUILDPACK_CACHE_DIR,
-          CloudController::DependencyLocator::RESOURCE_POOL_DIR,
+          CloudController::DependencyLocator::RESOURCE_POOL_DIR
         ].freeze
 
         def perform
@@ -73,25 +73,25 @@ module VCAP::CloudController
 
           full_list = [
             {
-              type:          :droplet_blobstore,
+              type: :droplet_blobstore,
               directory_key: config.get(:droplets, :droplet_directory_key),
-              root_dir:      CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
+              root_dir: CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
             },
             {
-              type:          :package_blobstore,
+              type: :package_blobstore,
               directory_key: config.get(:packages, :app_package_directory_key),
-              root_dir:      CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
+              root_dir: CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
             },
             {
-              type:          :buildpack_blobstore,
+              type: :buildpack_blobstore,
               directory_key: config.get(:buildpacks, :buildpack_directory_key),
-              root_dir:      CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
+              root_dir: CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
             },
             {
-              type:          :legacy_global_app_bits_cache,
+              type: :legacy_global_app_bits_cache,
               directory_key: config.get(:resource_pool, :resource_directory_key),
-              root_dir:      CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
-            },
+              root_dir: CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
+            }
           ]
 
           unique_blobstores = []
@@ -145,7 +145,7 @@ module VCAP::CloudController
             basename = path_parts[-1]
 
             PackageModel.find(guid: basename).present? ||
-            Buildpack.find(key: basename).present?
+              Buildpack.find(key: basename).present?
           else
             true
           end
@@ -174,9 +174,7 @@ module VCAP::CloudController
 
         def directory_key_for_type(type)
           blobstore_config = unique_blobstores.find { |b| b[:type].to_s == type.to_s }
-          if blobstore_config.nil?
-            raise "Could not find blobstore config matching blobstore type '#{type}': #{unique_blobstores.inspect}"
-          end
+          raise "Could not find blobstore config matching blobstore type '#{type}': #{unique_blobstores.inspect}" if blobstore_config.nil?
 
           blobstore_config[:directory_key]
         end

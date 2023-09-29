@@ -38,7 +38,7 @@ module VCAP::CloudController::Metrics
 
     def catch_error
       yield
-    rescue => e
+    rescue StandardError => e
       @logger.info(e)
     end
 
@@ -111,13 +111,13 @@ module VCAP::CloudController::Metrics
       rss_bytes, pcpu = VCAP::Stats.process_memory_bytes_and_cpu
 
       vitals = {
-        uptime:         Time.now.utc.to_i - @start_time.to_i,
-        cpu:            pcpu.to_f,
-        mem_bytes:      rss_bytes.to_i,
-        cpu_load_avg:   VCAP::Stats.cpu_load_average,
+        uptime: Time.now.utc.to_i - @start_time.to_i,
+        cpu: pcpu.to_f,
+        mem_bytes: rss_bytes.to_i,
+        cpu_load_avg: VCAP::Stats.cpu_load_average,
         mem_used_bytes: VCAP::Stats.memory_used_bytes,
         mem_free_bytes: VCAP::Stats.memory_free_bytes,
-        num_cores:      VCAP::HostSystem.new.num_cores,
+        num_cores: VCAP::HostSystem.new.num_cores
       }
 
       @updaters.each { |u| u.update_vitals(vitals) }
@@ -127,18 +127,18 @@ module VCAP::CloudController::Metrics
       threadqueue = EM.instance_variable_get(:@threadqueue) || []
       resultqueue = EM.instance_variable_get(:@resultqueue) || []
       {
-        thread_count:  Thread.list.size,
+        thread_count: Thread.list.size,
         event_machine: {
           connection_count: EventMachine.connection_count,
-          threadqueue:      {
-            size:        threadqueue.size,
-            num_waiting: threadqueue.is_a?(Array) ? 0 : threadqueue.num_waiting,
+          threadqueue: {
+            size: threadqueue.size,
+            num_waiting: threadqueue.is_a?(Array) ? 0 : threadqueue.num_waiting
           },
           resultqueue: {
-            size:        resultqueue.size,
-            num_waiting: resultqueue.is_a?(Array) ? 0 : resultqueue.num_waiting,
-          },
-        },
+            size: resultqueue.size,
+            num_waiting: resultqueue.is_a?(Array) ? 0 : resultqueue.num_waiting
+          }
+        }
       }
     end
   end

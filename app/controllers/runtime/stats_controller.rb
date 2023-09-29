@@ -14,12 +14,10 @@ module VCAP::CloudController
 
     get "#{path_guid}/stats", :stats
 
-    def stats(guid, opts={})
+    def stats(guid, _opts={})
       process = find_guid_and_validate_access(:read, guid)
 
-      if process.stopped?
-        raise ApiError.new_from_details('AppStoppedStatsError', process.name)
-      end
+      raise ApiError.new_from_details('AppStoppedStatsError', process.name) if process.stopped?
 
       begin
         stats, warnings = instances_reporters.stats_for_app(process)
@@ -29,9 +27,7 @@ module VCAP::CloudController
         end
 
         stats.each_value do |stats_hash|
-          if stats_hash[:stats]
-            stats_hash[:stats].delete_if { |key, _| key == :net_info }
-          end
+          stats_hash[:stats].delete_if { |key, _| key == :net_info } if stats_hash[:stats]
         end
         [HTTP::OK, MultiJson.dump(stats)]
       rescue CloudController::Errors::ApiError => e

@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     validates :parameters, hash: true, allow_nil: true
     validates :type, allow_blank: false, inclusion: {
-      in: %w(managed),
+      in: %w[managed],
       message: "must be 'managed'"
     }
 

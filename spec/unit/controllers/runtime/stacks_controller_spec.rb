@@ -17,9 +17,9 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::StacksController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          description: { type: 'string', required: false }
-        })
+                                                                                       name: { type: 'string', required: true },
+                                                                                       description: { type: 'string', required: false }
+                                                                                     })
       end
     end
 
@@ -42,6 +42,7 @@ module VCAP::CloudController
 
         context 'when the description is not provided' do
           let(:params) { { name: 'zakstack' } }
+
           it 'creates a stack' do
             post '/v2/stacks', MultiJson.dump(params)
             expect(last_response.status).to eq(201)
@@ -66,11 +67,11 @@ module VCAP::CloudController
       end
 
       context 'if apps exist' do
-        let!(:process) { ProcessModelFactory.make(stack: stack) }
+        let!(:process) { ProcessModelFactory.make(stack:) }
 
         it 'fails even when recursive' do
           delete "/v2/stacks/#{stack.guid}?recursive=true"
-          expect(parsed_response['code']).to eq 10006
+          expect(parsed_response['code']).to eq 10_006
           expect(last_response.status).to eq(400)
         end
       end

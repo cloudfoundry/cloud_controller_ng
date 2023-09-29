@@ -15,7 +15,7 @@ module VCAP::CloudController
         let(:crashed_instances) do
           [
             { instance: 'instance_1', since: 1 },
-            { instance: 'instance_2', since: 1 },
+            { instance: 'instance_2', since: 1 }
           ]
         end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
           expected = [
             { 'instance' => 'instance_1', 'since' => 1 },
-            { 'instance' => 'instance_2', 'since' => 1 },
+            { 'instance' => 'instance_2', 'since' => 1 }
           ]
 
           get "/v2/apps/#{process.app.guid}/crashes"
@@ -37,7 +37,8 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(MultiJson.load(last_response.body)).to eq(expected)
           expect(instances_reporters).to have_received(:crashed_instances_for_app).with(
-            satisfy { |requested_app| requested_app.guid == process.app.guid })
+            satisfy { |requested_app| requested_app.guid == process.app.guid }
+          )
         end
       end
 

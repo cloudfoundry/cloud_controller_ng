@@ -56,7 +56,7 @@ module VCAP::CloudController
             relationships: relationships,
             metadata: {
               labels: hashified_labels(service_plan.labels),
-              annotations: hashified_annotations(service_plan.annotations),
+              annotations: hashified_annotations(service_plan.annotations)
             },
             links: links
           }
@@ -125,9 +125,7 @@ module VCAP::CloudController
             }
           }
 
-          if service_plan.service.service_broker.space_guid
-            relationships[:space] = { data: { guid: service_plan.service.service_broker.space_guid } }
-          end
+          relationships[:space] = { data: { guid: service_plan.service.service_broker.space_guid } } if service_plan.service.service_broker.space_guid
 
           relationships
         end
@@ -145,9 +143,7 @@ module VCAP::CloudController
             }
           }
 
-          if service_plan.service.service_broker.space_guid
-            links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{service_plan.service.service_broker.space_guid}") }
-          end
+          links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{service_plan.service.service_broker.space_guid}") } if service_plan.service.service_broker.space_guid
 
           links
         end
@@ -158,7 +154,7 @@ module VCAP::CloudController
             'type' => 'array',
             'items' => {
               'type' => 'object',
-              'required' => %w(amount unit),
+              'required' => %w[amount unit],
               'properties' => {
                 'amount' => {
                   'type' => 'object',

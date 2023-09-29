@@ -68,7 +68,7 @@ module VCAP::CloudController
                  ).
                  where(service_bindings__syslog_drain_url: syslog_drain_urls_query).
 
-                 each_with_object({}) { |item, injected|
+                 each_with_object({}) do |item, injected|
                    syslog_drain_url = item[:syslog_drain_url]
                    credentials = item.credentials
                    cert = credentials&.fetch('cert', '') || ''
@@ -90,7 +90,7 @@ module VCAP::CloudController
                    cert_item[:apps].push({ hostname: hostname, app_id: app_guid })
 
                    injected
-                 }.values
+                 end.values
 
       bindings.each do |binding|
         binding[:credentials] = binding[:binding_data_map].values
@@ -116,9 +116,9 @@ module VCAP::CloudController
     end
 
     def hostname_from_app_name(*names)
-      names.map { |name|
+      names.map do |name|
         name.gsub(/\s+/, '-').gsub(/[^-a-zA-Z0-9]+/, '').sub(/-+$/, '')[0..62]
-      }.join('.')
+      end.join('.')
     end
 
     def aggregate_function(column)
@@ -132,9 +132,9 @@ module VCAP::CloudController
     end
 
     def prepare_aggregate_function
-      if AppModel.db.database_type == :mysql
-        AppModel.db.run('SET SESSION group_concat_max_len = 1000000000')
-      end
+      return unless AppModel.db.database_type == :mysql
+
+      AppModel.db.run('SET SESSION group_concat_max_len = 1000000000')
     end
 
     def last_id

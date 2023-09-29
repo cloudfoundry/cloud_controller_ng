@@ -5,8 +5,6 @@ Sequel.migration do
       add_column :secure_token, String
     end
 
-    if self.class.name.match?(/mysql/i)
-      run 'ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT'
-    end
+    run 'ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT' if self.class.name.match?(/mysql/i)
   end
 end

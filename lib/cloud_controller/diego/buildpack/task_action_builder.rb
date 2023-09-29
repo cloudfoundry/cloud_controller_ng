@@ -20,7 +20,7 @@ module VCAP::CloudController
             from: lifecycle_data[:droplet_uri],
             to: '.',
             cache_key: '',
-            user: 'vcap',
+            user: 'vcap'
           )
           if task.droplet.sha256_checksum
             download_droplet_action.checksum_algorithm = 'sha256'
@@ -46,7 +46,7 @@ module VCAP::CloudController
           else
             serial([
               download_droplet_action,
-              run_action,
+              run_action
             ])
           end
         end
@@ -63,7 +63,7 @@ module VCAP::CloudController
               url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
               destination_path: '/tmp/lifecycle',
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
             )
           ]
 
@@ -75,7 +75,7 @@ module VCAP::CloudController
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
               digest_value: task.droplet.sha256_checksum,
-              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
             )
           end
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "buildpack-#{lifecycle_stack}-lifecycle",
+            cache_key: "buildpack-#{lifecycle_stack}-lifecycle"
           )]
         end
 

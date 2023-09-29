@@ -11,11 +11,11 @@ module CloudFoundry
       let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
       let(:max_concurrent_requests) { 1 }
       let(:broker_timeout) { 60 }
-      let(:middleware) {
+      let(:middleware) do
         ServiceBrokerRateLimiter.new(app, logger: logger, max_concurrent_requests: max_concurrent_requests, broker_timeout_seconds: broker_timeout)
-      }
+      end
 
-      before(:each) do
+      before do
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
         allow(logger).to receive(:info)
         allow(app).to receive(:call) do
@@ -26,19 +26,19 @@ module CloudFoundry
 
       describe 'included requests' do
         it 'allows a service broker request within the limit' do
-          status, _, _ = middleware.call(user_env)
+          status, = middleware.call(user_env)
           expect(status).to eq(200)
         end
 
         it 'allows sequential requests' do
-          status, _, _ = middleware.call(user_env)
+          status, = middleware.call(user_env)
           expect(status).to eq(200)
-          status, _, _ = middleware.call(user_env)
+          status, = middleware.call(user_env)
           expect(status).to eq(200)
         end
 
         it 'does not allow more than the max number of concurrent requests' do
-          threads = 2.times.map { Thread.new { Thread.current[:status], _, _ = middleware.call(user_env) } }
+          threads = 2.times.map { Thread.new { Thread.current[:status], = middleware.call(user_env) } }
           statuses = threads.map { |t| t.join[:status] }
 
           expect(statuses).to include(200)
@@ -50,7 +50,7 @@ module CloudFoundry
         it 'counts concurrent requests per user' do
           other_user_env = { 'cf.user_guid' => 'other_user_guid', 'PATH_INFO' => path_info }
           threads = [user_env, other_user_env].map do |env|
-            Thread.new { Thread.current[:status], _, _ = middleware.call(env) }
+            Thread.new { Thread.current[:status], = middleware.call(env) }
           end
           statuses = threads.map { |t| t.join[:status] }
 
@@ -63,7 +63,7 @@ module CloudFoundry
           allow(app).to receive(:call).and_raise 'an error'
           expect { middleware.call(user_env) }.to raise_error('an error')
           allow(app).to receive(:call).and_return [200, {}, 'a body']
-          status, _, _ = middleware.call(user_env)
+          status, = middleware.call(user_env)
           expect(status).to eq(200)
         end
 
@@ -78,9 +78,9 @@ module CloudFoundry
                 _, response_headers, body = middleware.call(user_env)
                 json_body = JSON.parse(body.first)
                 expect(json_body).to include(
-                  'code' => 10016,
+                  'code' => 10_016,
                   'description' => 'Service broker concurrent request limit exceeded',
-                  'error_code' => 'CF-ServiceBrokerRateLimitExceeded',
+                  'error_code' => 'CF-ServiceBrokerRateLimitExceeded'
                 )
                 expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
@@ -95,9 +95,9 @@ module CloudFoundry
                 _, response_headers, body = middleware.call(user_env)
                 json_body = JSON.parse(body.first)
                 expect(json_body['errors'].first).to include(
-                  'code' => 10016,
+                  'code' => 10_016,
                   'detail' => 'Service broker concurrent request limit exceeded',
-                  'title' => 'CF-ServiceBrokerRateLimitExceeded',
+                  'title' => 'CF-ServiceBrokerRateLimitExceeded'
                 )
                 expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
@@ -109,7 +109,7 @@ module CloudFoundry
 
             it 'reduces the suggested delay in the Retry-After header' do
               Timecop.freeze do
-                _, response_headers, _ = middleware.call(user_env)
+                _, response_headers, = middleware.call(user_env)
                 expect(response_headers['Retry-After'].to_i).to be_between((broker_timeout * 0.5).floor, (broker_timeout * 1.5).ceil)
               end
             end
@@ -119,7 +119,8 @@ module CloudFoundry
 
       describe 'skipped requests' do
         let(:concurrent_request_counter) { double }
-        before(:each) { middleware.instance_variable_set('@concurrent_request_counter', concurrent_request_counter) }
+
+        before { middleware.instance_variable_set('@concurrent_request_counter', concurrent_request_counter) }
 
         context 'user is an admin' do
           before do
@@ -127,7 +128,7 @@ module CloudFoundry
           end
 
           it 'does not rate limit them' do
-            _, _, _ = middleware.call(user_env)
+            middleware.call(user_env)
             expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
@@ -137,7 +138,7 @@ module CloudFoundry
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/apps') }
 
           it 'does not rate limit them' do
-            _, _, _ = middleware.call(user_env)
+            middleware.call(user_env)
             expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
@@ -147,7 +148,7 @@ module CloudFoundry
           let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'GET') }
 
           it 'does not rate limit them' do
-            _, _, _ = middleware.call(user_env)
+            middleware.call(user_env)
             expect(concurrent_request_counter).not_to receive(:try_increment?)
             expect(app).to have_received(:call)
           end
@@ -213,23 +214,23 @@ module CloudFoundry
             end
 
             it 'returns true for a new user' do
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true for a recurring user performing the maximum allowed concurrent requests' do
               (max_concurrent_requests - 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns false for a recurring user with too many concurrent requests' do
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+              expect(concurrent_request_counter).not_to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true again for a recurring user after a single decrement' do
               (max_concurrent_requests + 1).times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
               concurrent_request_counter.decrement(user_guid, logger)
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'returns true in case of a Redis error' do
@@ -239,7 +240,7 @@ module CloudFoundry
               allow_any_instance_of(Redis).to receive(:incr).and_raise(Redis::ConnectionError)
               allow(logger).to receive(:error)
 
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
               expect(logger).to have_received(:error).with(/Redis error/)
             end
           end
@@ -254,13 +255,13 @@ module CloudFoundry
             it 'decreases the number of concurrent requests, allowing for another concurrent request' do
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
               concurrent_request_counter.decrement(user_guid, logger)
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_truthy
+              expect(concurrent_request_counter).to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'does not decrease the number of concurrent requests below zero' do
               concurrent_request_counter.decrement(user_guid, logger)
               max_concurrent_requests.times { concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger) }
-              expect(concurrent_request_counter.try_increment?(user_guid, max_concurrent_requests, logger)).to be_falsey
+              expect(concurrent_request_counter).not_to be_try_increment(user_guid, max_concurrent_requests, logger)
             end
 
             it 'writes an error log in case of a Redis error' do

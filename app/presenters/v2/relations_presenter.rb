@@ -9,9 +9,9 @@ module CloudController
 
         def to_hash(controller, obj, opts, depth, parents, orphans=nil)
           opts = opts.merge({
-            inline_relations_depth:                     opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT,
-            max_number_of_associated_objects_to_inline: opts[:max_inline] || MAX_INLINE_DEFAULT
-          })
+                              inline_relations_depth: opts[:inline_relations_depth] || INLINE_RELATIONS_DEFAULT,
+                              max_number_of_associated_objects_to_inline: opts[:max_inline] || MAX_INLINE_DEFAULT
+                            })
 
           {}.tap do |res|
             parents.push(controller)
@@ -19,14 +19,16 @@ module CloudController
             res.merge!(
               serialize_relationships(
                 controller.to_one_relationships,
-                controller, depth, obj, opts, parents, orphans,
-              ))
+                controller, depth, obj, opts, parents, orphans
+              )
+            )
 
             res.merge!(
               serialize_relationships(
                 controller.to_many_relationships,
-                controller, depth, obj, opts, parents, orphans,
-              ))
+                controller, depth, obj, opts, parents, orphans
+              )
+            )
 
             parents.pop
           end
@@ -88,9 +90,7 @@ module CloudController
         def add_relationship_url_to_response(response, controller, associated_controller, relationship_name, association, obj)
           if association.is_a?(VCAP::CloudController::RestController::ControllerDSL::ToOneAttribute)
             associated_model_instance = get_preloaded_association_contents!(obj, association)
-            if associated_model_instance
-              associated_url = associated_controller.url_for_guid(associated_model_instance.guid, associated_model_instance)
-            end
+            associated_url = associated_controller.url_for_guid(associated_model_instance.guid, associated_model_instance) if associated_model_instance
           else
             associated_url = "#{controller.url_for_guid(obj.guid, obj)}/#{relationship_name}"
           end
@@ -101,7 +101,7 @@ module CloudController
         def relationship_link_only?(association, associated_controller, relationship_name, opts, depth, parents)
           return true if association.link_only?
           return true if opts[:exclude_relations] && opts[:exclude_relations].include?(relationship_name.to_s)
-          return true if opts[:include_relations] && !opts[:include_relations].include?(relationship_name.to_s)
+          return true if opts[:include_relations] && opts[:include_relations].exclude?(relationship_name.to_s)
 
           depth >= opts[:inline_relations_depth] || parents.include?(associated_controller)
         end
@@ -116,9 +116,9 @@ module CloudController
 
         def get_associated_model_class_for(obj, name)
           model_association = obj.model.association_reflection(name)
-          if model_association
-            model_association.associated_class
-          end
+          return unless model_association
+
+          model_association.associated_class
         end
       end
     end

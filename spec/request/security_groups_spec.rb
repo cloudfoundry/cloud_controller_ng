@@ -11,13 +11,13 @@ RSpec.describe 'Security_Groups Request' do
       {
         protocol: 'udp',
         ports: '8080',
-        destination: '198.41.191.47/1',
+        destination: '198.41.191.47/1'
       }
     ]
   end
 
   describe 'POST /v3/security_groups' do
-    let(:api_call) { lambda { |user_headers| post '/v3/security_groups', params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post '/v3/security_groups', params.to_json, user_headers } }
 
     context 'creating a security group' do
       let(:security_group_name) { 'security_group_name' }
@@ -34,13 +34,13 @@ RSpec.describe 'Security_Groups Request' do
           relationships: {
             staging_spaces: {
               data: [
-                { guid: space.guid },
+                { guid: space.guid }
               ]
             },
             running_spaces: {
               data: []
             }
-          },
+          }
         }
       end
 
@@ -58,7 +58,7 @@ RSpec.describe 'Security_Groups Request' do
           relationships: {
             staging_spaces: {
               data: [
-                { guid: 'space-guid' },
+                { guid: 'space-guid' }
               ]
             },
             running_spaces: {
@@ -66,7 +66,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -96,7 +96,7 @@ RSpec.describe 'Security_Groups Request' do
               type: 8,
               code: 0,
               description: 'Allow ping requests to private services'
-            },
+            }
           ]
         end
 
@@ -122,12 +122,12 @@ RSpec.describe 'Security_Groups Request' do
                 type: 8,
                 code: 0,
                 description: 'Allow ping requests to private services'
-              },
+              }
             ],
             relationships: {
               staging_spaces: {
                 data: [
-                  { guid: 'space-guid' },
+                  { guid: 'space-guid' }
                 ]
               },
               running_spaces: {
@@ -135,7 +135,7 @@ RSpec.describe 'Security_Groups Request' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
           }
         end
@@ -193,7 +193,7 @@ RSpec.describe 'Security_Groups Request' do
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
             "Security group with name '#{security_group_name}' already exists."
-                                   )
+          )
         end
       end
     end
@@ -201,14 +201,14 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'POST /v3/security_groups/:security_group_guid/relationships/running_spaces' do
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:api_call) { lambda { |user_headers| post "/v3/security_groups/#{security_group.guid}/relationships/running_spaces", params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post "/v3/security_groups/#{security_group.guid}/relationships/running_spaces", params.to_json, user_headers } }
 
     context 'bind running security group to a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -216,7 +216,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:expected_response) do
           {
             data: [
-              { guid: 'space-guid' },
+              { guid: 'space-guid' }
             ],
             links: {
               self: {
@@ -250,7 +250,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -259,7 +259,7 @@ RSpec.describe 'Security_Groups Request' do
           {
             data: contain_exactly(
               { guid: 'space-guid' },
-              { guid: 'another-space-guid' },
+              { guid: 'another-space-guid' }
             ),
             links: {
               self: {
@@ -306,7 +306,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -314,7 +314,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:expected_response) do
           {
             data: [
-              { guid: 'space-guid' },
+              { guid: 'space-guid' }
             ],
             links: {
               self: {
@@ -349,7 +349,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: 'non-existent-space' },
+              { guid: 'non-existent-space' }
             ]
           }
         end
@@ -366,14 +366,14 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'POST /v3/security_groups/:security_group_guid/relationships/staging_spaces' do
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:api_call) { lambda { |user_headers| post "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces", params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { post "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces", params.to_json, user_headers } }
 
     context 'bind staging security group to a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -381,7 +381,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:expected_response) do
           {
             data: [
-              { guid: 'space-guid' },
+              { guid: 'space-guid' }
             ],
             links: {
               self: {
@@ -415,7 +415,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -424,7 +424,7 @@ RSpec.describe 'Security_Groups Request' do
           {
             data: contain_exactly(
               { guid: 'space-guid' },
-              { guid: 'another-space-guid' },
+              { guid: 'another-space-guid' }
             ),
             links: {
               self: {
@@ -471,7 +471,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: space.guid },
+              { guid: space.guid }
             ]
           }
         end
@@ -479,7 +479,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:expected_response) do
           {
             data: [
-              { guid: 'space-guid' },
+              { guid: 'space-guid' }
             ],
             links: {
               self: {
@@ -514,7 +514,7 @@ RSpec.describe 'Security_Groups Request' do
         let(:params) do
           {
             data: [
-              { guid: 'non-existent-space' },
+              { guid: 'non-existent-space' }
             ]
           }
         end
@@ -530,7 +530,7 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'GET /v3/security_groups' do
-    let(:api_call) { lambda { |user_headers| get '/v3/security_groups', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/security_groups', nil, user_headers } }
     let(:security_group_1) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_1_guid') }
     let(:security_group_2) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_2_guid') }
     let(:security_group_3) { VCAP::CloudController::SecurityGroup.make(running_default: true, guid: 'security_group_3_guid') }
@@ -542,7 +542,7 @@ RSpec.describe 'Security_Groups Request' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::SecurityGroup }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/security_groups?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/security_groups?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
@@ -561,14 +561,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_1_guid) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/security_group_1_guid} }
           }
         }
       end
@@ -586,14 +586,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [{ guid: 'space-guid' }],
+              data: [{ guid: 'space-guid' }]
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_2_guid) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/security_group_2_guid} }
           }
         }
       end
@@ -611,14 +611,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_3_guid) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/security_group_3_guid} }
           }
         }
       end
@@ -631,20 +631,20 @@ RSpec.describe 'Security_Groups Request' do
           name: 'dummy1',
           globally_enabled: {
             running: false,
-            staging: false,
+            staging: false
           },
           rules: [],
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links:
             {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
         }
       end
@@ -657,20 +657,20 @@ RSpec.describe 'Security_Groups Request' do
           name: 'dummy2',
           globally_enabled: {
             running: false,
-            staging: false,
+            staging: false
           },
           rules: [],
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links:
             {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
         }
       end
@@ -739,7 +739,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on names' do
@@ -748,7 +748,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on running_space_guids' do
@@ -757,7 +757,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on staging_space_guids' do
@@ -766,7 +766,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_2.guid)
       end
 
       it 'filters on globally_enabled_staging' do
@@ -775,7 +775,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_3.guid)
       end
 
       it 'filters on globally_enabled_running' do
@@ -784,7 +784,7 @@ RSpec.describe 'Security_Groups Request' do
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(security_group_3.guid)
       end
     end
 
@@ -794,14 +794,14 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(422)
         expect(last_response).to have_error_message("Unknown query parameter(s): 'blork'. Valid parameters are: " \
-            "'page', 'per_page', 'order_by', 'created_ats', 'updated_ats', 'guids', 'names', 'running_space_guids', " \
-            "'staging_space_guids', 'globally_enabled_running', 'globally_enabled_staging'")
+                                                    "'page', 'per_page', 'order_by', 'created_ats', 'updated_ats', 'guids', 'names', 'running_space_guids', " \
+                                                    "'staging_space_guids', 'globally_enabled_running', 'globally_enabled_staging'")
       end
     end
   end
 
   describe 'GET /v3/security_groups/:guid' do
-    let(:api_call) { lambda { |user_headers| get "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
 
     context 'getting a security group NOT globally enabled NOR associated with any spaces' do
       let(:security_group) { VCAP::CloudController::SecurityGroup.make }
@@ -819,14 +819,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -871,14 +871,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [{ guid: space.guid }],
+              data: [{ guid: space.guid }]
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -939,14 +939,14 @@ RSpec.describe 'Security_Groups Request' do
           rules: default_rules,
           relationships: {
             staging_spaces: {
-              data: [],
+              data: []
             },
             running_spaces: {
-              data: [],
+              data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -965,18 +965,18 @@ RSpec.describe 'Security_Groups Request' do
         expect(last_response).to have_status_code(404)
         expect(last_response).to have_error_message(
           'Security group not found'
-                                 )
+        )
       end
     end
   end
 
   describe 'PATCH /v3/security_groups/:guid' do
-    let(:api_call) { lambda { |user_headers| patch "/v3/security_groups/#{security_group.guid}", params.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/security_groups/#{security_group.guid}", params.to_json, user_headers } }
     let!(:security_group) do
       VCAP::CloudController::SecurityGroup.make({
-        name: 'original-name',
-        rules: [],
-      })
+                                                  name: 'original-name',
+                                                  rules: []
+                                                })
     end
 
     let(:params) do
@@ -984,7 +984,7 @@ RSpec.describe 'Security_Groups Request' do
         name: 'updated-name',
         globally_enabled: {
           running: false,
-          staging: true,
+          staging: true
         },
         rules: [
           {
@@ -992,7 +992,7 @@ RSpec.describe 'Security_Groups Request' do
             'ports' => '8080',
             'destination' => '198.41.191.47/1'
           }
-        ],
+        ]
       }
     end
 
@@ -1025,7 +1025,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -1062,14 +1062,14 @@ RSpec.describe 'Security_Groups Request' do
           ],
           relationships: {
             staging_spaces: {
-              data: [{ guid: space.guid }],
+              data: [{ guid: space.guid }]
             },
             running_spaces: {
               data: []
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -1120,7 +1120,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }
       end
@@ -1143,8 +1143,8 @@ RSpec.describe 'Security_Groups Request' do
       let(:params) do
         {
           globally_enabled: {
-            staging: true,
-          },
+            staging: true
+          }
         }
       end
 
@@ -1153,8 +1153,8 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(200)
         expect(security_group.reload.name).to eq('original-name')
-        expect(security_group.reload.running_default).to eq(false)
-        expect(security_group.reload.staging_default).to eq(true)
+        expect(security_group.reload.running_default).to be(false)
+        expect(security_group.reload.staging_default).to be(true)
         expect(security_group.reload.rules).to eq([])
       end
     end
@@ -1165,8 +1165,8 @@ RSpec.describe 'Security_Groups Request' do
 
         expect(last_response).to have_status_code(200)
         expect(security_group.reload.name).to eq('original-name')
-        expect(security_group.reload.running_default).to eq(false)
-        expect(security_group.reload.staging_default).to eq(false)
+        expect(security_group.reload.running_default).to be(false)
+        expect(security_group.reload.staging_default).to be(false)
         expect(security_group.reload.rules).to eq([])
       end
     end
@@ -1233,7 +1233,7 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'DELETE /v3/security_groups/:security_group_guid/relationships/running_spaces/:space_guid' do
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:api_call) { lambda { |user_headers| delete "/v3/security_groups/#{security_group.guid}/relationships/running_spaces/#{space.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/security_groups/#{security_group.guid}/relationships/running_spaces/#{space.guid}", nil, user_headers } }
 
     context 'unbinding a running security group from a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
@@ -1332,7 +1332,7 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'DELETE /v3/security_groups/:security_group_guid/relationships/staging_spaces/:space_guid' do
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:api_call) { lambda { |user_headers| delete "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces/#{space.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces/#{space.guid}", nil, user_headers } }
 
     context 'unbinding a staging security group from a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
@@ -1430,17 +1430,17 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'DELETE /v3/security_groups/:guid' do
-    let(:api_call) { lambda { |user_headers| delete "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
     let(:db_check) do
       lambda do
         last_job = VCAP::CloudController::PollableJobModel.last
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+        expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{last_job.guid}})
         expect(last_job.resource_type).to eq('security_group')
 
         get "/v3/jobs/#{last_job.guid}", nil, admin_header
         expect(last_response).to have_status_code(200)
         expect(parsed_response['operation']).to eq('security_group.delete')
-        expect(parsed_response['links']['security_group']['href']).to match(%r(/v3/security_groups/#{security_group.guid}))
+        expect(parsed_response['links']['security_group']['href']).to match(%r{/v3/security_groups/#{security_group.guid}})
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 

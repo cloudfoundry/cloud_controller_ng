@@ -9,10 +9,8 @@ module VCAP::CloudController
     validates :var, environment_variables_string_values: true
 
     def self.for_env_var_group(params)
-      if params == {}
-        params = { var: {} }
-      end
-      self.new(params)
+      params = { var: {} } if params == {}
+      new(params)
     end
 
     def audit_hash

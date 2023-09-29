@@ -26,7 +26,7 @@ module VCAP::CloudController
 
           # Routes
           total_routes: message.total_routes || SpaceQuotaDefinition::DEFAULT_TOTAL_ROUTES,
-          total_reserved_route_ports: message.total_reserved_ports || SpaceQuotaDefinition::UNLIMITED,
+          total_reserved_route_ports: message.total_reserved_ports || SpaceQuotaDefinition::UNLIMITED
         )
 
         spaces = valid_spaces(message.space_guids, organization)
@@ -42,9 +42,7 @@ module VCAP::CloudController
     private
 
     def validation_error!(error, message)
-      if error.errors.on([:organization_id, :name])&.include?(:unique)
-        error!("Space Quota '#{message.name}' already exists.")
-      end
+      error!("Space Quota '#{message.name}' already exists.") if error.errors.on(%i[organization_id name])&.include?(:unique)
 
       error!(error.message)
     end

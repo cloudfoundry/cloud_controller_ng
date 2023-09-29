@@ -1,7 +1,7 @@
 require 'action_controller/railtie'
 
-class Application < ::Rails::Application
-  config.exceptions_app = self.routes
+class Application < Rails::Application
+  config.exceptions_app = routes
   config.middleware.delete ActionDispatch::Session::CookieStore
   config.middleware.delete ActionDispatch::Cookies
   config.middleware.delete ActionDispatch::Flash

@@ -29,50 +29,51 @@ module CloudController
       end
 
       describe 'retries' do
-        context '#internal_download_url' do
+        describe '#internal_download_url' do
           before { allow(wrapped_blob).to receive(:internal_download_url).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               blob.internal_download_url
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_blob).to have_received(:internal_download_url).exactly(num_retries).times
           end
         end
 
-        context '#public_download_url' do
+        describe '#public_download_url' do
           before { allow(wrapped_blob).to receive(:public_download_url).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               blob.public_download_url
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_blob).to have_received(:public_download_url).exactly(num_retries).times
           end
         end
 
-        context '#attributes' do
+        describe '#attributes' do
           before { allow(wrapped_blob).to receive(:attributes).and_raise(RetryableError) }
-          let(:keys)  { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123455 } }
+
+          let(:keys)  { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123_455 } }
 
           it 'retries the operation' do
-            expect {
+            expect do
               blob.attributes(keys)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_blob).to have_received(:attributes).with(keys).exactly(num_retries).times
           end
         end
 
-        context '#local_path' do
+        describe '#local_path' do
           before { allow(wrapped_blob).to receive(:local_path).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               blob.local_path
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_blob).to have_received(:local_path).exactly(num_retries).times
           end
@@ -114,9 +115,9 @@ module CloudController
           operation = double(:operation)
           allow(operation).to receive(:call).and_raise(RetryableError.new)
 
-          expect {
+          expect do
             blob.send(:with_retries, log_prefix, log_data) { operation.call }
-          }.to raise_error(RetryableError)
+          end.to raise_error(RetryableError)
 
           expect(operation).to have_received(:call).exactly(num_retries).times
         end
@@ -125,9 +126,9 @@ module CloudController
           operation = double(:operation)
           allow(operation).to receive(:call).and_raise(RetryableError.new)
 
-          expect {
+          expect do
             blob.send(:with_retries, log_prefix, log_data) { operation.call }
-          }.to raise_error RetryableError
+          end.to raise_error RetryableError
 
           expect(logger).to have_received(:debug).exactly(num_retries).times
         end

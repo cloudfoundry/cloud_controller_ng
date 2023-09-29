@@ -52,13 +52,9 @@ module VCAP::CloudController::RestController
       ordered_dataset = order_applicator.apply(dataset)
       paginated_dataset = ordered_dataset.extension(:pagination).paginate(page, page_size)
 
-      if paginated_dataset.prev_page
-        prev_url = url(controller, path, paginated_dataset.prev_page, page_size, order_direction, opts, request_params)
-      end
+      prev_url = url(controller, path, paginated_dataset.prev_page, page_size, order_direction, opts, request_params) if paginated_dataset.prev_page
 
-      if paginated_dataset.next_page
-        next_url = url(controller, path, paginated_dataset.next_page, page_size, order_direction, opts, request_params)
-      end
+      next_url = url(controller, path, paginated_dataset.next_page, page_size, order_direction, opts, request_params) if paginated_dataset.next_page
 
       opts[:max_inline] ||= ::CloudController::Presenters::V2::RelationsPresenter::MAX_INLINE_DEFAULT
       orphans = opts[:orphan_relations] == 1 ? {} : nil
@@ -66,16 +62,14 @@ module VCAP::CloudController::RestController
       resources = fetch_and_process_records(paginated_dataset, controller, inline_relations_depth, orphans, opts)
 
       result = {
-         total_results: paginated_dataset.pagination_record_count,
-         total_pages: paginated_dataset.page_count,
-         prev_url: prev_url,
-         next_url: next_url,
-         resources: resources,
+        total_results: paginated_dataset.pagination_record_count,
+        total_pages: paginated_dataset.page_count,
+        prev_url: prev_url,
+        next_url: next_url,
+        resources: resources
       }
 
-      if orphans
-        result[:orphans] = orphans
-      end
+      result[:orphans] = orphans if orphans
 
       MultiJson.dump(result, pretty: true)
     end
@@ -83,17 +77,16 @@ module VCAP::CloudController::RestController
     private
 
     def validate(page, page_size, inline_relations_depth)
-      if page_size > @max_results_per_page
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
-      end
+      raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}") if page_size > @max_results_per_page
 
       if !@max_total_results.nil? && page * page_size > @max_total_results
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "(page * per_page) must be less than #{@max_total_results}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter',
+                                                                 "(page * per_page) must be less than #{@max_total_results}")
       end
 
-      if inline_relations_depth > @max_inline_relations_depth
-        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
-      end
+      return unless inline_relations_depth > @max_inline_relations_depth
+
+      raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
     end
 
     def fetch_and_process_records(paginated_dataset, controller, inline_relations_depth, orphans, opts)
@@ -102,7 +95,7 @@ module VCAP::CloudController::RestController
         controller,
         default_visibility_filter,
         opts[:additional_visibility_filters] || {},
-        inline_relations_depth,
+        inline_relations_depth
       )
 
       dataset_records = dataset.all
@@ -121,16 +114,14 @@ module VCAP::CloudController::RestController
 
     def url(controller, path, page, page_size, order_direction, opts, request_params)
       params = {
-          'page' => page,
-          'results-per-page' => page_size,
-          'order-direction' => order_direction
+        'page' => page,
+        'results-per-page' => page_size,
+        'order-direction' => order_direction
       }
 
       depth = opts[:inline_relations_depth]
 
-      if depth
-        params['inline-relations-depth'] = depth
-      end
+      params['inline-relations-depth'] = depth if depth
 
       params['q'] = opts[:q] if opts[:q]
       params['orphan-relations'] = opts[:orphan_relations] if opts[:orphan_relations]

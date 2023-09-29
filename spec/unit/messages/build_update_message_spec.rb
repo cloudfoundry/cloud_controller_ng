@@ -17,11 +17,12 @@ module VCAP::CloudController
             }
           }
         end
+
         it 'validates that there are not excess fields' do
           body['bogus'] = 'field'
           message = BuildUpdateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
         end
 
@@ -47,7 +48,7 @@ module VCAP::CloudController
             lifecycle: {
               type: 'kpack',
               data: {
-                image: 'some-image:tag',
+                image: 'some-image:tag'
               }
             }
           }
@@ -66,7 +67,7 @@ module VCAP::CloudController
               lifecycle: {
                 type: 'kpack',
                 data: {
-                  image: 'some-image:tag',
+                  image: 'some-image:tag'
                 }
               }
             }
@@ -83,7 +84,7 @@ module VCAP::CloudController
           body['bogus'] = 'field'
           message = BuildUpdateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
         end
 
@@ -131,7 +132,7 @@ module VCAP::CloudController
         context 'staged state update omits lifecycle data' do
           let(:body) do
             {
-              state: 'STAGED',
+              state: 'STAGED'
             }
           end
 

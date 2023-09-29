@@ -27,10 +27,10 @@ module VCAP::CloudController
         return finish if result[:finished]
 
         self.polling_interval_seconds = result[:retry_after].to_i if result[:retry_after]
-      rescue CloudController::Errors::ApiError => err
-        raise err
-      rescue => err
-        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, err.message)
+      rescue CloudController::Errors::ApiError => e
+        raise e
+      rescue StandardError => e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
       end
 
       def handle_timeout

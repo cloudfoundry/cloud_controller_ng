@@ -33,8 +33,8 @@ module VCAP
             }
           },
           metadata: {
-              labels: { potato: 'yam' },
-              annotations: { style: 'mashed' }
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
           }
         }
       end
@@ -43,15 +43,15 @@ module VCAP
 
       let(:message2) do
         ServiceBrokerCreateMessage.new({
-          name: "#{name}-2",
-          url: broker_url + '2',
-          authentication: {
-            credentials: {
-              username: auth_username + '2',
-              password: auth_password + '2'
-            }
-          }
-        })
+                                         name: "#{name}-2",
+                                         url: broker_url + '2',
+                                         authentication: {
+                                           credentials: {
+                                             username: auth_username + '2',
+                                             password: auth_password + '2'
+                                           }
+                                         }
+                                       })
       end
 
       let(:broker) { ServiceBroker.last }
@@ -63,7 +63,7 @@ module VCAP
         expect(broker.broker_url).to eq(broker_url)
         expect(broker.auth_username).to eq(auth_username)
         expect(broker.auth_password).to eq(auth_password)
-        expect(broker.space_guid).to eq(nil)
+        expect(broker.space_guid).to be_nil
 
         expect(broker.labels[0].key_name).to eq('potato')
         expect(broker.labels[0].value).to eq('yam')
@@ -100,7 +100,7 @@ module VCAP
           )
       end
 
-      describe 'concurrent behaviour', stepper: true do
+      describe 'concurrent behaviour', :stepper do
         let(:stepper) { Stepper.new(self) }
 
         before do
@@ -115,12 +115,12 @@ module VCAP
           it "works when parallel brokers are created #{i}", isolation: :truncation do
             stepper.start_thread([
               'start create broker transaction',
-              'finish create broker transaction',
+              'finish create broker transaction'
             ]) { subject.create(message) }
 
             stepper.start_thread([
               'start create broker transaction',
-              'finish create broker transaction',
+              'finish create broker transaction'
             ]) { subject.create(message2) }
 
             stepper.interleave_order

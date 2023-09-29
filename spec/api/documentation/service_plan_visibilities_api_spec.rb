@@ -1,14 +1,14 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Service Plan Visibilities', type: [:api, :legacy_api] do
+RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
   let(:guid) { service_plan_visibility.guid }
   authenticated_request
 
   standard_model_list(:service_plan_visibilities, VCAP::CloudController::ServicePlanVisibilitiesController)
-  standard_model_get(:service_plan_visibilities, nested_attributes: [:service_plan, :organization])
+  standard_model_get(:service_plan_visibilities, nested_attributes: %i[service_plan organization])
   standard_model_delete(:service_plan_visibilities)
 
   post '/v2/service_plan_visibilities' do

@@ -5,12 +5,12 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
     let(:space) { Space.make }
-    let(:process) { ProcessModelFactory.make(space: space) }
+    let(:process) { ProcessModelFactory.make(space:) }
     let(:app_model) { process.app }
-    let!(:first_route) { Route.make(space: space) }
-    let!(:second_route) { Route.make(space: space) }
-    let(:first_service) { ManagedServiceInstance.make(space: space) }
-    let(:second_service) { ManagedServiceInstance.make(space: space) }
+    let!(:first_route) { Route.make(space:) }
+    let!(:second_route) { Route.make(space:) }
+    let(:first_service) { ManagedServiceInstance.make(space:) }
+    let(:second_service) { ManagedServiceInstance.make(space:) }
 
     let(:instances_reporters) { double(:instances_reporters) }
     let(:running_instances) { { app_model.guid => 5 } }
@@ -51,7 +51,7 @@ module VCAP::CloudController
         }.merge(process.to_hash)
 
         expect(decoded_response['apps'][0]).to include(MultiJson.load(MultiJson.dump(expected_app_hash)))
-        expect(decoded_response['apps'][0]['service_names']).to match_array([first_service.name, second_service.name])
+        expect(decoded_response['apps'][0]['service_names']).to contain_exactly(first_service.name, second_service.name)
       end
 
       it 'returns the space services' do
@@ -68,11 +68,11 @@ module VCAP::CloudController
         private_broker = ServiceBroker.make(space_guid: foo_space.guid)
         service = Service.make(service_broker: private_broker)
         service_plan = ServicePlan.make(service: service, public: false)
-        service_instance = ManagedServiceInstance.make(space: space, service_plan: service_plan)
+        service_instance = ManagedServiceInstance.make(space:, service_plan:)
 
         get "/v2/spaces/#{space.guid}/summary"
 
-        expect(decoded_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+        expect(decoded_response['services'].pluck('guid')).to include(service_instance.guid)
       end
 
       it 'does not return private services from other spaces' do
@@ -85,12 +85,12 @@ module VCAP::CloudController
         get "/v2/spaces/#{space.guid}/summary"
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to_not include service_instance2.guid
+        expect(parsed_response['services'].pluck('guid')).not_to include service_instance2.guid
       end
 
       it 'does not include sharing information for not-shared service instances' do
         space = Space.make
-        ManagedServiceInstance.make(space: space)
+        ManagedServiceInstance.make(space:)
 
         get "/v2/spaces/#{space.guid}/summary"
 
@@ -119,16 +119,16 @@ module VCAP::CloudController
         end
 
         it 'includes the shared service instance' do
-          expect(services_response.map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+          expect(services_response.pluck('guid')).to include(service_instance.guid)
         end
 
         it 'includes sharing information' do
           expect(services_response.first).to have_key('shared_from')
           expect(services_response.first['shared_from']).to eq({
-            'space_guid' => originating_space.guid,
-            'space_name' => originating_space.name,
-            'organization_name' => originating_space.organization.name
-          })
+                                                                 'space_guid' => originating_space.guid,
+                                                                 'space_name' => originating_space.name,
+                                                                 'organization_name' => originating_space.organization.name
+                                                               })
         end
 
         it 'does not contain shared to information' do
@@ -142,7 +142,7 @@ module VCAP::CloudController
         let(:foreign_space) { Space.make }
         let(:services_response) { decoded_response['services'] }
 
-        before(:each) do
+        before do
           service_instance.add_shared_space(foreign_space)
 
           get "/v2/spaces/#{host_space.guid}/summary"
@@ -151,16 +151,17 @@ module VCAP::CloudController
         it 'includes shared to information' do
           expect(services_response.first).to have_key('shared_to')
           expect(services_response.first['shared_to'].first).to eq({
-            'space_guid' => foreign_space.guid,
-            'space_name' => foreign_space.name,
-            'organization_name' => foreign_space.organization.name
-          })
+                                                                     'space_guid' => foreign_space.guid,
+                                                                     'space_name' => foreign_space.name,
+                                                                     'organization_name' => foreign_space.organization.name
+                                                                   })
         end
       end
 
       context 'when an app is deleted concurrently' do
-        let(:deleted_process) { ProcessModelFactory.make(space: space) }
+        let(:deleted_process) { ProcessModelFactory.make(space:) }
         let!(:deleted_app_guid) { deleted_process.app.guid }
+
         before do
           deleted_process.app = nil
           allow_any_instance_of(Space).to receive(:apps).and_return([process, deleted_process])

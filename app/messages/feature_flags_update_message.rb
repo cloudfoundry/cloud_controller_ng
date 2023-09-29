@@ -3,7 +3,7 @@ require 'messages/validators'
 
 module VCAP::CloudController
   class FeatureFlagsUpdateMessage < MetadataBaseMessage
-    register_allowed_keys [:custom_error_message, :enabled]
+    register_allowed_keys %i[custom_error_message enabled]
     validates_with NoAdditionalKeysValidator
 
     def self.enabled_requested?
@@ -11,12 +11,12 @@ module VCAP::CloudController
     end
 
     validates :enabled,
-      boolean: true,
-      if: enabled_requested?
+              boolean: true,
+              if: enabled_requested?
 
     validates :custom_error_message,
-      string: true,
-      length: { minimum: 1, maximum: 250 },
-      allow_nil: true
+              string: true,
+              length: { minimum: 1, maximum: 250 },
+              allow_nil: true
   end
 end

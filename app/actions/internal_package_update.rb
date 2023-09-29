@@ -34,15 +34,15 @@ module VCAP::CloudController
     def validate_package_checksum!(package, message)
       return if message.requested?(:checksums)
 
-      if package.state != PackageModel::COPYING_STATE && message.state == PackageModel::READY_STATE
-        raise InvalidPackage.new('Checksums required when setting state to READY')
-      end
+      return unless package.state != PackageModel::COPYING_STATE && message.state == PackageModel::READY_STATE
+
+      raise InvalidPackage.new('Checksums required when setting state to READY')
     end
 
     def validate_package_state!(package)
-      if [PackageModel::READY_STATE, PackageModel::FAILED_STATE].include?(package.state)
-        raise InvalidPackage.new('Invalid state. State is already final and cannot be modified.')
-      end
+      return unless [PackageModel::READY_STATE, PackageModel::FAILED_STATE].include?(package.state)
+
+      raise InvalidPackage.new('Invalid state. State is already final and cannot be modified.')
     end
   end
 end

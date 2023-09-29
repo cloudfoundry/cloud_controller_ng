@@ -29,7 +29,7 @@ module VCAP::CloudController
         trap_signals
         logger.info("Starting thin server with #{EventMachine.threadpool_size} threads")
         @thin_server.start!
-      rescue => e
+      rescue StandardError => e
         logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
         raise e
       end
@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     def trap_signals
-      %w(TERM INT QUIT).each do |signal|
+      %w[TERM INT QUIT].each do |signal|
         trap(signal) do
           EM.add_timer(0) do
             logger.warn("Caught signal #{signal}")
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir)
       logger.warn("Diagnostics written to #{file}")
-    rescue => e
+    rescue StandardError => e
       logger.warn("Failed to capture diagnostics: #{e}")
     end
   end

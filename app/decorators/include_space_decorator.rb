@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IncludeSpaceDecorator
     class << self
       def match?(include)
-        include&.any? { |i| %w(space space.organization).include?(i) }
+        include&.any? { |i| %w[space space.organization].include?(i) }
       end
 
       def decorate(hash, resources)

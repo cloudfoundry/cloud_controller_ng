@@ -140,16 +140,17 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it {
-        is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-                                         :log_rate_limit
+        expect(subject).to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
+                                             :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                             :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                                             :log_rate_limit
       }
+
       it {
-        is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
-                                         :log_rate_limit
+        expect(subject).to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
+                                             :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                             :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
+                                             :log_rate_limit
       }
     end
 
@@ -162,11 +163,11 @@ module VCAP::CloudController
     describe '#destroy' do
       context 'when there is an associated organization' do
         it 'raises an AssociationNotEmpty error' do
-          Organization.make(quota_definition: quota_definition)
+          Organization.make(quota_definition:)
 
-          expect {
+          expect do
             quota_definition.destroy
-          }.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
+          end.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
           expect(QuotaDefinition[quota_definition.id]).to eq quota_definition
         end
       end
@@ -185,11 +186,11 @@ module VCAP::CloudController
       end
 
       it 'will not change the value returned (deprecated)' do
-        expect {
+        expect do
           quota_definition.trial_db_allowed = true
-        }.to_not change {
+        end.not_to(change do
           quota_definition
-        }
+        end)
       end
     end
 

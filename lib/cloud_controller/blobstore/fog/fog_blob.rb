@@ -29,13 +29,9 @@ module CloudController
       private
 
       def download_uri_for_file
-        if @cdn
-          return @cdn.download_uri(file.key)
-        end
+        return @cdn.download_uri(file.key) if @cdn
 
-        if file.respond_to?(:url)
-          return file.url(Time.now.utc + 3600)
-        end
+        return file.url(Time.now.utc + 3600) if file.respond_to?(:url)
 
         file.public_url
       end

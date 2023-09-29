@@ -26,14 +26,14 @@ RSpec.describe 'SharedDomains' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 3,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => /\w+/,
-                'url'        => %r{/v2/shared_domains/},
+                'guid' => /\w+/,
+                'url' => %r{/v2/shared_domains/},
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
@@ -46,8 +46,8 @@ RSpec.describe 'SharedDomains' do
             },
             {
               'metadata' => {
-                'guid'       => /\w+/,
-                'url'        => %r{/v2/shared_domains/},
+                'guid' => /\w+/,
+                'url' => %r{/v2/shared_domains/},
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
@@ -60,8 +60,8 @@ RSpec.describe 'SharedDomains' do
             },
             {
               'metadata' => {
-                'guid'       => domain.guid,
-                'url'        => "/v2/shared_domains/#{domain.guid}",
+                'guid' => domain.guid,
+                'url' => "/v2/shared_domains/#{domain.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
@@ -71,7 +71,7 @@ RSpec.describe 'SharedDomains' do
                 'router_group_guid' => 'tcp-group',
                 'router_group_type' => nil
               }
-            },
+            }
           ]
         }
       )
@@ -89,8 +89,8 @@ RSpec.describe 'SharedDomains' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => domain.guid,
-            'url'        => "/v2/shared_domains/#{domain.guid}",
+            'guid' => domain.guid,
+            'url' => "/v2/shared_domains/#{domain.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
@@ -115,20 +115,21 @@ RSpec.describe 'SharedDomains' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => domain.guid,
-          'url'        => "/v2/shared_domains/#{domain.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'name' => 'meow.mc.meowerson.com',
-          'internal' => false,
-          'router_group_guid' => nil,
-          'router_group_type' => nil
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => domain.guid,
+                                                        'url' => "/v2/shared_domains/#{domain.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'name' => 'meow.mc.meowerson.com',
+                                                        'internal' => false,
+                                                        'router_group_guid' => nil,
+                                                        'router_group_type' => nil
+                                                      }
+                                                    })
     end
+
     context 'router groups' do
       before do
         stub_request(:get, 'http://localhost:3000/routing/v1/router_groups').
@@ -155,19 +156,19 @@ RSpec.describe 'SharedDomains' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
-          'metadata' => {
-            'guid' => domain.guid,
-            'url' => "/v2/shared_domains/#{domain.guid}",
-            'created_at' => iso8601,
-            'updated_at' => iso8601
-          },
-          'entity' => {
-            'name' => 'meow.mc.meowerson.com',
-            'internal' => false,
-            'router_group_guid' => 'abc123',
-            'router_group_type' => 'http'
-          }
-        })
+                                                        'metadata' => {
+                                                          'guid' => domain.guid,
+                                                          'url' => "/v2/shared_domains/#{domain.guid}",
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601
+                                                        },
+                                                        'entity' => {
+                                                          'name' => 'meow.mc.meowerson.com',
+                                                          'internal' => false,
+                                                          'router_group_guid' => 'abc123',
+                                                          'router_group_type' => 'http'
+                                                        }
+                                                      })
       end
 
       it 'makes a TCP shared domain with TCP router group' do
@@ -179,19 +180,19 @@ RSpec.describe 'SharedDomains' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
-          'metadata' => {
-            'guid' => domain.guid,
-            'url' => "/v2/shared_domains/#{domain.guid}",
-            'created_at' => iso8601,
-            'updated_at' => iso8601
-          },
-          'entity' => {
-            'name' => 'meow.mc.meowerson.com',
-            'internal' => false,
-            'router_group_guid' => '9876',
-            'router_group_type' => 'tcp'
-          }
-        })
+                                                        'metadata' => {
+                                                          'guid' => domain.guid,
+                                                          'url' => "/v2/shared_domains/#{domain.guid}",
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601
+                                                        },
+                                                        'entity' => {
+                                                          'name' => 'meow.mc.meowerson.com',
+                                                          'internal' => false,
+                                                          'router_group_guid' => '9876',
+                                                          'router_group_type' => 'tcp'
+                                                        }
+                                                      })
       end
     end
   end
@@ -206,19 +207,19 @@ RSpec.describe 'SharedDomains' do
       parsed_response = MultiJson.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => domain.guid,
-          'url'        => "/v2/shared_domains/#{domain.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'name' => 'my-domain.edu',
-          'internal' => false,
-          'router_group_guid' => 'tcp-group',
-          'router_group_type' => nil
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => domain.guid,
+                                                        'url' => "/v2/shared_domains/#{domain.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'name' => 'my-domain.edu',
+                                                        'internal' => false,
+                                                        'router_group_guid' => 'tcp-group',
+                                                        'router_group_type' => nil
+                                                      }
+                                                    })
     end
   end
 

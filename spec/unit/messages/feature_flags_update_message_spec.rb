@@ -42,7 +42,7 @@ module VCAP::CloudController
           let(:params) { { enabled: true, custom_error_message: 'B' * (MAX_ERROR_MESSAGE_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:custom_error_message]).to eq ["is too long (maximum is #{MAX_ERROR_MESSAGE_LENGTH} characters)"]
           end
         end
@@ -51,7 +51,7 @@ module VCAP::CloudController
           let(:params) { { enabled: true, custom_error_message: '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:custom_error_message]).to eq ['is too short (minimum is 1 character)']
           end
         end
@@ -77,7 +77,7 @@ module VCAP::CloudController
           let(:params) { { enabled: nil } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:enabled]).to include('must be a boolean')
           end
         end

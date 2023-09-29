@@ -14,7 +14,7 @@ module VCAP::CloudController
           'per_page' => 5,
           'order_by' => 'created_at',
           'include' => 'space,org',
-          'label_selector' => 'foo in (stuff,things)',
+          'label_selector' => 'foo in (stuff,things)'
         }
       end
 
@@ -24,14 +24,14 @@ module VCAP::CloudController
         expect(message).to be_a(StackAppsListMessage)
         expect(message.stacks).to eq(['stack-name'])
 
-        expect(message.names).to eq(['name1', 'name2'])
-        expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.names).to eq(%w[name1 name2])
+        expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.organization_guids).to eq(['orgguid'])
         expect(message.space_guids).to eq(['spaceguid'])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(['space', 'org'])
+        expect(message.include).to eq(%w[space org])
         expect(message.label_selector).to eq('foo in (stuff,things)')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.requirements.first.operator).to eq(:in)

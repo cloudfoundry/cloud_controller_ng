@@ -39,25 +39,25 @@ module VCAP::Services::ServiceBrokers::V2
       it 'defaults @plan_updateable to false' do
         attrs = build_valid_service_attrs
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.plan_updateable).to eq false
+        expect(service.plan_updateable).to be false
       end
 
       it 'sets @plan_updateable if it is provided in the hash' do
         attrs = build_valid_service_attrs(plan_updateable: true)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.plan_updateable).to eq true
+        expect(service.plan_updateable).to be true
       end
 
       it 'defaults @allow_context_updates to false' do
         attrs = build_valid_service_attrs
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.allow_context_updates).to eq false
+        expect(service.allow_context_updates).to be false
       end
 
       it 'sets @allow_context_updates if it is provided in the hash' do
         attrs = build_valid_service_attrs(allow_context_updates: true)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service.allow_context_updates).to eq true
+        expect(service.allow_context_updates).to be true
       end
     end
 
@@ -107,7 +107,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'validates that @description is less than 10_001 characters' do
         attrs = build_valid_service_attrs(description: 'A' * 10_001)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        expect(service).to_not be_valid
+        expect(service).not_to be_valid
 
         expect(service.errors.messages).to include 'Service description may not have more than 10000 characters'
       end
@@ -205,7 +205,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @metadata is a hash' do
-        attrs = build_valid_service_attrs(metadata: ['list', 'of', 'strings'])
+        attrs = build_valid_service_attrs(metadata: %w[list of strings])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -254,7 +254,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that the plans list is an array of hashes' do
-        attrs = build_valid_service_attrs(plans: ['list', 'of', 'strings'])
+        attrs = build_valid_service_attrs(plans: %w[list of strings])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -276,7 +276,7 @@ module VCAP::Services::ServiceBrokers::V2
           build_valid_plan_attrs(name: 'same-name'),
           build_valid_plan_attrs(name: 'other-name')
         ]
-        attrs = build_valid_service_attrs(plans: plans)
+        attrs = build_valid_service_attrs(plans:)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
@@ -314,9 +314,9 @@ module VCAP::Services::ServiceBrokers::V2
             build_valid_plan_attrs(name: 'dup-name-1'),
             build_valid_plan_attrs(name: 'dup-name-2'),
             build_valid_plan_attrs(name: 'dup-name-2'),
-            build_valid_plan_attrs(name: 'unique-name'),
+            build_valid_plan_attrs(name: 'unique-name')
           ]
-          attrs = build_valid_service_attrs(plans: plans)
+          attrs = build_valid_service_attrs(plans:)
           service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
           expect(service).not_to be_valid
 
@@ -452,12 +452,11 @@ module VCAP::Services::ServiceBrokers::V2
       let(:broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
         CatalogService.new(service_broker,
-          'id' => broker_provided_id,
-          'name' => 'service-name',
-          'description' => 'service description',
-          'bindable' => true,
-          'plans' => [build_valid_plan_attrs]
-        )
+                           'id' => broker_provided_id,
+                           'name' => 'service-name',
+                           'description' => 'service description',
+                           'bindable' => true,
+                           'plans' => [build_valid_plan_attrs])
       end
 
       context 'when a Service exists with the same service broker and broker provided id' do
@@ -491,7 +490,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:service) { CatalogService.new(service_broker, 'requires' => ['route_forwarding']) }
 
         it 'returns true' do
-          expect(service.route_service?).to be_truthy
+          expect(service).to be_route_service
         end
       end
 
@@ -499,7 +498,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:service) { CatalogService.new(service_broker, 'requires' => []) }
 
         it 'returns false' do
-          expect(service.route_service?).to be_falsey
+          expect(service).not_to be_route_service
         end
       end
     end

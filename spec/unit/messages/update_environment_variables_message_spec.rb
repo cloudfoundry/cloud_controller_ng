@@ -3,14 +3,14 @@ require 'messages/update_environment_variables_message'
 
 module VCAP::CloudController
   RSpec.describe UpdateEnvironmentVariablesMessage do
-    let(:valid_body) {
+    let(:valid_body) do
       {
         'var' => {
           'ENV_VAR' => 'env-value',
           'ANOTHER_VAR' => 'another-value'
         }
       }
-    }
+    end
 
     describe 'validations' do
       it 'returns no validation errors on a valid request' do
@@ -92,7 +92,7 @@ module VCAP::CloudController
       it 'returns a validation error when a value is an array' do
         invalid_body = {
           var: {
-            arrays_are: ['not', 'allowed']
+            arrays_are: %w[not allowed]
           }
         }
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)

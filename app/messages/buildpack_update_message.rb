@@ -6,7 +6,7 @@ module VCAP::CloudController
     MAX_BUILDPACK_NAME_LENGTH = 250
     MAX_STACK_LENGTH = 250
 
-    register_allowed_keys [:name, :stack, :position, :enabled, :locked]
+    register_allowed_keys %i[name stack position enabled locked]
     validates_with NoAdditionalKeysValidator
 
     def self.position_requested?
@@ -22,26 +22,26 @@ module VCAP::CloudController
     end
 
     validates :name,
-      string: true,
-      length: { maximum: MAX_BUILDPACK_NAME_LENGTH },
-      format: /\A[-\w]+\z/,
-      allow_nil: true
+              string: true,
+              length: { maximum: MAX_BUILDPACK_NAME_LENGTH },
+              format: /\A[-\w]+\z/,
+              allow_nil: true
 
     validates :stack,
-      string: true,
-      length: { maximum: MAX_STACK_LENGTH },
-      allow_nil: true
+              string: true,
+              length: { maximum: MAX_STACK_LENGTH },
+              allow_nil: true
 
     validates :position,
-      numericality: { greater_than_or_equal_to: 1, only_integer: true },
-      if: position_requested?
+              numericality: { greater_than_or_equal_to: 1, only_integer: true },
+              if: position_requested?
 
     validates :enabled,
-      boolean: true,
-      if: enabled_requested?
+              boolean: true,
+              if: enabled_requested?
 
     validates :locked,
-      boolean: true,
-      if: locked_requested?
+              boolean: true,
+              if: locked_requested?
   end
 end

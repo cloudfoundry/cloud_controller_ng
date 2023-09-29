@@ -33,11 +33,9 @@ module VCAP::CloudController
     def read(name)
       validate_access(:read, model)
 
-      unless FeatureFlag::DEFAULT_FLAGS.key?(name.to_sym)
-        raise CloudController::Errors::ApiError.new_from_details('FeatureFlagNotFound', name)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('FeatureFlagNotFound', name) unless FeatureFlag::DEFAULT_FLAGS.key?(name.to_sym)
 
-      feature_flag = FeatureFlag.find(name: name)
+      feature_flag = FeatureFlag.find(name:)
 
       [
         HTTP::OK,
@@ -49,14 +47,12 @@ module VCAP::CloudController
     def update_feature_flag(name)
       validate_access(:update, model)
 
-      unless FeatureFlag::DEFAULT_FLAGS.key?(name.to_sym)
-        raise CloudController::Errors::ApiError.new_from_details('FeatureFlagNotFound', name)
-      end
+      raise CloudController::Errors::ApiError.new_from_details('FeatureFlagNotFound', name) unless FeatureFlag::DEFAULT_FLAGS.key?(name.to_sym)
 
       feature_flag_attributes = MultiJson.load(body)
 
-      feature_flag = FeatureFlag.find(name: name)
-      feature_flag ||= FeatureFlag.new(name: name)
+      feature_flag = FeatureFlag.find(name:)
+      feature_flag ||= FeatureFlag.new(name:)
 
       feature_flag.enabled = feature_flag_attributes['enabled']
       feature_flag.error_message = feature_flag_attributes['error_message']

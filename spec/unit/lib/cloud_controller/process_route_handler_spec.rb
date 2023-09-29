@@ -21,9 +21,9 @@ module VCAP::CloudController
       end
 
       it 'updates the version and ports' do
-        expect {
+        expect do
           handler.update_route_information(perform_validation: false, updated_ports: [3024])
-        }.to change {
+        end.to change {
           process.reload.updated_at
         }.and change {
           process.reload.ports
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       context 'when perform_validation is not provided' do
         let(:db) { instance_double(Sequel::Database) }
-        let(:process) { instance_double(ProcessModel, db: db) }
+        let(:process) { instance_double(ProcessModel, db:) }
 
         it 'calls #save_changes with validate true' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       context 'when perform_validation is false' do
         let(:db) { instance_double(Sequel::Database) }
-        let(:process) { instance_double(ProcessModel, db: db) }
+        let(:process) { instance_double(ProcessModel, db:) }
 
         it 'calls #save_changes with validate false' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
       context 'when the updated ports are nil' do
         let(:db) { instance_double(Sequel::Database) }
-        let(:process) { instance_double(ProcessModel, db: db) }
+        let(:process) { instance_double(ProcessModel, db:) }
 
         it 'sets the process ports to nil' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
@@ -86,7 +86,7 @@ module VCAP::CloudController
 
       context 'when the updated ports are false' do
         let(:db) { instance_double(Sequel::Database) }
-        let(:process) { instance_double(ProcessModel, db: db) }
+        let(:process) { instance_double(ProcessModel, db:) }
 
         it 'sets the process ports to what they are currently set to' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
@@ -111,9 +111,9 @@ module VCAP::CloudController
         end
 
         it 'raises a validation error' do
-          expect {
+          expect do
             handler.update_route_information(perform_validation: false, updated_ports: [-3024])
-          }.to raise_error(Sequel::ValidationFailed, /Ports must be in the 1024-65535./)
+          end.to raise_error(Sequel::ValidationFailed, /Ports must be in the 1024-65535./)
         end
       end
 

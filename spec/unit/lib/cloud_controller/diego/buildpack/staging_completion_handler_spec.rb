@@ -27,30 +27,30 @@ module VCAP::CloudController
             {
               name: buildpack1_other_name,
               version: buildpack1_version,
-              key: buildpack1_key,
+              key: buildpack1_key
             },
             {
               name: buildpack2_other_name,
               version: buildpack2_version,
-              key: buildpack2_key,
+              key: buildpack2_key
             },
             {
               name: buildpack3_other_name,
               version: buildpack3_version,
-              key: buildpack3_key,
-            },
+              key: buildpack3_key
+            }
           ]
         end
         let(:success_response) do
           {
             result: {
-              lifecycle_type:     'buildpack',
+              lifecycle_type: 'buildpack',
               lifecycle_metadata: {
-                buildpack_key:      buildpack.key,
-                detected_buildpack: 'INTERCAL',
+                buildpack_key: buildpack.key,
+                detected_buildpack: 'INTERCAL'
               },
               execution_metadata: '',
-              process_types:      {
+              process_types: {
                 web: 'some command'
               }
             }
@@ -73,10 +73,10 @@ module VCAP::CloudController
 
         describe '#staging_complete' do
           let(:app) { AppModel.make }
-          let(:package) { PackageModel.make(app: app) }
+          let(:package) { PackageModel.make(app:) }
           let!(:build) do
             BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
-              BuildpackLifecycleDataModel.make(build: build)
+              BuildpackLifecycleDataModel.make(build:)
             end
           end
           let(:staging_guid) { build.guid }
@@ -91,19 +91,19 @@ module VCAP::CloudController
             let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
 
             before do
-              build.update(droplet: droplet)
+              build.update(droplet:)
             end
 
             it 'marks the droplet as staged' do
-              expect {
+              expect do
                 subject.staging_complete(success_response)
-              }.to change { droplet.reload.staged? }.to(true)
+              end.to change { droplet.reload.staged? }.to(true)
             end
 
             it 'marks the build as staged' do
-              expect {
+              expect do
                 subject.staging_complete(success_response)
-              }.to change { build.reload.staged? }.to(true)
+              end.to change { build.reload.staged? }.to(true)
             end
 
             context 'when the build does not have a droplet' do
@@ -121,8 +121,8 @@ module VCAP::CloudController
             context 'when staging result is returned' do
               before do
                 success_response[:result][:process_types] = {
-                  web:      'start me',
-                  worker:   'hello',
+                  web: 'start me',
+                  worker: 'hello',
                   anything: 'hi hi hi'
                 }
 
@@ -135,10 +135,10 @@ module VCAP::CloudController
 
                 expect(droplet.execution_metadata).to eq('black-box-string')
                 expect(droplet.process_types).to eq({
-                  'web'      => 'start me',
-                  'worker'   => 'hello',
-                  'anything' => 'hi hi hi'
-                })
+                                                      'web' => 'start me',
+                                                      'worker' => 'hello',
+                                                      'anything' => 'hi hi hi'
+                                                    })
                 expect(droplet.buildpack_receipt_buildpack).to eq('lifecycle-bp')
                 expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
                 expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
@@ -155,7 +155,7 @@ module VCAP::CloudController
                     name: 'sleepy',
                     command: 'sleep infinity',
                     memory: 1000,
-                    process_types: ['web'],
+                    process_types: ['web']
                   }]
                 end
 
@@ -163,11 +163,11 @@ module VCAP::CloudController
                   subject.staging_complete(success_response)
                   droplet.reload
                   expect(droplet.sidecars).to eq([{
-                    'name' => 'sleepy',
-                    'command' => 'sleep infinity',
-                    'memory' => 1000,
-                    'process_types' => ['web'],
-                  }])
+                                                   'name' => 'sleepy',
+                                                   'command' => 'sleep infinity',
+                                                   'memory' => 1000,
+                                                   'process_types' => ['web']
+                                                 }])
                 end
               end
 
@@ -275,10 +275,10 @@ module VCAP::CloudController
                     context 'when there are sidecars on the droplet' do
                       before do
                         droplet.update(sidecars: [{
-                          'name' => 'sleepy',
-                          'command' => 'sleep infinity',
-                          'process_types' => ['web'],
-                        }])
+                                         'name' => 'sleepy',
+                                         'command' => 'sleep infinity',
+                                         'process_types' => ['web']
+                                       }])
                       end
 
                       it 'materializes sidecars' do
@@ -302,12 +302,12 @@ module VCAP::CloudController
                         it 'errors without materializing sidecars' do
                           expect do
                             subject.staging_complete(success_response, true)
-                          end.not_to change { SidecarModel.count }
+                          end.not_to(change(SidecarModel, :count))
 
                           expect(build.state).to eq(BuildModel::FAILED_STATE)
                           expect(build.error_id).to eq('StagingError')
                           expect(build.error_description).to eq(
-                            'Staging error: Buildpack defined sidecar \'sleepy\' conflicts with an '\
+                            'Staging error: Buildpack defined sidecar \'sleepy\' conflicts with an ' \
                             'existing user-defined sidecar. Consider renaming \'sleepy\'.'
                           )
                         end
@@ -372,7 +372,7 @@ module VCAP::CloudController
 
                 context 'when lifecycle buildpacks do not have versions or names' do
                   let(:lifecycle_buildpacks) do
-                    [{ key: buildpack1_key, }, { key: buildpack2_key, }, { key: buildpack3_key, },]
+                    [{ key: buildpack1_key }, { key: buildpack2_key }, { key: buildpack3_key }]
                   end
 
                   it 'accepts the lifecycle buildpacks' do
@@ -403,15 +403,15 @@ module VCAP::CloudController
                   'diego.staging.buildpack.saving-staging-result-failed',
                   hash_including(
                     staging_guid: build.guid,
-                    response:     success_response,
-                    error:        'save-error',
+                    response: success_response,
+                    error: 'save-error'
                   )
                 )
               end
 
               it 'does not attempt to start the app' do
-                expect(runner).to_not receive(:start)
-                expect(logger).to_not receive(:error).with(
+                expect(runner).not_to receive(:start)
+                expect(logger).not_to receive(:error).with(
                   'diego.staging.buildpack.starting-process-failed', anything
                 )
 
@@ -428,9 +428,9 @@ module VCAP::CloudController
               end
 
               it 'assigns the current droplet' do
-                expect {
+                expect do
                   subject.staging_complete(success_response, true)
-                }.to change { app.reload.droplet }.to(droplet)
+                end.to change { app.reload.droplet }.to(droplet)
               end
 
               it 'runs the wep process of the app' do
@@ -444,15 +444,15 @@ module VCAP::CloudController
 
               it 'records a buildpack set event for all processes' do
                 ProcessModel.make(app: app, type: 'other')
-                expect {
+                expect do
                   subject.staging_complete(success_response, true)
-                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
+                end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
               end
 
               it 'records a staging complete event for the build' do
-                expect {
+                expect do
                   subject.staging_complete(success_response, true)
-                }.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
+                end.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
                 event = AppUsageEvent.where(state: 'STAGING_STOPPED').last
                 expect(event.buildpack_guid).to eq(buildpack.guid)
                 expect(event.buildpack_name).to eq(buildpack.name)
@@ -460,13 +460,13 @@ module VCAP::CloudController
 
               context 'when this is not the most recent staging result' do
                 before do
-                  DropletModel.make(app: app, package: package)
+                  DropletModel.make(app:, package:)
                 end
 
                 it 'does not assign the current droplet' do
-                  expect {
+                  expect do
                     subject.staging_complete(success_response, true)
-                  }.not_to change { app.reload.droplet }.from(nil)
+                  end.not_to change { app.reload.droplet }.from(nil)
                 end
 
                 it 'does not start the app' do
@@ -486,9 +486,9 @@ module VCAP::CloudController
               end
 
               it 'records a staging complete event for the build' do
-                expect {
+                expect do
                   subject.staging_complete(success_response, with_start)
-                }.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
+                end.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
                 event = AppUsageEvent.where(state: 'STAGING_STOPPED').last
                 expect(event.buildpack_guid).to eq(buildpack.guid)
                 expect(event.buildpack_name).to eq(buildpack.name)
@@ -496,9 +496,9 @@ module VCAP::CloudController
 
               it 'records a buildpack set event for all processes' do
                 ProcessModel.make(app: app, type: 'other')
-                expect {
+                expect do
                   subject.staging_complete(success_response, with_start)
-                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(1)
+                end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(1)
                 event = AppUsageEvent.where(state: 'BUILDPACK_SET').last
                 expect(event.buildpack_guid).to eq(buildpack.guid)
                 expect(event.buildpack_name).to eq(buildpack.name)
@@ -518,9 +518,9 @@ module VCAP::CloudController
               end
 
               it 'does not update the build' do
-                expect {
+                expect do
                   subject.staging_complete(success_response)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
@@ -529,7 +529,7 @@ module VCAP::CloudController
 
           describe 'failure case' do
             context 'when the staging fails' do
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 subject.staging_complete(fail_response)
                 build.reload
 
@@ -538,7 +538,7 @@ module VCAP::CloudController
                 expect(build.error_description).to eq('Found no compatible cell')
               end
 
-              it 'should not create a droplet' do
+              it 'does not create a droplet' do
                 subject.staging_complete(fail_response)
                 expect(build.reload.droplet).to be_nil
               end
@@ -551,7 +551,7 @@ module VCAP::CloudController
                 expect(build.error_description).to eq('Found no compatible cell')
               end
 
-              it 'should emit a loggregator error' do
+              it 'emits a loggregator error' do
                 expect(VCAP::AppLogEmitter).to receive(:emit_error).with(build.app_guid, /Found no compatible cell/)
                 subject.staging_complete(fail_response)
               end
@@ -573,18 +573,18 @@ module VCAP::CloudController
               let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
 
               before do
-                build.update(droplet: droplet)
-                expect {
+                build.update(droplet:)
+                expect do
                   subject.staging_complete(malformed_success_response)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
               end
 
               it 'logs an error for the CF operator' do
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.success.invalid-message',
                   staging_guid: build.guid,
-                  payload:      malformed_success_response,
-                  error:        '{ result => Missing key }'
+                  payload: malformed_success_response,
+                  error: '{ result => Missing key }'
                 )
               end
 
@@ -592,7 +592,7 @@ module VCAP::CloudController
                 expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
-              it 'should mark the build as failed' do
+              it 'marks the build as failed' do
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
 
@@ -605,18 +605,18 @@ module VCAP::CloudController
                   expect(logger).to have_received(:error).with(
                     'diego.staging.buildpack.success.invalid-message',
                     staging_guid: build.guid,
-                    payload:      malformed_success_response,
-                    error:        '{ result => unexpected format }'
+                    payload: malformed_success_response,
+                    error: '{ result => unexpected format }'
                   )
                 end
               end
             end
 
             context 'with a malformed error message' do
-              it 'should mark the build as failed' do
-                expect {
+              it 'marks the build as failed' do
+                expect do
                   subject.staging_complete(malformed_fail_response)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 build.reload
                 expect(build.state).to eq(BuildModel::FAILED_STATE)
@@ -624,23 +624,23 @@ module VCAP::CloudController
               end
 
               it 'logs an error for the CF user' do
-                expect {
+                expect do
                   subject.staging_complete(malformed_fail_response)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(VCAP::AppLogEmitter).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do
-                expect {
+                expect do
                   subject.staging_complete(malformed_fail_response)
-                }.to raise_error(CloudController::Errors::ApiError)
+                end.to raise_error(CloudController::Errors::ApiError)
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.failure.invalid-message',
                   staging_guid: build.guid,
-                  payload:      malformed_fail_response,
-                  error:        '{ error => { message => Missing key } }'
+                  payload: malformed_fail_response,
+                  error: '{ error => { message => Missing key } }'
                 )
               end
             end
@@ -659,8 +659,8 @@ module VCAP::CloudController
                   'diego.staging.buildpack.saving-staging-result-failed',
                   hash_including(
                     staging_guid: build.guid,
-                    response:     fail_response,
-                    error:        'save-error',
+                    response: fail_response,
+                    error: 'save-error'
                   )
                 )
               end
@@ -670,9 +670,9 @@ module VCAP::CloudController
               let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
-                expect {
+                expect do
                   subject.staging_complete(fail_response, true)
-                }.to change { web_process.reload.state }.to('STOPPED')
+                end.to change { web_process.reload.state }.to('STOPPED')
               end
 
               context 'when there is no web process for the app' do

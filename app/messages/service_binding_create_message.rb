@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ServiceBindingCreateMessage < BaseMessage
-    register_allowed_keys [:type, :name, :relationships, :data]
+    register_allowed_keys %i[type name relationships data]
     ALLOWED_TYPES = ['app'].freeze
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator, DataValidator
@@ -22,7 +22,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      register_allowed_keys [:service_instance, :app]
+      register_allowed_keys %i[service_instance app]
 
       def app_guid
         HashUtils.dig(app, :data, :guid)

@@ -12,10 +12,10 @@ module VCAP::CloudController
 
     def schedule_daily_job(name:, at:, priority:)
       job_opts = {
-        name:     name,
+        name: name,
         interval: 1.day,
-        at:       at,
-        fudge:    DAILY_FUDGE_FACTOR,
+        at: at,
+        fudge: DAILY_FUDGE_FACTOR
       }
 
       schedule_job(job_opts) do
@@ -26,9 +26,9 @@ module VCAP::CloudController
 
     def schedule_frequent_worker_job(name:, interval:)
       job_opts = {
-        name:     name,
+        name: name,
         interval: interval,
-        fudge:    FREQUENT_FUDGE_FACTOR,
+        fudge: FREQUENT_FUDGE_FACTOR
       }
 
       schedule_job(job_opts) do
@@ -39,11 +39,11 @@ module VCAP::CloudController
 
     def schedule_frequent_inline_job(name:, interval:, timeout:)
       job_opts = {
-        name:     name,
+        name: name,
         interval: interval,
-        fudge:    FREQUENT_FUDGE_FACTOR,
-        thread:   true,
-        timeout:  timeout,
+        fudge: FREQUENT_FUDGE_FACTOR,
+        thread: true,
+        timeout: timeout
       }
 
       schedule_job(job_opts) do
@@ -54,8 +54,8 @@ module VCAP::CloudController
 
     private
 
-    def schedule_job(job_opts, &block)
-      DistributedScheduler.new.schedule_periodic_job(**job_opts, &block)
+    def schedule_job(job_opts, &)
+      DistributedScheduler.new.schedule_periodic_job(**job_opts, &)
     end
   end
 end

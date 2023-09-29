@@ -10,7 +10,7 @@ Sequel.migration do
 
       foreign_key [:space_guid], :spaces, key: :guid, name: :fk_space_labels_space_guid
       index [:space_guid], name: :fk_space_labels_space_guid_index
-      index [:key_prefix, :key_name, :value], name: :space_labels_compound_index
+      index %i[key_prefix key_name value], name: :space_labels_compound_index
     end
   end
 end

@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:droplet) { nil }
     let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
+
     subject { ProcessCreateFromAppDroplet.new(user_audit_info) }
 
     describe '#create' do
@@ -33,9 +34,9 @@ module VCAP::CloudController
 
         it 'does not update the process’s command' do
           existing_process = ProcessModel.make(type: 'other', command: 'old', app: app, metadata: {})
-          expect {
+          expect do
             subject.create(app)
-          }.not_to change { existing_process.refresh.command }
+          end.not_to(change { existing_process.refresh.command })
         end
 
         context 'when the sidecar memory validation fails' do
@@ -43,9 +44,9 @@ module VCAP::CloudController
           let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other') }
 
           it 'translates the validation failure to a luxurious error' do
-            expect {
+            expect do
               subject.create(app)
-            }.to raise_error(
+            end.to raise_error(
               ProcessCreate::SidecarMemoryLessThanProcessMemory,
               /The sidecar memory allocation defined is too large to run with the dependent "other" process/
             )
@@ -60,9 +61,9 @@ module VCAP::CloudController
           end
 
           it 'raises the validation error' do
-            expect {
+            expect do
               subject.create(app)
-            }.to raise_error(Sequel::ValidationFailed)
+            end.to raise_error(Sequel::ValidationFailed)
           end
         end
       end
@@ -71,20 +72,20 @@ module VCAP::CloudController
         let(:droplet) { nil }
 
         it 'raises a ProcessTypesNotFound error' do
-          expect {
+          expect do
             subject.create(app)
-          }.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
+          end.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
         end
       end
 
       context 'when the app has a droplet, but the droplet does not have a process type' do
         let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: nil) }
-        let(:app) { AppModel.make(droplet: droplet) }
+        let(:app) { AppModel.make(droplet:) }
 
         it 'raises procfile not found' do
-          expect {
+          expect do
             subject.create(app)
-          }.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
+          end.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
         end
       end
     end

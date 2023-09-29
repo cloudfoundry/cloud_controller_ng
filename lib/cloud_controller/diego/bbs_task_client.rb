@@ -74,11 +74,10 @@ module VCAP::CloudController
         end
 
         if response.error
-          if acceptable_errors.include?(response.error.type)
-            response.error = nil
-          else
-            raise CloudController::Errors::ApiError.new_from_details('TaskError', response.error.message)
-          end
+          raise CloudController::Errors::ApiError.new_from_details('TaskError', response.error.message) unless acceptable_errors.include?(response.error.type)
+
+          response.error = nil
+
         end
 
         response

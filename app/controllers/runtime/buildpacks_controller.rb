@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class BuildpacksController < RestController::ModelController
     def self.dependencies
-      [:buildpack_blobstore, :upload_handler]
+      %i[buildpack_blobstore upload_handler]
     end
 
     define_attributes do
@@ -15,7 +15,7 @@ module VCAP::CloudController
     query_parameters :name, :stack
 
     def self.translate_validation_exception(e, attributes)
-      buildpack_errors = e.errors.on([:name, :stack])
+      buildpack_errors = e.errors.on(%i[name stack])
       if buildpack_errors && buildpack_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', attributes['name'], attributes['stack'])
       else

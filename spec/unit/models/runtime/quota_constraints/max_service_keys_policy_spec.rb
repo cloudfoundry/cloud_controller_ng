@@ -5,11 +5,11 @@ RSpec.describe MaxServiceKeysPolicy do
   let(:space) { VCAP::CloudController::Space.make organization: org }
   let(:service_instance) do
     service_plan = VCAP::CloudController::ServicePlan.make
-    VCAP::CloudController::ManagedServiceInstance.make space: space, service_plan: service_plan
+    VCAP::CloudController::ManagedServiceInstance.make space:, service_plan:
   end
-  let(:service_key) { VCAP::CloudController::ServiceKey.make_unsaved service_instance: service_instance }
+  let(:service_key) { VCAP::CloudController::ServiceKey.make_unsaved service_instance: }
   let(:total_service_keys) { 2 }
-  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_service_keys: total_service_keys }
+  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_service_keys: }
   let(:existing_service_key_count) { 0 }
   let(:existing_service_key_dataset) { double(Sequel::Dataset, count: existing_service_key_count) }
   let(:error_name) { :random_error_name }
@@ -17,11 +17,12 @@ RSpec.describe MaxServiceKeysPolicy do
   let(:policy) { MaxServiceKeysPolicy.new(service_key, existing_service_key_dataset, quota, error_name) }
 
   def make_service_key
-    VCAP::CloudController::ServiceKey.make service_instance: service_instance
+    VCAP::CloudController::ServiceKey.make service_instance:
   end
 
   context 'when quota is nil' do
     let(:quota) { nil }
+
     it 'does not add errors' do
       expect(policy).to validate_without_error(service_key)
     end
@@ -44,6 +45,7 @@ RSpec.describe MaxServiceKeysPolicy do
 
   context 'when the quota is reached' do
     let(:existing_service_key_count) { total_service_keys }
+
     before { total_service_keys.times { make_service_key } }
 
     context 'and the request is for a new service key' do

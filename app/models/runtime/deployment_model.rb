@@ -22,38 +22,38 @@ module VCAP::CloudController
     ].freeze
 
     DEPLOYMENT_STRATEGIES = [
-      ROLLING_STRATEGY = 'rolling'.freeze,
+      ROLLING_STRATEGY = 'rolling'.freeze
     ].freeze
 
     many_to_one :app,
-      class: 'VCAP::CloudController::AppModel',
-      primary_key: :guid,
-      key: :app_guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::AppModel',
+                primary_key: :guid,
+                key: :app_guid,
+                without_guid_generation: true
 
     many_to_one :droplet,
-      class: 'VCAP::CloudController::DropletModel',
-      key: :droplet_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::DropletModel',
+                key: :droplet_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     many_to_one :previous_droplet,
-      class: 'VCAP::CloudController::DropletModel',
-      key: :previous_droplet_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::DropletModel',
+                key: :previous_droplet_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     many_to_one :deploying_web_process,
-      class: 'VCAP::CloudController::ProcessModel',
-      key: :deploying_web_process_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::ProcessModel',
+                key: :deploying_web_process_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     one_to_many :historical_related_processes,
-      class: 'VCAP::CloudController::DeploymentProcessModel',
-      key: :deployment_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::DeploymentProcessModel',
+                key: :deployment_guid,
+                primary_key: :guid,
+                without_guid_generation: true
 
     one_to_many :labels, class: 'VCAP::CloudController::DeploymentLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DeploymentAnnotationModel', key: :resource_guid, primary_key: :guid

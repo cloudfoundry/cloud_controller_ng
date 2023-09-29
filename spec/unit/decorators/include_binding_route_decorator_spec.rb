@@ -6,11 +6,11 @@ module VCAP
     RSpec.describe IncludeBindingRouteDecorator do
       subject(:decorator) { described_class }
       let(:bindings) { Array.new(3) { RouteBinding.make } }
-      let(:routes) {
+      let(:routes) do
         bindings.
           map(&:route).
           map { |r| Presenters::V3::RoutePresenter.new(r).to_hash }
-      }
+      end
 
       it 'decorates the given hash with service instances from bindings' do
         dict = { foo: 'bar' }
@@ -41,11 +41,11 @@ module VCAP
 
       describe '.match?' do
         it 'matches include arrays containing "route"' do
-          expect(decorator.match?(%w[potato route turnip])).to be_truthy
+          expect(decorator).to be_match(%w[potato route turnip])
         end
 
         it 'does not match other include arrays' do
-          expect(decorator.match?(%w[potato turnip])).to be_falsey
+          expect(decorator).not_to be_match(%w[potato turnip])
         end
       end
     end

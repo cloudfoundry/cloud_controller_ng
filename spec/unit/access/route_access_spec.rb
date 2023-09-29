@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
-    let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+    let(:object) { VCAP::CloudController::Route.make(domain:, space:) }
 
     before do
       flag.save
@@ -33,7 +33,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     read_table = {
@@ -52,7 +52,7 @@ module VCAP::CloudController
       org_user: false,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     reserved_table = {
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       admin: true,
       admin_read_only: false,
-      global_auditor: false,
+      global_auditor: false
     }
 
     write_table = {
@@ -82,19 +82,19 @@ module VCAP::CloudController
       org_user: false,
       org_manager: false,
       org_auditor: false,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     restricted_write_table = write_table.clone.merge({
-      space_developer: false,
-    })
+                                                       space_developer: false
+                                                     })
 
     it_behaves_like('an access control', :index, index_table)
     it_behaves_like('an access control', :read, read_table)
     it_behaves_like('an access control', :reserved, reserved_table)
 
     describe 'in a suspended org' do
-      before(:each) do
+      before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
       end
 
@@ -106,16 +106,16 @@ module VCAP::CloudController
 
     describe 'in an unsuspended org' do
       describe 'when route creation is enabled' do
-        before(:each) do
+        before do
           flag.enabled = true
           flag.save
         end
 
         describe 'in a shared domain' do
-          before(:each) { object.domain = SharedDomain.make }
+          before { object.domain = SharedDomain.make }
 
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table)
             it_behaves_like('an access control', :delete, restricted_write_table)
@@ -124,7 +124,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
         describe 'outside of a shared domain' do
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -144,7 +144,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
@@ -156,10 +156,10 @@ module VCAP::CloudController
 
       describe 'when route creation is disabled' do
         describe 'in a shared domain' do
-          before(:each) { object.domain = SharedDomain.make }
+          before { object.domain = SharedDomain.make }
 
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, restricted_write_table, CloudController::Errors::ApiError)
@@ -168,7 +168,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
@@ -179,7 +179,7 @@ module VCAP::CloudController
 
         describe 'outside of a shared domain' do
           describe 'when the route has a wildcard host' do
-            before(:each) { object.host = '*' }
+            before { object.host = '*' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
@@ -188,7 +188,7 @@ module VCAP::CloudController
           end
 
           describe 'when the route does not have a wildcard host' do
-            before(:each) { object.host = 'notawildcard' }
+            before { object.host = 'notawildcard' }
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)

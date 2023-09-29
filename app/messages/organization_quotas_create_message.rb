@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def organization_guids
       orgs = HashUtils.dig(organizations, :data)
-      orgs ? orgs.map { |org| org[:guid] } : []
+      orgs ? orgs.pluck(:guid) : []
     end
   end
 end

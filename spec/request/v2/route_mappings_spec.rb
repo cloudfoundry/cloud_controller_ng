@@ -11,7 +11,7 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'GET /v2/route_mappings/:guid' do
-    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:route) { route_mapping.route }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app) }
 
@@ -21,20 +21,20 @@ RSpec.describe 'RouteMappings' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => route_mapping.guid,
-          'url'        => "/v2/route_mappings/#{route_mapping.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'app_port'   => nil,
-          'app_guid'   => process.guid,
-          'route_guid' => route.guid,
-          'app_url'    => "/v2/apps/#{process.guid}",
-          'route_url'  => "/v2/routes/#{route.guid}"
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => route_mapping.guid,
+                                                        'url' => "/v2/route_mappings/#{route_mapping.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'app_port' => nil,
+                                                        'app_guid' => process.guid,
+                                                        'route_guid' => route.guid,
+                                                        'app_url' => "/v2/apps/#{process.guid}",
+                                                        'route_url' => "/v2/routes/#{route.guid}"
+                                                      }
+                                                    })
     end
 
     it 'does not display route mappings without a web process' do
@@ -61,11 +61,11 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'GET /v2/route_mappings' do
-    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:route1) { route_mapping1.route }
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process1.app) }
 
-    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space:) }
     let(:route2) { route_mapping2.route }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: process2.app) }
 
@@ -79,38 +79,38 @@ RSpec.describe 'RouteMappings' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => route_mapping1.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping1.guid}",
+                'guid' => route_mapping1.guid,
+                'url' => "/v2/route_mappings/#{route_mapping1.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process1.guid,
+                'app_port' => nil,
+                'app_guid' => process1.guid,
                 'route_guid' => route1.guid,
-                'app_url'    => "/v2/apps/#{process1.guid}",
-                'route_url'  => "/v2/routes/#{route1.guid}"
+                'app_url' => "/v2/apps/#{process1.guid}",
+                'route_url' => "/v2/routes/#{route1.guid}"
               }
             },
             {
               'metadata' => {
-                'guid'       => route_mapping2.guid,
-                'url'        => "/v2/route_mappings/#{route_mapping2.guid}",
+                'guid' => route_mapping2.guid,
+                'url' => "/v2/route_mappings/#{route_mapping2.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
               'entity' => {
-                'app_port'   => nil,
-                'app_guid'   => process2.guid,
+                'app_port' => nil,
+                'app_guid' => process2.guid,
                 'route_guid' => route2.guid,
-                'app_url'    => "/v2/apps/#{process2.guid}",
-                'route_url'  => "/v2/routes/#{route2.guid}"
+                'app_url' => "/v2/apps/#{process2.guid}",
+                'route_url' => "/v2/routes/#{route2.guid}"
               }
             }
           ]
@@ -132,15 +132,16 @@ RSpec.describe 'RouteMappings' do
 
   describe 'POST /v2/route_mappings' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
 
     it 'creates a route mapping' do
       request = MultiJson.dump(
         {
           route_guid: route.guid,
-          app_guid:   process.guid,
-          app_port:   9090
-        })
+          app_guid: process.guid,
+          app_port: 9090
+        }
+      )
 
       post '/v2/route_mappings', request, headers_for(user)
       expect(last_response.status).to eq(201)
@@ -149,20 +150,20 @@ RSpec.describe 'RouteMappings' do
       route_mapping   = VCAP::CloudController::RouteMappingModel.last
 
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => route_mapping.guid,
-          'url'        => "/v2/route_mappings/#{route_mapping.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'app_port'   => 9090,
-          'app_guid'   => process.guid,
-          'route_guid' => route.guid,
-          'app_url'    => "/v2/apps/#{process.guid}",
-          'route_url'  => "/v2/routes/#{route.guid}"
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => route_mapping.guid,
+                                                        'url' => "/v2/route_mappings/#{route_mapping.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'app_port' => 9090,
+                                                        'app_guid' => process.guid,
+                                                        'route_guid' => route.guid,
+                                                        'app_url' => "/v2/apps/#{process.guid}",
+                                                        'route_url' => "/v2/routes/#{route.guid}"
+                                                      }
+                                                    })
 
       expect(route_mapping.app_guid).to eq(process.guid)
       expect(route_mapping.route_guid).to eq(route.guid)
@@ -174,41 +175,41 @@ RSpec.describe 'RouteMappings' do
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
       expect(event.metadata).to eq({
-        'route_guid' => route.guid,
-        'app_port' => 9090,
-        'destination_guid' => route_mapping.guid,
-        'route_mapping_guid' => route_mapping.guid,
-        'process_type' => 'web',
-        'weight' => nil,
-        'protocol' => 'http1'
-      })
+                                     'route_guid' => route.guid,
+                                     'app_port' => 9090,
+                                     'destination_guid' => route_mapping.guid,
+                                     'route_mapping_guid' => route_mapping.guid,
+                                     'process_type' => 'web',
+                                     'weight' => nil,
+                                     'protocol' => 'http1'
+                                   })
     end
   end
 
   describe 'DELETE /V2/route_mappings' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
-    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space:) }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
     it 'deletes a route mapping' do
       delete "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(204), last_response.body
 
-      expect(route_mapping.exists?).to be_falsey
+      expect(route_mapping).not_to exist
 
       event = VCAP::CloudController::Event.last
       expect(event.type).to eq('audit.app.unmap-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
       expect(event.metadata).to eq({
-        'route_guid' => route.guid,
-        'app_port' => route_mapping.app_port,
-        'destination_guid' => route_mapping.guid,
-        'route_mapping_guid' => route_mapping.guid,
-        'process_type' => 'web',
-        'weight' => nil,
-        'protocol' => 'http1'
-      })
+                                     'route_guid' => route.guid,
+                                     'app_port' => route_mapping.app_port,
+                                     'destination_guid' => route_mapping.guid,
+                                     'route_mapping_guid' => route_mapping.guid,
+                                     'process_type' => 'web',
+                                     'weight' => nil,
+                                     'protocol' => 'http1'
+                                   })
     end
   end
 end

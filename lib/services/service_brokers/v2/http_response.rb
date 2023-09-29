@@ -66,11 +66,11 @@ module VCAP::Services::ServiceBrokers::V2
 
     def self.from_http_client_response(http_client_response)
       @http_client_response = http_client_response
-      self.new(
+      new(
         code: http_client_response.code,
         message: STATUS_CODE_MESSAGES.fetch(http_client_response.code, http_client_response.reason),
         body: http_client_response.body,
-        headers: http_client_response.headers,
+        headers: http_client_response.headers
       )
     end
 

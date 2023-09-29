@@ -29,7 +29,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
 
     get '/div_0' do
       1 / 0
-    rescue => e
+    rescue StandardError => e
       e.set_backtrace(['/foo:1', '/bar:2'])
       raise e
     end
@@ -60,7 +60,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
   end
 
   shared_examples 'http header content type' do
-    it 'should return json content type in the header' do
+    it 'returns json content type in the header' do
       expect(last_response.headers['Content-Type']).to eql('application/json;charset=utf-8')
     end
   end
@@ -70,7 +70,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       get '/'
     end
 
-    it 'should return success' do
+    it 'returns success' do
       expect(last_response.status).to eq(200)
       expect(last_response.body).to eq('ok')
     end
@@ -84,9 +84,9 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       get '/not_found'
     end
 
-    it 'should return a 404' do
+    it 'returns a 404' do
       expect(last_response.status).to eq(404)
-      expect(decoded_response['code']).to eq(10000)
+      expect(decoded_response['code']).to eq(10_000)
       expect(decoded_response['description']).to match(/Unknown request/)
     end
 
@@ -99,10 +99,10 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       get '/div_0'
     end
 
-    it 'should return 500' do
+    it 'returns 500' do
       expect(last_response.status).to eq(500)
       expect(decoded_response).to eq({
-                                       'code' => 10001,
+                                       'code' => 10_001,
                                        'error_code' => 'UnknownError',
                                        'description' => 'An unknown error occurred.'
                                      })
@@ -117,11 +117,11 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       get '/vcap_error'
     end
 
-    it 'should return 400' do
+    it 'returns 400' do
       expect(last_response.status).to eq(400)
     end
 
-    it 'should return structure' do
+    it 'returns structure' do
       decoded_response = MultiJson.load(last_response.body)
       expect(decoded_response['code']).to eq(1001)
       expect(decoded_response['description']).to eq('Request invalid due to parse error: some message')
@@ -136,13 +136,13 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       get '/structured_error'
     end
 
-    it 'should return 418' do
+    it 'returns 418' do
       expect(last_response.status).to eq(418)
     end
 
-    it 'should return structure' do
+    it 'returns structure' do
       decoded_response = MultiJson.load(last_response.body)
-      expect(decoded_response['code']).to eq(10001)
+      expect(decoded_response['code']).to eq(10_001)
       expect(decoded_response['description']).to eq('boring message')
 
       expect(decoded_response['error_code']).to eq('CF-StructuredErrorWithResponseCode')

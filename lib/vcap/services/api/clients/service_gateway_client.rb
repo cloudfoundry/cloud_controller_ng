@@ -147,7 +147,7 @@ module VCAP::Services::Api
         get: Net::HTTP::Get,
         post: Net::HTTP::Post,
         put: Net::HTTP::Put,
-        delete: Net::HTTP::Delete,
+        delete: Net::HTTP::Delete
       }.freeze
 
       attr_reader :uri, :timeout, :token, :headers
@@ -169,9 +169,7 @@ module VCAP::Services::Api
         request.body = msg.encode
 
         opts = {}
-        if uri.scheme == 'https'
-          opts[:use_ssl] = true
-        end
+        opts[:use_ssl] = true if uri.scheme == 'https'
 
         response = Net::HTTP.start(uri.host, uri.port, opts) do |http|
           http.request(request)

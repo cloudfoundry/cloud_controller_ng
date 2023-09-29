@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     describe '#space_guids' do
       it 'returns the space guids' do
-        expect(subject.space_guids).to eq(%w(space-guid-1 space-guid-2))
+        expect(subject.space_guids).to eq(%w[space-guid-1 space-guid-2])
       end
     end
   end
