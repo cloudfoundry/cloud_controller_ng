@@ -55,7 +55,7 @@ module VCAP::CloudController
 
         it 'validates guids' do
           message = DomainsListMessage.from_params({ guids: 'not an array' })
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids]).to include('must be an array')
         end
       end

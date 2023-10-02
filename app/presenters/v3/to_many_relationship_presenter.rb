@@ -38,9 +38,7 @@ module VCAP::CloudController
           links = {
             self: { href: url_builder.build_url(path: "/v3/#{@relation_url}/relationships/#{@relationship_path}") }
           }
-          if @build_related
-            links[:related] = { href: url_builder.build_url(path: "/v3/#{@relation_url}/#{@relationship_path}") }
-          end
+          links[:related] = { href: url_builder.build_url(path: "/v3/#{@relation_url}/#{@relationship_path}") } if @build_related
 
           links
         end

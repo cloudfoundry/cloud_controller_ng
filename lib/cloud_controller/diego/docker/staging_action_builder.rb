@@ -14,7 +14,7 @@ module VCAP::CloudController
         def action
           run_args = [
             "-outputMetadataJSONFilename=#{STAGING_RESULT_FILE}",
-            "-dockerRef=#{staging_details.package.image}",
+            "-dockerRef=#{staging_details.package.image}"
           ]
 
           if config.get(:diego, :insecure_docker_registry_list).count > 0
@@ -28,17 +28,17 @@ module VCAP::CloudController
           end
 
           stage_action = ::Diego::Bbs::Models::RunAction.new(
-            path:            '/tmp/lifecycle/builder',
-            user:            'vcap',
-            args:            run_args,
+            path: '/tmp/lifecycle/builder',
+            user: 'vcap',
+            args: run_args,
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
-            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
+            env: BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
 
           emit_progress(
             stage_action,
-            start_message:          'Staging...',
-            success_message:        'Staging Complete',
+            start_message: 'Staging...',
+            success_message: 'Staging Complete',
             failure_message_prefix: 'Staging Failed'
           )
         end
@@ -48,10 +48,10 @@ module VCAP::CloudController
 
           [::Diego::Bbs::Models::ImageLayer.new(
             name: 'docker-lifecycle',
-            url:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
+            url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
           )]
         end
 
@@ -60,9 +60,9 @@ module VCAP::CloudController
 
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
-              to:        '/tmp/lifecycle',
-              cache_key: 'docker-lifecycle',
+              from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
+              to: '/tmp/lifecycle',
+              cache_key: 'docker-lifecycle'
             )
           ]
         end

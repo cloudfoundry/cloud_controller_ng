@@ -13,9 +13,7 @@ module VCAP::CloudController
 
         # `false` means do **not** update ports. `nil` is a valid value as it
         # is used to use defaults later on.
-        if updated_ports == false
-          updated_ports = @process.ports
-        end
+        updated_ports = @process.ports if updated_ports == false
 
         @process.set(
           updated_at: ProcessModel.dataset.current_datetime,
@@ -37,11 +35,11 @@ module VCAP::CloudController
 
     private
 
-    def with_transaction(&block)
+    def with_transaction(&)
       if @process.db.in_transaction?
         yield
       else
-        @process.db.transaction(&block)
+        @process.db.transaction(&)
       end
     end
 

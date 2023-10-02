@@ -45,7 +45,8 @@ module VCAP::CloudController
       end
 
       if json_req.nil?
-        raise CloudController::Errors::ApiError.new_from_details('EnvironmentVariableGroupInvalid', "Cannot be 'null'. You may want to try empty object '{}' to clear the group.")
+        raise CloudController::Errors::ApiError.new_from_details('EnvironmentVariableGroupInvalid',
+                                                                 "Cannot be 'null'. You may want to try empty object '{}' to clear the group.")
       end
 
       group.environment_json = json_req

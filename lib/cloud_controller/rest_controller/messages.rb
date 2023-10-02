@@ -7,7 +7,7 @@ module VCAP::CloudController::RestController
     module ClassMethods
       # Define the messages exposed by a rest endpoint.
       def define_messages
-        [:create, :update].each do |type|
+        %i[create update].each do |type|
           define_message(type)
         end
       end
@@ -44,14 +44,12 @@ module VCAP::CloudController::RestController
           end
 
           to_many.each do |name, relation|
-            unless relation.exclude_in?(type)
-              optional "#{name.to_s.singularize}_guids", [String]
-            end
+            optional "#{name.to_s.singularize}_guids", [String] unless relation.exclude_in?(type)
           end
         end
 
         # grep-friendly location where CreateMessage and UpdateMessage are declared
-        self.const_set "#{type.to_s.camelize}Message", klass
+        const_set "#{type.to_s.camelize}Message", klass
       end
       # rubocop:enable Metrics/CyclomaticComplexity
     end

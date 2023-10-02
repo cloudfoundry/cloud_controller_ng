@@ -7,7 +7,7 @@ Sequel.migration do
       Integer :space_id, null: false
       foreign_key [:space_id], :spaces, name: :fk_space_id
 
-      index [:app_security_group_id, :space_id], unique: true, name: 'asgs_spaces_ids'
+      index %i[app_security_group_id space_id], unique: true, name: 'asgs_spaces_ids'
     end
   end
 end

@@ -35,30 +35,20 @@ module VCAP::CloudController
       end
 
       def filter_app_dataset(message, app_dataset)
-        if message.requested?(:space_guids)
-          app_dataset = app_dataset.where(space_guid: message.space_guids)
-        end
+        app_dataset = app_dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
         if message.requested?(:organization_guids)
           app_dataset = app_dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
         end
-        if message.requested?(:app_guids)
-          app_dataset = app_dataset.where(guid: message.app_guids)
-        end
+        app_dataset = app_dataset.where(guid: message.app_guids) if message.requested?(:app_guids)
         app_dataset
       end
 
       def filter_task_dataset(message, task_dataset)
-        if message.requested?(:names)
-          task_dataset = task_dataset.where(name: message.names)
-        end
+        task_dataset = task_dataset.where(name: message.names) if message.requested?(:names)
 
-        if message.requested?(:states)
-          task_dataset = task_dataset.where(state: message.states)
-        end
+        task_dataset = task_dataset.where(state: message.states) if message.requested?(:states)
 
-        if message.requested?(:sequence_ids)
-          task_dataset = task_dataset.where(sequence_id: message.sequence_ids)
-        end
+        task_dataset = task_dataset.where(sequence_id: message.sequence_ids) if message.requested?(:sequence_ids)
 
         if message.requested?(:label_selector)
           task_dataset = LabelSelectorQueryGenerator.add_selector_queries(

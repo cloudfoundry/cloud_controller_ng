@@ -15,27 +15,27 @@ module VCAP::CloudController
       let(:old_annotations) do
         {
           potato: 'celandine',
-          beet: 'formanova',
+          beet: 'formanova'
         }
       end
       let(:new_labels) do
         {
           release: 'stable',
           'seriouseats.com/potato' => 'mashed',
-          fruit: 'strawberries',
+          fruit: 'strawberries'
         }
       end
       let(:new_annotations) do
         {
-          potato: 'idaho',
+          potato: 'idaho'
         }
       end
       let(:body) do
         {
           metadata: {
             labels: new_labels,
-            annotations: new_annotations,
-          },
+            annotations: new_annotations
+          }
         }
       end
       let(:build) { BuildModel.make }
@@ -64,9 +64,9 @@ module VCAP::CloudController
             build.reload
             expect(build).to have_labels(
               { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-                { prefix: nil, key_name: 'fruit', value: 'strawberries' },
-                { prefix: nil, key_name: 'release', value: 'stable' },
-              )
+              { prefix: nil, key_name: 'fruit', value: 'strawberries' },
+              { prefix: nil, key_name: 'release', value: 'stable' }
+            )
             expect(build).to have_annotations({ key_name: 'potato', value: 'idaho' })
           end
         end
@@ -89,12 +89,12 @@ module VCAP::CloudController
             build.reload
             expect(build).to have_labels(
               { prefix: nil, key_name: 'fruit', value: 'pears' },
-                { prefix: nil, key_name: 'truck', value: 'hino' },
-              )
+              { prefix: nil, key_name: 'truck', value: 'hino' }
+            )
             expect(build).to have_annotations(
               { key_name: 'potato', value: 'celandine' },
-                { key_name: 'beet', value: 'formanova' },
-              )
+              { key_name: 'beet', value: 'formanova' }
+            )
           end
         end
 
@@ -103,24 +103,25 @@ module VCAP::CloudController
             {
               metadata: {
                 labels: new_labels.merge(fruit: nil, newstuff: 'here'),
-                annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy'),
-              },
+                annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy')
+              }
             }
           end
+
           it 'updates some, deletes nils, leaves unspecified fields alone' do
             expect(message).to be_valid
             build_update.update(build, message)
             build.reload
             expect(build).to have_labels(
               { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' },
-                { prefix: nil, key_name: 'release', value: 'stable' },
-                { prefix: nil, key_name: 'truck', value: 'hino' },
-                { prefix: nil, key_name: 'newstuff', value: 'here' },
-              )
+              { prefix: nil, key_name: 'release', value: 'stable' },
+              { prefix: nil, key_name: 'truck', value: 'hino' },
+              { prefix: nil, key_name: 'newstuff', value: 'here' }
+            )
             expect(build).to have_annotations(
               { key_name: 'potato', value: 'idaho' },
-                { key_name: 'asparagus', value: 'crunchy' },
-              )
+              { key_name: 'asparagus', value: 'crunchy' }
+            )
           end
         end
       end
@@ -138,8 +139,8 @@ module VCAP::CloudController
                   image: 'some-fake-image:tag',
                   processTypes: {
                     foo: 'foo start',
-                    bar: 'bar start',
-                  },
+                    bar: 'bar start'
+                  }
                 }
               }
             }

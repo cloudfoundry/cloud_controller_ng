@@ -26,9 +26,9 @@ module VCAP::CloudController
     attr_reader :config
 
     def reject_invalid_states!(task)
-      if task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
-        raise InvalidCancel.new("Task state is #{task.state} and therefore cannot be canceled")
-      end
+      return unless task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
+
+      raise InvalidCancel.new("Task state is #{task.state} and therefore cannot be canceled")
     end
 
     def bbs_task_client

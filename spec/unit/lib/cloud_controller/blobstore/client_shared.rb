@@ -18,54 +18,54 @@ RSpec.shared_examples_for 'a blobstore client' do
   end
 
   it 'downloads from the blobstore' do
-    expect {
+    expect do
       subject.download_from_blobstore(key, dest_path, mode: 600)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'copies directory contents recursively to the blobstore' do
     Dir.mktmpdir do |dir|
-      expect {
+      expect do
         subject.cp_r_to_blobstore(dir)
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 
   it 'copies a file to the blobstore' do
-    expect {
+    expect do
       subject.cp_to_blobstore(tmpfile.path, 'destination_key')
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'copies a file to a different key' do
-    expect {
+    expect do
       subject.cp_file_between_keys(key, 'destination_key')
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'deletes all the files from the blobstore' do
-    expect {
+    expect do
       page_size = 1
       subject.delete_all(page_size)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'deletes all the files in a path from the blobstore' do
-    expect {
+    expect do
       subject.delete_all_in_path('some-path')
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'deletes the file by key in the blobstore' do
-    expect {
+    expect do
       subject.delete('source-key')
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'deletes the blob' do
-    expect {
+    expect do
       subject.delete_blob(deletable_blob)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'returns a blob object for a file by key' do
@@ -73,16 +73,16 @@ RSpec.shared_examples_for 'a blobstore client' do
   end
 
   it 'returns all the files for a given directory prefix' do
-    expect {
+    expect do
       subject.files_for('aa')
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   describe '#ensure_bucket_exists' do
     it 'creates a bucket if it doesnt exist' do
-      expect {
+      expect do
         subject.ensure_bucket_exists
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 end

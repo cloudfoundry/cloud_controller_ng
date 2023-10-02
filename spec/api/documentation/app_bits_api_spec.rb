@@ -1,15 +1,15 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:tmpdir) { Dir.mktmpdir }
-  let(:valid_zip) {
+  let(:valid_zip) do
     zip_name = File.join(tmpdir, 'file.zip')
     TestZip.create(zip_name, 1, 1024)
     zip_file = File.new(zip_name)
     Rack::Test::UploadedFile.new(zip_file)
-  }
+  end
 
   let(:req_body) do
     {
@@ -19,7 +19,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   let(:space) { VCAP::CloudController::Space.make }
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
   authenticated_request
 
@@ -27,18 +27,18 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:async) { true }
   let(:app_bits_put_params) do
     {
-        async: async,
-        resources: fingerprints.to_json,
-        application: valid_zip,
+      async: async,
+      resources: fingerprints.to_json,
+      application: valid_zip
     }
   end
 
-  let(:fingerprints) {
+  let(:fingerprints) do
     [
       { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
       { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
     ]
-  }
+  end
 
   before do
     TestConfig.override(

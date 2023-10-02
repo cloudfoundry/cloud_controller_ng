@@ -124,6 +124,7 @@ module VCAP
               end
             end
           end
+
           it 'when changing exponential backoff rate and default polling interval' do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
@@ -146,6 +147,7 @@ module VCAP
               end
             end
           end
+
           it 'when changing exponential backoff rate and retry_after from the job' do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
@@ -200,7 +202,7 @@ module VCAP
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end
@@ -337,7 +339,7 @@ module VCAP
             expect(PollableJobModel.first.state).to eq('FAILED')
             expect(PollableJobModel.first.cf_api_error).not_to be_nil
             error = YAML.safe_load(PollableJobModel.first.cf_api_error)
-            expect(error['errors'].first['code']).to eq(290006)
+            expect(error['errors'].first['code']).to eq(290_006)
             expect(error['errors'].first['detail']).
               to eq('The job execution has timed out.')
           end

@@ -15,8 +15,8 @@ module VCAP::CloudController
 
     describe '#update' do
       let!(:app) { AppModel.make }
-      let!(:process) { ProcessModel.make(app: app) }
-      let!(:another_process) { ProcessModel.make(app: app) }
+      let!(:process) { ProcessModel.make(app:) }
+      let!(:another_process) { ProcessModel.make(app:) }
 
       before do
         TestConfig.override(kubernetes: {})
@@ -27,25 +27,25 @@ module VCAP::CloudController
         let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path', space: app.space) }
 
         context 'when the route is already mapped to the app' do
-          let!(:route_mapping) {
+          let!(:route_mapping) do
             RouteMappingModel.make(app: app, route: route, app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
-          }
+          end
 
           it 'does not attempt to re-map the route to the app' do
-            expect {
+            expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.not_to change { route_mapping.reload.updated_at }
+            end.not_to(change { route_mapping.reload.updated_at })
           end
 
           context 'and a protocol is NOT provided' do
-            let!(:route_mapping) {
+            let!(:route_mapping) do
               RouteMappingModel.make(app: app, route: route, protocol: 'http2', app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
-            }
+            end
 
             it 'does NOT change the route mapping protocol back to the default (manifests are NOT declarative)' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.not_to change { route_mapping.reload.updated_at }
+              end.not_to(change { route_mapping.reload.updated_at })
             end
           end
 
@@ -105,19 +105,20 @@ module VCAP::CloudController
 
               routes = app.reload.routes
               route = routes.first
-              mapping = route.route_mappings_dataset.first(app: app)
-              expect(mapping).to_not be_nil
+              mapping = route.route_mappings_dataset.first(app:)
+              expect(mapping).not_to be_nil
               expect(mapping.protocol).to eq('http2')
             end
           end
 
           context 'when the route and app are in different spaces' do
             let!(:outside_app) { AppModel.make }
+
             it 'raises a route invalid error' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(outside_app.guid, message, user_audit_info)
-              }.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
-                'Routes cannot be mapped to destinations in different spaces')
+              end.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
+                                 'Routes cannot be mapped to destinations in different spaces')
             end
           end
         end
@@ -130,9 +131,9 @@ module VCAP::CloudController
           end
 
           it 'creates and maps the route to the app' do
-            expect {
+            expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.to change { app.reload.routes.length }.by(1)
+            end.to change { app.reload.routes.length }.by(1)
             routes = app.reload.routes
             expect(routes.length).to eq 1
 
@@ -153,9 +154,9 @@ module VCAP::CloudController
             end
 
             it 'creates and maps the route to the app' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to change { app.reload.routes.length }.by(1)
+              end.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
 
@@ -181,9 +182,9 @@ module VCAP::CloudController
             end
 
             it 'creates and maps the route to the app' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to change { app.reload.routes.length }.by(1)
+              end.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
 
@@ -208,9 +209,9 @@ module VCAP::CloudController
             end
 
             it 'creates and maps the route to the app' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to change { app.reload.routes.length }.by(1)
+              end.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
 
@@ -231,9 +232,9 @@ module VCAP::CloudController
             end
 
             it 'raises an error' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to raise_error(CloudController::Errors::ApiError)
+              end.to raise_error(CloudController::Errors::ApiError)
             end
           end
 
@@ -255,9 +256,9 @@ module VCAP::CloudController
             end
 
             it 'creates and maps the route to the app' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to change { app.reload.routes.length }.by(1)
+              end.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq(1)
 
@@ -269,14 +270,14 @@ module VCAP::CloudController
 
             context 'but there is another tcp route with a different port' do
               let!(:other_route) { Route.make(domain: tcp_domain, host: '', space: app.space, port: 1235) }
-              let!(:other_route_mapping) {
+              let!(:other_route_mapping) do
                 RouteMappingModel.make(app: app, route: other_route)
-              }
+              end
 
               it 'creates and maps the route to the app' do
-                expect {
+                expect do
                   ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-                }.to change { app.reload.routes.length }.by(1)
+                end.to change { app.reload.routes.length }.by(1)
                 routes = app.reload.routes
                 expect(routes.length).to eq(2)
 
@@ -297,9 +298,9 @@ module VCAP::CloudController
               end
 
               it 'throws an error' do
-                expect {
+                expect do
                   ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-                }.to raise_error(VCAP::CloudController::UpdateRouteDestinations::Error, 'Cannot use \'http2\' protocol for tcp routes; valid options are: [tcp].')
+                end.to raise_error(VCAP::CloudController::UpdateRouteDestinations::Error, 'Cannot use \'http2\' protocol for tcp routes; valid options are: [tcp].')
               end
             end
           end
@@ -310,19 +311,19 @@ module VCAP::CloudController
             end
 
             it 'raises an unauthorized error' do
-              expect {
+              expect do
                 ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-              }.to raise_error(CloudController::Errors::ApiError)
+              end.to raise_error(CloudController::Errors::ApiError)
             end
           end
         end
 
         context 'when the domain does not exist' do
           it 'raises a route invalid error' do
-            expect {
+            expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
-              "No domains exist for route #{message.routes.first[:route]}")
+            end.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
+                               "No domains exist for route #{message.routes.first[:route]}")
           end
         end
 
@@ -332,9 +333,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Domain .* is not available/)
+            end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Domain .* is not available/)
           end
         end
       end
@@ -358,9 +359,9 @@ module VCAP::CloudController
         end
 
         it('raises an error indicating that a host must be provided') do
-          expect {
+          expect do
             ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Routes in shared domains must have a host defined/)
+          end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Routes in shared domains must have a host defined/)
         end
       end
 
@@ -375,9 +376,9 @@ module VCAP::CloudController
         end
 
         it('raises an error indicating that the host format is invalid') do
-          expect {
+          expect do
             ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /Host format is invalid/)
+          end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Host format is invalid/)
         end
       end
     end

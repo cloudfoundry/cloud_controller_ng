@@ -14,7 +14,7 @@ Sequel.migration do
       Time :failed_at
       String :locked_by
       String :queue
-      index [:priority, :run_at], name: :dj
+      index %i[priority run_at], name: :dj
     end
   end
 

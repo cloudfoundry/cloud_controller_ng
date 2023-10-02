@@ -20,17 +20,13 @@ module VCAP::CloudController
         domains_to_unshare = []
         org.private_domains.each do |private_domain|
           if private_domain.owning_organization == org
-            if private_domain.shared_with_any_orgs?
-              errs << "Domain '#{private_domain.name}' is shared with other organizations. Unshare before deleting."
-            end
+            errs << "Domain '#{private_domain.name}' is shared with other organizations. Unshare before deleting." if private_domain.shared_with_any_orgs?
           else
             domains_to_unshare << private_domain
           end
         end
 
-        unless errs.empty?
-          return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, errs.join("\n\n"))]
-        end
+        return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, errs.join("\n\n"))] unless errs.empty?
 
         Organization.db.transaction do
           unshare_private_domains(domains_to_unshare, org)

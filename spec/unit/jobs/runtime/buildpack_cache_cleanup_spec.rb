@@ -55,13 +55,13 @@ module VCAP::CloudController
         blobstore.cp_to_blobstore(file, orphan_key)
         blobstore.cp_to_blobstore(file, buildpack_cache_key)
 
-        expect(blobstore.exists?(orphan_key)).to be_truthy
-        expect(blobstore.exists?(buildpack_cache_key)).to be_truthy
+        expect(blobstore).to exist(orphan_key)
+        expect(blobstore).to exist(buildpack_cache_key)
 
         job.perform
 
-        expect(blobstore.exists?(orphan_key)).to be_falsey
-        expect(blobstore.exists?(buildpack_cache_key)).to be_falsey
+        expect(blobstore).not_to exist(orphan_key)
+        expect(blobstore).not_to exist(buildpack_cache_key)
       end
 
       it 'does not delete any droplets' do
@@ -69,13 +69,13 @@ module VCAP::CloudController
         blobstore.cp_to_blobstore(file, orphan_key)
         droplet_blobstore.cp_to_blobstore(file, droplet_key)
 
-        expect(blobstore.exists?(orphan_key)).to be_truthy
-        expect(droplet_blobstore.exists?(droplet_key)).to be_truthy
+        expect(blobstore).to exist(orphan_key)
+        expect(droplet_blobstore).to exist(droplet_key)
 
         job.perform
 
-        expect(blobstore.exists?(orphan_key)).to be_falsey
-        expect(droplet_blobstore.exists?(droplet_key)).to be_truthy
+        expect(blobstore).not_to exist(orphan_key)
+        expect(droplet_blobstore).to exist(droplet_key)
       end
 
       it { is_expected.to be_a_valid_job }

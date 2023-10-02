@@ -9,7 +9,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Validations' do
-      it { is_expected.to validate_uniqueness [:name, :stack] }
+      it { is_expected.to validate_uniqueness %i[name stack] }
 
       describe 'stack' do
         let(:stack) {  Stack.make(name: 'happy') }
@@ -49,10 +49,11 @@ module VCAP::CloudController
 
         context 'when there is a buildpack with nil stack' do
           let!(:buildpack) { Buildpack.create(name: 'oscar', stack: nil) }
+
           it 'will allow updating a different field' do
-            expect {
+            expect do
               buildpack.update(filename: '/some/file')
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end
@@ -60,7 +61,7 @@ module VCAP::CloudController
       describe 'name' do
         it 'does not allow non-word non-dash characters' do
           ['git://github.com', '$abc', 'foobar!'].each do |name|
-            buildpack = Buildpack.new(name: name)
+            buildpack = Buildpack.new(name:)
             expect(buildpack).not_to be_valid
             expect(buildpack.errors.on(:name)).to be_present
           end
@@ -68,7 +69,7 @@ module VCAP::CloudController
 
         it 'allows word and dash characters' do
           ['name', 'name-with-dash', '-name-'].each do |name|
-            buildpack = Buildpack.new(name: name)
+            buildpack = Buildpack.new(name:)
             expect(buildpack).to be_valid
           end
         end
@@ -126,7 +127,7 @@ module VCAP::CloudController
           @another_buildpack.key = nil
           @another_buildpack.save
 
-          expect(all_buildpacks).to_not include(@another_buildpack)
+          expect(all_buildpacks).not_to include(@another_buildpack)
           expect(all_buildpacks).to have(2).items
         end
 
@@ -142,7 +143,7 @@ module VCAP::CloudController
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(null_buildpack)
-            expect(all_buildpacks).to_not include(null_buildpack)
+            expect(all_buildpacks).not_to include(null_buildpack)
             expect(all_buildpacks).to have(3).items
           end
         end
@@ -152,14 +153,14 @@ module VCAP::CloudController
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(empty_buildpack)
-            expect(all_buildpacks).to_not include(empty_buildpack)
+            expect(all_buildpacks).not_to include(empty_buildpack)
             expect(all_buildpacks).to have(3).items
           end
         end
       end
 
       context 'when there are no buildpacks' do
-        it 'should cope with no buildpacks' do
+        it 'copes with no buildpacks' do
           expect(all_buildpacks).to be_empty
         end
       end
@@ -169,7 +170,7 @@ module VCAP::CloudController
         let!(:disabled_buildpack) { Buildpack.make(key: 'disabled-buildpack', enabled: false) }
 
         it 'includes them in the list' do
-          expect(all_buildpacks).to match_array([enabled_buildpack, disabled_buildpack])
+          expect(all_buildpacks).to contain_exactly(enabled_buildpack, disabled_buildpack)
         end
       end
 
@@ -210,9 +211,9 @@ module VCAP::CloudController
       end
 
       it 'does not modify the frozen hash provided by Sequel' do
-        expect {
+        expect do
           buildpacks.first.update({ position: 2 }.freeze)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
@@ -221,9 +222,9 @@ module VCAP::CloudController
       let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2 }) }
 
       it 'removes the specified buildpack' do
-        expect {
+        expect do
           buildpack1.destroy
-        }.to change {
+        end.to change {
           ordered_buildpacks
         }.from(
           [['first_buildpack', 1], ['second_buildpack', 2]]
@@ -233,9 +234,9 @@ module VCAP::CloudController
       end
 
       it "doesn't shift when the last position is deleted" do
-        expect {
+        expect do
           buildpack2.destroy
-        }.to change {
+        end.to change {
           ordered_buildpacks
         }.from(
           [['first_buildpack', 1], ['second_buildpack', 2]]

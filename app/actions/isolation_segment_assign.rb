@@ -8,11 +8,9 @@ module VCAP::CloudController
           org.lock!
           isolation_segment.add_organization(org)
 
-          if org.default_isolation_segment_model.nil?
-            if isolation_segment.is_shared_segment?
-              org.update(default_isolation_segment_model: isolation_segment)
-            end
-          end
+          next unless org.default_isolation_segment_model.nil?
+
+          org.update(default_isolation_segment_model: isolation_segment) if isolation_segment.is_shared_segment?
         end
       end
     end

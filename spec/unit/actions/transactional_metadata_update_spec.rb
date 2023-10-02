@@ -4,7 +4,7 @@ require 'actions/transactional_metadata_update'
 module VCAP::CloudController
   RSpec.describe TransactionalMetadataUpdate do
     describe '#update' do
-      let(:new_metadata) {
+      let(:new_metadata) do
         {
           metadata: {
             labels: {
@@ -15,7 +15,7 @@ module VCAP::CloudController
             }
           }
         }
-      }
+      end
       let(:update_request_body) { new_metadata }
       let(:resource) { Service.make }
       let(:message) { MetadataUpdateMessage.new(update_request_body) }
@@ -70,23 +70,23 @@ module VCAP::CloudController
 
         it 'can add new values' do
           message = MetadataUpdateMessage.new({
-            metadata: {
-              labels: {
-                freaky: 'tuesday',
-                another_label: 'new-label',
-              },
-              annotations: {
-                tokyo: 'apples',
-                another_annotation: 'new-annotation',
-              }
-            }
-          })
+                                                metadata: {
+                                                  labels: {
+                                                    freaky: 'tuesday',
+                                                    another_label: 'new-label'
+                                                  },
+                                                  annotations: {
+                                                    tokyo: 'apples',
+                                                    another_annotation: 'new-annotation'
+                                                  }
+                                                }
+                                              })
 
           expect(message).to be_valid
           updated_resource = TransactionalMetadataUpdate.update(resource, message)
           expect(updated_resource).to have_labels(
             { key_name: 'freaky', value: 'tuesday' },
-            { key_name: 'another_label', value: 'new-label' },
+            { key_name: 'another_label', value: 'new-label' }
           )
           expect(updated_resource).to have_annotations(
             { key_name: 'tokyo', value: 'apples' },

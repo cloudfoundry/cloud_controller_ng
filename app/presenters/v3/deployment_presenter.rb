@@ -35,9 +35,9 @@ module VCAP::CloudController::Presenters::V3
         },
         metadata: {
           labels: hashified_labels(deployment.labels),
-          annotations: hashified_annotations(deployment.annotations),
+          annotations: hashified_annotations(deployment.annotations)
         },
-        links: build_links,
+        links: build_links
       }
     end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def revision
-      (deployment.app.revisions_enabled && deployment.revision_guid) ? { guid: deployment.revision_guid, version: deployment.revision_version } : nil
+      deployment.app.revisions_enabled && deployment.revision_guid ? { guid: deployment.revision_guid, version: deployment.revision_version } : nil
     end
 
     def new_processes
@@ -67,7 +67,7 @@ module VCAP::CloudController::Presenters::V3
         },
         app: {
           href: url_builder.build_url(path: "/v3/apps/#{deployment.app_guid}")
-        },
+        }
       }.tap do |links|
         if deployment.cancelable?
           links[:cancel] = {

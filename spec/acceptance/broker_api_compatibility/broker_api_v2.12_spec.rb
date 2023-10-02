@@ -32,10 +32,11 @@ RSpec.describe 'Service Broker API integration' do
         }
 
         expect(
-          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
             context = JSON.parse(req.body)['context']
             context >= expected_context_attributes
-          }).to have_been_made
+          end
+        ).to have_been_made
       end
     end
 
@@ -61,10 +62,11 @@ RSpec.describe 'Service Broker API integration' do
         }
 
         expect(
-          a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+          a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
             context = JSON.parse(req.body)['context']
             context >= expected_context_attributes
-          }).to have_been_made
+          end
+        ).to have_been_made
       end
     end
   end

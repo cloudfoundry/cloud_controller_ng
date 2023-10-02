@@ -13,7 +13,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make }
       let(:config) { TestConfig.config_instance }
       let(:build) { BuildModel.make(package_guid: package.guid) }
-      let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
+      let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build:) }
       let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
 
       let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
@@ -70,9 +70,9 @@ module VCAP::CloudController
           end
 
           it 'calls the completion handler with the error' do
-            expect {
+            expect do
               stager.stage(staging_details)
-            }.to raise_error(CloudController::Errors::ApiError)
+            end.to raise_error(CloudController::Errors::ApiError)
             package.reload
             expect(buildpack_completion_handler).to have_received(:staging_complete).with(error, false)
           end
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         context 'buildpack' do
           let(:build) { BuildModel.make }
-          let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
+          let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build:) }
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(build, staging_response)

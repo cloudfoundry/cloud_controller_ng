@@ -9,12 +9,12 @@ module VCAP::CloudController
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)
         process.instances.times do |i|
-          unless reported_instances[i]
-            reported_instances[i] = {
-              state:  'DOWN',
-              uptime: 0,
-            }
-          end
+          next if reported_instances[i]
+
+          reported_instances[i] = {
+            state: 'DOWN',
+            uptime: 0
+          }
         end
 
         reported_instances

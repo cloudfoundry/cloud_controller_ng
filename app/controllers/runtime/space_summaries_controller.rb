@@ -28,10 +28,10 @@ module VCAP::CloudController
 
     def space_summary(space)
       {
-        guid:     space.guid,
-        name:     space.name,
-        apps:     app_summary(space),
-        services: services_summary(space),
+        guid: space.guid,
+        name: space.name,
+        apps: app_summary(space),
+        services: services_summary(space)
       }
     end
 
@@ -39,12 +39,12 @@ module VCAP::CloudController
       instances = instances_reporters.number_of_starting_and_running_instances_for_processes(space.apps)
       space.apps.reject { |process| process.app.nil? }.collect do |process|
         {
-          guid:              process.app_guid,
-          urls:              process.routes.map(&:uri),
-          routes:            process.routes.map(&:as_summary_json),
-          service_count:     process.service_bindings_dataset.count,
-          service_names:     process.service_bindings_dataset.map(&:service_instance).map(&:name),
-          running_instances: instances[process.guid],
+          guid: process.app_guid,
+          urls: process.routes.map(&:uri),
+          routes: process.routes.map(&:as_summary_json),
+          service_count: process.service_bindings_dataset.count,
+          service_names: process.service_bindings_dataset.map(&:service_instance).map(&:name),
+          running_instances: instances[process.guid]
         }.merge(process.to_hash)
       end
     end
@@ -58,10 +58,10 @@ module VCAP::CloudController
 
     def shared_service_instance_summary(service_instance)
       service_instance.as_summary_json.merge('shared_from' => {
-        'space_guid' => service_instance.space.guid,
-        'space_name' => service_instance.space.name,
-        'organization_name' => service_instance.space.organization.name,
-      })
+                                               'space_guid' => service_instance.space.guid,
+                                               'space_name' => service_instance.space.name,
+                                               'organization_name' => service_instance.space.organization.name
+                                             })
     end
 
     def source_service_instance_summary(service_instance)

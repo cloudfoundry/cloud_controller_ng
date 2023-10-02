@@ -31,12 +31,10 @@ module VCAP
 
             lifecycle_data.message
           rescue Membrane::SchemaValidationError => e
-            if e.message.match?(/app_bits_download_uri/)
-              logger.error "app_bits_download_uri is nil for package #{staging_details.package.guid}"
-              raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
-            else
-              raise e
-            end
+            raise e unless e.message.match?(/app_bits_download_uri/)
+
+            logger.error "app_bits_download_uri is nil for package #{staging_details.package.guid}"
+            raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
           end
 
           def staging_action_builder(config, staging_details)
@@ -64,21 +62,21 @@ module VCAP
           def builder_opts(process)
             checksum_info = droplet_checksum_info(process.actual_droplet)
             {
-              droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
-              droplet_hash:       process.actual_droplet.droplet_hash,
-              ports:              process.open_ports,
-              process_guid:       ProcessGuid.from_process(process),
-              stack:              process.app.lifecycle_data.stack,
+              droplet_uri: @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
+              droplet_hash: process.actual_droplet.droplet_hash,
+              ports: process.open_ports,
+              process_guid: ProcessGuid.from_process(process),
+              stack: process.app.lifecycle_data.stack,
               checksum_algorithm: checksum_info['type'],
-              checksum_value:     checksum_info['value'],
-              start_command:      process.started_command,
+              checksum_value: checksum_info['value'],
+              start_command: process.started_command
             }
           end
 
           def task_lifecycle_data(task)
             {
               droplet_uri: droplet_download_uri(task),
-              stack:       task.app.lifecycle_data.stack
+              stack: task.app.lifecycle_data.stack
             }
           end
 

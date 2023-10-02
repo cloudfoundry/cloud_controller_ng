@@ -27,7 +27,7 @@ RSpec.describe V2ErrorHasher do
   let(:to_h_error) do
     error = RuntimeError.new('fake message')
     error.set_backtrace('fake backtrace')
-    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67890, 'source' => 'fake source')
+    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67_890, 'source' => 'fake source')
     error
   end
 
@@ -40,7 +40,7 @@ RSpec.describe V2ErrorHasher do
   let(:to_provided_h_error) do
     error = RuntimeErrorWithToH.new('fake message')
     error.set_backtrace('fake backtrace')
-    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67890, 'source' => 'fake source')
+    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67_890, 'source' => 'fake source')
     allow(error.class).to receive(:name).and_return('RuntimeError')
     error
   end
@@ -55,18 +55,18 @@ RSpec.describe V2ErrorHasher do
 
       it 'lets the error do the conversion' do
         expect(unsanitized_hash).to eq({
-          'code'           => 10001,
-          'error_code'     => 'UnknownError',
-          'description'    => 'An unknown error occurred.',
-          'test_mode_info' => {
-            'description'     => 'fake message',
-            'code'            => 67890,
-            'error_code'      => 'CF-RuntimeError',
-            'source'          => 'fake source',
-            'arbritratry key' => 'arbritratry value',
-            'backtrace'       => ['fake backtrace'],
-          }
-        })
+                                         'code' => 10_001,
+                                         'error_code' => 'UnknownError',
+                                         'description' => 'An unknown error occurred.',
+                                         'test_mode_info' => {
+                                           'description' => 'fake message',
+                                           'code' => 67_890,
+                                           'error_code' => 'CF-RuntimeError',
+                                           'source' => 'fake source',
+                                           'arbritratry key' => 'arbritratry value',
+                                           'backtrace' => ['fake backtrace']
+                                         }
+                                       })
       end
     end
 
@@ -75,15 +75,15 @@ RSpec.describe V2ErrorHasher do
 
       it 'uses a standard convention by default' do
         expect(unsanitized_hash).to eq({
-          'code'           => 130001,
-          'description'    => 'The domain is invalid: notadomain',
-          'error_code'     => 'CF-DomainInvalid',
-          'test_mode_info' => {
-            'description' => 'The domain is invalid: notadomain',
-            'error_code'  => 'CF-DomainInvalid',
-            'backtrace'   => ['fake backtrace'],
-          }
-        })
+                                         'code' => 130_001,
+                                         'description' => 'The domain is invalid: notadomain',
+                                         'error_code' => 'CF-DomainInvalid',
+                                         'test_mode_info' => {
+                                           'description' => 'The domain is invalid: notadomain',
+                                           'error_code' => 'CF-DomainInvalid',
+                                           'backtrace' => ['fake backtrace']
+                                         }
+                                       })
       end
     end
 
@@ -92,16 +92,16 @@ RSpec.describe V2ErrorHasher do
 
       it 'uses a standard convention by default' do
         expect(unsanitized_hash).to eq({
-          'code'           => 10001,
-          'description'    => 'fake message',
-          'error_code'     => 'CF-StructuredError',
-          'test_mode_info' => {
-            'description' => 'fake message',
-            'error_code'  => 'CF-StructuredError',
-            'source'      => 'fake source',
-            'backtrace'   => ['fake backtrace'],
-          }
-        })
+                                         'code' => 10_001,
+                                         'description' => 'fake message',
+                                         'error_code' => 'CF-StructuredError',
+                                         'test_mode_info' => {
+                                           'description' => 'fake message',
+                                           'error_code' => 'CF-StructuredError',
+                                           'source' => 'fake source',
+                                           'backtrace' => ['fake backtrace']
+                                         }
+                                       })
       end
     end
 
@@ -110,10 +110,10 @@ RSpec.describe V2ErrorHasher do
 
       it 'returns a default hash' do
         expect(unsanitized_hash).to eq({
-          'error_code'  => 'UnknownError',
-          'description' => 'An unknown error occurred.',
-          'code'        => 10001,
-        })
+                                         'error_code' => 'UnknownError',
+                                         'description' => 'An unknown error occurred.',
+                                         'code' => 10_001
+                                       })
       end
     end
 
@@ -122,15 +122,15 @@ RSpec.describe V2ErrorHasher do
 
       it 'uses a standard convention by default' do
         expect(unsanitized_hash).to eq({
-          'code'           => 10001,
-          'description'    => 'An unknown error occurred.',
-          'error_code'     => 'UnknownError',
-          'test_mode_info' => {
-            'description' => 'fake message',
-            'error_code'  => 'CF-RuntimeError',
-            'backtrace'   => ['fake backtrace'],
-          }
-        })
+                                         'code' => 10_001,
+                                         'description' => 'An unknown error occurred.',
+                                         'error_code' => 'UnknownError',
+                                         'test_mode_info' => {
+                                           'description' => 'fake message',
+                                           'error_code' => 'CF-RuntimeError',
+                                           'backtrace' => ['fake backtrace']
+                                         }
+                                       })
       end
     end
   end
@@ -145,10 +145,10 @@ RSpec.describe V2ErrorHasher do
 
       it 'returns the default hash' do
         expect(sanitized_hash).to eq({
-          'error_code'  => 'UnknownError',
-          'description' => 'An unknown error occurred.',
-          'code'        => 10001
-        })
+                                       'error_code' => 'UnknownError',
+                                       'description' => 'An unknown error occurred.',
+                                       'code' => 10_001
+                                     })
       end
     end
 
@@ -158,10 +158,10 @@ RSpec.describe V2ErrorHasher do
 
         it 'uses a standard convention by default' do
           expect(sanitized_hash).to eq({
-            'code'        => 130001,
-            'description' => 'The domain is invalid: notadomain',
-            'error_code'  => 'CF-DomainInvalid'
-          })
+                                         'code' => 130_001,
+                                         'description' => 'The domain is invalid: notadomain',
+                                         'error_code' => 'CF-DomainInvalid'
+                                       })
         end
       end
 
@@ -170,10 +170,10 @@ RSpec.describe V2ErrorHasher do
 
         it 'uses a standard convention by default' do
           expect(sanitized_hash).to eq({
-            'code'        => 10002,
-            'description' => 'Authentication error',
-            'error_code'  => 'CF-NotAuthenticated'
-          })
+                                         'code' => 10_002,
+                                         'description' => 'Authentication error',
+                                         'error_code' => 'CF-NotAuthenticated'
+                                       })
         end
       end
     end
@@ -183,10 +183,10 @@ RSpec.describe V2ErrorHasher do
 
       it 'uses a standard convention by default' do
         expect(sanitized_hash).to eq({
-          'code'        => 10001,
-          'description' => 'fake message',
-          'error_code'  => 'CF-StructuredError'
-        })
+                                       'code' => 10_001,
+                                       'description' => 'fake message',
+                                       'error_code' => 'CF-StructuredError'
+                                     })
       end
     end
 
@@ -195,10 +195,10 @@ RSpec.describe V2ErrorHasher do
 
       it 'returns a default hash' do
         expect(sanitized_hash).to eq({
-          'error_code'  => 'UnknownError',
-          'description' => 'An unknown error occurred.',
-          'code'        => 10001,
-        })
+                                       'error_code' => 'UnknownError',
+                                       'description' => 'An unknown error occurred.',
+                                       'code' => 10_001
+                                     })
       end
     end
 
@@ -207,10 +207,10 @@ RSpec.describe V2ErrorHasher do
 
       it 'uses a standard convention by default' do
         expect(sanitized_hash).to eq({
-          'code'        => 10001,
-          'description' => 'An unknown error occurred.',
-          'error_code'  => 'UnknownError'
-        })
+                                       'code' => 10_001,
+                                       'description' => 'An unknown error occurred.',
+                                       'error_code' => 'UnknownError'
+                                     })
       end
     end
 

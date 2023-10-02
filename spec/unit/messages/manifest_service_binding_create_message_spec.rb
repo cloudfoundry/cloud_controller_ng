@@ -4,9 +4,9 @@ require 'messages/manifest_service_binding_create_message'
 module VCAP::CloudController
   RSpec.describe ManifestServiceBindingCreateMessage do
     describe 'validations' do
-      let(:body) {
-        { 'services' => ['s1', 's2'] }
-      }
+      let(:body) do
+        { 'services' => %w[s1 s2] }
+      end
 
       context 'when all values are correct' do
         it 'is valid' do
@@ -30,8 +30,7 @@ module VCAP::CloudController
                 name: 'no_parameters'
               },
               'other-instance-name'
-            ]
-          }
+            ] }
         end
 
         it 'is valid' do
@@ -48,10 +47,10 @@ module VCAP::CloudController
                 'parameters' => {
                   'foo' => 'bar'
                 }
-              },
-            ]
-          }
+              }
+            ] }
         end
+
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
           expect(message).not_to be_valid
@@ -66,8 +65,7 @@ module VCAP::CloudController
                 'name' => 'has_parameters',
                 'parameters' => 'foo'
               }
-            ]
-          }
+            ] }
         end
 
         it 'is not valid' do
@@ -86,8 +84,7 @@ module VCAP::CloudController
                 'name' => 'has_parameters',
                 'binding_name' => 123
               }
-            ]
-          }
+            ] }
         end
 
         it 'is not valid' do
@@ -108,9 +105,9 @@ module VCAP::CloudController
                   'foo' => 'bar'
                 }
               }
-            ]
-          }
+            ] }
         end
+
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
           expect(message).not_to be_valid
@@ -118,9 +115,9 @@ module VCAP::CloudController
       end
 
       context 'when service instances is not an array' do
-        let(:body) {
+        let(:body) do
           { services: 'service' }
-        }
+        end
 
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
@@ -131,9 +128,9 @@ module VCAP::CloudController
       end
 
       context 'when service instances is a nested array' do
-        let(:body) {
-          { services: [['s1', 's2'], 's3'] }
-        }
+        let(:body) do
+          { services: [%w[s1 s2], 's3'] }
+        end
 
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
@@ -144,9 +141,9 @@ module VCAP::CloudController
       end
 
       context 'when unexpected keys are requested' do
-        let(:body) {
-          { services: ['s1', 's2'], surprise_key: 'surprise' }
-        }
+        let(:body) do
+          { services: %w[s1 s2], surprise_key: 'surprise' }
+        end
 
         it 'is not valid' do
           message = ManifestServiceBindingCreateMessage.new(body)
@@ -170,10 +167,9 @@ module VCAP::CloudController
               },
               'instance-name-2',
               {
-                'name' => 'instance-name-3',
-              },
-            ]
-          }
+                'name' => 'instance-name-3'
+              }
+            ] }
         end
 
         it 'is valid' do

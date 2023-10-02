@@ -24,14 +24,14 @@ RSpec.describe 'v3 service credential bindings' do
         {
           names: 'foo bar',
           include: 'app,service_instance',
-          service_instance_names: %w(foo bar),
-          service_instance_guids: %w(foo bar),
-          service_plan_names: %w(foo bar),
-          service_plan_guids: %w(foo bar),
-          service_offering_names: %w(foo bar),
-          service_offering_guids: %w(foo bar),
-          app_names: %w(foo bar),
-          app_guids: %w(foo bar),
+          service_instance_names: %w[foo bar],
+          service_instance_guids: %w[foo bar],
+          service_plan_names: %w[foo bar],
+          service_plan_guids: %w[foo bar],
+          service_offering_names: %w[foo bar],
+          service_offering_guids: %w[foo bar],
+          app_names: %w[foo bar],
+          app_guids: %w[foo bar],
           type: 'app',
           per_page: '10',
           page: 2,
@@ -56,7 +56,7 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'given a mixture of bindings' do
       let(:now) { Time.now }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
       let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
       let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
       let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
@@ -65,7 +65,7 @@ RSpec.describe 'v3 service credential bindings' do
           operate_on(binding)
         end
       end
-      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.seconds) }
+      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.second) }
 
       describe 'permissions' do
         let(:labels) { { foo: 'bar' } }
@@ -78,7 +78,7 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
         let!(:other_app_binding) do
-          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.seconds) do |binding|
+          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.second) do |binding|
             operate_on(binding)
             VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
             VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
@@ -91,10 +91,10 @@ RSpec.describe 'v3 service credential bindings' do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding, labels: labels, annotations: annotations),
+              expected_json(key_binding, labels:, annotations:),
               expected_json(other_key_binding),
               expected_json(app_binding),
-              expected_json(other_app_binding, labels: labels, annotations: annotations),
+              expected_json(other_app_binding, labels:, annotations:)
             ]
           }
         end
@@ -103,7 +103,7 @@ RSpec.describe 'v3 service credential bindings' do
           {
             code: 200,
             response_objects: [
-              expected_json(key_binding, labels: labels, annotations: annotations),
+              expected_json(key_binding, labels:, annotations:),
               expected_json(app_binding)
             ]
           }
@@ -138,7 +138,7 @@ RSpec.describe 'v3 service credential bindings' do
         it_behaves_like 'list_endpoint_with_common_filters' do
           let(:resource_klass) { VCAP::CloudController::ServiceBinding }
           let(:api_call) do
-            lambda { |headers, filters| get "/v3/service_credential_bindings?#{filters}", nil, headers }
+            ->(headers, filters) { get "/v3/service_credential_bindings?#{filters}", nil, headers }
           end
           let(:headers) { admin_headers }
         end
@@ -146,12 +146,12 @@ RSpec.describe 'v3 service credential bindings' do
         it_behaves_like 'list_endpoint_with_common_filters' do
           let(:resource_klass) { VCAP::CloudController::ServiceKey }
           let(:api_call) do
-            lambda { |headers, filters| get "/v3/service_credential_bindings?#{filters}", nil, headers }
+            ->(headers, filters) { get "/v3/service_credential_bindings?#{filters}", nil, headers }
           end
           let(:headers) { admin_headers }
         end
 
-        let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+        let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
         let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
         let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
 
@@ -335,8 +335,8 @@ RSpec.describe 'v3 service credential bindings' do
             get '/v3/service_credential_bindings?type=route', nil, admin_headers
             expect(last_response).to have_status_code(400)
             expect(parsed_response['errors']).to include(include({
-              'detail' => "The query parameter is invalid: Type must be one of 'app', 'key'"
-            }))
+                                                                   'detail' => "The query parameter is invalid: Type must be one of 'app', 'key'"
+                                                                 }))
           end
 
           it 'returns the filtered bindings' do
@@ -359,6 +359,7 @@ RSpec.describe 'v3 service credential bindings' do
         describe 'label_selector' do
           let!(:key_labels) { { env: 'prod', animal: 'dog' } }
           let!(:app_labels) { { env: 'prod', animal: 'horse' } }
+
           before do
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
             VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: key_binding)
@@ -381,7 +382,7 @@ RSpec.describe 'v3 service credential bindings' do
 
             check_filtered_bindings(
               other_key_binding,
-              app_binding,
+              app_binding
             )
           end
         end
@@ -390,29 +391,26 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].length).to be(bindings.length)
 
-          returned_guids = parsed_response['resources'].map { |r| r['guid'] }
+          returned_guids = parsed_response['resources'].pluck('guid')
           expected_guids = bindings.map(&:guid)
-          expect(returned_guids).to contain_exactly(*expected_guids)
+          expect(returned_guids).to match_array(expected_guids)
         end
       end
 
       describe 'unknown filter' do
         let(:valid_query_params) do
-          %w(
+          %w[
             page per_page order_by created_ats updated_ats guids names service_instance_guids service_instance_names
             service_plan_names service_plan_guids service_offering_names service_offering_guids app_guids app_names
             include type label_selector
-          )
+          ]
         end
 
         it 'returns an error' do
           get '/v3/service_credential_bindings?fruits=avocado,guava', nil, admin_headers
           expect(last_response).to have_status_code(400)
-          expect(parsed_response['errors']).to include(include({
-            'detail' => "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: '#{valid_query_params.join("', '")}'",
-            'title' => 'CF-BadQueryParameter',
-            'code' => 10005,
-          }))
+          error_message = "The query parameter is invalid: Unknown query parameter(s): 'fruits'. Valid parameters are: '#{valid_query_params.join("', '")}'"
+          expect(parsed_response['errors']).to include(include({ 'detail' => error_message, 'title' => 'CF-BadQueryParameter', 'code' => 10_005 }))
         end
       end
 
@@ -422,7 +420,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['apps']).to have(2).items
-          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          guids = parsed_response['included']['apps'].pluck('guid')
           expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
         end
 
@@ -431,7 +429,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['service_instances']).to have(2).items
-          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          guids = parsed_response['included']['service_instances'].pluck('guid')
           expect(guids).to contain_exactly(instance.guid, other_instance.guid)
         end
 
@@ -439,17 +437,17 @@ RSpec.describe 'v3 service credential bindings' do
           get '/v3/service_credential_bindings?include=routes', nil, admin_headers
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Invalid included resource: 'routes'"),
-            'title' => 'CF-BadQueryParameter',
-            'code' => 10005,
-          }))
+                                                                 'detail' => include("Invalid included resource: 'routes'"),
+                                                                 'title' => 'CF-BadQueryParameter',
+                                                                 'code' => 10_005
+                                                               }))
         end
       end
 
       describe 'eager loading' do
         it 'eager loads associated resources that the presenter specifies' do
           expect(VCAP::CloudController::ServiceCredentialBindingListFetcher).to receive(:fetch).with(
-            hash_including(eager_loaded_associations: [:service_instance_sti_eager_load, :labels_sti_eager_load, :annotations_sti_eager_load, :operation_sti_eager_load])
+            hash_including(eager_loaded_associations: %i[service_instance_sti_eager_load labels_sti_eager_load annotations_sti_eager_load operation_sti_eager_load])
           ).and_call_original
 
           get '/v3/service_credential_bindings', nil, admin_headers
@@ -462,15 +460,16 @@ RSpec.describe 'v3 service credential bindings' do
   describe 'GET /v3/service_credential_bindings/:guid' do
     describe 'query params' do
       let(:binding) { VCAP::CloudController::ServiceBinding.make }
+
       it 'returns 400 for invalid query params' do
         get "/v3/service_credential_bindings/#{binding.guid}?bahamas=yes-please", nil, admin_headers
 
         expect(last_response).to have_status_code(400)
         expect(parsed_response['errors']).to include(include({
-          'detail' => "The query parameter is invalid: Unknown query parameter(s): 'bahamas'. Valid parameters are: 'include'",
-          'title' => 'CF-BadQueryParameter',
-          'code' => 10005,
-        }))
+                                                               'detail' => "The query parameter is invalid: Unknown query parameter(s): 'bahamas'. Valid parameters are: 'include'",
+                                                               'title' => 'CF-BadQueryParameter',
+                                                               'code' => 10_005
+                                                             }))
       end
 
       describe 'includes' do
@@ -479,10 +478,10 @@ RSpec.describe 'v3 service credential bindings' do
 
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Invalid included resource: 'routes'"),
-            'title' => 'CF-BadQueryParameter',
-            'code' => 10005,
-          }))
+                                                                 'detail' => include("Invalid included resource: 'routes'"),
+                                                                 'title' => 'CF-BadQueryParameter',
+                                                                 'code' => 10_005
+                                                               }))
         end
       end
     end
@@ -507,9 +506,9 @@ RSpec.describe 'v3 service credential bindings' do
           VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
         end
       end
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(key, labels: labels, annotations: annotations) }
+      let(:expected_object) { expected_json(key, labels:, annotations:) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -532,15 +531,15 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(200)
 
             expect(parsed_response['included']['service_instances']).to have(1).items
-            guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+            guids = parsed_response['included']['service_instances'].pluck('guid')
             expect(guids).to contain_exactly(instance.guid)
           end
         end
       end
     end
 
-    describe 'app credential binding ' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+    describe 'app credential binding' do
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
       let(:labels) { { foo: 'bar' } }
       let(:annotations) { { baz: 'wow' } }
       let(:app_binding) do
@@ -551,9 +550,9 @@ RSpec.describe 'v3 service credential bindings' do
         end
       end
 
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
-      let(:expected_object) { expected_json(app_binding, labels: labels, annotations: annotations) }
+      let(:expected_object) { expected_json(app_binding, labels:, annotations:) }
 
       describe 'permissions' do
         let(:expected_codes_and_responses) do
@@ -569,7 +568,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['apps']).to have(1).items
-          guids = parsed_response['included']['apps'].map { |x| x['guid'] }
+          guids = parsed_response['included']['apps'].pluck('guid')
           expect(guids).to contain_exactly(app_to_bind_to.guid)
         end
 
@@ -578,7 +577,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
 
           expect(parsed_response['included']['service_instances']).to have(1).items
-          guids = parsed_response['included']['service_instances'].map { |x| x['guid'] }
+          guids = parsed_response['included']['service_instances'].pluck('guid')
           expect(guids).to contain_exactly(instance.guid)
         end
       end
@@ -586,28 +585,28 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   describe 'GET /v3/service_credential_bindings/:binding_guid/details' do
-    let(:details) {
+    let(:details) do
       {
         service_instance: instance,
-        volume_mounts: ['foo', 'bar'],
+        volume_mounts: %w[foo bar],
         syslog_drain_url: 'some-drain-url',
         credentials: { 'cred_key' => 'creds-val-64', 'magic' => true }
       }
-    }
+    end
     let(:app_binding) { VCAP::CloudController::ServiceBinding.make(**details) }
     let(:guid) { app_binding.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/details", nil, user_headers } }
-    let(:binding_credentials) {
+    let(:binding_credentials) do
       {
         credentials: {
           cred_key: 'creds-val-64',
           magic: true
         },
         syslog_drain_url: 'some-drain-url',
-        volume_mounts: ['foo', 'bar']
+        volume_mounts: %w[foo bar]
       }
-    }
+    end
 
     context "last binding operation is in 'create succeeded' state" do
       before do
@@ -629,10 +628,10 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'Creation of service binding in progress',
-          'title' => 'CF-ResourceNotFound',
-          'code' => 10010,
-        }))
+                                                               'detail' => 'Creation of service binding in progress',
+                                                               'title' => 'CF-ResourceNotFound',
+                                                               'code' => 10_010
+                                                             }))
       end
     end
 
@@ -645,10 +644,10 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'Creation of service binding failed',
-          'title' => 'CF-ResourceNotFound',
-          'code' => 10010,
-        }))
+                                                               'detail' => 'Creation of service binding failed',
+                                                               'title' => 'CF-ResourceNotFound',
+                                                               'code' => 10_010
+                                                             }))
       end
     end
 
@@ -661,10 +660,10 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'Deletion of service binding in progress',
-          'title' => 'CF-ResourceNotFound',
-          'code' => 10010,
-        }))
+                                                               'detail' => 'Deletion of service binding in progress',
+                                                               'title' => 'CF-ResourceNotFound',
+                                                               'code' => 10_010
+                                                             }))
       end
     end
 
@@ -677,10 +676,10 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(404)
         expect(parsed_response['errors']).to include(include({
-          'detail' => 'Deletion of service binding failed',
-          'title' => 'CF-ResourceNotFound',
-          'code' => 10010,
-         }))
+                                                               'detail' => 'Deletion of service binding failed',
+                                                               'title' => 'CF-ResourceNotFound',
+                                                               'code' => 10_010
+                                                             }))
       end
     end
 
@@ -696,12 +695,12 @@ RSpec.describe 'v3 service credential bindings' do
       describe 'when the service instance is shared' do
         let(:originating_space) { VCAP::CloudController::Space.make }
         let(:shared_space) { space }
-        let(:user_in_shared_space) {
+        let(:user_in_shared_space) do
           u = VCAP::CloudController::User.make
           shared_space.organization.add_user(u)
           shared_space.add_developer(u)
           u
-        }
+        end
         let(:user_in_originating_space) do
           u = VCAP::CloudController::User.make
           originating_space.organization.add_user(u)
@@ -709,13 +708,13 @@ RSpec.describe 'v3 service credential bindings' do
           u
         end
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
-        let(:details) {
+        let(:details) do
           {
             service_instance: instance,
             credentials: '{"password": "terces"}',
             app: source_app
           }
-        }
+        end
 
         before do
           instance.add_shared_space(shared_space)
@@ -724,12 +723,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the originating space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
 
-          it 'should return the credentials for users in the originating space' do
+          it 'returns the credentials for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(200)
           end
 
-          it 'should return 404 for users in the shared space' do
+          it 'returns 404 for users in the shared space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(404)
           end
@@ -738,12 +737,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the shared space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
 
-          it 'should return 404 for users in the originating space' do
+          it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(404)
           end
 
-          it 'should return the credentials for users in the shared space space' do
+          it 'returns the credentials for users in the shared space space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(200)
           end
@@ -758,13 +757,13 @@ RSpec.describe 'v3 service credential bindings' do
       let(:credentials) { { 'username' => 'cinnamon', 'password' => 'roll' } }
       let(:credhub_response_status) { 200 }
       let(:credhub_response_body) { { data: [{ value: credentials }] }.to_json }
-      let!(:credhub_server_stub) {
+      let!(:credhub_server_stub) do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{key_binding.credhub_reference}&current=true").
           with(headers: {
-            'Authorization' => 'Bearer my-favourite-access-token',
-            'Content-Type' => 'application/json'
-          }).to_return(status: credhub_response_status, body: credhub_response_body)
-      }
+                 'Authorization' => 'Bearer my-favourite-access-token',
+                 'Content-Type' => 'application/json'
+               }).to_return(status: credhub_response_status, body: credhub_response_body)
+      end
 
       before do
         token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
@@ -815,10 +814,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(503)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Fetching credentials from CredHub failed; reason: cred does not exist',
-            'title' => 'CF-ServiceUnavailable',
-            'code' => 10015,
-          }))
+                                                                 'detail' => 'Fetching credentials from CredHub failed; reason: cred does not exist',
+                                                                 'title' => 'CF-ServiceUnavailable',
+                                                                 'code' => 10_015
+                                                               }))
         end
       end
 
@@ -831,10 +830,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(503)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Fetching credentials from CredHub failed; reason: Server error, status: 500',
-            'title' => 'CF-ServiceUnavailable',
-            'code' => 10015,
-          }))
+                                                                 'detail' => 'Fetching credentials from CredHub failed; reason: Server error, status: 500',
+                                                                 'title' => 'CF-ServiceUnavailable',
+                                                                 'code' => 10_015
+                                                               }))
         end
       end
     end
@@ -842,10 +841,10 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'GET /v3/service_credential_bindings/:binding_guid/parameters' do
     let(:binding_params) { { foo: 'bar', baz: 'xyzzy' }.with_indifferent_access }
-    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
     let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) }
     let(:guid) { binding.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/parameters", nil, user_headers } }
 
     context 'permissions' do
@@ -863,12 +862,12 @@ RSpec.describe 'v3 service credential bindings' do
       describe 'when the service instance is shared' do
         let(:originating_space) { VCAP::CloudController::Space.make }
         let(:shared_space) { space }
-        let(:user_in_shared_space) {
+        let(:user_in_shared_space) do
           u = VCAP::CloudController::User.make
           shared_space.organization.add_user(u)
           shared_space.add_developer(u)
           u
-        }
+        end
         let(:user_in_originating_space) do
           u = VCAP::CloudController::User.make
           originating_space.organization.add_user(u)
@@ -885,12 +884,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the originating space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
 
-          it 'should return the parameters for users in the originating space' do
+          it 'returns the parameters for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(200)
           end
 
-          it 'should return 404 for users in the shared space' do
+          it 'returns 404 for users in the shared space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(404)
           end
@@ -899,12 +898,12 @@ RSpec.describe 'v3 service credential bindings' do
         context 'bindings in the shared space' do
           let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
 
-          it 'should return 404 for users in the originating space' do
+          it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
             expect(last_response).to have_status_code(404)
           end
 
-          it 'should return the parameters for users in the shared space space' do
+          it 'returns the parameters for users in the shared space space' do
             api_call.call(headers_for(user_in_shared_space))
             expect(last_response).to have_status_code(200)
           end
@@ -918,7 +917,7 @@ RSpec.describe 'v3 service credential bindings' do
           instance.service.update(bindings_retrievable: false)
         end
 
-        it 'should fail as can not be done' do
+        it 'fails as can not be done' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(502)
@@ -935,7 +934,7 @@ RSpec.describe 'v3 service credential bindings' do
             binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
           end
 
-          it 'should fail as not allowed' do
+          it 'fails as not allowed' do
             api_call.call(admin_headers)
 
             expect(last_response).to have_status_code(409)
@@ -948,14 +947,14 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           it 'sends a request to the broker including the identity header' do
-            api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+            api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
 
             broker_binding_url = "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
             encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, broker_binding_url).
                 with(
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -978,7 +977,7 @@ RSpec.describe 'v3 service credential bindings' do
           instance.service.update(bindings_retrievable: false)
         end
 
-        it 'should fail as can not be done' do
+        it 'fails as can not be done' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(502)
@@ -992,14 +991,14 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         it 'sends a request to the broker including the identity header' do
-          api_call.call(headers_for(user, scopes: %w(cloud_controller.admin)))
+          api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
 
           broker_binding_url = "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
           encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
           expect(
             a_request(:get, broker_binding_url).
               with(
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
         end
@@ -1017,20 +1016,20 @@ RSpec.describe 'v3 service credential bindings' do
   describe 'POST /v3/service_credential_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_credential_bindings', create_body.to_json, user_headers } }
     let(:request_extra) { {} }
-    let(:service_instance_details) {
+    let(:service_instance_details) do
       {
         syslog_drain_url: 'http://syslog.example.com/wow',
         credentials: { password: 'foo' }
       }
-    }
+    end
     let(:service_instance_guid) { service_instance.guid }
 
     context 'creating a credential binding to an app' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
       let!(:app_annotations) { VCAP::CloudController::AppAnnotationModel.make(app: app_to_bind_to, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar') }
       let(:app_guid) { app_to_bind_to.guid }
       let(:binding_name) { 'some-name' }
-      let(:create_body) {
+      let(:create_body) do
         {
           type: 'app',
           name: binding_name,
@@ -1043,7 +1042,7 @@ RSpec.describe 'v3 service credential bindings' do
             annotations: { foz: 'baz' }
           }
         }.merge(request_extra)
-      }
+      end
 
       RSpec.shared_examples 'validation of credential binding' do
         it 'returns 422 when type is missing' do
@@ -1052,10 +1051,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Type must be 'app' or 'key'"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include("Type must be 'app' or 'key'"),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
 
         it 'returns 422 when service instance relationship is not included' do
@@ -1063,10 +1062,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Relationships Service instance can't be blank"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include("Relationships Service instance can't be blank"),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
 
         it 'returns 422 when the binding already exists' do
@@ -1077,10 +1076,10 @@ RSpec.describe 'v3 service credential bindings' do
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('The app is already bound to the service instance'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('The app is already bound to the service instance'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
 
         context 'when the service instance does not exist' do
@@ -1090,10 +1089,10 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The service instance could not be found: 'fake-instance'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include("The service instance could not be found: 'fake-instance'"),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1104,10 +1103,10 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The app could not be found: 'fake-app'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include("The app could not be found: 'fake-app'"),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1126,10 +1125,10 @@ RSpec.describe 'v3 service credential bindings' do
               api_call.call space_dev_headers
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(include({
-                'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              }))
+                                                                     'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+                                                                     'title' => 'CF-UnprocessableEntity',
+                                                                     'code' => 10_008
+                                                                   }))
             end
           end
 
@@ -1140,10 +1139,10 @@ RSpec.describe 'v3 service credential bindings' do
               api_call.call space_dev_headers
               expect(last_response).to have_status_code(422)
               expect(parsed_response['errors']).to include(include({
-                'detail' => include("The app could not be found: '#{app_guid}'"),
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              }))
+                                                                     'detail' => include("The app could not be found: '#{app_guid}'"),
+                                                                     'title' => 'CF-UnprocessableEntity',
+                                                                     'code' => 10_008
+                                                                   }))
             end
           end
         end
@@ -1155,29 +1154,30 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("Relationships App can't be blank"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include("Relationships App can't be blank"),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
         context 'when the service instance and the app are not in the same space' do
           let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
+
           it 'returns a 422 error' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('The service instance and the app are in different spaces'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('The service instance and the app are in different spaces'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
       end
 
       context 'user-provided service' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
+        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, **service_instance_details) }
 
         context 'permissions' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
@@ -1216,7 +1216,7 @@ RSpec.describe 'v3 service credential bindings' do
                 state: 'succeeded',
                 created_at: iso8601,
                 updated_at: iso8601,
-                description: nil,
+                description: nil
               },
               metadata: {
                 annotations: {
@@ -1263,9 +1263,9 @@ RSpec.describe 'v3 service credential bindings' do
             get "/v3/service_credential_bindings/#{@binding_guid}/details", {}, admin_headers
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to match_json_response({
-              credentials: { password: 'foo' },
-              syslog_drain_url: 'http://syslog.example.com/wow'
-            })
+                                                             credentials: { password: 'foo' },
+                                                             syslog_drain_url: 'http://syslog.example.com/wow'
+                                                           })
           end
         end
 
@@ -1279,7 +1279,7 @@ RSpec.describe 'v3 service credential bindings' do
                 'service-id' => OpenSSL::Digest.hexdigest('SHA256', 'user-provided'),
                 'service-instance-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.guid),
                 'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
-                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -1301,10 +1301,10 @@ RSpec.describe 'v3 service credential bindings' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                'detail' => 'Binding parameters are not supported for user-provided service instances',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008,
-              })
+                        'detail' => 'Binding parameters are not supported for user-provided service instances',
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
             )
 
             expect(VCAP::CloudController::ServiceBinding.all).to be_empty
@@ -1367,10 +1367,10 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('Service plan does not allow bindings'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('Service plan does not allow bindings'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
 
           it 'responds with 422 when there is an operation in progress for the service instance' do
@@ -1378,10 +1378,10 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call admin_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('There is an operation in progress for the service instance'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('There is an operation in progress for the service instance'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1402,7 +1402,7 @@ RSpec.describe 'v3 service credential bindings' do
                 'service-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
                 'service-instance-id' => OpenSSL::Digest::SHA256.hexdigest(service_instance.guid),
                 'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_guid),
-                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+                'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -1418,19 +1418,19 @@ RSpec.describe 'v3 service credential bindings' do
       let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
       let(:binding_name) { Sham.name }
-      let(:create_body) {
+      let(:create_body) do
         {
           type: 'key',
           name: binding_name,
           relationships: {
-            service_instance: { data: { guid: service_instance_guid } },
+            service_instance: { data: { guid: service_instance_guid } }
           },
           metadata: {
             labels: { foo: 'bar' },
             annotations: { foz: 'baz' }
           }
         }.merge(request_extra)
-      }
+      end
 
       context 'permissions' do
         context 'users in the originating service instance space' do
@@ -1465,10 +1465,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Type must be 'app' or 'key'"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include("Type must be 'app' or 'key'"),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
 
         it 'returns 422 when service instance relationship is not included' do
@@ -1476,10 +1476,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include("Relationships 'relationships' must include one or more valid relationships"),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include("Relationships 'relationships' must include one or more valid relationships"),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
 
         context 'when the service instance does not exist' do
@@ -1490,10 +1490,10 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The service instance could not be found: 'fake-instance'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include("The service instance could not be found: 'fake-instance'"),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1510,52 +1510,45 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call space_dev_headers
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include("The service instance could not be found: '#{service_instance_guid}'"),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
         context 'when a key with the same name exists for that SI' do
-          let(:service_cred_binding) {
-            VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
-          }
-          let(:create_body) {
+          let(:cred_binding) do
+            VCAP::CloudController::ServiceKey.make(service_instance:)
+          end
+          let(:create_body) do
             {
               type: 'key',
-              name: service_cred_binding.name,
+              name: cred_binding.name,
               relationships: {
-                service_instance: { data: { guid: service_instance_guid } },
+                service_instance: { data: { guid: service_instance_guid } }
               }
             }.merge(request_extra)
-          }
+          end
 
           it 'returns a 422' do
             api_call.call space_dev_headers
 
             expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(include({
-              'detail' => include(
-                "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{service_cred_binding.name}'."),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+            error_message = "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name '#{cred_binding.name}'."
+            expect(parsed_response['errors']).to include(include({ 'detail' => include(error_message), 'title' => 'CF-UnprocessableEntity', 'code' => 10_008 }))
           end
         end
 
         context 'when the service instance is user-provided' do
-          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, **service_instance_details) }
+          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, **service_instance_details) }
 
           it 'returns a 422' do
             api_call.call admin_headers
 
             expect(last_response).to have_status_code(422)
-            expect(parsed_response['errors']).to include(include({
-              'detail' => include("Service credential bindings of type 'key' are not supported for user-provided service instances."),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+            error_message = "Service credential bindings of type 'key' are not supported for user-provided service instances."
+            expect(parsed_response['errors']).to include(include({ 'detail' => include(error_message), 'title' => 'CF-UnprocessableEntity', 'code' => 10_008 }))
           end
         end
 
@@ -1568,10 +1561,10 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(include({
-              'detail' => include('Service plan does not allow bindings.'),
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008,
-            }))
+                                                                   'detail' => include('Service plan does not allow bindings.'),
+                                                                   'title' => 'CF-UnprocessableEntity',
+                                                                   'code' => 10_008
+                                                                 }))
           end
         end
 
@@ -1582,7 +1575,7 @@ RSpec.describe 'v3 service credential bindings' do
                 quota = VCAP::CloudController::SpaceQuotaDefinition.make(total_service_keys: 1, organization: org)
                 quota.add_space(space)
 
-                VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
+                VCAP::CloudController::ServiceKey.make(service_instance:)
               end
 
               it 'returns an error' do
@@ -1590,10 +1583,10 @@ RSpec.describe 'v3 service credential bindings' do
                 expect(last_response).to have_status_code(422)
                 expect(parsed_response['errors']).to include(
                   include({
-                    'detail' => "You have exceeded your space's limit for service binding of type key.",
-                    'title' => 'CF-UnprocessableEntity',
-                    'code' => 10008,
-                  })
+                            'detail' => "You have exceeded your space's limit for service binding of type key.",
+                            'title' => 'CF-UnprocessableEntity',
+                            'code' => 10_008
+                          })
                 )
               end
             end
@@ -1604,7 +1597,7 @@ RSpec.describe 'v3 service credential bindings' do
               before do
                 quota = VCAP::CloudController::QuotaDefinition.make(total_service_keys: 1)
                 quota.add_organization(org)
-                VCAP::CloudController::ServiceKey.make(service_instance: service_instance)
+                VCAP::CloudController::ServiceKey.make(service_instance:)
               end
 
               it 'returns an error' do
@@ -1612,10 +1605,10 @@ RSpec.describe 'v3 service credential bindings' do
                 expect(last_response).to have_status_code(422)
                 expect(parsed_response['errors']).to include(
                   include({
-                    'detail' => "You have exceeded your organization's limit for service binding of type key.",
-                    'title' => 'CF-UnprocessableEntity',
-                    'code' => 10008,
-                  })
+                            'detail' => "You have exceeded your organization's limit for service binding of type key.",
+                            'title' => 'CF-UnprocessableEntity',
+                            'code' => 10_008
+                          })
                 )
               end
             end
@@ -1632,21 +1625,21 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   describe 'PATCH /v3/service_credential_bindings/:guid' do
-    let(:api_call) { lambda { |user_headers| patch "/v3/service_credential_bindings/#{guid}", update_request_body.to_json, user_headers } }
+    let(:api_call) { ->(user_headers) { patch "/v3/service_credential_bindings/#{guid}", update_request_body.to_json, user_headers } }
 
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let(:guid) { binding.guid }
     let(:labels) { { potato: 'sweet' } }
     let(:annotations) { { style: 'mashed', amount: 'all' } }
-    let(:update_request_body) {
+    let(:update_request_body) do
       {
         metadata: {
-          labels: labels,
-          annotations: annotations
+          labels:,
+          annotations:
         }
       }
-    }
-    let(:response_object) { expected_json(binding, labels: labels, annotations: annotations) }
+    end
+    let(:response_object) { expected_json(binding, labels:, annotations:) }
 
     context 'key credential binding' do
       let(:binding) do
@@ -1666,7 +1659,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'app credential binding' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) { |binding| operate_on(binding) }
       end
@@ -1726,10 +1719,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service instance'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service instance'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
 
@@ -1740,10 +1733,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service binding.'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service binding.'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
 
@@ -1756,10 +1749,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call admin_headers
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('There is an operation in progress for the service binding.'),
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008,
-          }))
+                                                                 'detail' => include('There is an operation in progress for the service binding.'),
+                                                                 'title' => 'CF-UnprocessableEntity',
+                                                                 'code' => 10_008
+                                                               }))
         end
       end
 
@@ -1774,7 +1767,7 @@ RSpec.describe 'v3 service credential bindings' do
         context 'and the broker accepts the delete request' do
           before do
             @delete_stub = stub_request(:delete, broker_unbind_url).
-                           with(query: query).
+                           with(query:).
                            to_return(status: 202, body: '{"operation": "very important delete info"}', headers: {})
 
             @last_op_stub = stub_request(:get, "#{broker_unbind_url}/last_operation").
@@ -1800,7 +1793,7 @@ RSpec.describe 'v3 service credential bindings' do
         context 'and the broker rejects the delete request' do
           before do
             stub_request(:delete, broker_unbind_url).
-              with(query: query).
+              with(query:).
               to_return(status: 422, body: '{"error": "ConcurrencyError"}', headers: {})
 
             api_call.call(admin_headers)
@@ -1822,7 +1815,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(202)
 
           stub_request(:delete, broker_unbind_url).
-            with(query: query).
+            with(query:).
             to_return(status: broker_unbind_status_code, body: broker_response.to_json, headers: {})
         end
 
@@ -1834,7 +1827,7 @@ RSpec.describe 'v3 service credential bindings' do
             a_request(:delete, broker_unbind_url).
               with(
                 query: query,
-                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
         end
@@ -1861,35 +1854,35 @@ RSpec.describe 'v3 service credential bindings' do
             expect(event).to be
             expect(event.actee).to eq(binding.guid)
             expect(event.data).to include({
-              'request' => {
-                'app_guid' => bound_app&.guid,
-                'route_guid' => nil,
-                'service_instance_guid' => service_instance.guid
-              }
-            })
+                                            'request' => {
+                                              'app_guid' => bound_app&.guid,
+                                              'route_guid' => nil,
+                                              'service_instance_guid' => service_instance.guid
+                                            }
+                                          })
           end
         end
 
         context 'when the unbind completes asynchronously' do
           let(:broker_unbind_status_code) { 202 }
           let(:operation) { Sham.guid }
-          let(:broker_response) { { operation: operation } }
+          let(:broker_response) { { operation: } }
           let(:broker_binding_last_operation_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}/last_operation" }
           let(:last_operation_status_code) { 200 }
           let(:description) { Sham.description }
           let(:state) { 'in progress' }
           let(:last_operation_body) do
             {
-              description: description,
-              state: state,
+              description:,
+              state:
             }
           end
 
           before do
             stub_request(:get, broker_binding_last_operation_url).
               with(query: hash_including({
-                operation: operation
-              })).
+                                           operation:
+                                         })).
               to_return(status: last_operation_status_code, body: last_operation_body.to_json, headers: {})
           end
 
@@ -1901,11 +1894,11 @@ RSpec.describe 'v3 service credential bindings' do
               a_request(:get, broker_binding_last_operation_url).
                 with(
                   query: {
-                  operation: operation,
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id
+                  },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
           end
@@ -1928,12 +1921,12 @@ RSpec.describe 'v3 service credential bindings' do
             expect(event).to be
             expect(event.actee).to eq(binding.guid)
             expect(event.data).to include({
-              'request' => {
-                'app_guid' => bound_app&.guid,
-                'route_guid' => nil,
-                'service_instance_guid' => service_instance.guid
-              }
-            })
+                                            'request' => {
+                                              'app_guid' => bound_app&.guid,
+                                              'route_guid' => nil,
+                                              'service_instance_guid' => service_instance.guid
+                                            }
+                                          })
           end
 
           it 'enqueues the next fetch last operation job' do
@@ -1953,11 +1946,11 @@ RSpec.describe 'v3 service credential bindings' do
               a_request(:get, broker_binding_last_operation_url).
                 with(
                   query: {
-                  operation: operation,
-                  service_id: service_instance.service_plan.service.unique_id,
-                  plan_id: service_instance.service_plan.unique_id,
-                },
-                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" },
+                    operation: operation,
+                    service_id: service_instance.service_plan.service.unique_id,
+                    plan_id: service_instance.service_plan.unique_id
+                  },
+                  headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.twice
           end
@@ -1981,12 +1974,12 @@ RSpec.describe 'v3 service credential bindings' do
               expect(event).to be
               expect(event.actee).to eq(binding.guid)
               expect(event.data).to include({
-                'request' => {
-                  'app_guid' => bound_app&.guid,
-                  'route_guid' => nil,
-                  'service_instance_guid' => service_instance.guid
-                }
-              })
+                                              'request' => {
+                                                'app_guid' => bound_app&.guid,
+                                                'route_guid' => nil,
+                                                'service_instance_guid' => service_instance.guid
+                                              }
+                                            })
             end
           end
 
@@ -2009,12 +2002,12 @@ RSpec.describe 'v3 service credential bindings' do
               expect(event).to be
               expect(event.actee).to eq(binding.guid)
               expect(event.data).to include({
-                'request' => {
-                  'app_guid' => bound_app&.guid,
-                  'route_guid' => nil,
-                  'service_instance_guid' => service_instance.guid
-                }
-              })
+                                              'request' => {
+                                                'app_guid' => bound_app&.guid,
+                                                'route_guid' => nil,
+                                                'service_instance_guid' => service_instance.guid
+                                              }
+                                            })
             end
           end
         end
@@ -2035,7 +2028,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
             expect(job.cf_api_error).not_to be_nil
             error = YAML.safe_load(job.cf_api_error)
-            expect(error['errors'].first['code']).to eq(10009)
+            expect(error['errors'].first['code']).to eq(10_009)
             expect(error['errors'].first['detail']).
               to include('The service broker rejected the request. Status Code: 418 I\'m a Teapot, Body: "nope"')
           end
@@ -2045,27 +2038,27 @@ RSpec.describe 'v3 service credential bindings' do
 
     let(:api_call) { ->(user_headers) { delete "/v3/service_credential_bindings/#{guid}", {}, user_headers } }
     let(:guid) { binding.guid }
-    let(:service_instance_details) {
+    let(:service_instance_details) do
       {
         space: space,
         syslog_drain_url: 'http://syslog.example.com/wow',
         credentials: { password: 'foo' }
       }
-    }
-    let(:bound_app) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:binding_details) {
+    end
+    let(:bound_app) { VCAP::CloudController::AppModel.make(space:) }
+    let(:binding_details) do
       {
         service_instance: service_instance,
         app: bound_app
       }
-    }
+    end
     let(:binding) { VCAP::CloudController::ServiceBinding.make(**binding_details) }
 
     context 'user provided services' do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
 
       context 'permissions' do
-        let(:db_check) {
+        let(:db_check) do
           lambda {
             get "/v3/service_credential_bindings/#{guid}", {}, admin_headers
             expect(last_response).to have_status_code(404)
@@ -2073,7 +2066,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(VCAP::CloudController::ServiceBindingLabelModel.all).to be_empty
             expect(VCAP::CloudController::ServiceBindingAnnotationModel.all).to be_empty
           }
-        }
+        end
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
@@ -2099,18 +2092,18 @@ RSpec.describe 'v3 service credential bindings' do
           expect(event).to be
           expect(event.actee).to eq(binding.guid)
           expect(event.data).to include({
-            'request' => {
-              'app_guid' => bound_app.guid,
-              'route_guid' => nil,
-              'service_instance_guid' => service_instance.guid
-            }
-          })
+                                          'request' => {
+                                            'app_guid' => bound_app.guid,
+                                            'route_guid' => nil,
+                                            'service_instance_guid' => service_instance.guid
+                                          }
+                                        })
         end
       end
     end
 
     context 'managed service instances' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
 
       let(:broker_base_url) { service_instance.service_broker.broker_url }
       let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
@@ -2122,14 +2115,14 @@ RSpec.describe 'v3 service credential bindings' do
         {
           service_id: service_instance.service_plan.service.unique_id,
           plan_id: service_instance.service_plan.unique_id,
-          accepts_incomplete: true,
+          accepts_incomplete: true
         }
       end
-      let(:db_check) {
+      let(:db_check) do
         lambda {
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
         }
-      }
+      end
 
       context 'app binding' do
         context 'permissions' do
@@ -2169,15 +2162,15 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         it_behaves_like 'service credential binding delete endpoint',
-          'service_binding',
-          VCAP::CloudController::ServiceBinding,
-          VCAP::CloudController::ServiceBindingLabelModel,
-          VCAP::CloudController::ServiceBindingAnnotationModel
+                        'service_binding',
+                        VCAP::CloudController::ServiceBinding,
+                        VCAP::CloudController::ServiceBindingLabelModel,
+                        VCAP::CloudController::ServiceBindingAnnotationModel
       end
 
       context 'key bindings' do
         let(:bound_app) { nil }
-        let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+        let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance:) }
 
         context 'permissions' do
           context 'users in the originating service instance space' do
@@ -2217,10 +2210,10 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         it_behaves_like 'service credential binding delete endpoint',
-          'service_key',
-          VCAP::CloudController::ServiceKey,
-          VCAP::CloudController::ServiceKeyLabelModel,
-          VCAP::CloudController::ServiceKeyAnnotationModel
+                        'service_key',
+                        VCAP::CloudController::ServiceKey,
+                        VCAP::CloudController::ServiceKeyLabelModel,
+                        VCAP::CloudController::ServiceKeyAnnotationModel
       end
     end
 
@@ -2232,10 +2225,10 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(include({
-            'detail' => include('Service credential binding not found'),
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          }))
+                                                                 'detail' => include('Service credential binding not found'),
+                                                                 'title' => 'CF-ResourceNotFound',
+                                                                 'code' => 10_010
+                                                               }))
         end
       end
     end
@@ -2256,8 +2249,8 @@ RSpec.describe 'v3 service credential bindings' do
         }
       },
       metadata: {
-        labels: labels,
-        annotations: annotations
+        labels:,
+        annotations:
       },
       links: {
         self: {
@@ -2280,7 +2273,7 @@ RSpec.describe 'v3 service credential bindings' do
     case binding
     when VCAP::CloudController::ServiceKey
       {
-        type: 'key',
+        type: 'key'
       }
     when VCAP::CloudController::ServiceBinding
       {

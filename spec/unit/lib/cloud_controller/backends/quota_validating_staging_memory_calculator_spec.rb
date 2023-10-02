@@ -51,9 +51,9 @@ module VCAP::CloudController
           let(:space_quota_limit) { requested_limit - 1 }
 
           it 'raises MemoryLimitCalculator::SpaceQuotaExceeded' do
-            expect {
+            expect do
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded, /staging requires 100M memory/)
+            end.to raise_error(QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded, /staging requires 100M memory/)
           end
         end
 
@@ -61,9 +61,9 @@ module VCAP::CloudController
           let(:org_quota_limit) { requested_limit - 1 }
 
           it 'raises MemoryLimitCalculator::OrgQuotaExceeded' do
-            expect {
+            expect do
               calculator.get_limit(requested_limit, space, org)
-            }.to raise_error(QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded, /staging requires 100M memory/)
+            end.to raise_error(QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded, /staging requires 100M memory/)
           end
         end
       end
@@ -80,6 +80,7 @@ module VCAP::CloudController
 
     describe '#minimum_limit' do
       let(:expected_limit) { 99 }
+
       before do
         TestConfig.override(staging: { minimum_staging_memory_mb: expected_limit })
       end

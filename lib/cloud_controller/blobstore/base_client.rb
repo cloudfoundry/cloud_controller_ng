@@ -8,7 +8,7 @@ module CloudController
         Find.find(source_dir).each do |path|
           next unless File.file?(path)
           next unless within_limits?(File.size(path))
-          next unless File.stat(path).mode.to_s(8)[3..5].to_i(8) >= 0600
+          next unless File.stat(path).mode.to_s(8)[3..5].to_i(8) >= 0o600
 
           sha1 = Digester.new.digest_path(path)
           next if exists?(sha1)
@@ -26,9 +26,7 @@ module CloudController
       def partitioned_key(key)
         key             = key.to_s.downcase
         partitioned_key = BlobKeyGenerator.full_path_from_key(key)
-        if @root_dir
-          partitioned_key = File.join(@root_dir, partitioned_key)
-        end
+        partitioned_key = File.join(@root_dir, partitioned_key) if @root_dir
         partitioned_key
       end
 

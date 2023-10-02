@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
             protocol: 'tcp',
             destination: '10.10.10.0/24',
             ports: '443,80,8080'
-          },
+          }
         ]
       )
     end
@@ -24,7 +24,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible).to_hash }
+      let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids:, all_spaces_visible:).to_hash }
 
       let(:space1) { VCAP::CloudController::Space.make(guid: 'guid1') }
       let(:space2) { VCAP::CloudController::Space.make(guid: 'guid2') }
@@ -36,8 +36,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(security_group.created_at)
         expect(result[:updated_at]).to eq(security_group.updated_at)
         expect(result[:name]).to eq(security_group.name)
-        expect(result[:globally_enabled][:running]).to eq(true)
-        expect(result[:globally_enabled][:staging]).to eq(false)
+        expect(result[:globally_enabled][:running]).to be(true)
+        expect(result[:globally_enabled][:staging]).to be(false)
         expect(result[:rules]).to eq([
           {
             'protocol' => 'tcp',

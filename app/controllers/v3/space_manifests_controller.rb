@@ -55,7 +55,7 @@ class SpaceManifestsController < ApplicationController
 
     diff = SpaceDiffManifest.generate_diff(parsed_manifests, space)
 
-    render status: :created, json: { diff: diff }
+    render status: :created, json: { diff: }
   end
 
   private
@@ -86,10 +86,10 @@ class SpaceManifestsController < ApplicationController
   end
 
   def validate_content_type!
-    if !request_content_type_is_yaml?
-      logger.error("Content-type isn't yaml: #{request.content_type}")
-      bad_request!('Content-Type must be yaml')
-    end
+    return if request_content_type_is_yaml?
+
+    logger.error("Content-type isn't yaml: #{request.content_type}")
+    bad_request!('Content-Type must be yaml')
   end
 
   def request_content_type_is_yaml?
@@ -104,7 +104,7 @@ class SpaceManifestsController < ApplicationController
   def parsed_app_manifests
     check_version_is_supported!
     parsed_applications = parsed_yaml['applications']
-    raise unprocessable!("Cannot parse manifest with no 'applications' field.") unless parsed_applications.present?
+    raise unprocessable!("Cannot parse manifest with no 'applications' field.") if parsed_applications.blank?
 
     parsed_applications
   end

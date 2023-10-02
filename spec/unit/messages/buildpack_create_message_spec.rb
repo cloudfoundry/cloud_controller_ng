@@ -56,7 +56,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (BuildpackCreateMessage::MAX_BUILDPACK_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -81,8 +81,8 @@ module VCAP::CloudController
         context 'when it is too long' do
           let(:params) { { name: 'the-name', stack: 'B' * (BuildpackCreateMessage::MAX_STACK_LENGTH + 1) } }
 
-          it 'should return an error' do
-            expect(subject).to be_invalid
+          it 'returns an error' do
+            expect(subject).not_to be_valid
             expect(subject.errors[:stack]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end

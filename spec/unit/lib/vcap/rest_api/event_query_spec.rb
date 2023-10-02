@@ -26,9 +26,9 @@ module VCAP::RestAPI
         # mysql does typecasting of strings to ints, so start values at 0
         # so that the query using string tests don't find the 0 values.
         a = EventAuthor.create(num_val: i + 1,
-                               str_val:      "str #{i}",
-                               published:    (i == 0),
-                               published_at: (i == 0) ? nil : Time.at(0).utc + i)
+                               str_val: "str #{i}",
+                               published: (i == 0),
+                               published_at: i == 0 ? nil : Time.at(0).utc + i)
         2.times do |j|
           a.add_event_book(EventBook.create(num_val: j + 1, str_val: "str #{i} #{j}"))
         end
@@ -45,20 +45,20 @@ module VCAP::RestAPI
         describe 'exact query with a guid from a to_many relation' do
           it 'fails to resolve the foreign key' do
             q = "subscriber_guid:#{subscriber1_magazine1.guid}"
-            expect {
+            expect do
               EventQuery.filtered_dataset_from_query_params(EventMagazine, EventMagazine.dataset,
-                                                            Set.new(['subscriber_guid']), q: q)
-            }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                            Set.new(['subscriber_guid']), q:)
+            end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
           end
         end
 
         describe 'IN query with multiple guids from a to_many relation' do
           it 'fails to resolve the foreign key' do
             q = "subscriber_guid IN #{subscriber1_magazine1.guid},#{subscriber1_magazine2.guid}"
-            expect {
+            expect do
               EventQuery.filtered_dataset_from_query_params(EventMagazine, EventMagazine.dataset,
-                                                            Set.new(['subscriber_guid']), q: q)
-            }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
+                                                            Set.new(['subscriber_guid']), q:)
+            end.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
           end
         end
       end

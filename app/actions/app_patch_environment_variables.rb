@@ -24,7 +24,7 @@ module VCAP::CloudController
           app.space,
           @user_audit_info,
           message.audit_hash,
-          manifest_triggered: @manifest_triggered,
+          manifest_triggered: @manifest_triggered
         )
       end
 

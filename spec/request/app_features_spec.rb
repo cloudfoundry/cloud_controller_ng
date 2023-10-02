@@ -11,14 +11,14 @@ RSpec.describe 'App Features' do
 
   describe 'GET /v3/apps/:guid/features' do
     context 'getting a list of available features for the app' do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/features", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features", nil, user_headers } }
       let(:features_response_object) do
         {
           'resources' => [
             {
               'name' => 'ssh',
               'description' => 'Enable SSHing into the app.',
-              'enabled' => true,
+              'enabled' => true
             },
             {
               'name' => 'revisions',
@@ -33,8 +33,8 @@ RSpec.describe 'App Features' do
               'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
               'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
               'next' => nil,
-              'previous' => nil,
-            },
+              'previous' => nil
+            }
         }
       end
 
@@ -70,7 +70,7 @@ RSpec.describe 'App Features' do
     end
 
     context 'ssh app feature' do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/features/ssh", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features/ssh", nil, user_headers } }
       let(:feature_response_object) do
         {
           'name' => 'ssh',
@@ -83,7 +83,7 @@ RSpec.describe 'App Features' do
     end
 
     context 'revisions app feature' do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/features/revisions", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features/revisions", nil, user_headers } }
       let(:feature_response_object) do
         {
           'name' => 'revisions',
@@ -104,7 +104,7 @@ RSpec.describe 'App Features' do
     end
 
     context 'ssh app feature' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/features/ssh", request_body.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/features/ssh", request_body.to_json, user_headers } }
       let(:feature_response_object) do
         {
           'name' => 'ssh',
@@ -138,7 +138,7 @@ RSpec.describe 'App Features' do
     end
 
     context 'revisions app feature' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/apps/#{app_model.guid}/features/revisions", request_body.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/features/revisions", request_body.to_json, user_headers } }
       let(:feature_response_object) do
         {
           'name' => 'revisions',

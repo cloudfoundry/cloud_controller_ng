@@ -2,9 +2,9 @@ require 'presenters/base_error_hasher'
 
 class V2ErrorHasher < BaseErrorHasher
   UNKNOWN_ERROR_HASH = {
-    'error_code'  => 'UnknownError',
+    'error_code' => 'UnknownError',
     'description' => 'An unknown error occurred.',
-    'code'        => 10001,
+    'code' => 10_001
   }.freeze
 
   def unsanitized_hash
@@ -27,16 +27,16 @@ class V2ErrorHasher < BaseErrorHasher
   def api_error_hash
     {
       'description' => error.message,
-      'error_code'  => "CF-#{error.name}",
-      'code'        => error.code,
+      'error_code' => "CF-#{error.name}",
+      'code' => error.code
     }
   end
 
   def services_error_hash
     hash = {
       'description' => error.message,
-      'error_code'  => "CF-#{error.class.name.demodulize}",
-      'code'        => UNKNOWN_ERROR_HASH['code'],
+      'error_code' => "CF-#{error.class.name.demodulize}",
+      'code' => UNKNOWN_ERROR_HASH['code']
     }
     allowed_keys.each do |key|
       hash[key] = error.to_h[key] unless error.to_h[key].nil?
@@ -54,8 +54,8 @@ class V2ErrorHasher < BaseErrorHasher
 
     info = {
       'description' => error.message,
-      'error_code'  => debug_error_code,
-      'backtrace'   => error.backtrace,
+      'error_code' => debug_error_code,
+      'backtrace' => error.backtrace
     }
     info.merge!(error.to_h) if error.respond_to?(:to_h)
 
@@ -67,6 +67,6 @@ class V2ErrorHasher < BaseErrorHasher
   end
 
   def allowed_keys
-    ['error_code', 'description', 'code', 'http']
+    %w[error_code description code http]
   end
 end

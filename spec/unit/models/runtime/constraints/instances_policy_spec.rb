@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe InstancesPolicy do
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
-
   subject(:validator) { InstancesPolicy.new(process) }
+
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
 
   describe 'instances' do
     it 'registers an error if requested instances is negative' do

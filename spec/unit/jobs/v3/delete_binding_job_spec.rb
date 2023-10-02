@@ -5,18 +5,26 @@ require 'jobs/v3/delete_binding_job'
 module VCAP::CloudController
   module V3
     RSpec.describe DeleteBindingJob do
+      let(:subject) do
+        described_class.new(
+          :any,
+          'foo',
+          user_audit_info: {}
+        )
+      end
+
       context 'route' do
-        let(:route) { VCAP::CloudController::Route.make(space: space) }
+        let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
-              service_instance: service_instance,
-              route: route,
+              service_instance:,
+              route:
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
@@ -32,24 +40,16 @@ module VCAP::CloudController
               app: AppModel.make(space: service_instance.space),
               credentials: {
                 test: 'secretPassword'
-              },
+              }
             },
             {
               type: 'create',
               state: 'in progress'
-            },
+            }
           )
         end
 
         it_behaves_like 'delete binding job', :credential
-      end
-
-      let(:subject) do
-        described_class.new(
-          :any,
-          'foo',
-          user_audit_info: {},
-        )
       end
 
       describe '#actor' do
@@ -92,6 +92,7 @@ module VCAP::CloudController
 
       describe '#resource_type' do
         let(:actor) { double('Actor', resource_type: 'super') }
+
         before do
           allow(VCAP::CloudController::V3::DeleteServiceBindingFactory).to receive(:for).and_return(actor)
         end

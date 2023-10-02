@@ -53,10 +53,7 @@ module VCAP::CloudController
 
       it 'adds the segment to the allowed list' do
         subject.assign(isolation_segment_model2, [org])
-        expect(org.isolation_segment_models).to match_array([
-          isolation_segment_model,
-          isolation_segment_model2
-        ])
+        expect(org.isolation_segment_models).to contain_exactly(isolation_segment_model, isolation_segment_model2)
       end
     end
 

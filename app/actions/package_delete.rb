@@ -14,7 +14,8 @@ module VCAP::CloudController
 
         Repositories::PackageEventRepository.record_app_package_delete(
           package,
-          @user_audit_info)
+          @user_audit_info
+        )
       end
 
       []

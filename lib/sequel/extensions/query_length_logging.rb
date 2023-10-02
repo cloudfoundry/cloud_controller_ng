@@ -1,11 +1,9 @@
-# frozen-string-literal: true
+# frozen_string_literal: true
 
 module Sequel::QueryLengthLogging
   # Include SQL query length when logging query.
   def log_connection_yield(sql, conn, args=nil)
-    unless @loggers.empty?
-      sql = "(query_length=#{sql.length}) #{sql}"
-    end
+    sql = "(query_length=#{sql.length}) #{sql}" unless @loggers.empty?
     super
   end
 end

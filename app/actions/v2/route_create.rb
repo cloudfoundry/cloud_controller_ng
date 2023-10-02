@@ -7,14 +7,12 @@ module VCAP::CloudController
       end
 
       def create_route(route_hash:)
-        route = Route.db.transaction do
+        Route.db.transaction do
           r = Route.create_from_hash(route_hash)
           access_validator.validate_access(:create, r)
 
           r
         end
-
-        route
       end
 
       private

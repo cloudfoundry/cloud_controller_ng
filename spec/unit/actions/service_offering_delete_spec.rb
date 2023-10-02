@@ -8,9 +8,9 @@ module VCAP::CloudController
     it 'can delete service offerings' do
       subject.delete(service_offering_model)
 
-      expect {
+      expect do
         service_offering_model.reload
-      }.to raise_error(Sequel::Error, 'Record not found')
+      end.to raise_error(Sequel::Error, 'Record not found')
     end
 
     context 'when the service offering has a service plan' do
@@ -19,9 +19,9 @@ module VCAP::CloudController
       end
 
       it 'does not delete the service offering' do
-        expect {
+        expect do
           subject.delete(service_offering_model)
-        }.to raise_error(
+        end.to raise_error(
           ServiceOfferingDelete::AssociationNotEmptyError,
           'Please delete the service_plans associations for your services.'
         )

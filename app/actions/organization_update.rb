@@ -28,9 +28,7 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, message)
-      if error.errors.on(:name)&.include?(:unique)
-        error!("Organization name '#{message.name}' is already taken.")
-      end
+      error!("Organization name '#{message.name}' is already taken.") if error.errors.on(:name)&.include?(:unique)
       error!(error.message)
     end
 

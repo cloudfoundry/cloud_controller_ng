@@ -12,13 +12,13 @@ module VCAP::CloudController
         let(:maximum_polling_duration_for_plan) {}
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_binding) do
-          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan: service_plan))
+          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan:))
           service_binding.service_binding_operation = service_binding_operation
           service_binding
         end
         let(:last_operation) { service_binding.reload.last_operation }
 
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:default_polling_interval) { 60 }
         let(:user) { User.make }
         let(:user_email) { 'fake@mail.foo' }
@@ -32,7 +32,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(
             broker_client_default_async_poll_interval_seconds: default_polling_interval,
-            broker_client_max_async_poll_duration_minutes: max_duration,
+            broker_client_max_async_poll_duration_minutes: max_duration
           )
         end
 
@@ -42,22 +42,23 @@ module VCAP::CloudController
         end
 
         describe '#initialize' do
-          let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+          let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
 
           context 'when the service plan has maximum_polling_duration' do
             context "when the config value is smaller than plan's maximum_polling_duration" do
               let(:max_duration) { 10 } # in minutes
-              it 'should set end_timestamp to config value' do
+
+              it 'sets end_timestamp to config value' do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
               end
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
+              let(:max_duration) { 1_068_367_346 } # in minutes
 
-              it "should set end_timestamp to the plan's maximum_polling_duration value" do
+              it "sets end_timestamp to the plan's maximum_polling_duration value" do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
               end
@@ -65,7 +66,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a database error in fetching the plan' do
-            it 'should set end_timestamp to config value' do
+            it 'sets end_timestamp to config value' do
               allow(ManagedServiceInstance).to receive(:first) do |e|
                 raise Sequel::Error.new(e)
               end
@@ -79,7 +80,7 @@ module VCAP::CloudController
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
           let(:state) { 'in progress' }
           let(:description) { '10%' }
-          let(:last_operation_response) { { last_operation: { state: state, description: description } } }
+          let(:last_operation_response) { { last_operation: { state:, description: } } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do
@@ -99,7 +100,7 @@ module VCAP::CloudController
                 allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
               end
 
-              it 'should update the service binding operation' do
+              it 'updates the service binding operation' do
                 run_job(job)
                 service_binding.reload
                 expect(service_binding.last_operation.state).to eq('succeeded')
@@ -113,11 +114,11 @@ module VCAP::CloudController
 
                 let(:binding_response) { { credentials: { a: 'b' } } }
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding' do
+                it 'updates the service binding' do
                   service_binding.reload
                   expect(service_binding.credentials).to eq({ 'a' => 'b' })
                 end
@@ -131,11 +132,11 @@ module VCAP::CloudController
 
                 let(:binding_response) { { syslog_drain_url: 'syslog://example.com/awesome-syslog' } }
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding' do
+                it 'updates the service binding' do
                   service_binding.reload
                   expect(service_binding.syslog_drain_url).to eq('syslog://example.com/awesome-syslog')
                 end
@@ -164,34 +165,34 @@ module VCAP::CloudController
                   }
                 end
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding' do
+                it 'updates the service binding' do
                   service_binding.reload
                   expect(service_binding.volume_mounts).to eq([{
-                    'driver' => 'cephdriver',
-                    'container_dir' => '/data/images',
-                    'mode' => 'r',
-                    'device_type' => 'shared',
-                    'device' => {
-                      'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-                      'mount_config' => {
-                        'key' => 'value'
-                      }
-                    }
-                  }])
+                                                                'driver' => 'cephdriver',
+                                                                'container_dir' => '/data/images',
+                                                                'mode' => 'r',
+                                                                'device_type' => 'shared',
+                                                                'device' => {
+                                                                  'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                                                                  'mount_config' => {
+                                                                    'key' => 'value'
+                                                                  }
+                                                                }
+                                                              }])
                 end
               end
 
               context 'and the broker returns invalid credentials' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '200',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: 'invalid' } }
                 let(:response_malformed_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(nil, nil, broker_response, nil) }
 
@@ -199,19 +200,19 @@ module VCAP::CloudController
                   allow(client).to receive(:fetch_service_binding).with(service_binding).and_raise(response_malformed_exception)
                 end
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   run_job(job)
 
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should not perform orphan mitigation' do
+                it 'does not perform orphan mitigation' do
                   expect(client).not_to receive(:unbind)
 
                   run_job(job)
                 end
 
-                it 'should update the service binding last operation' do
+                it 'updates the service binding last operation' do
                   run_job(job)
 
                   service_binding.reload
@@ -219,7 +220,7 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
-                it 'should never show service binding last operation succeeded' do
+                it 'nevers show service binding last operation succeeded' do
                   allow(client).to receive(:fetch_service_binding).with(service_binding) do |service_binding|
                     service_binding.reload
                     expect(service_binding.last_operation.state).to eq('in progress')
@@ -234,7 +235,7 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
-                it 'should not create an audit event' do
+                it 'does not create an audit event' do
                   run_job(job)
 
                   expect(Event.all.count).to eq 0
@@ -242,12 +243,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker returns with invalid status code' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
 
@@ -255,19 +256,19 @@ module VCAP::CloudController
                   allow(client).to receive(:fetch_service_binding).with(service_binding).and_raise(bad_response_exception)
                 end
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   run_job(job)
 
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should not perform orphan mitigation' do
+                it 'does not perform orphan mitigation' do
                   expect(client).not_to receive(:unbind)
 
                   run_job(job)
                 end
 
-                it 'should update the service binding last operation' do
+                it 'updates the service binding last operation' do
                   run_job(job)
 
                   service_binding.reload
@@ -275,7 +276,7 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
-                it 'should not create an audit event' do
+                it 'does not create an audit event' do
                   run_job(job)
 
                   expect(Event.all.count).to eq 0
@@ -283,12 +284,12 @@ module VCAP::CloudController
               end
 
               context 'and the broker response timeout' do
-                let(:broker_response) {
+                let(:broker_response) do
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
                     code: '204',
-                    body: {}.to_json,
+                    body: {}.to_json
                   )
-                }
+                end
                 let(:binding_response) { { credentials: '{}' } }
                 let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new(nil, nil, broker_response) }
 
@@ -296,19 +297,19 @@ module VCAP::CloudController
                   allow(client).to receive(:fetch_service_binding).with(service_binding).and_raise(timeout_exception)
                 end
 
-                it 'should not enqueue another fetch job' do
+                it 'does not enqueue another fetch job' do
                   run_job(job)
 
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should not perform orphan mitigation' do
+                it 'does not perform orphan mitigation' do
                   expect(client).not_to receive(:unbind)
 
                   run_job(job)
                 end
 
-                it 'should update the service binding last operation' do
+                it 'updates the service binding last operation' do
                   run_job(job)
 
                   service_binding.reload
@@ -316,7 +317,7 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
-                it 'should not create an audit event' do
+                it 'does not create an audit event' do
                   run_job(job)
 
                   expect(Event.all.count).to eq 0
@@ -330,7 +331,7 @@ module VCAP::CloudController
 
                 let(:binding_response) { { credentials: { a: 'b' }, parameters: { c: 'd' } } }
 
-                it 'should update the service binding' do
+                it 'updates the service binding' do
                   service_binding.reload
                   expect(service_binding.credentials).to eq({ 'a' => 'b' })
                 end
@@ -341,7 +342,7 @@ module VCAP::CloudController
                   run_job(job)
                 end
 
-                it 'should create audit event' do
+                it 'creates audit event' do
                   event = Event.find(type: 'audit.service_binding.create')
                   expect(event).to be
                   expect(event.actee).to eq(service_binding.guid)
@@ -350,7 +351,7 @@ module VCAP::CloudController
               end
 
               context 'when the user has gone away' do
-                it 'should create an audit event' do
+                it 'creates an audit event' do
                   allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
                   user.destroy
 
@@ -397,13 +398,13 @@ module VCAP::CloudController
                 TestConfig.config[:broker_client_default_async_poll_interval_seconds] = polling_interval
               end
 
-              it 'should not create an audit event' do
+              it 'does not create an audit event' do
                 run_job(job)
                 event = Event.find(type: 'audit.service_binding.create')
                 expect(event).to be_nil
               end
 
-              it 'should update the service binding operation' do
+              it 'updates the service binding operation' do
                 run_job(job)
                 service_binding.reload
                 expect(service_binding.last_operation.description).to eq('50%')
@@ -439,7 +440,7 @@ module VCAP::CloudController
                 expect(service_binding.last_operation.description).to eq('something went wrong')
               end
 
-              it 'should not enqueue another fetch job' do
+              it 'does not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
             end
@@ -453,7 +454,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should mark the service instance operation as failed with appropriate description' do
+              it 'marks the service instance operation as failed with appropriate description' do
                 service_binding.reload
 
                 expect(service_binding.last_operation.state).to eq('failed')
@@ -481,7 +482,7 @@ module VCAP::CloudController
                   run_job(job)
                 end
 
-                it 'should create audit event' do
+                it 'creates audit event' do
                   event = Event.find(type: 'audit.service_binding.delete')
                   expect(event).not_to be_nil
                   expect(event.actee).to eq(service_binding.guid)
@@ -489,7 +490,7 @@ module VCAP::CloudController
               end
 
               context 'when the user has gone away' do
-                it 'should create an audit event' do
+                it 'creates an audit event' do
                   user.destroy
                   run_job(job)
 
@@ -526,17 +527,17 @@ module VCAP::CloudController
                 run_job(job)
               end
 
-              it 'should update the service binding operation' do
+              it 'updates the service binding operation' do
                 service_binding.reload
                 expect(service_binding.last_operation.description).to eq('50%')
               end
 
-              it 'should not create an audit event' do
+              it 'does not create an audit event' do
                 event = Event.find(type: 'audit.service_binding.delete')
                 expect(event).to be_nil
               end
 
-              it 'should enqueue another fetch job' do
+              it 'enqueues another fetch job' do
                 expect(Delayed::Job.count).to eq 1
                 expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceBindingStateFetch)
               end
@@ -556,11 +557,11 @@ module VCAP::CloudController
                 expect(service_binding.last_operation.description).to eq('something went wrong')
               end
 
-              it 'should not enqueue another fetch job' do
+              it 'does not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
 
-              it 'should not create an audit event' do
+              it 'does not create an audit event' do
                 event = Event.find(type: 'audit.service_binding.delete')
                 expect(event).to be_nil
               end
@@ -575,7 +576,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should mark the service instance operation as failed' do
+              it 'marks the service instance operation as failed' do
                 service_binding.reload
 
                 expect(service_binding.last_operation.state).to eq('failed')
@@ -590,7 +591,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceBindingStateFetch)
             end
@@ -609,7 +610,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should not enqueue another fetch job' do
+              it 'does not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
             end
@@ -627,7 +628,7 @@ module VCAP::CloudController
               expect(Delayed::Job.first.last_error).to match(/Invalid response from client/)
             end
 
-            it 'should not enqueue another fetch job in addition to the failed one' do
+            it 'does not enqueue another fetch job in addition to the failed one' do
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first.failed?).to be true
             end
@@ -642,7 +643,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
             end
 
@@ -659,7 +660,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should not enqueue another fetch job' do
+              it 'does not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
             end
@@ -673,7 +674,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
             end
 
@@ -690,7 +691,7 @@ module VCAP::CloudController
                 end
               end
 
-              it 'should not enqueue another fetch job' do
+              it 'does not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
             end
@@ -703,7 +704,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
             end
 
@@ -720,7 +721,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
             end
 
@@ -738,7 +739,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               expect(Delayed::Job.count).to eq 1
             end
 
@@ -756,7 +757,7 @@ module VCAP::CloudController
               run_job(job)
             end
 
-            it 'should not enqueue another fetch job' do
+            it 'does not enqueue another fetch job' do
               expect(Delayed::Job.count).to eq 0
             end
           end

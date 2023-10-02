@@ -23,7 +23,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'fetches all the quotas' do
-          expect(subject).to match_array([quota1, quota2, quota3, default_quota])
+          expect(subject).to contain_exactly(quota1, quota2, quota3, default_quota)
         end
       end
 
@@ -31,7 +31,7 @@ module VCAP::CloudController
         let(:filters) { { 'names' => 'Mercury,Venus' } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota1, quota2])
+          expect(subject).to contain_exactly(quota1, quota2)
         end
       end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
         let(:filters) { { 'guids' => "#{quota2.guid},#{quota3.guid}" } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota2, quota3])
+          expect(subject).to contain_exactly(quota2, quota3)
         end
       end
 
@@ -47,14 +47,14 @@ module VCAP::CloudController
         let(:filters) { { 'organization_guids' => "#{org1.guid},#{org2.guid}" } }
 
         it 'includes the quotas with the provided guids and matching the filter' do
-          expect(subject).to match_array([quota1, quota3])
+          expect(subject).to contain_exactly(quota1, quota3)
         end
 
         context 'and the org guid filter is partially out of scope' do
           let(:visible_org_ids) { [org2.id] }
 
           it 'includes the quotas with the provided guids and matching the filter' do
-            expect(subject).to match_array([quota3])
+            expect(subject).to contain_exactly(quota3)
           end
         end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
           let(:visible_org_ids) { [] }
 
           it 'includes the quotas with the provided guids and matching the filter' do
-            expect(subject).to match_array([])
+            expect(subject).to be_empty
           end
         end
       end

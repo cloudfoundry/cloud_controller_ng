@@ -30,7 +30,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'raises an ApiError with a 404 code' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -43,7 +43,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -58,7 +58,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           'space_auditor' => 404,
           'org_manager' => 404,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -69,7 +69,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
 
               post :apply_manifest, params: { guid: 'non-existent' }, body: request_body.to_yaml, as: :yaml
@@ -90,7 +90,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           'space_auditor' => 403,
           'org_manager' => 403,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -101,7 +101,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
 
               post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
@@ -119,7 +119,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 
@@ -128,95 +128,58 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
 
       context 'when specified manifest fails validations' do
         let(:request_body) do
           { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit',
-            'command' => '', 'env' => 42,
-            'health-check-http-endpoint' => '/endpoint',
-            'health-check-invocation-timeout' => -22,
-            'health-check-type' => 'foo',
-            'readiness_health-check-http-endpoint' => 'potato-potahto',
-            'readiness_health-check-invocation-timeout' => -2,
-            'readiness_health-check-type' => 'meow',
-            'timeout' => -42,
-            'random-route' => -42,
-            'routes' => [{ 'route' => 'garbage' }],
-          }] }
+                                 'command' => '', 'env' => 42,
+                                 'health-check-http-endpoint' => '/endpoint',
+                                 'health-check-invocation-timeout' => -22,
+                                 'health-check-type' => 'foo',
+                                 'readiness_health-check-http-endpoint' => 'potato-potahto',
+                                 'readiness_health-check-invocation-timeout' => -2,
+                                 'readiness_health-check-type' => 'meow',
+                                 'timeout' => -42,
+                                 'random-route' => -42,
+                                 'routes' => [{ 'route' => 'garbage' }] }] }
         end
 
         it 'returns a 422 and validation errors' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           errors = parsed_body['errors']
           expect(errors.size).to eq(14)
-          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-            {
-              'detail' => 'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008
-            }, {
-            'detail' => 'For application \'blah\': Process "web": Instances must be greater than or equal to 0',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Command must be between 1 and 4096 characters',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Env must be an object of keys and values',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Health check type must be "http" to set a health check HTTP endpoint',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Health check type must be "port", "process", or "http"',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Health check invocation timeout must be greater than or equal to 1',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Readiness health check type must be "http" to set a health check HTTP endpoint',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Readiness health check type must be "port", "process", or "http"',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Readiness health check invocation timeout must be greater than or equal to 1',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Readiness health check http endpoint must be a valid URI path',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Process "web": Timeout must be greater than or equal to 1',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => "For application 'blah': The route 'garbage' is not a properly formed URL",
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'For application \'blah\': Random-route must be a boolean',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }
-          ])
+          def error_message(detail)
+            { 'detail' => detail, 'title' => 'CF-UnprocessableEntity', 'code' => 10_008 }
+          end
+
+          messages = [
+            'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+            'For application \'blah\': Process "web": Instances must be greater than or equal to 0',
+            'For application \'blah\': Process "web": Command must be between 1 and 4096 characters',
+            'For application \'blah\': Env must be an object of keys and values',
+            'For application \'blah\': Process "web": Health check type must be "http" to set a health check HTTP endpoint',
+            'For application \'blah\': Process "web": Health check type must be "port", "process", or "http"',
+            'For application \'blah\': Process "web": Health check invocation timeout must be greater than or equal to 1',
+            'For application \'blah\': Process "web": Readiness health check type must be "http" to set a health check HTTP endpoint',
+            'For application \'blah\': Process "web": Readiness health check type must be "port", "process", or "http"',
+            'For application \'blah\': Process "web": Readiness health check invocation timeout must be greater than or equal to 1',
+            'For application \'blah\': Process "web": Readiness health check http endpoint must be a valid URI path',
+            'For application \'blah\': Process "web": Timeout must be greater than or equal to 1',
+            "For application 'blah': The route 'garbage' is not a properly formed URL",
+            'For application \'blah\': Random-route must be a boolean'
+          ]
+
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array(messages.map { |message| error_message(message) })
         end
       end
 
       context 'when the request payload is not yaml' do
         let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1 }] } }
+
         before do
           allow(CloudController::Errors::ApiError).to receive(:new_from_details).and_call_original
           request.headers['CONTENT_TYPE'] = 'text/plain'
@@ -224,7 +187,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 400' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml
-          expect(response.status).to eq(400)
+          expect(response).to have_http_status(:bad_request)
           # Verify we're getting the InvalidError we're expecting
           expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('BadRequest', 'Content-Type must be yaml').exactly :once
         end
@@ -237,7 +200,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           parsed_response = MultiJson.load(response.body)
           expect(parsed_response['errors'][0]['detail']).to match(/For application at index 0:/)
         end
@@ -254,7 +217,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the buildpack' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -271,10 +234,10 @@ RSpec.describe SpaceManifestsController, type: :controller do
             [{ 'name' => 'blah', 'instances' => 4, 'buildpack' => 'null' }] }
         end
 
-        it 'should autodetect the buildpack' do
+        it 'autodetects the buildpack' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq(1)
 
@@ -294,16 +257,15 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-            {
-              'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008
-            }
-          ])
+          expected_error = [
+            'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10_008
+          ]
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array(expected_error)
         end
       end
     end
@@ -318,7 +280,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the buildpacks' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -339,16 +301,15 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-            {
-              'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008
-            }
-          ])
+          expected_error = [
+            'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10_008
+          ]
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array(expected_error)
         end
       end
 
@@ -361,19 +322,17 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns a 422 and a useful error to the user' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq 0
 
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-            {
-              'detail' => "For application 'burger-king': Specified unknown buildpack name: \"badpack\"",
-              'title' => 'CF-UnprocessableEntity',
-              'code' => 10008
-            }
-          ])
+          expect(errors.map { |h| h.except('test_mode_info') }).to contain_exactly({
+                                                                                     'detail' => "For application 'burger-king': Specified unknown buildpack name: \"badpack\"",
+                                                                                     'title' => 'CF-UnprocessableEntity',
+                                                                                     'code' => 10_008
+                                                                                   })
         end
       end
     end
@@ -394,7 +353,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'sets the docker image' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -412,16 +371,15 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
-          expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-            {
-                'detail' => "For application 'blah': Docker cannot be configured for a buildpack lifecycle app.",
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008
-            }
-          ])
+          expected_error = [{
+            'detail' => "For application 'blah': Docker cannot be configured for a buildpack lifecycle app.",
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10_008
+          }]
+          expect(errors.map { |h| h.except('test_mode_info') }).to match_array(expected_error)
         end
       end
     end
@@ -435,7 +393,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the stack' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -456,7 +414,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -477,7 +435,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -498,7 +456,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -519,7 +477,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -540,7 +498,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -561,7 +519,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -582,7 +540,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -603,7 +561,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the command' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -619,36 +577,33 @@ RSpec.describe SpaceManifestsController, type: :controller do
       let(:request_body) do
         { 'applications' =>
           [{ 'name' => 'blah',
-            'metadata' => {
-              'labels' => {
-                'potato' => 'idaho',
-                'myspace.com/songs' => 'missing',
-              },
-              'annotations' => {
-                'potato' => 'yam',
-                'juice' => 'newton',
-              },
-            },
-          },
+             'metadata' => {
+               'labels' => {
+                 'potato' => 'idaho',
+                 'myspace.com/songs' => 'missing'
+               },
+               'annotations' => {
+                 'potato' => 'yam',
+                 'juice' => 'newton'
+               }
+             } },
            { 'name' => 'choo',
              'metadata' => {
                'labels' => {
                  'potato' => 'idaho',
-                 'myspace.com/songs' => nil,
+                 'myspace.com/songs' => nil
                },
                'annotations' => {
                  'potato' => nil,
-                 'juice' => 'newton',
-               },
-             },
-           }
-          ] }
+                 'juice' => 'newton'
+               }
+             } }] }
       end
 
       it 'applies the metadata' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
@@ -656,19 +611,23 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(aspace.guid).to eq space.guid
           app_update_message = app_guid_message_hash.entries.first[1].app_update_message
           expect(app_update_message.labels).to eq({
-            potato: 'idaho',
-            'myspace.com/songs': 'missing' })
+                                                    potato: 'idaho',
+                                                    'myspace.com/songs': 'missing'
+                                                  })
           expect(app_update_message.annotations).to eq({
-            potato: 'yam',
-            juice: 'newton', })
+                                                         potato: 'yam',
+                                                         juice: 'newton'
+                                                       })
 
           app_update_message = app_guid_message_hash.entries[1][1].app_update_message
           expect(app_update_message.labels).to eq({
-            potato: 'idaho',
-            'myspace.com/songs': nil })
+                                                    potato: 'idaho',
+                                                    'myspace.com/songs': nil
+                                                  })
           expect(app_update_message.annotations).to eq({
-            potato: nil,
-            juice: 'newton', })
+                                                         potato: nil,
+                                                         juice: 'newton'
+                                                       })
 
           expect(action).to eq app_apply_manifest_action
         end
@@ -684,7 +643,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the environment' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -705,7 +664,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       it 'sets the route' do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-        expect(response.status).to eq(202)
+        expect(response).to have_http_status(:accepted)
         space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
         expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -720,7 +679,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
     it 'successfully scales the app in a background job' do
       post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
       expect(space_apply_manifest_jobs.count).to eq 1
 
@@ -734,11 +693,9 @@ RSpec.describe SpaceManifestsController, type: :controller do
     it 'creates a job to track the applying the app manifest and returns it in the location header' do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
 
-      expect {
+      expect do
         post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-      }.to change {
-        VCAP::CloudController::PollableJobModel.count
-      }.by(1)
+      end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
 
       job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
@@ -748,13 +705,13 @@ RSpec.describe SpaceManifestsController, type: :controller do
       expect(job.resource_guid).to eq(space.guid)
       expect(job.resource_type).to eq('space')
 
-      expect(response.status).to eq(202)
+      expect(response).to have_http_status(:accepted)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
 
     describe 'emitting an audit event' do
       let(:request_body) do
-        { 'applications' => [{ 'name' => 'blah', 'buildpacks' => ['ruby_buildpack', 'go_buildpack'] }] }
+        { 'applications' => [{ 'name' => 'blah', 'buildpacks' => %w[ruby_buildpack go_buildpack] }] }
       end
       let(:app_event_repository) { instance_double(VCAP::CloudController::Repositories::AppEventRepository) }
 
@@ -779,7 +736,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:request_body) do
           { 'applications' => [
             { 'name' => app1.name, 'instances' => 2 },
-            { 'name' => app2.name, 'instances' => 4 },
+            { 'name' => app2.name, 'instances' => 4 }
           ] }
         end
 
@@ -793,28 +750,29 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
           it 'returns manifest errors associated with their apps' do
             post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-            expect(response.status).to eq(422)
+            expect(response).to have_http_status(:unprocessable_entity)
             errors = parsed_body['errors']
             expect(errors.size).to eq(2)
-            expect(errors.map { |h| h.except('test_mode_info') }).to match_array([
-              {
-                'detail' => 'For application \'honey\': Process "web": Instances must be greater than or equal to 0',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008
-              },
-              {
-                'detail' => 'For application \'nut\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-                'title' => 'CF-UnprocessableEntity',
-                'code' => 10008
-              },
-            ])
+            processed_errors = errors.map { |h| h.except('test_mode_info') }
+
+            expected_errors = [{
+              'detail' => 'For application \'honey\': Process "web": Instances must be greater than or equal to 0',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10_008
+            }, {
+              'detail' => 'For application \'nut\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10_008
+            }]
+
+            expect(processed_errors).to match_array(expected_errors)
           end
         end
 
         it 'successfully scales all apps in a single background job' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq 1
 

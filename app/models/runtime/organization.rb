@@ -10,110 +10,110 @@ module VCAP::CloudController
     one_to_many :spaces
 
     many_to_one :default_isolation_segment_model,
-      class:       'VCAP::CloudController::IsolationSegmentModel',
-      primary_key: :guid,
-      key:         :default_isolation_segment_guid
+                class: 'VCAP::CloudController::IsolationSegmentModel',
+                primary_key: :guid,
+                key: :default_isolation_segment_guid
 
     many_to_many :isolation_segment_models,
-      left_key:          :organization_guid,
-      left_primary_key:  :guid,
-      right_key:         :isolation_segment_guid,
-      right_primary_key: :guid,
-      join_table:        :organizations_isolation_segments,
-      # These are needed because we do not set the default isolation segment
-      # for an organization. This happens as part of the action on an
-      # Isolation Segment.
-      before_add:    proc { cannot_create! },
-      before_remove: proc { cannot_update! }
+                 left_key: :organization_guid,
+                 left_primary_key: :guid,
+                 right_key: :isolation_segment_guid,
+                 right_primary_key: :guid,
+                 join_table: :organizations_isolation_segments,
+                 # These are needed because we do not set the default isolation segment
+                 # for an organization. This happens as part of the action on an
+                 # Isolation Segment.
+                 before_add: proc { cannot_create! },
+                 before_remove: proc { cannot_update! }
 
     one_to_many :service_instances,
-      dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
+                dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
 
     one_to_many :managed_service_instances,
-      dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces, is_gateway_service: true) }
+                dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces, is_gateway_service: true) }
 
     one_to_many :apps,
-      class:   'VCAP::CloudController::ProcessModel',
-      dataset: -> { ProcessModel.filter(space: spaces, type: ProcessTypes::WEB) }
+                class: 'VCAP::CloudController::ProcessModel',
+                dataset: -> { ProcessModel.filter(space: spaces, type: ProcessTypes::WEB) }
 
     one_to_many :processes,
-      dataset: -> { ProcessModel.filter(space: spaces) }
+                dataset: -> { ProcessModel.filter(space: spaces) }
 
     one_to_many :app_models,
-      dataset: -> { AppModel.filter(space: spaces) }
+                dataset: -> { AppModel.filter(space: spaces) }
 
     one_to_many :tasks,
-      dataset: -> { TaskModel.filter(app: app_models) }
+                dataset: -> { TaskModel.filter(app: app_models) }
 
     one_to_many :app_events,
-      dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
+                dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
 
     many_to_many(
       :private_domains,
-      class:         'VCAP::CloudController::PrivateDomain',
-      right_key:     :private_domain_id,
-      dataset:       proc { |r|
+      class: 'VCAP::CloudController::PrivateDomain',
+      right_key: :private_domain_id,
+      dataset: proc { |r|
         # r.join_table_source = :organizations_private_domains
         # r.qualified_right_key = :private_domain_id
         # r.predicate_key = :organization_id
-        VCAP::CloudController::Domain.dataset.where(owning_organization_id: self.id).
-          or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => self.id))
+        VCAP::CloudController::Domain.dataset.where(owning_organization_id: id).
+          or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => id))
       },
-      before_add:    proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
+      before_add: proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
       before_remove: proc { |org, private_domain| org.cancel_action if private_domain.owned_by?(org) },
-      after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy },
-      allow_eager:   true
+      after_remove: proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy },
+      allow_eager: true
     )
 
     one_to_many(
       :owned_private_domains,
-      class:     'VCAP::CloudController::PrivateDomain',
+      class: 'VCAP::CloudController::PrivateDomain',
       read_only: true,
-      key:       :owning_organization_id,
+      key: :owning_organization_id
     )
 
     one_to_many :service_plan_visibilities
     many_to_one :quota_definition
 
     one_to_many :domains,
-      dataset:      -> { VCAP::CloudController::Domain.shared_or_owned_by(id) },
-      remover:      ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
-      clearer:      -> { remove_all_private_domains },
-      adder:        ->(legacy_domain) { legacy_domain.addable_to_organization!(self) },
-      eager_loader: proc { |eo|
-        id_map = {}
-        eo[:rows].each do |org|
-          org.associations[:domains] = []
-          id_map[org.id]             = org
-        end
-        ds = Domain.shared_or_owned_by(id_map.keys)
-        ds = ds.eager(eo[:associations]) if eo[:associations]
-        ds = eo[:eager_block].call(ds) if eo[:eager_block]
-        ds.all do |domain|
-          if domain.shared?
-            id_map.each_value { |org| org.associations[:domains] << domain }
-          else
-            id_map[domain.owning_organization_id].associations[:domains] << domain
-          end
-        end
-      }
+                dataset: -> { VCAP::CloudController::Domain.shared_or_owned_by(id) },
+                remover: ->(legacy_domain) { legacy_domain.destroy if legacy_domain.owning_organization_id == id },
+                clearer: -> { remove_all_private_domains },
+                adder: ->(legacy_domain) { legacy_domain.addable_to_organization!(self) },
+                eager_loader: proc { |eo|
+                  id_map = {}
+                  eo[:rows].each do |org|
+                    org.associations[:domains] = []
+                    id_map[org.id]             = org
+                  end
+                  ds = Domain.shared_or_owned_by(id_map.keys)
+                  ds = ds.eager(eo[:associations]) if eo[:associations]
+                  ds = eo[:eager_block].call(ds) if eo[:eager_block]
+                  ds.all do |domain|
+                    if domain.shared?
+                      id_map.each_value { |org| org.associations[:domains] << domain }
+                    else
+                      id_map[domain.owning_organization_id].associations[:domains] << domain
+                    end
+                  end
+                }
 
     one_to_many :space_quota_definitions,
-      before_add: proc { |org, quota| org.cancel_action if quota.organization.id != org.id }
+                before_add: proc { |org, quota| org.cancel_action if quota.organization.id != org.id }
 
     one_to_many :labels, class: 'VCAP::CloudController::OrganizationLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::OrganizationAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies(
-      owned_private_domains:     :destroy,
-      private_domains:           :nullify,
+      owned_private_domains: :destroy,
+      private_domains: :nullify,
       service_plan_visibilities: :destroy,
-      space_quota_definitions:   :destroy,
+      space_quota_definitions: :destroy
     )
 
     define_user_group :users
     define_user_group :managers,
-      reciprocal: :managed_organizations
+                      reciprocal: :managed_organizations
     define_user_group :billing_managers, reciprocal: :billing_managed_organizations
     define_user_group :auditors, reciprocal: :audited_organizations
 
@@ -121,8 +121,8 @@ module VCAP::CloudController
 
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
-      :user_guids, :manager_guids, :billing_manager_guids,
-      :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
+                      :user_guids, :manager_guids, :billing_manager_guids,
+                      :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
 
     def remove_user(user)
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
@@ -144,22 +144,22 @@ module VCAP::CloudController
 
     def add_auditor(user)
       OrganizationAuditor.find_or_create(user_id: user.id, organization_id: id)
-      self.reload
+      reload
     end
 
     def add_manager(user)
       OrganizationManager.find_or_create(user_id: user.id, organization_id: id)
-      self.reload
+      reload
     end
 
     def add_billing_manager(user)
       OrganizationBillingManager.find_or_create(user_id: user.id, organization_id: id)
-      self.reload
+      reload
     end
 
     def add_user(user)
       OrganizationUser.find_or_create(user_id: user.id, organization_id: id)
-      self.reload
+      reload
     end
 
     def self.user_visibility_filter(user)
@@ -200,9 +200,7 @@ module VCAP::CloudController
     end
 
     def before_save
-      if column_changed?(:billing_enabled) && billing_enabled?
-        @is_billing_enabled = true
-      end
+      @is_billing_enabled = true if column_changed?(:billing_enabled) && billing_enabled?
 
       validate_quota
 
@@ -215,9 +213,9 @@ module VCAP::CloudController
       validates_format ORG_NAME_REGEX, :name
       validates_includes ORG_STATUS_VALUES, :status, allow_missing: true
 
-      if column_changed?(:default_isolation_segment_guid)
-        validate_default_isolation_segment
-      end
+      return unless column_changed?(:default_isolation_segment_guid)
+
+      validate_default_isolation_segment
     end
 
     def memory_used
@@ -286,10 +284,10 @@ module VCAP::CloudController
     end
 
     def validate_default_isolation_segment_exists
-      unless isolation_segment_guids.include?(default_isolation_segment_model.guid)
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
-          "Could not find Isolation Segment with guid: #{default_isolation_segment_model.guid}")
-      end
+      return if isolation_segment_guids.include?(default_isolation_segment_model.guid)
+
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRelation',
+                                                               "Could not find Isolation Segment with guid: #{default_isolation_segment_model.guid}")
     end
 
     def validate_quota_on_create
@@ -303,10 +301,10 @@ module VCAP::CloudController
     end
 
     def validate_quota_on_update
-      if column_changed?(:quota_definition_id) && quota_definition.nil?
-        err_msg = CloudController::Errors::ApiError.new_from_details('QuotaDefinitionNotFound', 'null').message
-        raise CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', err_msg)
-      end
+      return unless column_changed?(:quota_definition_id) && quota_definition.nil?
+
+      err_msg = CloudController::Errors::ApiError.new_from_details('QuotaDefinitionNotFound', 'null').message
+      raise CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', err_msg)
     end
 
     def validate_quota

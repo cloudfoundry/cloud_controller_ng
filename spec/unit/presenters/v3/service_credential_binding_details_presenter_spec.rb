@@ -13,18 +13,18 @@ module VCAP
           app: app,
           service_instance: instance,
           credentials: credentials,
-          volume_mounts: %w{super good},
+          volume_mounts: %w[super good],
           syslog_drain_url: 'http://banana.example.com/drain'
         )
       end
 
-      let(:key_binding) {
+      let(:key_binding) do
         ServiceKey.make(
           name: 'some-key',
           service_instance: instance,
           credentials: credentials
         )
-      }
+      end
 
       it 'returns the app binding details' do
         presenter = described_class.new(binding: credential_binding, credentials: credential_binding.credentials)
@@ -34,7 +34,7 @@ module VCAP
               password: 'super secret avocado toast'
             },
             syslog_drain_url: 'http://banana.example.com/drain',
-            volume_mounts: ['super', 'good']
+            volume_mounts: %w[super good]
           }
         )
       end
@@ -55,7 +55,7 @@ module VCAP
 
         it 'does not include syslog_drain_url in the response' do
           presenter = described_class.new(binding: credential_binding, credentials: credential_binding.credentials)
-          expect(presenter.to_hash).to_not have_key(:syslog_drain_url)
+          expect(presenter.to_hash).not_to have_key(:syslog_drain_url)
         end
       end
 
@@ -64,14 +64,14 @@ module VCAP
 
         it 'does not include volume_mounts in the response' do
           presenter = described_class.new(binding: credential_binding, credentials: credential_binding.credentials)
-          expect(presenter.to_hash).to_not have_key(:volume_mounts)
+          expect(presenter.to_hash).not_to have_key(:volume_mounts)
         end
       end
 
       context 'when credentials are not set' do
         it 'does not include credentials in the response' do
           presenter = described_class.new(binding: credential_binding, credentials: nil)
-          expect(presenter.to_hash).to_not have_key(:credentials)
+          expect(presenter.to_hash).not_to have_key(:credentials)
         end
       end
 

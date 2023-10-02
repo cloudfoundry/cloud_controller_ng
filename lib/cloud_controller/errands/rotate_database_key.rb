@@ -4,7 +4,7 @@ module VCAP::CloudController
       def perform(batch_size: 1000)
         @logger = Steno.logger('cc.rotate_database_key')
 
-        no_encryption_key! unless Encryptor.current_encryption_key_label.present?
+        no_encryption_key! if Encryptor.current_encryption_key_label.blank?
 
         Encryptor.encrypted_classes.each do |klass|
           logger.info("Rotating encryption key for class #{klass}")

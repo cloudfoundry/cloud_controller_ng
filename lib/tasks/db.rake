@@ -3,11 +3,11 @@ require 'retryable'
 
 namespace :db do
   desc 'Create a Sequel migration in ./db/migrate'
-  task :create_migration do
+  task create_migration: :environment do
     RakeConfig.context = :migrate
 
-    name = ENV['NAME']
-    abort('no NAME specified. use `rake db:create_migration NAME=add_users`') if !name
+    name = ENV.fetch('NAME', nil)
+    abort('no NAME specified. use `rake db:create_migration NAME=add_users`') unless name
 
     migrations_dir = File.join('db', 'migrations')
 
@@ -33,21 +33,21 @@ namespace :db do
   end
 
   desc 'Perform Sequel migration to database'
-  task :migrate do
+  task migrate: :environment do
     RakeConfig.context = :migrate
 
     migrate
   end
 
   desc 'Make up to 5 attempts to connect to the database. Succeed it one is successful, and fail otherwise.'
-  task :connect do
+  task connect: :environment do
     RakeConfig.context = :migrate
 
     connect
   end
 
   desc 'Rollback migrations to the database (one migration by default)'
-  task :rollback, [:number_to_rollback] do |_, args|
+  task :rollback, [:number_to_rollback] => :environment do |_, args|
     RakeConfig.context = :migrate
 
     number_to_rollback = (args[:number_to_rollback] || 1).to_i
@@ -55,22 +55,22 @@ namespace :db do
   end
 
   desc 'Randomly select between postgres and mysql'
-  task :pick do
+  task pick: :environment do
     unless ENV['DB_CONNECTION_STRING']
       ENV['DB'] ||= %w[mysql postgres].sample
-      puts "Using #{ENV['DB']}"
+      puts "Using #{ENV.fetch('DB', nil)}"
     end
   end
 
   desc 'Create the database set in spec/support/bootstrap/db_config'
-  task :create do
+  task create: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -c 'create database #{db_config.name};'"
       extensions = 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
@@ -83,14 +83,14 @@ namespace :db do
   end
 
   desc 'Drop the database set in spec/support/bootstrap/db_config'
-  task :drop do
+  task drop: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
     when 'mysql'
@@ -104,7 +104,7 @@ namespace :db do
   task recreate: %w[drop create]
 
   desc 'Seed the database'
-  task :seed do
+  task seed: :environment do
     RakeConfig.context = :api
 
     require 'cloud_controller/seeds'
@@ -114,13 +114,13 @@ namespace :db do
   end
 
   desc 'Migrate and seed database'
-  task :setup_database do
+  task setup_database: :environment do
     Rake::Task['db:migrate'].invoke
     Rake::Task['db:seed'].invoke
   end
 
   desc 'Ensure migrations in DB match local migration files'
-  task :ensure_migrations_are_current do
+  task ensure_migrations_are_current: :environment do
     RakeConfig.context = :migrate
 
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
@@ -140,14 +140,14 @@ namespace :db do
   end
 
   desc 'Connect to the database set in spec/support/bootstrap/db_config'
-  task :connect do
+  task connect: :environment do
     RakeConfig.context = :migrate
 
     require_relative '../../spec/support/bootstrap/db_config'
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
 
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name}"
     when 'mysql'
@@ -158,14 +158,14 @@ namespace :db do
   end
 
   desc 'Terminate Istio sidecar for migration job (if one exists)'
-  task :terminate_istio_if_exists do
+  task terminate_istio_if_exists: :environment do
     puts 'Terminating Istio sidecar'
 
     terminate_istio_sidecar_if_exists
   end
 
   desc 'Validate Deployments are not missing encryption keys'
-  task :validate_encryption_keys do
+  task validate_encryption_keys: :environment do
     RakeConfig.context = :api
 
     require 'cloud_controller/validate_database_keys'
@@ -180,7 +180,7 @@ namespace :db do
 
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
-    task :migrate do
+    task migrate: :environment do
       RakeConfig.context = :migrate
 
       require_relative '../../spec/support/bootstrap/db_config'
@@ -189,7 +189,7 @@ namespace :db do
     end
 
     desc 'Rollback the database migration set in spec/support/bootstrap/db_config'
-    task :rollback, [:number_to_rollback] do |_, args|
+    task :rollback, [:number_to_rollback] => :environment do |_, args|
       RakeConfig.context = :migrate
 
       require_relative '../../spec/support/bootstrap/db_config'
@@ -198,7 +198,7 @@ namespace :db do
     end
 
     desc 'Dump schema to file'
-    task :dump_schema do
+    task dump_schema: :environment do
       require_relative '../../spec/support/bootstrap/db_config'
       require_relative '../../spec/support/bootstrap/table_recreator'
 
@@ -211,11 +211,11 @@ namespace :db do
       puts 'Dumping schema...'
       schema = db.dump_schema_migration(indexes: true, foreign_keys: true)
 
-      File.open('db/schema.rb', 'w') { |f|
+      File.open('db/schema.rb', 'w') do |f|
         f.write("# rubocop:disable all\n")
         f.write(schema)
         f.write("# rubocop:enable all\n")
-      }
+      end
 
       puts 'Wrote db/schema.rb'
     end
@@ -254,7 +254,7 @@ namespace :db do
 
   def parse_db_connection_string
     host = port = passenv = ''
-    case ENV['DB']
+    case ENV.fetch('DB', nil)
     when 'postgres'
       user = '-U postgres'
       pass = ''
@@ -262,9 +262,7 @@ namespace :db do
         uri = URI.parse(ENV['DB_CONNECTION_STRING'])
         host = "-h #{uri.host}"
         port = "-p #{uri.port}" if uri.port
-        if uri.user
-          user = "-U #{uri.user}"
-        end
+        user = "-U #{uri.user}" if uri.user
         passenv = "PGPASSWORD=#{uri.password}" if uri.password
       end
     when 'mysql'
@@ -274,12 +272,8 @@ namespace :db do
         uri = URI.parse(ENV['DB_CONNECTION_STRING'])
         host = "-h #{uri.host}"
         port = "-P #{uri.port}" if uri.port
-        if uri.user
-          user = "-u #{uri.user}"
-        end
-        if uri.password
-          pass = "--password=#{uri.password}"
-        end
+        user = "-u #{uri.user}" if uri.user
+        pass = "--password=#{uri.password}" if uri.password
       end
     end
     [host, port, user, pass, passenv]
@@ -292,8 +286,8 @@ namespace :db do
 
       yield
     else
-      %w(postgres mysql).each do |db_type|
-        connection_string = DbConfig.new(db_type: db_type).connection_string
+      %w[postgres mysql].each do |db_type|
+        connection_string = DbConfig.new(db_type:).connection_string
         RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: connection_string))
         yield
 
@@ -312,7 +306,7 @@ namespace :db do
     end
 
     puts 'Istio sidecar is now terminated'
-  rescue => e
+  rescue StandardError => e
     puts "Request to Istio sidecar failed. This is expected if your kubernetes cluster does not use Istio. Error: #{e}"
   end
 end

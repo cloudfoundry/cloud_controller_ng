@@ -13,7 +13,7 @@ class EventsController < ApplicationController
       presenter: Presenters::V3::EventPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/audit_events',
-      message: message,
+      message: message
     )
   end
 

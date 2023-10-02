@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe SpaceFeatureUpdateMessage do
     let(:body) do
       {
-        'enabled' => true,
+        'enabled' => true
       }
     end
 
@@ -14,7 +14,7 @@ module VCAP::CloudController
         body['bogus'] = 'field'
         message = SpaceFeatureUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 
@@ -37,14 +37,14 @@ module VCAP::CloudController
           body = { enabled: 1 }
           message = SpaceFeatureUpdateMessage.new(body)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Enabled must be a boolean')
         end
 
         it 'must be present' do
           body = {}
           message = SpaceFeatureUpdateMessage.new(body)
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include('Enabled must be a boolean')
         end
       end

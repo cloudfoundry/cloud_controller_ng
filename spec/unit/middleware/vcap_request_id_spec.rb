@@ -28,27 +28,28 @@ module CloudFoundry
 
           it 'nils it out after the request has been processed' do
             middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
-            expect(::VCAP::Request.current_id).to eq(nil)
+            expect(::VCAP::Request.current_id).to be_nil
           end
         end
 
         context 'clearing the request id' do
           context 'and an error is raised when the request is passed' do
             let(:error) { RuntimeError.new('oops') }
+
             before do
               allow(app).to receive(:call).and_raise(error)
             end
 
             it 'sets the request id to nil' do
               expect { middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id') }.to raise_error(error)
-              expect(::VCAP::Request.current_id).to eq(nil)
+              expect(::VCAP::Request.current_id).to be_nil
             end
           end
 
           context 'and no error is raised when the request is passed' do
             it 'sets the request id to nil' do
               middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
-              expect(::VCAP::Request.current_id).to eq(nil)
+              expect(::VCAP::Request.current_id).to be_nil
             end
           end
         end
@@ -100,7 +101,7 @@ module CloudFoundry
       describe 'the response' do
         context 'when the request id is passed in' do
           it 'is returned in the response' do
-            _, response_headers, _ = middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')
+            _, response_headers, = middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'request-id')
 
             expect(response_headers['X-VCAP-Request-ID']).to match(/^request-id::#{uuid_regex}$/)
           end
@@ -108,7 +109,7 @@ module CloudFoundry
 
         context 'when the request id is NOT passed in' do
           it 'returns a generated id in the response' do
-            _, response_headers, _ = middleware.call({})
+            _, response_headers, = middleware.call({})
 
             expect(response_headers['X-VCAP-Request-ID']).to match(/^#{uuid_regex}$/)
           end

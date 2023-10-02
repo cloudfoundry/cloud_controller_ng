@@ -13,7 +13,7 @@ module CloudController
 
       it 'returns all of the intermediate domains except the tld' do
         expect(DomainDecorator.new('long.named.example.com').intermediate_domains.map(&:name)).
-          to match_array(['long.named.example.com', 'named.example.com', 'example.com'])
+          to contain_exactly('long.named.example.com', 'named.example.com', 'example.com')
       end
 
       context 'when the domain includes a newline character' do
@@ -25,33 +25,33 @@ module CloudController
 
     describe '#has_sub_domain?' do
       it 'returns false when domains are completely different' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['apps.com'])).
-          to be_falsey
+        expect(DomainDecorator.new('bosh-lite.com')).
+          not_to have_sub_domain(test_domains: ['apps.com'])
       end
 
       it 'returns false when domains are completely different, but end in the same name lexically' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['lite.com'])).
-          to be_falsey
+        expect(DomainDecorator.new('bosh-lite.com')).
+          not_to have_sub_domain(test_domains: ['lite.com'])
       end
 
       it 'returns true when test_domain and domain are equal' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['bosh-lite.com'])).
-          to be_truthy
+        expect(DomainDecorator.new('bosh-lite.com')).
+          to have_sub_domain(test_domains: ['bosh-lite.com'])
       end
 
       it 'returns true when test_domain is a subdomain of domain' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['apps.bosh-lite.com'])).
-          to be_truthy
+        expect(DomainDecorator.new('bosh-lite.com')).
+          to have_sub_domain(test_domains: ['apps.bosh-lite.com'])
       end
 
       it 'returns true when any test_domain is a subdomain of domain' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['bosh-lite.com', 'apps.bosh-lite.com', 'example.com'])).
-          to be_truthy
+        expect(DomainDecorator.new('bosh-lite.com')).
+          to have_sub_domain(test_domains: ['bosh-lite.com', 'apps.bosh-lite.com', 'example.com'])
       end
 
       it 'returns false when domains contain system domain and another domain' do
-        expect(DomainDecorator.new('bosh-lite.com').has_sub_domain?(test_domains: ['apps.com', 'bosh-lite.com'])).
-          to be_falsey
+        expect(DomainDecorator.new('bosh-lite.com')).
+          not_to have_sub_domain(test_domains: ['apps.com', 'bosh-lite.com'])
       end
     end
 

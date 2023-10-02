@@ -74,7 +74,7 @@ module VCAP::CloudController
           ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
             last_operation: {
               state: 'failed',
-              description: 'Service Broker failed to provision within the required time.',
+              description: 'Service Broker failed to provision within the required time.'
             }
           )
         end

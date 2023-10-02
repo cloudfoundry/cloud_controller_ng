@@ -7,7 +7,7 @@ module VCAP::CloudController
       isolation_segment = nil
       IsolationSegmentModel.db.transaction do
         isolation_segment = IsolationSegmentModel.create(
-          name: message.name,
+          name: message.name
         )
         MetadataUpdate.update(isolation_segment, message)
       end

@@ -1,6 +1,6 @@
 Sequel.migration do
   up do
-    run <<-SQL
+    run <<-SQL.squish
       UPDATE apps
         SET ports = null
       WHERE docker_image is not null
@@ -8,7 +8,7 @@ Sequel.migration do
         and ports = '[8080]'
     SQL
 
-    run <<-SQL
+    run <<-SQL.squish
       UPDATE apps_routes
         SET app_port = null
       WHERE app_port = '8080'
@@ -19,7 +19,7 @@ Sequel.migration do
   end
 
   down do
-    run <<-SQL
+    run <<-SQL.squish
       UPDATE apps
         SET ports = '8080'
       WHERE ports is null and diego = true and docker_image is null

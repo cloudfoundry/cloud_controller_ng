@@ -24,7 +24,7 @@ class HttpResponseError < StructuredError
     hash = super
     hash['http'] = {
       'method' => method,
-      'status' => status,
+      'status' => status
     }
     hash
   end

@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         message = subject.from_params(params)
-        expect(message.requested?(:type)).to be_truthy
+        expect(message).to be_requested(:type)
       end
 
       it 'returns the correct message' do
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       it 'errors when `organizations` is defined but `type` is not "organization"' do
-        message = subject.from_params({ type: 'public', organizations: %w(some-org another-org) })
+        message = subject.from_params({ type: 'public', organizations: %w[some-org another-org] })
         expect(message).not_to be_valid
         expect(message.errors[:organizations]).to include('must be blank')
       end

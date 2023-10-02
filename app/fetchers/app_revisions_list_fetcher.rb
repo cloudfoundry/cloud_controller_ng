@@ -20,9 +20,7 @@ module VCAP::CloudController
       def filter(message, app)
         dataset = RevisionModel.where(Sequel[:revisions][:app_guid] => app.guid)
 
-        if message.requested?(:versions)
-          dataset = dataset.where(Sequel[:revisions][:app_guid] => app.guid, version: message.versions)
-        end
+        dataset = dataset.where(Sequel[:revisions][:app_guid] => app.guid, version: message.versions) if message.requested?(:versions)
 
         if message.requested?(:deployable)
           dataset = dataset.
@@ -36,7 +34,7 @@ module VCAP::CloudController
             label_klass: RevisionLabelModel,
             resource_dataset: dataset.qualify,
             requirements: message.requirements,
-            resource_klass: RevisionModel,
+            resource_klass: RevisionModel
           )
         end
 

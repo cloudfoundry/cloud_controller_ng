@@ -1,13 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe UploadHandler do
+  subject(:uploader) { UploadHandler.new(config) }
+
   let(:key) { 'application' }
   let(:tmpdir) { '/some/tmp/dir' }
-  subject(:uploader) { UploadHandler.new(config) }
 
   context 'NGINX mode' do
     let(:config) do
-      VCAP::CloudController::Config.new({ nginx: { use_nginx: true }, directories: { tmpdir: tmpdir } })
+      VCAP::CloudController::Config.new({ nginx: { use_nginx: true }, directories: { tmpdir: } })
     end
 
     context 'when the file exists' do
@@ -30,19 +31,20 @@ RSpec.describe UploadHandler do
       let(:params) { { "#{key}_path" => '/some/path', '<ngx_upload_module_dummy>' => '' } }
 
       it 'raises an error' do
-        expect {
+        expect do
           uploader.uploaded_file(params, key)
-        }.to raise_error(UploadHandler::MissingFilePathError, 'File field missing path information')
+        end.to raise_error(UploadHandler::MissingFilePathError, 'File field missing path information')
       end
     end
 
     context 'when the file exists but is not inside any of the temp directories' do
       context 'when the path is an absolute path' do
         let(:params) { { "#{key}_path" => "#{tmpdir}/../path" } }
+
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
 
@@ -50,9 +52,9 @@ RSpec.describe UploadHandler do
         let(:params) { { "#{key}_path" => '../relative/file' } }
 
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
     end
@@ -60,7 +62,7 @@ RSpec.describe UploadHandler do
 
   context 'Rack Mode' do
     let(:config) do
-      VCAP::CloudController::Config.new({ nginx: { use_nginx: false }, directories: { tmpdir: tmpdir } })
+      VCAP::CloudController::Config.new({ nginx: { use_nginx: false }, directories: { tmpdir: } })
     end
 
     context 'and the tempfile key is a symbol' do
@@ -98,10 +100,11 @@ RSpec.describe UploadHandler do
     context 'when the file exists but is not inside any of the temp directories' do
       context 'when the path is an absolute path' do
         let(:params) { { key => { 'tempfile' => "#{tmpdir}/../path" } } }
+
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
 
@@ -109,9 +112,9 @@ RSpec.describe UploadHandler do
         let(:params) { { key => { 'tempfile' => '../relative/file' } } }
 
         it 'raises an error' do
-          expect {
+          expect do
             uploader.uploaded_file(params, key)
-          }.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
+          end.to raise_error(UploadHandler::InvalidFilePathError, 'Invalid file path')
         end
       end
     end

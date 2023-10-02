@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe MinLogRateLimitPolicy do
-  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
-
   subject(:validator) { MinLogRateLimitPolicy.new(process) }
+
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
 
   it 'when requested size is negative 2' do
     allow(process).to receive(:log_rate_limit).and_return(-2)

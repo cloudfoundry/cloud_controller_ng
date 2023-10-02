@@ -67,11 +67,13 @@ module VCAP::Services
 
         context 'when service app binding' do
           let(:binding) { service_binding }
+
           it_behaves_like 'enqueues a job with the right data'
         end
 
         context 'when service key' do
           let(:binding) { service_key }
+
           it_behaves_like 'enqueues a job with the right data'
         end
 

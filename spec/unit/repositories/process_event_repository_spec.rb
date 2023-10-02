@@ -28,9 +28,9 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
           expect(event.metadata).to eq({
-            'process_guid' => process.guid,
-            'process_type' => 'potato'
-          })
+                                         'process_guid' => process.guid,
+                                         'process_type' => 'potato'
+                                       })
         end
 
         context 'event is manifest triggered' do
@@ -50,10 +50,10 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization.guid)
 
             expect(event.metadata).to eq({
-              'process_guid' => process.guid,
-              'process_type' => 'potato',
-              'manifest_triggered' => true,
-            })
+                                           'process_guid' => process.guid,
+                                           'process_type' => 'potato',
+                                           'manifest_triggered' => true
+                                         })
           end
         end
       end
@@ -75,9 +75,9 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
           expect(event.metadata).to eq({
-            'process_guid' => process.guid,
-            'process_type' => 'potato'
-          })
+                                         'process_guid' => process.guid,
+                                         'process_type' => 'potato'
+                                       })
         end
       end
 
@@ -99,14 +99,14 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
           expect(event.metadata).to eq({
-            'process_guid' => process.guid,
-            'process_type' => 'potato',
-            'request' => {
-               'instances' => 10,
-               'memory_in_mb' => 512,
-               'disk_in_mb' => 2048
-            }
-          })
+                                         'process_guid' => process.guid,
+                                         'process_type' => 'potato',
+                                         'request' => {
+                                           'instances' => 10,
+                                           'memory_in_mb' => 512,
+                                           'disk_in_mb' => 2048
+                                         }
+                                       })
         end
 
         context 'when the scale event is manifest triggered' do
@@ -115,15 +115,15 @@ module VCAP::CloudController
             event = ProcessEventRepository.record_scale(process, user_audit_info, request, manifest_triggered: true)
 
             expect(event.metadata).to eq({
-              process_guid: process.guid,
-              process_type: 'potato',
-              request: {
-                instances: 10,
-                memory_in_mb: 512,
-                disk_in_mb: 2048
-              },
-              manifest_triggered: true,
-            })
+                                           process_guid: process.guid,
+                                           process_type: 'potato',
+                                           request: {
+                                             instances: 10,
+                                             memory_in_mb: 512,
+                                             disk_in_mb: 2048
+                                           },
+                                           manifest_triggered: true
+                                         })
           end
         end
       end
@@ -145,12 +145,12 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
           expect(event.metadata).to eq({
-            'process_guid' => process.guid,
-            'process_type' => 'potato',
-            'request' => {
-              'anything' => 'whatever'
-            }
-          })
+                                         'process_guid' => process.guid,
+                                         'process_type' => 'potato',
+                                         'request' => {
+                                           'anything' => 'whatever'
+                                         }
+                                       })
         end
 
         it 'redacts metadata.request.command' do
@@ -161,7 +161,7 @@ module VCAP::CloudController
                                             'request' => {
                                               'command' => '[PRIVATE DATA HIDDEN]'
                                             }
-          ))
+                                          ))
         end
 
         context 'when the update event is manifest triggered' do
@@ -181,13 +181,13 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization.guid)
 
             expect(event.metadata).to eq({
-              'process_guid' => process.guid,
-              'process_type' => 'potato',
-              'manifest_triggered' => true,
-              'request' => {
-                'anything' => 'whatever'
-              }
-            })
+                                           'process_guid' => process.guid,
+                                           'process_type' => 'potato',
+                                           'manifest_triggered' => true,
+                                           'request' => {
+                                             'anything' => 'whatever'
+                                           }
+                                         })
           end
         end
       end
@@ -210,16 +210,16 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(app.space.organization.guid)
 
           expect(event.metadata).to eq({
-            'process_guid' => process.guid,
-            'process_type' => 'potato',
-            'process_index' => 0
-          })
+                                         'process_guid' => process.guid,
+                                         'process_type' => 'potato',
+                                         'process_index' => 0
+                                       })
         end
       end
 
       describe '.record_crash' do
         let(:exit_description) { 'X' * AppEventRepository::TRUNCATE_THRESHOLD * 2 }
-        let(:crash_payload) {
+        let(:crash_payload) do
           {
             'instance' => 'abc',
             'index' => 3,
@@ -228,7 +228,7 @@ module VCAP::CloudController
             'exit_description' => exit_description,
             'reason' => 'CRASHED'
           }
-        }
+        end
 
         it 'creates a new audit.app.crash event' do
           event = ProcessEventRepository.record_crash(process, crash_payload)
@@ -256,14 +256,14 @@ module VCAP::CloudController
       end
 
       describe '.record_rescheduling' do
-        let(:rescheduling_payload) {
+        let(:rescheduling_payload) do
           {
             'instance' => Sham.guid,
             'index' => 3,
             'cell_id' => 'some-cell',
             'reason' => 'Helpful reason for rescheduling'
           }
-        }
+        end
 
         it 'creates a new audit.app.process.rescheduling event' do
           event = ProcessEventRepository.record_rescheduling(process, rescheduling_payload)

@@ -8,8 +8,8 @@ module VCAP::CloudController
     include ActiveModel::Model
     include Validators
 
-    ALLOWED_PAGINATION_KEYS = [:page, :per_page, :order_by].freeze
-    ADVANCED_FILTERING_KEYS = [:created_ats, :updated_ats].freeze
+    ALLOWED_PAGINATION_KEYS = %i[page per_page order_by].freeze
+    ADVANCED_FILTERING_KEYS = %i[created_ats updated_ats].freeze
     COMMON_FILTERING_KEYS = [:guids].freeze
 
     register_allowed_keys ALLOWED_PAGINATION_KEYS + ADVANCED_FILTERING_KEYS + COMMON_FILTERING_KEYS
@@ -36,12 +36,12 @@ module VCAP::CloudController
       def validate(record)
         order_by = record.pagination_params[:order_by]
         columns_allowed = record.valid_order_by_values.join('|')
-        matcher = /\A(\+|\-)?(#{columns_allowed})\z/
+        matcher = /\A(\+|-)?(#{columns_allowed})\z/
 
-        unless order_by.match?(matcher)
-          valid_values_message = record.valid_order_by_values.map { |value| "'#{value}'" }.join(', ')
-          record.errors.add(:order_by, "can only be: #{valid_values_message}")
-        end
+        return if order_by.match?(matcher)
+
+        valid_values_message = record.valid_order_by_values.map { |value| "'#{value}'" }.join(', ')
+        record.errors.add(:order_by, "can only be: #{valid_values_message}")
       end
     end
 
@@ -50,8 +50,8 @@ module VCAP::CloudController
         page = record.pagination_params[:page]
         per_page = record.pagination_params[:per_page]
 
-        validate_page(page, record) if !page.nil?
-        validate_per_page(per_page, record) if !per_page.nil?
+        validate_page(page, record) unless page.nil?
+        validate_per_page(per_page, record) unless per_page.nil?
         validate_maximum_result(page, per_page, record) if !page.nil? || !per_page.nil?
       end
 
@@ -68,16 +68,16 @@ module VCAP::CloudController
       end
 
       def validate_maximum_result(page, per_page, record)
-        maximum_result = VCAP::CloudController::Config.config.get(:renderer, :max_total_results) || 9223372036854775807
-        if (page || PaginationOptions::PAGE_DEFAULT).to_i * (per_page || PaginationOptions::PER_PAGE_DEFAULT).to_i > maximum_result
-          record.errors.add(:maximum_result, "(page * per_page) must be less than #{maximum_result}")
-        end
+        maximum_result = VCAP::CloudController::Config.config.get(:renderer, :max_total_results) || 9_223_372_036_854_775_807
+        return unless (page || PaginationOptions::PAGE_DEFAULT).to_i * (per_page || PaginationOptions::PER_PAGE_DEFAULT).to_i > maximum_result
+
+        record.errors.add(:maximum_result, "(page * per_page) must be less than #{maximum_result}")
       end
     end
 
     # override this to define valid fields to order by
     def valid_order_by_values
-      [:created_at, :updated_at]
+      %i[created_at updated_at]
     end
 
     validates_with PaginationPageValidator
@@ -88,7 +88,7 @@ module VCAP::CloudController
     validates :guids, array: true, allow_nil: true
 
     def self.from_params(params, to_array_keys, fields: [])
-      message = super(params, (to_array_keys + ADVANCED_FILTERING_KEYS + COMMON_FILTERING_KEYS).map(&:to_s), fields: fields)
+      message = super(params, (to_array_keys + ADVANCED_FILTERING_KEYS + COMMON_FILTERING_KEYS).map(&:to_s), fields:)
       message.requirements = parse_label_selector(params.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message
@@ -110,7 +110,7 @@ module VCAP::CloudController
       LabelSelectorRequirement.new(
         key: match_data[:key],
         operator: requirement_operator_pair[:operator],
-        values: match_data[:values],
+        values: match_data[:values]
       )
     end
   end

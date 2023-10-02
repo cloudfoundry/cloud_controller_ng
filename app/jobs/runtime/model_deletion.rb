@@ -13,7 +13,7 @@ module VCAP::CloudController
           logger = Steno.logger('cc.background')
           logger.info("Deleting model class '#{model_class}' with guid '#{guid}'")
 
-          model = model_class.find(guid: guid)
+          model = model_class.find(guid:)
           return if model.nil?
 
           model.db.transaction do

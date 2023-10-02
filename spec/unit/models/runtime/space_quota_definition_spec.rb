@@ -24,7 +24,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :total_routes }
       it { is_expected.to validate_presence :memory_limit }
       it { is_expected.to validate_presence :organization }
-      it { is_expected.to validate_uniqueness [:organization_id, :name] }
+      it { is_expected.to validate_uniqueness %i[organization_id name] }
 
       describe 'memory_limits' do
         it 'total memory_limit cannot be less than zero' do
@@ -85,6 +85,7 @@ module VCAP::CloudController
             'be less than or equal to total routes, and must be less than or ' \
             'equal to total reserved ports for the organization quota.'
         end
+
         it 'cannot be less than -1' do
           space_quota_definition.total_reserved_route_ports = -2
           expect(space_quota_definition).not_to be_valid
@@ -101,14 +102,14 @@ module VCAP::CloudController
             org_quota_definition.save
           end
 
-          it "should not exceed space's total_routes" do
+          it "does not exceed space's total_routes" do
             space_quota_definition.total_reserved_route_ports = 11
             space_quota_definition.total_routes = 8
             expect(space_quota_definition).not_to be_valid
             expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to contain_exactly(err_msg)
           end
 
-          it "should not exceed org's total_reserved_route_ports" do
+          it "does not exceed org's total_reserved_route_ports" do
             space_quota_definition.total_reserved_route_ports = 11
             expect(space_quota_definition).not_to be_valid
             expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to contain_exactly(err_msg)
@@ -133,7 +134,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'should not exceed total routes for the same space' do
+        it 'does not exceed total routes for the same space' do
           space_quota_definition.total_routes = 5
 
           space_quota_definition.total_reserved_route_ports = 4
@@ -143,7 +144,7 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
 
           space_quota_definition.total_reserved_route_ports = 6
-          expect(space_quota_definition).to_not be_valid
+          expect(space_quota_definition).not_to be_valid
           expect(space_quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
         end
 
@@ -172,15 +173,15 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it do
-        is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+        expect(subject).to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+                                             :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                                             :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
 
       it do
-        is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
-          :total_service_keys, :total_reserved_route_ports, :log_rate_limit
+        expect(subject).to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+                                             :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit, :app_task_limit,
+                                             :total_service_keys, :total_reserved_route_ports, :log_rate_limit
       end
     end
 

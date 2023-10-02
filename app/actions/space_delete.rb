@@ -22,12 +22,12 @@ module VCAP::CloudController
         err = accumulate_space_deletion_error(instance_unshare_errors, space_model.name)
         errors << err unless err.nil?
 
-        if instance_delete_errors.empty? && instance_unshare_errors.empty?
-          Space.db.transaction do
-            delete_apps(space_model)
-            space_model.destroy
-            Repositories::SpaceEventRepository.new.record_space_delete_request(space_model, @user_audit_info, true)
-          end
+        next unless instance_delete_errors.empty? && instance_unshare_errors.empty?
+
+        Space.db.transaction do
+          delete_apps(space_model)
+          space_model.destroy
+          Repositories::SpaceEventRepository.new.record_space_delete_request(space_model, @user_audit_info, true)
         end
       end
     end
@@ -44,10 +44,10 @@ module VCAP::CloudController
     end
 
     def accumulate_space_deletion_error(operation_errors, space_name)
-      unless operation_errors.empty?
-        error_message = operation_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-        CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_name, error_message)
-      end
+      return if operation_errors.empty?
+
+      error_message = operation_errors.map { |error| "\t#{error.message}" }.join("\n\n")
+      CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_name, error_message)
     end
 
     def delete_service_instances(space_model)
@@ -59,7 +59,7 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
           errors << CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
         end
-      rescue => e
+      rescue StandardError => e
         errors << e
       end
     end
@@ -69,7 +69,7 @@ module VCAP::CloudController
       errors = []
       space_model.service_instances_shared_from_other_spaces.each do |service_instance|
         unshare.unshare(service_instance, space_model, @user_audit_info)
-      rescue => e
+      rescue StandardError => e
         errors.push(e)
       end
       errors

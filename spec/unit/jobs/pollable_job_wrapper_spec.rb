@@ -26,7 +26,7 @@ module VCAP::CloudController::Jobs
         enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
 
         job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
-        expect(job_record).to_not be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
+        expect(job_record).not_to be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
         expect(job_record.state).to eq('PROCESSING')
         expect(job_record.operation).to eq('droplet.delete')
         expect(job_record.resource_guid).to eq('fake')
@@ -52,7 +52,7 @@ module VCAP::CloudController::Jobs
           expect(jobs_after_enqueue).to eq(1)
 
           job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
-          expect(job_record).to_not be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
+          expect(job_record).not_to be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
           expect(job_record.state).to eq('POLLING')
           expect(job_record.operation).to eq('droplet.delete')
           expect(job_record.resource_guid).to eq('fake')
@@ -91,11 +91,11 @@ module VCAP::CloudController::Jobs
 
             job_model.reload
             expect(job_model.state).to eq('FAILED')
-            expect(job_model.cf_api_error).to_not be_nil
+            expect(job_model.cf_api_error).not_to be_nil
 
             api_error = YAML.safe_load(job_model.cf_api_error)['errors'].first
             expect(api_error['title']).to eql('CF-BlobstoreError')
-            expect(api_error['code']).to eql(150007)
+            expect(api_error['code']).to be(150_007)
             expect(api_error['detail']).to eql('Failed to perform blobstore operation after three retries.')
           end
         end
@@ -111,17 +111,17 @@ module VCAP::CloudController::Jobs
     end
 
     describe 'warnings' do
-      let(:broker) {
+      let(:broker) do
         VCAP::CloudController::ServiceBroker.create(
           name: 'test-broker',
           broker_url: 'http://example.org/broker-url',
           auth_username: 'username',
           auth_password: 'password'
         )
-      }
+      end
 
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo, { user_guid: Sham.guid }) }
-      let(:job) { VCAP::CloudController::V3::SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: user_audit_info) }
+      let(:job) { VCAP::CloudController::V3::SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info:) }
 
       before do
         allow_any_instance_of(VCAP::CloudController::V3::SynchronizeBrokerCatalogJob).
@@ -133,6 +133,7 @@ module VCAP::CloudController::Jobs
 
       context 'when warnings were issued' do
         let(:expected_warnings) { [{ detail: 'warning 1' }, { detail: 'warning 2' }] }
+
         it 'records all warnings' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
           job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
@@ -148,7 +149,8 @@ module VCAP::CloudController::Jobs
 
       context 'when warnings were not issued' do
         let(:expected_warnings) { nil }
-        it 'has empty list of warnings ' do
+
+        it 'has empty list of warnings' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
           job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
@@ -173,15 +175,15 @@ module VCAP::CloudController::Jobs
       context 'with a big backtrace' do
         it 'culls it down' do
           exception = BigException.new
-          exception.set_backtrace(['1000 character backtrace: ' + 'x' * 974] * 32)
+          exception.set_backtrace(['1000 character backtrace: ' + ('x' * 974)] * 32)
           pollable_job.error(job, exception)
-          expect(actual_pollable_job.reload.cf_api_error).to_not be_empty
+          expect(actual_pollable_job.reload.cf_api_error).not_to be_empty
           block = YAML.safe_load(actual_pollable_job.cf_api_error)
           errors = block['errors']
           expect(errors.size).to eq(1)
           error = errors[0]['test_mode_info']
           expect(error['detail']).to eq('VCAP::CloudController::Jobs::BigException')
-          expect(error['backtrace'].size).to be == 8
+          expect(error['backtrace'].size).to eq 8
         end
       end
 
@@ -190,22 +192,22 @@ module VCAP::CloudController::Jobs
         # mysql complains with 15,828, so test for failure at that point
 
         it 'squeezes just right one in' do
-          expect {
+          expect do
             pollable_job.error(job, BigException.new(message: 'x' * 15_825))
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
         it 'gives up' do
           pg_error = /value too long for type character varying/
           mysql_error = /Data too long for column 'cf_api_error'/
-          expect {
+          expect do
             pollable_job.error(job, BigException.new(message: 'x' * 15_828))
-          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
+          end.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end
     end
 
-    context '#max_attempts' do
+    describe '#max_attempts' do
       it 'delegates to the handler' do
         expect(pollable_job.max_attempts).to eq(2)
       end

@@ -5,7 +5,7 @@ module VCAP::Services
     module V2
       module Errors
         class ServiceBrokerBadResponse < HttpResponseError
-          def initialize(uri, method, response, ignore_description_key: false)
+          def initialize(_uri, method, response, ignore_description_key: false)
             begin
               hash = MultiJson.load(response.body)
             rescue MultiJson::ParseError
@@ -15,7 +15,7 @@ module VCAP::Services
                         "Service broker error: #{hash['description']}"
                       else
                         'The service broker returned an invalid response. ' \
-                                  "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
+                          "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
                       end
             if message.bytesize > 2**14
               message = message.truncate_bytes(2**13) + "...This message has been truncated due to size. To read the full message, check the broker's logs"

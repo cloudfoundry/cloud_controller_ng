@@ -5,19 +5,17 @@ module CloudController
     class NginxSecureLinkSigner
       def self.build(options:, directory_key:)
         NginxSecureLinkSigner.new(
-          internal_endpoint:    options[:private_endpoint],
+          internal_endpoint: options[:private_endpoint],
           internal_path_prefix: directory_key,
-          public_endpoint:      options[:public_endpoint],
-          public_path_prefix:   directory_key,
-          basic_auth_user:      options[:username],
-          basic_auth_password:  options[:password],
-          httpclient:           HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path]),
+          public_endpoint: options[:public_endpoint],
+          public_path_prefix: directory_key,
+          basic_auth_user: options[:username],
+          basic_auth_password: options[:password],
+          httpclient: HTTPClientProvider.provide(ca_cert_path: options[:ca_cert_path])
         )
       end
 
-      def initialize(internal_endpoint:, internal_path_prefix: nil,
-        public_endpoint:, public_path_prefix: nil, basic_auth_user:, basic_auth_password:, httpclient:)
-
+      def initialize(internal_endpoint:, public_endpoint:, basic_auth_user:, basic_auth_password:, httpclient:, internal_path_prefix: nil, public_path_prefix: nil)
         @internal_uri             = URI(internal_endpoint)
         @internal_path_prefix     = internal_path_prefix
         @public_uri               = URI(public_endpoint)
@@ -68,7 +66,7 @@ module CloudController
         uri.path  = '/sign'
         uri.query = {
           expires: expires,
-          path:    File.join(['/', path])
+          path: File.join(['/', path])
         }.to_query
 
         uri.to_s

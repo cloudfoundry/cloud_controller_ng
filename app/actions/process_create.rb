@@ -15,11 +15,11 @@ module VCAP::CloudController
     def create(app, args)
       type = args[:type]
       attrs = args.merge({
-        diego:             true,
-        instances:         default_instance_count(type),
-        health_check_type: default_health_check_type(type),
-        metadata:          {},
-      })
+                           diego: true,
+                           instances: default_instance_count(type),
+                           health_check_type: default_health_check_type(type),
+                           metadata: {}
+                         })
       attrs[:guid] = app.guid if type == ProcessTypes::WEB
 
       process = nil

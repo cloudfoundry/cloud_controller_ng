@@ -10,18 +10,19 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com', user_name: 'amelia') }
 
       context 'when creating a space' do
-        let(:message) { VCAP::CloudController::SpaceCreateMessage.new(
-          name: 'my-space',
-          relationships: relationships,
-          metadata: {
-            labels: {
-              release: 'stable',
-              'seriouseats.com/potato': 'mashed'
+        let(:message) do
+          VCAP::CloudController::SpaceCreateMessage.new(
+            name: 'my-space',
+            relationships: relationships,
+            metadata: {
+              labels: {
+                release: 'stable',
+                'seriouseats.com/potato': 'mashed'
+              }
             }
-          }
-        )
-        }
-        let!(:space) { SpaceCreate.new(user_audit_info: user_audit_info).create(org, message) }
+          )
+        end
+        let!(:space) { SpaceCreate.new(user_audit_info:).create(org, message) }
 
         it 'creates a space' do
           expect(space.organization).to eq(org)
@@ -46,7 +47,7 @@ module VCAP::CloudController
             actor_name: user_audit_info.user_email,
             actor_username: user_audit_info.user_name,
             space_guid: space.guid,
-            organization_guid: space.organization.guid,
+            organization_guid: space.organization.guid
           )
         end
       end
@@ -59,9 +60,9 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = VCAP::CloudController::SpaceCreateMessage.new(name: 'foobar')
-          expect {
-            SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
-          }.to raise_error(SpaceCreate::Error, 'blork is busted')
+          expect do
+            SpaceCreate.new(user_audit_info:).create(org, message)
+          end.to raise_error(SpaceCreate::Error, 'blork is busted')
         end
 
         context 'when it is a uniqueness error' do
@@ -72,22 +73,23 @@ module VCAP::CloudController
           end
 
           it 'raises a human-friendly error' do
-            message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
-            expect {
-              SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
-            }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
+            message = VCAP::CloudController::SpaceCreateMessage.new(name:)
+            expect do
+              SpaceCreate.new(user_audit_info:).create(org, message)
+            end.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
 
         context 'when it is a db uniqueness error' do
           let(:name) { 'mySpace' }
+
           it 'handles Space::DBNameUniqueRaceErrors' do
             allow(Space).to receive(:create).and_raise(Space::DBNameUniqueRaceError)
 
-            message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
-            expect {
-              SpaceCreate.new(user_audit_info: user_audit_info).create(org, message)
-            }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
+            message = VCAP::CloudController::SpaceCreateMessage.new(name:)
+            expect do
+              SpaceCreate.new(user_audit_info:).create(org, message)
+            end.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
       end

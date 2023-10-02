@@ -13,17 +13,17 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type:              'audit.app.deployment.create',
-          actor:             user_audit_info.user_guid,
-          actor_type:        'user',
-          actor_name:        user_audit_info.user_email,
-          actor_username:    user_audit_info.user_name,
-          actee:             deployment.app_guid,
-          actee_type:        'app',
-          actee_name:        v3_app_name,
-          timestamp:         Sequel::CURRENT_TIMESTAMP,
-          metadata:          metadata,
-          space_guid:        space_guid,
+          type: 'audit.app.deployment.create',
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actor_username: user_audit_info.user_name,
+          actee: deployment.app_guid,
+          actee_type: 'app',
+          actee_name: v3_app_name,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          metadata: metadata,
+          space_guid: space_guid,
           organization_guid: org_guid
         )
       end
@@ -33,21 +33,21 @@ module VCAP::CloudController
 
         metadata = {
           deployment_guid: deployment.guid,
-          droplet_guid: droplet&.guid,
+          droplet_guid: droplet&.guid
         }
 
         Event.create(
-          type:              'audit.app.deployment.cancel',
-          actor:             user_audit_info.user_guid,
-          actor_type:        'user',
-          actor_name:        user_audit_info.user_email,
-          actor_username:    user_audit_info.user_name,
-          actee:             deployment.app_guid,
-          actee_type:        'app',
-          actee_name:        v3_app_name,
-          timestamp:         Sequel::CURRENT_TIMESTAMP,
-          metadata:          metadata,
-          space_guid:        space_guid,
+          type: 'audit.app.deployment.cancel',
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actor_username: user_audit_info.user_name,
+          actee: deployment.app_guid,
+          actee_type: 'app',
+          actee_name: v3_app_name,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          metadata: metadata,
+          space_guid: space_guid,
           organization_guid: org_guid
         )
       end

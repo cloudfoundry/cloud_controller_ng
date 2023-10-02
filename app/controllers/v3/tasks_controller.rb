@@ -21,13 +21,13 @@ class TasksController < ApplicationController
     show_secrets = false
 
     if app_nested?
-      app, dataset = TaskListFetcher.fetch_for_app(message: message)
+      app, dataset = TaskListFetcher.fetch_for_app(message:)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
 
       show_secrets = can_read_secrets?(app.space)
     else
       dataset = if permission_queryer.can_read_globally?
-                  TaskListFetcher.fetch_all(message: message)
+                  TaskListFetcher.fetch_all(message:)
                 else
                   TaskListFetcher.fetch_for_spaces(message: message, space_guids: readable_space_guids)
                 end
@@ -40,6 +40,13 @@ class TasksController < ApplicationController
       message: message,
       show_secrets: show_secrets
     )
+  end
+
+  def show
+    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && can_read_task?(space)
+
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(space))
   end
 
   def create
@@ -55,7 +62,7 @@ class TasksController < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
-    task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
+    task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet:)
     TelemetryLogger.v3_emit(
       'create-task',
       {
@@ -74,7 +81,7 @@ class TasksController < ApplicationController
 
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
-    TaskCancel.new(configuration).cancel(task: task, user_audit_info: user_audit_info)
+    TaskCancel.new(configuration).cancel(task:, user_audit_info:)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e
@@ -92,13 +99,6 @@ class TasksController < ApplicationController
 
     task = TaskUpdate.new.update(task, message)
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task)
-  end
-
-  def show
-    task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
-    task_not_found! unless task && can_read_task?(space)
-
-    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(space))
   end
 
   private

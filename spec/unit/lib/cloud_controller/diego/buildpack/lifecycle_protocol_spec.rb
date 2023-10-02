@@ -12,12 +12,11 @@ module VCAP
           let(:droplet_url_generator) { instance_double(DropletUrlGenerator, perma_droplet_download_url: 'www.droplet.com') }
           let(:blobstore_url_generator) do
             instance_double(::CloudController::Blobstore::UrlGenerator,
-              buildpack_cache_download_url: 'cache-download-url',
-              buildpack_cache_upload_url:   'cache-upload-url',
-              package_download_url:         'package-download-url',
-              droplet_upload_url:           'droplet-upload-url',
-              droplet_download_url:         droplet_download_url,
-            )
+                            buildpack_cache_download_url: 'cache-download-url',
+                            buildpack_cache_upload_url: 'cache-upload-url',
+                            package_download_url: 'package-download-url',
+                            droplet_upload_url: 'droplet-upload-url',
+                            droplet_download_url: droplet_download_url)
           end
           let(:droplet_download_url) { 'droplet-download-url' }
 
@@ -25,7 +24,7 @@ module VCAP
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
-            let(:process) { ProcessModel.make(app: app) }
+            let(:process) { ProcessModel.make(app:) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
@@ -48,8 +47,8 @@ module VCAP
 
           describe '#lifecycle_data' do
             let(:app) { AppModel.make }
-            let(:package) { PackageModel.make(app: app) }
-            let(:droplet) { DropletModel.make(package: package, app: app) }
+            let(:package) { PackageModel.make(app:) }
+            let(:droplet) { DropletModel.make(package:, app:) }
             let(:buildpack) { nil }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
@@ -110,9 +109,9 @@ module VCAP
                 end
 
                 it 'raises an InvalidDownloadUri error' do
-                  expect {
+                  expect do
                     lifecycle_protocol.lifecycle_data(staging_details)
-                  }.to raise_error LifecycleProtocol::InvalidDownloadUri, /Failed to get blobstore download url for package #{staging_details.package.guid}/
+                  end.to raise_error LifecycleProtocol::InvalidDownloadUri, /Failed to get blobstore download url for package #{staging_details.package.guid}/
                 end
               end
 
@@ -122,9 +121,9 @@ module VCAP
                 end
 
                 it 're-raises the error' do
-                  expect {
+                  expect do
                     lifecycle_protocol.lifecycle_data(staging_details)
-                  }.to raise_error Membrane::SchemaValidationError, '{ droplet_upload_uri => Expected instance of String, given an instance of NilClass }'
+                  end.to raise_error Membrane::SchemaValidationError, '{ droplet_upload_uri => Expected instance of String, given an instance of NilClass }'
                 end
               end
             end
@@ -154,15 +153,15 @@ module VCAP
               expect(lifecycle_protocol.staging_action_builder(config, staging_details)).to be staging_action_builder
 
               expect(StagingActionBuilder).to have_received(:new).with(config, staging_details, hash_including({
-                app_bits_download_uri:              'package-download-url',
-                build_artifacts_cache_download_uri: 'cache-download-url',
-                buildpacks:                         ['buildpacks'],
-                stack:                              'potato-stack',
-                build_artifacts_cache_upload_uri:   'cache-upload-url',
-                droplet_upload_uri:                 'droplet-upload-url',
-                buildpack_cache_checksum:           'bp-cache-checksum',
-                app_bits_checksum:                  package.checksum_info,
-              }))
+                                                                                                                 app_bits_download_uri: 'package-download-url',
+                                                                                                                 build_artifacts_cache_download_uri: 'cache-download-url',
+                                                                                                                 buildpacks: ['buildpacks'],
+                                                                                                                 stack: 'potato-stack',
+                                                                                                                 build_artifacts_cache_upload_uri: 'cache-upload-url',
+                                                                                                                 droplet_upload_uri: 'droplet-upload-url',
+                                                                                                                 buildpack_cache_checksum: 'bp-cache-checksum',
+                                                                                                                 app_bits_checksum: package.checksum_info
+                                                                                                               }))
             end
           end
 
@@ -179,18 +178,18 @@ module VCAP
               expect(lifecycle_protocol.task_action_builder(config, task)).to be task_action_builder
 
               expect(TaskActionBuilder).to have_received(:new).with(config, task, {
-                droplet_uri: 'droplet-download-url',
-                stack:       'potato-stack'
-              })
+                                                                      droplet_uri: 'droplet-download-url',
+                                                                      stack: 'potato-stack'
+                                                                    })
             end
 
             context 'when the blobstore_url_generator returns nil' do
               let(:droplet_download_url) { nil }
 
               it 'returns an error' do
-                expect {
+                expect do
                   lifecycle_protocol.task_action_builder(config, task)
-                }.to raise_error(
+                end.to raise_error(
                   VCAP::CloudController::Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri,
                   /Failed to get blobstore download url for droplet #{task.droplet.guid}/
                 )
@@ -200,35 +199,35 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { AppModel.make(droplet: droplet) }
+            let(:app) { AppModel.make(droplet:) }
             let(:droplet) { DropletModel.make }
             let(:process) do
               ProcessModel.make(
-                type:     'worker',
-                app:      app,
-                diego:    true,
-                command:  'go go go',
+                type: 'worker',
+                app: app,
+                diego: true,
+                command: 'go go go',
                 metadata: {},
-                ports:    [1234, 5678]
+                ports: [1234, 5678]
               )
             end
             let(:builder_opts) do
               {
-                ports:              [1234, 5678],
-                stack:              process.stack.name,
-                droplet_uri:        'www.droplet.com',
-                droplet_hash:       droplet.droplet_hash,
-                process_guid:       ProcessGuid.from_process(process),
+                ports: [1234, 5678],
+                stack: process.stack.name,
+                droplet_uri: 'www.droplet.com',
+                droplet_hash: droplet.droplet_hash,
+                process_guid: ProcessGuid.from_process(process),
                 checksum_algorithm: 'sha256',
-                checksum_value:     droplet.sha256_checksum,
-                start_command:      'go go go',
+                checksum_value: droplet.sha256_checksum,
+                start_command: 'go go go'
               }
             end
 
             it 'creates a diego DesiredLrpBuilder' do
               expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                 config,
-                builder_opts,
+                builder_opts
               )
               lifecycle_protocol.desired_lrp_builder(config, process)
             end
@@ -242,7 +241,7 @@ module VCAP
                 builder_opts.merge!(checksum_algorithm: 'sha256', checksum_value: 'droplet-sha256-checksum')
                 expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                   config,
-                  builder_opts,
+                  builder_opts
                 )
                 lifecycle_protocol.desired_lrp_builder(config, process)
               end
@@ -258,7 +257,7 @@ module VCAP
                 builder_opts[:start_command] = '/usr/bin/nc'
                 expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                   config,
-                  builder_opts,
+                  builder_opts
                 )
                 lifecycle_protocol.desired_lrp_builder(config, process)
               end
@@ -275,20 +274,21 @@ module VCAP
                     app: app,
                     process_types: {
                       'worker' => 'something else',
-                      'web'    => 'not this'
+                      'web' => 'not this'
                     }
                   )
                 end
                 let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
+
                 before do
-                  process.update(revision: revision)
+                  process.update(revision:)
                 end
 
                 it 'uses the droplet from the revision and the command in the droplet' do
                   builder_opts.merge!(start_command: 'something else', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
                   expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                     config,
-                    builder_opts,
+                    builder_opts
                   )
                   lifecycle_protocol.desired_lrp_builder(config, process)
                 end
@@ -302,7 +302,7 @@ module VCAP
                     builder_opts.merge!(start_command: 'stop stop stop', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
                     expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                       config,
-                      builder_opts,
+                      builder_opts
                     )
                     lifecycle_protocol.desired_lrp_builder(config, process)
                   end
@@ -314,7 +314,7 @@ module VCAP
                   builder_opts.merge!(droplet_hash: droplet.droplet_hash, checksum_value: droplet.sha256_checksum)
                   expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                     config,
-                    builder_opts,
+                    builder_opts
                   )
                   lifecycle_protocol.desired_lrp_builder(config, process)
                 end
@@ -323,7 +323,7 @@ module VCAP
                   builder_opts[:start_command] = 'go go go'
                   expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                     config,
-                    builder_opts,
+                    builder_opts
                   )
                   lifecycle_protocol.desired_lrp_builder(config, process)
                 end

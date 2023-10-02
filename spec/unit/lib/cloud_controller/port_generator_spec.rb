@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:domain1) { SharedDomain.make(router_group_guid: router_group_guid1) }
     let(:space_quota) { SpaceQuotaDefinition.make }
     let(:space) { Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
-    let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
+    let(:dependency_double) { double('dependency_locator', routing_api_client:) }
 
     before do
       allow_any_instance_of(RouteValidator).to receive(:validate)
@@ -20,9 +20,9 @@ module VCAP::CloudController
 
     describe 'generate_port' do
       it 'generates a port' do
-        port = PortGenerator.generate_port(domain_guid1, Array(1024..65535))
+        port = PortGenerator.generate_port(domain_guid1, Array(1024..65_535))
 
-        expect((1024..65535).cover?(port)).to eq(true)
+        expect((1024..65_535).cover?(port)).to be(true)
       end
 
       it 'runs out of ports' do
@@ -42,11 +42,11 @@ module VCAP::CloudController
         let(:domain2) { SharedDomain.make(router_group_guid: router_group_guid2) }
 
         it 'hands out the same port for multiple router groups' do
-          Route.make(domain: domain1, port: 60001, space: space)
-          Route.make(domain: domain2, port: 60001, space: space)
+          Route.make(domain: domain1, port: 60_001, space: space)
+          Route.make(domain: domain2, port: 60_001, space: space)
 
-          port1 = PortGenerator.generate_port(domain2.guid, Array(60001..60002))
-          port2 = PortGenerator.generate_port(domain2.guid, Array(60001..60002))
+          port1 = PortGenerator.generate_port(domain2.guid, Array(60_001..60_002))
+          port2 = PortGenerator.generate_port(domain2.guid, Array(60_001..60_002))
 
           expect(port1).to eq(port2)
         end

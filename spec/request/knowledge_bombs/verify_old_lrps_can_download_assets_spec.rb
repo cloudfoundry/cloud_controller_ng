@@ -37,6 +37,7 @@ end
 RSpec.describe 'StagingsController download endpoint exists:' do
   describe 'GET /staging/v3/droplets/:guid/download' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
+
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, or redirect to another endpoint with different auth' do
         get "/staging/v3/droplets/#{droplet.guid}/download", nil, {}
@@ -50,6 +51,7 @@ end
 RSpec.describe 'DropletsController download endpoint with checksum exists:' do
   describe 'GET /internal/v2/droplets/:guid/:droplet_hash/download' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
+
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, and redirects to the droplet-url' do
         get "/internal/v2/droplets/#{droplet.guid}/#{droplet.sha256_checksum}/download", nil, {}

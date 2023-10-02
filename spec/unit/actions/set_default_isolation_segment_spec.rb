@@ -46,9 +46,9 @@ module VCAP::CloudController
 
       context 'when the org is NOT entitled to the isolation segment' do
         it 'raises an invalid relationship error' do
-          expect {
+          expect do
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
+          end.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
         end
       end
 
@@ -57,9 +57,9 @@ module VCAP::CloudController
         let(:isolation_segment_guid) { 'guid' }
 
         it 'raises an invalid relationship error' do
-          expect {
+          expect do
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
+          end.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
         end
       end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
             other_iso_seg = IsolationSegmentModel.make
             assigner.assign(other_iso_seg, [org])
             org.update(default_isolation_segment_guid: other_iso_seg.guid)
-            expect(org.default_isolation_segment_guid).to_not be_nil
+            expect(org.default_isolation_segment_guid).not_to be_nil
           end
 
           it 'sets the default isolation segment to null' do
@@ -90,9 +90,9 @@ module VCAP::CloudController
         end
 
         it 'raises an InvalidOrg error' do
-          expect {
+          expect do
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error(SetDefaultIsolationSegment::Error, 'some message')
+          end.to raise_error(SetDefaultIsolationSegment::Error, 'some message')
         end
       end
     end

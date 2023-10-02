@@ -49,10 +49,10 @@ module VCAP::CloudController
             job.perform
 
             buildpack.reload
-            expect(buildpack).to_not be_nil
+            expect(buildpack).not_to be_nil
             expect(buildpack.enabled).to be false
             expect(buildpack.filename).to end_with(File.basename(zipfile2))
-            expect(buildpack.key).to_not eql(existing_buildpack.key)
+            expect(buildpack.key).not_to eql(existing_buildpack.key)
             expect(buildpack.stack).to eq(existing_stack.name)
           end
 
@@ -94,9 +94,9 @@ module VCAP::CloudController
             let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: existing_stack.name) }
 
             it 'does not update any values on the buildpack and re-raises the error' do
-              expect {
+              expect do
                 job.perform
-              }.to raise_error(RuntimeError)
+              end.to raise_error(RuntimeError)
 
               expect(Buildpack.find(name: 'mybuildpack')).to eql(existing_buildpack)
             end

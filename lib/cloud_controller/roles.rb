@@ -1,5 +1,3 @@
-require 'set'
-
 module VCAP::CloudController
   class Roles
     CLOUD_CONTROLLER_ADMIN_SCOPE = 'cloud_controller.admin'.freeze
@@ -11,8 +9,8 @@ module VCAP::CloudController
     CLOUD_CONTROLLER_SERVICE_PERMISSIONS_READER = 'cloud_controller_service_permissions.read'.freeze
     CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE = 'cloud_controller.v2_api_rate_limit_exempt'.freeze
 
-    ORG_ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
-    SPACE_ROLE_NAMES = [:manager, :developer, :auditor].freeze
+    ORG_ROLE_NAMES = %i[user manager billing_manager auditor].freeze
+    SPACE_ROLE_NAMES = %i[manager developer auditor].freeze
 
     def initialize(token=nil)
       @scopes = Set.new(token && token['scope'])

@@ -36,11 +36,11 @@ module VCAP::CloudController
       def vcap_application
         vars_builder = VCAP::VarsBuilder.new(
           app,
-          memory_limit:       task.memory_in_mb,
+          memory_limit: task.memory_in_mb,
           staging_disk_in_mb: default_disk_limit,
-          space:              space,
-          file_descriptors:   Config.config.get(:instance_file_descriptor_limit),
-          version:            SecureRandom.uuid
+          space: space,
+          file_descriptors: Config.config.get(:instance_file_descriptor_limit),
+          version: SecureRandom.uuid
         )
 
         vars_builder.to_hash

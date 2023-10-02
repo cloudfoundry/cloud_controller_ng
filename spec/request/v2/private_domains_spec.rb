@@ -25,14 +25,14 @@ RSpec.describe 'PrivateDomains' do
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'prev_url'      => nil,
-          'next_url'      => nil,
-          'resources'     => [
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
             {
               'metadata' => {
-                'guid'       => domain.guid,
-                'url'        => "/v2/private_domains/#{domain.guid}",
+                'guid' => domain.guid,
+                'url' => "/v2/private_domains/#{domain.guid}",
                 'created_at' => iso8601,
                 'updated_at' => iso8601
               },
@@ -40,9 +40,9 @@ RSpec.describe 'PrivateDomains' do
                 'name' => domain.name,
                 'owning_organization_guid' => organization.guid,
                 'owning_organization_url' => "/v2/organizations/#{organization.guid}",
-                'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations",
+                'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations"
               }
-            },
+            }
           ]
         }
       )
@@ -60,8 +60,8 @@ RSpec.describe 'PrivateDomains' do
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
-            'guid'       => domain.guid,
-            'url'        => "/v2/private_domains/#{domain.guid}",
+            'guid' => domain.guid,
+            'url' => "/v2/private_domains/#{domain.guid}",
             'created_at' => iso8601,
             'updated_at' => iso8601
           },
@@ -69,7 +69,7 @@ RSpec.describe 'PrivateDomains' do
             'name' => domain.name,
             'owning_organization_guid' => organization.guid,
             'owning_organization_url' => "/v2/organizations/#{organization.guid}",
-            'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations",
+            'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations"
           }
         }
       )
@@ -86,19 +86,19 @@ RSpec.describe 'PrivateDomains' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => domain.guid,
-          'url'        => "/v2/private_domains/#{domain.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'name' => 'meow.mc.meowerson.com',
-          'owning_organization_guid' => organization.guid,
-          'owning_organization_url' => "/v2/organizations/#{organization.guid}",
-          'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations",
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => domain.guid,
+                                                        'url' => "/v2/private_domains/#{domain.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'name' => 'meow.mc.meowerson.com',
+                                                        'owning_organization_guid' => organization.guid,
+                                                        'owning_organization_url' => "/v2/organizations/#{organization.guid}",
+                                                        'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations"
+                                                      }
+                                                    })
     end
   end
 
@@ -112,19 +112,19 @@ RSpec.describe 'PrivateDomains' do
       parsed_response = MultiJson.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
-        'metadata' => {
-          'guid'       => domain.guid,
-          'url'        => "/v2/private_domains/#{domain.guid}",
-          'created_at' => iso8601,
-          'updated_at' => iso8601
-        },
-        'entity' => {
-          'name' => 'meow.com',
-          'owning_organization_guid' => organization.guid,
-          'owning_organization_url' => "/v2/organizations/#{organization.guid}",
-          'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations",
-        }
-      })
+                                                      'metadata' => {
+                                                        'guid' => domain.guid,
+                                                        'url' => "/v2/private_domains/#{domain.guid}",
+                                                        'created_at' => iso8601,
+                                                        'updated_at' => iso8601
+                                                      },
+                                                      'entity' => {
+                                                        'name' => 'meow.com',
+                                                        'owning_organization_guid' => organization.guid,
+                                                        'owning_organization_url' => "/v2/organizations/#{organization.guid}",
+                                                        'shared_organizations_url' => "/v2/private_domains/#{domain.guid}/shared_organizations"
+                                                      }
+                                                    })
     end
   end
 

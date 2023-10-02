@@ -16,7 +16,7 @@ module VCAP::CloudController
                else
                  SharedDomain.new(
                    name: message.name,
-                   internal: message.internal.nil? ? INTERNAL_DEFAULT : message.internal,
+                   internal: message.internal.nil? ? INTERNAL_DEFAULT : message.internal
                  )
                end
 
@@ -40,16 +40,13 @@ module VCAP::CloudController
     private
 
     def validation_error!(message, error)
-      if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
-        error!("The domain name \"#{message.name}\" is already in use")
-      end
+      error!("The domain name \"#{message.name}\" is already in use") if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
 
-      if error.errors.on(:name)&.any? { |e| [:reserved].include?(e) }
-        error!("The \"#{message.name}\" domain is reserved and cannot be used for org-scoped domains.")
-      end
+      error!("The \"#{message.name}\" domain is reserved and cannot be used for org-scoped domains.") if error.errors.on(:name)&.any? { |e| [:reserved].include?(e) }
 
       if error.errors.on(:organization)&.any? { |e| [:total_private_domains_exceeded].include?(e) }
-        error!("The number of private domains exceeds the quota for organization \"#{Organization.find(guid: message.organization_guid).name}\"")
+        org = Organization.find(guid: message.organization_guid).name
+        error!("The number of private domains exceeds the quota for organization \"#{org}\"")
       end
 
       error!(error.message)

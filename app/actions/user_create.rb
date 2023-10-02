@@ -16,9 +16,7 @@ module VCAP::CloudController
     private
 
     def validation_error!(message, error)
-      if error.errors.on(:guid)&.any? { |e| [:unique].include?(e) }
-        error!("User with guid '#{message.guid}' already exists.")
-      end
+      error!("User with guid '#{message.guid}' already exists.") if error.errors.on(:guid)&.any? { |e| [:unique].include?(e) }
 
       error!(error.message)
     end

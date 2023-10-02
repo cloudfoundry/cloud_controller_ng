@@ -19,7 +19,7 @@ module CloudController
       end
 
       describe 'attributes' do
-        let(:headers) { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123455 } }
+        let(:headers) { { 'ETag' => 'the-etag', 'Last-Modified' => 'modified-date', 'Content-Length' => 123_455 } }
 
         before do
           allow(httpmessage).to receive(:headers).and_return(headers)
@@ -28,10 +28,10 @@ module CloudController
         it "returns the blob's attributes" do
           expect(blob.attributes).to eq(
             {
-              etag:          'the-etag',
+              etag: 'the-etag',
               last_modified: 'modified-date',
-              content_length: 123455,
-              created_at: nil,
+              content_length: 123_455,
+              created_at: nil
             }
           )
         end
@@ -49,7 +49,7 @@ module CloudController
         it 'requests a signed expiring url with expiration of 1 hour' do
           Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
             blob.internal_download_url
-            expect(signer).to have_received(:sign_internal_url).with(path: 'fo/ob/foobar', expires: 1199192400)
+            expect(signer).to have_received(:sign_internal_url).with(path: 'fo/ob/foobar', expires: 1_199_192_400)
           end
         end
       end
@@ -62,7 +62,7 @@ module CloudController
         it 'generates a signed expiring url with expiration of 1 hour' do
           Timecop.freeze(Time.utc(2008, 1, 1, 12, 0, 0)) do
             blob.public_download_url
-            expect(signer).to have_received(:sign_public_url).with(path: 'fo/ob/foobar', expires: 1199192400)
+            expect(signer).to have_received(:sign_public_url).with(path: 'fo/ob/foobar', expires: 1_199_192_400)
           end
         end
       end

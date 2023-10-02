@@ -3,7 +3,7 @@ Sequel.migration do
     create_table(:job_warnings) do
       VCAP::Migration.common(self)
 
-      String :detail, size: 16000, null: false
+      String :detail, size: 16_000, null: false
 
       Integer :job_id, null: false
       foreign_key :job_id, :jobs, name: :fk_jobs_id

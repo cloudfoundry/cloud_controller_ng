@@ -12,7 +12,7 @@ class HttpRequestError < StructuredError
     hash = super
     hash['http'] = {
       'uri' => uri,
-      'method' => method,
+      'method' => method
     }
     hash
   end

@@ -11,17 +11,17 @@ module VCAP::CloudController
     describe '.update' do
       context 'when the feature name is ssh' do
         it 'updates the enable_ssh column on the app' do
-          expect {
+          expect do
             AppFeatureUpdate.update('ssh', app, message)
-          }.to change { app.reload.enable_ssh }.to(true)
+          end.to change { app.reload.enable_ssh }.to(true)
         end
       end
 
       context 'when the feature name is revisions' do
         it 'updates the revisions_enabled column on the app' do
-          expect {
+          expect do
             AppFeatureUpdate.update('revisions', app, message)
-          }.to change { app.reload.revisions_enabled }.to(true)
+          end.to change { app.reload.revisions_enabled }.to(true)
         end
       end
     end

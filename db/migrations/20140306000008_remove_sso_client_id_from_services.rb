@@ -1,6 +1,6 @@
 Sequel.migration do
   up do
-    run <<-SQL
+    run <<-SQL.squish
       INSERT INTO service_dashboard_clients (uaa_id, service_id_on_broker)
         SELECT sso_client_id, unique_id
         FROM services
@@ -15,7 +15,7 @@ Sequel.migration do
     alter_table :services do
       add_column :sso_client_id, String, unique: true
     end
-    run <<-SQL
+    run <<-SQL.squish
       UPDATE services
         SET sso_client_id = (
           SELECT service_dashboard_clients.uaa_id

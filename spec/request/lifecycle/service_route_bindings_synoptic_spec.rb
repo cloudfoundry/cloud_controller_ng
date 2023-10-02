@@ -5,23 +5,23 @@ require 'cloud_controller'
 RSpec.describe 'V3 service route bindings synoptic' do
   before do
     stub_request(:get, 'http://example.org/amazing-service-broker/v2/catalog').
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: catalog, headers: {})
 
     stub_request(:put, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 201, body: {}.to_json, headers: {})
 
     stub_request(:get, 'https://main.default.svc.cluster-domain.example/apis/networking.cloudfoundry.org/v1alpha1').
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: '', headers: {})
 
     stub_request(:get, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 200, body: { parameters: { key1: 'value1', key2: 'value2' } }.to_json, headers: {})
 
     stub_request(:delete, %r{\Ahttp://example.org/amazing-service-broker/v2/service_instances/.+/service_bindings/.+\z}).
-      with(basic_auth: %w(admin password)).
+      with(basic_auth: %w[admin password]).
       to_return(status: 410, body: '', headers: {})
     VCAP::CloudController::Config.config.set(:kubernetes, nil)
 
@@ -52,7 +52,7 @@ RSpec.describe 'V3 service route bindings synoptic' do
     get '/v3/service_route_bindings', nil, admin_headers
     route_binding_guid = parsed_response['resources'][0]['guid']
     get "/v3/service_route_bindings/#{route_binding_guid}/parameters", nil, admin_headers
-    expect(parsed_response).to contain_exactly(*create_request[:parameters].with_indifferent_access)
+    expect(parsed_response).to match_array(create_request[:parameters].with_indifferent_access)
 
     updates_metadata(route_binding_guid, create_request)
 
@@ -72,8 +72,8 @@ RSpec.describe 'V3 service route bindings synoptic' do
     }
     patch "/v3/service_route_bindings/#{binding_guid}", update_request.to_json, admin_headers
     expect(last_response).to have_status_code(200)
-    expect(parsed_response['metadata']['annotations']).to contain_exactly(*update_request[:metadata][:annotations].merge(create_request[:metadata][:annotations]).stringify_keys)
-    expect(parsed_response['metadata']['labels']).to contain_exactly(*update_request[:metadata][:labels].merge(create_request[:metadata][:labels]).stringify_keys)
+    expect(parsed_response['metadata']['annotations']).to match_array(update_request[:metadata][:annotations].merge(create_request[:metadata][:annotations]).stringify_keys)
+    expect(parsed_response['metadata']['labels']).to match_array(update_request[:metadata][:labels].merge(create_request[:metadata][:labels]).stringify_keys)
   end
 
   def get_route_service_plan(using:)

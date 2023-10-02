@@ -2,7 +2,7 @@ require 'cloud_controller/db'
 require 'cloud_controller/database_parts_parser'
 
 class DbConfig
-  def initialize(connection_string: ENV['DB_CONNECTION_STRING'], db_type: ENV['DB'])
+  def initialize(connection_string: ENV.fetch('DB_CONNECTION_STRING', nil), db_type: ENV.fetch('DB', nil))
     @connection_string = connection_string || default_connection_string(db_type || 'postgres')
     initialize_environment_for_cc_spawning
   end

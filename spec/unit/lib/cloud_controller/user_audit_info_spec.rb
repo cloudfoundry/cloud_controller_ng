@@ -5,10 +5,9 @@ module VCAP::CloudController
   RSpec.describe UserAuditInfo do
     let(:security_context) do
       class_double(SecurityContext,
-        current_user_email: 'email',
-        current_user_name:  'username',
-        current_user:       User.new(guid: 'the-guid')
-      )
+                   current_user_email: 'email',
+                   current_user_name: 'username',
+                   current_user: User.new(guid: 'the-guid'))
     end
 
     describe '.from_context' do
@@ -23,10 +22,9 @@ module VCAP::CloudController
     context 'defaults' do
       let(:security_context) do
         class_double(SecurityContext,
-          current_user_email: nil,
-          current_user_name:  nil,
-          current_user:       User.new(guid: 'the-guid')
-        )
+                     current_user_email: nil,
+                     current_user_name: nil,
+                     current_user: User.new(guid: 'the-guid'))
       end
 
       describe '.from_context' do

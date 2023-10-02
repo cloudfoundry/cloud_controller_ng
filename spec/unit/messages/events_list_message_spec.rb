@@ -23,14 +23,14 @@ module VCAP::CloudController
 
       it 'accepts a set of fields' do
         message = EventsListMessage.from_params({
-          guids: ['event_guid1'],
-          types: ['audit.app.create'],
-          target_guids: ['guid1', 'guid2'],
-          space_guids: ['guid3', 'guid4'],
-          organization_guids: ['guid5', 'guid6'],
-          created_ats: { lt: Time.now.utc.iso8601 },
-          updated_ats: { gt: Time.now.utc.iso8601 },
-        })
+                                                  guids: ['event_guid1'],
+                                                  types: ['audit.app.create'],
+                                                  target_guids: %w[guid1 guid2],
+                                                  space_guids: %w[guid3 guid4],
+                                                  organization_guids: %w[guid5 guid6],
+                                                  created_ats: { lt: Time.now.utc.iso8601 },
+                                                  updated_ats: { gt: Time.now.utc.iso8601 }
+                                                })
         expect(message).to be_valid
       end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
           end
 
           it 'is valid for an array' do
-            message = EventsListMessage.from_params({ target_guids: ['guid1', 'guid2'] })
+            message = EventsListMessage.from_params({ target_guids: %w[guid1 guid2] })
             expect(message).to be_valid
           end
 

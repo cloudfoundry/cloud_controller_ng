@@ -10,7 +10,7 @@ module VCAP::CloudController
         name: 'basic',
         apps: apps,
         services: services,
-        routes: routes,
+        routes: routes
       }
     end
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
         per_process_memory_in_mb: 1024,
         total_instances: 2,
         per_app_tasks: 4,
-        log_rate_limit_in_bytes_per_second: 2000,
+        log_rate_limit_in_bytes_per_second: 2000
       }
     end
 
@@ -28,14 +28,14 @@ module VCAP::CloudController
       {
         paid_services_allowed: true,
         total_service_instances: 17,
-        total_service_keys: 19,
+        total_service_keys: 19
       }
     end
 
     let(:routes) do
       {
         total_routes: 47,
-        total_reserved_ports: 28,
+        total_reserved_ports: 28
       }
     end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (SpaceQuotaUpdateMessage::MAX_SPACE_QUOTA_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
           end
         end
@@ -115,7 +115,7 @@ module VCAP::CloudController
           let(:params) { { name: '' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include("can't be blank")
           end
         end
@@ -123,26 +123,26 @@ module VCAP::CloudController
 
       describe 'apps' do
         context 'value for apps is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: true,
+              apps: true
             }
-          }
+          end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Apps must be an object')
           end
         end
 
         context 'when apps is well-formed (a hash)' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              apps: {},
+              apps: {}
             }
-          }
+          end
 
           before do
             quota_app_message = instance_double(QuotasAppsMessage)
@@ -152,7 +152,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasAppsMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:apps]).to include('invalid_app_limits')
           end
         end
@@ -160,26 +160,26 @@ module VCAP::CloudController
 
       describe 'services' do
         context 'value for services is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: true,
+              services: true
             }
-          }
+          end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Services must be an object')
           end
         end
 
         context 'when the services validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              services: {},
+              services: {}
             }
-          }
+          end
 
           before do
             quota_services_message = instance_double(QuotasServicesMessage)
@@ -189,7 +189,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasServicesMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:services]).to include('invalid_services_limits')
           end
         end
@@ -197,26 +197,26 @@ module VCAP::CloudController
 
       describe 'routes' do
         context 'value for routes is not a hash' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: true,
+              routes: true
             }
-          }
+          end
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors.full_messages[0]).to include('Routes must be an object')
           end
         end
 
         context 'when the routes validator returns errors' do
-          let(:params) {
+          let(:params) do
             {
               name: 'my-name',
-              routes: {},
+              routes: {}
             }
-          }
+          end
 
           before do
             quota_routes_message = instance_double(QuotasRoutesMessage)
@@ -226,7 +226,7 @@ module VCAP::CloudController
           end
 
           it 'delegates validation to QuotasRoutesMessage and returns any errors' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:routes]).to include('invalid_routes_limits')
           end
         end

@@ -23,7 +23,7 @@ RSpec.describe BuildpacksController, type: :controller do
         'global_auditor' => 200,
         'org_auditor' => 200,
         'org_billing_manager' => 200,
-        'org_user' => 200,
+        'org_user' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -32,7 +32,7 @@ RSpec.describe BuildpacksController, type: :controller do
           let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role:, org:, space:, user:)
 
             get :index
 
@@ -44,7 +44,7 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'returns 401 when logged out' do
         get :index
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
@@ -90,19 +90,19 @@ RSpec.describe BuildpacksController, type: :controller do
 
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::BuildpackListFetcher).to receive(:fetch_all).with(
-          anything, hash_including(eager_loaded_associations: [:labels, :annotations])
+          anything, hash_including(eager_loaded_associations: %i[labels annotations])
         ).and_call_original
 
         get :index
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
       end
 
       context 'when the query params are invalid' do
         it 'returns an error' do
           get :index, params: { per_page: 'whoops' }
 
-          expect(response.status).to eq 400
+          expect(response).to have_http_status :bad_request
           expect(response.body).to include('Per page must be a positive integer')
           expect(response.body).to include('BadQueryParameter')
         end
@@ -123,7 +123,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           delete :destroy, params: { guid: buildpack.guid }
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -145,7 +145,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               delete :destroy, params: { guid: buildpack.guid }, as: :json
 
@@ -158,7 +158,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -168,10 +168,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               delete :destroy, params: { guid: 'non-existent' }, as: :json
 
@@ -184,22 +184,20 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'returns 401 when logged out' do
         delete :destroy, params: { guid: buildpack.guid }, as: :json
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
     context 'as an admin user' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when the buildpack exists' do
         it 'creates a job to track the deletion and returns it in the location header' do
-          expect {
+          expect do
             delete :destroy, params: { guid: buildpack.guid }
-          }.to change {
-            VCAP::CloudController::PollableJobModel.count
-          }.by(1)
+          end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
 
           job = VCAP::CloudController::PollableJobModel.last
           enqueued_job = Delayed::Job.last
@@ -209,7 +207,7 @@ RSpec.describe BuildpacksController, type: :controller do
           expect(job.resource_guid).to eq(buildpack.guid)
           expect(job.resource_type).to eq('buildpack')
 
-          expect(response.status).to eq(202)
+          expect(response).to have_http_status(:accepted)
           expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
         end
 
@@ -217,7 +215,7 @@ RSpec.describe BuildpacksController, type: :controller do
           delete :destroy, params: { guid: buildpack.guid }
 
           job = VCAP::CloudController::PollableJobModel.find(resource_guid: buildpack.guid)
-          expect(job).to_not be_nil
+          expect(job).not_to be_nil
           expect(job.state).to eq('PROCESSING')
 
           # one job to delete the model, which spawns another to delete the blob
@@ -231,7 +229,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'returns a 404 Not Found' do
           delete :destroy, params: { guid: 'not-found' }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
@@ -247,9 +245,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
     context 'when the buildpack exists' do
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
       it 'renders a single buildpack details' do
         get :show, params: { guid: buildpack.guid }
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
         expect(parsed_body['guid']).to eq(buildpack.guid)
       end
     end
@@ -257,7 +256,7 @@ RSpec.describe BuildpacksController, type: :controller do
     context 'when the buildpack does not exist' do
       it 'errors' do
         get :show, params: { guid: 'psych!' }
-        expect(response.status).to eq 404
+        expect(response).to have_http_status :not_found
         expect(response.body).to include('ResourceNotFound')
       end
     end
@@ -282,29 +281,29 @@ RSpec.describe BuildpacksController, type: :controller do
           locked: true,
           metadata: {
             labels: {
-              fruit: 'passionfruit',
+              fruit: 'passionfruit'
             },
             annotations: {
-              potato: 'adora',
-            },
-          },
+              potato: 'adora'
+            }
+          }
         }
       end
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when params are correct' do
         context 'when the stack exists' do
           let(:stack) { VCAP::CloudController::Stack.make }
 
-          it 'should save the buildpack in the database' do
+          it 'saves the buildpack in the database' do
             post :create, params: params, as: :json
 
             buildpack_id = parsed_body['guid']
             our_buildpack = VCAP::CloudController::Buildpack.find(guid: buildpack_id)
-            expect(our_buildpack).to_not be_nil
+            expect(our_buildpack).not_to be_nil
             expect(our_buildpack.name).to eq(params[:name])
             expect(our_buildpack.stack).to eq(params[:stack])
             expect(our_buildpack.position).to eq(params[:position])
@@ -320,13 +319,13 @@ RSpec.describe BuildpacksController, type: :controller do
 
           it 'does not create the buildpack' do
             expect { post :create, params: params, as: :json }.
-              to_not change { VCAP::CloudController::Buildpack.count }
+              not_to(change(VCAP::CloudController::Buildpack, :count))
           end
 
           it 'returns 422' do
             post :create, params: params, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
           end
 
           it 'returns a helpful error message' do
@@ -346,12 +345,12 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'returns 422' do
           post :create, params: params, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
         end
 
         it 'does not create the buildpack' do
           expect { post :create, params: params, as: :json }.
-            to_not change { VCAP::CloudController::Buildpack.count }
+            not_to(change(VCAP::CloudController::Buildpack, :count))
         end
       end
     end
@@ -372,7 +371,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           patch :update, params: { guid: buildpack.guid }
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -394,7 +393,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               patch :update, params: { guid: buildpack.guid }, as: :json
 
@@ -407,7 +406,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -417,10 +416,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               patch :update, params: { guid: 'non-existent' }, as: :json
 
@@ -433,27 +432,27 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'returns 401 when logged out' do
         patch :update, params: { guid: buildpack.guid }, as: :json
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
     context 'when authenticated' do
       let(:name) do
-        expect(buildpack.reload.enabled).to eq false
+        expect(buildpack.reload.enabled).to be false
       end
 
       let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'when the request message has invalid parameters' do
         it 'returns 422' do
           patch :update, params: { guid: buildpack.guid, enabled: 'totally-not-a-valid-value' }, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
         end
       end
@@ -463,7 +462,7 @@ RSpec.describe BuildpacksController, type: :controller do
           other_buildpack = VCAP::CloudController::Buildpack.make(stack: buildpack.stack)
           patch :update, params: { guid: buildpack.guid, name: other_buildpack.name }, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(parsed_body['errors'][0]['detail']).to include("Buildpack with name '#{other_buildpack.name}' and an unassigned stack already exists")
         end
       end
@@ -480,12 +479,12 @@ RSpec.describe BuildpacksController, type: :controller do
           locked: !buildpack.locked,
           metadata: {
             labels: { key: 'value' },
-            annotations: { key2: 'value2' },
-          },
+            annotations: { key2: 'value2' }
+          }
         }
         patch :update, params: { guid: buildpack.guid }.merge(new_values), as: :json
 
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
 
         expect(parsed_body['name']).to eq 'new-name'
         expect(parsed_body['stack']).to eq new_stack.name
@@ -519,6 +518,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
     describe 'permissions' do
       let(:params) { { bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
+
       context 'when the user does not have the write scope' do
         before do
           set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
@@ -527,7 +527,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'raises an ApiError with a 403 code' do
           post :upload, params: params.merge({ guid: test_buildpack.guid })
 
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
           expect(response.body).to include 'NotAuthorized'
         end
       end
@@ -549,7 +549,7 @@ RSpec.describe BuildpacksController, type: :controller do
                 org: org,
                 space: space,
                 user: user,
-                scopes: %w(cloud_controller.read cloud_controller.write)
+                scopes: %w[cloud_controller.read cloud_controller.write]
               )
               post :upload, params: params.merge({ guid: test_buildpack.guid }), as: :json
 
@@ -562,7 +562,7 @@ RSpec.describe BuildpacksController, type: :controller do
       context 'permissions by role when the buildpack does not exist' do
         role_to_expected_http_response = {
           'admin' => 404,
-          'reader_and_writer' => 404,
+          'reader_and_writer' => 404
         }.freeze
 
         role_to_expected_http_response.each do |role, expected_return_value|
@@ -572,10 +572,10 @@ RSpec.describe BuildpacksController, type: :controller do
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
-                role: role,
-                org: org,
-                space: space,
-                user: user
+                role:,
+                org:,
+                space:,
+                user:
               )
               post :upload, params: params.merge({ guid: 'doesnt-exist' }), as: :json
 
@@ -588,7 +588,7 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'returns 401 when logged out' do
         post :upload, params: params.merge({ guid: test_buildpack.guid }), as: :json
 
-        expect(response.status).to eq 401
+        expect(response).to have_http_status :unauthorized
       end
     end
 
@@ -596,15 +596,13 @@ RSpec.describe BuildpacksController, type: :controller do
       let(:params) { { guid: test_buildpack.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
 
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       it 'returns a 202, the buildpack, and the job location header' do
-        expect {
+        expect do
           post :upload, params: params.merge({}), as: :json
-        }.to change {
-          VCAP::CloudController::PollableJobModel.count
-        }.by(1)
+        end.to change(VCAP::CloudController::PollableJobModel, :count).by(1)
 
         job = VCAP::CloudController::PollableJobModel.last
         expect(job.operation).to eq('buildpack.upload')
@@ -619,7 +617,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
         it 'returns a 422 and error message that the buildpack is locked' do
           post :upload, params: { guid: bp.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -630,7 +628,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'errors' do
           post :upload, params: params.merge({}), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
         end
       end
@@ -641,7 +639,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'errors' do
           post :upload, params: params.merge({}), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
         end
       end

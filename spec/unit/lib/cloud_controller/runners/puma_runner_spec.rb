@@ -23,12 +23,12 @@ module VCAP::CloudController
       TestConfig.override(
         external_host: 'some_local_ip',
         nginx: {
-          use_nginx:  use_nginx,
+          use_nginx: use_nginx,
           instance_socket: unix_socket
         },
         puma: {
           workers: 3,
-          max_threads: 4,
+          max_threads: 4
         }
       )
       PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
@@ -103,13 +103,13 @@ module VCAP::CloudController
     end
 
     describe '#stop!' do
-      it 'should stop puma and EM, logs incomplete requests' do
+      it 'stops puma and EM, logs incomplete requests' do
         expect(request_logs).to receive(:log_incomplete_requests)
         expect(EM).to receive(:stop)
         subject.stop!
       end
 
-      it 'should get called when the launcher stops' do
+      it 'gets called when the launcher stops' do
         expect(subject).to receive(:stop!)
         subject.instance_variable_get(:@puma_launcher).events.fire(:on_stopped)
       end

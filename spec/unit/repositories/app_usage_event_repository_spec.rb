@@ -10,13 +10,13 @@ module VCAP::CloudController
         context 'when the event exists' do
           let(:event) { AppUsageEvent.make }
 
-          it 'should return the event' do
+          it 'returns the event' do
             expect(repository.find(event.guid)).to eq(event)
           end
         end
 
         context 'when the event does not exist' do
-          it 'should return nil' do
+          it 'returns nil' do
             expect(repository.find('does-not-exist')).to be_nil
           end
         end
@@ -82,6 +82,7 @@ module VCAP::CloudController
               process.desired_droplet.update(state: DropletModel::FAILED_STATE)
               process.reload
             end
+
             it 'will create an event with failed package state' do
               event = repository.create_from_process(process)
               expect(event).to match_app(process)
@@ -93,7 +94,7 @@ module VCAP::CloudController
           before do
             process.desired_droplet.update(
               buildpack_receipt_buildpack_guid: 'buildpack-guid',
-              buildpack_receipt_buildpack:      'buildpack-name'
+              buildpack_receipt_buildpack: 'buildpack-name'
             )
           end
 
@@ -150,9 +151,9 @@ module VCAP::CloudController
           end
 
           it 'will raise an error' do
-            expect {
+            expect do
               repository.create_from_process(process)
-            }.to raise_error(Sequel::NotNullConstraintViolation)
+            end.to raise_error(Sequel::NotNullConstraintViolation)
           end
         end
 
@@ -218,9 +219,9 @@ module VCAP::CloudController
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
-          expect {
+          expect do
             repository.create_from_task(task, state)
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change(AppUsageEvent, :count).by(1)
         end
 
         describe 'the created event' do
@@ -317,9 +318,9 @@ module VCAP::CloudController
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
-          expect {
+          expect do
             repository.create_from_build(build, state)
-          }.to change { AppUsageEvent.count }.by(1)
+          end.to change(AppUsageEvent, :count).by(1)
         end
 
         describe 'the created event' do
@@ -394,17 +395,17 @@ module VCAP::CloudController
             let!(:build) do
               BuildModel.make(
                 :buildpack,
-                guid:         'build-1',
+                guid: 'build-1',
                 package_guid: package.guid,
-                app_guid:     app_model.guid,
+                app_guid: app_model.guid
               )
             end
             let!(:droplet) do
               DropletModel.make(
                 :buildpack,
-                buildpack_receipt_buildpack:      'a-buildpack',
+                buildpack_receipt_buildpack: 'a-buildpack',
                 buildpack_receipt_buildpack_guid: 'a-buildpack-guid',
-                build:                            build
+                build: build
               )
             end
 
@@ -428,9 +429,9 @@ module VCAP::CloudController
           let!(:build) do
             BuildModel.make(
               :docker,
-              guid:         'build-1',
+              guid: 'build-1',
               package_guid: package.guid,
-              app_guid:     app_model.guid,
+              app_guid: app_model.guid
             )
           end
 
@@ -444,12 +445,14 @@ module VCAP::CloudController
 
         context 'when the build is updating its state' do
           let(:old_build_state) { BuildModel::STAGED_STATE }
-          let(:existing_build) { BuildModel.make(
-            guid:     'existing-build',
-            state:    old_build_state,
-            package:  package,
-            app_guid: app_model.guid)
-          }
+          let(:existing_build) do
+            BuildModel.make(
+              guid: 'existing-build',
+              state: old_build_state,
+              package: package,
+              app_guid: app_model.guid
+            )
+          end
 
           context 'when the same attribute values are set' do
             before do
@@ -518,9 +521,9 @@ module VCAP::CloudController
         it 'will purge all existing events' do
           3.times { repository.create_from_process(process) }
 
-          expect {
+          expect do
             repository.purge_and_reseed_started_apps!
-          }.to change { AppUsageEvent.count }.to(0)
+          end.to change(AppUsageEvent, :count).to(0)
         end
 
         context 'when there are started apps' do
@@ -539,9 +542,9 @@ module VCAP::CloudController
             started_app_count = ProcessModel.where(state: 'STARTED').count
 
             expect(AppUsageEvent.count > 1).to be true
-            expect {
+            expect do
               repository.purge_and_reseed_started_apps!
-            }.to change { AppUsageEvent.count }.to(started_app_count)
+            end.to change(AppUsageEvent, :count).to(started_app_count)
 
             expect(AppUsageEvent.last).to match_app(process)
           end
@@ -556,13 +559,13 @@ module VCAP::CloudController
           context 'with associated buildpack information' do
             before do
               process.desired_droplet.update(
-                buildpack_receipt_buildpack:      'detected-name',
-                buildpack_receipt_buildpack_guid: 'detected-guid',
+                buildpack_receipt_buildpack: 'detected-name',
+                buildpack_receipt_buildpack_guid: 'detected-guid'
               )
               process.reload
             end
 
-            it 'should preserve the buildpack info in the new event' do
+            it 'preserves the buildpack info in the new event' do
               repository.purge_and_reseed_started_apps!
               event = AppUsageEvent.last
 
@@ -675,6 +678,7 @@ module VCAP::CloudController
 
       describe '#delete_events_older_than' do
         let(:cutoff_age_in_days) { 1 }
+
         before do
           AppUsageEvent.dataset.delete
 
@@ -691,21 +695,17 @@ module VCAP::CloudController
           process = ProcessModel.make
           repository.create_from_process(process)
 
-          expect {
+          expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          }.to change {
-            AppUsageEvent.count
-          }.to(1)
+          end.to change(AppUsageEvent, :count).to(1)
 
           expect(AppUsageEvent.last).to match_app(process)
         end
 
         it 'will keep the last record even if before the cutoff age' do
-          expect {
+          expect do
             repository.delete_events_older_than(cutoff_age_in_days)
-          }.to change {
-            AppUsageEvent.count
-          }.to(1)
+          end.to change(AppUsageEvent, :count).to(1)
 
           expect(AppUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
         end

@@ -40,9 +40,9 @@ module VCAP::CloudController
       private
 
       def validate_max_label_limit!(labels, starting_label_count, ending_label_count)
-        if starting_label_count < ending_label_count && ending_label_count > max_labels_per_resource
-          raise CloudController::Errors::ApiError.new_from_details('LabelLimitExceeded', labels.size, max_labels_per_resource)
-        end
+        return unless starting_label_count < ending_label_count && ending_label_count > max_labels_per_resource
+
+        raise CloudController::Errors::ApiError.new_from_details('LabelLimitExceeded', labels.size, max_labels_per_resource)
       end
 
       def max_labels_per_resource

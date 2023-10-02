@@ -23,9 +23,9 @@ module CloudController
           let(:root_dir) { nil }
 
           it 'raises an UnsafeDelete error' do
-            expect {
+            expect do
               client.delete_all
-            }.to raise_error(UnsafeDelete)
+            end.to raise_error(UnsafeDelete)
           end
         end
 
@@ -33,9 +33,9 @@ module CloudController
           let(:root_dir) { '' }
 
           it 'raises an UnsafeDelete error' do
-            expect {
+            expect do
               client.delete_all
-            }.to raise_error(UnsafeDelete)
+            end.to raise_error(UnsafeDelete)
           end
         end
       end
@@ -51,9 +51,9 @@ module CloudController
           let(:root_dir) { nil }
 
           it 'raises an UnsafeDelete error' do
-            expect {
+            expect do
               client.delete_all_in_path
-            }.to raise_error(UnsafeDelete)
+            end.to raise_error(UnsafeDelete)
           end
         end
 
@@ -61,9 +61,9 @@ module CloudController
           let(:root_dir) { '' }
 
           it 'raises an UnsafeDelete error' do
-            expect {
+            expect do
               client.delete_all_in_path
-            }.to raise_error(UnsafeDelete)
+            end.to raise_error(UnsafeDelete)
           end
         end
       end

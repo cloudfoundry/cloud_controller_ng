@@ -21,14 +21,12 @@ module VCAP::CloudController
         message.manifest_route_mappings.each do |manifest_route_mapping|
           route = {
             model: find_or_create_valid_route(app, manifest_route_mapping[:route].to_hash, user_audit_info),
-            protocol: manifest_route_mapping[:protocol],
+            protocol: manifest_route_mapping[:protocol]
           }
 
-          if route[:model].present?
-            routes_to_map << route
-          else
-            raise InvalidRoute.new("No domains exist for route #{manifest_route_mapping[:route]}")
-          end
+          raise InvalidRoute.new("No domains exist for route #{manifest_route_mapping[:route]}") if route[:model].blank?
+
+          routes_to_map << route
         end
 
         # map route to app, but do this only if the full message contains valid routes
@@ -63,7 +61,7 @@ module VCAP::CloudController
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
           potential_domain = candidate[:domain]
           existing_domain = Domain.find(name: potential_domain)
-          next if !existing_domain
+          next unless existing_domain
 
           host = candidate[:host]
 
@@ -72,27 +70,25 @@ module VCAP::CloudController
             domain: existing_domain,
             **manifest_route.compact.slice(
               :path,
-              :port,
+              :port
             )
           )
 
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)
-            if host == '*' && existing_domain.shared?
-              raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
-            end
+            raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if host == '*' && existing_domain.shared?
 
             message = RouteCreateMessage.new({
-              'host' => host,
-              'path' => manifest_route[:path],
-              'port' => manifest_route[:port],
-            })
+                                               'host' => host,
+                                               'path' => manifest_route[:path],
+                                               'port' => manifest_route[:port]
+                                             })
 
             route = RouteCreate.new(user_audit_info).create(
               message: message,
               space: app.space,
               domain: existing_domain,
-              manifest_triggered: true,
+              manifest_triggered: true
             )
           elsif route.space.guid != app.space_guid
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')

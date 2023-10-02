@@ -11,9 +11,7 @@ module Sequel::Plugins::VcapGuid
 
   module InstanceMethods
     def before_create
-      if self.columns.include?(:guid) && self.guid.nil? && !self.class.no_auto_guid_flag
-        self.guid = SecureRandom.uuid
-      end
+      self.guid = SecureRandom.uuid if columns.include?(:guid) && guid.nil? && !self.class.no_auto_guid_flag
       super
     end
   end

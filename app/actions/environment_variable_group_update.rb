@@ -13,9 +13,7 @@ module VCAP::CloudController
 
       env_var_group
     rescue Sequel::DatabaseError => e
-      if e.message.include?("Mysql2::Error: Data too long for column 'environment_json'")
-        raise EnvironmentVariableGroupTooLong
-      end
+      raise EnvironmentVariableGroupTooLong if e.message.include?("Mysql2::Error: Data too long for column 'environment_json'")
 
       raise e
     end

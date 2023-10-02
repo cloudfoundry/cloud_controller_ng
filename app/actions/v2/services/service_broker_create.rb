@@ -18,7 +18,7 @@ module VCAP::CloudController
     def create(params)
       if params[:space_guid]
         space_id = get_space_id_from_guid(params)
-        params = params.merge({ space_id: space_id })
+        params = params.merge({ space_id: })
       end
 
       broker = ServiceBroker.new(params)
@@ -31,15 +31,11 @@ module VCAP::CloudController
         @route_services_enabled,
         @volume_services_enabled
       )
-      unless registration.create
-        raise get_exception_from_errors(registration)
-      end
+      raise get_exception_from_errors(registration) unless registration.create
 
       services_event_repository.record_broker_event(:create, broker, params)
 
-      if !registration.warnings.empty?
-        registration.warnings.each { |warning| warning_observer.add_warning(warning) }
-      end
+      registration.warnings.each { |warning| warning_observer.add_warning(warning) } unless registration.warnings.empty?
 
       broker
     end

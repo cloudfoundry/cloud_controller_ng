@@ -4,7 +4,7 @@ module VCAP::CloudController
   class PackageUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
 
-    register_allowed_keys [:bits_path, :bits_name, :upload_start_time, :resources]
+    register_allowed_keys %i[bits_path bits_name upload_start_time resources]
 
     validates_with NoAdditionalKeysValidator
 
@@ -31,17 +31,17 @@ module VCAP::CloudController
     private
 
     def bits_path_or_resources_presence
-      if bits_path.blank? && resources.blank?
-        errors.add(:base, 'Upload must include either resources or bits')
-      end
+      return unless bits_path.blank? && resources.blank?
+
+      errors.add(:base, 'Upload must include either resources or bits')
     end
 
     def bits_path_in_tmpdir
       return unless bits_path
 
-      unless FilePathChecker.safe_path?(bits_path, tmpdir)
-        errors.add(:bits_path, 'is invalid')
-      end
+      return if FilePathChecker.safe_path?(bits_path, tmpdir)
+
+      errors.add(:bits_path, 'is invalid')
     end
 
     def missing_file_path

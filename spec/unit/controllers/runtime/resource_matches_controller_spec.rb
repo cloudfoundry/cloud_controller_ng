@@ -29,15 +29,15 @@ module VCAP::CloudController
       end
 
       describe 'PUT /v2/resource_match' do
-        it 'should return an empty list when no resources match' do
+        it 'returns an empty list when no resources match' do
           resource_match_request(:put, '/v2/resource_match', [], [@nonexisting_descriptor])
         end
 
-        it 'should return a resource that matches' do
+        it 'returns a resource that matches' do
           resource_match_request(:put, '/v2/resource_match', [@descriptors.first], [@nonexisting_descriptor])
         end
 
-        it 'should return many resources that match' do
+        it 'returns many resources that match' do
           resource_match_request(:put, '/v2/resource_match', @descriptors, [@nonexisting_descriptor])
         end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
         FeatureFlag.make(name: 'resource_matching', enabled: false)
       end
 
-      it 'should return an empty list' do
+      it 'returns an empty list' do
         resource_match_request(:put, '/v2/resource_match', [], @descriptors)
       end
     end

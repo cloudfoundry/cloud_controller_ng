@@ -14,7 +14,7 @@ module VCAP::CloudController
             name: message.name,
             rules: message.rules || [],
             staging_default: message.staging || false,
-            running_default: message.running || false,
+            running_default: message.running || false
           )
           AsgLatestUpdate.renew
 
@@ -35,9 +35,7 @@ module VCAP::CloudController
       private
 
       def validation_error!(error, message)
-        if error.errors.on(:name)&.include?(:unique)
-          error!("Security group with name '#{message.name}' already exists.")
-        end
+        error!("Security group with name '#{message.name}' already exists.") if error.errors.on(:name)&.include?(:unique)
 
         error!(error.message)
       end

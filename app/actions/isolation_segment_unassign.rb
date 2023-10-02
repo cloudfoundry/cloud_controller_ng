@@ -32,14 +32,14 @@ module VCAP::CloudController
       space_list = associated_spaces.map { |s| "'#{s.name}'" }.join(', ')
       raise CloudController::Errors::ApiError.new_from_details(
         'UnprocessableEntity',
-        "Cannot remove the entitlement while this Isolation Segment is assigned to any Spaces. Currently assigned to: #{space_list}",
+        "Cannot remove the entitlement while this Isolation Segment is assigned to any Spaces. Currently assigned to: #{space_list}"
       )
     end
 
     def org_association_error!
       raise CloudController::Errors::ApiError.new_from_details(
         'UnprocessableEntity',
-        'Cannot remove the entitlement while this Isolation Segment is assigned as the Default Isolation Segment for the Organization.',
+        'Cannot remove the entitlement while this Isolation Segment is assigned as the Default Isolation Segment for the Organization.'
       )
     end
   end

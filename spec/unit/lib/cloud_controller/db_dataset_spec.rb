@@ -25,7 +25,7 @@ module VCAP::CloudController
         it 'does not log the number of returned rows under threshold' do
           2.times { Space.make }
           Space.all
-          expect(logs.string).to_not match 'Loaded'
+          expect(logs.string).not_to match 'Loaded'
         end
       end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
         it 'does not log' do
           2.times { Space.make }
           Space.all
-          expect(logs.string).to_not match 'Loaded'
+          expect(logs.string).not_to match 'Loaded'
         end
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
         it 'does not log the number of returned rows under threshold' do
           2.times { Space.make }
           Space.all
-          expect(logs.string).to_not match 'Loaded'
+          expect(logs.string).not_to match 'Loaded'
         end
       end
     end

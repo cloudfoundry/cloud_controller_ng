@@ -28,7 +28,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
     end
 
     before do
-      set_current_user_as_admin(user: user)
+      set_current_user_as_admin(user:)
       @resource_pool.add_directory(@tmpdir)
     end
 
@@ -46,13 +46,13 @@ RSpec.describe ResourceMatchesController, type: :controller do
         'org_manager' => 201,
         'org_auditor' => 201,
         'org_billing_manager' => 201,
-        'unauthenticated' => 401,
+        'unauthenticated' => 401
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role:, org:, space:, user:)
 
             post :create, params: req_body, as: :json
 
@@ -75,7 +75,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
         it 'raises FeatureDisabled' do
           post :create, params: req_body, as: :json
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include 'FeatureDisabled'
           expect(response.body).to include 'Feature Disabled'
         end
@@ -87,7 +87,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
           post :create, params: req_body, as: :json
 
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
         end
       end
     end
@@ -107,9 +107,9 @@ RSpec.describe ResourceMatchesController, type: :controller do
           }
         end
 
-        it 'should return an empty list ' do
+        it 'returns an empty list' do
           post :create, params: req_body, as: :json
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
           expect(parsed_body['resources']).to eq([])
         end
       end
@@ -134,15 +134,15 @@ RSpec.describe ResourceMatchesController, type: :controller do
           }
         end
 
-        it 'should return it' do
+        it 'returns it' do
           post :create, params: req_body, as: :json
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
           expect(parsed_body['resources']).to eq([{
-            'checksum' => { 'value' => @descriptors.first['sha1'] },
-            'size_in_bytes' => @descriptors.first['size'],
-            'path' => 'path/to/file1',
-            'mode' => '644'
-          }])
+                                                   'checksum' => { 'value' => @descriptors.first['sha1'] },
+                                                   'size_in_bytes' => @descriptors.first['size'],
+                                                   'path' => 'path/to/file1',
+                                                   'mode' => '644'
+                                                 }])
         end
       end
 
@@ -172,9 +172,9 @@ RSpec.describe ResourceMatchesController, type: :controller do
           }
         end
 
-        it 'should return many resources that match' do
+        it 'returns many resources that match' do
           post :create, params: req_body, as: :json
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
           expect(parsed_body['resources']).to eq([
             {
               'checksum' => { 'value' => @descriptors.first['sha1'] },
@@ -196,7 +196,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
         it 'returns an error' do
           post :create, params: { 'wrong-key' => [] }, as: :json
 
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
         end
       end
     end

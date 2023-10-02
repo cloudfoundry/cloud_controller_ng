@@ -33,7 +33,7 @@ module VCAP::CloudController
       let(:params) { { 'label_selector' => '' } }
 
       it 'is invalid' do
-        expect(subject).to_not be_valid
+        expect(subject).not_to be_valid
         expect(subject.errors[:base]).to include('Missing label_selector value')
       end
     end

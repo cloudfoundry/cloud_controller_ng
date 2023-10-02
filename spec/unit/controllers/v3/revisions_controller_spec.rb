@@ -6,7 +6,7 @@ require 'permissions_spec_helper'
 RSpec.describe RevisionsController, type: :controller do
   describe '#show' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
     let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet: droplet) }
@@ -14,13 +14,13 @@ RSpec.describe RevisionsController, type: :controller do
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+      allow_user_secret_access(user, space:)
     end
 
     it 'returns 200 and shows the revision' do
       get :show, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body).to be_a_response_like(
         {
           'guid' => revision.guid,
@@ -48,14 +48,14 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'environment_variables' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-            },
+            }
           },
           'metadata' => {
             'labels' => {},
             'annotations' => {}
           },
           'processes' => { 'web' => { 'command' => nil } },
-          'sidecars' => [],
+          'sidecars' => []
         }
       )
     end
@@ -66,7 +66,7 @@ RSpec.describe RevisionsController, type: :controller do
 
       get :show, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body).to be_a_response_like(
         {
           'guid' => revision.guid,
@@ -94,14 +94,14 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'environment_variables' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-            },
+            }
           },
           'metadata' => {
             'labels' => {},
             'annotations' => {}
           },
           'processes' => { 'web' => { 'command' => nil } },
-          'sidecars' => [],
+          'sidecars' => []
         }
       )
     end
@@ -109,7 +109,7 @@ RSpec.describe RevisionsController, type: :controller do
     it 'raises an ApiError with a 404 code when the revision does not exist' do
       get :show, params: { revision_guid: 'hahaha' }
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status :not_found
       expect(response.body).to include 'ResourceNotFound'
     end
 
@@ -123,7 +123,7 @@ RSpec.describe RevisionsController, type: :controller do
           get :show, params: { revision_guid: revision.guid }
 
           expect(response.body).to include 'NotAuthorized'
-          expect(response.status).to eq 403
+          expect(response).to have_http_status :forbidden
         end
       end
 
@@ -131,13 +131,13 @@ RSpec.describe RevisionsController, type: :controller do
         let(:space) { app_model.space }
 
         before do
-          disallow_user_read_access(user, space: space)
+          disallow_user_read_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do
           get :show, params: { revision_guid: revision.guid }
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
           expect(response.body).to include 'ResourceNotFound'
         end
       end
@@ -146,7 +146,7 @@ RSpec.describe RevisionsController, type: :controller do
 
   describe '#update' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
     let(:labels) do
@@ -158,7 +158,7 @@ RSpec.describe RevisionsController, type: :controller do
     let(:annotations) do
       {
         potato: 'celandine',
-        beet: 'formanova',
+        beet: 'formanova'
       }
     end
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
@@ -178,7 +178,7 @@ RSpec.describe RevisionsController, type: :controller do
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
 
       VCAP::CloudController::LabelsUpdate.update(revision, labels, VCAP::CloudController::RevisionLabelModel)
       VCAP::CloudController::AnnotationsUpdate.update(revision, annotations, VCAP::CloudController::RevisionAnnotationModel)
@@ -188,7 +188,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 200 and the updated revision' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body).to be_a_response_like(
           {
             'guid' => revision.guid,
@@ -216,14 +216,14 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => {
               'labels' => { 'fruit' => 'passionfruit', 'truck' => 'hino' },
               'annotations' => { 'potato' => 'adora', 'beet' => 'formanova' }
             },
             'processes' => { 'web' => { 'command' => nil } },
-            'sidecars' => [],
+            'sidecars' => []
           }
         )
       end
@@ -246,7 +246,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'is removed' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body).to be_a_response_like(
           {
             'guid' => revision.guid,
@@ -274,14 +274,14 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => {
               'labels' => { 'truck' => 'hino' },
               'annotations' => { 'beet' => 'formanova' }
             },
             'processes' => { 'web' => { 'command' => nil } },
-            'sidecars' => [],
+            'sidecars' => []
           }
         )
       end
@@ -289,25 +289,25 @@ RSpec.describe RevisionsController, type: :controller do
 
     context 'when the user cannot read from the space' do
       before do
-        disallow_user_read_access(user, space: space)
+        disallow_user_read_access(user, space:)
       end
 
       it 'returns a 404' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
     context 'when the user cannot modify the app' do
       before do
-        disallow_user_write_access(user, space: space)
+        disallow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
       end
     end
 
@@ -317,7 +317,7 @@ RSpec.describe RevisionsController, type: :controller do
           metadata: {
             annotations: {
               "": 'mashed',
-              "/potato": '.value.'
+              '/potato': '.value.'
             }
           }
         }
@@ -326,41 +326,42 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 422' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
 
   describe '#show_environment_variables' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(
-      app: app_model,
-      version: 808,
-      droplet_guid: droplet.guid,
-      environment_variables: { 'key' => 'value' },
-    )
-    }
+    let(:revision) do
+      VCAP::CloudController::RevisionModel.make(
+        app: app_model,
+        version: 808,
+        droplet_guid: droplet.guid,
+        environment_variables: { 'key' => 'value' }
+      )
+    end
 
     before do
       set_current_user(user, email: 'mona@example.com')
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+      allow_user_secret_access(user, space:)
     end
 
     it 'returns 200 and shows environment_variables' do
       get :show_environment_variables, params: { revision_guid: revision.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(parsed_body['var']).to eq({ 'key' => 'value' })
     end
 
     it 'records an audit event' do
-      expect {
+      expect do
         get :show_environment_variables, params: { revision_guid: revision.guid }
-      }.to change { VCAP::CloudController::Event.count }.by(1)
+      end.to change(VCAP::CloudController::Event, :count).by(1)
 
       event = VCAP::CloudController::Event.find(type: 'audit.app.revision.environment_variables.show')
       expect(event).not_to be_nil
@@ -374,37 +375,37 @@ RSpec.describe RevisionsController, type: :controller do
       expect(event.space_guid).to eq(app_model.space_guid)
       expect(event.organization_guid).to eq(app_model.space.organization.guid)
       expect(event.metadata).to eq({
-        'revision_guid' => revision.guid,
-        'revision_version' => revision.version,
-      })
+                                     'revision_guid' => revision.guid,
+                                     'revision_version' => revision.version
+                                   })
     end
 
     context 'when retrieving env variables for revision that do not exist' do
       it '404s' do
         get :show_environment_variables, params: { revision_guid: 'nonsense' }
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
     context 'when access to the space is restricted' do
       before do
-        disallow_user_read_access(user, space: space)
+        disallow_user_read_access(user, space:)
       end
 
       it '404s' do
         get :show_environment_variables, params: { revision_guid: 'nonsense' }
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
       end
     end
 
     context 'when access is restricted' do
       before do
-        disallow_user_secret_access(user, space: space)
+        disallow_user_secret_access(user, space:)
       end
 
       it '403s' do
         get :show_environment_variables, params: { revision_guid: revision.guid }
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end

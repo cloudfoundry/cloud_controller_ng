@@ -12,9 +12,7 @@ module VCAP::CloudController
 
     # rubocop:disable Metrics/CyclomaticComplexity
     def update(process, message, strategy_class)
-      if process.web? && process.app.deploying?
-        raise InvalidProcess.new('Cannot update this process while a deployment is in flight.')
-      end
+      raise InvalidProcess.new('Cannot update this process while a deployment is in flight.') if process.web? && process.app.deploying?
 
       strategy = strategy_class.new(message, process)
       process.db.transaction do

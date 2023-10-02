@@ -37,11 +37,9 @@ RSpec.describe 'Spaces' do
     end
 
     it 'creates a new space with the given name and org' do
-      expect {
+      expect do
         post '/v3/spaces', request_body, admin_header
-      }.to change {
-        VCAP::CloudController::Space.count
-      }.by 1
+      end.to change(VCAP::CloudController::Space, :count).by 1
 
       created_space = VCAP::CloudController::Space.last
 
@@ -64,7 +62,7 @@ RSpec.describe 'Spaces' do
           'links' => build_space_links(created_space),
           'metadata' => {
             'labels' => { 'hocus' => 'pocus' },
-            'annotations' => { 'boo' => 'urns' },
+            'annotations' => { 'boo' => 'urns' }
           }
         }
       )
@@ -72,7 +70,7 @@ RSpec.describe 'Spaces' do
 
     context 'permissions' do
       let(:space) { nil }
-      let(:api_call) { lambda { |user_headers| post '/v3/spaces', request_body, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/spaces', request_body, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[admin org_manager].each { |r| h[r] = { code: 201 } }
@@ -114,6 +112,7 @@ RSpec.describe 'Spaces' do
       org.add_user(user)
       TestConfig.override(kubernetes: {})
     end
+
     it 'returns the requested space' do
       space1.add_developer(user)
       get "/v3/spaces/#{space1.guid}", nil, user_header
@@ -136,9 +135,9 @@ RSpec.describe 'Spaces' do
           },
           'metadata' => {
             'labels' => {},
-            'annotations' => {},
+            'annotations' => {}
           },
-          'links' => build_space_links(space1),
+          'links' => build_space_links(space1)
         }
       )
     end
@@ -162,23 +161,23 @@ RSpec.describe 'Spaces' do
           'suspended' => false,
           'metadata' => {
             'labels' => {},
-            'annotations' => {},
+            'annotations' => {}
           },
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}"
             },
             'default_domain' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default"
             },
             'domains' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains"
             },
             'quota' => {
               'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}"
             }
           },
-          'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } }
         }
       )
     end
@@ -212,13 +211,13 @@ RSpec.describe 'Spaces' do
             },
             'metadata' => {
               'labels' => {},
-              'annotations' => {},
+              'annotations' => {}
             },
             'links' => build_space_links(space1).merge({
-              'quota' => {
-                'href' => "#{link_prefix}/v3/space_quotas/#{space_quota.guid}"
-              }
-            }),
+                                                         'quota' => {
+                                                           'href' => "#{link_prefix}/v3/space_quotas/#{space_quota.guid}"
+                                                         }
+                                                       })
           }
         )
       end
@@ -226,7 +225,7 @@ RSpec.describe 'Spaces' do
 
     context 'permissions' do
       let(:space) { space1 }
-      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guid: space.guid)
@@ -257,16 +256,16 @@ RSpec.describe 'Spaces' do
 
         let(:params) do
           {
-            names: ['foo', 'bar'],
-            organization_guids: ['foo', 'bar'],
-            guids: ['foo', 'bar'],
+            names: %w[foo bar],
+            organization_guids: %w[foo bar],
+            guids: %w[foo bar],
             include: 'org',
             page: '2',
             per_page: '10',
             order_by: 'updated_at',
             label_selector: 'foo,bar',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
       end
@@ -280,6 +279,7 @@ RSpec.describe 'Spaces' do
         space3.add_developer(user)
         TestConfig.override(kubernetes: {})
       end
+
       it 'returns a paginated list of spaces the user has access to' do
         get '/v3/spaces?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
@@ -317,7 +317,7 @@ RSpec.describe 'Spaces' do
                 },
                 'metadata' => {
                   'labels' => {},
-                  'annotations' => {},
+                  'annotations' => {}
                 },
                 'links' => build_space_links(space1)
               },
@@ -336,7 +336,7 @@ RSpec.describe 'Spaces' do
                 },
                 'metadata' => {
                   'labels' => {},
-                  'annotations' => {},
+                  'annotations' => {}
                 },
                 'links' => build_space_links(space2)
               }
@@ -376,7 +376,7 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceB.guid, spaceC.guid)
       end
 
       it 'returns the correct spaces when scoped to an org' do
@@ -384,14 +384,14 @@ RSpec.describe 'Spaces' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceF.guid)
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceF.guid)
       end
     end
 
     context('including org') do
       # space with org1
       let!(:other_org_space) { VCAP::CloudController::Space.make name: 'Agricola', organization: org2 }
-      let!(:org2) { VCAP::CloudController::Organization.make name: 'Videogames', created_at: 1.days.ago }
+      let!(:org2) { VCAP::CloudController::Organization.make name: 'Videogames', created_at: 1.day.ago }
 
       it 'can includes all orgs for spaces' do
         get '/v3/spaces?include=organization', nil, admin_header
@@ -403,59 +403,59 @@ RSpec.describe 'Spaces' do
         expect(orgs.length).to eq 2
         org1 = space1.organization
 
-        expect(orgs.map { |org| org['guid'] }).to eq [org1.guid, org2.guid]
+        expect(orgs.pluck('guid')).to eq [org1.guid, org2.guid]
         expect(orgs[0]).to be_a_response_like({
-          'guid' => org1.guid,
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'name' => org1.name,
-          'suspended' => false,
-          'metadata' => {
-            'labels' => {},
-            'annotations' => {},
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}",
-            },
-            'default_domain' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains/default",
-            },
-            'domains' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains",
-            },
-            'quota' => {
-              'href' => "#{link_prefix}/v3/organization_quotas/#{org1.quota_definition.guid}"
-            }
-          },
-          'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
-        })
+                                                'guid' => org1.guid,
+                                                'created_at' => iso8601,
+                                                'updated_at' => iso8601,
+                                                'name' => org1.name,
+                                                'suspended' => false,
+                                                'metadata' => {
+                                                  'labels' => {},
+                                                  'annotations' => {}
+                                                },
+                                                'links' => {
+                                                  'self' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}"
+                                                  },
+                                                  'default_domain' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains/default"
+                                                  },
+                                                  'domains' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains"
+                                                  },
+                                                  'quota' => {
+                                                    'href' => "#{link_prefix}/v3/organization_quotas/#{org1.quota_definition.guid}"
+                                                  }
+                                                },
+                                                'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } }
+                                              })
         expect(orgs[1]).to be_a_response_like({
-          'guid' => org2.guid,
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'name' => org2.name,
-          'suspended' => false,
-          'metadata' => {
-            'labels' => {},
-            'annotations' => {},
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
-            },
-            'default_domain' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
-            },
-            'domains' => {
-              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
-            },
-            'quota' => {
-              'href' => "#{link_prefix}/v3/organization_quotas/#{org2.quota_definition.guid}"
-            }
-          },
-          'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
-        })
+                                                'guid' => org2.guid,
+                                                'created_at' => iso8601,
+                                                'updated_at' => iso8601,
+                                                'name' => org2.name,
+                                                'suspended' => false,
+                                                'metadata' => {
+                                                  'labels' => {},
+                                                  'annotations' => {}
+                                                },
+                                                'links' => {
+                                                  'self' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org2.guid}"
+                                                  },
+                                                  'default_domain' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default"
+                                                  },
+                                                  'domains' => {
+                                                    'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains"
+                                                  },
+                                                  'quota' => {
+                                                    'href' => "#{link_prefix}/v3/organization_quotas/#{org2.quota_definition.guid}"
+                                                  }
+                                                },
+                                                'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } }
+                                              })
       end
 
       it 'flags unsupported includes that contain supported ones' do
@@ -466,21 +466,21 @@ RSpec.describe 'Spaces' do
       it 'does not include spaces if no one asks for them' do
         get '/v3/spaces', nil, admin_header
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to_not have_key('included')
+        expect(parsed_response).not_to have_key('included')
       end
     end
 
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::Space }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/spaces?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/spaces?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
 
     context 'permissions' do
       let(:space) { space1 }
-      let(:api_call) { lambda { |user_headers| get '/v3/spaces', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/spaces', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid, space3.guid])
@@ -514,7 +514,7 @@ RSpec.describe 'Spaces' do
         other_sec_group.add_staging_space(space)
       end
 
-      let(:expected_response_objects) {
+      let(:expected_response_objects) do
         [{
           guid: security_group.guid,
           created_at: iso8601,
@@ -542,10 +542,10 @@ RSpec.describe 'Spaces' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }]
-      }
+      end
       let(:other_sec_group) { VCAP::CloudController::SecurityGroup.make }
 
       it 'returns the filtered list' do
@@ -554,13 +554,13 @@ RSpec.describe 'Spaces' do
         expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
 
         expect(parsed_response['pagination']).to match_json_response({
-          total_results: an_instance_of(Integer),
-          total_pages: an_instance_of(Integer),
-          first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
-          last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
-          next: anything,
-          previous: anything
-        })
+                                                                       total_results: an_instance_of(Integer),
+                                                                       total_pages: an_instance_of(Integer),
+                                                                       first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+                                                                       last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+                                                                       next: anything,
+                                                                       previous: anything
+                                                                     })
       end
     end
 
@@ -569,8 +569,8 @@ RSpec.describe 'Spaces' do
         security_group.staging_default = true
       end
 
-      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}/staging_security_groups", nil, user_headers } }
-      let(:response_object) {
+      let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space.guid}/staging_security_groups", nil, user_headers } }
+      let(:response_object) do
         [
           {
             guid: security_group.guid,
@@ -599,7 +599,7 @@ RSpec.describe 'Spaces' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
           },
           {
@@ -627,12 +627,12 @@ RSpec.describe 'Spaces' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
-          },
+          }
 
         ]
-      }
+      end
       let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
 
@@ -667,7 +667,7 @@ RSpec.describe 'Spaces' do
         other_sec_group.add_space(space)
       end
 
-      let(:expected_response_objects) {
+      let(:expected_response_objects) do
         [{
           guid: security_group.guid,
           created_at: iso8601,
@@ -695,10 +695,10 @@ RSpec.describe 'Spaces' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
           }
         }]
-      }
+      end
       let(:other_sec_group) { VCAP::CloudController::SecurityGroup.make }
 
       it 'returns the filtered list' do
@@ -707,13 +707,13 @@ RSpec.describe 'Spaces' do
         expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
 
         expect(parsed_response['pagination']).to match_json_response({
-          total_results: an_instance_of(Integer),
-          total_pages: an_instance_of(Integer),
-          first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
-          last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
-          next: anything,
-          previous: anything
-        })
+                                                                       total_results: an_instance_of(Integer),
+                                                                       total_pages: an_instance_of(Integer),
+                                                                       first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+                                                                       last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+                                                                       next: anything,
+                                                                       previous: anything
+                                                                     })
       end
     end
 
@@ -722,8 +722,8 @@ RSpec.describe 'Spaces' do
         security_group.running_default = true
       end
 
-      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}/running_security_groups", nil, user_headers } }
-      let(:response_object) {
+      let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space.guid}/running_security_groups", nil, user_headers } }
+      let(:response_object) do
         [
           {
             guid: security_group.guid,
@@ -752,7 +752,7 @@ RSpec.describe 'Spaces' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
           },
           {
@@ -780,12 +780,12 @@ RSpec.describe 'Spaces' do
               }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/security_groups/#{UUID_REGEX}} }
             }
-          },
+          }
 
         ]
-      }
+      end
       let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make running_default: true, name: 'global' }
       let(:expected_codes_and_responses) do
@@ -860,7 +860,7 @@ RSpec.describe 'Spaces' do
         }
       end
 
-      let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}", request_body, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/spaces/#{space.guid}", request_body, user_headers } }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -905,7 +905,7 @@ RSpec.describe 'Spaces' do
               }
             }.to_json,
             space_guid: space.guid,
-            organization_guid: space.organization_guid,
+            organization_guid: space.organization_guid
           }
         end
       end
@@ -952,7 +952,7 @@ RSpec.describe 'Spaces' do
               'labels' => {
                 'animal' => 'monkey'
               },
-              'annotations' => {},
+              'annotations' => {}
             },
             'links' => build_space_links(space1)
           }
@@ -986,7 +986,7 @@ RSpec.describe 'Spaces' do
               'labels' => {
                 'fruit' => 'strawberry'
               },
-              'annotations' => {},
+              'annotations' => {}
             },
             'links' => build_space_links(space1)
           }
@@ -1006,42 +1006,42 @@ RSpec.describe 'Spaces' do
     end
 
     before do
-      VCAP::CloudController::AppModel.make(space: space)
-      VCAP::CloudController::Route.make(space: space)
+      VCAP::CloudController::AppModel.make(space:)
+      VCAP::CloudController::Route.make(space:)
       org.add_user(associated_user)
       space.add_developer(associated_user)
-      VCAP::CloudController::ServiceInstance.make(space: space)
-      VCAP::CloudController::ServiceBroker.make(space: space)
+      VCAP::CloudController::ServiceInstance.make(space:)
+      VCAP::CloudController::ServiceBroker.make(space:)
     end
 
-    it 'destroys the requested space and sub resources' do
-      expect {
-        delete "/v3/spaces/#{space.guid}", nil, admin_header
-        expect(last_response.status).to eq(202)
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
-
-        execute_all_jobs(expected_successes: 2, expected_failures: 0)
-        get "/v3/spaces/#{space.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
-      }.to  change { VCAP::CloudController::Space.count }.by(-1).
-        and change { VCAP::CloudController::AppModel.count }.by(-1).
-        and change { VCAP::CloudController::Route.count }.by(-1).
-        and change { associated_user.reload.default_space }.to(be_nil).
-        and change { associated_user.reload.spaces }.to(be_empty).
-        and change { VCAP::CloudController::ServiceInstance.count }.by(-1).
-        and change { VCAP::CloudController::ServiceBroker.count }.by(-1).
-        and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
-    end
-
-    let(:api_call) { lambda { |user_headers| delete "/v3/spaces/#{space.guid}", nil, user_headers } }
     let(:db_check) do
       lambda do
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         execute_all_jobs(expected_successes: 2, expected_failures: 0)
         get "/v3/spaces/#{space.guid}", {}, admin_headers
         expect(last_response.status).to eq(404)
       end
+    end
+    let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}", nil, user_headers } }
+
+    it 'destroys the requested space and sub resources' do
+      expect do
+        delete "/v3/spaces/#{space.guid}", nil, admin_header
+        expect(last_response.status).to eq(202)
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
+
+        execute_all_jobs(expected_successes: 2, expected_failures: 0)
+        get "/v3/spaces/#{space.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end.to change(VCAP::CloudController::Space, :count).by(-1).
+        and change(VCAP::CloudController::AppModel, :count).by(-1).
+        and change(VCAP::CloudController::Route, :count).by(-1).
+        and change { associated_user.reload.default_space }.to(be_nil).
+        and change { associated_user.reload.spaces }.to(be_empty).
+        and change(VCAP::CloudController::ServiceInstance, :count).by(-1).
+        and change(VCAP::CloudController::ServiceBroker, :count).by(-1).
+        and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
     end
 
     context 'deleting metadata' do
@@ -1075,7 +1075,7 @@ RSpec.describe 'Spaces' do
             actee_name: space.name,
             metadata: { request: { recursive: true } }.to_json,
             space_guid: space.guid,
-            organization_guid: org.guid,
+            organization_guid: org.guid
           }
         end
       end
@@ -1107,16 +1107,16 @@ RSpec.describe 'Spaces' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let!(:unmapped_route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+    let!(:unmapped_route) { VCAP::CloudController::Route.make(space:, domain:) }
     let!(:mapped_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'mapped') }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
     let!(:destination) { VCAP::CloudController::RouteMappingModel.make(route: mapped_route, app: app_model) }
 
-    let(:api_call) { lambda { |user_headers| delete "/v3/spaces/#{space.guid}/routes?unmapped=true", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}/routes?unmapped=true", nil, user_headers } }
 
     let(:db_check) do
       lambda do
-        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+        expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -1199,24 +1199,24 @@ RSpec.describe 'Spaces' do
 
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['data']).to eq(nil)
+        expect(parsed_response['data']).to be_nil
       end
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}/relationships/isolation_segment", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space.guid}/relationships/isolation_segment", nil, user_headers } }
 
-      let(:expected_response) {
+      let(:expected_response) do
         {
           'data' => {
             'guid' => isolation_segment.guid
           },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}/relationships/isolation_segment" },
-            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
+            'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" }
           }
         }
-      }
+      end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_object: expected_response)
@@ -1242,12 +1242,12 @@ RSpec.describe 'Spaces' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}/relationships/isolation_segment", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/spaces/#{space.guid}/relationships/isolation_segment", params.to_json, user_headers } }
       let(:params) do
         {
           data: {
-            guid: isolation_segment.guid,
-          },
+            guid: isolation_segment.guid
+          }
         }
       end
 
@@ -1268,6 +1268,7 @@ RSpec.describe 'Spaces' do
   describe 'GET /v3/spaces/:guid/users' do
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
     let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
+
     context 'filters' do
       before do
         org.add_user(user)
@@ -1276,12 +1277,12 @@ RSpec.describe 'Spaces' do
         space1.add_developer(client)
         allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
         allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(user.guid, client.guid)).and_return({
-          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-        })
+                                                                                                                user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
+                                                                                                              })
         allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
         allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return({
-          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-        })
+                                                                                    user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
+                                                                                  })
         allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
       end
 
@@ -1297,15 +1298,15 @@ RSpec.describe 'Spaces' do
 
         let(:params) do
           {
-            guids: ['foo', 'bar'],
-            usernames: ['foo', 'bar'],
-            origins: ['foo', 'bar'],
-            page:   '2',
-            per_page:   '10',
-            order_by:   'updated_at',
-            label_selector:   'foo,bar',
-            created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-            updated_ats: { gt: Time.now.utc.iso8601 },
+            guids: %w[foo bar],
+            usernames: %w[foo bar],
+            origins: %w[foo bar],
+            page: '2',
+            per_page: '10',
+            order_by: 'updated_at',
+            label_selector: 'foo,bar',
+            created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+            updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
       end
@@ -1323,15 +1324,15 @@ RSpec.describe 'Spaces' do
 
           let(:params) do
             {
-              guids: ['foo', 'bar'],
-              partial_usernames: ['foo', 'bar'],
-              origins: ['foo', 'bar'],
-              page:   '2',
-              per_page:   '10',
-              order_by:   'updated_at',
-              label_selector:   'foo,bar',
-              created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-              updated_ats: { gt: Time.now.utc.iso8601 },
+              guids: %w[foo bar],
+              partial_usernames: %w[foo bar],
+              origins: %w[foo bar],
+              page: '2',
+              per_page: '10',
+              order_by: 'updated_at',
+              label_selector: 'foo,bar',
+              created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+              updated_ats: { gt: Time.now.utc.iso8601 }
             }
           end
         end
@@ -1352,7 +1353,7 @@ RSpec.describe 'Spaces' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1370,10 +1371,11 @@ RSpec.describe 'Spaces' do
           allow(uaa_client).to receive(:users_for_ids).with(contain_exactly('user', 'user_in_different_origin')).and_return(
             {
               user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-              user_in_different_origin.guid => { 'username' => 'bob-mcjames', 'origin' => 'uaa' },
+              user_in_different_origin.guid => { 'username' => 'bob-mcjames', 'origin' => 'uaa' }
             }
           )
         end
+
         it 'returns 200 and the filtered users' do
           get "/v3/spaces/#{space1.guid}/users?usernames=bob-mcjames&origins=Okta", nil, admin_header
 
@@ -1388,7 +1390,7 @@ RSpec.describe 'Spaces' do
           }
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1409,7 +1411,7 @@ RSpec.describe 'Spaces' do
             'next' => nil,
             'previous' => nil
           }
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
@@ -1433,8 +1435,8 @@ RSpec.describe 'Spaces' do
           get "/v3/spaces/#{space1.guid}/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
 
@@ -1462,14 +1464,14 @@ RSpec.describe 'Spaces' do
           get "/v3/spaces/#{space1.guid}/users?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to include(resource_1.guid)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to_not include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
+          expect(parsed_response['resources'].pluck('guid')).to include(resource_1.guid)
+          expect(parsed_response['resources'].pluck('guid')).not_to include(user.guid, client.guid, resource_2.guid, resource_3.guid, resource_4.guid)
         end
       end
     end
 
     context 'no filters' do
-      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space1.guid}/users", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space1.guid}/users", nil, user_headers } }
       let(:space) { space1 }
       let(:current_user_json) do
         {
@@ -1484,7 +1486,7 @@ RSpec.describe 'Spaces' do
             annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user.guid}} }
           }
         }
       end
@@ -1501,7 +1503,7 @@ RSpec.describe 'Spaces' do
             annotations: {}
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{client.guid}} }
           }
         }
       end
@@ -1511,7 +1513,7 @@ RSpec.describe 'Spaces' do
           code: 200,
           response_objects: [
             client_json,
-            current_user_json,
+            current_user_json
           ]
         )
         h['no_role'] = {
@@ -1557,12 +1559,13 @@ RSpec.describe 'Spaces' do
         allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
         allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(user.guid, client.guid)).and_return(
           {
-            user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+            user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' }
           }
-      )
+        )
         allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
         allow(uaa_client).to receive(:users_for_ids).with([]).and_return({})
       end
+
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 

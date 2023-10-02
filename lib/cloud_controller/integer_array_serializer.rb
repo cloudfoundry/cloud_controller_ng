@@ -1,5 +1,5 @@
 module VCAP::CloudController::IntegerArraySerializer
-  def self.extended(other)
+  def self.extended(_other)
     Sequel::Plugins::Serialization.register_format(:integer_array, serializer, deserializer)
   end
 

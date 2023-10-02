@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       describe '#send_stage_request' do
         let(:package) { PackageModel.make }
-        let(:droplet) { DropletModel.make(package: package) }
+        let(:droplet) { DropletModel.make(package:) }
         let(:staging_guid) { droplet.guid }
         let(:staging_details) do
           VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|
@@ -50,7 +50,7 @@ module VCAP::CloudController
       describe '#send_desire_request' do
         let(:process) { ProcessModel.new }
         let(:default_health_check_timeout) { 99 }
-        let(:config) { Config.new({ default_health_check_timeout: default_health_check_timeout }) }
+        let(:config) { Config.new({ default_health_check_timeout: }) }
 
         it 'attempts to create or update the app by delegating to the desire app handler' do
           allow(DesireAppHandler).to receive(:create_or_update_app)

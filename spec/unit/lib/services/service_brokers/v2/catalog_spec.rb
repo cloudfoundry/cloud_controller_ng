@@ -6,20 +6,20 @@ module VCAP::Services::ServiceBrokers::V2
 
     def service_entry(opts={})
       {
-          'id' => opts[:id] || Sham.guid,
-          'name' => opts[:name] || Sham.name,
-          'description' => Sham.description,
-          'bindable' => true,
-          'tags' => ['magical', 'webscale'],
-          'plans' => opts[:plans] || [plan_entry]
+        'id' => opts[:id] || Sham.guid,
+        'name' => opts[:name] || Sham.name,
+        'description' => Sham.description,
+        'bindable' => true,
+        'tags' => %w[magical webscale],
+        'plans' => opts[:plans] || [plan_entry]
       }
     end
 
     def plan_entry(opts={})
       {
-          'id' => opts[:id] || Sham.guid,
-          'name' => opts[:name] || Sham.name,
-          'description' => Sham.description,
+        'id' => opts[:id] || Sham.guid,
+        'name' => opts[:name] || Sham.name,
+        'description' => Sham.description
       }
     end
 
@@ -29,20 +29,20 @@ module VCAP::Services::ServiceBrokers::V2
       @index ||= 0
       @index += 1
       {
-          'id' => @index.to_s,
-          'name' => @index.to_s,
-          'description' => 'the service description',
-          'bindable' => true,
-          'tags' => ['tag1'],
-          'metadata' => { 'foo' => 'bar' },
-          'plans' => [
-            {
-                'id' => @index.to_s,
-                'name' => @index.to_s,
-                'description' => 'the plan description',
-                'metadata' => { 'foo' => 'bar' }
-            }
-          ]
+        'id' => @index.to_s,
+        'name' => @index.to_s,
+        'description' => 'the service description',
+        'bindable' => true,
+        'tags' => ['tag1'],
+        'metadata' => { 'foo' => 'bar' },
+        'plans' => [
+          {
+            'id' => @index.to_s,
+            'name' => @index.to_s,
+            'description' => 'the plan description',
+            'metadata' => { 'foo' => 'bar' }
+          }
+        ]
       }.merge(attrs)
     end
 
@@ -50,18 +50,18 @@ module VCAP::Services::ServiceBrokers::V2
       context "when the catalog's services include errors" do
         let(:catalog_hash) do
           {
-              'services' => [
-                service_entry,
-                service_entry(id: 123),
-                service_entry(plans: [plan_entry(id: 'plan-id'), plan_entry(id: 'plan-id', name: 123)]),
-                service_entry(plans: [])
-              ]
+            'services' => [
+              service_entry,
+              service_entry(id: 123),
+              service_entry(plans: [plan_entry(id: 'plan-id'), plan_entry(id: 'plan-id', name: 123)]),
+              service_entry(plans: [])
+            ]
           }
         end
 
         specify '#valid? returns false' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.nested_errors).not_to be_empty
         end
       end
@@ -69,13 +69,13 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same id' do
         let(:catalog_hash) do
           {
-              'services' => [build_service('id' => '1'), build_service('id' => '1')]
+            'services' => [build_service('id' => '1'), build_service('id' => '1')]
           }
         end
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to include('Service ids must be unique')
         end
       end
@@ -93,15 +93,15 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'gives an error' do
             catalog = Catalog.new(broker, catalog_hash)
-            expect(catalog.valid?).to eq false
+            expect(catalog.valid?).to be false
             expect(catalog.errors.messages).to include('Service names must be unique within a broker')
           end
         end
 
         context 'when the broker is being created and has not yet been persisted' do
-          let(:broker) {
+          let(:broker) do
             VCAP::CloudController::ServiceBroker.new(name: 'not-persisted')
-          }
+          end
           let(:catalog_hash) do
             {
               'services' => [build_service('id' => '1')]
@@ -111,7 +111,7 @@ module VCAP::Services::ServiceBrokers::V2
           it 'is does not check for preexistent services' do
             catalog = Catalog.new(broker, catalog_hash)
 
-            expect(catalog.valid?).to eq true
+            expect(catalog.valid?).to be true
           end
         end
 
@@ -126,7 +126,7 @@ module VCAP::Services::ServiceBrokers::V2
                   ]
                 }
               end
-              let(:broker) {
+              let(:broker) do
                 broker = VCAP::CloudController::ServiceBroker.make
                 old_service = VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker)
                 old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
@@ -137,7 +137,7 @@ module VCAP::Services::ServiceBrokers::V2
                 VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
 
                 broker
-              }
+              end
 
               it 'is invalid' do
                 catalog = Catalog.new(broker, new_catalog_hash)
@@ -192,24 +192,24 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when a service in the catalog has the same name as a service from a different broker' do
           let(:catalog_hash) do
             {
-                'services' => [build_service('id' => '1'), build_service('id' => '2')]
+              'services' => [build_service('id' => '1'), build_service('id' => '2')]
             }
           end
           let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
-          let(:another_broker) {
+          let(:another_broker) do
             broker = VCAP::CloudController::ServiceBroker.make
             old_service = VCAP::CloudController::Service.make(name: '1', service_broker: broker)
             old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
             VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
 
             broker
-          }
+          end
 
           it 'is valid' do
             catalog = Catalog.new(broker, catalog_hash)
 
-            expect(catalog.valid?).to eq true
+            expect(catalog.valid?).to be true
           end
         end
       end
@@ -217,24 +217,24 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same dashboard_client id' do
         let(:catalog_hash) do
           {
-              'services' => [
-                build_service('dashboard_client' => {
-                    'id' => 'client-1',
-                    'secret' => 'secret',
-                    'redirect_uri' => 'http://example.com/client-1'
-                }),
-                build_service('dashboard_client' => {
-                    'id' => 'client-1',
-                    'secret' => 'secret2',
-                    'redirect_uri' => 'http://example.com/client-2'
-                }),
-              ]
+            'services' => [
+              build_service('dashboard_client' => {
+                              'id' => 'client-1',
+                              'secret' => 'secret',
+                              'redirect_uri' => 'http://example.com/client-1'
+                            }),
+              build_service('dashboard_client' => {
+                              'id' => 'client-1',
+                              'secret' => 'secret2',
+                              'redirect_uri' => 'http://example.com/client-2'
+                            })
+            ]
           }
         end
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to include('Service dashboard_client id must be unique')
         end
       end
@@ -246,7 +246,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'gives an error' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
         end
       end
 
@@ -257,23 +257,23 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not give a uniqueness error on dashboard_client id' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq true
+          expect(catalog.valid?).to be true
         end
       end
 
       context 'when there are multiple services with a nil dashboard_client id' do
         let(:catalog_hash) do
           {
-              'services' => [
-                build_service('dashboard_client' => { 'id' => nil }),
-                build_service('dashboard_client' => { 'id' => nil })
-              ]
+            'services' => [
+              build_service('dashboard_client' => { 'id' => nil }),
+              build_service('dashboard_client' => { 'id' => nil })
+            ]
           }
         end
 
         it 'is invalid, but not due to uniqueness constraints' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to eq []
         end
       end
@@ -285,7 +285,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'is invalid, but not due to uniqueness constraints' do
           catalog = Catalog.new(broker, catalog_hash)
-          expect(catalog.valid?).to eq false
+          expect(catalog.valid?).to be false
           expect(catalog.errors.messages).to eq []
         end
       end
@@ -293,10 +293,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when there are both service validation problems and uniqueness problems' do
         let(:catalog_hash) do
           {
-              'services' => [
-                build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
-                build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
-              ]
+            'services' => [
+              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
+              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' })
+            ]
           }
         end
         let(:catalog) { Catalog.new(broker, catalog_hash) }
@@ -326,10 +326,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the catalog has no services with route forwarding or volume mounts' do
         let(:catalog_hash) do
           {
-              'services' => [
-                build_service('requires' => []),
-                build_service('requires' => []),
-              ]
+            'services' => [
+              build_service('requires' => []),
+              build_service('requires' => [])
+            ]
           }
         end
 
@@ -349,12 +349,12 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the catalog has a services with route forwarding and volume mounts' do
         let(:catalog_hash) do
           {
-              'services' => [
-                build_service('requires' => []),
-                build_service('requires' => %w(route_forwarding)),
-                build_service('requires' => %w(volume_mount)),
-                build_service('requires' => %w(route_forwarding volume_mount))
-              ]
+            'services' => [
+              build_service('requires' => []),
+              build_service('requires' => %w[route_forwarding]),
+              build_service('requires' => %w[volume_mount]),
+              build_service('requires' => %w[route_forwarding volume_mount])
+            ]
           }
         end
 

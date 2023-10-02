@@ -24,8 +24,8 @@ module CloudController::Presenters::V2
       it 'returns the route_mapping entity and associated urls' do
         expect(subject.entity_hash(controller, route_mapping, opts, depth, parents, orphans)).to eq(
           {
-            'app_port'   => 9090,
-            'app_guid'   => app.guid,
+            'app_port' => 9090,
+            'app_guid' => app.guid,
             'route_guid' => route.guid,
             'relationship_key' => 'relationship_value'
           }
@@ -35,11 +35,13 @@ module CloudController::Presenters::V2
       end
 
       context 'docker app' do
-        let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(
-          app: app,
-          route: route,
-          app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED)
-        }
+        let(:route_mapping) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app,
+            route: route,
+            app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
+          )
+        end
 
         it 'presents the app_port as nil' do
           entity = subject.entity_hash(controller, route_mapping, opts, depth, parents, orphans)

@@ -6,7 +6,7 @@ RSpec::Matchers.define :have_annotations do |*expected|
       {
         prefix: annotation.key_prefix,
         key_name: annotation.key_name,
-        value: annotation.value,
+        value: annotation.value
       }
     end
 
@@ -15,7 +15,7 @@ RSpec::Matchers.define :have_annotations do |*expected|
         {
           prefix: annotation.with_indifferent_access[:prefix],
           key_name: annotation.with_indifferent_access[:key_name],
-          value: annotation.with_indifferent_access[:value],
+          value: annotation.with_indifferent_access[:value]
         }
       end
 
@@ -30,7 +30,7 @@ RSpec::Matchers.define :have_annotations do |*expected|
       [
         "Annotations don't match!",
         "Expected #{expected}",
-        "     got #{actual_annotations}",
+        "     got #{actual_annotations}"
       ].join("\n")
     else
       'Expected annotations but found none!'

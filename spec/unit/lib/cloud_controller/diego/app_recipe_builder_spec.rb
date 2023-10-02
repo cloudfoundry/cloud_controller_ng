@@ -5,9 +5,9 @@ module VCAP::CloudController
     RSpec.describe AppRecipeBuilder do
       subject(:builder) do
         AppRecipeBuilder.new(
-          config:  config,
-          process: process,
-          ssh_key: ssh_key
+          config:,
+          process:,
+          ssh_key:
         )
       end
 
@@ -22,12 +22,24 @@ module VCAP::CloudController
           environment = instance_double(Environment)
           allow(Environment).to receive(:new).with(process, {}).and_return(environment)
           allow(environment).to receive(:as_json).and_return(environment_variables)
+          [
+            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
+            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }])
+          ].each { |security_group| security_group.add_space(process.space) }
+
+          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
+          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
+
+          app_model.update(droplet:)
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
+          process.desired_droplet.execution_metadata = execution_metadata
         end
 
         let(:environment_variables) { [{ 'name' => 'KEY', 'value' => 'running_value' }] }
         let(:port_environment_variables) do
           [
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444')
           ]
         end
 
@@ -38,21 +50,20 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
-            app:                  app_model,
-            state:                'STARTED',
-            diego:                true,
-            guid:                 'process-guid',
-            type:                 'web',
-            health_check_timeout: 12,
-            instances:            21,
-            memory:               128,
-            disk_quota:           256,
-            log_rate_limit:       1024,
-            command:              command,
-            file_descriptors:     32,
-            health_check_type:    'port',
-            enable_ssh:           false
-          )
+                                      app: app_model,
+                                      state: 'STARTED',
+                                      diego: true,
+                                      guid: 'process-guid',
+                                      type: 'web',
+                                      health_check_timeout: 12,
+                                      instances: 21,
+                                      memory: 128,
+                                      disk_quota: 256,
+                                      log_rate_limit: 1024,
+                                      command: command,
+                                      file_descriptors: 32,
+                                      health_check_type: 'port',
+                                      enable_ssh: false)
           process.this.update(updated_at: Time.at(2))
           process.reload
         end
@@ -70,12 +81,12 @@ module VCAP::CloudController
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: {
-              'policy_group_id'    => app_model.guid,
-              'app_id'             => app_model.guid,
-              'space_id'           => app_model.space.guid,
-              'org_id'             => app_model.organization.guid,
-              'ports'              => ports,
-              'container_workload' => Protocol::ContainerNetworkInfo::APP,
+              'policy_group_id' => app_model.guid,
+              'app_id' => app_model.guid,
+              'space_id' => app_model.space.guid,
+              'org_id' => app_model.organization.guid,
+              'ports' => ports,
+              'container_workload' => Protocol::ContainerNetworkInfo::APP
             }
           )
         end
@@ -94,12 +105,12 @@ module VCAP::CloudController
         let(:expected_app_run_action) do
           ::Diego::Bbs::Models::Action.new(
             run_action: ::Diego::Bbs::Models::RunAction.new(
-              path:            '/tmp/lifecycle/launcher',
-              args:            ['app', command, execution_metadata],
-              log_source:      'APP/PROC/WEB',
+              path: '/tmp/lifecycle/launcher',
+              args: ['app', command, execution_metadata],
+              log_source: 'APP/PROC/WEB',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-              env:             expected_action_environment_variables,
-              user:            'lrp-action-user',
+              env: expected_action_environment_variables,
+              user: 'lrp-action-user'
             )
           )
         end
@@ -107,28 +118,28 @@ module VCAP::CloudController
         let(:expected_monitor_action) do
           ::Diego::Bbs::Models::Action.new(
             timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
-              timeout_ms: 600000,
-              action:     ::Diego::Bbs::Models::Action.new(
+              timeout_ms: 600_000,
+              action: ::Diego::Bbs::Models::Action.new(
                 parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
                   actions: [
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user:                'lrp-action-user',
-                        path:                '/tmp/lifecycle/healthcheck',
-                        args:                ['-port=4444'],
-                        resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                        log_source:          HEALTH_LOG_SOURCE,
-                        suppress_log_output: true,
+                        user: 'lrp-action-user',
+                        path: '/tmp/lifecycle/healthcheck',
+                        args: ['-port=4444'],
+                        resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                        log_source: HEALTH_LOG_SOURCE,
+                        suppress_log_output: true
                       )
                     ),
                     ::Diego::Bbs::Models::Action.new(
                       run_action: ::Diego::Bbs::Models::RunAction.new(
-                        user:                'lrp-action-user',
-                        path:                '/tmp/lifecycle/healthcheck',
-                        args:                ['-port=5555'],
-                        resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                        log_source:          HEALTH_LOG_SOURCE,
-                        suppress_log_output: true,
+                        user: 'lrp-action-user',
+                        path: '/tmp/lifecycle/healthcheck',
+                        args: ['-port=5555'],
+                        resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                        log_source: HEALTH_LOG_SOURCE,
+                        suppress_log_output: true
                       )
                     )
                   ]
@@ -141,10 +152,10 @@ module VCAP::CloudController
         let(:expected_cached_dependencies) do
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      'lifecycle-from',
-              to:        'lifecycle-to',
-              cache_key: 'lifecycle-key',
-            ),
+              from: 'lifecycle-from',
+              to: 'lifecycle-to',
+              cache_key: 'lifecycle-key'
+            )
           ]
         end
 
@@ -154,7 +165,7 @@ module VCAP::CloudController
               "organization:#{process.app.organization.guid}",
               "space:#{process.app.space.guid}",
               "app:#{process.app.guid}"
-            ],
+            ]
           )
         end
 
@@ -162,26 +173,26 @@ module VCAP::CloudController
 
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     'udp',
+            protocol: 'udp',
             destinations: ['0.0.0.0/0'],
-            ports:        [53],
-            annotations:  ['security_group_id:guid1']
+            ports: [53],
+            annotations: ['security_group_id:guid1']
           )
         end
         let(:rule_http_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     'tcp',
+            protocol: 'tcp',
             destinations: ['0.0.0.0/0'],
-            ports:        [80],
-            log:          true,
-            annotations:  ['security_group_id:guid2']
+            ports: [80],
+            log: true,
+            annotations: ['security_group_id:guid2']
           )
         end
         let(:rule_staging_specific) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     'tcp',
+            protocol: 'tcp',
             destinations: ['0.0.0.0/0'],
-            ports:        [443],
+            ports: [443],
             log: true,
             annotations: ['security_group_id:guid3']
           )
@@ -189,49 +200,33 @@ module VCAP::CloudController
         let(:execution_metadata) { { user: execution_metadata_user }.to_json }
         let(:execution_metadata_user) { nil }
 
-        before do
-          [
-            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
-            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
-            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }]),
-          ].each { |security_group| security_group.add_space(process.space) }
-
-          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
-          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 1111)
-
-          app_model.update(droplet: droplet)
-          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
-          process.desired_droplet.execution_metadata = execution_metadata
-        end
-
         context 'when the lifecycle_type is "buildpack"' do
           let(:lifecycle_type) { :buildpack }
           let(:droplet) do
             DropletModel.make(lifecycle_type,
-              package:            package,
-              state:              DropletModel::STAGED_STATE,
-              execution_metadata: execution_metadata,
-              droplet_hash:       'droplet-hash',
-            )
+                              package: package,
+                              state: DropletModel::STAGED_STATE,
+                              execution_metadata: execution_metadata,
+                              droplet_hash: 'droplet-hash')
           end
           let(:config) do
             Config.new({
-              diego: {
-                use_privileged_containers_for_running: false,
-                lifecycle_bundles:                     {
-                  'potato-stack' => 'some-uri'
-                },
-                pid_limit:                             100,
-              }
-            })
+                         diego: {
+                           use_privileged_containers_for_running: false,
+                           lifecycle_bundles: {
+                             'potato-stack' => 'some-uri'
+                           },
+                           pid_limit: 100
+                         }
+                       })
           end
           let(:expected_cached_dependencies) do
             [
               ::Diego::Bbs::Models::CachedDependency.new(
-                from:      'lifecycle-from',
-                to:        'lifecycle-to',
-                cache_key: 'lifecycle-cache-key',
-              ),
+                from: 'lifecycle-from',
+                to: 'lifecycle-to',
+                cache_key: 'lifecycle-cache-key'
+              )
             ]
           end
           let(:expected_setup_action) { ::Diego::Bbs::Models::Action.new }
@@ -240,26 +235,25 @@ module VCAP::CloudController
 
           let(:desired_lrp_builder) do
             instance_double(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder,
-              cached_dependencies:          expected_cached_dependencies,
-              root_fs:                      'buildpack_root_fs',
-              setup:                        expected_setup_action,
-              global_environment_variables: env_vars,
-              privileged?:                  false,
-              ports:                        lrp_builder_ports,
-              port_environment_variables:   port_environment_variables,
-              action_user:                  'lrp-action-user',
-              image_layers:                 expected_image_layers,
-              start_command:                command,
-            )
+                            cached_dependencies: expected_cached_dependencies,
+                            root_fs: 'buildpack_root_fs',
+                            setup: expected_setup_action,
+                            global_environment_variables: env_vars,
+                            privileged?: false,
+                            ports: lrp_builder_ports,
+                            port_environment_variables: port_environment_variables,
+                            action_user: 'lrp-action-user',
+                            image_layers: expected_image_layers,
+                            start_command: command)
           end
 
           let(:ports) { '8080' }
 
           before do
             VCAP::CloudController::BuildpackLifecycleDataModel.make(
-              app:        app_model,
+              app: app_model,
               buildpacks: nil,
-              stack:      'potato-stack',
+              stack: 'potato-stack'
             )
 
             allow(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
@@ -272,14 +266,8 @@ module VCAP::CloudController
             expect(lrp.cached_dependencies).to eq(expected_cached_dependencies)
             expect(lrp.disk_mb).to eq(256)
             expect(lrp.domain).to eq(APP_LRP_DOMAIN)
-            expect(lrp.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific,
-            ])
-            expect(lrp.environment_variables).to match_array(
-              [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
-            )
+            expect(lrp.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
+            expect(lrp.environment_variables).to contain_exactly(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar'))
             expect(lrp.legacy_download_user).to eq('lrp-action-user')
             expect(lrp.instances).to eq(21)
             expect(lrp.log_guid).to eq(process.app.guid)
@@ -332,11 +320,11 @@ module VCAP::CloudController
               [
                 {
                   container_dir: '/data/images',
-                  mode:          'r',
-                  device_type:   'shared',
-                  driver:        'cephfs',
-                  device:        {
-                    volume_id:    'abc',
+                  mode: 'r',
+                  device_type: 'shared',
+                  driver: 'cephfs',
+                  device: {
+                    volume_id: 'abc',
                     mount_config: {
                       key: 'value'
                     }
@@ -344,11 +332,11 @@ module VCAP::CloudController
                 },
                 {
                   container_dir: '/data/scratch',
-                  mode:          'rw',
-                  device_type:   'shared',
-                  driver:        'local',
-                  device:        {
-                    volume_id:    'def',
+                  mode: 'rw',
+                  device_type: 'shared',
+                  driver: 'local',
+                  device: {
+                    volume_id: 'def',
                     mount_config: {}
                   }
                 }
@@ -363,17 +351,17 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver:        'cephfs',
+                  driver: 'cephfs',
                   container_dir: '/data/images',
-                  mode:          'r',
-                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  mode: 'r',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json)
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver:        'local',
+                  driver: 'local',
                   container_dir: '/data/scratch',
-                  mode:          'rw',
-                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
-                ),
+                  mode: 'rw',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: '')
+                )
               ])
             end
           end
@@ -382,12 +370,12 @@ module VCAP::CloudController
             context 'when the health_check_timeout is not set on process' do
               before do
                 process.update(health_check_timeout: nil)
-                config.set(:default_health_check_timeout, 12345)
+                config.set(:default_health_check_timeout, 12_345)
               end
 
               it 'falls back to the default located in the config' do
                 lrp = builder.build_app_lrp
-                expect(lrp.start_timeout_ms).to eq(12345000)
+                expect(lrp.start_timeout_ms).to eq(12_345_000)
               end
 
               it 'sets the healthcheck definition timeout to the default' do
@@ -422,7 +410,7 @@ module VCAP::CloudController
               it 'does not add a monitor action' do
                 lrp = builder.build_app_lrp
 
-                expect(lrp.monitor).to eq(nil)
+                expect(lrp.monitor).to be_nil
               end
 
               it 'does not add healthcheck definitions' do
@@ -500,28 +488,28 @@ module VCAP::CloudController
               let(:expected_monitor_action) do
                 ::Diego::Bbs::Models::Action.new(
                   timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
-                    timeout_ms: 600000,
-                    action:     ::Diego::Bbs::Models::Action.new(
+                    timeout_ms: 600_000,
+                    action: ::Diego::Bbs::Models::Action.new(
                       parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
                         actions: [
                           ::Diego::Bbs::Models::Action.new(
                             run_action: ::Diego::Bbs::Models::RunAction.new(
-                              user:                'lrp-action-user',
-                              path:                '/tmp/lifecycle/healthcheck',
-                              args:                ['-port=4444', '-uri=http-endpoint', '-timeout=10s'],
-                              resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                              log_source:          HEALTH_LOG_SOURCE,
-                              suppress_log_output: true,
+                              user: 'lrp-action-user',
+                              path: '/tmp/lifecycle/healthcheck',
+                              args: ['-port=4444', '-uri=http-endpoint', '-timeout=10s'],
+                              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                              log_source: HEALTH_LOG_SOURCE,
+                              suppress_log_output: true
                             )
                           ),
                           ::Diego::Bbs::Models::Action.new(
                             run_action: ::Diego::Bbs::Models::RunAction.new(
-                              user:                'lrp-action-user',
-                              path:                '/tmp/lifecycle/healthcheck',
-                              args:                ['-port=5555', '-timeout=10s'],
-                              resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                              log_source:          HEALTH_LOG_SOURCE,
-                              suppress_log_output: true,
+                              user: 'lrp-action-user',
+                              path: '/tmp/lifecycle/healthcheck',
+                              args: ['-port=5555', '-timeout=10s'],
+                              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                              log_source: HEALTH_LOG_SOURCE,
+                              suppress_log_output: true
                             )
                           )
                         ]
@@ -542,7 +530,7 @@ module VCAP::CloudController
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('http-endpoint')
-                expect(http_check.request_timeout_ms).to eq(10000)
+                expect(http_check.request_timeout_ms).to eq(10_000)
               end
 
               it 'defaults the HTTP invocation timeout to zero' do
@@ -572,7 +560,7 @@ module VCAP::CloudController
               it 'adds a port healthcheck action for backwards compatibility' do
                 lrp = builder.build_app_lrp
 
-                expect(lrp.monitor).to eq(nil)
+                expect(lrp.monitor).to be_nil
               end
 
               it 'does not add healthcheck definitions' do
@@ -652,7 +640,7 @@ module VCAP::CloudController
                 http_check = lrp.check_definition.readiness_checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('/http-endpoint')
-                expect(http_check.request_timeout_ms).to eq(10000)
+                expect(http_check.request_timeout_ms).to eq(10_000)
               end
 
               it 'defaults the HTTP invocation timeout to zero' do
@@ -690,12 +678,12 @@ module VCAP::CloudController
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
-                    'port'     => 8080,
+                    'port' => 8080,
                     'protocol' => 'http2'
                   },
                   {
-                    'hostname'          => 'tomato.example.com',
-                    'port'              => 8080,
+                    'hostname' => 'tomato.example.com',
+                    'port' => 8080,
                     'route_service_url' => 'https://potatosarebetter.example.com',
                     'protocol' => 'http1'
                   }
@@ -703,18 +691,18 @@ module VCAP::CloudController
                 'tcp_routes' => [
                   {
                     'router_group_guid' => 'im-a-guid',
-                    'external_port'     => 1234,
-                    'container_port'    => 4321
+                    'external_port' => 1234,
+                    'container_port' => 4321
                   },
                   {
                     'router_group_guid' => 'im-probably-a-guid',
-                    'external_port'     => 789,
-                    'container_port'    => 987
-                  },
+                    'external_port' => 789,
+                    'container_port' => 987
+                  }
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.apps.internal',
+                    'hostname' => 'app-guid.apps.internal'
                   }
                 ]
               }
@@ -729,35 +717,35 @@ module VCAP::CloudController
                 routes: {
                   'cf-router' => [
                     {
-                      'hostnames'         => ['potato.example.com'],
-                      'port'              => 8080,
+                      'hostnames' => ['potato.example.com'],
+                      'port' => 8080,
                       'route_service_url' => nil,
                       'isolation_segment' => 'placement-tag',
-                      'protocol'          => 'http2',
+                      'protocol' => 'http2'
                     },
                     {
-                      'hostnames'         => ['tomato.example.com'],
-                      'port'              => 8080,
+                      'hostnames' => ['tomato.example.com'],
+                      'port' => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com',
                       'isolation_segment' => 'placement-tag',
-                      'protocol'          => 'http1'
+                      'protocol' => 'http1'
                     }
                   ].to_json,
                   'tcp-router' => [
                     {
                       'router_group_guid' => 'im-a-guid',
-                      'external_port'     => 1234,
-                      'container_port'    => 4321
+                      'external_port' => 1234,
+                      'container_port' => 4321
                     },
                     {
                       'router_group_guid' => 'im-probably-a-guid',
-                      'external_port'     => 789,
-                      'container_port'    => 987
+                      'external_port' => 789,
+                      'container_port' => 987
                     }
                   ].to_json,
                   'internal-router' => [
                     {
-                      'hostname' => 'app-guid.apps.internal',
+                      'hostname' => 'app-guid.apps.internal'
                     }
                   ].to_json
                 }
@@ -774,18 +762,18 @@ module VCAP::CloudController
                   'tcp_routes' => [
                     {
                       'router_group_guid' => 'im-a-guid',
-                      'external_port'     => 1234,
-                      'container_port'    => 4321
+                      'external_port' => 1234,
+                      'container_port' => 4321
                     },
                     {
                       'router_group_guid' => 'im-probably-a-guid',
-                      'external_port'     => 789,
-                      'container_port'    => 987
-                    },
+                      'external_port' => 789,
+                      'container_port' => 987
+                    }
                   ],
                   'internal_routes' => [
                     {
-                      'hostname' => 'app-guid.apps.internal',
+                      'hostname' => 'app-guid.apps.internal'
                     }
                   ]
                 }
@@ -802,18 +790,18 @@ module VCAP::CloudController
                     'tcp-router' => [
                       {
                         'router_group_guid' => 'im-a-guid',
-                        'external_port'     => 1234,
-                        'container_port'    => 4321
+                        'external_port' => 1234,
+                        'container_port' => 4321
                       },
                       {
                         'router_group_guid' => 'im-probably-a-guid',
-                        'external_port'     => 789,
-                        'container_port'    => 987
+                        'external_port' => 789,
+                        'container_port' => 987
                       }
                     ].to_json,
                     'internal-router' => [
                       {
-                        'hostname' => 'app-guid.apps.internal',
+                        'hostname' => 'app-guid.apps.internal'
                       }
                     ].to_json
                   }
@@ -831,20 +819,20 @@ module VCAP::CloudController
                   'http_routes' => [
                     {
                       'hostname' => 'potato.example.com',
-                      'port'     => 8080,
+                      'port' => 8080,
                       'protocol' => 'http1'
                     },
                     {
-                      'hostname'          => 'tomato.example.com',
-                      'port'              => 8080,
+                      'hostname' => 'tomato.example.com',
+                      'port' => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com',
-                      'protocol'          => 'http2'
+                      'protocol' => 'http2'
                     }
 
                   ],
                   'internal_routes' => [
                     {
-                      'hostname' => 'app-guid.apps.internal',
+                      'hostname' => 'app-guid.apps.internal'
                     }
                   ]
                 }
@@ -859,24 +847,24 @@ module VCAP::CloudController
                   routes: {
                     'cf-router' => [
                       {
-                        'hostnames'         => ['potato.example.com'],
-                        'port'              => 8080,
+                        'hostnames' => ['potato.example.com'],
+                        'port' => 8080,
                         'route_service_url' => nil,
                         'isolation_segment' => 'placement-tag',
-                        'protocol'          => 'http1',
+                        'protocol' => 'http1'
                       },
                       {
-                        'hostnames'         => ['tomato.example.com'],
-                        'port'              => 8080,
+                        'hostnames' => ['tomato.example.com'],
+                        'port' => 8080,
                         'route_service_url' => 'https://potatosarebetter.example.com',
                         'isolation_segment' => 'placement-tag',
-                        'protocol'          => 'http2'
+                        'protocol' => 'http2'
                       }
                     ].to_json,
                     'tcp-router' => [].to_json,
                     'internal-router' => [
                       {
-                        'hostname' => 'app-guid.apps.internal',
+                        'hostname' => 'app-guid.apps.internal'
                       }
                     ].to_json
                   }
@@ -903,15 +891,15 @@ module VCAP::CloudController
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
               expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
-                container_port:   2222,
-                private_key:      ssh_key.private_key,
-                host_fingerprint: ssh_key.fingerprint
-              }))
+                                                                            container_port: 2222,
+                                                                            private_key: ssh_key.private_key,
+                                                                            host_fingerprint: ssh_key.fingerprint
+                                                                          }))
             end
           end
 
           context 'when the same builder is used twice' do
-            it 'should build the same app lrp' do
+            it 'builds the same app lrp' do
               lrp = builder.build_app_lrp
               expect(lrp.action).to eq(expected_action)
               lrp2 = builder.build_app_lrp
@@ -923,46 +911,44 @@ module VCAP::CloudController
         context 'when the lifecycle_type is "docker"' do
           let(:config) do
             Config.new({
-              diego: {
-                pid_limit: 100,
-              }
-            })
+                         diego: {
+                           pid_limit: 100
+                         }
+                       })
           end
           let(:lifecycle_type) { :docker }
           let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
           let(:droplet) do
             DropletModel.make(:docker,
-              package:                 package,
-              state:                   DropletModel::STAGED_STATE,
-              execution_metadata:      execution_metadata,
-              docker_receipt_image:    'docker-receipt-image',
-              docker_receipt_username: 'dockeruser',
-              docker_receipt_password: 'dockerpass',
-            )
+                              package: package,
+                              state: DropletModel::STAGED_STATE,
+                              execution_metadata: execution_metadata,
+                              docker_receipt_image: 'docker-receipt-image',
+                              docker_receipt_username: 'dockeruser',
+                              docker_receipt_password: 'dockerpass')
           end
           let(:old_expected_cached_dependencies) do
             [
               ::Diego::Bbs::Models::CachedDependency.new(
-                from:      'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
-                to:        '/tmp/lifecycle',
-                cache_key: 'docker-lifecycle',
-              ),
+                from: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
+                to: '/tmp/lifecycle',
+                cache_key: 'docker-lifecycle'
+              )
             ]
           end
 
           let(:desired_lrp_builder) do
             instance_double(VCAP::CloudController::Diego::Docker::DesiredLrpBuilder,
-              cached_dependencies:          expected_cached_dependencies,
-              root_fs:                      'docker_root_fs',
-              setup:                        nil,
-              global_environment_variables: [],
-              privileged?:                  false,
-              image_layers:                 [],
-              ports:                        lrp_builder_ports,
-              port_environment_variables:   port_environment_variables,
-              action_user:                  'lrp-action-user',
-              start_command:                command,
-            )
+                            cached_dependencies: expected_cached_dependencies,
+                            root_fs: 'docker_root_fs',
+                            setup: nil,
+                            global_environment_variables: [],
+                            privileged?: false,
+                            image_layers: [],
+                            ports: lrp_builder_ports,
+                            port_environment_variables: port_environment_variables,
+                            action_user: 'lrp-action-user',
+                            start_command: command)
           end
 
           before do
@@ -978,11 +964,7 @@ module VCAP::CloudController
             expect(lrp.instances).to eq(21)
             expect(lrp.disk_mb).to eq(256)
             expect(lrp.domain).to eq(APP_LRP_DOMAIN)
-            expect(lrp.egress_rules).to match_array([
-              rule_dns_everywhere,
-              rule_http_everywhere,
-              rule_staging_specific,
-            ])
+            expect(lrp.egress_rules).to contain_exactly(rule_dns_everywhere, rule_http_everywhere, rule_staging_specific)
             expect(lrp.environment_variables).to eq([])
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.log_guid).to eq(process.app.guid)
@@ -1008,7 +990,7 @@ module VCAP::CloudController
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
-            expect(lrp.privileged).to eq false
+            expect(lrp.privileged).to be false
             expect(lrp.process_guid).to eq(ProcessGuid.from_process(process))
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
@@ -1045,7 +1027,7 @@ module VCAP::CloudController
 
               it 'app labels set custom tags' do
                 expect(lrp.metric_tags['DatadogValue'].static).to eq 'woof'
-                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+                expect(lrp.metric_tags['SomeotherValue']).to be_nil
               end
 
               context 'when app labels tags match existing custom metrics tags' do
@@ -1109,8 +1091,8 @@ module VCAP::CloudController
               end
 
               it 'app labels do not set custom tags' do
-                expect(lrp.metric_tags['DatadogValue']).to eq nil
-                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+                expect(lrp.metric_tags['DatadogValue']).to be_nil
+                expect(lrp.metric_tags['SomeotherValue']).to be_nil
               end
             end
           end
@@ -1127,6 +1109,7 @@ module VCAP::CloudController
 
             context 'when the memory limit is below the minimum' do
               before { process.memory = MIN_CPU_PROXY - 1 }
+
               it 'sets the cpu_weight to 100*min/max' do
                 lrp             = builder.build_app_lrp
                 expected_weight = (100 * MIN_CPU_PROXY / MAX_CPU_PROXY).to_i
@@ -1136,6 +1119,7 @@ module VCAP::CloudController
 
             context 'when the memory limit exceeds the maximum' do
               before { process.memory = MAX_CPU_PROXY + 1 }
+
               it 'sets the cpu_weight to 100' do
                 lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(100)
@@ -1146,12 +1130,12 @@ module VCAP::CloudController
           context 'when the health_check_timeout is not set on process' do
             before do
               process.update(health_check_timeout: nil)
-              config.set(:default_health_check_timeout, 12345)
+              config.set(:default_health_check_timeout, 12_345)
             end
 
             it 'falls back to the default located in the config' do
               lrp = builder.build_app_lrp
-              expect(lrp.start_timeout_ms).to eq(12345000)
+              expect(lrp.start_timeout_ms).to eq(12_345_000)
             end
           end
 
@@ -1175,7 +1159,7 @@ module VCAP::CloudController
             it 'adds a port healthcheck action for backwards compatibility' do
               lrp = builder.build_app_lrp
 
-              expect(lrp.monitor).to eq(nil)
+              expect(lrp.monitor).to be_nil
             end
           end
 
@@ -1193,11 +1177,11 @@ module VCAP::CloudController
               [
                 {
                   container_dir: '/data/images',
-                  mode:          'r',
-                  device_type:   'shared',
-                  driver:        'cephfs',
-                  device:        {
-                    volume_id:    'abc',
+                  mode: 'r',
+                  device_type: 'shared',
+                  driver: 'cephfs',
+                  device: {
+                    volume_id: 'abc',
                     mount_config: {
                       key: 'value'
                     }
@@ -1205,11 +1189,11 @@ module VCAP::CloudController
                 },
                 {
                   container_dir: '/data/scratch',
-                  mode:          'rw',
-                  device_type:   'shared',
-                  driver:        'local',
-                  device:        {
-                    volume_id:    'def',
+                  mode: 'rw',
+                  device_type: 'shared',
+                  driver: 'local',
+                  device: {
+                    volume_id: 'def',
                     mount_config: {}
                   }
                 }
@@ -1224,17 +1208,17 @@ module VCAP::CloudController
               lrp = builder.build_app_lrp
               expect(lrp.volume_mounts).to eq([
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver:        'cephfs',
+                  driver: 'cephfs',
                   container_dir: '/data/images',
-                  mode:          'r',
-                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json),
+                  mode: 'r',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'abc', mount_config: { 'key' => 'value' }.to_json)
                 ),
                 ::Diego::Bbs::Models::VolumeMount.new(
-                  driver:        'local',
+                  driver: 'local',
                   container_dir: '/data/scratch',
-                  mode:          'rw',
-                  shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
-                ),
+                  mode: 'rw',
+                  shared: ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: '')
+                )
               ])
             end
           end
@@ -1253,10 +1237,10 @@ module VCAP::CloudController
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
               expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
-                container_port:   2222,
-                private_key:      ssh_key.private_key,
-                host_fingerprint: ssh_key.fingerprint,
-              }))
+                                                                            container_port: 2222,
+                                                                            private_key: ssh_key.private_key,
+                                                                            host_fingerprint: ssh_key.fingerprint
+                                                                          }))
             end
           end
         end
@@ -1301,34 +1285,34 @@ module VCAP::CloudController
             routing_info = {
               'http_routes' => [
                 {
-                  'hostname'          => 'potato.example.com',
-                  'port'              => 8080,
+                  'hostname' => 'potato.example.com',
+                  'port' => 8080,
                   'router_group_guid' => 'potato-guid',
-                  'protocol'          => 'http1'
+                  'protocol' => 'http1'
                 },
                 {
-                  'hostname'          => 'tomato.example.com',
-                  'port'              => 8080,
+                  'hostname' => 'tomato.example.com',
+                  'port' => 8080,
                   'router_group_guid' => 'tomato-guid',
                   'route_service_url' => 'https://potatosarebetter.example.com',
-                  'protocol'          => 'http2'
+                  'protocol' => 'http2'
                 }
               ],
               'tcp_routes' => [
                 {
                   'router_group_guid' => 'im-a-guid',
-                  'external_port'     => 1234,
-                  'container_port'    => 4321
+                  'external_port' => 1234,
+                  'container_port' => 4321
                 },
                 {
                   'router_group_guid' => 'im-probably-a-guid',
-                  'external_port'     => 789,
-                  'container_port'    => 987
-                },
+                  'external_port' => 789,
+                  'container_port' => 987
+                }
               ],
               'internal_routes' => [
                 {
-                  'hostname' => 'app-guid.apps.internal',
+                  'hostname' => 'app-guid.apps.internal'
                 }
               ]
             }
@@ -1343,35 +1327,35 @@ module VCAP::CloudController
               routes: {
                 'cf-router' => [
                   {
-                    'hostnames'         => ['potato.example.com'],
-                    'port'              => 8080,
+                    'hostnames' => ['potato.example.com'],
+                    'port' => 8080,
                     'route_service_url' => nil,
                     'isolation_segment' => 'placement-tag',
-                    'protocol'          => 'http1',
+                    'protocol' => 'http1'
                   },
                   {
-                    'hostnames'         => ['tomato.example.com'],
-                    'port'              => 8080,
+                    'hostnames' => ['tomato.example.com'],
+                    'port' => 8080,
                     'route_service_url' => 'https://potatosarebetter.example.com',
                     'isolation_segment' => 'placement-tag',
-                    'protocol'          => 'http2',
+                    'protocol' => 'http2'
                   }
                 ].to_json,
                 'tcp-router' => [
                   {
                     'router_group_guid' => 'im-a-guid',
-                    'external_port'     => 1234,
-                    'container_port'    => 4321
+                    'external_port' => 1234,
+                    'container_port' => 4321
                   },
                   {
                     'router_group_guid' => 'im-probably-a-guid',
-                    'external_port'     => 789,
-                    'container_port'    => 987
+                    'external_port' => 789,
+                    'container_port' => 987
                   }
                 ].to_json,
                 'internal-router' => [
                   {
-                    'hostname' => 'app-guid.apps.internal',
+                    'hostname' => 'app-guid.apps.internal'
                   }
                 ].to_json
               }
@@ -1388,18 +1372,18 @@ module VCAP::CloudController
                 'tcp_routes' => [
                   {
                     'router_group_guid' => 'im-a-guid',
-                    'external_port'     => 1234,
-                    'container_port'    => 4321
+                    'external_port' => 1234,
+                    'container_port' => 4321
                   },
                   {
                     'router_group_guid' => 'im-probably-a-guid',
-                    'external_port'     => 789,
-                    'container_port'    => 987
-                  },
+                    'external_port' => 789,
+                    'container_port' => 987
+                  }
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.apps.internal',
+                    'hostname' => 'app-guid.apps.internal'
                   }
                 ]
               }
@@ -1412,22 +1396,22 @@ module VCAP::CloudController
             it 'includes empty cf-router entry' do
               expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
                 routes: {
-                  'cf-router' =>  [].to_json,
+                  'cf-router' => [].to_json,
                   'tcp-router' => [
                     {
                       'router_group_guid' => 'im-a-guid',
-                      'external_port'     => 1234,
-                      'container_port'    => 4321
+                      'external_port' => 1234,
+                      'container_port' => 4321
                     },
                     {
                       'router_group_guid' => 'im-probably-a-guid',
-                      'external_port'     => 789,
-                      'container_port'    => 987
+                      'external_port' => 789,
+                      'container_port' => 987
                     }
                   ].to_json,
                   'internal-router' => [
                     {
-                      'hostname' => 'app-guid.apps.internal',
+                      'hostname' => 'app-guid.apps.internal'
                     }
                   ].to_json
                 }
@@ -1445,19 +1429,19 @@ module VCAP::CloudController
                 'http_routes' => [
                   {
                     'hostname' => 'potato.example.com',
-                    'port'     => 8080,
+                    'port' => 8080,
                     'protocol' => 'http2'
                   },
                   {
-                    'hostname'          => 'tomato.example.com',
-                    'port'              => 8080,
+                    'hostname' => 'tomato.example.com',
+                    'port' => 8080,
                     'route_service_url' => 'https://potatosarebetter.example.com',
-                    'protocol'          => 'http1'
+                    'protocol' => 'http1'
                   }
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.apps.internal',
+                    'hostname' => 'app-guid.apps.internal'
                   }
                 ]
               }
@@ -1472,24 +1456,24 @@ module VCAP::CloudController
                 routes: {
                   'cf-router' => [
                     {
-                      'hostnames'         => ['potato.example.com'],
-                      'port'              => 8080,
+                      'hostnames' => ['potato.example.com'],
+                      'port' => 8080,
                       'route_service_url' => nil,
                       'isolation_segment' => 'placement-tag',
-                      'protocol'          => 'http2',
+                      'protocol' => 'http2'
                     },
                     {
-                      'hostnames'         => ['tomato.example.com'],
-                      'port'              => 8080,
+                      'hostnames' => ['tomato.example.com'],
+                      'port' => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com',
                       'isolation_segment' => 'placement-tag',
-                      'protocol'          => 'http1',
+                      'protocol' => 'http1'
                     }
                   ].to_json,
                   'tcp-router' => [].to_json,
                   'internal-router' => [
                     {
-                      'hostname' => 'app-guid.apps.internal',
+                      'hostname' => 'app-guid.apps.internal'
                     }
                   ].to_json
                 }

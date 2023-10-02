@@ -7,7 +7,7 @@ RSpec.describe 'Sequel::Plugins::VcapNormalization' do
   end
 
   describe '.strip_attributes' do
-    it 'should only result in provided strings being normalized' do
+    it 'onlies result in provided strings being normalized' do
       model_object = TestModel.new
       model_object.guid = ' hi '
       model_object.unique_value = ' bye '

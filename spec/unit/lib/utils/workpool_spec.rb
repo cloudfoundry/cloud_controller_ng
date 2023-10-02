@@ -131,11 +131,11 @@ RSpec.describe WorkPool do
         end
         wp.drain
         expect(wp.threads.count).to eq(thread_count)
-        expect(wp.threads.any?(&:alive?)).to eq false
+        expect(wp.threads.any?(&:alive?)).to be false
         wp.replenish
 
         expect(wp.threads.count).to eq(thread_count)
-        expect(wp.threads.all?(&:alive?)).to eq(true)
+        expect(wp.threads.all?(&:alive?)).to be(true)
 
         ran_this_many_times = 0
         thread_count.times do
@@ -158,11 +158,11 @@ RSpec.describe WorkPool do
         end
         original_threads = wp.threads.dup
         expect(wp.threads.count).to eq(thread_count)
-        expect(wp.threads.any?(&:alive?)).to eq true
+        expect(wp.threads.any?(&:alive?)).to be true
         wp.replenish
 
         expect(wp.threads.count).to eq(thread_count)
-        expect(wp.threads.all?(&:alive?)).to eq(true)
+        expect(wp.threads.all?(&:alive?)).to be(true)
 
         expect(wp.threads).to eq(original_threads)
       end

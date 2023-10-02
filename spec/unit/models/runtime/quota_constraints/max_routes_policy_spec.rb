@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe MaxRoutesPolicy do
+  subject { MaxRoutesPolicy.new(quota_definition, route_counter) }
+
   let(:quota_definition) { double(:quota_definition, total_routes: 4) }
   let(:route_counter) { double(:route_counter, count: 0) }
-
-  subject { MaxRoutesPolicy.new(quota_definition, route_counter) }
 
   describe '#allow_more_routes?' do
     it 'is false when exceeding the total allowed routes' do

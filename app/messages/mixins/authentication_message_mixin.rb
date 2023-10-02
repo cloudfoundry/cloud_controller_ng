@@ -19,7 +19,8 @@ module VCAP::CloudController::AuthenticationMessageMixin
     result = super
 
     if result['authentication'] && result['authentication']['credentials']
-      result['authentication']['credentials']['password'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
+      result['authentication']['credentials']['password'] =
+        VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
     end
 
     result

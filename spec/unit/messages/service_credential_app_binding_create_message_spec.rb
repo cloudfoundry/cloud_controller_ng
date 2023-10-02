@@ -5,20 +5,20 @@ module VCAP::CloudController
   RSpec.describe ServiceCredentialAppBindingCreateMessage do
     subject { ServiceCredentialAppBindingCreateMessage }
 
-    let(:params) {
+    let(:params) do
       {
         type: 'app',
         name: 'some-name',
         parameters: {
-            some_param: 'very important',
-            another_param: 'epa'
+          some_param: 'very important',
+          another_param: 'epa'
         },
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } },
           app: { data: { guid: 'some-app-guid' } }
         }
       }
-    }
+    end
 
     describe '.from_params' do
       let(:message) { subject.new(params) }
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         params.each do |key, _|
-          expect(message.requested?(key.to_sym)).to be_truthy
+          expect(message).to be_requested(key.to_sym)
         end
       end
 
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
       context 'type' do
         it 'accepts app and key' do
-          %w{app key}.each do |type|
+          %w[app key].each do |type|
             params[:type] = type
             expect(subject.new(params)).to be_valid
           end
@@ -81,21 +81,21 @@ module VCAP::CloudController
         it 'returns an invalid message when there is no service instance relationship' do
           params[:relationships].delete(:service_instance)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Service instance can't be blank")
         end
 
         it 'returns an invalid message when there is no app relationship' do
           params[:relationships].delete(:app)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships App can't be blank")
         end
 
         it 'returns an invalid message when there is invalid relationships' do
           params[:relationships][:foo] = {}
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'foo'")
         end
       end

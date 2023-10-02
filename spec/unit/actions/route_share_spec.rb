@@ -31,7 +31,8 @@ module VCAP::CloudController
 
       it 'records a share event' do
         expect_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_share).with(
-          route, user_audit_info, [target_space1.guid, target_space2.guid])
+          route, user_audit_info, [target_space1.guid, target_space2.guid]
+        )
 
         route_share.create(route, [target_space1, target_space2], user_audit_info)
       end
@@ -43,9 +44,9 @@ module VCAP::CloudController
         end
 
         it 'does not share with any spaces' do
-          expect {
+          expect do
             route_share.create(route, [target_space1, target_space2], user_audit_info)
-          }.to raise_error('db failure')
+          end.to raise_error('db failure')
 
           route.reload
           expect(route.shared_spaces.length).to eq 0
@@ -54,10 +55,10 @@ module VCAP::CloudController
 
       context 'when source space is included in list of target spaces' do
         it 'does not share with any spaces' do
-          expect {
+          expect do
             route_share.create(route, [target_space1, route.space], user_audit_info)
-          }.to raise_error(VCAP::CloudController::RouteShare::Error,
-                           "Unable to share route '#{route.uri}' with space '#{route.space.guid}'. Routes cannot be shared into the space where they were created.")
+          end.to raise_error(VCAP::CloudController::RouteShare::Error,
+                             "Unable to share route '#{route.uri}' with space '#{route.space.guid}'. Routes cannot be shared into the space where they were created.")
 
           route.reload
 

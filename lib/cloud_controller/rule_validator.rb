@@ -2,25 +2,19 @@ module CloudController
   class RuleValidator
     class_attribute :required_fields, :optional_fields
 
-    self.required_fields = ['protocol', 'destination']
-    self.optional_fields = ['log', 'description']
+    self.required_fields = %w[protocol destination]
+    self.optional_fields = %w[log description]
 
     def self.validate(rule)
       errs = validate_fields(rule)
       return errs unless errs.empty?
 
       destination = rule['destination']
-      unless validate_destination(destination)
-        errs << 'contains invalid destination'
-      end
+      errs << 'contains invalid destination' unless validate_destination(destination)
 
-      if rule.key?('log') && !validate_boolean(rule['log'])
-        errs << 'contains invalid log value'
-      end
+      errs << 'contains invalid log value' if rule.key?('log') && !validate_boolean(rule['log'])
 
-      if rule.key?('description') && !rule['description'].is_a?(String)
-        errs << 'contains invalid description'
-      end
+      errs << 'contains invalid description' if rule.key?('description') && !rule['description'].is_a?(String)
 
       errs
     end

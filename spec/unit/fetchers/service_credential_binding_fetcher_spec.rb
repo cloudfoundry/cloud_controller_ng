@@ -9,7 +9,7 @@ module VCAP
       describe 'not a real guid' do
         let!(:existing_credential_binding) { ServiceBinding.make }
 
-        it 'should return nothing' do
+        it 'returns nothing' do
           credential_binding = fetcher.fetch('does-not-exist', readable_spaces_query: nil)
           expect(credential_binding).to be_nil
         end
@@ -18,12 +18,12 @@ module VCAP
       describe 'service keys' do
         let(:space) { Space.make }
         let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-        let(:service_instance) { ManagedServiceInstance.make(space: space) }
-        let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+        let(:service_instance) { ManagedServiceInstance.make(space:) }
+        let!(:service_key) { ServiceKey.make(service_instance:) }
 
         describe 'when in the space' do
           it 'can be found' do
-            credential_binding = fetcher.fetch(service_key.guid, readable_spaces_query: readable_spaces_query)
+            credential_binding = fetcher.fetch(service_key.guid, readable_spaces_query:)
 
             expect(credential_binding).not_to be_nil
             expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceKey)
@@ -37,8 +37,9 @@ module VCAP
         describe 'when not in the space' do
           let!(:other_space) { Space.make }
           let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
           it 'can not be found' do
-            credential_binding = fetcher.fetch(service_key.guid, readable_spaces_query: readable_spaces_query)
+            credential_binding = fetcher.fetch(service_key.guid, readable_spaces_query:)
 
             expect(credential_binding).to be_nil
           end
@@ -49,11 +50,11 @@ module VCAP
         describe 'managed services' do
           let(:space) { Space.make }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+          let(:service_instance) { ManagedServiceInstance.make(space:) }
           let!(:app_binding) { ServiceBinding.make(service_instance: service_instance, name: 'some-name') }
 
           it 'can be found' do
-            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)
+            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
             expect(credential_binding).not_to be_nil
             expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceBinding)
@@ -68,8 +69,9 @@ module VCAP
           describe 'when not in the space' do
             let!(:other_space) { Space.make }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
             it 'can not be found' do
-              credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)
+              credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
               expect(credential_binding).to be_nil
             end
@@ -79,11 +81,11 @@ module VCAP
         describe 'user provided services' do
           let(:space) { Space.make }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-          let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
+          let(:service_instance) { UserProvidedServiceInstance.make(space:) }
           let!(:app_binding) { ServiceBinding.make(service_instance: service_instance, name: 'some-name') }
 
           it 'can be found' do
-            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)
+            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
             expect(credential_binding).not_to be_nil
             expect(credential_binding).to an_instance_of(VCAP::CloudController::ServiceBinding)
@@ -98,8 +100,9 @@ module VCAP
           describe 'when not in the space' do
             let!(:other_space) { Space.make }
             let!(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [other_space].map(&:id)) }
+
             it 'can not be found' do
-              credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)
+              credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
               expect(credential_binding).to be_nil
             end
@@ -109,16 +112,16 @@ module VCAP
         describe 'with last operation' do
           let(:service_instance) { ManagedServiceInstance.make }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [service_instance.space].map(&:id)) }
-          let!(:app_binding) {
-            binding = ServiceBinding.make(service_instance: service_instance)
+          let!(:app_binding) do
+            binding = ServiceBinding.make(service_instance:)
             binding.save_with_new_operation({ state: 'succeeded', type: 'create', description: 'radical avocado' })
             binding
-          }
+          end
 
           it 'fetches the last operation' do
-            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query: readable_spaces_query)
+            credential_binding = fetcher.fetch(app_binding.guid, readable_spaces_query:)
 
-            expect(credential_binding.last_operation).to_not be_nil
+            expect(credential_binding.last_operation).not_to be_nil
 
             last_operation = credential_binding.last_operation
 

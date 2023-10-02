@@ -16,11 +16,11 @@ RSpec.describe HttpRequestError do
   it 'produces the correct hash' do
     exception = HttpRequestError.new('message', endpoint, 'PUT', nested_exception)
     expect(exception.to_h).to include({
-      'description' => 'message',
-      'http' => {
-        'uri' => endpoint,
-        'method' => 'PUT'
-      }
-    })
+                                        'description' => 'message',
+                                        'http' => {
+                                          'uri' => endpoint,
+                                          'method' => 'PUT'
+                                        }
+                                      })
   end
 end

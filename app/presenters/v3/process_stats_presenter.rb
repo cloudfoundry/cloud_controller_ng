@@ -9,7 +9,7 @@ module VCAP::CloudController
 
         def to_hash
           {
-            resources: present_stats_hash,
+            resources: present_stats_hash
           }
         end
 
@@ -32,15 +32,16 @@ module VCAP::CloudController
 
         def found_instance_stats_hash(index, stats)
           {
-            type:       @type,
-            index:      index,
-            state:      stats[:state],
-            host:       stats[:stats][:host],
-            uptime:     stats[:stats][:uptime],
-            mem_quota:  stats[:stats][:mem_quota],
+            type: @type,
+            index: index,
+            state: stats[:state],
+            host: stats[:stats][:host],
+            instance_internal_ip: stats[:stats][:net_info][:instance_address],
+            uptime: stats[:stats][:uptime],
+            mem_quota: stats[:stats][:mem_quota],
             disk_quota: stats[:stats][:disk_quota],
-            log_rate_limit:  stats[:stats][:log_rate_limit],
-            fds_quota:  stats[:stats][:fds_quota],
+            log_rate_limit: stats[:stats][:log_rate_limit],
+            fds_quota: stats[:stats][:fds_quota],
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]
           }.tap do |presented_stats|
@@ -51,9 +52,9 @@ module VCAP::CloudController
 
         def down_instance_stats_hash(index, stats)
           {
-            type:   @type,
-            index:  index,
-            state:  stats[:state],
+            type: @type,
+            index: index,
+            state: stats[:state],
             uptime: stats[:uptime],
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]
@@ -72,10 +73,10 @@ module VCAP::CloudController
           presented_stats[:usage] = if stats[:stats][:usage].present?
                                       {
                                         time: stats[:stats][:usage][:time],
-                                        cpu:  stats[:stats][:usage][:cpu],
-                                        mem:  stats[:stats][:usage][:mem],
+                                        cpu: stats[:stats][:usage][:cpu],
+                                        mem: stats[:stats][:usage][:mem],
                                         disk: stats[:stats][:usage][:disk],
-                                        log_rate: stats[:stats][:usage][:log_rate],
+                                        log_rate: stats[:stats][:usage][:log_rate]
                                       }
                                     else
                                       {}

@@ -12,16 +12,16 @@ module VCAP::CloudController
       let(:process_model) { ProcessModelFactory.make(:buildpack, app: app_model) }
 
       before do
-        app_model.update(buildpack_lifecycle_data: buildpack_lifecycle_data)
+        app_model.update(buildpack_lifecycle_data:)
       end
 
       context 'when the app package hash is blank' do
         before { PackageModel.make(package_hash: nil, sha256_checksum: '', app: process_model) }
 
         it 'raises' do
-          expect {
+          expect do
             subject.validate_process(process_model)
-          }.to raise_error(CloudController::Errors::ApiError, /app package is invalid/)
+          end.to raise_error(CloudController::Errors::ApiError, /app package is invalid/)
         end
       end
 
@@ -37,9 +37,9 @@ module VCAP::CloudController
           end
 
           it 'raises' do
-            expect {
+            expect do
               subject.validate_process(process_model)
-            }.to raise_error(CloudController::Errors::ApiError, /Docker support has not been enabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Docker support has not been enabled/)
           end
         end
 
@@ -59,25 +59,25 @@ module VCAP::CloudController
 
         context 'and an admin buildpack is specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov admin-buildpack))
+            BuildpackLifecycleDataModel.make(buildpacks: %w[https://buildpacks.gov admin-buildpack])
           end
 
           it 'raises an error' do
-            expect {
+            expect do
               subject.validate_process(process_model)
-            }.to raise_error(CloudController::Errors::ApiError, /There are no buildpacks available/)
+            end.to raise_error(CloudController::Errors::ApiError, /There are no buildpacks available/)
           end
         end
 
         context 'and custom buildpacks are specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov http://custom-buildpack.example.com))
+            BuildpackLifecycleDataModel.make(buildpacks: %w[https://buildpacks.gov http://custom-buildpack.example.com])
           end
 
           it 'does not raise' do
-            expect {
+            expect do
               subject.validate_process(process_model)
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end

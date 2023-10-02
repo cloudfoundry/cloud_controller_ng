@@ -12,6 +12,8 @@ module VCAP::CloudController
                        enumerate: 7
     end
 
+    let(:developer) { make_developer_for_space(Space.make) }
+
     describe 'Query Parameters' do
       it { expect(ServicePlansController).to be_queryable_by(:active) }
       it { expect(ServicePlansController).to be_queryable_by(:service_guid) }
@@ -32,9 +34,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool', default: true },
               service_guid: { type: 'string', required: true },
-              service_instance_guids: { type: '[string]' },
+              service_instance_guids: { type: '[string]' }
             }
-           )
+          )
       end
 
       it do
@@ -48,8 +50,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool' },
               service_guid: { type: 'string' },
-              service_instance_guids: { type: '[string]' },
-            })
+              service_instance_guids: { type: '[string]' }
+            }
+          )
       end
     end
 
@@ -118,11 +121,9 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(ServicePlansController).to have_nested_routes({ service_instances: [:get, :put, :delete] })
+        expect(ServicePlansController).to have_nested_routes({ service_instances: %i[get put delete] })
       end
     end
-
-    let(:developer) { make_developer_for_space(Space.make) }
 
     describe 'non public service plans' do
       let!(:private_plan) { ServicePlan.make(public: false) }
@@ -143,7 +144,7 @@ module VCAP::CloudController
         organization = developer.organizations.first
         VCAP::CloudController::ServicePlanVisibility.create(
           organization: organization,
-          service_plan: private_plan,
+          service_plan: private_plan
         )
         get '/v2/service_plans'
         expect(plan_guids).to include(private_plan.guid)
@@ -182,7 +183,7 @@ module VCAP::CloudController
 
         schemas = decoded_response.fetch('entity')['schemas']
 
-        expect(schemas).to_not be_nil
+        expect(schemas).not_to be_nil
         expect(schemas).to eq(
           {
             'service_instance' => {
@@ -193,7 +194,7 @@ module VCAP::CloudController
               'create' => { 'parameters' => {} }
             }
           }
-                           )
+        )
       end
 
       context 'when the plan does not set bindable' do
@@ -207,7 +208,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code 200
 
           bindable = decoded_response.fetch('entity')['bindable']
-          expect(bindable).to_not be_nil
+          expect(bindable).not_to be_nil
           expect(bindable).to eq service_plan.service.bindable
         end
       end
@@ -240,7 +241,7 @@ module VCAP::CloudController
 
           context 'and the user has a service instance associated with that plan' do
             let(:organization) { Organization.make }
-            let(:space) { Space.make(organization: organization) }
+            let(:space) { Space.make(organization:) }
 
             before do
               space.organization.add_user(user)
@@ -252,7 +253,7 @@ module VCAP::CloudController
               broker = ServiceBroker.make
               service = Service.make(service_broker: broker)
               service_plan = ServicePlan.make(service: service, public: false, active: false)
-              ManagedServiceInstance.make(space: space, service_plan: service_plan)
+              ManagedServiceInstance.make(space:, service_plan:)
               service_plan.reload
 
               set_current_user(user)
@@ -273,7 +274,7 @@ module VCAP::CloudController
               broker = ServiceBroker.make
               service = Service.make(:v2, service_broker: broker)
               service_plan = ServicePlan.make(:v2, service: service, public: true, active: true)
-              ManagedServiceInstance.make(:v2, space: space, service_plan: service_plan)
+              ManagedServiceInstance.make(:v2, space:, service_plan:)
               service_plan.update(public: false)
               service_plan.reload
 
@@ -344,7 +345,7 @@ module VCAP::CloudController
 
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
-            private_broker = ServiceBroker.make(space: space)
+            private_broker = ServiceBroker.make(space:)
             service = Service.make(service_broker: private_broker)
             private_broker_service_plan = ServicePlan.make(service: service, public: false)
 
@@ -364,7 +365,7 @@ module VCAP::CloudController
           it 'does not list the inactive service plan' do
             service = Service.make
             service_plan = ServicePlan.make(service: service, public: true, active: true)
-            ManagedServiceInstance.make(service_plan: service_plan)
+            ManagedServiceInstance.make(service_plan:)
             service_plan.update(public: false)
             service_plan.reload
 
@@ -384,6 +385,7 @@ module VCAP::CloudController
       context 'as an admin' do
         let(:different_service) { Service.make(service_broker: ServiceBroker.make) }
         let(:different_service_plan) { ServicePlan.make }
+
         before do
           set_current_user_as_admin
           different_service_plan.service = different_service
@@ -522,7 +524,7 @@ module VCAP::CloudController
 
         it 'does not allow the unauthed user to use inline-relations-depth' do
           get '/v2/service_plans?inline-relations-depth=1'
-          plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
+          plans = decoded_response.fetch('resources').pluck('entity')
           plans.each do |plan|
             expect(plan['service_instances']).to be_nil
           end
@@ -534,7 +536,7 @@ module VCAP::CloudController
 
           get "/v2/service_plans?q=service_guid:#{service_guid}"
 
-          plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
+          plans = decoded_response.fetch('resources').pluck('entity')
           expect(plans.size).to eq(1)
           expect(plans[0]['unique_id']).to eq(service_plan.unique_id)
         end
@@ -575,7 +577,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
           service_plan.reload
           expect(service_plan.name).to eq('old-name')
-          expect(service_plan.public).to eq(false)
+          expect(service_plan.public).to be(false)
         end
       end
     end
@@ -583,13 +585,13 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/service_plans/:guid' do
       let(:service_plan) { ServicePlan.make }
 
-      it 'should prevent recursive deletions if there are any instances' do
+      it 'prevents recursive deletions if there are any instances' do
         set_current_user_as_admin
-        ManagedServiceInstance.make(service_plan: service_plan)
+        ManagedServiceInstance.make(service_plan:)
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
         expect(last_response).to have_status_code(400)
 
-        expect(decoded_response.fetch('code')).to eq(10006)
+        expect(decoded_response.fetch('code')).to eq(10_006)
         expect(decoded_response.fetch('description')).to eq('Please delete the service_instances associations for your service_plans.')
       end
     end

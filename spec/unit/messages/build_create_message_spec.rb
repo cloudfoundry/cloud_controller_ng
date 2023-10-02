@@ -6,6 +6,7 @@ module VCAP::CloudController
     describe 'validations' do
       context 'when no params are given' do
         let(:params) {}
+
         it 'is not valid' do
           message = BuildCreateMessage.new(params)
 
@@ -165,6 +166,7 @@ module VCAP::CloudController
                     }
                   }
                 end
+
                 it 'includes the metadata in the message' do
                   message = BuildCreateMessage.new(all_params)
                   expect(message).to be_valid
@@ -189,7 +191,7 @@ module VCAP::CloudController
         let(:params) { nil }
 
         it 'returns nil' do
-          expect(build_create_message.staging_memory_in_mb).to eq(nil)
+          expect(build_create_message.staging_memory_in_mb).to be_nil
         end
       end
     end
@@ -206,7 +208,7 @@ module VCAP::CloudController
         let(:params) { nil }
 
         it 'returns nil' do
-          expect(build_create_message.staging_disk_in_mb).to eq(nil)
+          expect(build_create_message.staging_disk_in_mb).to be_nil
         end
       end
     end
@@ -223,7 +225,7 @@ module VCAP::CloudController
         let(:params) { nil }
 
         it 'returns nil' do
-          expect(build_create_message.staging_log_rate_limit_bytes_per_second).to eq(nil)
+          expect(build_create_message.staging_log_rate_limit_bytes_per_second).to be_nil
         end
       end
 
@@ -234,6 +236,7 @@ module VCAP::CloudController
             staging_log_rate_limit_bytes_per_second: -2
           }
         end
+
         it 'is invalid' do
           expect(build_create_message.valid?).to be false
         end
@@ -246,6 +249,7 @@ module VCAP::CloudController
             staging_log_rate_limit_bytes_per_second: 2**63
           }
         end
+
         it 'is invalid' do
           expect(build_create_message.valid?).to be false
         end
@@ -266,7 +270,7 @@ module VCAP::CloudController
         let(:params) { nil }
 
         it 'returns nil' do
-          expect(build_create_message.environment_variables).to eq(nil)
+          expect(build_create_message.environment_variables).to be_nil
         end
       end
     end

@@ -8,7 +8,7 @@ module VCAP::CloudController
       read_for_update?(object, params)
     end
 
-    def index?(object_class, params=nil)
+    def index?(_object_class, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -27,12 +27,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)
@@ -48,22 +48,22 @@ module VCAP::CloudController
       true
     end
 
-    def create?(space_quota_definition, params=nil)
+    def create?(space_quota_definition, _params=nil)
       return true if admin_user?
       return false if space_quota_definition.organization.suspended?
 
       space_quota_definition.organization.managers.include?(context.user)
     end
 
-    def read_for_update?(space_quota_definition, params=nil)
+    def read_for_update?(space_quota_definition, _params=nil)
       create?(space_quota_definition)
     end
 
-    def update?(space_quota_definition, params=nil)
+    def update?(space_quota_definition, _params=nil)
       create?(space_quota_definition)
     end
 
-    def delete?(space_quota_definition, params=nil)
+    def delete?(space_quota_definition, _params=nil)
       create?(space_quota_definition)
     end
 

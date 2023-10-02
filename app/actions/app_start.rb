@@ -10,9 +10,7 @@ module VCAP::CloudController
           app.lock!
           process_attributes = { state: ProcessModel::STARTED }
 
-          if create_revision && app.desired_state != ProcessModel::STARTED
-            RevisionResolver.update_app_revision(app, user_audit_info)
-          end
+          RevisionResolver.update_app_revision(app, user_audit_info) if create_revision && app.desired_state != ProcessModel::STARTED
 
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each do |process|
@@ -34,7 +32,7 @@ module VCAP::CloudController
       def record_audit_event(app, user_audit_info)
         Repositories::AppEventRepository.new.record_app_start(
           app,
-          user_audit_info,
+          user_audit_info
         )
       end
     end

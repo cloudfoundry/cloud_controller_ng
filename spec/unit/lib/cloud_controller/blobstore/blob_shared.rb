@@ -1,10 +1,10 @@
 RSpec.shared_examples_for 'a blob' do
   it 'returns a public_download_url' do
-    expect { subject.public_download_url }.to_not raise_error
+    expect { subject.public_download_url }.not_to raise_error
   end
 
   it 'returns a internal_download_url' do
-    expect { subject.internal_download_url }.to_not raise_error
+    expect { subject.internal_download_url }.not_to raise_error
   end
 
   it 'returns attributes' do

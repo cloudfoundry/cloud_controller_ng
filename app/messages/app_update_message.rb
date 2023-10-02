@@ -3,7 +3,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppUpdateMessage < MetadataBaseMessage
-    register_allowed_keys [:name, :lifecycle]
+    register_allowed_keys %i[name lifecycle]
 
     attr_reader :app
 
@@ -21,14 +21,14 @@ module VCAP::CloudController
     validates :name, string: true, allow_nil: true
 
     validates :lifecycle_type,
-      string: true,
-      allow_nil: false,
-      if: lifecycle_type_requested?
+              string: true,
+              allow_nil: false,
+              if: lifecycle_type_requested?
 
     validates :lifecycle_data,
-      hash: true,
-      allow_nil: false,
-      if: lifecycle_requested?
+              hash: true,
+              allow_nil: false,
+              if: lifecycle_requested?
 
     def lifecycle_data
       HashUtils.dig(lifecycle, :data)

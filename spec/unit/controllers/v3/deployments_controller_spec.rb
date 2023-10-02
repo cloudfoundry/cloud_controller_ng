@@ -7,7 +7,7 @@ require 'messages/deployment_create_message'
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
   let(:app) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
-  let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app) }
+  let!(:process_model) { VCAP::CloudController::ProcessModel.make(app:) }
   let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'spider' }) }
   let(:app_guid) { app.guid }
   let(:space) { app.space }
@@ -16,7 +16,7 @@ RSpec.describe DeploymentsController, type: :controller do
   describe '#create' do
     before do
       TestConfig.override(temporary_disable_deployments: false)
-      app.update(droplet: droplet)
+      app.update(droplet:)
     end
 
     let(:request_body) do
@@ -27,7 +27,7 @@ RSpec.describe DeploymentsController, type: :controller do
               guid: app_guid
             }
           }
-        },
+        }
       }
     end
 
@@ -39,7 +39,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 201' do
         post :create, params: request_body, as: :json
 
-        expect(response.status).to eq(201)
+        expect(response).to have_http_status(:created)
       end
 
       context 'when a droplet is not provided' do
@@ -49,36 +49,36 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
           post :create, params: request_body, as: :json
         end
 
         context 'the app does not have a current droplet' do
-          let(:app_without_droplet) {
+          let(:app_without_droplet) do
             VCAP::CloudController::AppModel.make(
               desired_state: VCAP::CloudController::ProcessModel::STARTED,
               space: space
             )
-          }
+          end
 
           let(:request_body) do
             {
-             relationships: {
+              relationships: {
                 app: {
                   data: {
                     guid: app_without_droplet.guid
                   }
                 }
-              },
+              }
             }
           end
 
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.')
           end
@@ -98,7 +98,7 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
@@ -113,12 +113,12 @@ RSpec.describe DeploymentsController, type: :controller do
               with(
                 app: app,
                 user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-                ).and_call_original
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+              ).and_call_original
 
-            expect {
+            expect do
               post :create, params: request_body, as: :json
-            }.not_to change { VCAP::CloudController::RevisionModel.count }
+            end.not_to(change(VCAP::CloudController::RevisionModel, :count))
           end
         end
 
@@ -128,12 +128,12 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
-          expect {
+          expect do
             post :create, params: request_body, as: :json
-          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
         end
 
         it 'sets the app droplet to the provided droplet' do
@@ -155,14 +155,14 @@ RSpec.describe DeploymentsController, type: :controller do
                     guid: app_guid
                   }
                 }
-              },
+              }
             }
           end
 
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
           end
@@ -180,14 +180,14 @@ RSpec.describe DeploymentsController, type: :controller do
                     guid: app_guid
                   }
                 }
-              },
+              }
             }
           end
 
           it 'returns a 422' do
             post :create, params: request_body, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include('UnprocessableEntity')
             expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
           end
@@ -199,7 +199,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'returns 422 with an error message' do
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
         end
       end
@@ -224,7 +224,7 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
@@ -234,32 +234,31 @@ RSpec.describe DeploymentsController, type: :controller do
             with(
               app: app,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+            ).and_call_original
 
-          expect {
+          expect do
             post :create, params: request_body, as: :json
-          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
           expect(VCAP::CloudController::RevisionModel.last.droplet_guid).to eq(droplet.guid)
         end
 
         context 'when the provided revision specifies start commands' do
           let!(:earlier_revision) do
             VCAP::CloudController::RevisionModel.make(:custom_web_command,
-              app: app,
-              droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
-              created_at: 5.days.ago,
-              version: 2,
-              description: 'reassigned earlier_revision',
-            )
+                                                      app: app,
+                                                      droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
+                                                      created_at: 5.days.ago,
+                                                      version: 2,
+                                                      description: 'reassigned earlier_revision')
           end
 
           it 'uses the process commands from the revision to create a new revision' do
             expect(VCAP::CloudController::DeploymentCreate).
               to receive(:create).and_call_original
-            expect {
+            expect do
               post :create, params: request_body, as: :json
-            }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+            end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
             expect(VCAP::CloudController::RevisionModel.last.commands_by_process_type).to eq({ 'web' => 'custom_web_command' })
           end
         end
@@ -268,7 +267,7 @@ RSpec.describe DeploymentsController, type: :controller do
           earlier_revision.destroy
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('The revision does not exist')
         end
@@ -277,7 +276,7 @@ RSpec.describe DeploymentsController, type: :controller do
           droplet.destroy
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to deploy this revision, the droplet for this revision no longer exists.')
         end
@@ -286,13 +285,13 @@ RSpec.describe DeploymentsController, type: :controller do
           app.update(revisions_enabled: false)
 
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include('Cannot create deployment from a revision for an app without revisions enabled')
         end
       end
 
       context 'when both a revision and a droplet are provided' do
-        let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
+        let!(:revision) { VCAP::CloudController::RevisionModel.make(app:) }
         let(:request_body) do
           {
             droplet: {
@@ -307,28 +306,28 @@ RSpec.describe DeploymentsController, type: :controller do
                   guid: app_guid
                 }
               }
-            },
+            }
           }
         end
 
         it 'returns 422 with an error message' do
           post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include("Cannot set both fields 'droplet' and 'revision'")
         end
       end
 
       context 'when metadata is provided' do
-        let(:metadata) {
+        let(:metadata) do
           {
             'labels' => {
-              'seriouseats.com/potato' => 'mashed',
+              'seriouseats.com/potato' => 'mashed'
             },
             'annotations' => {
-              'potato' => 'idaho',
-            },
+              'potato' => 'idaho'
+            }
           }
-        }
+        end
 
         let(:request_body) do
           {
@@ -339,14 +338,14 @@ RSpec.describe DeploymentsController, type: :controller do
                 }
               }
             },
-            metadata: metadata,
+            metadata: metadata
           }
         end
 
         it 'sets some metadata' do
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq(201)
+          expect(response).to have_http_status(:created)
           expect(parsed_body['metadata']).to eq(metadata)
         end
       end
@@ -363,27 +362,27 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 422,
           'org_manager' => 422,
           'org_auditor' => 422,
-          'org_billing_manager' => 422,
+          'org_billing_manager' => 422
         }
       end
-      let(:api_call) { lambda { post :create, params: request_body, as: :json } }
+      let(:api_call) { -> { post :create, params: request_body, as: :json } }
     end
 
     context 'when the user does not have permission' do
       before do
-        set_current_user(user, scopes: %w(cloud_controller.write))
+        set_current_user(user, scopes: %w[cloud_controller.write])
       end
 
       it 'returns 422 with an error message' do
         post :create, params: request_body, as: :json
-        expect(response.status).to eq 422
+        expect(response).to have_http_status :unprocessable_entity
         expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it and the organization is not suspended.')
       end
     end
 
     it 'returns 401 for Unauthenticated requests' do
       post :create, params: request_body, as: :json
-      expect(response.status).to eq(401)
+      expect(response).to have_http_status(:unauthorized)
     end
 
     context 'when temporary_disable_deployments is true' do
@@ -395,7 +394,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 403' do
         post :create, params: request_body, as: :json
 
-        expect(response.status).to eq(403)
+        expect(response).to have_http_status(:forbidden)
         expect(response.body).to include("Deployments cannot be created due to manifest property 'temporary_disable_deployments'")
       end
 
@@ -418,14 +417,14 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'returns a 200 on show existing deployment' do
         get :show, params: { guid: deployment.guid }, as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['guid']).to eq(deployment.guid)
       end
 
       it 'returns a 404 on bogus deployment' do
         get :show, params: { guid: 'not a deployment' }, as: :json
 
-        expect(response.status).to eq(404)
+        expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
       end
 
@@ -437,7 +436,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
           get :show, params: { guid: deployment.guid }, as: :json
 
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['guid']).to eq(deployment.guid)
           expect(parsed_body['relationships']['app']['data']['guid']).to eq(app.guid)
           expect(parsed_body['droplet']['guid']).to eq(droplet.guid)
@@ -456,15 +455,15 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 200,
           'org_manager' => 200,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { get :show, params: { guid: deployment.guid }, as: :json } }
+      let(:api_call) { -> { get :show, params: { guid: deployment.guid }, as: :json } }
     end
 
     it 'returns 401 for Unauthenticated requests' do
       get :show, params: { guid: deployment.guid }, as: :json
-      expect(response.status).to eq(401)
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
@@ -483,18 +482,18 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 200,
           'org_manager' => 200,
           'org_auditor' => 200,
-          'org_billing_manager' => 200,
+          'org_billing_manager' => 200
         }.freeze
 
         has_no_space_access = {
           'org_auditor' => true,
-          'org_billing_manager' => true,
+          'org_billing_manager' => true
         }
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             it "returns #{expected_return_value}" do
-              set_current_user_as_role(role: role, org: org, space: space, user: user)
+              set_current_user_as_role(role:, org:, space:, user:)
 
               get :index
               expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
@@ -503,7 +502,7 @@ RSpec.describe DeploymentsController, type: :controller do
                 expect(resources.size).to eq(0), "role #{role}: expected 0, got: #{resources.size}"
               else
                 expect(resources.size).to eq(2), "role #{role}: expected 2, got: #{resources.size}"
-                expect(resources.map { |r| r['guid'] }).to match_array([deployment.guid, another_deployment.guid])
+                expect(resources.pluck('guid')).to contain_exactly(deployment.guid, another_deployment.guid)
               end
             end
           end
@@ -518,7 +517,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns a 403 Not Authorized error' do
           get :index
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -526,7 +525,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
     describe 'request validity and pagination' do
       before do
-        set_current_user_as_admin(user: user)
+        set_current_user_as_admin(user:)
       end
 
       context 'query params' do
@@ -534,9 +533,9 @@ RSpec.describe DeploymentsController, type: :controller do
           let(:params) { { 'order_by' => '^%' } }
 
           it 'returns 400' do
-            get :index, params: params
+            get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
           end
@@ -546,9 +545,9 @@ RSpec.describe DeploymentsController, type: :controller do
           let(:params) { { 'bad_param' => 'foo' } }
 
           it 'returns 400' do
-            get :index, params: params
+            get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include('Unknown query parameter(s)')
             expect(response.body).to include('bad_param')
@@ -556,12 +555,12 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         context 'invalid pagination' do
-          let(:params) { { 'per_page' => 9999999999999999 } }
+          let(:params) { { 'per_page' => 9_999_999_999_999_999 } }
 
           it 'returns 400' do
-            get :index, params: params
+            get(:index, params:)
 
-            expect(response.status).to eq(400)
+            expect(response).to have_http_status(:bad_request)
             expect(response.body).to include('BadQueryParameter')
             expect(response.body).to include('Per page must be between')
           end
@@ -571,9 +570,9 @@ RSpec.describe DeploymentsController, type: :controller do
           let(:params) { { 'per_page' => 1 } }
 
           it 'adds requested params to the links' do
-            get :index, params: params
+            get(:index, params:)
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/deployments")
             expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
             expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
@@ -587,16 +586,16 @@ RSpec.describe DeploymentsController, type: :controller do
           let!(:canceled_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app) }
 
           it 'gets only the requested deployments' do
-            get :index, params: params
+            get(:index, params:)
 
-            expect(response.status).to eq(200)
-            expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([deployed_deployment.guid, canceled_deployment.guid])
+            expect(response).to have_http_status(:ok)
+            expect(parsed_body['resources'].pluck('guid')).to contain_exactly(deployed_deployment.guid, canceled_deployment.guid)
           end
 
           it 'echo the params in the pagination links' do
             get :index, params: params.merge({ per_page: 1 })
 
-            expect(response.status).to eq(200)
+            expect(response).to have_http_status(:ok)
             expect(parsed_body['pagination']['next']['href']).to match(/states=#{CGI.escape(states_list)}/)
           end
         end
@@ -614,13 +613,13 @@ RSpec.describe DeploymentsController, type: :controller do
     end
 
     before do
-      set_current_user_as_admin(user: user)
+      set_current_user_as_admin(user:)
     end
 
     it 'returns 404 not found when the deployment does not exist' do
       post :cancel, params: { guid: 'non-existant-giud' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
 
     it 'returns a 200 and cancels the deployment' do
@@ -628,7 +627,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
       post :cancel, params: { guid: deployment.guid }
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
       expect(response.body).to be_empty
     end
 
@@ -639,8 +638,8 @@ RSpec.describe DeploymentsController, type: :controller do
 
         post :cancel, params: { guid: deployment.guid }
 
-        expect(response.status).to eq(422)
-        expect(response.body).to match /awry/
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to match(/awry/)
       end
     end
 
@@ -655,20 +654,20 @@ RSpec.describe DeploymentsController, type: :controller do
           'space_auditor' => 404,
           'org_manager' => 404,
           'org_auditor' => 404,
-          'org_billing_manager' => 404,
+          'org_billing_manager' => 404
         }
       end
-      let(:api_call) { lambda { post :cancel, params: { guid: deployment.guid } } }
+      let(:api_call) { -> { post :cancel, params: { guid: deployment.guid } } }
     end
   end
 
   describe '#update' do
-    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app) }
+    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app:) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
-      allow_user_write_access(user, space: space)
+      allow_user_write_access(user, space:)
     end
 
     context 'when there is an invalid message validation failure' do
@@ -679,9 +678,10 @@ RSpec.describe DeploymentsController, type: :controller do
           }
         }
       end
+
       it 'displays an informative error' do
         patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
         expect(response).to have_error_message("labels' is not an object")
       end
     end
@@ -689,27 +689,27 @@ RSpec.describe DeploymentsController, type: :controller do
     context 'permissions' do
       context 'when the user cannot read the deployment due to roles' do
         before do
-          disallow_user_read_access(user, space: space)
-          disallow_user_write_access(user, space: space)
+          disallow_user_read_access(user, space:)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns a 404 ResourceNotFound error' do
           patch :update, params: { guid: deployment.guid }
 
-          expect(response.status).to eq(404)
+          expect(response).to have_http_status(:not_found)
           expect(response.body).to include('ResourceNotFound')
         end
       end
 
       context 'when the user can read but cannot write to the space' do
         before do
-          disallow_user_write_access(user, space: space)
+          disallow_user_write_access(user, space:)
         end
 
         it 'returns 403 NotAuthorized' do
           patch :update, params: { guid: deployment.guid }
 
-          expect(response.status).to eq(403)
+          expect(response).to have_http_status(:forbidden)
           expect(response.body).to include('NotAuthorized')
         end
       end
@@ -729,11 +729,12 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'updates' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(200)
+          expect(response).to have_http_status(:ok)
           expect(parsed_body['guid']).to eq(deployment.guid)
           expect(parsed_body['metadata']['labels']['key']).to eq('value')
         end
       end
+
       context 'when the label is invalid' do
         let(:request_body) do
           {
@@ -748,7 +749,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -763,7 +764,7 @@ RSpec.describe DeploymentsController, type: :controller do
               },
               annotations: {
                 '' => 'uhoh'
-              },
+              }
             }
           }
         end
@@ -771,7 +772,7 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -786,7 +787,7 @@ RSpec.describe DeploymentsController, type: :controller do
               },
               annotations: {
                 this: 'is valid'
-              },
+              }
             }
           }
         end
@@ -797,7 +798,7 @@ RSpec.describe DeploymentsController, type: :controller do
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
@@ -821,7 +822,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
         end
       end
@@ -844,7 +845,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
-          expect(response.status).to eq(422)
+          expect(response).to have_http_status(:unprocessable_entity)
           expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
         end
       end

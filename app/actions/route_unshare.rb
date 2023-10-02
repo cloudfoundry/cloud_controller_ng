@@ -24,9 +24,9 @@ module VCAP::CloudController
     end
 
     def validate_not_unsharing_from_owner!(route, space)
-      if space == route.space
-        error!("Unable to unshare route '#{route.uri}' from space '#{route.space.guid}'. Routes cannot be removed from the space that owns them.")
-      end
+      return unless space == route.space
+
+      error!("Unable to unshare route '#{route.uri}' from space '#{route.space.guid}'. Routes cannot be removed from the space that owns them.")
     end
   end
 end

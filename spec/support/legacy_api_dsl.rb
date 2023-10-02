@@ -13,23 +13,21 @@ module LegacyApiDsl
       next if field_is_url_and_relationship_not_present?(json, expected_attribute)
 
       expect(json).to have_key expected_attribute.to_s
-      if expected_values.key? expected_attribute.to_sym
-        expect(json[expected_attribute.to_s]).to eq(expected_values[expected_attribute.to_sym])
-      end
+      expect(json[expected_attribute.to_s]).to eq(expected_values[expected_attribute.to_sym]) if expected_values.key? expected_attribute.to_sym
     end
   end
 
   def standard_list_response(response_json, model, expected_attributes: nil)
     standard_paginated_response_format? response_json
     resource = response_json['resources'].first
-    standard_entity_response resource, model, expected_attributes: expected_attributes
+    standard_entity_response resource, model, expected_attributes:
   end
 
   def standard_entity_response(json, model, expected_values: {}, expected_attributes: nil)
     expect(json).to include('metadata')
     expect(json).to include('entity')
     standard_metadata_response_format? json['metadata'], model
-    validate_response(model, json['entity'], expected_values: expected_values, expected_attributes: expected_attributes)
+    validate_response(model, json['entity'], expected_values:, expected_attributes:)
   end
 
   def standard_paginated_response_format?(json)
@@ -39,7 +37,7 @@ module LegacyApiDsl
   def standard_metadata_response_format?(json, model)
     ignored_attributes = []
     ignored_attributes = [:updated_at] unless model_has_updated_at?(model)
-    validate_response(VCAP::RestAPI::MetadataMessage, json, ignored_attributes: ignored_attributes)
+    validate_response(VCAP::RestAPI::MetadataMessage, json, ignored_attributes:)
   end
 
   def expected_attributes_for_model(model)
@@ -53,9 +51,9 @@ module LegacyApiDsl
   end
 
   def field_is_url_and_relationship_not_present?(json, field)
-    if field =~ /(.*)_url$/
-      !json["#{Regexp.last_match[1]}_guid".to_sym]
-    end
+    return unless field =~ /(.*)_url$/
+
+    !json["#{Regexp.last_match[1]}_guid".to_sym]
   end
 
   def audited_event(event)
@@ -110,7 +108,7 @@ module LegacyApiDsl
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model, controller, options={}, &block)
+    def standard_model_list(model, controller, options={}, &)
       outer_model_description = ''
       model_name = options[:path] || model
       title = options[:title] || model_name.to_s.pluralize.titleize
@@ -127,7 +125,7 @@ module LegacyApiDsl
       get root(path) do
         include_context 'response_fields' if options[:response_fields]
 
-        standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, []), &block
+        standard_list_parameters(controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, []), &)
 
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
@@ -182,13 +180,13 @@ module LegacyApiDsl
       end
     end
 
-    def standard_model_delete(model, options={}, &block)
+    def standard_model_delete(model, options={}, &)
       title = options[:title] || model.to_s.titleize
       query_string = "?#{options[:query_string]}"
       delete "#{root(model)}/:guid#{query_string}" do
         parameter :guid, "The guid of the #{title}"
 
-        instance_eval(&block) if block_given?
+        instance_eval(&) if block_given?
 
         request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'.", valid_values: [true, false] unless options[:async] == false
 
@@ -210,14 +208,14 @@ module LegacyApiDsl
 
     def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [], &block)
       query_parameters = controller.query_parameters - exclude_parameters
-      if !query_parameters.empty?
+      unless query_parameters.empty?
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
         query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'
         query_parameter_description += " Valid filters: #{query_parameters.to_a.join(', ')}"
         if outer_model && query_parameters.include?((outer_model.to_s + '_guid'))
-          query_parameter_description += "<br/> (Note that filtering on #{outer_model}_guid will return an empty list" \
-          ' if you specify anything other than the guid included in the path.)'
+          query_parameter_description += "<br/> (Note that filtering on #{outer_model}_guid will return an empty list " \
+                                         'if you specify anything other than the guid included in the path.)'
         end
 
         examples = ['q=filter:value', 'q=filter>value', 'q=filter IN a,b,c']
@@ -238,9 +236,7 @@ module LegacyApiDsl
     end
 
     def request_parameter(name, description, options={})
-      if options[:html]
-        options[:description_html] = description
-      end
+      options[:description_html] = description if options[:html]
 
       parameter name, description, options
       metadata[:request_parameters] ||= []
@@ -259,8 +255,8 @@ module LegacyApiDsl
       header 'AUTHORIZATION', :admin_auth_header
     end
 
-    def field(*args)
-      body_parameter(*args)
+    def field(*)
+      body_parameter(*)
     end
   end
 end

@@ -24,18 +24,10 @@ module VCAP::CloudController
     private
 
     def validation_error!(error, message)
-      if error.errors.on(:stack)&.include?(:buildpack_stack_does_not_exist)
-        error!(%{Stack '#{message.stack}' does not exist})
-      end
-      if error.errors.on(:stack)&.include?(:buildpack_cant_change_stacks)
-        error!(%{Buildpack stack cannot be changed})
-      end
-      if error.errors.on(:stack)&.include?(:unique)
-        error!(%{Buildpack with name '#{error.model.name}' and an unassigned stack already exists})
-      end
-      if error.errors.on([:name, :stack])&.include?(:unique)
-        error!(%{Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists})
-      end
+      error!(%(Stack '#{message.stack}' does not exist)) if error.errors.on(:stack)&.include?(:buildpack_stack_does_not_exist)
+      error!(%(Buildpack stack cannot be changed)) if error.errors.on(:stack)&.include?(:buildpack_cant_change_stacks)
+      error!(%(Buildpack with name '#{error.model.name}' and an unassigned stack already exists)) if error.errors.on(:stack)&.include?(:unique)
+      error!(%(Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists)) if error.errors.on(%i[name stack])&.include?(:unique)
 
       error!(error.message)
     end

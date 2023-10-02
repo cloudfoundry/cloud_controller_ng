@@ -27,7 +27,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     read_table = {
@@ -43,7 +43,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     write_table = {
@@ -59,16 +59,16 @@ module VCAP::CloudController
       org_user: false,
       org_manager: false,
       org_auditor: false,
-      org_billing_manager: false,
+      org_billing_manager: false
     }
 
     update_table = write_table.clone.merge({
-       org_manager: true,
-    })
+                                             org_manager: true
+                                           })
 
     remove_last_remaining_table = write_table.clone.merge({
-      org_manager: false,
-    })
+                                                            org_manager: false
+                                                          })
 
     flag_enabled_create_table = {
       unauthenticated: false,
@@ -83,7 +83,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     flag_disabled_create_table = write_table
@@ -101,7 +101,7 @@ module VCAP::CloudController
       org_user: true,
       org_manager: true,
       org_auditor: true,
-      org_billing_manager: true,
+      org_billing_manager: true
     }
 
     it_behaves_like('an access control', :index, index_table)

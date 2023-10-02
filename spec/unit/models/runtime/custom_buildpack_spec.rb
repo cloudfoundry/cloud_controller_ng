@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     let(:url) { 'http://foo_bar/baz' }
 
-    its(:url) { should == url }
-    its(:to_json) { should == '"http://foo_bar/baz"' }
+    its(:url) { is_expected.to eq(url) }
+    its(:to_json) { is_expected.to eq('"http://foo_bar/baz"') }
 
     it 'has the correct staging message' do
       expect(buildpack.staging_message).to include(buildpack_git_url: url)

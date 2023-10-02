@@ -24,7 +24,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'eager loads the specified resources for the routes' do
-          results = RoleListFetcher.fetch(message, Role.dataset, eager_loaded_associations: [:user, :space]).all
+          results = RoleListFetcher.fetch(message, Role.dataset, eager_loaded_associations: %i[user space]).all
 
           expect(results.first.associations.key?(:user)).to be true
           expect(results.first.associations.key?(:space)).to be true
@@ -44,7 +44,7 @@ module VCAP::CloudController
         let(:filters) { { guids: [space_1_role_1.guid] } }
 
         it 'returns all of the desired roles' do
-          expect(subject.map(&:guid)).to match_array([space_1_role_1.guid])
+          expect(subject.map(&:guid)).to contain_exactly(space_1_role_1.guid)
         end
       end
 

@@ -17,7 +17,7 @@ module VCAP::CloudController
               labels: hashified_labels(isolation_segment.labels),
               annotations: hashified_annotations(isolation_segment.annotations)
             },
-            links: build_links,
+            links: build_links
           }
         end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
         def build_links
           {
             self: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}") },
-            organizations: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/organizations") },
+            organizations: { href: url_builder.build_url(path: "/v3/isolation_segments/#{isolation_segment.guid}/organizations") }
           }
         end
       end

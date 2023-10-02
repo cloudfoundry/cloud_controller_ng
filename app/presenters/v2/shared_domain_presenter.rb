@@ -21,8 +21,8 @@ module CloudController
 
         def metadata_hash(domain, _controller)
           {
-            'guid'       => domain.guid,
-            'url'        => "/v2/shared_domains/#{domain.guid}",
+            'guid' => domain.guid,
+            'url' => "/v2/shared_domains/#{domain.guid}",
             'created_at' => domain.created_at,
             'updated_at' => domain.updated_at
           }

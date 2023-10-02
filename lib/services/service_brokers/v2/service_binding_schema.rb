@@ -34,7 +34,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def human_readable_attr_name(name)
       {
-        create: 'Schemas service_binding.create',
+        create: 'Schemas service_binding.create'
       }.fetch(name) { raise NotImplementedError }
     end
   end

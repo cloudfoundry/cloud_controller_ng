@@ -49,8 +49,8 @@ RSpec.shared_examples 'binding last operation response handling' do |operation_t
     before do
       stub_request(:get, broker_binding_last_operation_url).
         with(query: hash_including({
-          operation: operation
-        })).to_timeout
+                                     operation:
+                                   })).to_timeout
     end
 
     it 'continues polling' do
@@ -69,8 +69,8 @@ RSpec.shared_examples 'binding last operation response handling' do |operation_t
       before do
         stub_request(:get, broker_binding_last_operation_url).
           with(query: hash_including({
-                  operation: operation
-                })).to_raise(error)
+                                       operation:
+                                     })).to_raise(error)
       end
 
       it 'continues polling' do

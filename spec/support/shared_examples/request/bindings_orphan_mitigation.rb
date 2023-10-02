@@ -6,10 +6,10 @@ RSpec.shared_examples 'create binding orphan mitigation' do
   before do
     stub_request(:delete, bind_url).
       with(query: {
-        accepts_incomplete: true,
-        plan_id: plan_id,
-        service_id: offering_id,
-      }).to_return(status: 200, body: {}.to_json)
+             accepts_incomplete: true,
+             plan_id: plan_id,
+             service_id: offering_id
+           }).to_return(status: 200, body: {}.to_json)
 
     stub_request(:put, bind_url).
       with(query: { accepts_incomplete: true }).to_return(status: broker_bind_status_code, body: bind_response_body)
@@ -82,6 +82,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
     context 'last operation response' do
       context 'response for last operation is 200 state failed' do
         let(:broker_bind_status_code) { 202 }
+
         before do
           stub_request(:get, "#{bind_url}/last_operation").
             with({ query: { plan_id: plan_id, service_id: offering_id } }).
@@ -98,6 +99,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
 
       context 'response for last operation is 200 with a malformed response' do
         let(:broker_bind_status_code) { 202 }
+
         before do
           stub_request(:get, "#{bind_url}/last_operation").
             with({ query: { plan_id: plan_id, service_id: offering_id } }).
@@ -131,6 +133,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
 
       context 'response for last operation is 404' do
         let(:broker_bind_status_code) { 202 }
+
         before do
           stub_request(:get, "#{bind_url}/last_operation").
             with({ query: { plan_id: plan_id, service_id: offering_id } }).
@@ -147,6 +150,7 @@ RSpec.shared_examples 'create binding orphan mitigation' do
 
       context 'response for last operation is 400' do
         let(:broker_bind_status_code) { 202 }
+
         before do
           stub_request(:get, "#{bind_url}/last_operation").
             with({ query: { plan_id: plan_id, service_id: offering_id } }).
@@ -246,8 +250,8 @@ RSpec.shared_examples 'create binding orphan mitigation' do
       before do
         stub_request(:put, bind_url).
           with(query: {
-            accepts_incomplete: true,
-          }).to_timeout
+                 accepts_incomplete: true
+               }).to_timeout
       end
 
       it 'does orphan mitigation and fails the job' do
@@ -279,7 +283,7 @@ def assert_orphan_mitigation_performed(plan_id, offering_id)
 end
 
 def assert_no_orphan_mitigation_performed(plan_id, offering_id)
-  expect(delete_request(plan_id, offering_id)).to_not have_been_made
+  expect(delete_request(plan_id, offering_id)).not_to have_been_made
 end
 
 def delete_request(plan_id, offering_id)
@@ -288,7 +292,7 @@ def delete_request(plan_id, offering_id)
       query: {
         accepts_incomplete: true,
         plan_id: plan_id,
-        service_id: offering_id,
+        service_id: offering_id
       }
     )
 end

@@ -11,49 +11,49 @@ module VCAP::CloudController
       let(:space) { VCAP::CloudController::Space.make(guid: 'some-space', organization: org) }
       let(:message) do
         VCAP::CloudController::SpaceQuotasCreateMessage.new({
-          name: 'my-name',
-          relationships: {
-            organization: {
-              data: {
-                guid: org.guid
-              }
-            }
-          }
-        })
+                                                              name: 'my-name',
+                                                              relationships: {
+                                                                organization: {
+                                                                  data: {
+                                                                    guid: org.guid
+                                                                  }
+                                                                }
+                                                              }
+                                                            })
       end
 
       let(:message_with_params) do
         VCAP::CloudController::SpaceQuotasCreateMessage.new({
-          name: 'my-name',
-          apps: {
-            total_memory_in_mb: 5,
-            per_process_memory_in_mb: 6,
-            total_instances: 7,
-            per_app_tasks: 8,
-            log_rate_limit_in_bytes_per_second: 2000,
-          },
-          services: {
-            paid_services_allowed: false,
-            total_service_instances: 9,
-            total_service_keys: 10,
-          },
-          routes: {
-            total_routes: 47,
-            total_reserved_ports: 5,
-          },
-          relationships: {
-            organization: {
-              data: {
-                guid: org.guid
-              }
-            },
-            spaces: {
-              data: [
-                { guid: space.guid }
-              ]
-            }
-          }
-        })
+                                                              name: 'my-name',
+                                                              apps: {
+                                                                total_memory_in_mb: 5,
+                                                                per_process_memory_in_mb: 6,
+                                                                total_instances: 7,
+                                                                per_app_tasks: 8,
+                                                                log_rate_limit_in_bytes_per_second: 2000
+                                                              },
+                                                              services: {
+                                                                paid_services_allowed: false,
+                                                                total_service_instances: 9,
+                                                                total_service_keys: 10
+                                                              },
+                                                              routes: {
+                                                                total_routes: 47,
+                                                                total_reserved_ports: 5
+                                                              },
+                                                              relationships: {
+                                                                organization: {
+                                                                  data: {
+                                                                    guid: org.guid
+                                                                  }
+                                                                },
+                                                                spaces: {
+                                                                  data: [
+                                                                    { guid: space.guid }
+                                                                  ]
+                                                                }
+                                                              }
+                                                            })
       end
 
       context 'when creating a space quota' do
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
             expect(space_quota.total_services).to eq(-1)
             expect(space_quota.total_service_keys).to eq(-1)
-            expect(space_quota.non_basic_services_allowed).to eq(true)
+            expect(space_quota.non_basic_services_allowed).to be(true)
 
             expect(space_quota.total_routes).to eq(-1)
             expect(space_quota.total_reserved_route_ports).to eq(-1)
@@ -96,7 +96,7 @@ module VCAP::CloudController
 
             expect(space_quota.total_services).to eq(9)
             expect(space_quota.total_service_keys).to eq(10)
-            expect(space_quota.non_basic_services_allowed).to eq(false)
+            expect(space_quota.non_basic_services_allowed).to be(false)
 
             expect(space_quota.total_routes).to eq(47)
             expect(space_quota.total_reserved_route_ports).to eq(5)
@@ -113,19 +113,19 @@ module VCAP::CloudController
           let(:invalid_space_guid) { 'invalid_space_guid' }
           let(:message_with_invalid_space_guid) do
             VCAP::CloudController::SpaceQuotasCreateMessage.new({
-              'name' => 'my-name',
-              'relationships' => {
-                organization: { data: [{ guid: org.guid }] },
-                spaces: { data: [{ guid: space.guid }, { guid: invalid_space_guid }] }
-              }
-            })
+                                                                  'name' => 'my-name',
+                                                                  'relationships' => {
+                                                                    organization: { data: [{ guid: org.guid }] },
+                                                                    spaces: { data: [{ guid: space.guid }, { guid: invalid_space_guid }] }
+                                                                  }
+                                                                })
           end
 
           it 'raises a human-friendly error' do
-            expect {
+            expect do
               space_quotas_create.create(message_with_invalid_space_guid, organization: org)
-            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist " \
-                'within the organization specified, or you do not have access to them.')
+            end.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist " \
+                                                         'within the organization specified, or you do not have access to them.')
           end
         end
 
@@ -134,19 +134,19 @@ module VCAP::CloudController
 
           let(:message_with_invalid_space_guid) do
             VCAP::CloudController::SpaceQuotasCreateMessage.new({
-              'name' => 'my-name',
-              'relationships' => {
-                organization: { data: [{ guid: org.guid }] },
-                spaces: { data: [{ guid: space.guid }, { guid: invalid_space.guid }] }
-              }
-            })
+                                                                  'name' => 'my-name',
+                                                                  'relationships' => {
+                                                                    organization: { data: [{ guid: org.guid }] },
+                                                                    spaces: { data: [{ guid: space.guid }, { guid: invalid_space.guid }] }
+                                                                  }
+                                                                })
           end
 
           it 'raises a human-friendly error' do
-            expect {
+            expect do
               space_quotas_create.create(message_with_invalid_space_guid, organization: org)
-            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space.guid}\"] do not exist " \
-                'within the organization specified, or you do not have access to them.')
+            end.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space.guid}\"] do not exist " \
+                                                         'within the organization specified, or you do not have access to them.')
           end
         end
       end
@@ -158,9 +158,9 @@ module VCAP::CloudController
           expect(VCAP::CloudController::SpaceQuotaDefinition).to receive(:create).
             and_raise(Sequel::ValidationFailed.new(errors))
 
-          expect {
+          expect do
             space_quotas_create.create(message, organization: org)
-          }.to raise_error(SpaceQuotasCreate::Error, 'blork is busted')
+          end.to raise_error(SpaceQuotasCreate::Error, 'blork is busted')
         end
 
         context 'when it is a uniqueness error' do
@@ -169,9 +169,9 @@ module VCAP::CloudController
           end
 
           it 'raises a human-friendly error' do
-            expect {
+            expect do
               space_quotas_create.create(message, organization: org)
-            }.to raise_error(SpaceQuotasCreate::Error, "Space Quota '#{message.name}' already exists.")
+            end.to raise_error(SpaceQuotasCreate::Error, "Space Quota '#{message.name}' already exists.")
           end
         end
       end

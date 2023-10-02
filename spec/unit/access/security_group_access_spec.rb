@@ -9,10 +9,10 @@ module VCAP::CloudController
 
     before { set_current_user(user) }
 
-    it_behaves_like :admin_read_only_access
+    it_behaves_like 'admin read only access'
 
     context 'admin' do
-      it_should_behave_like :admin_full_access
+      it_behaves_like 'admin full access'
     end
 
     context 'non admin' do
@@ -22,11 +22,11 @@ module VCAP::CloudController
           space.add_developer(user)
         end
 
-        it_should_behave_like :read_only_access
+        it_behaves_like 'read only access'
       end
 
       context 'when the user is not a developer of the owning space' do
-        it_should_behave_like :no_access
+        it_behaves_like 'no access'
       end
     end
   end

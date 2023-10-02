@@ -44,7 +44,7 @@ module VCAP::CloudController
         end
 
         it 'updates the destination droplet_hash and state' do
-          expect(destination_droplet.droplet_hash).to be nil
+          expect(destination_droplet.droplet_hash).to be_nil
           expect(destination_droplet.state).not_to eq(source_droplet.state)
 
           job.perform
@@ -64,7 +64,7 @@ module VCAP::CloudController
           end
 
           it 'marks the droplet as failed and saves the message and raises the error' do
-            expect(destination_droplet.error).to be nil
+            expect(destination_droplet.error).to be_nil
 
             expect { job.perform }.to raise_error('ba boom!')
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
           before { source_droplet.destroy }
 
           it 'marks the droplet as failed and saves the message and raises the error' do
-            expect(destination_droplet.error).to be nil
+            expect(destination_droplet.error).to be_nil
 
             expect { job.perform }.to raise_error('source droplet does not exist')
 

@@ -17,9 +17,9 @@ module CloudController
 
       describe '.new' do
         it 'validates that the input is a array of hashes' do
-          expect {
+          expect do
             FingerprintsCollection.new('', '')
-          }.to raise_error CloudController::Errors::ApiError, /invalid/
+          end.to raise_error CloudController::Errors::ApiError, /invalid/
         end
       end
 
@@ -30,10 +30,11 @@ module CloudController
       end
 
       describe '#fingerprints' do
-        let(:unpresented_fingerprints) { [
-          { 'fn' => 'path/to/file', 'size' => 'my_filesize', 'sha1' => 'mysha' }
-        ]
-        }
+        let(:unpresented_fingerprints) do
+          [
+            { 'fn' => 'path/to/file', 'size' => 'my_filesize', 'sha1' => 'mysha' }
+          ]
+        end
         let(:fingerprint) { collection.fingerprints[0] }
 
         describe 'file path' do
@@ -47,6 +48,7 @@ module CloudController
                 { 'fn' => "../../..#{root_path}/legit/path", 'size' => 'my_filesize', 'sha1' => 'mysha' }
               ]
             end
+
             it 'presents file path' do
               expect(fingerprint['fn']).to eq("../../..#{root_path}/legit/path")
             end
@@ -58,10 +60,11 @@ module CloudController
                 { 'fn' => '../incorrect/path', 'size' => 'my_filesize', 'sha1' => 'mysha' }
               ]
             end
+
             it 'raises an error' do
-              expect {
+              expect do
                 fingerprint
-              }.to raise_error do |error|
+              end.to raise_error do |error|
                 expect(error.name).to eq 'AppResourcesFilePathInvalid'
                 expect(error.response_code).to eq 400
               end
@@ -79,18 +82,19 @@ module CloudController
 
         describe 'mode' do
           it 'defaults to 0744' do
-            expect(fingerprint['mode']).to eq(0744)
+            expect(fingerprint['mode']).to eq(0o744)
           end
 
           context 'when mode is provided' do
-            let(:unpresented_fingerprints) { [
-              { 'fn' => 'path/to/mode-modified-file', 'size' => 'my_filesize', 'sha1' => 'mysha', 'mode' => mode }
-            ]
-            }
+            let(:unpresented_fingerprints) do
+              [
+                { 'fn' => 'path/to/mode-modified-file', 'size' => 'my_filesize', 'sha1' => 'mysha', 'mode' => mode }
+              ]
+            end
             let(:mode) { '0653' }
 
             it 'uses the provided mode' do
-              expect(fingerprint['mode']).to eq(0653)
+              expect(fingerprint['mode']).to eq(0o653)
             end
 
             context 'when the mode is bad' do
@@ -98,9 +102,9 @@ module CloudController
                 let(:mode) { 'banana' }
 
                 it 'raises an error' do
-                  expect {
+                  expect do
                     fingerprint
-                  }.to raise_error do |error|
+                  end.to raise_error do |error|
                     expect(error.name).to eq 'AppResourcesFileModeInvalid'
                     expect(error.response_code).to eq 400
                   end
@@ -111,9 +115,9 @@ module CloudController
                 let(:mode) { '144' }
 
                 it 'raises an error' do
-                  expect {
+                  expect do
                     fingerprint
-                  }.to raise_error do |error|
+                  end.to raise_error do |error|
                     expect(error.name).to eq 'AppResourcesFileModeInvalid'
                     expect(error.message).to eq "The resource file mode is invalid: File mode '144' with path 'path/to/mode-modified-file' is invalid. Minimum file mode is '0600'"
                     expect(error.response_code).to eq 400
@@ -127,9 +131,9 @@ module CloudController
 
       describe '#each' do
         it 'returns each sha one by one' do
-          expect { |yielded|
+          expect do |yielded|
             collection.each(&yielded)
-          }.to yield_successive_args(['path/to/file.txt', 'abc', 0744], ['path/to/file2.txt', 'def', 0744], ['path/to/file3.txt', 'fad', 0744])
+          end.to yield_successive_args(['path/to/file.txt', 'abc', 0o744], ['path/to/file2.txt', 'def', 0o744], ['path/to/file3.txt', 'fad', 0o744])
         end
       end
     end

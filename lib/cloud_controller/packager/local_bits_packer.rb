@@ -15,8 +15,8 @@ module CloudController
           package_blobstore.cp_to_blobstore(complete_package_path, blobstore_key)
 
           {
-            sha1:   Digester.new.digest_path(complete_package_path),
-            sha256: Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(complete_package_path),
+            sha1: Digester.new.digest_path(complete_package_path),
+            sha256: Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_path(complete_package_path)
           }
         end
       end

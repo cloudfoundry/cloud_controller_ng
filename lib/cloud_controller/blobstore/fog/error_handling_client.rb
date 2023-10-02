@@ -8,51 +8,51 @@ module CloudController
       end
 
       def_delegators :@wrapped_client,
-        :local?,
-        :root_dir
+                     :local?,
+                     :root_dir
 
-      def delete_all(*args)
-        error_handling { wrapped_client.delete_all(*args) }
+      def delete_all(*)
+        error_handling { wrapped_client.delete_all(*) }
       end
 
-      def delete_all_in_path(*args)
-        error_handling { wrapped_client.delete_all_in_path(*args) }
+      def delete_all_in_path(*)
+        error_handling { wrapped_client.delete_all_in_path(*) }
       end
 
-      def exists?(*args)
-        error_handling { wrapped_client.exists?(*args) }
+      def exists?(*)
+        error_handling { wrapped_client.exists?(*) }
       end
 
-      def blob(*args)
-        error_handling { wrapped_client.blob(*args) }
+      def blob(*)
+        error_handling { wrapped_client.blob(*) }
       end
 
-      def files_for(*args)
-        error_handling { wrapped_client.files_for(*args) }
+      def files_for(*)
+        error_handling { wrapped_client.files_for(*) }
       end
 
-      def delete_blob(*args)
-        error_handling { wrapped_client.delete_blob(*args) }
+      def delete_blob(*)
+        error_handling { wrapped_client.delete_blob(*) }
       end
 
-      def cp_file_between_keys(*args)
-        error_handling { wrapped_client.cp_file_between_keys(*args) }
+      def cp_file_between_keys(*)
+        error_handling { wrapped_client.cp_file_between_keys(*) }
       end
 
-      def cp_r_to_blobstore(*args)
-        error_handling { wrapped_client.cp_r_to_blobstore(*args)    }
+      def cp_r_to_blobstore(*)
+        error_handling { wrapped_client.cp_r_to_blobstore(*)    }
       end
 
-      def download_from_blobstore(*args, **kwargs)
-        error_handling { wrapped_client.download_from_blobstore(*args, **kwargs) }
+      def download_from_blobstore(*, **)
+        error_handling { wrapped_client.download_from_blobstore(*, **) }
       end
 
-      def delete(*args)
-        error_handling { wrapped_client.delete(*args) }
+      def delete(*)
+        error_handling { wrapped_client.delete(*) }
       end
 
-      def cp_to_blobstore(*args)
-        error_handling { wrapped_client.cp_to_blobstore(*args) }
+      def cp_to_blobstore(*)
+        error_handling { wrapped_client.cp_to_blobstore(*) }
       end
 
       def ensure_bucket_exists
@@ -63,7 +63,7 @@ module CloudController
 
       def error_handling
         yield
-      rescue => e
+      rescue StandardError => e
         logger.error("Error with blobstore: #{e.class} - #{e.message}")
         raise BlobstoreError.new(e.message)
       end

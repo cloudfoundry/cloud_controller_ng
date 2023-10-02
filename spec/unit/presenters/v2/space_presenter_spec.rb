@@ -18,31 +18,32 @@ module CloudController::Presenters::V2
       end
 
       let(:organization) { VCAP::CloudController::Organization.make }
-      let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization) }
+      let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization:) }
 
       context 'when a space is associated to an isolation segment' do
         let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-        let(:space) { VCAP::CloudController::Space.make(
-          name: 'no_unicorns_no_rainbows',
-          organization: organization,
-          space_quota_definition: space_quota_definition,
-          allow_ssh: true
+        let(:space) do
+          VCAP::CloudController::Space.make(
+            name: 'no_unicorns_no_rainbows',
+            organization: organization,
+            space_quota_definition: space_quota_definition,
+            allow_ssh: true
           )
-        }
+        end
 
         before do
           assigner.assign(isolation_segment_model, [organization])
-          space.update(isolation_segment_model: isolation_segment_model)
+          space.update(isolation_segment_model:)
         end
 
         it 'returns the space entity and associated urls' do
           expected_entity_hash = {
-            'name'                        => space.name,
-            'organization_guid'           => organization.guid,
+            'name' => space.name,
+            'organization_guid' => organization.guid,
             'space_quota_definition_guid' => space_quota_definition.guid,
             'isolation_segment_guid' => isolation_segment_model.guid,
-            'allow_ssh'                   => space.allow_ssh,
-            'relationship_key'            => 'relationship_value',
+            'allow_ssh' => space.allow_ssh,
+            'relationship_key' => 'relationship_value',
             'isolation_segment_url' => "/v3/isolation_segments/#{isolation_segment_model.guid}"
           }
 
@@ -54,27 +55,28 @@ module CloudController::Presenters::V2
       end
 
       context 'when a space is not associated to an isolation segment' do
-        let(:space) { VCAP::CloudController::Space.make(
-          name: 'no_unicorns_no_rainbows',
-          organization: organization,
-          allow_ssh: true
+        let(:space) do
+          VCAP::CloudController::Space.make(
+            name: 'no_unicorns_no_rainbows',
+            organization: organization,
+            allow_ssh: true
           )
-        }
+        end
 
         it 'returns the space and does not show isolation segment url' do
           expected_entity_hash = {
-            'name'                        => space.name,
-            'organization_guid'           => organization.guid,
+            'name' => space.name,
+            'organization_guid' => organization.guid,
             'space_quota_definition_guid' => nil,
             'isolation_segment_guid' => nil,
-            'allow_ssh'                   => space.allow_ssh,
-            'relationship_key'            => 'relationship_value'
+            'allow_ssh' => space.allow_ssh,
+            'relationship_key' => 'relationship_value'
           }
 
           actual_entity_hash = space_presenter.entity_hash(controller, space, opts, depth, parents, orphans)
 
           expect(actual_entity_hash).to be_a_response_like(expected_entity_hash)
-          expect(actual_entity_hash).to_not include('isolation_segment_url')
+          expect(actual_entity_hash).not_to include('isolation_segment_url')
           expect(relations_presenter).to have_received(:to_hash).with(controller, space, opts, depth, parents, orphans)
         end
       end

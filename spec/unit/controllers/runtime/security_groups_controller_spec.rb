@@ -13,20 +13,20 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(SecurityGroupsController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          rules: { type: '[hash]', default: [] },
-          space_guids: { type: '[string]' },
-          staging_space_guids: { type: '[string]' },
-        })
+                                                                        name: { type: 'string', required: true },
+                                                                        rules: { type: '[hash]', default: [] },
+                                                                        space_guids: { type: '[string]' },
+                                                                        staging_space_guids: { type: '[string]' }
+                                                                      })
       end
 
       it do
         expect(SecurityGroupsController).to have_updatable_attributes({
-          name: { type: 'string' },
-          rules: { type: '[hash]' },
-          space_guids: { type: '[string]' },
-          staging_space_guids: { type: '[string]' },
-        })
+                                                                        name: { type: 'string' },
+                                                                        rules: { type: '[hash]' },
+                                                                        space_guids: { type: '[string]' },
+                                                                        staging_space_guids: { type: '[string]' }
+                                                                      })
       end
     end
 
@@ -34,9 +34,9 @@ module VCAP::CloudController
       describe 'nested routes' do
         it do
           expect(SecurityGroupsController).to have_nested_routes({
-            spaces: [:get, :put, :delete],
-            staging_spaces: [:get, :put, :delete],
-          })
+                                                                   spaces: %i[get put delete],
+                                                                   staging_spaces: %i[get put delete]
+                                                                 })
         end
       end
     end
@@ -101,7 +101,7 @@ module VCAP::CloudController
 
       context 'as admin' do
         before do
-          set_current_user_as_admin(user: user)
+          set_current_user_as_admin(user:)
         end
 
         it 'works for staging security groups' do

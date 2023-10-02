@@ -6,22 +6,22 @@ module VCAP::CloudController
     DEFAULT_PROCESS_TYPES = { 'web' => '' }.freeze
 
     def create(app, message, user_audit_info)
-      if !app.buildpack_lifecycle_data
+      unless app.buildpack_lifecycle_data
         error!('Droplet creation is not available for apps with docker lifecycles.')
         return
       end
 
       droplet = DropletModel.new(
-        app_guid:                 app.guid,
-        state:                    DropletModel::AWAITING_UPLOAD_STATE,
-        process_types:            message.process_types || DEFAULT_PROCESS_TYPES,
-        execution_metadata:       '',
+        app_guid: app.guid,
+        state: DropletModel::AWAITING_UPLOAD_STATE,
+        process_types: message.process_types || DEFAULT_PROCESS_TYPES,
+        execution_metadata: ''
       )
 
       DropletModel.db.transaction do
         droplet.save
         VCAP::CloudController::BuildpackLifecycleDataModel.create(
-          droplet: droplet
+          droplet:
         )
       end
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
       droplet = droplet_from_build(build)
       droplet.update(
         docker_receipt_username: build.package.docker_username,
-        docker_receipt_password: build.package.docker_password,
+        docker_receipt_password: build.package.docker_password
       )
       droplet.save
 
@@ -67,10 +67,10 @@ module VCAP::CloudController
 
     def droplet_from_build(build)
       DropletModel.new(
-        app_guid:             build.app_guid,
-        package_guid:         build.package_guid,
-        state:                DropletModel::STAGING_STATE,
-        build:                build,
+        app_guid: build.app_guid,
+        package_guid: build.package_guid,
+        state: DropletModel::STAGING_STATE,
+        build: build
       )
     end
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
       UserAuditInfo.new(
         user_guid: build.created_by_user_guid || UserAuditInfo::DATA_UNAVAILABLE,
         user_name: build.created_by_user_name,
-        user_email: build.created_by_user_email,
+        user_email: build.created_by_user_email
       )
     end
 

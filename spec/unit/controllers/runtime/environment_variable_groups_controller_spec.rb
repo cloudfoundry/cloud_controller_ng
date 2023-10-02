@@ -30,9 +30,9 @@ module VCAP::CloudController
             get '/v2/config/environment_variable_groups/running'
             expect(last_response.status).to eq(200)
             expect(decoded_response).to eq({
-              'foo' => 'bar',
-              'to all' => 'a good morrow'
-            })
+                                             'foo' => 'bar',
+                                             'to all' => 'a good morrow'
+                                           })
           end
         end
       end
@@ -52,9 +52,9 @@ module VCAP::CloudController
             get '/v2/config/environment_variable_groups/staging'
             expect(last_response.status).to eq(200)
             expect(decoded_response).to eq({
-              'foo' => 'bar',
-              'to all' => 'a good morrow'
-            })
+                                             'foo' => 'bar',
+                                             'to all' => 'a good morrow'
+                                           })
           end
         end
       end
@@ -87,8 +87,8 @@ module VCAP::CloudController
             put '/v2/config/environment_variable_groups/staging', '{"foo": "bar"}'
             expect(last_response.status).to eq(200)
             expect(EnvironmentVariableGroup.staging.environment_json).to include({
-              'foo' => 'bar'
-            })
+                                                                                   'foo' => 'bar'
+                                                                                 })
 
             expect(decoded_response).to eq({ 'foo' => 'bar' })
           end
@@ -134,8 +134,8 @@ module VCAP::CloudController
             put '/v2/config/environment_variable_groups/running', '{"foo": "bar"}'
             expect(last_response.status).to eq(200)
             expect(EnvironmentVariableGroup.running.environment_json).to include({
-              'foo' => 'bar'
-            })
+                                                                                   'foo' => 'bar'
+                                                                                 })
 
             expect(decoded_response).to eq({ 'foo' => 'bar' })
           end

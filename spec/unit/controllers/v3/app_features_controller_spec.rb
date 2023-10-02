@@ -25,14 +25,14 @@ RSpec.describe AppFeaturesController, type: :controller do
         'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
         'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
         'next' => nil,
-        'previous' => nil,
+        'previous' => nil
       }
     end
 
     describe 'authorization' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) { READ_ONLY_PERMS }
-        let(:api_call) { lambda { get :index, params: { app_guid: app_model.guid } } }
+        let(:api_call) { -> { get :index, params: { app_guid: app_model.guid } } }
       end
     end
 
@@ -47,14 +47,14 @@ RSpec.describe AppFeaturesController, type: :controller do
     it 'responds 404 when the app does not exist' do
       get :index, params: { app_guid: 'no-such-guid' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
   end
 
   describe '#show' do
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) { READ_ONLY_PERMS }
-      let(:api_call) { lambda { get :show, params: { app_guid: app_model.guid, name: 'ssh' } } }
+      let(:api_call) { -> { get :show, params: { app_guid: app_model.guid, name: 'ssh' } } }
     end
 
     it 'returns the ssh app feature' do
@@ -72,21 +72,21 @@ RSpec.describe AppFeaturesController, type: :controller do
 
       get :show, params: { app_guid: app_model.guid, name: 'i-dont-exist' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
       expect(response).to have_error_message('Feature not found')
     end
 
     it 'responds 404 when the app does not exist' do
       get :show, params: { app_guid: 'no-such-guid', name: 'ssh' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
   end
 
   describe '#update' do
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) { READ_AND_WRITE_PERMS }
-      let(:api_call) { lambda { patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json } }
+      let(:api_call) { -> { patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json } }
     end
 
     context 'updating ssh to false' do
@@ -94,10 +94,10 @@ RSpec.describe AppFeaturesController, type: :controller do
         expect(VCAP::CloudController::Permissions).to receive(:new).and_call_original.exactly(:once)
         patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['name']).to eq('ssh')
         expect(parsed_body['description']).to eq('Enable SSHing into the app.')
-        expect(parsed_body['enabled']).to eq(false)
+        expect(parsed_body['enabled']).to be(false)
       end
     end
 
@@ -106,33 +106,33 @@ RSpec.describe AppFeaturesController, type: :controller do
         expect(VCAP::CloudController::Permissions).to receive(:new).and_call_original.exactly(:once)
         patch :update, params: { app_guid: app_model.guid, name: 'revisions', enabled: false }, as: :json
 
-        expect(response.status).to eq(200)
+        expect(response).to have_http_status(:ok)
         expect(parsed_body['name']).to eq('revisions')
         expect(parsed_body['description']).to eq('Enable versioning of an application')
-        expect(parsed_body['enabled']).to eq(false)
+        expect(parsed_body['enabled']).to be(false)
       end
     end
 
     it 'responds 404 when the feature does not exist' do
-      expect {
+      expect do
         patch :update, params: { app_guid: app_model.guid, name: 'no-such-feature', enabled: false }, as: :json
-      }.not_to change { app_model.reload.values }
+      end.not_to(change { app_model.reload.values })
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
 
     it 'responds 404 when the app does not exist' do
       patch :update, params: { app_guid: 'no-such-guid', name: 'ssh', enabled: false }, as: :json
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
 
     it 'responds 422 when enabled param is missing' do
-      expect {
+      expect do
         patch :update, params: { app_guid: app_model.guid, name: 'ssh' }, as: :json
-      }.not_to change { app_model.reload.values }
+      end.not_to(change { app_model.reload.values })
 
-      expect(response.status).to eq(422)
+      expect(response).to have_http_status(:unprocessable_entity)
       expect(response).to have_error_message('Enabled must be a boolean')
     end
   end
@@ -147,13 +147,13 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) { READ_ONLY_PERMS }
-      let(:api_call) { lambda { get :ssh_enabled, params: { guid: app_model.guid } } }
+      let(:api_call) { -> { get :ssh_enabled, params: { guid: app_model.guid } } }
     end
 
     it 'responds 404 when the app does not exist' do
       get :ssh_enabled, params: { guid: 'non-existent-app' }
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

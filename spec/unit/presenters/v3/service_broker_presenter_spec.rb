@@ -73,7 +73,7 @@ module VCAP::CloudController
         it 'includes the right links' do
           links = {
             self: { href: "#{link_prefix}/v3/service_brokers/#{service_broker.guid}" },
-            service_offerings: { href: "#{link_prefix}/v3/service_offerings?service_broker_guids=#{service_broker.guid}" },
+            service_offerings: { href: "#{link_prefix}/v3/service_offerings?service_broker_guids=#{service_broker.guid}" }
           }
 
           expect(result[:links]).to eq(links)

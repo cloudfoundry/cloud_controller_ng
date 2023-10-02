@@ -29,8 +29,8 @@ module VCAP::CloudController
       begin
         payload = body.read
         task_response = MultiJson.load(payload, symbolize_keys: true)
-      rescue MultiJson::ParseError => pe
-        logger.error('diego.task.parse-error', payload: payload, error: pe.to_s)
+      rescue MultiJson::ParseError => e
+        logger.error('diego.task.parse-error', payload: payload, error: e.to_s)
         raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
       end
 

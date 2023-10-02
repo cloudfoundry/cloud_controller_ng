@@ -14,22 +14,22 @@ module CloudController::Packager
     let(:global_app_bits_cache) do
       CloudController::Blobstore::FogClient.new(
         connection_config: { provider: 'Local', local_root: blobstore_dir },
-        directory_key:     'global_app_bits_cache',
-        min_size:          min_size,
-        max_size:          max_size
+        directory_key: 'global_app_bits_cache',
+        min_size: min_size,
+        max_size: max_size
       )
     end
     let(:package_blobstore) do
       CloudController::Blobstore::FogClient.new(
         connection_config: { provider: 'Local', local_root: blobstore_dir },
-        directory_key:     'package'
+        directory_key: 'package'
       )
     end
 
     let(:fingerprints) do
       path = File.join(local_tmp_dir, 'content')
       sha  = 'some_fake_sha'
-      File.open(path, 'w') { |f| f.write 'content' }
+      File.write(path, 'content')
       global_app_bits_cache.cp_to_blobstore(path, sha)
 
       [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }]
@@ -38,12 +38,15 @@ module CloudController::Packager
     before do
       TestConfig.override(directories: { tmpdir: local_tmp_dir })
 
-      allow(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
-      allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+      allow(CloudController::DependencyLocator.instance).to receive_messages(global_app_bits_cache:, package_blobstore:)
       allow(packer).to receive(:max_package_size).and_return(max_package_size)
 
       FileUtils.cp(input_zip, local_tmp_dir)
-      FileUtils.chmod(0400, uploaded_files_path) rescue nil
+      begin
+        FileUtils.chmod(0o400, uploaded_files_path)
+      rescue StandardError
+        nil
+      end
 
       Fog.unmock!
     end
@@ -74,9 +77,9 @@ module CloudController::Packager
         result_sha = packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
 
         expect(result_sha).to eq({
-          sha1: 'expected-sha1',
-          sha256: 'expected-sha256'
-        })
+                                   sha1: 'expected-sha1',
+                                   sha256: 'expected-sha256'
+                                 })
       end
 
       context 'when the package zip file path is nil' do
@@ -86,9 +89,9 @@ module CloudController::Packager
           let(:cached_files_fingerprints) { [] }
 
           it 'raises an error' do
-            expect {
+            expect do
               packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-            }.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
+            end.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
           end
         end
 
@@ -104,24 +107,24 @@ module CloudController::Packager
             let(:max_package_size) { 1 }
 
             it 'raises an exception' do
-              expect {
+              expect do
                 packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-              }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
+              end.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
             end
           end
         end
       end
 
-      context 'when the package zip file is missing ' do
+      context 'when the package zip file is missing' do
         let(:uploaded_files_path) { File.join(local_tmp_dir, 'file_that_does_not_exist.zip') }
 
         context 'and there are NO cached files' do
           let(:cached_files_fingerprints) { [] }
 
           it 'raises an error' do
-            expect {
+            expect do
               packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-            }.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
+            end.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
           end
         end
 
@@ -140,9 +143,9 @@ module CloudController::Packager
         let(:uploaded_files_path) { File.join(local_tmp_dir, 'bad.zip') }
 
         it 'raises an informative error' do
-          expect {
+          expect do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-          }.to raise_error(CloudController::Errors::ApiError, /invalid/)
+          end.to raise_error(CloudController::Errors::ApiError, /invalid/)
         end
       end
 
@@ -150,13 +153,17 @@ module CloudController::Packager
         let(:max_package_size) { 1 }
 
         it 'raises an exception' do
-          expect {
+          expect do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-          }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
+          end.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
         end
 
         it 'does not populate the cache' do
-          packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints) rescue nil
+          begin
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          rescue StandardError
+            nil
+          end
           sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'
           expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be false
         end
@@ -172,7 +179,7 @@ module CloudController::Packager
         end
 
         it 'initializes the fingerprints collection to be scoped to the temporary working directory' do
-          expect(CloudController::Blobstore::FingerprintsCollection).to receive(:new).with(fingerprints, %r{#{local_tmp_dir}\/local_bits_packer}).and_return([])
+          expect(CloudController::Blobstore::FingerprintsCollection).to receive(:new).with(fingerprints, %r{#{local_tmp_dir}/local_bits_packer}).and_return([])
           packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
         end
 
@@ -193,11 +200,11 @@ module CloudController::Packager
           let(:input_zip_file_path) { File.join(local_tmp_dir, 'unreadable_dir.zip') }
 
           it 'is able to clean up all files regardless of their permissions in the zip' do
-            expect {
+            expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            }.to_not change {
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
-            }
+            end)
           end
         end
 
@@ -206,11 +213,11 @@ module CloudController::Packager
           let(:input_zip_file_path) { File.join(local_tmp_dir, 'undeletable_dir.zip') }
 
           it 'is able to clean up all files regardless of their permissions in the zip' do
-            expect {
+            expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            }.to_not change {
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
-            }
+            end)
           end
         end
 
@@ -219,11 +226,11 @@ module CloudController::Packager
           let(:input_zip_file_path) { File.join(local_tmp_dir, 'untraversable_dir.zip') }
 
           it 'is able to clean up all files regardless of their permissions in the zip' do
-            expect {
+            expect do
               packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
-            }.to_not change {
+            end.not_to(change do
               Dir.entries(local_tmp_dir)
-            }
+            end)
           end
         end
 
@@ -241,7 +248,7 @@ module CloudController::Packager
             FileUtils.ln_s(tempfile.path, symlink_path)
 
             # Make the zipfile writable so we can dynamically insert the symlink
-            FileUtils.chmod(0600, uploaded_files_path)
+            FileUtils.chmod(0o600, uploaded_files_path)
             `zip -r --symlinks "#{uploaded_files_path}" "#{symlink_path}"`
 
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, [])
@@ -257,7 +264,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files exceeds the configured maximum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             sha_of_greetings_file_in_good_zip = '82693f9b3a4857415aeffccd535c375891d96f74'
             sha_of_bye_file_in_good_zip       = 'ee9e51458f4642f48efe956962058245ee7127b1'
@@ -267,7 +274,7 @@ module CloudController::Packager
         end
 
         context 'when one of the files is less than the configured minimum_size' do
-          it 'it is not uploaded to the cache but the others are' do
+          it 'is not uploaded to the cache but the others are' do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             sha_of_hi_file_in_good_zip  = '55ca6286e3e4f4fba5d0448333fa99fc5a404a73'
             sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'

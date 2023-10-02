@@ -10,20 +10,19 @@ module VCAP::CloudController
     let(:diego) { false }
     let(:process) do
       instance_double(ProcessModel,
-        package_hash: package_hash,
-        guid: 'process-guid',
-        previous_changes: previous_changes,
-        started?: process_started,
-        needs_staging?: process_needs_staging,
-        active?: process_active,
-        # TODO: why did we remove `buildpack_cache_key: key`?
-        diego: diego,
-        staging?: staging?,
-        desired_droplet: nil,
-        memory: 12,
-        disk_quota: 34,
-        revisions_enabled?: false,
-      )
+                      package_hash: package_hash,
+                      guid: 'process-guid',
+                      previous_changes: previous_changes,
+                      started?: process_started,
+                      needs_staging?: process_needs_staging,
+                      active?: process_active,
+                      # TODO: why did we remove `buildpack_cache_key: key`?
+                      diego: diego,
+                      staging?: staging?,
+                      desired_droplet: nil,
+                      memory: 12,
+                      disk_quota: 34,
+                      revisions_enabled?: false)
     end
     let(:process_started) { false }
     let(:process_needs_staging) { false }
@@ -38,6 +37,7 @@ module VCAP::CloudController
 
     describe '.deleted' do
       let(:key) { 'my-cache-key' }
+
       subject { ProcessObserver.deleted(process) }
 
       it 'stops the process' do
@@ -70,7 +70,7 @@ module VCAP::CloudController
           end
 
           it 'does not start the process' do
-            expect(runner).to_not receive(:start)
+            expect(runner).not_to receive(:start)
             subject
           end
 
@@ -88,7 +88,7 @@ module VCAP::CloudController
           let(:process_started) { true }
 
           it 'does not stop the process' do
-            expect(runner).to_not receive(:stop)
+            expect(runner).not_to receive(:stop)
             subject
           end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
             let(:process_needs_staging) { true }
 
             it 'does not start the process' do
-              expect(runner).to_not receive(:start)
+              expect(runner).not_to receive(:start)
               subject
             end
           end
@@ -112,7 +112,7 @@ module VCAP::CloudController
             context 'when revisions are enabled' do
               let(:process) { ProcessModel.make }
               let(:app) { process.app }
-              let!(:revision) { RevisionModel.make(app: app) }
+              let!(:revision) { RevisionModel.make(app:) }
 
               before do
                 app.update(revisions_enabled: true)
@@ -150,7 +150,7 @@ module VCAP::CloudController
           end
 
           it 'does not start the process' do
-            expect(runner).to_not receive(:start)
+            expect(runner).not_to receive(:start)
             subject
           end
         end
@@ -159,7 +159,7 @@ module VCAP::CloudController
           let(:process_started) { true }
 
           it 'does not stop the process' do
-            expect(runner).to_not receive(:stop)
+            expect(runner).not_to receive(:stop)
             subject
           end
 
@@ -195,7 +195,7 @@ module VCAP::CloudController
           end
 
           it 'does not start the process' do
-            expect(runner).to_not receive(:start)
+            expect(runner).not_to receive(:start)
             subject
           end
 
@@ -213,7 +213,7 @@ module VCAP::CloudController
           let(:process_started) { true }
 
           it 'does not stop the process' do
-            expect(runner).to_not receive(:stop)
+            expect(runner).not_to receive(:stop)
             subject
           end
 
@@ -253,7 +253,7 @@ module VCAP::CloudController
           let(:process_started) { false }
 
           it 'does not scale the process' do
-            expect(runner).to_not receive(:scale)
+            expect(runner).not_to receive(:scale)
             subject
           end
 
@@ -261,7 +261,7 @@ module VCAP::CloudController
             let(:process_active) { true }
 
             it 'does not scale the process' do
-              expect(runner).to_not receive(:scale)
+              expect(runner).not_to receive(:scale)
               subject
             end
           end
@@ -270,7 +270,7 @@ module VCAP::CloudController
             let(:process_active) { false }
 
             it 'does not scale the process' do
-              expect(runner).to_not receive(:scale)
+              expect(runner).not_to receive(:scale)
               subject
             end
           end
@@ -297,7 +297,7 @@ module VCAP::CloudController
             let(:process_active) { false }
 
             it 'does not scale the process' do
-              expect(runner).to_not receive(:scale)
+              expect(runner).not_to receive(:scale)
               subject
             end
           end

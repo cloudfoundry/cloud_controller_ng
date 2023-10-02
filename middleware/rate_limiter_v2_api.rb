@@ -24,11 +24,11 @@ module CloudFoundry
         request.fullpath.match(%r{\A/v2/(?!(info)).+})
       end
 
-      def global_request_limit(env)
+      def global_request_limit(_env)
         admin? ? @global_admin_limit : @global_general_limit
       end
 
-      def per_process_request_limit(env)
+      def per_process_request_limit(_env)
         admin? ? @per_process_admin_limit : @per_process_general_limit
       end
 
@@ -36,7 +36,7 @@ module CloudFoundry
         VCAP::CloudController::SecurityContext.v2_rate_limit_exempted?
       end
 
-      def rate_limit_error(env)
+      def rate_limit_error(_env)
         api_error = CloudController::Errors::ApiError.new_from_details('RateLimitV2APIExceeded')
         ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_hash
       end

@@ -11,7 +11,7 @@ module VCAP::CloudController
       end
 
       def perform
-        @warnings = Perform.new(broker_guid, user_audit_info: user_audit_info).perform
+        @warnings = Perform.new(broker_guid, user_audit_info:).perform
       end
 
       def job_name_in_configuration
@@ -41,7 +41,7 @@ module VCAP::CloudController
       class Perform
         def initialize(broker_guid, user_audit_info:)
           @broker = ServiceBroker.find(guid: broker_guid)
-          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info: user_audit_info)
+          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info:)
         end
 
         def perform
@@ -52,10 +52,10 @@ module VCAP::CloudController
           broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
 
           warnings
-        rescue => e
+        rescue StandardError => e
           begin
             broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
-          rescue
+          rescue StandardError
             raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerGone') if broker.nil?
           end
 

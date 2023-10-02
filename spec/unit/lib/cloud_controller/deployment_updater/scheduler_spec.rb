@@ -4,20 +4,21 @@ require 'cloud_controller/deployment_updater/scheduler'
 module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Scheduler do
     let(:update_frequency) { 42 }
+
     before do
       TestConfig.context = :deployment_updater
       TestConfig.override(
         deployment_updater: {
           update_frequency_in_seconds: update_frequency,
           lock_key: 'lock_key',
-          lock_owner: 'lock_owner',
+          lock_owner: 'lock_owner'
         },
         locket: {
           host: 'host',
           port: 'port',
           ca_file: 'ca_file',
           key_file: 'key_file',
-          cert_file: 'cert_file',
+          cert_file: 'cert_file'
         }
       )
     end
@@ -37,8 +38,7 @@ module VCAP::CloudController
         allow(lock_worker).to receive(:acquire_lock_and_repeatedly_call).and_yield
         allow(DeploymentUpdater::Scheduler).to receive(:sleep)
         allow(DeploymentUpdater::Dispatcher).to receive(:dispatch)
-        allow(CloudController::DependencyLocator.instance).to receive(:statsd_client).and_return(statsd_client)
-        allow(CloudController::DependencyLocator.instance).to receive(:prometheus_updater).and_return(prometheus_updater)
+        allow(CloudController::DependencyLocator.instance).to receive_messages(statsd_client:, prometheus_updater:)
         allow(statsd_client).to receive(:timing)
         allow(prometheus_updater).to receive(:report_deployment_duration)
       end
@@ -53,7 +53,7 @@ module VCAP::CloudController
           port: TestConfig.config_instance.get(:locket, :port),
           client_ca_path: TestConfig.config_instance.get(:locket, :ca_file),
           client_key_path: TestConfig.config_instance.get(:locket, :key_file),
-          client_cert_path: TestConfig.config_instance.get(:locket, :cert_file),
+          client_cert_path: TestConfig.config_instance.get(:locket, :cert_file)
         )
 
         expect(Locket::LockWorker).to have_received(:new).with(lock_runner)
@@ -63,7 +63,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(
             deployment_updater: {
-              update_frequency_in_seconds: update_frequency,
+              update_frequency_in_seconds: update_frequency
             },
             locket: nil
           )
@@ -112,7 +112,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'should not sleep if updater takes longer than the configure frequency' do
+      it 'does not sleep if updater takes longer than the configure frequency' do
         update_duration = update_frequency + 1
         Timecop.freeze do
           allow(DeploymentUpdater::Dispatcher).to receive(:dispatch) do
@@ -152,7 +152,7 @@ module VCAP::CloudController
             'cc.deployment_updater',
             error: error.class.name,
             error_message: error.message,
-            backtrace: anything,
+            backtrace: anything
           )
         end
       end

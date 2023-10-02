@@ -9,7 +9,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       subject do
-        DomainPresenter.new(domain, visible_org_guids_query: visible_org_guids_query, all_orgs_visible: all_orgs_visible).to_hash
+        DomainPresenter.new(domain, visible_org_guids_query:, all_orgs_visible:).to_hash
       end
 
       context 'when the domain is public (shared)' do
@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
             key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
 
@@ -41,8 +41,7 @@ module VCAP::CloudController::Presenters::V3
 
         before do
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(nil)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
         end
 
         it 'presents the domain as json' do
@@ -86,7 +85,7 @@ module VCAP::CloudController::Presenters::V3
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
             key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
 
@@ -100,8 +99,8 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
           expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization]).to eq({
-            data: { guid: domain.owning_organization.guid }
-          })
+                                                                 data: { guid: domain.owning_organization.guid }
+                                                               })
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
           expect(subject[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{domain.owning_organization.guid}")
           expect(subject[:links][:route_reservations][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}/route_reservations")
@@ -111,9 +110,9 @@ module VCAP::CloudController::Presenters::V3
         context 'and has no shared organizations' do
           it 'presents shared orgs as an empty array' do
             expect(subject[:relationships]).to eq({
-              organization: { data: { guid: domain.owning_organization.guid } },
-              shared_organizations: { data: [] }
-            })
+                                                    organization: { data: { guid: domain.owning_organization.guid } },
+                                                    shared_organizations: { data: [] }
+                                                  })
           end
         end
 
@@ -129,18 +128,18 @@ module VCAP::CloudController::Presenters::V3
           end
 
           context 'when user is a regular user' do
-            let(:visible_org_guids) { ['org2', 'org3'] }
+            let(:visible_org_guids) { %w[org2 org3] }
 
             it 'presents the shared orgs that are visible to a user' do
               expect(subject[:relationships]).to match({
-                organization: { data: { guid: 'org' } },
-                shared_organizations: {
-                  data: contain_exactly(
-                    { guid: 'org2' },
-                    { guid: 'org3' }
-                  ),
-                }
-              })
+                                                         organization: { data: { guid: 'org' } },
+                                                         shared_organizations: {
+                                                           data: contain_exactly(
+                                                             { guid: 'org2' },
+                                                             { guid: 'org3' }
+                                                           )
+                                                         }
+                                                       })
             end
           end
 
@@ -151,15 +150,15 @@ module VCAP::CloudController::Presenters::V3
               expect(subject[:relationships][:organization].length).to eq(1)
               expect(subject[:relationships][:shared_organizations][:data].length).to eq(3)
               expect(subject[:relationships]).to match({
-                organization: { data: { guid: 'org' } },
-                shared_organizations: {
-                  data: contain_exactly(
-                    { guid: 'org2' },
-                    { guid: 'org3' },
-                    { guid: 'org4' }
-                  ),
-                }
-              })
+                                                         organization: { data: { guid: 'org' } },
+                                                         shared_organizations: {
+                                                           data: contain_exactly(
+                                                             { guid: 'org2' },
+                                                             { guid: 'org3' },
+                                                             { guid: 'org4' }
+                                                           )
+                                                         }
+                                                       })
             end
           end
         end
@@ -173,12 +172,11 @@ module VCAP::CloudController::Presenters::V3
           TestConfig.override(
             kubernetes: { host_url: nil },
             external_domain: 'api2.vcap.me',
-            external_protocol: 'https',
+            external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           # allow(routing_api_client).to receive(:router_group).with(router_group_guid).and_return router_group
-          allow(routing_api_client).to receive(:enabled?).and_return(true)
-          allow(routing_api_client).to receive(:router_group).and_return(router_group)
+          allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
         let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
@@ -202,7 +200,7 @@ module VCAP::CloudController::Presenters::V3
           VCAP::CloudController::DomainAnnotationModel.make(
             resource_guid: domain.guid,
             key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
           )
         end
 
@@ -246,7 +244,7 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'does not include a link to the router group' do
-            expect(subject[:links][:router_group]).to eq(nil)
+            expect(subject[:links][:router_group]).to be_nil
           end
         end
       end

@@ -25,11 +25,11 @@ class VCAP::CloudController::ResourcePool
     @blobstore = CloudController::Blobstore::ClientProvider.provide(
       options: options,
       directory_key: options.fetch(:resource_directory_key),
-      root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR,
+      root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR
     )
 
     @minimum_size = options[:minimum_size] || 0 # TODO: move default into config object?
-    @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB #TODO: move default into config object?
+    @maximum_size = options[:maximum_size] || (512 * 1024 * 1024) # MB #TODO: move default into config object?
   end
 
   def match_resources(descriptors)
@@ -38,9 +38,7 @@ class VCAP::CloudController::ResourcePool
 
   # Adds everything under source directory +dir+ to the resource pool.
   def add_directory(dir)
-    unless File.exist?(dir) && File.directory?(dir)
-      raise ArgumentError.new("Source directory #{dir} is not valid")
-    end
+    raise ArgumentError.new("Source directory #{dir} is not valid") unless File.exist?(dir) && File.directory?(dir)
 
     pattern = File.join(dir, '**', '*')
     files = Dir.glob(pattern, File::FNM_DOTMATCH).select do |f|
@@ -62,25 +60,25 @@ class VCAP::CloudController::ResourcePool
   def resource_sizes(resources)
     sizes = []
     resources.each do |descriptor|
-      if (blob = blobstore.blob(descriptor['sha1']))
-        entry = descriptor.dup
-        entry['size'] = blob.attributes[:content_length]
-        sizes << entry
-      end
+      next unless (blob = blobstore.blob(descriptor['sha1']))
+
+      entry = descriptor.dup
+      entry['size'] = blob.attributes[:content_length]
+      sizes << entry
     end
     sizes
   end
 
   def copy(descriptor, destination)
-    if !resource_known?(descriptor)
+    unless resource_known?(descriptor)
       logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
       raise ArgumentError.new("Cannot copy bits we do not have #{descriptor}")
     end
 
     logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
 
-    logger.debug 'resource_pool.download.starting',
-      destination: destination
+    logger.debug('resource_pool.download.starting',
+                 destination:)
 
     start = Time.now.utc
 
@@ -88,15 +86,13 @@ class VCAP::CloudController::ResourcePool
 
     took = Time.now.utc - start
 
-    logger.debug 'resource_pool.download.complete', took: took, destination: destination
+    logger.debug 'resource_pool.download.complete', took:, destination:
   end
 
   def resource_known?(descriptor)
     sha1 = descriptor['sha1']
-    if valid_sha?(sha1)
-      blobstore.exists?(sha1)
-    end
-  rescue => e
+    blobstore.exists?(sha1) if valid_sha?(sha1)
+  rescue StandardError => e
     logger.error('blobstore error: ' + e.to_s)
     raise e
   end
@@ -106,7 +102,7 @@ class VCAP::CloudController::ResourcePool
   end
 
   def mode_allowed?(raw_mode)
-    raw_mode && raw_mode.to_i(8) >= 0600
+    raw_mode && raw_mode.to_i(8) >= 0o600
   end
 
   private

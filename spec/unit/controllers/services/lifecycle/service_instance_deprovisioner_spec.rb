@@ -69,19 +69,19 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to contain_exactly(nil, %w[warning-1 warning-2])
             end
           end
 
           context 'and the delete job did not return warnings' do
             it 'returns nil and an empty array' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, []])
+              expect(result).to contain_exactly(nil, [])
             end
           end
         end
@@ -103,19 +103,19 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to contain_exactly(nil, %w[warning-1 warning-2])
             end
           end
 
           context 'and the delete job did not return warnings' do
             it 'returns nil and an empty array' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, []])
+              expect(result).to contain_exactly(nil, [])
             end
           end
         end
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
           it 'returns the enqueued job and an empty warnings array' do
             result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-            expect(result).to match_array([be_instance_of(Delayed::Job), []])
+            expect(result).to contain_exactly(be_instance_of(Delayed::Job), [])
           end
         end
 
@@ -158,19 +158,19 @@ module VCAP::CloudController
 
           context 'and the delete job returned warnings' do
             before do
-              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+              allow(fake_job).to receive(:perform).and_return(%w[warning-1 warning-2])
             end
 
             it 'returns nil and the warnings' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+              expect(result).to contain_exactly(nil, %w[warning-1 warning-2])
             end
           end
 
           context 'and the delete job did not return warnings' do
             it 'returns nil and an empty array' do
               result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-              expect(result).to match_array([nil, []])
+              expect(result).to contain_exactly(nil, [])
             end
           end
         end

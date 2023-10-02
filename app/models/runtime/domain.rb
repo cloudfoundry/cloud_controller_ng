@@ -72,7 +72,7 @@ module VCAP::CloudController
 
     add_association_dependencies(
       routes: :destroy,
-      shared_organizations: :nullify,
+      shared_organizations: :nullify
     )
 
     one_to_many :labels, class: 'VCAP::CloudController::DomainLabelModel', key: :resource_guid, primary_key: :guid
@@ -90,15 +90,15 @@ module VCAP::CloudController
       validates_unique :name, dataset: Domain.dataset
 
       validates_format CloudController::DomainDecorator::DOMAIN_REGEX, :name,
-        message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+                       message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
       validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name, message: "must be no more than #{MAXIMUM_FQDN_DOMAIN_LENGTH} characters"
 
       if (offending_domain = name_overlaps?)
-        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain}))
+        errors.add(:name, Sequel.lit(%(The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain)))
       end
-      if (offending_routes = routes_match?)
-        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_routes}" is already reserved by a route}))
-      end
+      return unless (offending_routes = routes_match?)
+
+      errors.add(:name, Sequel.lit(%(The domain name "#{name}" cannot be created because "#{offending_routes}" is already reserved by a route)))
     end
 
     def self.user_visibility_filter(user)
@@ -154,7 +154,7 @@ module VCAP::CloudController
     private
 
     def validate_change_owning_organization(organization)
-      return if self.new? || owning_organization == organization
+      return if new? || owning_organization == organization
 
       raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end

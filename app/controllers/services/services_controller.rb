@@ -38,7 +38,7 @@ module VCAP::CloudController
       super
     end
 
-    def self.translate_validation_exception(e, attributes)
+    def self.translate_validation_exception(e, _attributes)
       CloudController::Errors::ApiError.new_from_details('ServiceInvalid', e.errors.full_messages)
     end
 

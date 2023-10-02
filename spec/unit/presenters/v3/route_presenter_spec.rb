@@ -141,7 +141,7 @@ module VCAP::CloudController::Presenters::V3
         subject { RoutePresenter.new(route, decorators: [banana_decorator]).to_hash }
 
         it 'runs the decorators' do
-          expect(subject[:included][:bananas]).to match_array(['host is bananas'])
+          expect(subject[:included][:bananas]).to contain_exactly('host is bananas')
         end
       end
     end

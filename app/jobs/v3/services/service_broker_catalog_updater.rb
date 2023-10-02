@@ -20,9 +20,7 @@ module VCAP::CloudController
         raise fail_with_invalid_catalog(catalog.validation_errors) unless catalog.valid?
         raise fail_with_incompatible_catalog(catalog.incompatibility_errors) unless catalog.compatible?
 
-        unless client_manager.synchronize_clients_with_catalog(catalog)
-          raise fail_with_invalid_catalog(client_manager.errors)
-        end
+        raise fail_with_invalid_catalog(client_manager.errors) unless client_manager.synchronize_clients_with_catalog(catalog)
 
         service_manager.sync_services_and_plans(catalog)
         collect_warnings
@@ -37,11 +35,11 @@ module VCAP::CloudController
       private
 
       attr_reader :broker,
-          :formatter, :client_manager, :service_event_repository,
-          :service_manager
+                  :formatter, :client_manager, :service_event_repository,
+                  :service_manager
 
       def broker_client
-        @broker_client ||= VCAP::Services::ServiceClientProvider.provide(broker: broker)
+        @broker_client ||= VCAP::Services::ServiceClientProvider.provide(broker:)
       end
 
       def fail_with_invalid_catalog(errors)

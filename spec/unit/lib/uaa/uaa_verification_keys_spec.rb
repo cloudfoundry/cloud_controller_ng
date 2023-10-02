@@ -18,8 +18,10 @@ module VCAP::CloudController
       end
 
       context 'when verification key is nil' do
-        before { config_hash[:verification_key] = nil }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
+        before do
+          config_hash[:verification_key] = nil
+          allow(uaa_info).to receive_messages(validation_keys_hash: key_hash)
+        end
 
         context 'when key was never fetched' do
           it 'is fetched' do
@@ -30,8 +32,10 @@ module VCAP::CloudController
       end
 
       context 'when verification key is an empty string' do
-        before { config_hash[:verification_key] = '' }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
+        before do
+          config_hash[:verification_key] = ''
+          allow(uaa_info).to receive_messages(validation_keys_hash: key_hash)
+        end
 
         context 'when key was never fetched' do
           it 'is fetched' do
@@ -43,6 +47,7 @@ module VCAP::CloudController
 
       context 'when key was fetched more than 30 seconds ago' do
         let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
         it 're-fetches the key' do
@@ -58,6 +63,7 @@ module VCAP::CloudController
 
       context 'when key was fetched less than 30 seconds ago' do
         let(:key_hash2) { { 'key-name' => { 'value' => 'another-from-uaa' } } }
+
         before { allow(uaa_info).to receive(:validation_keys_hash).and_return(key_hash, key_hash2) }
 
         it 'does not fetch the keys' do
@@ -108,9 +114,9 @@ module VCAP::CloudController
           end
 
           it 'returns an empty array' do
-            expect {
+            expect do
               subject.value
-            }.to raise_error(VCAP::CloudController::UaaUnavailable)
+            end.to raise_error(VCAP::CloudController::UaaUnavailable)
             expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
           end
         end
@@ -119,8 +125,10 @@ module VCAP::CloudController
 
     describe '#refresh' do
       context 'when config does not specify verification key' do
-        before { config_hash[:verification_key] = nil }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
+        before do
+          config_hash[:verification_key] = nil
+          allow(uaa_info).to receive_messages(validation_keys_hash: key_hash)
+        end
 
         context 'when key was never fetched' do
           it 'is fetched' do

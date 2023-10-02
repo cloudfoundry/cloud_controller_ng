@@ -7,6 +7,8 @@ require 'linters/migration/include_string_size'
 RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
   include CopHelper
 
+  subject(:cop) { RuboCop::Cop::Migration::IncludeStringSize.new(RuboCop::Config.new({})) }
+
   let(:string_size_message) do
     'Please specify an explicit size for String columns. `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'
   end
@@ -16,7 +18,7 @@ RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
 
   RSpec.shared_examples 'a cop that validates inclusion of string size' do |method_name|
     context 'with an explicit table name' do
-      it 'registers an offense if string column is added without a specified size', focus: true do
+      it 'registers an offense if string column is added without a specified size' do
         inspect_source(<<~RUBY)
           change do
             #{method_name} :carly, :my_column, String
@@ -96,8 +98,6 @@ RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
       end
     end
   end
-
-  subject(:cop) { RuboCop::Cop::Migration::IncludeStringSize.new(RuboCop::Config.new({})) }
 
   context 'when the method is add_column' do
     it_behaves_like 'a cop that validates inclusion of string size', :add_column

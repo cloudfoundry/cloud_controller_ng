@@ -2,9 +2,9 @@ RSpec.shared_examples_for 'a app lifecycle' do
   let(:app) { VCAP::CloudController::AppModel.make }
 
   it 'creates a lifecycle data model' do
-    expect {
+    expect do
       subject.create_lifecycle_data_model(app)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'provides validations' do
@@ -13,9 +13,9 @@ RSpec.shared_examples_for 'a app lifecycle' do
   end
 
   it 'updates a lifecycle data model' do
-    expect {
+    expect do
       subject.update_lifecycle_data_model(app)
-    }.not_to raise_error
+    end.not_to raise_error
   end
 
   it 'provides a type' do

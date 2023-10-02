@@ -12,19 +12,19 @@ module VCAP::CloudController
     describe 'Validations' do
       it { is_expected.to validate_presence :service_plan }
       it { is_expected.to validate_presence :organization }
-      it { is_expected.to validate_uniqueness [:organization_id, :service_plan_id] }
+      it { is_expected.to validate_uniqueness %i[organization_id service_plan_id] }
 
       context 'when the service plan visibility is for a private broker' do
         it 'returns a validation error' do
           organization = Organization.make
-          space = Space.make organization: organization
-          private_broker = ServiceBroker.make space: space
+          space = Space.make(organization:)
+          private_broker = ServiceBroker.make(space:)
           service = Service.make service_broker: private_broker, active: true
-          plan = ServicePlan.make service: service
+          plan = ServicePlan.make(service:)
 
-          expect {
+          expect do
             ServicePlanVisibility.create service_plan: plan, organization: organization
-          }.to raise_error Sequel::ValidationFailed, 'service_plan is from a private broker'
+          end.to raise_error Sequel::ValidationFailed, 'service_plan is from a private broker'
         end
       end
     end
@@ -57,9 +57,8 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        expect(ServicePlanVisibility.visible_private_plan_ids_for_user(user).select_map(:service_plan_id)).to match_array([
-          plan_visible_to_both.id, plan_visible_to_org1.id, plan_visible_to_org2.id
-        ])
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_user(user).select_map(:service_plan_id)).to contain_exactly(plan_visible_to_both.id, plan_visible_to_org1.id,
+                                                                                                                              plan_visible_to_org2.id)
       end
     end
 
@@ -73,7 +72,7 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        expect(ServicePlanVisibility.visible_private_plan_ids_for_organization(organization.id).select_map(:service_plan_id)).to match_array([visible_plan.id])
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_organization(organization.id).select_map(:service_plan_id)).to contain_exactly(visible_plan.id)
       end
     end
   end

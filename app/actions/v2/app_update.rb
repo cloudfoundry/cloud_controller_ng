@@ -43,13 +43,13 @@ module VCAP::CloudController
 
       def assign_process_values(process, request_attrs)
         mass_assign = request_attrs.slice('production', 'memory', 'instances', 'disk_quota', 'state',
-          'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
-          'diego', 'ports', 'route_guids')
+                                          'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
+                                          'diego', 'ports', 'route_guids')
 
         if is_web_process_deploying(mass_assign, process)
           if request_attrs['state'] == 'STOPPED'
             raise CloudController::Errors::ApiError.new_from_details('StopDisabledDuringDeployment')
-          elsif ['memory', 'instances', 'disk_quota'].any? { |scaling_attr| request_attrs.key?(scaling_attr) }
+          elsif %w[memory instances disk_quota].any? { |scaling_attr| request_attrs.key?(scaling_attr) }
             raise CloudController::Errors::ApiError.new_from_details('ScaleDisabledDuringDeployment')
           else
             raise CloudController::Errors::ApiError.new_from_details('ProcessUpdateDisabledDuringDeployment')
@@ -91,10 +91,10 @@ module VCAP::CloudController
           end
 
           create_message = PackageCreateMessage.new({
-            type:          'docker',
-            relationships: relationships,
-            data:          docker_data,
-          })
+                                                      type: 'docker',
+                                                      relationships: relationships,
+                                                      data: docker_data
+                                                    })
           PackageCreate.create_without_event(create_message)
         end
       end
@@ -110,9 +110,7 @@ module VCAP::CloudController
       end
 
       def prepare_to_stage(app)
-        if v2_api_staging_disabled?
-          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Staging through the v2 API is disabled')
-        end
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Staging through the v2 API is disabled') if v2_api_staging_disabled?
 
         app.update(droplet_guid: nil)
       end
@@ -122,13 +120,13 @@ module VCAP::CloudController
       end
 
       def start_or_stop(app, request_attrs)
-        if request_attrs.key?('state')
-          case request_attrs['state']
-          when ProcessModel::STARTED
-            AppStart.start_without_event(app)
-          when ProcessModel::STOPPED
-            V2::AppStop.stop(app, StagingCancel.new(@stagers))
-          end
+        return unless request_attrs.key?('state')
+
+        case request_attrs['state']
+        when ProcessModel::STARTED
+          AppStart.start_without_event(app)
+        when ProcessModel::STOPPED
+          V2::AppStop.stop(app, StagingCancel.new(@stagers))
         end
       end
 
@@ -137,9 +135,9 @@ module VCAP::CloudController
       end
 
       def validate_lifecycle!(process, request_attrs)
-        if request_attrs['docker_credentials'].present? && !request_attrs.key('docker_image') && process.docker_image.nil?
-          raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
-        end
+        return unless request_attrs['docker_credentials'].present? && !request_attrs.key('docker_image') && process.docker_image.nil?
+
+        raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
       end
 
       def validate_not_changing_lifecycle_type!(process, request_attrs)
@@ -149,21 +147,21 @@ module VCAP::CloudController
         type_is_docker    = process.app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
         type_is_buildpack = !type_is_docker
 
-        if (type_is_docker && buildpack_type_requested) || (type_is_buildpack && docker_type_requested)
-          raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Lifecycle type cannot be changed')
-        end
+        return unless (type_is_docker && buildpack_type_requested) || (type_is_buildpack && docker_type_requested)
+
+        raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Lifecycle type cannot be changed')
       end
 
       def validate_package_exists!(process, request_attrs, original_process_state)
-        if request_attrs['state'] == 'STARTED' && original_process_state != 'STARTED' && !process.package_available?
-          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-        end
+        return unless request_attrs['state'] == 'STARTED' && original_process_state != 'STARTED' && !process.package_available?
+
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
       def validate_custom_buildpack!(process)
-        if process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
-          raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
-        end
+        return unless process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
+
+        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
       end
 
       def custom_buildpacks_disabled?

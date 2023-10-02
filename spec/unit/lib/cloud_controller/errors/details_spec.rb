@@ -19,7 +19,7 @@ module CloudController::Errors
       end
 
       it 'knows code' do
-        expect(details.code).to eq(130001)
+        expect(details.code).to eq(130_001)
       end
 
       it 'knows the error message_format' do

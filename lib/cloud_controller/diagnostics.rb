@@ -3,15 +3,13 @@ module VCAP::CloudController
     def collect(output_directory)
       data = {
         time: Time.now.utc,
-        threads: thread_data,
+        threads: thread_data
       }
 
       FileUtils.mkdir_p(output_directory)
 
       output_file = File.join(output_directory, output_file_name)
-      File.open(output_file, 'w') do |diag_file|
-        diag_file.write(MultiJson.dump(data, pretty: true))
-      end
+      File.write(output_file, MultiJson.dump(data, pretty: true))
 
       output_file
     end

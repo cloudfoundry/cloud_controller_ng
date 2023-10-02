@@ -2,10 +2,10 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class DomainsListMessage < MetadataListMessage
-    register_allowed_keys [
-      :names,
-      :guids,
-      :organization_guids,
+    register_allowed_keys %i[
+      names
+      guids
+      organization_guids
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -13,7 +13,7 @@ module VCAP::CloudController
     validates :organization_guids, allow_nil: true, array: true
 
     def self.from_params(params)
-      super(params, %w(names organization_guids))
+      super(params, %w[names organization_guids])
     end
   end
 end

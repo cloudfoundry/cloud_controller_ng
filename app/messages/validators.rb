@@ -1,5 +1,4 @@
 require 'active_model'
-require 'set'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
 require 'models/helpers/metadata_error'
@@ -11,8 +10,8 @@ require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   module StandaloneValidator
-    def validate_each(*args)
-      new(attributes: [nil]).validate_each(*args)
+    def validate_each(*)
+      new(attributes: [nil]).validate_each(*)
     end
   end
 
@@ -48,7 +47,7 @@ module VCAP::CloudController::Validators
     private
 
     def boolean?(value)
-      ['true', 'false'].include? value
+      %w[true false].include? value
     end
   end
 
@@ -85,7 +84,7 @@ module VCAP::CloudController::Validators
     def validate_each(record, attribute, value)
       if value.is_a?(Hash)
         value.each_key do |key|
-          if ![String, Symbol].include?(key.class)
+          if [String, Symbol].exclude?(key.class)
             record.errors.add(attribute, message: 'key must be a string')
           elsif key.empty?
             record.errors.add(attribute, message: 'key must be a minimum length of 1')
@@ -109,7 +108,7 @@ module VCAP::CloudController::Validators
     def validate_each(record, attribute, value)
       if value.is_a?(Hash)
         value.each do |key, inner_value|
-          if ![String, Symbol].include?(key.class)
+          if [String, Symbol].exclude?(key.class)
             record.errors.add(attribute, message: 'key must be a string')
           elsif key.empty?
             record.errors.add(attribute, message: 'key must be a minimum length of 1')
@@ -119,7 +118,7 @@ module VCAP::CloudController::Validators
             record.errors.add(attribute, message: 'cannot start with VMC_')
           elsif key.match?(/\APORT\z/i)
             record.errors.add(attribute, message: 'cannot set PORT')
-          elsif ![String, NilClass].include?(inner_value.class)
+          elsif [String, NilClass].exclude?(inner_value.class)
             stringified = inner_value.to_json
             record.errors.add(:base, message: "Non-string value in environment variable for key '#{key}', value '#{stringified}'")
           end
@@ -152,17 +151,17 @@ module VCAP::CloudController::Validators
 
   class HealthCheckValidator < ActiveModel::Validator
     def validate(record)
-      if record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
-        record.errors.add(:health_check_type, message: 'must be "http" to set a health check HTTP endpoint')
-      end
+      return unless record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
+
+      record.errors.add(:health_check_type, message: 'must be "http" to set a health check HTTP endpoint')
     end
   end
 
   class ReadinessHealthCheckValidator < ActiveModel::Validator
     def validate(record)
-      if record.readiness_health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
-        record.errors.add(:readiness_health_check_type, message: 'must be "http" to set a health check HTTP endpoint')
-      end
+      return unless record.readiness_health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
+
+      record.errors.add(:readiness_health_check_type, message: 'must be "http" to set a health check HTTP endpoint')
     end
   end
 
@@ -170,9 +169,9 @@ module VCAP::CloudController::Validators
     def validate_each(record, attribute, value)
       return if value.nil?
 
-      if value.reject { |o| o.is_a?(Hash) && o.key?(:guid) && o[:guid].is_a?(String) }.any?
-        record.errors.add(attribute, message: "organizations list must be structured like this: \"#{attribute}\": [{\"guid\": \"valid-guid\"}]")
-      end
+      return unless value.reject { |o| o.is_a?(Hash) && o.key?(:guid) && o[:guid].is_a?(String) }.any?
+
+      record.errors.add(attribute, message: "organizations list must be structured like this: \"#{attribute}\": [{\"guid\": \"valid-guid\"}]")
     end
   end
 
@@ -184,7 +183,7 @@ module VCAP::CloudController::Validators
 
       data_message_class_table = {
         lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
+        lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage
       }
 
       lifecycle_data_message_class = data_message_class_table[lifecycle_type]
@@ -196,31 +195,31 @@ module VCAP::CloudController::Validators
       return unless record.lifecycle_data.is_a?(Hash)
 
       lifecycle_data_message = lifecycle_data_message_class.new(record.lifecycle_data)
-      unless lifecycle_data_message.valid?
-        lifecycle_data_message.errors.full_messages.each do |message|
-          record.errors.add(:lifecycle, message: message)
-        end
+      return if lifecycle_data_message.valid?
+
+      lifecycle_data_message.errors.full_messages.each do |message|
+        record.errors.add(:lifecycle, message:)
       end
     end
   end
 
   class DataValidator < ActiveModel::Validator
     def validate(record)
-      return if !record.data.is_a?(Hash)
+      return unless record.data.is_a?(Hash)
 
       data = record.class::Data.new(record.data.symbolize_keys)
 
-      if !data.valid?
-        data.errors.full_messages.each do |message|
-          record.errors.add(:data, message: message)
-        end
+      return if data.valid?
+
+      data.errors.full_messages.each do |message|
+        record.errors.add(:data, message:)
       end
     end
   end
 
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
-      if !record.relationships.is_a?(Hash)
+      unless record.relationships.is_a?(Hash)
         record.errors.add(:relationships, message: "'relationships' is not an object")
         return
       end
@@ -232,10 +231,10 @@ module VCAP::CloudController::Validators
 
       rel = record.relationships_message
 
-      if !rel.valid?
-        rel.errors.full_messages.each do |message|
-          record.errors.add(:relationships, message: message)
-        end
+      return if rel.valid?
+
+      rel.errors.full_messages.each do |message|
+        record.errors.add(:relationships, message:)
       end
     end
   end
@@ -294,7 +293,7 @@ module VCAP::CloudController::Validators
 
     def validate_guids(record, attribute, value)
       guids = value.map(&:values).flatten
-      guids.each_with_index do |guid, idx|
+      guids.each_with_index do |guid, _idx|
         VCAP::CloudController::BaseMessage::GuidValidator.
           validate_each(record, :"#{attribute.to_s.singularize}_guids", guid)
       end
@@ -340,13 +339,11 @@ module VCAP::CloudController::Validators
           VCAP::CloudController::RelationalOperators::LESS_THAN_COMPARATOR,
           VCAP::CloudController::RelationalOperators::GREATER_THAN_COMPARATOR,
           VCAP::CloudController::RelationalOperators::LESS_THAN_OR_EQUAL_COMPARATOR,
-          VCAP::CloudController::RelationalOperators::GREATER_THAN_OR_EQUAL_COMPARATOR,
+          VCAP::CloudController::RelationalOperators::GREATER_THAN_OR_EQUAL_COMPARATOR
         ]
 
         values.each do |relational_operator, timestamp|
-          unless valid_relational_operators.include?(relational_operator)
-            record.errors.add(attribute, message: "Invalid relational operator: '#{relational_operator}'")
-          end
+          record.errors.add(attribute, message: "Invalid relational operator: '#{relational_operator}'") unless valid_relational_operators.include?(relational_operator)
 
           if timestamp.to_s.include?(',')
             record.errors.add(attribute, message: 'only accepts one value when using a relational operator')
@@ -361,9 +358,9 @@ module VCAP::CloudController::Validators
     private
 
     def opinionated_iso_8601(timestamp, record, attribute)
-      if /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/ !~ timestamp.to_s
-        record.errors.add(attribute, message: "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
-      end
+      return unless /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/ !~ timestamp.to_s
+
+      record.errors.add(attribute, message: "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
     end
   end
 

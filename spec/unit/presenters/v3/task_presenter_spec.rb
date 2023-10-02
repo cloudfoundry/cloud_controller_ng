@@ -4,18 +4,18 @@ require 'presenters/v3/task_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe TaskPresenter do
     subject(:presenter) { TaskPresenter.new(task) }
-    let(:task) {
+    let(:task) do
       task = VCAP::CloudController::TaskModel.make(
         failure_reason: 'sup dawg',
-        memory_in_mb:   2048,
-        disk_in_mb:     4048,
+        memory_in_mb: 2048,
+        disk_in_mb: 4048,
         log_rate_limit: 1024,
-        created_at:     Time.at(1),
-        sequence_id:    5
+        created_at: Time.at(1),
+        sequence_id: 5
       )
       task.this.update(updated_at: Time.at(2))
       task.reload
-    }
+    end
 
     let!(:release_label) do
       VCAP::CloudController::TaskLabelModel.make(
@@ -36,14 +36,14 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::TaskAnnotationModel.make(
         key_name: 'altitude',
         value: '14,412',
-        resource_guid: task.guid,
+        resource_guid: task.guid
       )
     end
     let!(:plain_annotation) do
       VCAP::CloudController::TaskAnnotationModel.make(
         key_name: 'maize',
         value: 'hfcs',
-        resource_guid: task.guid,
+        resource_guid: task.guid
       )
     end
 
@@ -52,10 +52,10 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the task as a hash' do
         links = {
-          self:    { href: "#{link_prefix}/v3/tasks/#{task.guid}" },
-          app:     { href: "#{link_prefix}/v3/apps/#{task.app.guid}" },
-          cancel:  { href: "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel", method: 'POST' },
-          droplet: { href: "#{link_prefix}/v3/droplets/#{task.droplet.guid}" },
+          self: { href: "#{link_prefix}/v3/tasks/#{task.guid}" },
+          app: { href: "#{link_prefix}/v3/apps/#{task.app.guid}" },
+          cancel: { href: "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel", method: 'POST' },
+          droplet: { href: "#{link_prefix}/v3/droplets/#{task.droplet.guid}" }
         }
 
         expect(result[:guid]).to eq(task.guid)

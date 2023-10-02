@@ -10,13 +10,13 @@ module VCAP::CloudController
       if values.is_a? Array
         values.each do |value|
           guid = value[:guid]
-          record.errors.add attr, "#{guid} not a string" if !guid.is_a? String
+          record.errors.add attr, "#{guid} not a string" unless guid.is_a? String
         end
       end
     end
 
     def guids
-      data.map { |val| val[:guid] }
+      data.pluck(:guid)
     end
   end
 end

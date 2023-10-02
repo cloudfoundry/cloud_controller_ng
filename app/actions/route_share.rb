@@ -26,9 +26,9 @@ module VCAP::CloudController
     end
 
     def validate_not_sharing_to_self!(route, spaces)
-      if spaces.include?(route.space)
-        error!("Unable to share route '#{route.uri}' with space '#{route.space.guid}'. Routes cannot be shared into the space where they were created.")
-      end
+      return unless spaces.include?(route.space)
+
+      error!("Unable to share route '#{route.uri}' with space '#{route.space.guid}'. Routes cannot be shared into the space where they were created.")
     end
   end
 end

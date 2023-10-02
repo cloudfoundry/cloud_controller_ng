@@ -29,11 +29,11 @@ module VCAP::CloudController
             succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
 
             Timecop.travel(time_after_expiration) do
-              expect(failed_task.exists?).to be_truthy
-              expect(succeeded_task.exists?).to be_truthy
+              expect(failed_task).to exist
+              expect(succeeded_task).to exist
               job.perform
-              expect(failed_task.exists?).to be_falsey
-              expect(succeeded_task.exists?).to be_falsey
+              expect(failed_task).not_to exist
+              expect(succeeded_task).not_to exist
             end
           end
 
@@ -42,16 +42,16 @@ module VCAP::CloudController
             pending_task = TaskModel.make(state: TaskModel::PENDING_STATE)
 
             Timecop.travel(time_after_expiration) do
-              expect(running_task.exists?).to be_truthy
-              expect(pending_task.exists?).to be_truthy
+              expect(running_task).to exist
+              expect(pending_task).to exist
               job.perform
-              expect(running_task.exists?).to be_truthy
-              expect(pending_task.exists?).to be_truthy
+              expect(running_task).to exist
+              expect(pending_task).to exist
             end
           end
 
           describe 'logging' do
-            it 'should log the number of deleted tasks' do
+            it 'logs the number of deleted tasks' do
               TaskModel.make(state: TaskModel::FAILED_STATE)
               TaskModel.make(state: TaskModel::FAILED_STATE)
               TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
@@ -74,17 +74,17 @@ module VCAP::CloudController
             succeeded_task = TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
 
             Timecop.travel(time_before_expiration) do
-              expect(running_task.exists?).to be_truthy
-              expect(pending_task.exists?).to be_truthy
-              expect(failed_task.exists?).to be_truthy
-              expect(succeeded_task.exists?).to be_truthy
+              expect(running_task).to exist
+              expect(pending_task).to exist
+              expect(failed_task).to exist
+              expect(succeeded_task).to exist
 
               job.perform
 
-              expect(failed_task.exists?).to be_truthy
-              expect(succeeded_task.exists?).to be_truthy
-              expect(running_task.exists?).to be_truthy
-              expect(pending_task.exists?).to be_truthy
+              expect(failed_task).to exist
+              expect(succeeded_task).to exist
+              expect(running_task).to exist
+              expect(pending_task).to exist
             end
           end
         end

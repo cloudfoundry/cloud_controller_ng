@@ -9,6 +9,7 @@ module VCAP::CloudController
           register_allowed_keys []
         end
       end
+
       context 'when the message contains labels' do
         it 'can parse labels' do
           params =
@@ -27,7 +28,7 @@ module VCAP::CloudController
         it 'validates labels' do
           params = {
             metadata: {
-              labels: 'potato',
+              labels: 'potato'
             }
           }
           message = fake_class.new(params)
@@ -54,7 +55,7 @@ module VCAP::CloudController
         it 'validates annotations' do
           params = {
             metadata: {
-              annotations: 'potato',
+              annotations: 'potato'
             }
           }
           message = fake_class.new(params)

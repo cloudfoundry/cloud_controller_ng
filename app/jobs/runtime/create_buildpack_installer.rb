@@ -14,14 +14,14 @@ module VCAP::CloudController
           end
           begin
             buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))
-          rescue
+          rescue StandardError
             buildpack.destroy
             raise
           end
           buildpack.update(options)
 
           logger.info "Buildpack #{name} created and installed"
-        rescue => e
+        rescue StandardError => e
           logger.error("Buildpack #{name} failed to install or update. Error: #{e.inspect}")
           raise e
         end

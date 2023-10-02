@@ -2,7 +2,7 @@ require 'actions/services/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate
-    KEYS_TO_UPDATE_CC_ONLY = %w(tags name space_guid).freeze
+    KEYS_TO_UPDATE_CC_ONLY = %w[tags name space_guid].freeze
     KEYS_TO_UPDATE_CC = KEYS_TO_UPDATE_CC_ONLY + ['service_plan_guid']
 
     def initialize(accepts_incomplete: false, services_event_repository: nil)
@@ -26,9 +26,7 @@ module VCAP::CloudController
         lock.synchronous_unlock!
       end
 
-      unless service_instance.operation_in_progress?
-        @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
-      end
+      @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs) unless service_instance.operation_in_progress?
     ensure
       lock.unlock_and_fail! if lock.needs_unlock?
     end
@@ -39,7 +37,7 @@ module VCAP::CloudController
       parameters_changed = attrs['parameters']
       service_name_changed = attrs['name'] && service_instance.service.allow_context_updates
       maintenance_info_version_changed = attrs['maintenance_info'] &&
-        attrs['maintenance_info']['version'] != service_instance.maintenance_info&.fetch('version', nil)
+                                         attrs['maintenance_info']['version'] != service_instance.maintenance_info&.fetch('version', nil)
       service_plan_changed = attrs['service_plan_guid'] && attrs['service_plan_guid'] != old_service_plan_guid
 
       parameters_changed || service_name_changed || maintenance_info_version_changed || service_plan_changed
@@ -73,14 +71,12 @@ module VCAP::CloudController
         accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: request_attrs['parameters'],
         previous_values: previous_values,
-        maintenance_info: maintenance_info,
+        maintenance_info: maintenance_info
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])
 
-      if response.key?(:dashboard_url)
-        service_instance.update_service_instance(dashboard_url: response[:dashboard_url])
-      end
+      service_instance.update_service_instance(dashboard_url: response[:dashboard_url]) if response.key?(:dashboard_url)
 
       err
     end
@@ -112,18 +108,18 @@ module VCAP::CloudController
     end
 
     def update_deferred_attrs(service_instance, request_attrs)
-      unless service_instance.operation_in_progress?
-        service_plan = extract_current_or_updated_service_plan(service_instance, request_attrs)
-        maintenance_info = extract_updated_maintenance_info(service_plan, request_attrs)
+      return if service_instance.operation_in_progress?
 
-        attrs_to_update = if plan_update_requested?(request_attrs)
-                            { service_plan: service_plan, maintenance_info: maintenance_info }
-                          elsif maintenance_info
-                            { maintenance_info: maintenance_info }
-                          end
+      service_plan = extract_current_or_updated_service_plan(service_instance, request_attrs)
+      maintenance_info = extract_updated_maintenance_info(service_plan, request_attrs)
 
-        service_instance.update_service_instance(attrs_to_update) if attrs_to_update
-      end
+      attrs_to_update = if plan_update_requested?(request_attrs)
+                          { service_plan:, maintenance_info: }
+                        elsif maintenance_info
+                          { maintenance_info: }
+                        end
+
+      service_instance.update_service_instance(attrs_to_update) if attrs_to_update
     end
 
     def update_cc_only_attrs(service_instance, request_attrs)
@@ -143,7 +139,7 @@ module VCAP::CloudController
         plan_id: service_instance.service_plan.broker_provided_id,
         service_id: service_instance.service.broker_provided_id,
         organization_id: service_instance.organization.guid,
-        space_id: service_instance.space.guid,
+        space_id: service_instance.space.guid
       }
 
       maintenance_info = get_version_only(from: service_instance.maintenance_info)
@@ -161,16 +157,14 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.guid,
         @services_event_repository.user_audit_info,
-        request_attrs,
+        request_attrs
       )
     end
 
     def get_attributes_to_update(request_attrs, accepts_incomplete)
       attributes_to_update = request_attrs.slice(*KEYS_TO_UPDATE_CC_ONLY)
 
-      if !accepts_incomplete
-        attributes_to_update.merge! successful_sync_operation
-      end
+      attributes_to_update.merge! successful_sync_operation unless accepts_incomplete
 
       attributes_to_update
     end

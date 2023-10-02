@@ -22,9 +22,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns an empty list' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
 
-          org_guids = parsed_body['data'].map { |r| r['guid'] }
+          org_guids = parsed_body['data'].pluck('guid')
 
           expect(org_guids).to be_empty
         end
@@ -37,7 +37,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns a 404' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -54,9 +54,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns the org guids for all allowed organizations' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
 
-          org_guids = parsed_body['data'].map { |r| r['guid'] }
+          org_guids = parsed_body['data'].pluck('guid')
           expect(org_guids).to include(org1.guid, org2.guid)
         end
       end
@@ -68,7 +68,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns a 404' do
           get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
 
         context "when the user is an org user for an org in the isolation segment's allowed list" do
@@ -78,9 +78,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           it 'returns the org guids for only those allowed organizations to which the user has access' do
             get :relationships_orgs, params: { guid: isolation_segment_model.guid }, as: :json
-            expect(response.status).to eq 200
+            expect(response).to have_http_status :ok
 
-            org_guids = parsed_body['data'].map { |r| r['guid'] }
+            org_guids = parsed_body['data'].pluck('guid')
             expect(org_guids).to contain_exactly(org1.guid)
           end
         end
@@ -101,7 +101,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns a 404' do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -123,10 +123,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns the guids of all associated spaces' do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
 
-          guids = parsed_body['data'].map { |r| r['guid'] }
-          expect(guids).to match_array([space1.guid, space2.guid, space3.guid])
+          guids = parsed_body['data'].pluck('guid')
+          expect(guids).to contain_exactly(space1.guid, space2.guid, space3.guid)
         end
       end
 
@@ -138,10 +138,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns the guids of only the allowed spaces' do
           get :relationships_spaces, params: { guid: isolation_segment_model.guid }, as: :json
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
 
-          guids = parsed_body['data'].map { |r| r['guid'] }
-          expect(guids).to match_array([space1.guid, space3.guid])
+          guids = parsed_body['data'].pluck('guid')
+          expect(guids).to contain_exactly(space1.guid, space3.guid)
         end
       end
     end
@@ -168,7 +168,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       it 'assigns the isolation segment to the org' do
         post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
         expect(parsed_body['data'][0]['guid']).to eq(org1.guid)
         expect(isolation_segment_model.organizations).to contain_exactly(org1)
       end
@@ -177,7 +177,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         request_body[:data] << { guid: org2.guid }
         post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
 
         entitled_guids = []
         parsed_body['data'].each do |item|
@@ -194,20 +194,20 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
           post :assign_allowed_organizations, params: { guid: 'some-guid', org_guid: org1.guid }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
       context 'when the request is malformed' do
-        let(:request_body) {
+        let(:request_body) do
           {
-            bork: 'some-name',
+            bork: 'some-name'
           }
-        }
+        end
 
         it 'returns a 422' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
         end
       end
 
@@ -223,9 +223,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'does not assign any of the valid orgs and returns a 404' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
           expect(response.body).to include 'bogus-guid'
-          expect(response.body).to_not include org1.guid
+          expect(response.body).not_to include org1.guid
 
           expect(isolation_segment_model.organizations).to be_empty
           expect(org1.default_isolation_segment_model).to be_nil
@@ -240,7 +240,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 200 and leaves the existing assignment intact' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
 
           expect(isolation_segment_model.organizations).to include(org1)
         end
@@ -249,12 +249,12 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     context 'when the user is not an admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
       end
     end
   end
@@ -271,7 +271,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       it 'unassigns Isolation Segments from the org' do
         post :unassign_allowed_organization, params: { guid: isolation_segment_model.guid, org_guid: org.guid }, as: :json
-        expect(response.status).to eq 204
+        expect(response).to have_http_status :no_content
       end
 
       context 'when a request body is supplied' do
@@ -289,7 +289,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'ignores the body' do
           post :unassign_allowed_organization, params: { guid: isolation_segment_model.guid, org_guid: org.guid }.merge(request_body), as: :json
-          expect(response.status).to eq 204
+          expect(response).to have_http_status :no_content
           expect(isolation_segment_model.organizations).to include(org2)
         end
       end
@@ -297,26 +297,26 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
           post :unassign_allowed_organization, params: { guid: 'bad-guid', org_guid: org.guid }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
 
       context 'when the organization does not exist' do
         it 'returns a 404' do
           post :unassign_allowed_organization, params: { guid: isolation_segment_model.guid, org_guid: 'bad-guid' }, as: :json
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
 
     context 'when the user is not an admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         post :unassign_allowed_organization, params: { guid: isolation_segment_model.guid, org_guid: org.guid }, as: :json
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
       end
     end
   end
@@ -324,7 +324,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   describe '#create' do
     let(:request_body) do
       {
-        name: 'some-name',
+        name: 'some-name'
       }
     end
 
@@ -333,24 +333,25 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         set_current_user_as_admin
       end
 
-      it 'returns a 201 Created  and the isolation segment' do
+      it 'returns a 201 Created and the isolation segment' do
         post :create, params: request_body
 
-        expect(response.status).to eq 201
+        expect(response).to have_http_status :created
 
         isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.last
         expect(isolation_segment_model.name).to eq 'some-name'
       end
 
       context 'when the request is malformed' do
-        let(:request_body) {
+        let(:request_body) do
           {
-            bork: 'some-name',
+            bork: 'some-name'
           }
-        }
+        end
+
         it 'returns a 422' do
           post :create, body: request_body
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
         end
       end
 
@@ -359,19 +360,19 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           VCAP::CloudController::IsolationSegmentModel.make(name: 'some-name')
           post :create, params: request_body
 
-          expect(response.status).to eq 422
+          expect(response).to have_http_status :unprocessable_entity
         end
       end
     end
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         post :create, params: request_body
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
       end
     end
   end
@@ -388,7 +389,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 200 and the correct isolation segment' do
           get :show, params: { guid: isolation_segment.guid }, as: :json
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
           expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
@@ -400,7 +401,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 404' do
           get :show, params: { guid: 'noexistent-guid' }, as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
@@ -415,7 +416,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'allows the user to see the isolation segment' do
           get :show, params: { guid: isolation_segment.guid }, as: :json
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(parsed_body['guid']).to eq(isolation_segment.guid)
           expect(parsed_body['name']).to eq(isolation_segment.name)
         end
@@ -433,7 +434,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             it 'allows the user to see the isolation segment' do
               get :show, params: { guid: isolation_segment.guid }, as: :json
 
-              expect(response.status).to eq 200
+              expect(response).to have_http_status :ok
               expect(parsed_body['guid']).to eq(isolation_segment.guid)
               expect(parsed_body['name']).to eq(isolation_segment.name)
               expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}")
@@ -462,7 +463,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 400' do
             get :index, params: { order_by: '^=%' }, as: :json
 
-            expect(response.status).to eq 400
+            expect(response).to have_http_status :bad_request
             expect(response.body).to include 'BadQueryParameter'
             expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
           end
@@ -472,7 +473,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 400 and a list of allowed values' do
             get :index, params: { order_by: 'invalid' }, as: :json
 
-            expect(response.status).to eq 400
+            expect(response).to have_http_status :bad_request
             expect(response.body).to include 'BadQueryParameter'
             expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
           end
@@ -482,7 +483,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns 400 and a list of the unknown params' do
             get :index, params: { meow: 'woof', kaplow: 'zoom' }, as: :json
 
-            expect(response.status).to eq 400
+            expect(response).to have_http_status :bad_request
             expect(response.body).to include 'BadQueryParameter'
             expect(response.body).to include('Unknown query parameter(s):')
             expect(response.body).to include('meow')
@@ -492,9 +493,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         context 'with invalid pagination params' do
           it 'returns 400 and the allowed param range' do
-            get :index, params: { per_page: 99999999999999999 }, as: :json
+            get :index, params: { per_page: 99_999_999_999_999_999 }, as: :json
 
-            expect(response.status).to eq 400
+            expect(response).to have_http_status :bad_request
             expect(response.body).to include 'BadQueryParameter'
             expect(response.body).to include 'Per page must be between'
           end
@@ -508,10 +509,10 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 200 and a list of the existing isolation segments' do
           get :index, params: { order_by: 'name' }, as: :json
 
-          expect(response.status).to eq(200)
-          response_names = parsed_body['resources'].map { |r| r['name'] }
+          expect(response).to have_http_status(:ok)
+          response_names = parsed_body['resources'].pluck('name')
           expect(response_names.length).to eq(3)
-          expect(response_names).to eq(['a-segment', 'b-segment', 'shared'])
+          expect(response_names).to eq(%w[a-segment b-segment shared])
         end
       end
     end
@@ -531,7 +532,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 200 and the entity information with the updated name' do
           put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-          expect(response.status).to eq 200
+          expect(response).to have_http_status :ok
           expect(parsed_body['guid']).to eq(isolation_segment_model.guid)
           expect(parsed_body['name']).to eq(new_name)
           expect(parsed_body['links']['self']['href']).to eq("#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}")
@@ -544,7 +545,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 422' do
             put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
           end
         end
 
@@ -555,7 +556,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 422' do
             put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
           end
         end
 
@@ -564,7 +565,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           it 'returns a 422' do
             post :create, params: request_body
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
           end
         end
       end
@@ -573,19 +574,19 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 404' do
           put :update, params: { guid: 'nonexistent-guid' }.merge(request_body), as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
       end
     end
   end
@@ -603,22 +604,23 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 204 and deletes only the specified isolation segment' do
           delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
 
-          expect(response.status).to eq 204
+          expect(response).to have_http_status :no_content
           expect { isolation_segment_model1.reload }.to raise_error(Sequel::Error, 'Record not found')
-          expect { isolation_segment_model2.reload }.to_not raise_error
+          expect { isolation_segment_model2.reload }.not_to raise_error
         end
 
         context 'when the isolation segment is associated to an organization' do
           before do
             allow_any_instance_of(VCAP::CloudController::IsolationSegmentDelete).to receive(:delete).
               and_raise(VCAP::CloudController::IsolationSegmentDelete::AssociationNotEmptyError.new(
-                          'Revoke the Organization entitlements for your Isolation Segment.'))
+                          'Revoke the Organization entitlements for your Isolation Segment.'
+                        ))
           end
 
           it 'returns a 422 UnprocessableEntity error' do
             delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
 
-            expect(response.status).to eq 422
+            expect(response).to have_http_status :unprocessable_entity
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Revoke the Organization entitlements for your Isolation Segment.')
           end
@@ -630,7 +632,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 204 and deletes only the specified isolation segment' do
             delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
 
-            expect(response.status).to eq 204
+            expect(response).to have_http_status :no_content
             expect(label).not_to exist
           end
         end
@@ -640,19 +642,19 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         it 'returns a 404 not found' do
           delete :destroy, params: { guid: 'nonexistent-guid' }, as: :json
 
-          expect(response.status).to eq 404
+          expect(response).to have_http_status :not_found
         end
       end
     end
 
     context 'when the user is not admin' do
       before do
-        allow_user_write_access(user, space: space)
+        allow_user_write_access(user, space:)
       end
 
       it 'returns a 403' do
         delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
-        expect(response.status).to eq 403
+        expect(response).to have_http_status :forbidden
       end
     end
   end
@@ -666,7 +668,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
     let(:request_body) do
       {
-        name: 'some-other-name',
+        name: 'some-other-name'
       }
     end
 
@@ -677,14 +679,14 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     it 'cannot be deleted' do
       delete :destroy, params: { guid: shared_segment.guid }, as: :json
 
-      expect(response.status).to eq 422
+      expect(response).to have_http_status :unprocessable_entity
       expect(VCAP::CloudController::IsolationSegmentModel.first(guid: shared_segment.guid).exists?).to be true
     end
 
     it 'cannot be updated via API' do
       put :update, params: { guid: shared_segment.guid, body: request_body }, as: :json
 
-      expect(response.status).to eq 422
+      expect(response).to have_http_status :unprocessable_entity
       expect(shared_segment.name).to eq(original_name)
     end
   end

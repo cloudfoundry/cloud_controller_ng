@@ -11,8 +11,8 @@ module CloudFoundry
       let(:user_guid_offset) { 1170.seconds }
 
       context "time is set to beginning of hour + the user's offset" do
-        before(:each) { Timecop.freeze Time.now.beginning_of_hour + user_guid_offset }
-        after(:each) { Timecop.return }
+        before { Timecop.freeze Time.now.beginning_of_hour + user_guid_offset }
+        after { Timecop.return }
 
         it 'returns expires_in that equals the reset interval' do
           expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)
@@ -21,8 +21,8 @@ module CloudFoundry
       end
 
       context 'time is set to beginning of hour' do
-        before(:each) { Timecop.freeze Time.now.beginning_of_hour }
-        after(:each) { Timecop.return }
+        before { Timecop.freeze Time.now.beginning_of_hour }
+        after { Timecop.return }
 
         it "returns expires_in that equals the user's offset" do
           expires_in = implementor.next_expires_in(user_guid, reset_interval_in_minutes)

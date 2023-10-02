@@ -18,7 +18,7 @@ RSpec.describe 'Builds' do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
     let(:diego_staging_response) do
@@ -27,7 +27,7 @@ RSpec.describe 'Builds' do
         detected_start_command: {},
         lifecycle_data: {
           buildpack_key: 'String',
-          detected_buildpack: 'String',
+          detected_buildpack: 'String'
         }
       }
     end
@@ -38,24 +38,24 @@ RSpec.describe 'Builds' do
           data: {
             buildpacks: ['http://github.com/myorg/awesome-buildpack'],
             stack: 'cflinuxfs4'
-          },
+          }
         },
         package: {
           guid: package.guid
         }
       }
     end
-    let(:metadata) {
+    let(:metadata) do
       {
         labels: {
           release: 'stable',
-          'seriouseats.com/potato' => 'mashed',
+          'seriouseats.com/potato' => 'mashed'
         },
         annotations: {
-          potato: 'idaho',
-        },
+          potato: 'idaho'
+        }
       }
-    }
+    end
 
     before do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
@@ -65,7 +65,7 @@ RSpec.describe 'Builds' do
     end
 
     it 'creates a Builds resource' do
-      post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
+      post '/v3/builds', create_request.merge(metadata:).to_json, developer_headers
       expect(last_response.status).to eq(201), last_response.body
 
       created_build = VCAP::CloudController::BuildModel.last
@@ -86,7 +86,7 @@ RSpec.describe 'Builds' do
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
               'stack' => 'cflinuxfs4'
-            },
+            }
           },
           'package' => {
             'guid' => package.guid
@@ -104,7 +104,7 @@ RSpec.describe 'Builds' do
           'created_by' => {
             'guid' => developer.guid,
             'name' => 'bob the builder',
-            'email' => 'bob@loblaw.com',
+            'email' => 'bob@loblaw.com'
           }
         }
 
@@ -115,13 +115,13 @@ RSpec.describe 'Builds' do
       expect(event).not_to be_nil
       expect(event.type).to eq('audit.app.build.create')
       expect(event.metadata).to eq({
-        'build_guid' => created_build.guid,
-        'package_guid' => package.guid,
-      })
+                                     'build_guid' => created_build.guid,
+                                     'package_guid' => package.guid
+                                   })
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| post '/v3/builds', create_request.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/builds', create_request.to_json, user_headers } }
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
 
@@ -130,13 +130,13 @@ RSpec.describe 'Builds' do
           code: 422
         )
         h['admin'] = {
-          code: 201,
+          code: 201
         }
         h['space_developer'] = {
-          code: 201,
+          code: 201
         }
         h['space_supporter'] = {
-          code: 201,
+          code: 201
         }
         h
       end
@@ -149,7 +149,7 @@ RSpec.describe 'Builds' do
           actee_name: app_model.name,
           metadata: { build_guid: parsed_response['guid'], package_guid: parsed_response['package']['guid'] }.to_json,
           space_guid: space.guid,
-          organization_guid: org.guid,
+          organization_guid: org.guid
         }
       end
 
@@ -177,9 +177,9 @@ RSpec.describe 'Builds' do
         allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
       end
 
-      it 'should log the required fields when the build is created' do
+      it 'logs the required fields when the build is created' do
         Timecop.freeze do
-          post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
+          post '/v3/builds', create_request.merge(metadata:).to_json, developer_headers
           created_build = VCAP::CloudController::BuildModel.last
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -191,7 +191,7 @@ RSpec.describe 'Builds' do
               'stack' => 'cflinuxfs4',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'build-id' => OpenSSL::Digest::SHA256.hexdigest(created_build.guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid)
             }
           }
           expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
@@ -229,21 +229,23 @@ RSpec.describe 'Builds' do
     end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:second_package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(
-      state: VCAP::CloudController::DropletModel::STAGED_STATE,
-      package_guid: package.guid,
-      build: build,
-    )
-    }
-    let(:second_droplet) { VCAP::CloudController::DropletModel.make(
-      state: VCAP::CloudController::DropletModel::STAGED_STATE,
-      package_guid: second_package.guid,
-      build: second_build,
-    )
-    }
+    let(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: package.guid,
+        build: build
+      )
+    end
+    let(:second_droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: second_package.guid,
+        build: second_build
+      )
+    end
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-        stack: 'cflinuxfs4' } } }
+                                                stack: 'cflinuxfs4' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -268,8 +270,8 @@ RSpec.describe 'Builds' do
           app_guids: '123',
           package_guids: '123',
           label_selector: 'foo,bar',
-          created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-          updated_ats: { gt: Time.now.utc.iso8601 },
+          created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+          updated_ats: { gt: Time.now.utc.iso8601 }
         }
       end
     end
@@ -277,14 +279,14 @@ RSpec.describe 'Builds' do
     it_behaves_like 'list_endpoint_with_common_filters' do
       let(:resource_klass) { VCAP::CloudController::BuildModel }
       let(:api_call) do
-        lambda { |headers, filters| get "/v3/builds?#{filters}", nil, headers }
+        ->(headers, filters) { get "/v3/builds?#{filters}", nil, headers }
       end
       let(:headers) { admin_headers }
     end
 
     describe 'permissions' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| get '/v3/builds', nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get '/v3/builds', nil, user_headers } }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
 
@@ -318,75 +320,75 @@ RSpec.describe 'Builds' do
         expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
         expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
         expect(parsed_response).to be_a_response_like({
-          'pagination' => {
-            'total_results' => 2,
-            'total_pages' => 1,
-            'first' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
-            'last' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
-            'next' => nil,
-            'previous' => nil,
-          },
-          'resources' => [
-            {
-              'guid' => build.guid,
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'state' => 'STAGED',
-              'staging_memory_in_mb' => 123,
-              'staging_disk_in_mb' => 456,
-              'staging_log_rate_limit_bytes_per_second' => 234,
-              'error' => nil,
-              'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs4',
-                },
-              },
-              'package' => { 'guid' => package.guid, },
-              'droplet' => {
-                'guid' => droplet.guid,
-              },
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
-                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}", }
-              },
-              'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
-            },
-            {
-              'guid' => second_build.guid,
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'state' => 'STAGED',
-              'staging_memory_in_mb' => 789,
-              'staging_disk_in_mb' => 12,
-              'staging_log_rate_limit_bytes_per_second' => 345,
-              'error' => nil,
-              'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs4',
-                },
-              },
-              'package' => { 'guid' => second_package.guid, },
-              'droplet' => {
-                'guid' => second_droplet.guid,
-              },
-              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
-              'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", },
-                'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}", }
-              },
-              'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
-            },
-          ]
-        })
+                                                        'pagination' => {
+                                                          'total_results' => 2,
+                                                          'total_pages' => 1,
+                                                          'first' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+                                                          'last' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+                                                          'next' => nil,
+                                                          'previous' => nil
+                                                        },
+                                                        'resources' => [
+                                                          {
+                                                            'guid' => build.guid,
+                                                            'created_at' => iso8601,
+                                                            'updated_at' => iso8601,
+                                                            'state' => 'STAGED',
+                                                            'staging_memory_in_mb' => 123,
+                                                            'staging_disk_in_mb' => 456,
+                                                            'staging_log_rate_limit_bytes_per_second' => 234,
+                                                            'error' => nil,
+                                                            'lifecycle' => {
+                                                              'type' => 'buildpack',
+                                                              'data' => {
+                                                                'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                                                                'stack' => 'cflinuxfs4'
+                                                              }
+                                                            },
+                                                            'package' => { 'guid' => package.guid },
+                                                            'droplet' => {
+                                                              'guid' => droplet.guid
+                                                            },
+                                                            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                                                            'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                                            'links' => {
+                                                              'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}" },
+                                                              'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}" },
+                                                              'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}" }
+                                                            },
+                                                            'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com' }
+                                                          },
+                                                          {
+                                                            'guid' => second_build.guid,
+                                                            'created_at' => iso8601,
+                                                            'updated_at' => iso8601,
+                                                            'state' => 'STAGED',
+                                                            'staging_memory_in_mb' => 789,
+                                                            'staging_disk_in_mb' => 12,
+                                                            'staging_log_rate_limit_bytes_per_second' => 345,
+                                                            'error' => nil,
+                                                            'lifecycle' => {
+                                                              'type' => 'buildpack',
+                                                              'data' => {
+                                                                'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                                                                'stack' => 'cflinuxfs4'
+                                                              }
+                                                            },
+                                                            'package' => { 'guid' => second_package.guid },
+                                                            'droplet' => {
+                                                              'guid' => second_droplet.guid
+                                                            },
+                                                            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
+                                                            'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                                            'links' => {
+                                                              'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}" },
+                                                              'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}" },
+                                                              'droplet' => { 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}" }
+                                                            },
+                                                            'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com' }
+                                                          }
+                                                        ]
+                                                      })
       end
 
       it 'filters on label_selector' do
@@ -432,15 +434,16 @@ RSpec.describe 'Builds' do
       )
     end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(
-      state: VCAP::CloudController::DropletModel::STAGED_STATE,
-      package_guid: package.guid,
-      build: build,
-    )
-    }
+    let(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: package.guid,
+        build: build
+      )
+    end
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-        stack: 'cflinuxfs4' } } }
+                                                stack: 'cflinuxfs4' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -468,32 +471,32 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs4',
-            },
+              'stack' => 'cflinuxfs4'
+            }
           },
           'package' => {
-            'guid' => package.guid,
+            'guid' => package.guid
           },
           'droplet' => {
-            'guid' => droplet.guid,
+            'guid' => droplet.guid
           },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/builds/#{build.guid}",
+              'href' => "#{link_prefix}/v3/builds/#{build.guid}"
             },
             'app' => {
-              'href' => "#{link_prefix}/v3/apps/#{package.app.guid}",
+              'href' => "#{link_prefix}/v3/apps/#{package.app.guid}"
             },
             'droplet' => {
-              'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
+              'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"
             }
           },
           'created_by' => {
             'guid' => developer.guid,
             'name' => 'bob the builder',
-            'email' => 'bob@loblaw.com',
+            'email' => 'bob@loblaw.com'
           }
         }
 
@@ -505,7 +508,7 @@ RSpec.describe 'Builds' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
-        let(:api_call) { lambda { |user_headers| get "v3/builds/#{build.guid}", nil, user_headers } }
+        let(:api_call) { ->(user_headers) { get "v3/builds/#{build.guid}", nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 200)
@@ -527,13 +530,13 @@ RSpec.describe 'Builds' do
           release: 'stable',
           'seriouseats.com/potato' => 'mashed'
         },
-        annotations: { 'checksum' => 'SHA' },
+        annotations: { 'checksum' => 'SHA' }
       }
     end
 
     context 'when the build does not exist' do
       it 'returns a 404' do
-        patch '/v3/builds/POTATO', { metadata: metadata }.to_json, developer_headers
+        patch '/v3/builds/POTATO', { metadata: }.to_json, developer_headers
         expect(last_response).to have_status_code(404)
       end
     end
@@ -553,15 +556,15 @@ RSpec.describe 'Builds' do
       end
 
       it 'updates build metadata' do
-        patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, developer_headers
+        patch "/v3/builds/#{build_model.guid}", { metadata: }.to_json, developer_headers
         expect(last_response.status).to eq(200), last_response.body
 
         expected_metadata = {
           'labels' => {
             'release' => 'stable',
-            'seriouseats.com/potato' => 'mashed',
+            'seriouseats.com/potato' => 'mashed'
           },
-          'annotations' => { 'checksum' => 'SHA' },
+          'annotations' => { 'checksum' => 'SHA' }
         }
 
         parsed_response = MultiJson.load(last_response.body)
@@ -569,14 +572,14 @@ RSpec.describe 'Builds' do
       end
 
       it 'cloud_controller returns 403 if not admin and not build_state_updater' do
-        patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, headers_for(make_auditor_for_space(space), user_name: user_name, email: 'bob@loblaw.com')
+        patch "/v3/builds/#{build_model.guid}", { metadata: }.to_json, headers_for(make_auditor_for_space(space), user_name: user_name, email: 'bob@loblaw.com')
         expect(last_response.status).to eq(403), last_response.body
       end
 
       describe 'permissions' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
-        let(:api_call) { lambda { |user_headers| patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, user_headers } }
+        let(:api_call) { ->(user_headers) { patch "/v3/builds/#{build_model.guid}", { metadata: }.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
@@ -606,16 +609,17 @@ RSpec.describe 'Builds' do
       end
 
       context 'updating state' do
-        let(:build_model) { VCAP::CloudController::BuildModel.make(:kpack, package: package_model,
-          state: VCAP::CloudController::BuildModel::STAGING_STATE, app: app_model)
-        }
+        let(:build_model) do
+          VCAP::CloudController::BuildModel.make(:kpack, package: package_model,
+                                                         state: VCAP::CloudController::BuildModel::STAGING_STATE, app: app_model)
+        end
         let(:request) do
           {
             state: 'STAGED',
             lifecycle: {
               type: 'kpack',
               data: {
-                image: 'some-fake-image:tag',
+                image: 'some-fake-image:tag'
               }
             }
           }

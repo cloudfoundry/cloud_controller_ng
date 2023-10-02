@@ -9,7 +9,7 @@ module Sinatra
   module VCAP
     module Helpers
       def in_test_mode?
-        ENV['CC_TEST']
+        ENV.fetch('CC_TEST', nil)
       end
     end
 

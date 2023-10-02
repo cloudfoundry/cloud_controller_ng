@@ -17,7 +17,7 @@ module VCAP::CloudController
       { pattern: EQUAL_PATTERN, operator: :equal },
       { pattern: NOT_EQUAL_PATTERN, operator: :not_equal },
       { pattern: EXISTS_PATTERN, operator: :exists }, # foo
-      { pattern: NOT_EXISTS_PATTERN, operator: :not_exists },
+      { pattern: NOT_EXISTS_PATTERN, operator: :not_exists }
     ].freeze
 
     class << self

@@ -39,9 +39,9 @@ module VCAP::CloudController
 
       begin
         stagers.stager_for_build(build).staging_complete(build, staging_response, params['start'] == 'true')
-      rescue CloudController::Errors::ApiError => api_err
-        raise api_err
-      rescue => e
+      rescue CloudController::Errors::ApiError => e
+        raise e
+      rescue StandardError => e
         logger.error('diego.staging.completion-controller-error', error: e)
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       end
@@ -62,10 +62,10 @@ module VCAP::CloudController
 
       begin
         stagers.stager_for_build(build).staging_complete(build, staging_response, params['start'] == 'true')
-      rescue CloudController::Errors::ApiError => api_err
-        logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
-        raise api_err
-      rescue => e
+      rescue CloudController::Errors::ApiError => e
+        logger.error('diego.staging.completion-controller-api_err-error', error: e)
+        raise e
+      rescue StandardError => e
         logger.error('diego.staging.completion-controller-error', error: e)
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       end
@@ -74,12 +74,12 @@ module VCAP::CloudController
         'build-completed',
         {
           'app-id' => build.app.guid,
-          'build-id' => build.guid,
+          'build-id' => build.guid
         },
         {
           'lifecycle' => build.lifecycle_type,
           'buildpacks' => build.lifecycle_data&.buildpacks,
-          'stack' => build.lifecycle_data.try(:stack),
+          'stack' => build.lifecycle_data.try(:stack)
         }
       )
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
     end
 
     def report_metrics(bbs_staging_response)
-      duration = Time.now.utc.to_i * 1e9 - bbs_staging_response[:created_at]
+      duration = (Time.now.utc.to_i * 1e9) - bbs_staging_response[:created_at]
       if bbs_staging_response[:failed]
         statsd_updater.report_staging_failure_metrics(duration)
         prometheus_updater.report_staging_failure_metrics(duration)
@@ -125,8 +125,8 @@ module VCAP::CloudController
       begin
         payload          = body.read
         staging_response = MultiJson.load(payload, symbolize_keys: true)
-      rescue MultiJson::ParseError => pe
-        logger.error('diego.staging.parse-error', payload: payload, error: pe.to_s)
+      rescue MultiJson::ParseError => e
+        logger.error('diego.staging.parse-error', payload: payload, error: e.to_s)
         raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
       end
 

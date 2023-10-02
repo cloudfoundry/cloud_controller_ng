@@ -22,22 +22,10 @@ class UsersController < ApplicationController
       paginated_result: paginated_result,
       path: '/v3/users',
       message: message,
-      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) }
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
-  end
-
-  def create
-    unauthorized! unless permission_queryer.can_write_globally?
-
-    message = UserCreateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-    user = UserCreate.new.create(message: message)
-
-    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
-  rescue UserCreate::Error => e
-    unprocessable!(e)
   end
 
   def show
@@ -45,6 +33,32 @@ class UsersController < ApplicationController
     user_not_found! unless user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+  end
+
+  def create
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    message = UserCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    user = UserCreate.new.create(message:)
+
+    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+  rescue UserCreate::Error => e
+    unprocessable!(e)
+  end
+
+  def update
+    user = fetch_user_if_readable(hashed_params[:guid])
+    user_not_found! unless user
+
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    message = UserUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    user = UserUpdate.new.update(user:, message:)
+
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([hashed_params[:guid]]))
   end
 
   def destroy
@@ -58,20 +72,6 @@ class UsersController < ApplicationController
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
-  end
-
-  def update
-    user = fetch_user_if_readable(hashed_params[:guid])
-    user_not_found! unless user
-
-    unauthorized! unless permission_queryer.can_write_globally?
-
-    message = UserUpdateMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
-
-    user = UserUpdate.new.update(user: user, message: message)
-
-    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([hashed_params[:guid]]))
   end
 
   private

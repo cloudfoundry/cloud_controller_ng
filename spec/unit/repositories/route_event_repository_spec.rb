@@ -32,7 +32,7 @@ module VCAP::CloudController
           it 'tags the event as manifest triggered' do
             event = route_event_repository.record_route_create(route, actor_audit_info, request_attrs, manifest_triggered: true)
             event.reload
-            expect(event.metadata['manifest_triggered']).to eq(true)
+            expect(event.metadata['manifest_triggered']).to be(true)
           end
         end
       end
@@ -55,7 +55,7 @@ module VCAP::CloudController
       end
 
       describe '#record_route_share' do
-        let(:target_space_guids) { ['space-guid', 'another-guid'] }
+        let(:target_space_guids) { %w[space-guid another-guid] }
 
         it 'records event correctly' do
           event = route_event_repository.record_route_share(route, actor_audit_info, target_space_guids)
@@ -120,6 +120,7 @@ module VCAP::CloudController
 
       describe '#record_route_map' do
         let(:app) { AppModel.make(space: route.space) }
+
         context 'when route mapping has no weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
@@ -138,14 +139,15 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight,
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
+
         context 'when route mapping has weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 
@@ -164,18 +166,19 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight,
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
       end
 
       describe '#record_route_unmap' do
         let(:app) { AppModel.make(space: route.space) }
+
         context 'when route mapping has no weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
@@ -194,14 +197,15 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
+
         context 'when route mapping has weight' do
           let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 
@@ -220,12 +224,12 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(app.space.organization_guid)
 
             expect(event.metadata).to eq({
-              'route_guid' => route.guid,
-              'app_port' => 8080,
-              'destination_guid' => route_mapping.guid,
-              'process_type' => 'web',
-              'weight' => route_mapping.weight
-            })
+                                           'route_guid' => route.guid,
+                                           'app_port' => 8080,
+                                           'destination_guid' => route_mapping.guid,
+                                           'process_type' => 'web',
+                                           'weight' => route_mapping.weight
+                                         })
           end
         end
       end

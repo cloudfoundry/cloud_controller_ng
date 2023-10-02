@@ -11,7 +11,7 @@ module VCAP::CloudController
                      global: { timeout_in_seconds: global_timeout },
                      app_usage_events_cleanup: { timeout_in_seconds: 2.hours },
                      blobstore_delete: { timeout_in_seconds: 3.hours },
-                     diego_sync: { timeout_in_seconds: 4.hours },
+                     diego_sync: { timeout_in_seconds: 4.hours }
                    }
                  })
     end

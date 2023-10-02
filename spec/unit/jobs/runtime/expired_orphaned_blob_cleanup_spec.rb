@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe ExpiredOrphanedBlobCleanup, job_context: :worker do
       subject(:job) { ExpiredOrphanedBlobCleanup.new }
       let!(:old_blob) { OrphanedBlob.create(created_at: 91.days.ago) }
-      let!(:new_blob) { OrphanedBlob.create(created_at: 1.days.ago) }
+      let!(:new_blob) { OrphanedBlob.create(created_at: 1.day.ago) }
 
       it { is_expected.to be_a_valid_job }
 

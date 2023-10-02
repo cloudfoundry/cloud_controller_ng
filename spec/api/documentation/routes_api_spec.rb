@@ -1,24 +1,24 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Routes', type: [:api, :legacy_api] do
+RSpec.resource 'Routes', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make }
   let(:space) { VCAP::CloudController::Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
   let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
   let(:route_path) { '/apps/v1/path' }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
-  let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
+  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
+  let(:route) { VCAP::CloudController::Route.make(domain:, space:) }
   let(:guid) { route.guid }
 
   let(:routing_api_client) { double('routing_api_client', enabled?: true) }
-  let(:router_group) {
+  let(:router_group) do
     VCAP::CloudController::RoutingApi::RouterGroup.new({
-                                                           'guid' => 'tcp-guid',
-                                                           'type' => 'tcp',
-                                                           'reservable_ports' => '1024-65535'
+                                                         'guid' => 'tcp-guid',
+                                                         'type' => 'tcp',
+                                                         'reservable_ports' => '1024-65535'
                                                        })
-  }
+  end
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
       and_return(routing_api_client)
@@ -44,18 +44,18 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route. Required for shared-domains.'
       field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false,
-                                                                                              valid_values: '1024-65535', example_values: [50000]
+                                                                                              valid_values: '1024-65535', example_values: [50_000]
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 
     context 'with a route binding' do
       before do
-        route_binding = VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+        route_binding = VCAP::CloudController::RouteBinding.make(service_instance:, route:)
         stub_unbind(route_binding)
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController
-      standard_model_get :route, nested_associations: [:domain, :space, :service_instance]
+      standard_model_get :route, nested_associations: %i[domain space service_instance]
       standard_model_delete :route, query_string: 'recursive=true'
 
       def after_standard_model_delete(guid)
@@ -77,7 +77,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
           required_fields.merge(
             domain_guid: domain.guid,
             space_guid: space.guid,
-            port: 10000
+            port: 10_000
           ), pretty: true
         )
         client.post '/v2/routes', body, headers
@@ -97,7 +97,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
       example 'Update a Route' do
         body = MultiJson.dump(
           {
-              port: 10000
+            port: 10_000
           }, pretty: true
         )
         client.put "/v2/routes/#{guid}", body, headers
@@ -115,9 +115,9 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
     include_context 'guid_field', required: true
 
     describe 'Apps' do
-      let!(:associated_process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+      let!(:associated_process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
       let(:associated_app_guid) { associated_process.guid }
-      let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
       let(:app_guid) { process.guid }
 
       before do
@@ -133,12 +133,13 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
   end
 
   describe 'Reserved Routes' do
-    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61000, host: '', space: space) }
+    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61_000, host: '', space: space) }
+
     get '/v2/routes/reserved/domain/:domain_guid?host=:host&path=:path&port=:port' do
       request_parameter :host, 'The host portion of the route. Required for shared-domains.', required: false
       request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
       request_parameter :port, 'The port of the route. Supported for domains of TCP router groups only.',
-        required: false, example_values: [60027, 1234]
+                        required: false, example_values: [60_027, 1234]
 
       example 'Check a Route exists' do
         explanation 'This endpoint returns a status code of 204 if the route exists, and 404 if it does not.'
@@ -154,6 +155,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
       route.path = route_path
       route.save
     end
+
     get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :host, 'The host portion of the route. Required for shared-domains.'
       request_parameter :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']

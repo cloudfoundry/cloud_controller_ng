@@ -9,18 +9,18 @@ module VCAP::CloudController
 
       db_result       = BuildpackLifecycleFetcher.fetch(buildpacks, stack)
       @validator      = BuildpackLifecycleDataValidator.new({
-        buildpack_infos: db_result[:buildpack_infos],
-        stack: db_result[:stack],
-      })
+                                                              buildpack_infos: db_result[:buildpack_infos],
+                                                              stack: db_result[:stack]
+                                                            })
     end
 
     delegate :valid?, :errors, to: :validator
 
     def create_lifecycle_data_model(app)
       BuildpackLifecycleDataModel.create(
-        buildpacks: buildpacks,
-        stack:     stack,
-        app:       app
+        buildpacks:,
+        stack:,
+        app:
       )
     end
 
@@ -32,15 +32,15 @@ module VCAP::CloudController
     end
 
     def update_lifecycle_data_buildpacks(app)
-      if message.buildpack_data.requested?(:buildpacks)
-        app.lifecycle_data.buildpacks = buildpacks
-      end
+      return unless message.buildpack_data.requested?(:buildpacks)
+
+      app.lifecycle_data.buildpacks = buildpacks
     end
 
     def update_lifecycle_data_stack(app)
-      if message.buildpack_data.requested?(:stack)
-        app.lifecycle_data.stack = message.buildpack_data.stack
-      end
+      return unless message.buildpack_data.requested?(:stack)
+
+      app.lifecycle_data.stack = message.buildpack_data.stack
     end
 
     def type

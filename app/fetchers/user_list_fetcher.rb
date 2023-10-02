@@ -27,7 +27,7 @@ module VCAP::CloudController
             label_klass: UserLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: User,
+            resource_klass: User
           )
         end
 

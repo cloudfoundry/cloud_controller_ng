@@ -9,13 +9,9 @@ module VCAP::CloudController
           db_connection.sql_log_level = connection_options[:log_level]
         end
 
-        if connection_options[:connection_validation_timeout]
-          db_connection.pool.connection_validation_timeout = connection_options[:connection_validation_timeout]
-        end
+        db_connection.pool.connection_validation_timeout = connection_options[:connection_validation_timeout] if connection_options[:connection_validation_timeout]
 
-        if db_connection.database_type == :mysql
-          db_connection.default_collate = 'utf8_bin'
-        end
+        db_connection.default_collate = 'utf8_bin' if db_connection.database_type == :mysql
 
         db_connection
       end

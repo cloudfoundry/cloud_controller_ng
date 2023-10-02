@@ -52,7 +52,7 @@ RSpec.describe VCAP::Services::ServiceClientProvider do
       end
 
       it 'returns a client for a broker' do
-        VCAP::Services::ServiceClientProvider.provide(broker: broker)
+        VCAP::Services::ServiceClientProvider.provide(broker:)
         expect(VCAP::Services::ServiceBrokers::V2::Client).to have_received(:new).with(expected_attrs)
       end
     end

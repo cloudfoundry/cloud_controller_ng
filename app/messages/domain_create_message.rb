@@ -11,11 +11,11 @@ module VCAP::CloudController
     MAXIMUM_DOMAIN_LABEL_LENGTH = 63
     MINIMUM_FQDN_DOMAIN_LENGTH = 3
 
-    register_allowed_keys [
-      :name,
-      :internal,
-      :relationships,
-      :router_group
+    register_allowed_keys %i[
+      name
+      internal
+      relationships
+      router_group
     ]
 
     def self.relationships_requested?
@@ -26,28 +26,28 @@ module VCAP::CloudController
     validates_with RelationshipValidator, if: relationships_requested?
 
     validates :name,
-      presence: true,
-      string: true,
-      length: {
-        minimum: MINIMUM_FQDN_DOMAIN_LENGTH,
-        maximum: MAXIMUM_FQDN_DOMAIN_LENGTH,
-      },
-      format: {
-        with: CloudController::DomainDecorator::DOMAIN_REGEX,
-        message: 'does not comply with RFC 1035 standards',
-      }
+              presence: true,
+              string: true,
+              length: {
+                minimum: MINIMUM_FQDN_DOMAIN_LENGTH,
+                maximum: MAXIMUM_FQDN_DOMAIN_LENGTH
+              },
+              format: {
+                with: CloudController::DomainDecorator::DOMAIN_REGEX,
+                message: 'does not comply with RFC 1035 standards'
+              }
 
     validates :name,
-      format: {
-        with: /\./,
-        message: 'must contain at least one "."',
-      }
+              format: {
+                with: /\./,
+                message: 'must contain at least one "."'
+              }
 
     validates :name,
-      format: {
-        with: /\A^([^\.]{0,63}\.)*[^\.]{0,63}$\Z/,
-        message: 'subdomains must each be at most 63 characters',
-      }
+              format: {
+                with: /\A^([^\.]{0,63}\.)*[^\.]{0,63}$\Z/,
+                message: 'subdomains must each be at most 63 characters'
+              }
 
     validate :alpha_numeric
 
@@ -56,8 +56,8 @@ module VCAP::CloudController
     validate :mutually_exclusive_fields
 
     validates :internal,
-      allow_nil: true,
-      boolean: true
+              allow_nil: true,
+              boolean: true
 
     delegate :organization_guid, to: :relationships_message
     delegate :shared_organizations_guids, to: :relationships_message
@@ -74,21 +74,17 @@ module VCAP::CloudController
     private
 
     def alpha_numeric
-      if /[^a-z0-9\-\.]/i.match?(name.to_s)
-        errors.add(:name, 'must consist of alphanumeric characters and hyphens')
-      end
+      return unless /[^a-z0-9\-\.]/i.match?(name.to_s)
+
+      errors.add(:name, 'must consist of alphanumeric characters and hyphens')
     end
 
     def mutually_exclusive_fields
-      if requested?(:internal) && internal == true && requested?(:relationships)
-        errors.add(:base, 'Cannot associate an internal domain with an organization')
-      end
-      if requested?(:internal) && internal == true && requested?(:router_group)
-        errors.add(:base, 'Internal domains cannot be associated to a router group.')
-      end
-      if requested?(:relationships) && requested?(:router_group)
-        errors.add(:base, 'Domains scoped to an organization cannot be associated to a router group.')
-      end
+      errors.add(:base, 'Cannot associate an internal domain with an organization') if requested?(:internal) && internal == true && requested?(:relationships)
+      errors.add(:base, 'Internal domains cannot be associated to a router group.') if requested?(:internal) && internal == true && requested?(:router_group)
+      return unless requested?(:relationships) && requested?(:router_group)
+
+      errors.add(:base, 'Domains scoped to an organization cannot be associated to a router group.')
     end
 
     def router_group_validation
@@ -96,9 +92,7 @@ module VCAP::CloudController
       return errors.add(:router_group, 'must be an object') unless router_group.is_a?(Hash)
 
       extra_keys = router_group.keys - [:guid]
-      if extra_keys.any?
-        errors.add(:router_group, "Unknown field(s): '#{extra_keys.join("', '")}'")
-      end
+      errors.add(:router_group, "Unknown field(s): '#{extra_keys.join("', '")}'") if extra_keys.any?
 
       errors.add(:router_group, 'guid must be a string') unless router_group_guid.is_a?(String)
     end
@@ -112,7 +106,7 @@ module VCAP::CloudController
         @organization_requested ||= proc { |a| a.requested?(:organization) }
       end
 
-      register_allowed_keys [:organization, :shared_organizations]
+      register_allowed_keys %i[organization shared_organizations]
 
       validates_with NoAdditionalKeysValidator
       validates :organization, allow_nil: true, to_one_relationship: true
@@ -126,13 +120,13 @@ module VCAP::CloudController
 
       def shared_organizations_guids
         shared_orgs = HashUtils.dig(shared_organizations, :data)
-        shared_orgs ? shared_orgs.map { |hsh| hsh[:guid] } : []
+        shared_orgs ? shared_orgs.pluck(:guid) : []
       end
 
       def valid_organization_if_shared_organizations
-        if !requested?(:organization)
-          errors.add(:base, 'cannot contain shared_organizations without an owning organization.')
-        end
+        return if requested?(:organization)
+
+        errors.add(:base, 'cannot contain shared_organizations without an owning organization.')
       end
     end
   end

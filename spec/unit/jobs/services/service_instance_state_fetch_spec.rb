@@ -13,12 +13,12 @@ module VCAP::CloudController
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
-            name: 'new-fake-name',
-            service_plan_guid: proposed_service_plan.guid,
-            maintenance_info: proposed_maintenance_info,
-          })
+                                                      name: 'new-fake-name',
+                                                      service_plan_guid: proposed_service_plan.guid,
+                                                      maintenance_info: proposed_maintenance_info
+                                                    })
           operation.save
-          service_instance = ManagedServiceInstance.make(service_plan: service_plan)
+          service_instance = ManagedServiceInstance.make(service_plan:)
           service_instance.save
 
           service_instance.service_instance_operation = operation
@@ -41,7 +41,7 @@ module VCAP::CloudController
             description: description
           }
         end
-        let(:max_duration) { 10080 }
+        let(:max_duration) { 10_080 }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -53,7 +53,7 @@ module VCAP::CloudController
             name,
             service_instance.guid,
             UserAuditInfo.new(user_guid: user.guid, user_email: user_email),
-            request_attrs,
+            request_attrs
           )
         end
 
@@ -64,18 +64,18 @@ module VCAP::CloudController
 
         describe '#initialize' do
           let(:default_polling_interval) { 120 }
-          let(:max_duration) { 10080 }
+          let(:max_duration) { 10_080 }
 
           before do
             config_override = {
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
-              broker_client_max_async_poll_duration_minutes: max_duration,
+              broker_client_max_async_poll_duration_minutes: max_duration
             }
             TestConfig.override(**config_override)
           end
 
           context 'when the caller does not provide the maximum number of attempts' do
-            it 'should the default configuration value' do
+            it 'thes default configuration value' do
               Timecop.freeze(Time.now)
               expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
             end
@@ -90,19 +90,21 @@ module VCAP::CloudController
           end
 
           context 'when the service plan has maximum_polling_duration' do
-            let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+            let(:maximum_polling_duration_for_plan) { 36_000_000 } # in seconds
 
             context "when the config value is smaller than plan's maximum_polling_duration" do
               let(:max_duration) { 10 } # in minutes
-              it 'should set end_timestamp to config value' do
+
+              it 'sets end_timestamp to config value' do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
               end
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:max_duration) { 1068367346 } # in minutes
-              it "should set end_timestamp to the plan's maximum_polling_duration value" do
+              let(:max_duration) { 1_068_367_346 } # in minutes
+
+              it "sets end_timestamp to the plan's maximum_polling_duration value" do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
               end
@@ -110,7 +112,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a database error in fetching the plan' do
-            it 'should set end_timestamp to config value' do
+            it 'sets end_timestamp to config value' do
               allow(ManagedServiceInstance).to receive(:first) do |e|
                 raise Sequel::Error.new(e)
               end
@@ -121,7 +123,7 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
-          let(:last_operation_response) { { last_operation: { state: state, description: description }, response_code: 200 } }
+          let(:last_operation_response) { { last_operation: { state:, description: }, response_code: 200 } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do
@@ -146,7 +148,7 @@ module VCAP::CloudController
             end
 
             context 'when the broker does not return a description' do
-              let(:last_operation_response) { { last_operation: { state: state } } }
+              let(:last_operation_response) { { last_operation: { state: } } }
               let(:response) do
                 {
                   state: 'in progress'
@@ -168,13 +170,13 @@ module VCAP::CloudController
                 service_instance.save_with_new_operation({}, { type: 'delete' })
               end
 
-              it 'should delete the service instance' do
+              it 'deletes the service instance' do
                 run_job(job)
 
                 expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
               end
 
-              it 'should create a delete event' do
+              it 'creates a delete event' do
                 run_job(job)
 
                 event = Event.find(type: 'audit.service_instance.delete')
@@ -251,7 +253,7 @@ module VCAP::CloudController
                 service_instance.last_operation.save
               end
 
-              it 'should create an update event' do
+              it 'creates an update event' do
                 run_job(job)
 
                 event = Event.find(type: 'audit.service_instance.update')
@@ -282,7 +284,7 @@ module VCAP::CloudController
               expect(db_service_instance.last_operation.type).to eq('create')
             end
 
-            it 'should not enqueue another fetch job' do
+            it 'does not enqueue another fetch job' do
               run_job(job)
 
               expect(Delayed::Job.count).to eq 0
@@ -290,7 +292,7 @@ module VCAP::CloudController
 
             context 'when user information is provided' do
               context 'and the last operation type is create' do
-                it 'should create audit event' do
+                it 'creates audit event' do
                   run_job(job)
 
                   event = Event.find(type: 'audit.service_instance.create')
@@ -302,7 +304,7 @@ module VCAP::CloudController
             end
 
             context 'when the user has gone away' do
-              it 'should create an audit event' do
+              it 'creates an audit event' do
                 user.destroy
 
                 run_job(job)
@@ -322,7 +324,7 @@ module VCAP::CloudController
               run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-              expect(db_service_instance.service_plan).to_not eq(proposed_service_plan)
+              expect(db_service_instance.service_plan).not_to eq(proposed_service_plan)
               expect(db_service_instance.name).to eq(service_instance.name)
             end
 
@@ -333,13 +335,13 @@ module VCAP::CloudController
               expect(db_service_instance.last_operation.state).to eq('failed')
             end
 
-            it 'should not enqueue another fetch job' do
+            it 'does not enqueue another fetch job' do
               run_job(job)
 
               expect(Delayed::Job.count).to eq 0
             end
 
-            it 'should not create an audit event' do
+            it 'does not create an audit event' do
               run_job(job)
 
               expect(Event.find(type: 'audit.service_instance.create')).to be_nil
@@ -356,7 +358,7 @@ module VCAP::CloudController
               expect(db_service_instance.last_operation.state).to eq('in progress')
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               run_job(job)
 
               expect(Delayed::Job.count).to eq 1
@@ -368,7 +370,7 @@ module VCAP::CloudController
               end
             end
 
-            it 'should not create an audit event' do
+            it 'does not create an audit event' do
               run_job(job)
 
               expect(Event.find(type: 'audit.service_instance.create')).to be_nil
@@ -395,13 +397,14 @@ module VCAP::CloudController
 
           context 'when saving to the database fails' do
             let(:state) { 'in progress' }
+
             before do
               allow(service_instance).to receive(:save) do |instance|
                 raise Sequel::Error.new(instance)
               end
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               run_job(job)
 
               expect(Delayed::Job.count).to eq 1
@@ -419,7 +422,7 @@ module VCAP::CloudController
                 allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
               end
 
-              it 'should enqueue another fetch job' do
+              it 'enqueues another fetch job' do
                 run_job(job)
 
                 expect(Delayed::Job.count).to eq 1
@@ -434,7 +437,7 @@ module VCAP::CloudController
                 allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
               end
 
-              it 'should enqueue another fetch job' do
+              it 'enqueues another fetch job' do
                 run_job(job)
 
                 expect(Delayed::Job.count).to eq 1
@@ -453,13 +456,13 @@ module VCAP::CloudController
               end
             end
 
-            it 'should not enqueue another fetch job' do
+            it 'does not enqueue another fetch job' do
               Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
                 execute_all_jobs(expected_successes: 0, expected_failures: 0)
               end
             end
 
-            it 'should mark the service instance operation as failed' do
+            it 'marks the service instance operation as failed' do
               service_instance.reload
 
               expect(service_instance.last_operation.state).to eq('failed')
@@ -470,11 +473,11 @@ module VCAP::CloudController
           context 'when enqueuing the job would exceed the max poll duration by the time it runs' do
             let(:state) { 'in progress' }
 
-            it 'should not enqueue another fetch job' do
+            it 'does not enqueue another fetch job' do
               Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
               run_job(job)
 
-              Timecop.freeze(Time.now + job.poll_interval * 2)
+              Timecop.freeze(Time.now + (job.poll_interval * 2))
               execute_all_jobs(expected_successes: 0, expected_failures: 0)
             end
           end
@@ -482,7 +485,7 @@ module VCAP::CloudController
           context 'when the job was migrated before the addition of end_timestamp' do
             let(:state) { 'in progress' }
 
-            it 'should compute the end_timestamp based on the current time' do
+            it 'computes the end_timestamp based on the current time' do
               Timecop.freeze(Time.now)
 
               run_job(job)
@@ -498,7 +501,7 @@ module VCAP::CloudController
               end
             end
 
-            it 'should enqueue another fetch job' do
+            it 'enqueues another fetch job' do
               run_job(job)
 
               expect(Delayed::Job.count).to eq 1
@@ -541,9 +544,9 @@ module VCAP::CloudController
             it 'exits without exploding' do
               service_instance.destroy
 
-              expect {
+              expect do
                 run_job(job)
-              }.not_to raise_error
+              end.not_to raise_error
             end
           end
 
@@ -558,10 +561,10 @@ module VCAP::CloudController
               Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
 
               broker.update({
-                broker_url:    updated_url,
-                auth_username: updated_username,
-                auth_password: updated_password
-              })
+                              broker_url: updated_url,
+                              auth_username: updated_username,
+                              auth_password: updated_password
+                            })
 
               allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(newClient)
               allow(newClient).to receive(:fetch_service_instance_last_operation).and_return(last_operation_response)

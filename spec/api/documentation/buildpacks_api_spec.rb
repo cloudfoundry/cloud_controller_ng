@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
+RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:buildpacks) { (1..3).map { |i| VCAP::CloudController::Buildpack.make(name: "name_#{i}", position: i) } }
   let(:guid) { buildpacks.first.guid }
@@ -15,9 +15,9 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
   describe 'Standard endpoints' do
     shared_context 'updatable_fields' do |opts|
       field :name,
-        'The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)',
-        required: opts[:required],
-        example_values: ['Golang_buildpack']
+            'The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)',
+            required: opts[:required],
+            example_values: ['Golang_buildpack']
 
       field :stack, 'The name of the stack to associate this buildpack with', example_values: ['cflinuxfs4']
       field :position, 'The order in which the buildpacks are checked during buildpack auto-detection.'
@@ -51,11 +51,11 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
           the end of the current list, the buildpack will be positioned at the end of the list.
         DOC
 
-        expect {
+        expect do
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ position: 3 }, pretty: true), headers
           expect(status).to eq(201)
           standard_entity_response parsed_response, :buildpack, expected_values: { position: 3 }
-        }.to change {
+        end.to change {
           VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
         }.from(
           [['name_1', 1], ['name_2', 2], ['name_3', 3]]
@@ -65,38 +65,38 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
       end
 
       example 'Enable or disable a Buildpack' do
-        expect {
+        expect do
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: false }, pretty: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { enabled: false }
-        }.to change {
-          VCAP::CloudController::Buildpack.find(guid: guid).enabled
+        end.to change {
+          VCAP::CloudController::Buildpack.find(guid:).enabled
         }.from(true).to(false)
 
-        expect {
+        expect do
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: true }, pretty: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { enabled: true }
-        }.to change {
-          VCAP::CloudController::Buildpack.find(guid: guid).enabled
+        end.to change {
+          VCAP::CloudController::Buildpack.find(guid:).enabled
         }.from(false).to(true)
       end
 
       example 'Lock or unlock a Buildpack' do
-        expect {
+        expect do
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: true }, pretty: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { locked: true }
-        }.to change {
-          VCAP::CloudController::Buildpack.find(guid: guid).locked
+        end.to change {
+          VCAP::CloudController::Buildpack.find(guid:).locked
         }.from(false).to(true)
 
-        expect {
+        expect do
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: false }, pretty: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { locked: false }
-        }.to change {
-          VCAP::CloudController::Buildpack.find(guid: guid).locked
+        end.to change {
+          VCAP::CloudController::Buildpack.find(guid:).locked
         }.from(true).to(false)
       end
     end

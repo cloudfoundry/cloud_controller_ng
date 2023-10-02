@@ -17,19 +17,19 @@ module Sequel::Plugins::VcapSerialization
     def to_hash(opts={})
       hash = {}
       redact_vals = opts[:redact]
-      attrs = opts[:attrs] || self.export_attrs
+      attrs = opts[:attrs] || export_attrs
 
       attrs.each do |k|
-        if opts[:only].nil? || opts[:only].include?(k)
-          value = send(k)
-          hash[k.to_s] = if value.respond_to?(:nil_object?) && value.nil_object?
-                           nil
-                         elsif !redact_vals.nil? && redact_vals.include?(k.to_s)
-                           { redacted_message: VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
-                         else
-                           value
-                         end
-        end
+        next unless opts[:only].nil? || opts[:only].include?(k)
+
+        value = send(k)
+        hash[k.to_s] = if value.respond_to?(:nil_object?) && value.nil_object?
+                         nil
+                       elsif !redact_vals.nil? && redact_vals.include?(k.to_s)
+                         { redacted_message: VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
+                       else
+                         value
+                       end
       end
       hash
     end
@@ -126,7 +126,7 @@ module Sequel::Plugins::VcapSerialization
     # by instance of the class, so it can't be made private.
     def update_or_create_options(hash, opts)
       results = {}
-      attrs = self.import_attrs || []
+      attrs = import_attrs || []
       attrs -= opts[:only] unless opts[:only].nil?
       attrs.each do |attr|
         key = nil

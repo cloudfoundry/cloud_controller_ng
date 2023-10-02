@@ -6,7 +6,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
   before do
     FileUtils.cp(
       File.join(DBMigrator::SEQUEL_MIGRATIONS, '20190712210940_backfill_status_for_deployments.rb'),
-      tmp_migrations_dir,
+      tmp_migrations_dir
     )
   end
 

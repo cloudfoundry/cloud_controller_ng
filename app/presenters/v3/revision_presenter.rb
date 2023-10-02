@@ -12,7 +12,7 @@ module VCAP::CloudController
             guid: revision.guid,
             version: revision.version,
             droplet: {
-              guid: revision.droplet_guid,
+              guid: revision.droplet_guid
             },
             processes: processes,
             sidecars: sidecars,
@@ -20,16 +20,16 @@ module VCAP::CloudController
             relationships: {
               app: {
                 data: {
-                  guid: revision.app_guid,
-                },
-              },
+                  guid: revision.app_guid
+                }
+              }
             },
             created_at: revision.created_at,
             updated_at: revision.updated_at,
             links: build_links,
             metadata: {
               labels: hashified_labels(revision.labels),
-              annotations: hashified_annotations(revision.annotations),
+              annotations: hashified_annotations(revision.annotations)
             },
             deployable: deployable
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
               name: sidecar.name,
               command: sidecar.command,
               memory_in_mb: sidecar.memory,
-              process_types: sidecar.revision_sidecar_process_types.map(&:type),
+              process_types: sidecar.revision_sidecar_process_types.map(&:type)
             }
           end
         end

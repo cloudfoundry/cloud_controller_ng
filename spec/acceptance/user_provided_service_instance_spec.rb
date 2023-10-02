@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'User Provided Service Instance' do
   include VCAP::CloudController::BrokerApiHelper
 
-  before(:each) do
+  before do
     setup_cc
     create_app
   end
@@ -14,8 +14,8 @@ RSpec.describe 'User Provided Service Instance' do
   it 'can be created, bound, unbound, updated' do
     # create
     post('/v2/user_provided_service_instances', {
-      name:             'my-v2-user-provided-service',
-      space_guid:       @space_guid,
+      name: 'my-v2-user-provided-service',
+      space_guid: @space_guid,
       syslog_drain_url: syslog_drain_url
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
@@ -25,7 +25,7 @@ RSpec.describe 'User Provided Service Instance' do
     # bind
     post('/v2/service_bindings', {
       service_instance_guid: service_instance_guid,
-      app_guid:              @app_guid
+      app_guid: @app_guid
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
     json_body    = JSON.parse(last_response.body)
@@ -38,8 +38,8 @@ RSpec.describe 'User Provided Service Instance' do
 
     # update service instance
     put("/v2/user_provided_service_instances/#{service_instance_guid}", {
-      name:             'my-v2-user-provided-service',
-      space_guid:       @space_guid,
+      name: 'my-v2-user-provided-service',
+      space_guid: @space_guid,
       syslog_drain_url: syslog_drain_url2
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
@@ -47,7 +47,7 @@ RSpec.describe 'User Provided Service Instance' do
     # rebind after update
     post('/v2/service_bindings', {
       service_instance_guid: service_instance_guid,
-      app_guid:              @app_guid
+      app_guid: @app_guid
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
     json_body = JSON.parse(last_response.body)

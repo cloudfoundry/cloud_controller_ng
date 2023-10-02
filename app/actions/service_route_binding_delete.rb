@@ -13,7 +13,8 @@ module VCAP::CloudController
 
       def event_repository
         @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
-          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING
+        )
       end
 
       def perform_delete_actions(binding)

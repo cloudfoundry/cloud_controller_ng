@@ -14,7 +14,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
-          'include' => 'user,organization,space',
+          'include' => 'user,organization,space'
         }
       end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(message.user_guids).to eq(['my-user-guid'])
         expect(message.space_guids).to eq(['my-space-guid'])
         expect(message.organization_guids).to eq(['my-organization-guid'])
-        expect(message.include).to eq(%w(user organization space))
+        expect(message.include).to eq(%w[user organization space])
       end
 
       it 'converts requested keys to symbols' do
@@ -54,16 +54,16 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = RolesListMessage.from_params({
-          'page' => 1,
-          'per_page' => 5,
-          'order_by' => 'created_at',
-          'types' => 'space_auditor',
-          'guids' => 'my-role-guid',
-          'user_guids' => 'my-user-guid',
-          'space_guids' => 'my-space-guid',
-          'organization_guids' => 'my-organization-guid',
-          'include' => 'user,organization,space',
-        })
+                                                 'page' => 1,
+                                                 'per_page' => 5,
+                                                 'order_by' => 'created_at',
+                                                 'types' => 'space_auditor',
+                                                 'guids' => 'my-role-guid',
+                                                 'user_guids' => 'my-user-guid',
+                                                 'space_guids' => 'my-space-guid',
+                                                 'organization_guids' => 'my-organization-guid',
+                                                 'include' => 'user,organization,space'
+                                               })
         expect(message).to be_valid
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array guids param' do
         message = RolesListMessage.from_params({ guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:guids]).to include('must be an array')
       end
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array organization_guids param' do
         message = RolesListMessage.from_params({ organization_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:organization_guids]).to include('must be an array')
       end
 
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array space_guids param' do
         message = RolesListMessage.from_params({ space_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:space_guids]).to include('must be an array')
       end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array user_guids param' do
         message = RolesListMessage.from_params({ user_guids: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:user_guids]).to include('must be an array')
       end
 
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
       it 'does not accept a non-array types param' do
         message = RolesListMessage.from_params({ types: 'not array' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:types]).to include('must be an array')
       end
 
@@ -147,14 +147,14 @@ module VCAP::CloudController
 
       it 'does not accept an include param that is invalid' do
         message = RolesListMessage.from_params({ include: ['garbage'] })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:base]).to contain_exactly(include("Invalid included resource: 'garbage'"))
       end
 
       it 'reject an invalid order_by field' do
         message = RolesListMessage.from_params({
-          'order_by' => 'fail!',
-        })
+                                                 'order_by' => 'fail!'
+                                               })
         expect(message).not_to be_valid
       end
     end

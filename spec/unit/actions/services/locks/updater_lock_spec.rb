@@ -29,9 +29,9 @@ module VCAP::CloudController
         end
 
         it 'does not let you lock again' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error CloudController::Errors::ApiError
+          end.to raise_error CloudController::Errors::ApiError
         end
       end
 
@@ -41,26 +41,26 @@ module VCAP::CloudController
         end
 
         it 'raises an AsyncServiceInstanceOperationInProgress error' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error CloudController::Errors::ApiError do |err|
+          end.to raise_error CloudController::Errors::ApiError do |err|
             expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
           end
         end
       end
 
       context 'when the instance has a service binding with an operation in progress' do
-        let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
-        let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+        let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
+        let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
 
         before do
           service_binding_2.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
         end
 
         it 'raises an ServiceBindingLockedError error' do
-          expect {
+          expect do
             updater_lock.lock!
-          }.to raise_error LockCheck::ServiceBindingLockedError do |err|
+          end.to raise_error LockCheck::ServiceBindingLockedError do |err|
             expect(err.service_binding).to eq(service_binding_2)
           end
         end
@@ -80,9 +80,9 @@ module VCAP::CloudController
         end
 
         it 'does not update the service instance' do
-          expect {
+          expect do
             updater_lock.unlock_and_fail!
-          }.to_not change { service_instance.updated_at }
+          end.not_to(change(service_instance, :updated_at))
         end
       end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
     describe 'tracking if unlock is needed' do
       it 'is false by default' do
-        expect(updater_lock.needs_unlock?).to be_falsey
+        expect(updater_lock).not_to be_needs_unlock
       end
 
       describe 'after it is locked' do
@@ -115,23 +115,23 @@ module VCAP::CloudController
         end
 
         it 'is true' do
-          expect(updater_lock.needs_unlock?).to be_truthy
+          expect(updater_lock).to be_needs_unlock
         end
 
         it 'is false if you unlock and fail' do
           updater_lock.unlock_and_fail!
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
 
         it 'is false if you synchronous unlock' do
           updater_lock.synchronous_unlock!
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
 
         it 'is false if you enqueue an unlock' do
           job = double(Jobs::Services::ServiceInstanceStateFetch)
           updater_lock.enqueue_unlock!(job)
-          expect(updater_lock.needs_unlock?).to be_falsey
+          expect(updater_lock).not_to be_needs_unlock
         end
       end
     end

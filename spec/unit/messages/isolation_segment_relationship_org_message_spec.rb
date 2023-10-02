@@ -14,7 +14,7 @@ module VCAP::CloudController
         it 'returns an error' do
           message = IsolationSegmentRelationshipOrgMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include("can't be blank")
         end
       end
@@ -29,22 +29,22 @@ module VCAP::CloudController
         it 'returns an error' do
           message = IsolationSegmentRelationshipOrgMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:data]).to include('must be an array')
         end
       end
 
       context 'when unexpected keys are requested' do
-        let(:params) {
+        let(:params) do
           {
-            unexpected: 'an-unexpected-value',
+            unexpected: 'an-unexpected-value'
           }
-        }
+        end
 
         it 'is not valid' do
           message = IsolationSegmentRelationshipOrgMessage.new(params)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
         end
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
       private
 
       def traverse_secrets_hash(secrets_hash)
-        secrets_hash.each { |k, v|
+        secrets_hash.each do |k, v|
           if v.is_a? Hash
             traverse_secrets_hash(v)
           else
@@ -21,7 +21,7 @@ module VCAP::CloudController
             secret_value = File.read(v)
             secrets_hash[k] = secret_value
           end
-        }
+        end
       end
     end
   end

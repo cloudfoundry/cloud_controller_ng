@@ -22,8 +22,9 @@ module VCAP::CloudController
 
       describe 'eager loading associated resources' do
         let(:filters) { {} }
+
         it 'eager loads the specified resources for the buildpacks' do
-          results = fetcher.fetch_all(message, eager_loaded_associations: [:labels, :annotations]).all
+          results = fetcher.fetch_all(message, eager_loaded_associations: %i[labels annotations]).all
 
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:annotations)).to be true
@@ -34,13 +35,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'fetches all the buildpacks' do
-          expect(subject).to match_array([
-            buildpack1,
-            buildpack2,
-            buildpack3,
-            buildpack4,
-            buildpack_without_stack
-          ])
+          expect(subject).to contain_exactly(buildpack1, buildpack2, buildpack3, buildpack4, buildpack_without_stack)
         end
       end
 
@@ -55,7 +50,7 @@ module VCAP::CloudController
         let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack1.guid, key_name: 'key', value: 'value') }
 
         it 'returns all of the desired buildpacks' do
-          expect(subject).to match_array([buildpack1])
+          expect(subject).to contain_exactly(buildpack1)
         end
       end
 
@@ -65,7 +60,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired buildpacks' do
-          expect(subject).to match_array([buildpack_without_stack])
+          expect(subject).to contain_exactly(buildpack_without_stack)
         end
       end
 
@@ -75,7 +70,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired buildpacks' do
-          expect(subject).to match_array([buildpack2, buildpack_without_stack])
+          expect(subject).to contain_exactly(buildpack2, buildpack_without_stack)
         end
       end
     end

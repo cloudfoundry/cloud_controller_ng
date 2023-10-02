@@ -31,10 +31,11 @@ module VCAP::CloudController
               },
               annotations: {
                 superhero: 'Bummer-boy',
-                superpower: 'Bums you out',
+                superpower: 'Bums you out'
               }
             }
-          })
+          }
+        )
       end
 
       context 'when the request is valid' do
@@ -64,13 +65,13 @@ module VCAP::CloudController
           before do
             TestConfig.override(
               default_app_memory: 393,
-              default_app_disk_in_mb: 71,
+              default_app_disk_in_mb: 71
             )
           end
 
           it 'has the same guid' do
             app = app_create.create(message, lifecycle)
-            expect(ProcessModel.find(guid: app.guid)).to_not be_nil
+            expect(ProcessModel.find(guid: app.guid)).not_to be_nil
           end
 
           it 'has type "web"' do
@@ -88,7 +89,7 @@ module VCAP::CloudController
           it 'has nil command' do
             app = app_create.create(message, lifecycle)
             process = ProcessModel.find(guid: app.guid)
-            expect(process.command).to eq nil
+            expect(process.command).to be_nil
           end
 
           it 'has 1 instance' do
@@ -119,10 +120,9 @@ module VCAP::CloudController
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).
             to receive(:record_app_create).with(instance_of(AppModel),
-              space,
-              user_audit_info,
-              message.audit_hash
-            )
+                                                space,
+                                                user_audit_info,
+                                                message.audit_hash)
 
           app_create.create(message, lifecycle)
         end
@@ -133,9 +133,9 @@ module VCAP::CloudController
         let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [unready_buildpack.name], stack: 'cflinuxfs4' } } }
 
         it 'does not allow buildpacks that are not READY' do
-          expect {
+          expect do
             app_create.create(message, lifecycle)
-          }.to raise_error(AppCreate::InvalidApp)
+          end.to raise_error(AppCreate::InvalidApp)
         end
       end
 
@@ -146,15 +146,17 @@ module VCAP::CloudController
           before { TestConfig.override(disable_custom_buildpacks: true) }
 
           it 'raises an error' do
-            expect {
+            expect do
               app_create.create(message, lifecycle)
-            }.to raise_api_error(:CustomBuildpacksDisabled)
+            end.to raise_api_error(:CustomBuildpacksDisabled)
           end
 
           it 'does not create an app' do
-            expect {
-              app_create.create(message, lifecycle) rescue nil
-            }.not_to change { [AppModel.count, BuildpackLifecycleDataModel.count, Event.count] }
+            expect do
+              app_create.create(message, lifecycle)
+            rescue StandardError
+              nil
+            end.not_to(change { [AppModel.count, BuildpackLifecycleDataModel.count, Event.count] })
           end
         end
 
@@ -162,27 +164,27 @@ module VCAP::CloudController
           before { TestConfig.override(disable_custom_buildpacks: false) }
 
           it 'allows apps with custom buildpacks' do
-            expect {
+            expect do
               app_create.create(message, lifecycle)
-            }.to change(AppModel, :count).by(1)
+            end.to change(AppModel, :count).by(1)
           end
         end
       end
 
       it 're-raises validation errors' do
         message = AppCreateMessage.new('name' => '', relationships: relationships)
-        expect {
+        expect do
           app_create.create(message, lifecycle)
-        }.to raise_error(AppCreate::InvalidApp)
+        end.to raise_error(AppCreate::InvalidApp)
       end
 
       context 'when the app name is a duplicate within the space' do
         let!(:existing_app) { AppModel.make(space: space, name: 'my-app') }
 
         it 'fails the right way' do
-          expect {
+          expect do
             app_create.create(message, lifecycle)
-          }.to raise_v3_api_error(:UniquenessError)
+          end.to raise_v3_api_error(:UniquenessError)
         end
       end
     end

@@ -8,11 +8,11 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
       context 'when a process does not have a user-specified command' do
         before do
           VCAP::CloudController::ProcessModelFactory.make(
-            app: app,
+            app:
           )
         end
 
-        it 'should not include "command" in the output' do
+        it 'does not include "command" in the output' do
           expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first).
             not_to have_key('command')
         end
@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
           )
         end
 
-        it 'should include the command in the output' do
+        it 'includes the command in the output' do
           expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first['command']).
             to eq('Do it now!')
         end
@@ -51,21 +51,21 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
       it 'renders a compact hash of the process' do
         hash = subject.process_hash(process)
         expect(hash).to eq({
-          'type' => 'web',
-          'instances' => 1,
-          'memory' => '1024M',
-          'disk_quota' => '1024M',
-          'log-rate-limit-per-second' => '1M',
-          'health-check-type' => 'http',
-          'health-check-http-endpoint' => '/healthy',
-          'health-check-invocation-timeout' => 10,
-          'health-check-interval' => 5,
-          'readiness-health-check-type' => 'http',
-          'readiness-health-check-http-endpoint' => '/ready',
-          'readiness-health-check-invocation-timeout' => 20,
-          'readiness-health-check-interval' => 7,
-          'timeout' => 30
-        })
+                             'type' => 'web',
+                             'instances' => 1,
+                             'memory' => '1024M',
+                             'disk_quota' => '1024M',
+                             'log-rate-limit-per-second' => '1M',
+                             'health-check-type' => 'http',
+                             'health-check-http-endpoint' => '/healthy',
+                             'health-check-invocation-timeout' => 10,
+                             'health-check-interval' => 5,
+                             'readiness-health-check-type' => 'http',
+                             'readiness-health-check-http-endpoint' => '/ready',
+                             'readiness-health-check-invocation-timeout' => 20,
+                             'readiness-health-check-interval' => 7,
+                             'timeout' => 30
+                           })
       end
     end
 
