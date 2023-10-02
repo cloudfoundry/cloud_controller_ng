@@ -23,14 +23,6 @@ module VCAP::CloudController
 
         dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
 
-        if message.requested?(:organization_guids)
-          dataset = dataset.
-                    join(:spaces, guid: :space_guid).
-                    join(:organizations, id: :organization_id).
-                    where(Sequel[:organizations][:guid] => message.organization_guids).
-                    qualify(:apps)
-        end
-
         if message.requested?(:stacks)
           buildpack_lifecycle_data_dataset = NullFilterQueryGenerator.add_filter(
             BuildpackLifecycleDataModel.dataset,
@@ -39,15 +31,6 @@ module VCAP::CloudController
           )
 
           dataset = dataset.where(guid: buildpack_lifecycle_data_dataset.map(&:app_guid))
-        end
-
-        if message.requested?(:label_selector)
-          dataset = LabelSelectorQueryGenerator.add_selector_queries(
-            label_klass: AppLabelModel,
-            resource_dataset: dataset,
-            requirements: message.requirements,
-            resource_klass: AppModel
-          )
         end
 
         # rubocop:disable Rails/PluckInWhere
@@ -69,6 +52,23 @@ module VCAP::CloudController
           end
         end
         # rubocop:enable Rails/PluckInWhere
+
+        if message.requested?(:organization_guids)
+          dataset = dataset.
+                    join(:spaces, guid: :space_guid).
+                    join(:organizations, id: :organization_id).
+                    where(Sequel[:organizations][:guid] => message.organization_guids).
+                    qualify(:apps)
+        end
+
+        if message.requested?(:label_selector)
+          dataset = LabelSelectorQueryGenerator.add_selector_queries(
+            label_klass: AppLabelModel,
+            resource_dataset: dataset,
+            requirements: message.requirements,
+            resource_klass: AppModel
+          )
+        end
 
         dataset = super(message, dataset, AppModel)
 
