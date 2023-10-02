@@ -74,7 +74,7 @@ module VCAP::CloudController
 
       def missing_database_encryption_keys(defined_encryption_key_labels)
         used_encryption_key_labels = Set.new(Encryptor.encrypted_classes.map do |klass|
-          klass.constantize.distinct.pluck(:encryption_key_label)
+          klass.constantize.distinct.select_map(:encryption_key_label)
         end.flatten.compact_blank.map(&:to_sym))
         (used_encryption_key_labels - defined_encryption_key_labels).to_a
       end

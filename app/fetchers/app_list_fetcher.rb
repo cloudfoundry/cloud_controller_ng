@@ -33,25 +33,21 @@ module VCAP::CloudController
           dataset = dataset.where(guid: buildpack_lifecycle_data_dataset.map(&:app_guid))
         end
 
-        # rubocop:disable Rails/PluckInWhere
         if message.requested?(:lifecycle_type)
           if message.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.where(
               guid: BuildpackLifecycleDataModel.
-              select(:app_guid).
               where(Sequel.~(app_guid: nil)).
-              pluck(:app_guid)
+              select_map(:app_guid)
             )
           elsif message.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.exclude(
               guid: BuildpackLifecycleDataModel.
-              select(:app_guid).
               where(Sequel.~(app_guid: nil)).
-              pluck(:app_guid)
+              select_map(:app_guid)
             )
           end
         end
-        # rubocop:enable Rails/PluckInWhere
 
         if message.requested?(:organization_guids)
           dataset = dataset.

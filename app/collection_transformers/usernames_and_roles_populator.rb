@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     def subset_of_guids(role_dataset, user_guids)
-      role_dataset.where(guid: user_guids).pluck(:guid)
+      role_dataset.where(guid: user_guids).select_map(:guid)
     end
   end
 end
