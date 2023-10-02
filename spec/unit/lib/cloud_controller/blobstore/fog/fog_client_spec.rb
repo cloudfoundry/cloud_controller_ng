@@ -389,8 +389,9 @@ module CloudController
                 FogClient.new(
                   connection_config: connection_config,
                   directory_key: directory_key,
-                  storage_options: { uniform: false, other: 'thing' })
-                end
+                  storage_options: { uniform: false, other: 'thing' }
+                )
+              end
 
               it 'forwards the storage options to gcp' do
                 path = File.join(local_dir, 'empty_file.png')
@@ -408,10 +409,11 @@ module CloudController
             end
 
             context 'when no encryption type nor uniform flag are specified' do
-              let(:client_with_other) { FogClient.new(connection_config: connection_config,
-                                                      directory_key: directory_key,
-                                                      storage_options: { other: 'thing' })
-              }
+              let(:client_with_other) do
+                FogClient.new(connection_config: connection_config,
+                              directory_key: directory_key,
+                              storage_options: { other: 'thing' })
+              end
 
               it 'does not pass the storage options' do
                 path = File.join(local_dir, 'empty_file.png')
@@ -427,9 +429,10 @@ module CloudController
             end
 
             context 'when no storage options are specified' do
-              let(:client) { FogClient.new(connection_config: connection_config,
-                                                      directory_key: directory_key)
-              }
+              let(:client) do
+                FogClient.new(connection_config:,
+                              directory_key:)
+              end
 
               it 'succeeds' do
                 path = File.join(local_dir, 'empty_file.png')
@@ -504,6 +507,7 @@ module CloudController
                               directory_key: directory_key,
                               storage_options: { encryption: encryption, other: 'thing' })
               end
+
               context 'when encryption type is specified' do
                 it 'passes the storage options to aws' do
                   client.cp_file_between_keys(src_key, dest_key)
@@ -520,6 +524,7 @@ module CloudController
                               directory_key: directory_key,
                               storage_options: { uniform: uniform, other: 'thing' })
               end
+
               context 'when uniform flag is specified' do
                 it 'forwards the storage options to gcp' do
                   client.cp_file_between_keys(src_key, dest_key)
@@ -544,8 +549,8 @@ module CloudController
 
             context 'when no storage options are specified' do
               let(:client) do
-                FogClient.new(connection_config: connection_config,
-                              directory_key: directory_key)
+                FogClient.new(connection_config:,
+                              directory_key:)
               end
 
               it 'succeeds' do
