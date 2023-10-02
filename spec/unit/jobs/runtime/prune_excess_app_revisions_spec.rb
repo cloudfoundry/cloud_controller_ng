@@ -30,6 +30,28 @@ module VCAP::CloudController
           expect(RevisionModel.map(&:version)).to match_array((36..50).to_a)
         end
 
+        context 'logging' do
+          let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
+          end
+
+          it 'logs the number of revisions deleted' do
+            expect(RevisionModel.count).to eq(0)
+
+            total = 50
+            (1..50).each do |i|
+              RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+            end
+
+            job.perform
+
+            expect(fake_logger).to have_received(:info).with('Cleaning up excess app revisions')
+            expect(fake_logger).to have_received(:info).with("Cleaned up 35 revision rows for app #{app.guid}")
+          end
+        end
+
         it 'destroys metadata associated with pruned revisions' do
           expect(RevisionModel.count).to eq(0)
           expect(RevisionLabelModel.count).to eq(0)
