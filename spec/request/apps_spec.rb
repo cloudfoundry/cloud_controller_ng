@@ -505,6 +505,8 @@ RSpec.describe 'Apps' do
             updated_ats: { gt: Time.now.utc.iso8601 }
           }
         end
+
+        let!(:app_model) { VCAP::CloudController::AppModel.make }
       end
     end
 
