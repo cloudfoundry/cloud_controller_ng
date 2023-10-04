@@ -20,7 +20,7 @@ module VCAP::CloudController
                                 limit(max_retained_revisions_per_app).
                                 select(:id)
             delete_count = RevisionDelete.delete(revision_dataset.exclude(id: revisions_to_keep))
-            logger.info("Cleaned up #{delete_count} revision rows for app #{app_guid}")
+            logger.info("Cleaned up #{delete_count.length} revision rows for app #{app_guid}")
           end
         end
 
