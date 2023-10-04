@@ -7,7 +7,7 @@ RSpec.describe ErrorsController, type: :controller do
     it 'returns an error' do
       get :not_found
 
-      expect(response.status).to eq(404)
+      expect(response).to have_http_status(:not_found)
       expect(parsed_body['errors'].first['title']).to eq('CF-NotFound')
     end
   end
@@ -21,7 +21,7 @@ RSpec.describe ErrorsController, type: :controller do
     it 'returns the error from the request env in action_dispatch.exception' do
       get :internal_error
 
-      expect(response.status).to eq(500)
+      expect(response).to have_http_status(:internal_server_error)
       expect(response).to have_error_message('An unknown error occurred.')
     end
   end
@@ -30,7 +30,7 @@ RSpec.describe ErrorsController, type: :controller do
     it 'returns an error' do
       get :bad_request
 
-      expect(response.status).to eq(400)
+      expect(response).to have_http_status(:bad_request)
       expect(parsed_body['errors'].first['title']).to eq('CF-InvalidRequest')
     end
   end

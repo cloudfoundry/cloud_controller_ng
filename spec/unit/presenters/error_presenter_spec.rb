@@ -37,6 +37,7 @@ RSpec.describe ErrorPresenter do
 
   describe '#log_message' do
     let(:error) { StandardError.new }
+
     it 'logs the response code and unsanitized error hash' do
       expect(presenter.log_message).to eq('Request failed: 500: {"fake"=>"insane"}')
     end
@@ -62,6 +63,7 @@ RSpec.describe ErrorPresenter do
 
     context 'when the error does not have an associated response code' do
       let(:error) { StandardError.new }
+
       it 'returns 500' do
         expect(presenter.response_code).to eq(500)
       end
@@ -84,9 +86,9 @@ RSpec.describe ErrorPresenter do
         end
 
         it 'raises the error' do
-          expect {
+          expect do
             presenter.to_hash
-          }.to raise_error(ResponsiveStandardError)
+          end.to raise_error(ResponsiveStandardError)
         end
       end
 
@@ -95,9 +97,9 @@ RSpec.describe ErrorPresenter do
         let(:error) { CustomError.new }
 
         it 'raises the error' do
-          expect {
+          expect do
             presenter.to_hash
-          }.to raise_error(CustomError)
+          end.to raise_error(CustomError)
         end
       end
     end

@@ -5,11 +5,11 @@ RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_name) { 'clarence' }
-  let(:user_header) { headers_for(user, email: email, user_name: user_name) }
+  let(:user_header) { headers_for(user, email:, user_name:) }
   let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:space_guid) { space.guid }
-  let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space_guid) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid:) }
 
   describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }
@@ -23,31 +23,31 @@ RSpec.describe 'Packages' do
     let(:data) { { image: 'registry/image:latest', username: 'my-docker-username', password: 'my-password' } }
     let(:expected_data) { { image: 'registry/image:latest', username: 'my-docker-username', password: '***' } }
     let(:relationships) { { app: { data: { guid: app_model.guid } } } }
-    let(:metadata) {
+    let(:metadata) do
       {
         labels: {
           release: 'stable',
-          'seriouseats.com/potato' => 'mashed',
+          'seriouseats.com/potato' => 'mashed'
         },
         annotations: {
-          potato: 'idaho',
-        },
+          potato: 'idaho'
+        }
       }
-    }
+    end
 
     describe 'creation' do
       it 'creates a package' do
-        expect {
-          post '/v3/packages', { type: type, data: data, relationships: relationships, metadata: metadata }.to_json, user_header
-        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
+        expect do
+          post '/v3/packages', { type:, data:, relationships:, metadata: }.to_json, user_header
+        end.to change(VCAP::CloudController::PackageModel, :count).by(1)
 
         package = VCAP::CloudController::PackageModel.last
 
         expected_response = {
-          'guid'       => package.guid,
-          'type'       => type,
-          'data'       => {
-            'image'    => 'registry/image:latest',
+          'guid' => package.guid,
+          'type' => type,
+          'data' => {
+            'image' => 'registry/image:latest',
             'username' => 'my-docker-username',
             'password' => '***'
           },
@@ -58,7 +58,7 @@ RSpec.describe 'Packages' do
           'updated_at' => iso8601,
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" }
           }
         }
 
@@ -68,7 +68,7 @@ RSpec.describe 'Packages' do
             type: type,
             data: expected_data,
             relationships: relationships,
-            metadata: metadata,
+            metadata: metadata
           }
         }.to_json
 
@@ -78,18 +78,18 @@ RSpec.describe 'Packages' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type:              'audit.app.package.create',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             package.app.guid,
-          actee_type:        'app',
-          actee_name:        package.app.name,
-          metadata:          expected_event_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.app.package.create',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: email,
+                                          actor_username: user_name,
+                                          actee: package.app.guid,
+                                          actee_type: 'app',
+                                          actee_name: package.app.name,
+                                          metadata: expected_event_metadata,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
       end
 
       context 'permissions' do
@@ -97,7 +97,8 @@ RSpec.describe 'Packages' do
           space.remove_developer(user)
           space.organization.remove_user(user)
         end
-        let(:api_call) { lambda { |user_headers| post '/v3/packages', { type: type, data: data, relationships: relationships, metadata: metadata }.to_json, user_headers } }
+
+        let(:api_call) { ->(user_headers) { post '/v3/packages', { type:, data:, relationships:, metadata: }.to_json, user_headers } }
         let(:space) { VCAP::CloudController::Space.make }
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
@@ -114,7 +115,7 @@ RSpec.describe 'Packages' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-        context 'when organization is suspended ' do
+        context 'when organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
             h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -137,25 +138,25 @@ RSpec.describe 'Packages' do
       let(:target_app) { VCAP::CloudController::AppModel.make(space: target_space) }
 
       it 'copies a package' do
-        expect {
+        expect do
           post "/v3/packages?source_guid=#{source_package.guid}",
-            {
-              relationships: {
-                app: { data: { guid: target_app.guid } },
-              }
-            }.to_json,
-            user_header
-        }.to change { VCAP::CloudController::PackageModel.count }.by(1)
+               {
+                 relationships: {
+                   app: { data: { guid: target_app.guid } }
+                 }
+               }.to_json,
+               user_header
+        end.to change(VCAP::CloudController::PackageModel, :count).by(1)
 
         package = VCAP::CloudController::PackageModel.last
 
         expected_response = {
-          'guid'       => package.guid,
-          'type'       => 'docker',
-          'data'       => {
-            'image'    => 'http://awesome-sauce.com',
+          'guid' => package.guid,
+          'type' => 'docker',
+          'data' => {
+            'image' => 'http://awesome-sauce.com',
             'username' => nil,
-            'password' => nil,
+            'password' => nil
           },
           'state' => 'READY',
           'relationships' => { 'app' => { 'data' => { 'guid' => target_app.guid } } },
@@ -164,7 +165,7 @@ RSpec.describe 'Packages' do
           'updated_at' => iso8601,
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
-            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{target_app.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{target_app.guid}" }
           }
         }
 
@@ -181,18 +182,18 @@ RSpec.describe 'Packages' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type:              'audit.app.package.create',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             package.app.guid,
-          actee_type:        'app',
-          actee_name:        package.app.name,
-          metadata:          expected_event_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.app.package.create',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: email,
+                                          actor_username: user_name,
+                                          actee: package.app.guid,
+                                          actee_type: 'app',
+                                          actee_name: package.app.name,
+                                          metadata: expected_event_metadata,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
       end
 
       context 'permissions' do
@@ -200,14 +201,17 @@ RSpec.describe 'Packages' do
           space.remove_developer(user)
           space.organization.remove_user(user)
         end
-        let(:api_call) { lambda { |user_headers| post "/v3/packages?source_guid=#{source_package.guid}",
-                                                      {
-                                                        relationships: {
-                                                          app: { data: { guid: target_app.guid } },
-                                                        }
-                                                      }.to_json, user_headers
-                         }
-        }
+
+        let(:api_call) do
+          lambda { |user_headers|
+            post "/v3/packages?source_guid=#{source_package.guid}",
+                 {
+                   relationships: {
+                     app: { data: { guid: target_app.guid } }
+                   }
+                 }.to_json, user_headers
+          }
+        end
         let(:expected_codes_and_responses) do
           h = Hash.new(code: 201)
           h['org_auditor'] = { code: 422 }
@@ -221,7 +225,7 @@ RSpec.describe 'Packages' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-        context 'when target organization is suspended ' do
+        context 'when target organization is suspended' do
           let(:expected_codes_and_responses) do
             h = super()
             h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -266,13 +270,13 @@ RSpec.describe 'Packages' do
     let(:order_by) { '-created_at' }
 
     context 'when listing all packages for an app' do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/packages", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/packages", nil, user_headers } }
       let(:packages_response_objects) do
         [
           {
-            'guid'       => package.guid,
-            'type'       => 'bits',
-            'data'       => {
+            'guid' => package.guid,
+            'type' => 'bits',
+            'data' => {
               'checksum' => { 'type' => 'sha256', 'value' => anything },
               'error' => nil
             },
@@ -282,12 +286,12 @@ RSpec.describe 'Packages' do
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
-              'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+              'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
               'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
-              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" }
             }
-          },
+          }
         ]
       end
 
@@ -314,17 +318,17 @@ RSpec.describe 'Packages' do
         expected_response = {
           'pagination' => {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps/#{guid}/packages?order_by=-created_at&page=1&per_page=2" },
+            'next' => nil,
+            'previous' => nil
           },
           'resources' => [
             {
-              'guid'       => package2.guid,
-              'type'       => 'bits',
-              'data'       => {
+              'guid' => package2.guid,
+              'type' => 'bits',
+              'data' => {
                 'checksum' => { 'type' => 'sha256', 'value' => anything },
                 'error' => nil
               },
@@ -334,16 +338,16 @@ RSpec.describe 'Packages' do
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
-                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
+                'self' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
                 'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
                 'download' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/download" },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" }
               }
             },
             {
-              'guid'       => package.guid,
-              'type'       => 'bits',
-              'data'       => {
+              'guid' => package.guid,
+              'type' => 'bits',
+              'data' => {
                 'checksum' => { 'type' => 'sha256', 'value' => anything },
                 'error' => nil
               },
@@ -353,12 +357,12 @@ RSpec.describe 'Packages' do
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
-                'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
+                'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
                 'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
                 'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download" },
-                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" }
               }
-            },
+            }
           ]
         }
 
@@ -373,7 +377,7 @@ RSpec.describe 'Packages' do
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::PackageModel }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/apps/#{guid}/packages?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/apps/#{guid}/packages?#{filters}", nil, headers }
         end
         let(:additional_resource_params) { { app: app_model } }
         let(:headers) { admin_headers }
@@ -396,18 +400,18 @@ RSpec.describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 3,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-          'next'          => nil,
-          'previous'      => nil
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+          'last' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+          'next' => nil,
+          'previous' => nil
         }
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(3)
-        expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
+        expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -421,18 +425,18 @@ RSpec.describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-          'next'          => nil,
-          'previous'      => nil
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+          'next' => nil,
+          'previous' => nil
         }
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(2)
-        expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+        expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
 
@@ -445,17 +449,17 @@ RSpec.describe 'Packages' do
 
         expected_pagination = {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-          'next'          => nil,
-          'previous'      => nil
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
         }
 
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
@@ -468,18 +472,18 @@ RSpec.describe 'Packages' do
     let(:per_page) { 2 }
     let(:params) do
       {
-        guids: ['foo', 'bar'],
-        space_guids: ['foo', 'bar'],
-        organization_guids: ['foo', 'bar'],
-        app_guids: ['foo', 'bar'],
-        states: ['foo', 'bar'],
-        types: ['foo', 'bar'],
-        page:   '2',
-        per_page:   '10',
-        order_by:   'updated_at',
-        label_selector:   'foo,bar',
-        created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-        updated_ats: { gt: Time.now.utc.iso8601 },
+        guids: %w[foo bar],
+        space_guids: %w[foo bar],
+        organization_guids: %w[foo bar],
+        app_guids: %w[foo bar],
+        states: %w[foo bar],
+        types: %w[foo bar],
+        page: '2',
+        per_page: '10',
+        order_by: 'updated_at',
+        label_selector: 'foo,bar',
+        created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+        updated_ats: { gt: Time.now.utc.iso8601 }
       }
     end
     let(:bits_package) { VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid) }
@@ -488,14 +492,15 @@ RSpec.describe 'Packages' do
         type: docker_type,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
-        docker_image: 'http://location-of-image.com')
+        docker_image: 'http://location-of-image.com'
+      )
     end
     let(:packages_response_objects) do
       [
         {
-          'guid'       => bits_package.guid,
-          'type'       => 'bits',
-          'data'       => {
+          'guid' => bits_package.guid,
+          'type' => 'bits',
+          'data' => {
             'checksum' => { 'type' => 'sha256', 'value' => anything },
             'error' => nil
           },
@@ -505,19 +510,19 @@ RSpec.describe 'Packages' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
-            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
             'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
             'download' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/download" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" }
           }
         },
         {
-          'guid'       => docker_package.guid,
-          'type'       => 'docker',
-          'data'       => {
-            'image'    => 'http://location-of-image.com',
+          'guid' => docker_package.guid,
+          'type' => 'docker',
+          'data' => {
+            'image' => 'http://location-of-image.com',
             'username' => nil,
-            'password' => nil,
+            'password' => nil
           },
           'state' => VCAP::CloudController::PackageModel::READY_STATE,
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
@@ -526,21 +531,21 @@ RSpec.describe 'Packages' do
           'updated_at' => iso8601,
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
-            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" }
           }
         }
       ]
     end
 
     context 'when listing all packages' do
-      let(:api_call) { lambda { |user_headers| get '/v3/packages', { per_page: per_page }, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/packages', { per_page: }, user_headers } }
       let(:message) { VCAP::CloudController::PackagesListMessage }
       let(:request) { '/v3/packages' }
-      let(:excluded_params) {
+      let(:excluded_params) do
         [
           :app_guid
         ]
-      }
+      end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: packages_response_objects)
@@ -562,17 +567,17 @@ RSpec.describe 'Packages' do
       it_behaves_like 'list query endpoint' do
         let(:message) { VCAP::CloudController::PackagesListMessage }
         let(:request) { '/v3/packages' }
-        let(:excluded_params) {
+        let(:excluded_params) do
           [
             :app_guid
           ]
-        }
+        end
       end
 
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::PackageModel }
         let(:api_call) do
-          lambda { |headers, filters| get "/v3/packages?#{filters}", nil, headers }
+          ->(headers, filters) { get "/v3/packages?#{filters}", nil, headers }
         end
         let(:headers) { admin_headers }
       end
@@ -583,25 +588,25 @@ RSpec.describe 'Packages' do
           VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
           VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
 
-          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid:)
           VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
           get '/v3/packages?types=bits', {}, user_header
 
           expected_pagination = {
             'total_results' => 3,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&types=bits" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
-          expect(parsed_response['resources'].map { |r| r['type'] }.uniq).to eq(['bits'])
+          expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -610,30 +615,30 @@ RSpec.describe 'Packages' do
           VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
           VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
 
-          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          another_app_in_same_space = VCAP::CloudController::AppModel.make(space_guid:)
           VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
           get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
 
           expected_pagination = {
             'total_results' => 3,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&states=PROCESSING_UPLOAD" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
-          expect(parsed_response['resources'].map { |r| r['state'] }.uniq).to eq(['PROCESSING_UPLOAD'])
+          expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
         it 'filters by app guids' do
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid:)
           package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
           package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
           VCAP::CloudController::PackageModel.make
@@ -642,22 +647,22 @@ RSpec.describe 'Packages' do
 
           expected_pagination = {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?app_guids=#{app_model.guid}%2C#{app_model2.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
         it 'filters by package guids' do
-          app_model2 = VCAP::CloudController::AppModel.make(space_guid: space_guid)
+          app_model2 = VCAP::CloudController::AppModel.make(space_guid:)
           package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
           package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
           VCAP::CloudController::PackageModel.make
@@ -666,17 +671,17 @@ RSpec.describe 'Packages' do
 
           expected_pagination = {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?guids=#{package1.guid}%2C#{package2.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package1.guid, package2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -697,17 +702,17 @@ RSpec.describe 'Packages' do
 
           expected_pagination = {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?page=1&per_page=50&space_guids=#{space2.guid}%2C#{space_guid}" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_on_space2.guid, package_on_space1.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_on_space2.guid, package_on_space1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -735,17 +740,17 @@ RSpec.describe 'Packages' do
 
           expected_pagination = {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?organization_guids=#{org1_guid}%2C#{org2_guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(200)
-          expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
+          expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_in_org1.guid, package_in_org2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
@@ -759,11 +764,11 @@ RSpec.describe 'Packages' do
 
           expected_pagination = {
             'total_results' => 1,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
           }
 
           parsed_response = MultiJson.load(last_response.body)
@@ -778,16 +783,16 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/packages/:guid' do
-    let(:api_call) { lambda { |user_headers| get "v3/packages/#{guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "v3/packages/#{guid}", nil, user_headers } }
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
     let(:guid) { package_model.guid }
     let(:package_model_response_object) do
       {
-        'type'       => package_model.type,
-        'guid'       => guid,
-        'data'       => {
+        'type' => package_model.type,
+        'guid' => guid,
+        'data' => {
           'checksum' => { 'type' => 'sha256', 'value' => anything },
           'error' => nil
         },
@@ -797,10 +802,10 @@ RSpec.describe 'Packages' do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links' => {
-          'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+          'self' => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
           'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -825,19 +830,19 @@ RSpec.describe 'Packages' do
     let(:guid) { package_model.guid }
     let(:tmpdir) { Dir.mktmpdir }
     let(:test_config_overrides) do
-      { directories: { tmpdir: tmpdir } }
+      { directories: { tmpdir: } }
     end
-    let!(:tmpfile) {
+    let!(:tmpfile) do
       File.open(File.join(tmpdir, 'application.zip'), 'w+') do |f|
         f.write('application code')
         f
       end
-    }
+    end
 
     let(:packages_params) do
       {
         bits_name: File.basename(tmpfile.path),
-        bits_path: tmpfile.path,
+        bits_path: tmpfile.path
       }
     end
 
@@ -847,7 +852,7 @@ RSpec.describe 'Packages' do
       TestConfig.override(**test_config_overrides)
     end
 
-    shared_examples :upload_bits_successfully do
+    shared_examples 'upload bits successfully' do
       it 'uploads the bits for the package' do
         expect(Delayed::Job.count).to eq 0
 
@@ -856,9 +861,9 @@ RSpec.describe 'Packages' do
         expect(Delayed::Job.count).to eq 1
 
         expected_response = {
-          'type'       => package_model.type,
-          'guid'       => guid,
-          'data'       => {
+          'type' => package_model.type,
+          'guid' => guid,
+          'data' => {
             'checksum' => { 'type' => 'sha256', 'value' => anything },
             'error' => nil
           },
@@ -868,10 +873,10 @@ RSpec.describe 'Packages' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
-            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
             'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
             'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
           }
         }
         parsed_response = MultiJson.load(last_response.body)
@@ -882,18 +887,18 @@ RSpec.describe 'Packages' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type:              'audit.app.package.upload',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             'woof',
-          actee_type:        'app',
-          actee_name:        'meow',
-          metadata:          expected_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.app.package.upload',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: email,
+                                          actor_username: user_name,
+                                          actee: 'woof',
+                                          actee_type: 'app',
+                                          actee_name: 'meow',
+                                          metadata: expected_metadata,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
       end
     end
 
@@ -908,7 +913,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples :upload_bits_successfully
+      include_examples 'upload bits successfully'
     end
 
     context 'with v3 resources' do
@@ -922,11 +927,11 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples :upload_bits_successfully
+      include_examples 'upload bits successfully'
     end
 
     context 'telemetry' do
-      it 'should log the required fields when the package uploads' do
+      it 'logs the required fields when the package uploads' do
         Timecop.freeze do
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
@@ -934,7 +939,7 @@ RSpec.describe 'Packages' do
             'upload-package' => {
               'api-version' => 'v3',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
-              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
+              'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
@@ -949,15 +954,16 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
-      let(:api_call) { lambda { |user_headers| post "/v3/packages/#{guid}/upload", packages_params.to_json, user_headers } }
+
+      let(:api_call) { ->(user_headers) { post "/v3/packages/#{guid}/upload", packages_params.to_json, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
       let(:package_model_response_object) do
         {
-          'type'       => package_model.type,
-          'guid'       => guid,
-          'data'       => {
+          'type' => package_model.type,
+          'guid' => guid,
+          'data' => {
             'checksum' => { 'type' => 'sha256', 'value' => anything },
             'error' => nil
           },
@@ -967,10 +973,10 @@ RSpec.describe 'Packages' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
-            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+            'self' => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
             'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
             'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
           }
         }
       end
@@ -987,7 +993,7 @@ RSpec.describe 'Packages' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -1022,7 +1028,7 @@ RSpec.describe 'Packages' do
     let(:upload_body) do
       {
         bits_name: 'application.zip',
-        bits_path: temp_file,
+        bits_path: temp_file
       }
     end
 
@@ -1045,18 +1051,18 @@ RSpec.describe 'Packages' do
 
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-          type:              'audit.app.package.download',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             'woof-guid',
-          actee_type:        'app',
-          actee_name:        'meow',
-          metadata:          expected_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
+                                          type: 'audit.app.package.download',
+                                          actor: user.guid,
+                                          actor_type: 'user',
+                                          actor_name: email,
+                                          actor_username: user_name,
+                                          actee: 'woof-guid',
+                                          actee_type: 'app',
+                                          actee_name: 'meow',
+                                          metadata: expected_metadata,
+                                          space_guid: space.guid,
+                                          organization_guid: space.organization.guid
+                                        })
       end
     end
 
@@ -1065,7 +1071,8 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
-      let(:api_call) { lambda { |user_headers| get "/v3/packages/#{guid}/download", nil, user_headers } }
+
+      let(:api_call) { ->(user_headers) { get "/v3/packages/#{guid}/download", nil, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
@@ -1094,14 +1101,15 @@ RSpec.describe 'Packages' do
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
-    let(:metadata) { {
-      labels: {
-        release: 'stable',
-        'seriouseats.com/potato' => 'mashed'
-      },
-      annotations: { 'checksum' => 'SHA' },
-    }
-    }
+    let(:metadata) do
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed'
+        },
+        annotations: { 'checksum' => 'SHA' }
+      }
+    end
 
     let(:guid) { package_model.guid }
 
@@ -1111,14 +1119,14 @@ RSpec.describe 'Packages' do
     end
 
     it 'updates package metadata' do
-      patch "/v3/packages/#{guid}", { metadata: metadata }.to_json, user_header
+      patch "/v3/packages/#{guid}", { metadata: }.to_json, user_header
 
       expected_metadata = {
         'labels' => {
           'release' => 'stable',
-          'seriouseats.com/potato' => 'mashed',
+          'seriouseats.com/potato' => 'mashed'
         },
-        'annotations' => { 'checksum' => 'SHA' },
+        'annotations' => { 'checksum' => 'SHA' }
       }
 
       parsed_response = MultiJson.load(last_response.body)
@@ -1131,7 +1139,8 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
-      let(:api_call) { lambda { |user_headers| patch "/v3/packages/#{guid}", { metadata: metadata }.to_json, user_headers } }
+
+      let(:api_call) { ->(user_headers) { patch "/v3/packages/#{guid}", { metadata: }.to_json, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
@@ -1148,7 +1157,7 @@ RSpec.describe 'Packages' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -1185,7 +1194,7 @@ RSpec.describe 'Packages' do
 
       expect(last_response.status).to eq(202)
       expect(last_response.body).to eq('')
-      expect(last_response.header['Location']).to match(%r(jobs/[a-fA-F0-9-]+))
+      expect(last_response.header['Location']).to match(%r{jobs/[a-fA-F0-9-]+})
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/packages/#{guid}", {}, user_header
       expect(last_response.status).to eq(404)
@@ -1194,18 +1203,18 @@ RSpec.describe 'Packages' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.app.package.delete',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        email,
-        actor_username:    user_name,
-        actee:             app_guid,
-        actee_type:        'app',
-        actee_name:        app_name,
-        metadata:          expected_metadata,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
+                                        type: 'audit.app.package.delete',
+                                        actor: user.guid,
+                                        actor_type: 'user',
+                                        actor_name: email,
+                                        actor_username: user_name,
+                                        actee: app_guid,
+                                        actee_type: 'app',
+                                        actee_name: app_name,
+                                        metadata: expected_metadata,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
     end
 
     context 'deleting metadata' do
@@ -1222,7 +1231,8 @@ RSpec.describe 'Packages' do
         space.remove_developer(user)
         space.organization.remove_user(user)
       end
-      let(:api_call) { lambda { |user_headers| delete "/v3/packages/#{guid}", nil, user_headers } }
+
+      let(:api_call) { ->(user_headers) { delete "/v3/packages/#{guid}", nil, user_headers } }
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
@@ -1238,7 +1248,7 @@ RSpec.describe 'Packages' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-      context 'when organization is suspended ' do
+      context 'when organization is suspended' do
         let(:expected_codes_and_responses) do
           h = super()
           h['space_developer'] = { code: 403, errors: CF_ORG_SUSPENDED }
@@ -1258,14 +1268,14 @@ RSpec.describe 'Packages' do
     let!(:package_model) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
     let(:body) do
       {
-        'state'     => 'READY',
+        'state' => 'READY',
         'checksums' => [
           {
-            'type'  => 'sha1',
+            'type' => 'sha1',
             'value' => 'potato'
           },
           {
-            'type'  => 'sha256',
+            'type' => 'sha256',
             'value' => 'potatoest'
           }
         ]

@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def perform
-        @warnings = Perform.new(update_request_guid, previous_broker_state, user_audit_info: user_audit_info).perform
+        @warnings = Perform.new(update_request_guid, previous_broker_state, user_audit_info:).perform
       end
 
       def job_name_in_configuration
@@ -49,7 +49,7 @@ module VCAP::CloudController
           @update_request = ServiceBrokerUpdateRequest.find(guid: update_request_guid)
           @broker = ServiceBroker.find(id: @update_request.service_broker_id)
           @previous_broker_state = previous_broker_state
-          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info: user_audit_info)
+          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker, user_audit_info:)
         end
 
         def perform
@@ -65,12 +65,10 @@ module VCAP::CloudController
           end
 
           @warnings
-        rescue => e
+        rescue StandardError => e
           ServiceBroker.where(id: update_request.service_broker_id).update(state: previous_broker_state)
 
-          if e.is_a?(Sequel::ValidationFailed)
-            raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message)
-          end
+          raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message) if e.is_a?(Sequel::ValidationFailed)
 
           raise e
         ensure

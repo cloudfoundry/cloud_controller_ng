@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
+RSpec.resource 'Shared Domains', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::SharedDomain.first.guid }
   let!(:domains) { 3.times { VCAP::CloudController::SharedDomain.make } }
@@ -42,7 +42,7 @@ RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
 
       expect(status).to eq 201
       standard_entity_response parsed_response, :shared_domain,
-        expected_values: { name: 'example.com', router_group_guid: 'my-random-guid' }
+                               expected_values: { name: 'example.com', router_group_guid: 'my-random-guid' }
 
       domain_guid = parsed_response['metadata']['guid']
       domain = VCAP::CloudController::Domain.find(guid: domain_guid)
@@ -72,7 +72,8 @@ RSpec.resource 'Shared Domains', type: [:api, :legacy_api] do
         standard_entity_response(
           parsed_response['resources'].first,
           :shared_domain,
-          expected_values: { name: 'shared-domain.com' })
+          expected_values: { name: 'shared-domain.com' }
+        )
       end
     end
   end

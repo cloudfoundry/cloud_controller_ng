@@ -22,7 +22,7 @@ module VCAP::CloudController
   end
 
   def self.controller_from_relationship(relationship)
-    return nil unless relationship.try(:association_controller).present?
+    return nil if relationship.try(:association_controller).blank?
 
     VCAP::CloudController.const_get(relationship.association_controller)
   end

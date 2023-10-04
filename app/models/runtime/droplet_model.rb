@@ -9,32 +9,32 @@ module VCAP::CloudController
       STAGED_STATE = 'STAGED'.freeze,
       EXPIRED_STATE = 'EXPIRED'.freeze,
       AWAITING_UPLOAD_STATE = 'AWAITING_UPLOAD'.freeze,
-      PROCESSING_UPLOAD_STATE = 'PROCESSING_UPLOAD'.freeze,
+      PROCESSING_UPLOAD_STATE = 'PROCESSING_UPLOAD'.freeze
     ].freeze
     FINAL_STATES = [
       FAILED_STATE,
       STAGED_STATE,
       EXPIRED_STATE
     ].freeze
-    STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
-                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w[StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
+                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell].map(&:freeze).freeze
 
     many_to_one :package, class: 'VCAP::CloudController::PackageModel', key: :package_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :build,
-      class: 'VCAP::CloudController::BuildModel',
-      key: :build_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+                class: 'VCAP::CloudController::BuildModel',
+                key: :build_guid,
+                primary_key: :guid,
+                without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
     one_to_one :buildpack_lifecycle_data,
-      class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
-      key: :droplet_guid,
-      primary_key: :guid
+               class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
+               key: :droplet_guid,
+               primary_key: :guid
     one_to_one :kpack_lifecycle_data,
-      class: 'VCAP::CloudController::KpackLifecycleDataModel',
-      key: :droplet_guid,
-      primary_key: :guid
+               class: 'VCAP::CloudController::KpackLifecycleDataModel',
+               key: :droplet_guid,
+               primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::DropletLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
     def error
       e = [error_id, error_description].compact.join(' - ')
-      e.blank? ? nil : e
+      e.presence
     end
 
     def validate
@@ -91,15 +91,13 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      if self.execution_metadata.present?
+      if execution_metadata.present?
         begin
-          metadata = JSON.parse(self.execution_metadata)
+          metadata = JSON.parse(execution_metadata)
           unless metadata['ports'].nil?
-            metadata['ports'].each { |port|
-              if port['Protocol'] == 'tcp'
-                exposed_ports << port['Port']
-              end
-            }
+            metadata['ports'].each do |port|
+              exposed_ports << port['Port'] if port['Protocol'] == 'tcp'
+            end
           end
         rescue JSON::ParserError
         end
@@ -108,23 +106,23 @@ module VCAP::CloudController
     end
 
     def staging?
-      self.state == STAGING_STATE
+      state == STAGING_STATE
     end
 
     def failed?
-      self.state == FAILED_STATE
+      state == FAILED_STATE
     end
 
     def staged?
-      self.state == STAGED_STATE
+      state == STAGED_STATE
     end
 
     def copying?
-      self.state == COPYING_STATE
+      state == COPYING_STATE
     end
 
     def processing_upload?
-      self.state == PROCESSING_UPLOAD_STATE
+      state == PROCESSING_UPLOAD_STATE
     end
 
     def mark_as_staged
@@ -151,7 +149,7 @@ module VCAP::CloudController
     end
 
     def in_final_state?
-      FINAL_STATES.include?(self.state)
+      FINAL_STATES.include?(state)
     end
 
     def process_start_command(process_type)

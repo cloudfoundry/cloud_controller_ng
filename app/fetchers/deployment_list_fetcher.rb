@@ -19,33 +19,25 @@ module VCAP::CloudController
       def filter(message, app_dataset)
         dataset = filter_deployment_dataset(message, DeploymentModel.dataset)
 
-        if message.requested? :app_guids
-          app_dataset = app_dataset.where(guid: message.app_guids)
-        end
+        app_dataset = app_dataset.where(guid: message.app_guids) if message.requested? :app_guids
 
         dataset = dataset.where(app: app_dataset)
         super(message, dataset, DeploymentModel)
       end
 
       def filter_deployment_dataset(message, dataset)
-        if message.requested? :states
-          dataset = dataset.where(state: message.states)
-        end
+        dataset = dataset.where(state: message.states) if message.requested? :states
 
-        if message.requested? :status_reasons
-          dataset = NullFilterQueryGenerator.add_filter(dataset, :status_reason, message.status_reasons)
-        end
+        dataset = NullFilterQueryGenerator.add_filter(dataset, :status_reason, message.status_reasons) if message.requested? :status_reasons
 
-        if message.requested? :status_values
-          dataset = dataset.where(status_value: message.status_values)
-        end
+        dataset = dataset.where(status_value: message.status_values) if message.requested? :status_values
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: DeploymentLabelModel,
             resource_dataset: dataset,
             requirements: message.requirements,
-            resource_klass: DeploymentModel,
+            resource_klass: DeploymentModel
           )
         end
         dataset

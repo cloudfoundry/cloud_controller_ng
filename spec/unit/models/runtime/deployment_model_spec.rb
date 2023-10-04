@@ -3,10 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe DeploymentModel do
     let(:app) { AppModel.make(name: 'rolling-app') }
-    let(:droplet) { DropletModel.make(app: app) }
+    let(:droplet) { DropletModel.make(app:) }
     let(:deploying_web_process) { ProcessModel.make(health_check_timeout: 180) }
 
-    let(:deployment) { DeploymentModel.make(app: app, droplet: droplet, deploying_web_process: deploying_web_process) }
+    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:) }
 
     it 'has an app' do
       expect(deployment.app.name).to eq('rolling-app')
@@ -20,7 +20,7 @@ module VCAP::CloudController
       expect(deployment.deploying_web_process).to eq(deploying_web_process)
     end
 
-    context '#processes' do
+    describe '#processes' do
       before do
         DeploymentProcessModel.make(
           deployment: deployment,

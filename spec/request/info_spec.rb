@@ -60,9 +60,9 @@ RSpec.describe 'Info Request' do
     let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }
-    let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+    let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
-    let(:api_call) { lambda { |user_headers| get '/v3/info/usage_summary', nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get '/v3/info/usage_summary', nil, user_headers } }
 
     let!(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 100) }
     let!(:completed_task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, memory_in_mb: 100) }

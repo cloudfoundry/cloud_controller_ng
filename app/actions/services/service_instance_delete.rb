@@ -5,7 +5,7 @@ require 'actions/service_instance_unshare'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
-    def initialize(accepts_incomplete: false, event_repository:)
+    def initialize(event_repository:, accepts_incomplete: false)
       @accepts_incomplete = accepts_incomplete
       @event_repository = event_repository
     end
@@ -52,9 +52,7 @@ module VCAP::CloudController
     def unshare_from_all_spaces(service_instance)
       errors = []
 
-      if service_instance.exists?
-        service_instance.reload
-      end
+      service_instance.reload if service_instance.exists?
 
       return errors unless service_instance.service_bindings.empty?
       return errors unless service_instance.shared?
@@ -62,7 +60,7 @@ module VCAP::CloudController
       unshare = ServiceInstanceUnshare.new
       service_instance.shared_spaces.each do |target_space|
         unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
-      rescue => e
+      rescue StandardError => e
         errors << e
       end
 
@@ -72,9 +70,7 @@ module VCAP::CloudController
     def delete_one(service_instance)
       errors = []
 
-      if !service_instance.exists?
-        return []
-      end
+      return [] unless service_instance.exists?
 
       begin
         lock = DeleterLock.new(service_instance)
@@ -94,7 +90,7 @@ module VCAP::CloudController
           lock.enqueue_and_unlock!(attributes_to_update, build_fetch_job(service_instance))
           @event_repository.record_service_instance_event(:start_delete, service_instance, {})
         end
-      rescue => e
+      rescue StandardError => e
         errors << e
       ensure
         lock.unlock_and_fail! if lock.needs_unlock?
@@ -139,7 +135,7 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.guid,
         @event_repository.user_audit_info,
-        {},
+        {}
       )
     end
 

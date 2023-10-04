@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user) { User.make }
 
     describe 'Validations' do
-      it { is_expected.to validate_uniqueness [:space_id, :user_id] }
+      it { is_expected.to validate_uniqueness %i[space_id user_id] }
       it { is_expected.to validate_presence :space_id }
       it { is_expected.to validate_presence :user_id }
 

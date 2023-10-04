@@ -19,21 +19,9 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        if message.requested?(:names)
-          dataset = dataset.where(name: message.names)
-        end
+        dataset = dataset.where(name: message.names) if message.requested?(:names)
 
-        if message.requested?(:space_guids)
-          dataset = dataset.where(space_guid: message.space_guids)
-        end
-
-        if message.requested?(:organization_guids)
-          dataset = dataset.
-                    join(:spaces, guid: :space_guid).
-                    join(:organizations, id: :organization_id).
-                    where(Sequel[:organizations][:guid] => message.organization_guids).
-                    qualify(:apps)
-        end
+        dataset = dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
 
         if message.requested?(:stacks)
           buildpack_lifecycle_data_dataset = NullFilterQueryGenerator.add_filter(
@@ -45,31 +33,41 @@ module VCAP::CloudController
           dataset = dataset.where(guid: buildpack_lifecycle_data_dataset.map(&:app_guid))
         end
 
-        if message.requested?(:label_selector)
-          dataset = LabelSelectorQueryGenerator.add_selector_queries(
-            label_klass: AppLabelModel,
-            resource_dataset: dataset,
-            requirements: message.requirements,
-            resource_klass: AppModel,
-          )
-        end
-
+        # rubocop:disable Rails/PluckInWhere
         if message.requested?(:lifecycle_type)
           if message.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.where(
               guid: BuildpackLifecycleDataModel.
               select(:app_guid).
               where(Sequel.~(app_guid: nil)).
-              map(&:app_guid)
+              pluck(:app_guid)
             )
           elsif message.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.exclude(
               guid: BuildpackLifecycleDataModel.
               select(:app_guid).
               where(Sequel.~(app_guid: nil)).
-              map(&:app_guid)
+              pluck(:app_guid)
             )
           end
+        end
+        # rubocop:enable Rails/PluckInWhere
+
+        if message.requested?(:organization_guids)
+          dataset = dataset.
+                    join(:spaces, guid: :space_guid).
+                    join(:organizations, id: :organization_id).
+                    where(Sequel[:organizations][:guid] => message.organization_guids).
+                    qualify(:apps)
+        end
+
+        if message.requested?(:label_selector)
+          dataset = LabelSelectorQueryGenerator.add_selector_queries(
+            label_klass: AppLabelModel,
+            resource_dataset: dataset,
+            requirements: message.requirements,
+            resource_klass: AppModel
+          )
         end
 
         dataset = super(message, dataset, AppModel)

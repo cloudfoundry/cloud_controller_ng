@@ -9,9 +9,9 @@ module VCAP::CloudController
       let!(:user) { User.make }
 
       it 'deletes the user record' do
-        expect {
+        expect do
           user_delete.delete([user])
-        }.to change { User.count }.by(-1)
+        end.to change(User, :count).by(-1)
         expect { user.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
     end

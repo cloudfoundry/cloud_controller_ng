@@ -26,7 +26,7 @@ module CloudController::Presenters::V2
             'service_instance_guid' => service_key.service_instance_guid,
             'credentials' => service_key.credentials,
             'some_relation_url' => 'http://example.com',
-            'service_key_parameters_url' => "/v2/service_keys/#{service_key.guid}/parameters",
+            'service_key_parameters_url' => "/v2/service_keys/#{service_key.guid}/parameters"
           }
         )
       end

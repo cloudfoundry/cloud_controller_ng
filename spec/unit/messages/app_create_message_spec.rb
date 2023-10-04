@@ -6,17 +6,17 @@ module VCAP::CloudController
     it 'works for the happy path' do
       params =
         {
-            name: 'name',
-            relationships: { space: { data: { guid: 'space-guid-1' } } },
-            metadata: {
-                labels: {
-                    potato: 'mashed'
-                },
-                annotations: {
-                  happy: 'annotation',
-                },
+          name: 'name',
+          relationships: { space: { data: { guid: 'space-guid-1' } } },
+          metadata: {
+            labels: {
+              potato: 'mashed'
             },
-            lifecycle: { type: 'docker', data: {} }
+            annotations: {
+              happy: 'annotation'
+            }
+          },
+          lifecycle: { type: 'docker', data: {} }
         }
       message = AppCreateMessage.new(params)
       expect(message).to be_valid
@@ -26,16 +26,17 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:params) do
           {
-              unexpected: 'foo',
-              lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                      buildpack: 'nil',
-                      stack: Stack.default.name
-                  }
+            unexpected: 'foo',
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpack: 'nil',
+                stack: Stack.default.name
               }
+            }
           }
         end
+
         it 'is not valid' do
           message = AppCreateMessage.new(params)
 
@@ -47,14 +48,14 @@ module VCAP::CloudController
       context 'when name is not a string' do
         let(:params) do
           {
-              name: 32.77,
-              lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                      buildpack: 'nil',
-                      stack: Stack.default.name
-                  }
+            name: 32.77,
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpack: 'nil',
+                stack: Stack.default.name
               }
+            }
           }
         end
 
@@ -69,16 +70,16 @@ module VCAP::CloudController
       context 'when environment_variables is not an object' do
         let(:params) do
           {
-              name: 'name',
-              environment_variables: 'potato',
-              relationships: { space: { data: { guid: 'guid' } } },
-              lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                      buildpack: 'nil',
-                      stack: Stack.default.name
-                  }
+            name: 'name',
+            environment_variables: 'potato',
+            relationships: { space: { data: { guid: 'guid' } } },
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpack: 'nil',
+                stack: Stack.default.name
               }
+            }
           }
         end
 
@@ -94,15 +95,15 @@ module VCAP::CloudController
         context 'when relationships is malformed' do
           let(:params) do
             {
-                name: 'name',
-                relationships: 'malformed shizzle',
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: 'nil',
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: 'malformed shizzle',
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 'nil',
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -117,14 +118,14 @@ module VCAP::CloudController
         context 'when relationships is missing' do
           let(:params) do
             {
-                name: 'name',
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: 'nil',
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 'nil',
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -139,15 +140,15 @@ module VCAP::CloudController
         context 'when relationships is not an object' do
           let(:params) do
             {
-                name: 'name',
-                relationships: 'barney',
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: 'nil',
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: 'barney',
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 'nil',
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -162,15 +163,15 @@ module VCAP::CloudController
         context 'when space is missing' do
           let(:params) do
             {
-                name: 'name',
-                relationships: {},
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: 'nil',
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: {},
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 'nil',
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -185,15 +186,15 @@ module VCAP::CloudController
         context 'when space has an invalid guid' do
           let(:params) do
             {
-                name: 'name',
-                relationships: { space: { data: { guid: 32 } } },
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: nil,
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: { space: { data: { guid: 32 } } },
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: nil,
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -208,15 +209,15 @@ module VCAP::CloudController
         context 'when space is malformed' do
           let(:params) do
             {
-                name: 'name',
-                relationships: { space: 'asdf' },
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: nil,
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: { space: 'asdf' },
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: nil,
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -231,18 +232,18 @@ module VCAP::CloudController
         context 'when additional keys are present' do
           let(:params) do
             {
-                name: 'name',
-                relationships: {
-                    space: { data: { guid: 'guid' } },
-                    other: 'stuff'
-                },
-                lifecycle: {
-                    type: 'buildpack',
-                    data: {
-                        buildpack: nil,
-                        stack: Stack.default.name
-                    }
+              name: 'name',
+              relationships: {
+                space: { data: { guid: 'guid' } },
+                other: 'stuff'
+              },
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: nil,
+                  stack: Stack.default.name
                 }
+              }
             }
           end
 
@@ -306,7 +307,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = AppCreateMessage.new(params)
 
-              expect(message).to_not be_valid
+              expect(message).not_to be_valid
               expect(message.errors_on(:lifecycle_type)).to include('must be a string')
             end
           end

@@ -12,19 +12,22 @@ module VCAP::CloudController
           route.route_binding.destroy
           route.route_binding.notify_diego
           Repositories::ServiceGenericBindingEventRepository.new(
-            Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING).record_delete(route.route_binding, @event_repository.user_audit_info)
+            Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING
+          ).record_delete(route.route_binding, @event_repository.user_audit_info)
         end
 
         service_instance.service_bindings.each do |binding|
           binding.destroy
           Repositories::ServiceGenericBindingEventRepository.new(
-            Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING).record_delete(binding, @event_repository.user_audit_info)
+            Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+          ).record_delete(binding, @event_repository.user_audit_info)
         end
 
         service_instance.service_keys.each do |key|
           key.destroy
           Repositories::ServiceGenericBindingEventRepository.new(
-            Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING).record_delete(key, @event_repository.user_audit_info)
+            Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING
+          ).record_delete(key, @event_repository.user_audit_info)
         end
 
         service_instance.shared_spaces.each do |target_space|

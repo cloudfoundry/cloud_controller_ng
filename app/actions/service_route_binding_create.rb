@@ -20,8 +20,8 @@ module VCAP::CloudController
         validate_binding!(binding, route, service_instance)
 
         binding_details = {
-          service_instance: service_instance,
-          route: route,
+          service_instance:,
+          route:
         }
 
         RouteBinding.new.tap do |b|
@@ -42,7 +42,8 @@ module VCAP::CloudController
 
       def event_repository
         @event_repository ||= Repositories::ServiceGenericBindingEventRepository.new(
-          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING)
+          Repositories::ServiceGenericBindingEventRepository::SERVICE_ROUTE_BINDING
+        )
       end
 
       def validate_service_instance!(service_instance, route)
@@ -51,10 +52,10 @@ module VCAP::CloudController
         route_is_internal! if route.try(:internal?)
         space_mismatch! unless route.space == service_instance.space
         already_bound! if route.service_instance && route.service_instance != service_instance
-        if service_instance.managed_instance?
-          service_instance_not_found! if service_instance.create_failed?
-          operation_in_progress! if service_instance.operation_in_progress?
-        end
+        return unless service_instance.managed_instance?
+
+        service_instance_not_found! if service_instance.create_failed?
+        operation_in_progress! if service_instance.operation_in_progress?
       end
 
       def validate_binding!(binding, route, service_instance)

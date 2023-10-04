@@ -24,7 +24,7 @@ unless defined?(SPEC_HELPER_LOADED)
       VCAP::CloudController::SpecBootstrap.seed
     end
 
-    rspec_config.around :each do |example|
+    rspec_config.around do |example|
       # DatabaseIsolation requires the api config context
       TestConfig.context = :api
       TestConfig.reset

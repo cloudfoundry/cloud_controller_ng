@@ -69,7 +69,7 @@ module VCAP::CloudController
         Steno.logger('cc.background')
       end
 
-      def with_request_id_set(&block)
+      def with_request_id_set
         current_request_id         = ::VCAP::Request.current_id
         ::VCAP::Request.current_id = @request_id
         yield

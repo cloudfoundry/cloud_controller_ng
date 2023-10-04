@@ -8,39 +8,39 @@ module VCAP::CloudController
     let(:catalog_json) do
       {
         'services' => [{
-            'name' => 'fake-service',
-            'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
-            'description' => 'fake service',
-            'tags' => ['no-sql', 'relational'],
-            'max_db_per_node' => 5,
-            'bindable' => true,
-            'metadata' => {
-              'provider' => { 'name' => 'The name' },
-              'listing' => {
-                'imageUrl' => 'http://catgifpage.com/cat.gif',
-                'blurb' => 'fake broker that is fake',
-                'longDescription' => 'A long time ago, in a galaxy far far away...'
-              },
-              'displayName' => 'The Fake Broker'
+          'name' => 'fake-service',
+          'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+          'description' => 'fake service',
+          'tags' => %w[no-sql relational],
+          'max_db_per_node' => 5,
+          'bindable' => true,
+          'metadata' => {
+            'provider' => { 'name' => 'The name' },
+            'listing' => {
+              'imageUrl' => 'http://catgifpage.com/cat.gif',
+              'blurb' => 'fake broker that is fake',
+              'longDescription' => 'A long time ago, in a galaxy far far away...'
             },
-            'dashboard_client' => nil,
+            'displayName' => 'The Fake Broker'
+          },
+          'dashboard_client' => nil,
+          'plan_updateable' => true,
+          'plans' => [{
+            'name' => 'fake-plan',
+            'id' => 'f52eabf8-e38d-422f-8ef9-9dc83b75cc05',
+            'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
             'plan_updateable' => true,
-            'plans' => [{
-                'name' => 'fake-plan',
-                'id' => 'f52eabf8-e38d-422f-8ef9-9dc83b75cc05',
-                'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
-                'plan_updateable' => true,
-                'max_storage_tb' => 5,
-                'metadata' => {
-                  'cost' => 0.0,
-                  'bullets' => [
-                    { 'content' => 'Shared fake server' },
-                    { 'content' => '5 TB storage' },
-                    { 'content' => '40 concurrent connections' }
-                  ],
-                },
-              }],
-          }],
+            'max_storage_tb' => 5,
+            'metadata' => {
+              'cost' => 0.0,
+              'bullets' => [
+                { 'content' => 'Shared fake server' },
+                { 'content' => '5 TB storage' },
+                { 'content' => '40 concurrent connections' }
+              ]
+            }
+          }]
+        }]
       }
     end
 
@@ -49,12 +49,13 @@ module VCAP::CloudController
     let(:broker_catalog_url) do
       build_broker_url_from_params(
         body_hash[:url] || body_hash[:broker_url],
-        '/v2/catalog')
+        '/v2/catalog'
+      )
     end
 
     def stub_catalog(broker_url: nil, username: nil, password: nil)
       url = broker_url || broker_catalog_url
-      auth = (username && password) ? [username, password] : basic_auth
+      auth = username && password ? [username, password] : basic_auth
       stub_request(:get, url).
         with(basic_auth: auth).
         to_return(status: 200, body: catalog_json.to_json)
@@ -67,21 +68,21 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(ServiceBrokersController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          broker_url: { type: 'string', required: true },
-          auth_username: { type: 'string', required: true },
-          auth_password: { type: 'string', required: true },
-          space_guid: { type: 'string', required: false }
-        })
+                                                                        name: { type: 'string', required: true },
+                                                                        broker_url: { type: 'string', required: true },
+                                                                        auth_username: { type: 'string', required: true },
+                                                                        auth_password: { type: 'string', required: true },
+                                                                        space_guid: { type: 'string', required: false }
+                                                                      })
       end
 
       it do
         expect(ServiceBrokersController).to have_updatable_attributes({
-          name: { type: 'string' },
-          broker_url: { type: 'string' },
-          auth_username: { type: 'string' },
-          auth_password: { type: 'string' }
-        })
+                                                                        name: { type: 'string' },
+                                                                        broker_url: { type: 'string' },
+                                                                        auth_username: { type: 'string' },
+                                                                        auth_password: { type: 'string' }
+                                                                      })
       end
     end
 
@@ -168,10 +169,10 @@ module VCAP::CloudController
 
       let(:body_hash) do
         {
-          name: name,
-          broker_url: broker_url,
-          auth_username: auth_username,
-          auth_password: auth_password,
+          name:,
+          broker_url:,
+          auth_username:,
+          auth_password:
         }
       end
 
@@ -199,13 +200,13 @@ module VCAP::CloudController
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
         expect(event.metadata).to include({
-          'request' => {
-            'name' => body_hash[:name],
-            'broker_url' => body_hash[:broker_url],
-            'auth_username' => body_hash[:auth_username],
-            'auth_password' => '[REDACTED]',
-          }
-        })
+                                            'request' => {
+                                              'name' => body_hash[:name],
+                                              'broker_url' => body_hash[:broker_url],
+                                              'auth_username' => body_hash[:auth_username],
+                                              'auth_password' => '[REDACTED]'
+                                            }
+                                          })
       end
 
       it 'creates a service broker registration' do
@@ -213,7 +214,7 @@ module VCAP::CloudController
         post '/v2/service_brokers', body
 
         expect(last_response).to have_status_code(201)
-        expect(a_request(:get, broker_catalog_url).with(basic_auth: basic_auth)).to have_been_made
+        expect(a_request(:get, broker_catalog_url).with(basic_auth:)).to have_been_made
       end
 
       it 'returns the serialized broker' do
@@ -226,14 +227,14 @@ module VCAP::CloudController
             'guid' => service_broker.guid,
             'created_at' => service_broker.created_at.iso8601,
             'updated_at' => service_broker.updated_at.iso8601,
-            'url' => "/v2/service_brokers/#{service_broker.guid}",
+            'url' => "/v2/service_brokers/#{service_broker.guid}"
           },
           'entity' => {
             'name' => name,
             'broker_url' => broker_url,
             'auth_username' => auth_username,
-            'space_guid' => nil,
-          },
+            'space_guid' => nil
+          }
         )
       end
 
@@ -281,10 +282,10 @@ module VCAP::CloudController
           stub_catalog(broker_url: 'http://cf-service-broker.example-2.com/v2/catalog', username: 'me', password: 'abc123')
 
           public_body = {
-            name:          name,
-            broker_url:    'http://cf-service-broker.example-2.com',
+            name: name,
+            broker_url: 'http://cf-service-broker.example-2.com',
             auth_username: auth_username,
-            auth_password: auth_password,
+            auth_password: auth_password
           }.to_json
 
           post '/v2/service_brokers', public_body
@@ -329,7 +330,7 @@ module VCAP::CloudController
           it 'returns a 400 error' do
             post '/v2/service_brokers', body
             expect(last_response).to have_status_code(400)
-            expect(decoded_response.fetch('code')).to eq(270011)
+            expect(decoded_response.fetch('code')).to eq(270_011)
           end
         end
 
@@ -354,7 +355,7 @@ module VCAP::CloudController
             post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(400)
-            expect(decoded_response.fetch('code')).to eq(270016)
+            expect(decoded_response.fetch('code')).to eq(270_016)
           end
         end
 
@@ -368,7 +369,7 @@ module VCAP::CloudController
             post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(400)
-            expect(decoded_response.fetch('code')).to eq(270002)
+            expect(decoded_response.fetch('code')).to eq(270_002)
           end
         end
 
@@ -382,7 +383,7 @@ module VCAP::CloudController
             post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(502)
-            expect(decoded_response.fetch('code')).to eq(270012)
+            expect(decoded_response.fetch('code')).to eq(270_012)
             expect(decoded_response.fetch('description')).to include('Service broker catalog is invalid:')
             expect(decoded_response.fetch('description')).to include('Service broker must provide at least one service')
           end
@@ -400,7 +401,7 @@ module VCAP::CloudController
                 TestConfig.config[:route_services_enabled] = true
               end
 
-              it 'should succeed without warnings' do
+              it 'succeeds without warnings' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -413,12 +414,13 @@ module VCAP::CloudController
               before do
                 TestConfig.config[:route_services_enabled] = false
               end
-              it 'should succeed with a warning' do
+
+              it 'succeeds with a warning' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
                 warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                expect(warning).to match /fake-service.+route services is disabled/
+                expect(warning).to match(/fake-service.+route services is disabled/)
               end
             end
           end
@@ -435,8 +437,8 @@ module VCAP::CloudController
                   'plans' => [{
                     'name' => 'fake-plan',
                     'id' => 'a52eabf8-e38d-422f-8ef9-9dc83b75cc05',
-                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
-                  }],
+                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections'
+                  }]
                 }
             end
 
@@ -450,12 +452,13 @@ module VCAP::CloudController
                   catalog_json['services'][0]['requires'] = ['route_forwarding']
                   stub_catalog
                 end
-                it 'should succeed with two warnings' do
+
+                it 'succeeds with two warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                  expect(warning).to match /fake-service.+route services is disabled.+fake-service2.+route services is disabled/
+                  expect(warning).to match(/fake-service.+route services is disabled.+fake-service2.+route services is disabled/)
                 end
               end
 
@@ -463,12 +466,13 @@ module VCAP::CloudController
                 before do
                   stub_catalog
                 end
-                it 'should succeed with one warnings' do
+
+                it 'succeeds with one warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                  expect(warning).to match /fake-service2.+route services is disabled/
+                  expect(warning).to match(/fake-service2.+route services is disabled/)
                 end
               end
             end
@@ -487,7 +491,7 @@ module VCAP::CloudController
                 TestConfig.config[:volume_services_enabled] = true
               end
 
-              it 'should succeed without warnings' do
+              it 'succeeds without warnings' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
@@ -500,12 +504,13 @@ module VCAP::CloudController
               before do
                 TestConfig.config[:volume_services_enabled] = false
               end
-              it 'should succeed with a warning' do
+
+              it 'succeeds with a warning' do
                 post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
                 warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                expect(warning).to match /fake-service.+volume mount services is disabled/
+                expect(warning).to match(/fake-service.+volume mount services is disabled/)
               end
             end
           end
@@ -522,8 +527,8 @@ module VCAP::CloudController
                   'plans' => [{
                     'name' => 'fake-plan',
                     'id' => 'a52eabf8-e38d-422f-8ef9-9dc83b75cc05',
-                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
-                  }],
+                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections'
+                  }]
                 }
             end
 
@@ -537,12 +542,13 @@ module VCAP::CloudController
                   catalog_json['services'][0]['requires'] = ['volume_mount']
                   stub_catalog
                 end
-                it 'should succeed with two warnings' do
+
+                it 'succeeds with two warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                  expect(warning).to match /fake-service.+volume mount services is disabled.+fake-service2.+volume mount services is disabled/
+                  expect(warning).to match(/fake-service.+volume mount services is disabled.+fake-service2.+volume mount services is disabled/)
                 end
               end
 
@@ -550,12 +556,13 @@ module VCAP::CloudController
                 before do
                   stub_catalog
                 end
-                it 'should succeed with one warnings' do
+
+                it 'succeeds with one warnings' do
                   post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-                  expect(warning).to match /fake-service2.+volume mount services is disabled/
+                  expect(warning).to match(/fake-service2.+volume mount services is disabled/)
                 end
               end
             end
@@ -570,7 +577,7 @@ module VCAP::CloudController
           catalog_json['services'][0]['dashboard_client'] = {
             id: 'p-mysql-client',
             secret: 'p-mysql-secret',
-            redirect_uri: 'http://p-mysql.example.com',
+            redirect_uri: 'http://p-mysql.example.com'
           }
         end
 
@@ -627,13 +634,13 @@ module VCAP::CloudController
       context 'when a service instance exists', isolation: :truncation do
         it 'returns a 400 and an appropriate error message' do
           service = Service.make(service_broker: broker)
-          service_plan = ServicePlan.make(service: service)
-          ManagedServiceInstance.make(service_plan: service_plan)
+          service_plan = ServicePlan.make(service:)
+          ManagedServiceInstance.make(service_plan:)
 
           delete "/v2/service_brokers/#{broker.guid}"
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response.fetch('code')).to eq(270010)
+          expect(decoded_response.fetch('code')).to eq(270_010)
           expect(decoded_response.fetch('description')).to match(/Can not remove brokers that have associated service instances/)
 
           get '/v2/service_brokers'
@@ -661,7 +668,7 @@ module VCAP::CloudController
         {
           name: 'My Updated Service',
           auth_username: 'new-username',
-          auth_password: 'new-password',
+          auth_password: 'new-password'
         }
       end
 
@@ -673,7 +680,7 @@ module VCAP::CloudController
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
           auth_username: 'me',
-          auth_password: 'abc123',
+          auth_password: 'abc123'
         )
       end
       let(:user) { User.make }
@@ -682,7 +689,7 @@ module VCAP::CloudController
         attrs = {
           url: 'http://broker.example.com',
           auth_username: 'new-username',
-          auth_password: 'new-password',
+          auth_password: 'new-password'
         }
         stub_request(:get, build_broker_url_from_params(attrs[:url], '/v2/catalog')).
           with(basic_auth: [attrs[:auth_username], attrs[:auth_password]]).
@@ -730,13 +737,13 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(200)
           json_response = MultiJson.load(last_response.body)
           expect(json_response).to include({
-            'entity' => {
-              'name' => 'My Updated Service',
-              'broker_url' => broker.broker_url,
-              'auth_username' => 'new-username',
-              'space_guid' => nil,
-            },
-          })
+                                             'entity' => {
+                                               'name' => 'My Updated Service',
+                                               'broker_url' => broker.broker_url,
+                                               'auth_username' => 'new-username',
+                                               'space_guid' => nil
+                                             }
+                                           })
         end
 
         context 'when specifying an unknown broker' do
@@ -755,20 +762,21 @@ module VCAP::CloudController
               put "/v2/service_brokers/#{broker.guid}", body
 
               expect(last_response).to have_status_code(400)
-              expect(decoded_response.fetch('code')).to eq(270011)
+              expect(decoded_response.fetch('code')).to eq(270_011)
               expect(decoded_response.fetch('description')).to match(/is not a valid URL/)
             end
           end
 
           context 'when the broker name is taken' do
             let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
+
             before { body_hash[:name] = another_broker.name }
 
             it 'returns an error' do
               put "/v2/service_brokers/#{broker.guid}", body
 
               expect(last_response.status).to eq(400)
-              expect(decoded_response.fetch('code')).to eq(270002)
+              expect(decoded_response.fetch('code')).to eq(270_002)
               expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
             end
           end
@@ -781,7 +789,7 @@ module VCAP::CloudController
                 'name' => 'fake-service',
                 'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
                 'description' => 'fake service',
-                'tags' => ['no-sql', 'relational'],
+                'tags' => %w[no-sql relational],
                 'max_db_per_node' => 5,
                 'bindable' => true,
                 'metadata' => {
@@ -806,17 +814,17 @@ module VCAP::CloudController
                       { 'content' => 'Shared fake server' },
                       { 'content' => '5 TB storage' },
                       { 'content' => '40 concurrent connections' }
-                    ],
-                  },
-                }],
-              }],
+                    ]
+                  }
+                }]
+              }]
             }
           end
           let(:service) { Service.make(:v2, service_broker: broker) }
-          let(:service_plan) { ServicePlan.make(:v2, service: service) }
+          let(:service_plan) { ServicePlan.make(:v2, service:) }
 
           before do
-            ManagedServiceInstance.make(:v2, service_plan: service_plan)
+            ManagedServiceInstance.make(:v2, service_plan:)
           end
 
           it 'includes the warnings in the response' do
@@ -838,13 +846,15 @@ module VCAP::CloudController
 
         context 'when the user is a space developer' do
           let(:space) { Space.make(id: 1) }
-          let(:broker) do ServiceBroker.make(
-            guid: '123',
-            name: 'My Custom Service',
-            broker_url: 'http://broker.example.com',
-            auth_username: 'me',
-            auth_password: 'abc123',
-            space_id: space.id)
+          let(:broker) do
+            ServiceBroker.make(
+              guid: '123',
+              name: 'My Custom Service',
+              broker_url: 'http://broker.example.com',
+              auth_username: 'me',
+              auth_password: 'abc123',
+              space_id: space.id
+            )
           end
           let(:user) { User.make }
 
@@ -887,13 +897,15 @@ module VCAP::CloudController
 
           context 'when the user is a space developer in another space' do
             let(:space_outer) { Space.make(id: 2) }
-            let(:broker) do ServiceBroker.make(
-              guid: '123',
-              name: 'My Custom Service',
-              broker_url: 'http://broker.example.com',
-              auth_username: 'me',
-              auth_password: 'abc123',
-              space_id: space_outer.id)
+            let(:broker) do
+              ServiceBroker.make(
+                guid: '123',
+                name: 'My Custom Service',
+                broker_url: 'http://broker.example.com',
+                auth_username: 'me',
+                auth_password: 'abc123',
+                space_id: space_outer.id
+              )
             end
 
             it 'does not update the broker' do
@@ -910,7 +922,7 @@ module VCAP::CloudController
             put "/v2/service_brokers/#{broker.guid}", body
 
             expect(last_response).to have_status_code(400)
-            expect(decoded_response.fetch('code')).to eq(270016)
+            expect(decoded_response.fetch('code')).to eq(270_016)
           end
         end
       end

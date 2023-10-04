@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       def update_app(process, existing_lrp)
         process_guid = ProcessGuid.from_process(process)
-        logger.info('update.app.request', process_guid: process_guid)
+        logger.info('update.app.request', process_guid:)
 
         lrp_update = AppRecipeBuilder.new(config: @config, process: process).build_app_lrp_update(existing_lrp)
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       def get_app(process)
         process_guid = ProcessGuid.from_process(process)
-        logger.info('get.app.request', process_guid: process_guid)
+        logger.info('get.app.request', process_guid:)
 
         result = handle_diego_errors(process_guid) do
           response = @client.desired_lrp_by_process_guid(process_guid)
@@ -56,7 +56,7 @@ module VCAP::CloudController
       end
 
       def stop_app(process_guid)
-        logger.info('stop.app.request', process_guid: process_guid)
+        logger.info('stop.app.request', process_guid:)
         handle_diego_errors(process_guid) do
           response = @client.remove_desired_lrp(process_guid)
           logger.info('stop.app.response', process_guid: process_guid, error: response.error)
@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
 
       def stop_index(process_guid, index)
-        logger.info('stop.index.request', process_guid: process_guid, index: index)
+        logger.info('stop.index.request', process_guid:, index:)
         actual_lrp_key = ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process_guid, index: index, domain: APP_LRP_DOMAIN)
         handle_diego_errors(process_guid) do
           response = @client.retire_actual_lrp(actual_lrp_key)

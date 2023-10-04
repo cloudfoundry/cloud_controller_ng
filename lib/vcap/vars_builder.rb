@@ -5,8 +5,7 @@ module VCAP
                    staging_disk_in_mb: nil,
                    space: nil,
                    file_descriptors: nil,
-                   version: nil
-                  )
+                   version: nil)
       @process = process
       @staging_disk_in_mb = staging_disk_in_mb
       @memory_limit = memory_limit

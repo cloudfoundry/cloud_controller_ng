@@ -11,7 +11,7 @@ module VCAP::CloudController
       job = nil
 
       ClockJob.db.transaction do
-        job = ClockJob.find(name: name).lock!
+        job = ClockJob.find(name:).lock!
 
         need_to_run_job = need_to_run_job?(job, interval, timeout, fudge)
 
@@ -25,12 +25,12 @@ module VCAP::CloudController
         end
       end
 
-      if need_to_run_job
-        begin
-          yield
-        ensure
-          record_job_completed(job)
-        end
+      return unless need_to_run_job
+
+      begin
+        yield
+      ensure
+        record_job_completed(job)
       end
     end
 
@@ -69,14 +69,12 @@ module VCAP::CloudController
 
     def need_to_run_job?(job, interval, timeout, fudge=0)
       return true if never_run?(job)
-      return false if !interval_elapsed?(job, interval, fudge)
-      return true if !job_in_progress?(job)
+      return false unless interval_elapsed?(job, interval, fudge)
+      return true unless job_in_progress?(job)
 
       if timeout.nil?
         timeout = Config.config.get(:jobs, :global, :timeout_in_seconds)
-        if timeout.nil?
-          return false
-        end
+        return false if timeout.nil?
       end
       interval_elapsed?(job, timeout, fudge)
     end

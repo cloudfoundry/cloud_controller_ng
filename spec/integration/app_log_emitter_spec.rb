@@ -4,13 +4,13 @@ require 'tempfile'
 
 RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
   before(:all) do
-    @loggregator_server = FakeLoggregatorServer.new(12345)
+    @loggregator_server = FakeLoggregatorServer.new(12_345)
     @loggregator_server.start
 
     @authed_headers = {
-        'Authorization' => "bearer #{admin_token}",
-        'Accept' => 'application/json',
-        'Content-Type' => 'application/json'
+      'Authorization' => "bearer #{admin_token}",
+      'Accept' => 'application/json',
+      'Content-Type' => 'application/json'
     }
 
     base_cc_config_file = 'config/cloud_controller.yml'
@@ -29,12 +29,11 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
     org_guid = org.json_body['metadata']['guid']
 
     space = make_post_request('/v2/spaces',
-      {
-        'name' => 'foo_space',
-        'organization_guid' => org_guid
-      }.to_json,
-      @authed_headers
-    )
+                              {
+                                'name' => 'foo_space',
+                                'organization_guid' => org_guid
+                              }.to_json,
+                              @authed_headers)
     @space_guid = space.json_body['metadata']['guid']
   end
 
@@ -46,12 +45,11 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
 
   it 'send logs to the loggregator' do
     app = make_post_request('/v2/apps',
-      {
-        'name' => 'foo_app',
-        'space_guid' => @space_guid
-      }.to_json,
-      @authed_headers
-    )
+                            {
+                              'name' => 'foo_app',
+                              'space_guid' => @space_guid
+                            }.to_json,
+                            @authed_headers)
 
     app_id = app.json_body['metadata']['guid']
     messages = @loggregator_server.messages

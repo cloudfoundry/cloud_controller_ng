@@ -19,9 +19,9 @@ module VCAP::CloudController::Presenters::V3
         locked: buildpack.locked,
         metadata: {
           labels: hashified_labels(buildpack.labels),
-          annotations: hashified_annotations(buildpack.annotations),
+          annotations: hashified_annotations(buildpack.annotations)
         },
-        links: build_links,
+        links: build_links
       }
     end
 

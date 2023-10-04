@@ -10,7 +10,7 @@ module VCAP::CloudController
     PER_PAGE_MAX      = 5000
     ORDER_DEFAULT     = 'id'.freeze
     DIRECTION_DEFAULT = 'asc'.freeze
-    VALID_DIRECTIONS  = %w(asc desc).freeze
+    VALID_DIRECTIONS  = %w[asc desc].freeze
 
     attr_writer :order_by, :order_direction, :default_order_by
     attr_accessor :page, :per_page
@@ -26,7 +26,7 @@ module VCAP::CloudController
       page                      = params[:page].to_i if params[:page].present?
       per_page                  = params[:per_page].to_i if params[:per_page].present?
       order_by, order_direction = params[:order_by].present? ? OrderByMapper.from_param(params[:order_by]) : nil
-      options                   = { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction }
+      options                   = { page:, per_page:, order_by:, order_direction: }
       PaginationOptions.new(options)
     end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
     end
 
     def keys
-      [:page, :per_page, :order_by, :order_direction]
+      %i[page per_page order_by order_direction]
     end
 
     def ordering_configured?

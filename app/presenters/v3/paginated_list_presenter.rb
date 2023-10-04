@@ -19,7 +19,7 @@ module VCAP::CloudController
         def to_hash
           hash = {
             pagination: present_pagination_hash(@message),
-            resources:  presented_resources
+            resources: presented_resources
           }
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, @paginated_result.records) }
@@ -44,12 +44,12 @@ module VCAP::CloudController
 
           {
             total_results: @paginated_result.total,
-            total_pages:   last_page,
+            total_pages: last_page,
 
-            first:         { href: first_uri },
-            last:          { href: last_uri },
-            next:          next_page <= last_page ? { href: next_uri } : nil,
-            previous:      previous_page > 0 ? { href: previous_uri } : nil
+            first: { href: first_uri },
+            last: { href: last_uri },
+            next: next_page <= last_page ? { href: next_uri } : nil,
+            previous: previous_page > 0 ? { href: previous_uri } : nil
           }
         end
 

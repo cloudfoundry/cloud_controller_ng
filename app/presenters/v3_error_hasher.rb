@@ -2,9 +2,9 @@ require 'presenters/base_error_hasher'
 
 class V3ErrorHasher < BaseErrorHasher
   UNKNOWN_ERROR_HASH = {
-    'title'  => 'UnknownError',
+    'title' => 'UnknownError',
     'detail' => 'An unknown error occurred.',
-    'code'   => 10001,
+    'code' => 10_001
   }.freeze
 
   def unsanitized_hash
@@ -62,8 +62,8 @@ class V3ErrorHasher < BaseErrorHasher
   def api_error_hash(an_error)
     {
       'detail' => an_error.message,
-      'title'  => "CF-#{an_error.name}",
-      'code'   => an_error.code,
+      'title' => "CF-#{an_error.name}",
+      'code' => an_error.code
     }
   end
 
@@ -72,20 +72,20 @@ class V3ErrorHasher < BaseErrorHasher
     {
       'detail' => error_hash['detail'] || error.message,
       'title' => error_hash['title'] || "CF-#{error.class.name.demodulize}",
-      'code' => error_hash['code'] || UNKNOWN_ERROR_HASH['code'],
+      'code' => error_hash['code'] || UNKNOWN_ERROR_HASH['code']
     }
   end
 
   def with_test_mode_info(hash:, an_error:, backtrace:)
-    hash['test_mode_info'] = test_mode_hash(an_error: an_error, backtrace: backtrace)
+    hash['test_mode_info'] = test_mode_hash(an_error:, backtrace:)
     hash
   end
 
   def test_mode_hash(an_error:, backtrace:)
     info = {
-      'detail'    => an_error.message,
-      'title'     => generate_debug_title(an_error),
-      'backtrace' => backtrace,
+      'detail' => an_error.message,
+      'title' => generate_debug_title(an_error),
+      'backtrace' => backtrace
     }
     info.merge!(an_error.to_h) if an_error.respond_to?(:to_h)
 
@@ -101,6 +101,6 @@ class V3ErrorHasher < BaseErrorHasher
   end
 
   def allowed_keys
-    ['title', 'detail', 'code']
+    %w[title detail code]
   end
 end

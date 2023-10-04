@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       it 'cannot have docker data if it is a bits package' do
         package = PackageModel.new(type: 'bits', docker_image: 'some-image')
-        expect(package.valid?).to eq(false)
+        expect(package.valid?).to be(false)
 
         expect(package.errors.full_messages).to include('type cannot have docker data if type is bits')
       end
@@ -16,7 +16,7 @@ module VCAP::CloudController
         package = PackageModel.new(type: 'docker', docker_password: 'a' * 5000)
         package2 = PackageModel.new(type: 'docker', docker_password: 'a' * 5001)
         expect(package).to be_valid
-        expect(package2).to_not be_valid
+        expect(package2).not_to be_valid
         expect(package2.errors.full_messages).to include('docker_password can be up to 5,000 characters')
       end
     end
@@ -45,24 +45,25 @@ module VCAP::CloudController
           let(:type) { PackageModel::DOCKER_TYPE }
 
           it 'raises an error' do
-            expect {
+            expect do
               package.bits_image_reference
-            }.to raise_error('Package type must be bits')
+            end.to raise_error('Package type must be bits')
           end
         end
       end
 
       context 'when not using a package registry' do
         it 'raises an error' do
-          expect {
+          expect do
             package.bits_image_reference
-          }.to raise_error('Package Registry is not configured')
+          end.to raise_error('Package Registry is not configured')
         end
       end
     end
 
     describe 'checksum_info' do
       let(:package) { PackageModel.new(state: PackageModel::READY_STATE) }
+
       context 'when the package has a sha1 hash and not a sha256 hash' do
         before do
           package.update(package_hash: 'sha1-hash', sha256_checksum: nil)
@@ -107,23 +108,23 @@ module VCAP::CloudController
       context 'when the package has been deleted before finishing upload' do
         it 'does not error' do
           PackageModel.find(guid: package.guid).destroy
-          expect {
+          expect do
             package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
-          }.to_not raise_error
+          end.not_to raise_error
         end
       end
     end
 
     describe 'metadata' do
       let(:package) { PackageModel.make }
-      let(:annotation) { PackageAnnotationModel.make(package: package) }
-      let(:label) { PackageLabelModel.make(package: package) }
+      let(:annotation) { PackageAnnotationModel.make(package:) }
+      let(:label) { PackageLabelModel.make(package:) }
 
       it 'can access its metadata' do
         expect(annotation.package.guid).to eq(package.guid)
         expect(label.package.guid).to eq(package.guid)
-        expect(package.labels).to match_array([label])
-        expect(package.annotations).to match_array([annotation])
+        expect(package.labels).to contain_exactly(label)
+        expect(package.annotations).to contain_exactly(annotation)
       end
     end
   end

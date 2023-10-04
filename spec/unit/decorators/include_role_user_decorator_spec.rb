@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:roles) do
       [
         SpaceDeveloper.make(user: user1),
-        OrganizationManager.make(user: user2),
+        OrganizationManager.make(user: user2)
       ]
     end
 
@@ -31,31 +31,27 @@ module VCAP::CloudController
         undecorated_hash = { foo: 'bar' }
         hash = subject.decorate(undecorated_hash, roles)
         expect(hash[:foo]).to eq('bar')
-        expect(hash[:included][:users]).to match_array([
-          Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
-          Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash
-        ])
+        expect(hash[:included][:users]).to contain_exactly(Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
+                                                           Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash)
       end
 
       it 'does not overwrite other included fields' do
-        undecorated_hash = { foo: 'bar', included: { monkeys: ['zach', 'greg'] } }
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         hash = subject.decorate(undecorated_hash, roles)
         expect(hash[:foo]).to eq('bar')
-        expect(hash[:included][:users]).to match_array([
-          Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
-          Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash
-        ])
-        expect(hash[:included][:monkeys]).to match_array(['zach', 'greg'])
+        expect(hash[:included][:users]).to contain_exactly(Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
+                                                           Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash)
+        expect(hash[:included][:monkeys]).to match_array(%w[zach greg])
       end
     end
 
     describe '#match?' do
       it 'matches include arrays containing "user"' do
-        expect(decorator.match?(['potato', 'user', 'turnip'])).to be_truthy
+        expect(decorator).to be_match(%w[potato user turnip])
       end
 
       it 'does not match other include arrays' do
-        expect(decorator.match?(['potato', 'turnip'])).to be_falsey
+        expect(decorator).not_to be_match(%w[potato turnip])
       end
     end
   end

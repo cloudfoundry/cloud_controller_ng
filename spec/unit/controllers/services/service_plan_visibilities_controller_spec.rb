@@ -5,21 +5,22 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServicePlanVisibilitiesController, :services do
     let(:user) { User.make }
+
     before { set_current_user(user, admin: true, email: 'some-email-address@example.com') }
 
     describe 'Attributes' do
       it do
         expect(ServicePlanVisibilitiesController).to have_creatable_attributes({
-          service_plan_guid: { type: 'string', required: true },
-          organization_guid: { type: 'string', required: true }
-        })
+                                                                                 service_plan_guid: { type: 'string', required: true },
+                                                                                 organization_guid: { type: 'string', required: true }
+                                                                               })
       end
 
       it do
         expect(ServicePlanVisibilitiesController).to have_updatable_attributes({
-          service_plan_guid: { type: 'string' },
-          organization_guid: { type: 'string' }
-        })
+                                                                                 service_plan_guid: { type: 'string' },
+                                                                                 organization_guid: { type: 'string' }
+                                                                               })
       end
     end
 

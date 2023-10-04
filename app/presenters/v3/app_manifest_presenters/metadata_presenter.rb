@@ -12,7 +12,7 @@ module VCAP::CloudController
             metadata[:labels] = hashified_labels(app.labels) unless app.labels.empty?
             metadata[:annotations] = hashified_annotations(app.annotations) unless app.annotations.empty?
 
-            metadata.empty? ? {} : { metadata: metadata }
+            metadata.empty? ? {} : { metadata: }
           end
         end
       end

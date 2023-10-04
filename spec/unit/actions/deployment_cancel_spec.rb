@@ -37,9 +37,9 @@ module VCAP::CloudController
         let(:status_reason) { DeploymentModel::DEPLOYING_STATUS_REASON }
 
         it 'sets the deployments status to CANCELING' do
-          expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
+          expect(deployment.state).not_to eq(DeploymentModel::CANCELING_STATE)
 
-          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          DeploymentCancel.cancel(deployment:, user_audit_info:)
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
@@ -48,12 +48,12 @@ module VCAP::CloudController
         end
 
         it "resets the app's current droplet to the previous droplet from the deploy" do
-          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          DeploymentCancel.cancel(deployment:, user_audit_info:)
           expect(app.reload.droplet).to eq(old_droplet)
         end
 
         it 'records an audit event for the cancelled deployment' do
-          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          DeploymentCancel.cancel(deployment:, user_audit_info:)
 
           event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.cancel')
           expect(event).not_to be_nil
@@ -68,9 +68,9 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space_guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
           expect(event.metadata).to eq({
-            'droplet_guid' => new_droplet.guid,
-            'deployment_guid' => deployment.guid
-          })
+                                         'droplet_guid' => new_droplet.guid,
+                                         'deployment_guid' => deployment.guid
+                                       })
         end
 
         context 'when setting the current droplet errors' do
@@ -81,9 +81,9 @@ module VCAP::CloudController
           end
 
           it 'raises the error' do
-            expect {
-              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-            }.to raise_error(DeploymentCancel::SetCurrentDropletError, 'ahhhh!')
+            expect do
+              DeploymentCancel.cancel(deployment:, user_audit_info:)
+            end.to raise_error(DeploymentCancel::SetCurrentDropletError, 'ahhhh!')
           end
         end
 
@@ -91,18 +91,18 @@ module VCAP::CloudController
           let(:old_droplet) { nil }
 
           it 'raises the error' do
-            expect {
-              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-            }.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
+            expect do
+              DeploymentCancel.cancel(deployment:, user_audit_info:)
+            end.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
           end
         end
 
         context 'when the previous droplet no longer exists' do
           it 'raises the error' do
             old_droplet.destroy
-            expect {
-              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-            }.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
+            expect do
+              DeploymentCancel.cancel(deployment:, user_audit_info:)
+            end.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
           end
         end
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController
         let(:status_reason) { DeploymentModel::CANCELING_STATUS_REASON }
 
         it 'does *not* fail (idempotent canceling)' do
-          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          DeploymentCancel.cancel(deployment:, user_audit_info:)
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
@@ -128,9 +128,9 @@ module VCAP::CloudController
         let(:status_reason) { DeploymentModel::DEPLOYED_STATUS_REASON }
 
         it 'raises an error' do
-          expect {
-            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: DEPLOYED')
+          expect do
+            DeploymentCancel.cancel(deployment:, user_audit_info:)
+          end.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: DEPLOYED')
         end
       end
 
@@ -140,9 +140,9 @@ module VCAP::CloudController
         let(:status_reason) { DeploymentModel::CANCELED_STATUS_REASON }
 
         it 'raises an error' do
-          expect {
-            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: CANCELED')
+          expect do
+            DeploymentCancel.cancel(deployment:, user_audit_info:)
+          end.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: CANCELED')
         end
       end
     end

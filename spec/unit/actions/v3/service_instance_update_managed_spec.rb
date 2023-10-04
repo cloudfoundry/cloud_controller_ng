@@ -8,7 +8,7 @@ module VCAP::CloudController
     RSpec.describe ServiceInstanceUpdateManaged do
       RSpec.shared_examples 'async service instance update' do
         it "returns 'true' for update_broker_needed?" do
-          expect(action.update_broker_needed?).to be_truthy
+          expect(action).to be_update_broker_needed
         end
 
         it 'locks the service instance' do
@@ -52,7 +52,7 @@ module VCAP::CloudController
         si = VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: original_service_plan,
           name: original_name,
-          tags: %w(accounting mongodb),
+          tags: %w[accounting mongodb],
           space: space,
           maintenance_info: original_maintenance_info,
           dashboard_url: original_dashboard_url
@@ -81,9 +81,9 @@ module VCAP::CloudController
             let(:body) { { name: instance_in_same_space.name } }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceNameTaken')
               end
             end
@@ -96,9 +96,9 @@ module VCAP::CloudController
             it 'raises' do
               original_instance.add_shared_space(shared_space)
 
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('SharedServiceInstanceCannotBeRenamed')
               end
             end
@@ -123,9 +123,9 @@ module VCAP::CloudController
             let(:new_service_plan) { ServicePlan.make(service: original_service_offering) }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServicePlanNotUpdateable')
               end
             end
@@ -135,7 +135,7 @@ module VCAP::CloudController
             before do
               quota = SpaceQuotaDefinition.make(
                 non_basic_services_allowed: false,
-                organization: org,
+                organization: org
               )
               quota.add_space(space)
             end
@@ -144,9 +144,9 @@ module VCAP::CloudController
             let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
               end
             end
@@ -162,9 +162,9 @@ module VCAP::CloudController
             let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceServicePlanNotAllowed')
               end
             end
@@ -175,15 +175,15 @@ module VCAP::CloudController
 
             before do
               ServiceBinding.make(
-                app: AppModel.make(space: space),
+                app: AppModel.make(space:),
                 service_instance: original_instance
               )
             end
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServicePlanInvalid')
                 expect(err.message).to eq('The service plan is invalid: cannot switch to non-bindable plan when service bindings exist')
               end
@@ -220,9 +220,9 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceNotFound')
               end
             end
@@ -292,9 +292,9 @@ module VCAP::CloudController
             let(:original_service_plan) { ServicePlan.make(service: original_service_offering) }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('MaintenanceInfoNotSupported')
               end
             end
@@ -302,9 +302,9 @@ module VCAP::CloudController
 
           context 'when does not match the version in the plan' do
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('MaintenanceInfoConflict')
               end
             end
@@ -329,9 +329,9 @@ module VCAP::CloudController
             let(:new_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: { version: '4.2.1' }) }
 
             it 'raises' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('MaintenanceInfoNotUpdatableWhenChangingPlan')
               end
             end
@@ -343,10 +343,11 @@ module VCAP::CloudController
 
           context 'when updating parameters' do
             let(:body) { { parameters: { param1: 'value' } } }
+
             it 'raises error' do
-              expect {
+              expect do
                 action.preflight!
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
                 expect(err.message).to eq('Cannot update parameters of a service instance that belongs to inaccessible plan')
               end
@@ -367,9 +368,9 @@ module VCAP::CloudController
 
               it 'raises an error' do
                 original_service_plan.update({ maintenance_info: { version: '99.0.0' } })
-                expect {
+                expect do
                   action.preflight!
-                }.to raise_error CloudController::Errors::ApiError do |err|
+                end.to raise_error CloudController::Errors::ApiError do |err|
                   expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
                   expect(err.message).to eq('Cannot update maintenance_info of a service instance that belongs to inaccessible plan')
                 end
@@ -384,9 +385,9 @@ module VCAP::CloudController
               let(:original_service_offering) { Service.make(allow_context_updates: true) }
 
               it 'raises an error' do
-                expect {
+                expect do
                   action.preflight!
-                }.to raise_error CloudController::Errors::ApiError do |err|
+                end.to raise_error CloudController::Errors::ApiError do |err|
                   expect(err.name).to eq('ServiceInstanceWithInaccessiblePlanNotUpdateable')
                   expect(err.message).to eq('Cannot update name of a service instance that belongs to inaccessible plan')
                 end
@@ -408,7 +409,7 @@ module VCAP::CloudController
           end
 
           it "returns 'false' for update_broker_needed?" do
-            expect(action.update_broker_needed?).to be_falsey
+            expect(action).not_to be_update_broker_needed
           end
 
           it 'returns the current unchanged instance' do
@@ -430,7 +431,7 @@ module VCAP::CloudController
             end
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'updates the values in the service instance in the database' do
@@ -439,11 +440,11 @@ module VCAP::CloudController
               original_instance.reload
               expect(original_instance).to have_annotations(
                 { prefix: nil, key_name: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
               )
               expect(original_instance).to have_labels(
                 { prefix: nil, key_name: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
               )
             end
 
@@ -456,7 +457,7 @@ module VCAP::CloudController
                   have_attributes(
                     name: original_name,
                     guid: original_instance.guid,
-                    space: original_instance.space,
+                    space: original_instance.space
                   ),
                   body.with_indifferent_access
                 )
@@ -467,7 +468,7 @@ module VCAP::CloudController
             let(:body) do
               {
                 name: 'different-name',
-                tags: %w(accounting couchbase nosql),
+                tags: %w[accounting couchbase nosql],
                 maintenance_info: { version: original_maintenance_info[:version] },
                 metadata: {
                   labels: { foo: 'bar', 'pre.fix/to_delete': nil },
@@ -477,7 +478,7 @@ module VCAP::CloudController
             end
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'updates the values in the service instance in the database' do
@@ -485,14 +486,14 @@ module VCAP::CloudController
 
               original_instance.reload
               expect(original_instance.name).to eq('different-name')
-              expect(original_instance.tags).to eq(%w(accounting couchbase nosql))
+              expect(original_instance.tags).to eq(%w[accounting couchbase nosql])
               expect(original_instance).to have_annotations(
                 { prefix: nil, key_name: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
               )
               expect(original_instance).to have_labels(
                 { prefix: nil, key_name: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
               )
             end
 
@@ -550,9 +551,9 @@ module VCAP::CloudController
                 expect_any_instance_of(ManagedServiceInstance).to receive(:update).
                   and_raise(Sequel::ValidationFailed.new(errors))
 
-                expect {
+                expect do
                   action.update_sync
-                }.to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
+                end.to raise_error(V3::ServiceInstanceUpdateManaged::InvalidServiceInstance, 'blork is busted')
 
                 original_instance.reload
                 expect(original_instance.last_operation.type).to eq('update')
@@ -565,7 +566,7 @@ module VCAP::CloudController
             let(:body) { {} }
 
             it "returns 'false' for update_broker_needed?" do
-              expect(action.update_broker_needed?).to be_falsey
+              expect(action).not_to be_update_broker_needed
             end
 
             it 'returns the updated service instance' do
@@ -584,9 +585,9 @@ module VCAP::CloudController
           end
 
           it 'raises' do
-            expect {
+            expect do
               action.update_sync
-            }.to raise_error CloudController::Errors::ApiError do |err|
+            end.to raise_error CloudController::Errors::ApiError do |err|
               expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
             end
           end
@@ -602,9 +603,9 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              expect {
+              expect do
                 action.update_sync
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
             end
@@ -632,11 +633,11 @@ module VCAP::CloudController
               original_instance.reload
               expect(original_instance).to have_annotations(
                 { prefix: nil, key_name: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
               )
               expect(original_instance).to have_labels(
                 { prefix: nil, key_name: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
               )
             end
           end
@@ -645,9 +646,9 @@ module VCAP::CloudController
             let(:body) { { name: 'new-name' } }
 
             it 'raises' do
-              expect {
+              expect do
                 action.update_sync
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
             end
@@ -675,11 +676,11 @@ module VCAP::CloudController
               original_instance.reload
               expect(original_instance).to have_annotations(
                 { prefix: nil, key_name: 'alpha', value: 'beta' },
-                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
+                { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' }
               )
               expect(original_instance).to have_labels(
                 { prefix: nil, key_name: 'foo', value: 'bar' },
-                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
+                { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
               )
             end
           end
@@ -688,9 +689,9 @@ module VCAP::CloudController
             let(:body) { { name: 'new-name' } }
 
             it 'raises' do
-              expect {
+              expect do
                 action.update_sync
-              }.to raise_error CloudController::Errors::ApiError do |err|
+              end.to raise_error CloudController::Errors::ApiError do |err|
                 expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
               end
             end
@@ -706,7 +707,7 @@ module VCAP::CloudController
             {
               name: 'new-name',
               parameters: { foo: 'bar' },
-              tags: %w(bar quz),
+              tags: %w[bar quz],
               relationships: { service_plan: { data: { guid: new_plan.guid } } }
             }
           end
@@ -746,7 +747,7 @@ module VCAP::CloudController
                 let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
 
                 it "returns 'false' for update_broker_needed?" do
-                  expect(action.update_broker_needed?).to be_falsey
+                  expect(action).not_to be_update_broker_needed
                 end
               end
             end
@@ -807,7 +808,7 @@ module VCAP::CloudController
             original_instance.reload
             expect(original_instance.name).to eq(original_name)
             expect(original_instance.service_plan).to eq(original_service_plan)
-            expect(original_instance.tags).to eq(%w(accounting mongodb))
+            expect(original_instance.tags).to eq(%w[accounting mongodb])
           end
         end
       end
@@ -817,18 +818,18 @@ module VCAP::CloudController
           {
             last_operation: {
               type: 'update',
-              state: 'succeeded',
+              state: 'succeeded'
             }
           }
         end
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-            update: [update_response, nil],
-          })
+                            update: [update_response, nil]
+                          })
         end
         let(:new_plan) { ServicePlan.make }
         let(:new_name) { 'new-name' }
-        let(:new_tags) { %w(bar quz) }
+        let(:new_tags) { %w[bar quz] }
         let(:arbitrary_parameters) { { foo: 'bar' } }
 
         let(:body) do
@@ -853,15 +854,15 @@ module VCAP::CloudController
             }
           }
         end
-        let(:previous_values) {
+        let(:previous_values) do
           {
             plan_id: original_service_plan.broker_provided_id,
             service_id: original_service_offering.broker_provided_id,
             organization_id: org.guid,
             space_id: space.guid,
-            maintenance_info: original_service_plan.maintenance_info.stringify_keys,
+            maintenance_info: original_service_plan.maintenance_info.stringify_keys
           }
-        }
+        end
 
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
@@ -879,7 +880,7 @@ module VCAP::CloudController
             maintenance_info: nil,
             name: new_name,
             previous_values: previous_values,
-            user_guid: user_guid,
+            user_guid: user_guid
           )
         end
 
@@ -890,7 +891,7 @@ module VCAP::CloudController
               dashboard_url: updated_dashboard_url,
               last_operation: {
                 type: 'update',
-                state: 'succeeded',
+                state: 'succeeded'
               }
             }
           end
@@ -899,7 +900,7 @@ module VCAP::CloudController
             action.update(accepts_incomplete: true)
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(new_name)
             expect(instance.tags).to eq(new_tags)
@@ -911,9 +912,9 @@ module VCAP::CloudController
             expect(instance.last_operation.state).to eq('succeeded')
 
             expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
-{ prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+                                                 { prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
             expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
-{ prefix: nil, key_name: 'release', value: 'stable' })
+                                            { prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'logs an audit event' do
@@ -946,7 +947,7 @@ module VCAP::CloudController
                   maintenance_info: nil,
                   name: original_name,
                   previous_values: previous_values,
-                  user_guid: user_guid,
+                  user_guid: user_guid
                 )
               end
 
@@ -954,7 +955,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -988,7 +989,7 @@ module VCAP::CloudController
                   maintenance_info: nil,
                   name: new_name,
                   previous_values: previous_values,
-                  user_guid: user_guid,
+                  user_guid: user_guid
                 )
               end
 
@@ -996,7 +997,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(new_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -1012,12 +1013,13 @@ module VCAP::CloudController
             end
 
             context 'when service plan is changing' do
-              let(:new_service_plan) { ServicePlan.make(
-                service: original_service_offering,
-                maintenance_info: { version: '2.2.0' },
-                public: true
-              )
-              }
+              let(:new_service_plan) do
+                ServicePlan.make(
+                  service: original_service_offering,
+                  maintenance_info: { version: '2.2.0' },
+                  public: true
+                )
+              end
               let(:body) do
                 {
                   relationships: {
@@ -1041,7 +1043,7 @@ module VCAP::CloudController
                   maintenance_info: { version: '2.2.0' },
                   name: original_name,
                   previous_values: previous_values,
-                  user_guid: user_guid,
+                  user_guid: user_guid
                 )
               end
 
@@ -1049,7 +1051,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(new_service_plan)
@@ -1084,7 +1086,7 @@ module VCAP::CloudController
                   maintenance_info: { version: '2.2.0' },
                   name: original_name,
                   previous_values: previous_values,
-                  user_guid: user_guid,
+                  user_guid: user_guid
                 )
               end
 
@@ -1092,7 +1094,7 @@ module VCAP::CloudController
                 action.update(accepts_incomplete: true)
 
                 instance = original_instance.reload
-                expect(instance).to_not be_nil
+                expect(instance).not_to be_nil
                 expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
                 expect(instance.name).to eq(original_name)
                 expect(instance.service_plan).to eq(original_service_plan)
@@ -1116,9 +1118,9 @@ module VCAP::CloudController
               end
 
               it 'raises an error and records failure' do
-                expect {
+                expect do
                   action.update(accepts_incomplete: true)
-                }.to raise_error CloudController::Errors::ApiError do |err|
+                end.to raise_error CloudController::Errors::ApiError do |err|
                   expect(err.name).to eq('ServicePlanNotFound')
                   expect(err.message).to eq('The service plan could not be found: fake-plan')
                 end
@@ -1136,7 +1138,7 @@ module VCAP::CloudController
               {
                 last_operation: {
                   type: 'update',
-                  state: 'succeeded',
+                  state: 'succeeded'
                 }
               }
             end
@@ -1145,7 +1147,7 @@ module VCAP::CloudController
               action.update(accepts_incomplete: true)
 
               instance = original_instance.reload
-              expect(instance).to_not be_nil
+              expect(instance).not_to be_nil
               expect(instance.dashboard_url).to eq(original_dashboard_url)
 
               expect(instance.last_operation.type).to eq('update')
@@ -1173,7 +1175,7 @@ module VCAP::CloudController
             action.update(accepts_incomplete: true)
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance).to eq(ServiceInstance.where(guid: instance.guid).first)
             expect(instance.name).to eq(original_name)
             expect(instance.service_plan).to eq(original_service_plan)
@@ -1211,7 +1213,7 @@ module VCAP::CloudController
               action.update(accepts_incomplete: true)
 
               instance = original_instance.reload
-              expect(instance).to_not be_nil
+              expect(instance).not_to be_nil
               expect(instance.dashboard_url).to eq(original_dashboard_url)
 
               expect(instance.last_operation.type).to eq('update')
@@ -1242,7 +1244,7 @@ module VCAP::CloudController
           si = VCAP::CloudController::ManagedServiceInstance.make(
             service_plan: original_service_plan,
             name: original_name,
-            tags: %w(accounting mongodb),
+            tags: %w[accounting mongodb],
             space: space,
             maintenance_info: original_maintenance_info,
             dashboard_url: original_dashboard_url
@@ -1277,14 +1279,14 @@ module VCAP::CloudController
         let(:fetch_instance_response) { {} }
         let(:client) do
           instance_double(VCAP::Services::ServiceBrokers::V2::Client, {
-            fetch_service_instance_last_operation: poll_response,
-            fetch_service_instance: fetch_instance_response
-          })
+                            fetch_service_instance_last_operation: poll_response,
+                            fetch_service_instance: fetch_instance_response
+                          })
         end
 
         let(:new_plan) { ServicePlan.make }
         let(:new_name) { 'new-name' }
-        let(:new_tags) { %w(bar quz) }
+        let(:new_tags) { %w[bar quz] }
         let(:arbitrary_parameters) { { foo: 'bar' } }
         let(:body) do
           {
@@ -1308,15 +1310,15 @@ module VCAP::CloudController
             }
           }
         end
-        let(:previous_values) {
+        let(:previous_values) do
           {
             plan_id: original_service_plan.broker_provided_id,
             service_id: original_service_offering.broker_provided_id,
             organization_id: org.guid,
             space_id: space.guid,
-            maintenance_info: original_service_plan.maintenance_info.stringify_keys,
+            maintenance_info: original_service_plan.maintenance_info.stringify_keys
           }
-        }
+        end
 
         before do
           allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
@@ -1327,7 +1329,7 @@ module VCAP::CloudController
 
           expect(client).to have_received(:fetch_service_instance_last_operation).with(
             original_instance,
-            user_guid: user_guid
+            user_guid:
           )
         end
 
@@ -1368,7 +1370,7 @@ module VCAP::CloudController
               last_operation: {
                 state: 'succeeded',
                 description: description
-              },
+              }
             }
           end
 
@@ -1376,7 +1378,7 @@ module VCAP::CloudController
             action.poll
 
             instance = original_instance.reload
-            expect(instance).to_not be_nil
+            expect(instance).not_to be_nil
             expect(instance.name).to eq(new_name)
             expect(instance.tags).to eq(new_tags)
             expect(instance.service_plan).to eq(new_plan)
@@ -1387,9 +1389,9 @@ module VCAP::CloudController
             expect(instance.last_operation.state).to eq('succeeded')
 
             expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
-              { prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
+                                                 { prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
             expect(instance).to have_labels({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' },
-              { prefix: nil, key_name: 'release', value: 'stable' })
+                                            { prefix: nil, key_name: 'release', value: 'stable' })
           end
 
           it 'updates an audit event' do
@@ -1413,7 +1415,7 @@ module VCAP::CloudController
               let(:service_offering) { Service.make(instances_retrievable: false) }
               let(:new_plan) { ServicePlan.make(service: service_offering) }
 
-              it 'should not call fetch service instance' do
+              it 'does not call fetch service instance' do
                 action.poll
 
                 expect(client).not_to have_received(:fetch_service_instance)
@@ -1422,14 +1424,14 @@ module VCAP::CloudController
 
             context 'when service instance is retrievable' do
               let(:service) { Service.make(instances_retrievable: true) }
-              let(:new_plan) { ServicePlan.make(service: service) }
+              let(:new_plan) { ServicePlan.make(service:) }
 
-              it 'should fetch service instance' do
+              it 'fetches service instance' do
                 action.poll
 
                 expect(client).to have_received(:fetch_service_instance).with(
                   original_instance,
-                  user_guid: user_guid
+                  user_guid:
                 )
               end
 
@@ -1444,7 +1446,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq('http://some-dashboard-url.com')
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')
@@ -1462,7 +1464,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq(original_dashboard_url)
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')
@@ -1478,7 +1480,7 @@ module VCAP::CloudController
                   action.poll
 
                   instance = original_instance.reload
-                  expect(instance).to_not be_nil
+                  expect(instance).not_to be_nil
                   expect(instance.dashboard_url).to eq(original_dashboard_url)
                   expect(instance.last_operation.type).to eq('update')
                   expect(instance.last_operation.state).to eq('succeeded')
@@ -1495,14 +1497,14 @@ module VCAP::CloudController
               last_operation: {
                 state: 'failed',
                 description: description
-              },
+              }
             }
           end
 
           it 'raises and updates the last operation description' do
-            expect {
+            expect do
               action.poll
-            }.to raise_error(VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState)
+            end.to raise_error(VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState)
 
             expect(ServiceInstance.first.last_operation.type).to eq('update')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')

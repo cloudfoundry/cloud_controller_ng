@@ -3,7 +3,7 @@ module VCAP::Services
     module V2
       module Errors
         class ServiceBrokerInvalidVolumeMounts < HttpResponseError
-          def initialize(uri, method, response, description)
+          def initialize(_uri, method, response, description)
             super(
               description_from_response(description),
               method,

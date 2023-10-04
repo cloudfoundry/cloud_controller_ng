@@ -16,14 +16,14 @@ module VCAP::CloudController
         timestamp: Time.new(1997, 6, 27).utc,
         metadata: { 'popcorn_price' => '$(arm + leg)' },
         space_guid: space.guid,
-        organization_guid: space.organization.guid,
+        organization_guid: space.organization.guid
       )
     end
 
     it { is_expected.to have_timestamp_columns }
 
     context 'when no space is specified' do
-      let(:event_attrs) {
+      let(:event_attrs) do
         {
           type: 'audit.test',
           actor: 'frank',
@@ -35,7 +35,7 @@ module VCAP::CloudController
           timestamp: Time.new(1999, 9, 9).utc,
           metadata: {}
         }
-      }
+      end
 
       it 'fails to create the event' do
         expect { Event.create(event_attrs) }.to raise_error(Event::EventValidationError)
@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'creates an event tied just to the organization' do
-          expect { Event.create(event_attrs) }.to_not raise_error
+          expect { Event.create(event_attrs) }.not_to raise_error
 
           an_event = Event.first(actor: 'frank')
           expect(an_event.actee).to eq('vlad')
@@ -70,9 +70,11 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee, :actee_type, :actee_name,
-                                    :timestamp, :metadata, :space_guid, :organization_guid
+      it {
+        expect(subject).to export_attributes :type, :actor, :actor_type, :actor_name, :actor_username, :actee, :actee_type, :actee_name,
+                                             :timestamp, :metadata, :space_guid, :organization_guid
       }
+
       it { is_expected.to import_attributes }
     end
 
@@ -135,7 +137,7 @@ module VCAP::CloudController
 
         it 'the event continues to exist' do
           expect(Space.find(id: new_space.id)).to be_nil
-          expect(Event.find(id: new_event.id)).to_not be_nil
+          expect(Event.find(id: new_event.id)).not_to be_nil
         end
 
         it 'returns nil' do

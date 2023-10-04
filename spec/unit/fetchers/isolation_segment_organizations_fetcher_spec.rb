@@ -22,7 +22,7 @@ module VCAP::CloudController
       it 'returns all organizations in the allowed list' do
         organizations = fetcher.fetch_all
 
-        expect(organizations).to match_array([org1, org2, org3])
+        expect(organizations).to contain_exactly(org1, org2, org3)
       end
     end
 

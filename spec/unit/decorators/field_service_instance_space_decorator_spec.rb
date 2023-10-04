@@ -18,120 +18,120 @@ module VCAP::CloudController
         let(:decorator) { described_class.new({ space: ['relationships.organization', 'guid', 'name'] }) }
 
         it 'decorates the given hash with spaces guids and relationships to orgs from service instances' do
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              spaces: [
-                {
-                  guid: space1.guid,
-                  name: space1.name,
-                  relationships: {
-                    organization: {
-                      data: {
-                        guid: org1.guid
-                      }
-                    }
-                  }
-                },
-                {
-                  guid: space2.guid,
-                  name: space2.name,
-                  relationships: {
-                    organization: {
-                      data: {
-                        guid: org2.guid
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    spaces: [
+                                      {
+                                        guid: space1.guid,
+                                        name: space1.name,
+                                        relationships: {
+                                          organization: {
+                                            data: {
+                                              guid: org1.guid
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        guid: space2.guid,
+                                        name: space2.name,
+                                        relationships: {
+                                          organization: {
+                                            data: {
+                                              guid: org2.guid
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                })
         end
       end
 
       context 'when only space guids are requested' do
         it 'decorates the given hash with spaces guids' do
           decorator = described_class.new({ space: ['guid'] })
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              spaces: [
-                {
-                  guid: space1.guid,
-                },
-                {
-                  guid: space2.guid,
-                }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    spaces: [
+                                      {
+                                        guid: space1.guid
+                                      },
+                                      {
+                                        guid: space2.guid
+                                      }
+                                    ]
+                                  }
+                                })
         end
       end
 
       context 'when only space names are requested' do
         it 'decorates the given hash with spaces names' do
           decorator = described_class.new({ space: ['name'] })
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              spaces: [
-                {
-                  name: space1.name,
-                },
-                {
-                  name: space2.name,
-                }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    spaces: [
+                                      {
+                                        name: space1.name
+                                      },
+                                      {
+                                        name: space2.name
+                                      }
+                                    ]
+                                  }
+                                })
         end
       end
 
       context 'when only relationships.organization is requested' do
         it 'decorates the given hash with relationships to orgs' do
           decorator = described_class.new({ space: ['relationships.organization'] })
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              spaces: [
-                {
-                  relationships: {
-                    organization: {
-                      data: {
-                        guid: org1.guid
-                      }
-                    }
-                  }
-                },
-                {
-                  relationships: {
-                    organization: {
-                      data: {
-                        guid: org2.guid
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    spaces: [
+                                      {
+                                        relationships: {
+                                          organization: {
+                                            data: {
+                                              guid: org1.guid
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        relationships: {
+                                          organization: {
+                                            data: {
+                                              guid: org2.guid
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                })
         end
       end
 
@@ -148,25 +148,25 @@ module VCAP::CloudController
       context 'decorating relationships' do
         it 'includes the related resource correctly' do
           decorator = described_class.new({ space: ['guid'] })
-          undecorated_hash = { foo: 'bar', included: { monkeys: %w(zach greg) } }
+          undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
           relationship = [space1, space2, space1]
 
           hash = decorator.decorate(undecorated_hash, relationship)
 
           expect(hash).to match({
-            foo: 'bar',
-            included: {
-              monkeys: %w(zach greg),
-              spaces: [
-                {
-                  guid: space1.guid,
-                },
-                {
-                  guid: space2.guid,
-                }
-              ]
-            }
-          })
+                                  foo: 'bar',
+                                  included: {
+                                    monkeys: %w[zach greg],
+                                    spaces: [
+                                      {
+                                        guid: space1.guid
+                                      },
+                                      {
+                                        guid: space2.guid
+                                      }
+                                    ]
+                                  }
+                                })
         end
       end
     end

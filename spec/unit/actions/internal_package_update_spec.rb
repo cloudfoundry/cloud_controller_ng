@@ -8,14 +8,14 @@ module VCAP::CloudController
     describe '#update' do
       let(:body) do
         {
-          'state'     => 'READY',
+          'state' => 'READY',
           'checksums' => [
             {
-              'type'  => 'sha1',
+              'type' => 'sha1',
               'value' => 'potato'
             },
             {
-              'type'  => 'sha256',
+              'type' => 'sha256',
               'value' => 'potatoest'
             }
           ],
@@ -39,9 +39,9 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_update.update(package, message)
-          }.to raise_error(InternalPackageUpdate::InvalidPackage, 'Invalid state. State is already final and cannot be modified.')
+          end.to raise_error(InternalPackageUpdate::InvalidPackage, 'Invalid state. State is already final and cannot be modified.')
         end
       end
 
@@ -49,9 +49,9 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(state: PackageModel::FAILED_STATE) }
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_update.update(package, message)
-          }.to raise_error(InternalPackageUpdate::InvalidPackage, 'Invalid state. State is already final and cannot be modified.')
+          end.to raise_error(InternalPackageUpdate::InvalidPackage, 'Invalid state. State is already final and cannot be modified.')
         end
       end
 
@@ -59,13 +59,13 @@ module VCAP::CloudController
         let(:body) { { 'state' => 'READY' } }
 
         context 'and the current state is COPYING' do
-          let(:package) {
+          let(:package) do
             PackageModel.make(
               state: PackageModel::COPYING_STATE,
               package_hash: 'existing-sha1',
               sha256_checksum: 'existing-sha256'
             )
-          }
+          end
 
           it 'does not require checksums in the message' do
             package_update.update(package, message)
@@ -81,9 +81,9 @@ module VCAP::CloudController
           [PackageModel::PENDING_STATE, PackageModel::CREATED_STATE, PackageModel::EXPIRED_STATE].each do |package_state|
             it 'requires checksums in the message' do
               package = PackageModel.make(state: package_state)
-              expect {
+              expect do
                 package_update.update(package, message)
-              }.to raise_error(InternalPackageUpdate::InvalidPackage, 'Checksums required when setting state to READY')
+              end.to raise_error(InternalPackageUpdate::InvalidPackage, 'Checksums required when setting state to READY')
             end
           end
         end
@@ -106,9 +106,9 @@ module VCAP::CloudController
         end
 
         it 'raises InvalidPackage' do
-          expect {
+          expect do
             package_update.update(package, message)
-          }.to raise_error(InternalPackageUpdate::InvalidPackage)
+          end.to raise_error(InternalPackageUpdate::InvalidPackage)
         end
       end
     end

@@ -5,19 +5,19 @@ module VCAP::CloudController
   RSpec.describe ServiceCredentialKeyBindingCreateMessage do
     subject { ServiceCredentialKeyBindingCreateMessage }
 
-    let(:params) {
+    let(:params) do
       {
         type: 'key',
         name: 'some-name',
         parameters: {
-            some_param: 'very important',
-            another_param: 'epa'
+          some_param: 'very important',
+          another_param: 'epa'
         },
         relationships: {
-          service_instance: { data: { guid: 'some-instance-guid' } },
+          service_instance: { data: { guid: 'some-instance-guid' } }
         }
       }
-    }
+    end
 
     describe '.from_params' do
       let(:message) { subject.new(params) }
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         params.each do |key, _|
-          expect(message.requested?(key.to_sym)).to be_truthy
+          expect(message).to be_requested(key.to_sym)
         end
       end
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
       context 'type' do
         it 'accepts app and key' do
-          %w{app key}.each do |type|
+          %w[app key].each do |type|
             params[:type] = type
             expect(subject.new(params)).to be_valid
           end
@@ -79,14 +79,14 @@ module VCAP::CloudController
         it 'returns an invalid message when there is no service instance relationship' do
           params[:relationships].delete(:service_instance)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships 'relationships' must include one or more valid relationships")
         end
 
         it 'returns an invalid message when there is invalid relationships' do
           params[:relationships][:app] = {}
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Unknown field(s): 'app'")
         end
       end

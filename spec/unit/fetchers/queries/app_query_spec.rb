@@ -3,7 +3,7 @@ require 'fetchers/queries/app_query'
 
 module VCAP::RestAPI
   RSpec.describe AppQuery do
-    let(:queryable_attributes) { %w(organization_guid stack_guid name) }
+    let(:queryable_attributes) { %w[organization_guid stack_guid name] }
 
     describe 'filtering by organization_guid' do
       it 'works for equals' do
@@ -17,7 +17,7 @@ module VCAP::RestAPI
           { q: ["organization_guid:#{expected_process.organization.guid}"] }
         ).all
 
-        expect(results).to match_array([expected_process])
+        expect(results).to contain_exactly(expected_process)
       end
 
       it 'works for IN' do
@@ -34,7 +34,7 @@ module VCAP::RestAPI
           { q: ["organization_guid IN #{org_guids}"] }
         ).all
 
-        expect(results).to match_array([expected_process1, expected_process2])
+        expect(results).to contain_exactly(expected_process1, expected_process2)
       end
     end
 
@@ -50,7 +50,7 @@ module VCAP::RestAPI
           { q: ["stack_guid:#{VCAP::CloudController::Stack.find(name: expected_process.app.lifecycle_data.stack).guid}"] }
         ).all
 
-        expect(results).to match_array([expected_process])
+        expect(results).to contain_exactly(expected_process)
       end
 
       it 'works for IN' do
@@ -70,7 +70,7 @@ module VCAP::RestAPI
           { q: ["stack_guid IN #{stack_guids}"] }
         ).all
 
-        expect(results).to match_array([expected_process1, expected_process2])
+        expect(results).to contain_exactly(expected_process1, expected_process2)
       end
     end
 
@@ -87,7 +87,7 @@ module VCAP::RestAPI
           { q: ['name:expected-name'] }
         ).all
 
-        expect(results).to match_array([expected_process])
+        expect(results).to contain_exactly(expected_process)
       end
 
       it 'works for IN' do
@@ -104,7 +104,7 @@ module VCAP::RestAPI
           { q: ['name IN expected-name1,expected-name2'] }
         ).all
 
-        expect(results).to match_array([expected_process1, expected_process2])
+        expect(results).to contain_exactly(expected_process1, expected_process2)
       end
     end
   end

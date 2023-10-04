@@ -10,7 +10,7 @@ Sequel.migration do
 
       foreign_key [:app_guid], :apps, key: :guid, name: :fk_app_labels_app_guid
       index [:app_guid], name: :fk_app_labels_app_guid_index
-      index [:key_prefix, :key_name, :value], name: :app_labels_compound_index
+      index %i[key_prefix key_name value], name: :app_labels_compound_index
     end
   end
 end

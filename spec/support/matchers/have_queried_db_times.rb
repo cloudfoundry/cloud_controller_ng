@@ -6,14 +6,12 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
     calls = stub.and_record_arguments
     actual_blk.call
     matched_calls = calls.select { |call| call[1] =~ query_regex }
-    if matched_calls.size == expected_times
-      return true
-    else
-      @matched_calls = matched_calls
-      @calls = calls
-      return false
-    end
-  rescue => e
+    return true if matched_calls.size == expected_times
+
+    @matched_calls = matched_calls
+    @calls = calls
+    return false
+  rescue StandardError => e
     @raised_exception = e
     false
   ensure

@@ -10,12 +10,12 @@ module VCAP::CloudController
         {
           metadata: {
             labels: {
-              freaky: 'wednesday',
+              freaky: 'wednesday'
             },
             annotations: {
               tokyo: 'grapes'
-            },
-          },
+            }
+          }
         }
       end
       let(:revision) { RevisionModel.make }

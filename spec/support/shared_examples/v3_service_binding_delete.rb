@@ -7,7 +7,7 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
   describe '#delete' do
     let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
     let(:unbind_response) { { async: false } }
     let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: unbind_response) }
 
@@ -35,11 +35,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
       end
 
       it 'fails with an appropriate error and stores the message in the binding' do
-        expect {
+        expect do
           action.delete(binding)
-        }.to raise_error(
+        end.to raise_error(
           described_class::UnprocessableDelete,
-          "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing",
+          "Service broker failed to delete service binding for instance #{service_instance.name}: awful thing"
         )
 
         binding.reload
@@ -79,11 +79,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
         end
 
         it 'fails with an appropriate error and does not alter the binding' do
-          expect {
+          expect do
             action.delete(binding)
-          }.to raise_error(
+          end.to raise_error(
             described_class::ConcurrencyError,
-            'The service broker rejected the request due to an operation being in progress for the service binding.',
+            'The service broker rejected the request due to an operation being in progress for the service binding.'
           )
 
           binding.reload
@@ -103,11 +103,11 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
       end
 
       it 'fails with an appropriate error and does not alter the binding' do
-        expect {
+        expect do
           action.delete(binding)
-        }.to raise_error(
+        end.to raise_error(
           described_class::ConcurrencyError,
-          'The delete request was rejected due to an operation being in progress for the service binding.',
+          'The delete request was rejected due to an operation being in progress for the service binding.'
         )
 
         binding.reload
@@ -160,15 +160,15 @@ RSpec.shared_examples 'polling service binding deletion' do
   describe '#poll' do
     let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
     let(:description) { Sham.description }
     let(:state) { 'in progress' }
     let(:fetch_last_operation_response) do
       {
         last_operation: {
-          state: state,
-          description: description,
-        },
+          state:,
+          description:
+        }
       }
     end
 
@@ -178,7 +178,7 @@ RSpec.shared_examples 'polling service binding deletion' do
       instance_double(
         VCAP::Services::ServiceBrokers::V2::Client,
         {
-          unbind: unbind_response,
+          unbind: unbind_response
         }
       )
     end
@@ -193,7 +193,7 @@ RSpec.shared_examples 'polling service binding deletion' do
     it 'fetches the last operation' do
       action.poll(binding)
 
-      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid: user_guid)
+      expect(broker_client).to have_received(:fetch_and_handle_service_binding_last_operation).with(binding, user_guid:)
     end
 
     context 'last operation state is complete' do
@@ -235,10 +235,10 @@ RSpec.shared_examples 'polling service binding deletion' do
           let(:fetch_last_operation_response) do
             {
               last_operation: {
-                state: state,
-                description: description,
+                state:,
+                description:
               },
-              retry_after: 10,
+              retry_after: 10
             }
           end
 
@@ -268,7 +268,7 @@ RSpec.shared_examples 'polling service binding deletion' do
         allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
 
-      it 'should stop polling for other errors' do
+      it 'stops polling for other errors' do
         expect { action.poll(binding) }.to raise_error(RuntimeError)
 
         binding.reload

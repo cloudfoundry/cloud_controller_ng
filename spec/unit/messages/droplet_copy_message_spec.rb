@@ -20,16 +20,16 @@ module VCAP::CloudController
 
     it 'converts requested keys to symbols' do
       message = DropletCopyMessage.new(body)
-      expect(message.requested?(:relationships)).to be_truthy
+      expect(message).to be_requested(:relationships)
     end
 
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:body) do
           {
-            unexpected:    'woah',
+            unexpected: 'woah',
             relationships: {
-              app: { data: { guid: 'some-app-guid' } },
+              app: { data: { guid: 'some-app-guid' } }
             }
           }
         end
@@ -59,12 +59,12 @@ module VCAP::CloudController
           message = DropletCopyMessage.new({ relationships: { app: { data: { guid: 876 } } } })
           expect(message.app_guid).not_to be_nil
           expect(message).not_to be_valid
-          expect(message.errors_on(:app_guid)).to_not be_empty
+          expect(message.errors_on(:app_guid)).not_to be_empty
         end
 
         it 'is valid when there is a valid app guid' do
           guid    = SecureRandom.uuid
-          message = DropletCopyMessage.new({ relationships: { app: { data: { guid: guid } } } })
+          message = DropletCopyMessage.new({ relationships: { app: { data: { guid: } } } })
           expect(message.app_guid).to eq(guid)
           expect(message).to be_valid
         end

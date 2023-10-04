@@ -13,9 +13,9 @@ module VCAP
     end
 
     def emit(app_id, message)
-      unless fluent_logger.post(PRIMARY_TAG, message(app_id, message))
-        raise Error.new(fluent_logger.last_error)
-      end
+      return if fluent_logger.post(PRIMARY_TAG, message(app_id, message))
+
+      raise Error.new(fluent_logger.last_error)
     end
 
     private
@@ -25,7 +25,7 @@ module VCAP
         app_id: app_id,
         log: message,
         source_type: SOURCE_TYPE,
-        instance_id: '0', # TODO: fill this from an environment variable?
+        instance_id: '0' # TODO: fill this from an environment variable?
       }
     end
   end

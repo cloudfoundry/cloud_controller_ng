@@ -18,7 +18,7 @@ module VCAP::CloudController
           DropletModel.where(
             state: DropletModel::EXPIRED_STATE,
             droplet_hash: nil,
-            sha256_checksum: nil,
+            sha256_checksum: nil
           )
         end
 
@@ -26,7 +26,7 @@ module VCAP::CloudController
           PackageModel.where(
             state: PackageModel::EXPIRED_STATE,
             package_hash: nil,
-            sha256_checksum: nil,
+            sha256_checksum: nil
           )
         end
 

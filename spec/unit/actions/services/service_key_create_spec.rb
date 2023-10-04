@@ -13,7 +13,7 @@ module VCAP::CloudController
       let(:key_attrs) do
         {
           'name' => 'key-name',
-          'service_instance_guid' => service_instance.guid,
+          'service_instance_guid' => service_instance.guid
         }
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
         it 'logs that the unbind failed' do
           allow_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_delete_key)
           subject.create(service_instance, key_attrs, {})
-          expect(logger).to have_received(:error).with /Failed to save/
+          expect(logger).to have_received(:error).with(/Failed to save/)
         end
       end
     end

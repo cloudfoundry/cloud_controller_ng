@@ -10,7 +10,7 @@ RSpec.describe 'ServiceKeys' do
   end
 
   describe 'GET /v2/service_keys' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let!(:service_key1) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance, credentials: { secret: 'key' }) }
     let!(:service_key2) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance, credentials: { secret: 'key' }) }
 
@@ -38,7 +38,7 @@ RSpec.describe 'ServiceKeys' do
                 'credentials' => { 'secret' => 'key' },
                 'name' => service_key1.name,
                 'service_instance_url' => "/v2/service_instances/#{service_key1.service_instance.guid}",
-                'service_key_parameters_url' => "/v2/service_keys/#{service_key1.guid}/parameters",
+                'service_key_parameters_url' => "/v2/service_keys/#{service_key1.guid}/parameters"
               }
             },
             {
@@ -53,7 +53,7 @@ RSpec.describe 'ServiceKeys' do
                 'credentials' => { 'secret' => 'key' },
                 'name' => service_key2.name,
                 'service_instance_url' => "/v2/service_instances/#{service_key2.service_instance.guid}",
-                'service_key_parameters_url' => "/v2/service_keys/#{service_key2.guid}/parameters",
+                'service_key_parameters_url' => "/v2/service_keys/#{service_key2.guid}/parameters"
               }
             }
           ]
@@ -63,7 +63,7 @@ RSpec.describe 'ServiceKeys' do
   end
 
   describe 'GET /v2/service_keys/:guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
     let!(:service_key1) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance, credentials: { secret: 'key' }, name: 'key') }
 
     it 'displays the service key' do
@@ -93,9 +93,9 @@ RSpec.describe 'ServiceKeys' do
 
   describe 'GET /v2/service_keys/:guid/parameters' do
     let(:service) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
-    let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance:) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -103,9 +103,9 @@ RSpec.describe 'ServiceKeys' do
         fb.parameters = {
           parameters: {
             top_level_param: {
-              nested_param: true,
+              nested_param: true
             },
-            another_param: 'some-value',
+            another_param: 'some-value'
           },
           credentials:
           {
@@ -124,9 +124,9 @@ RSpec.describe 'ServiceKeys' do
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
-            'nested_param' => true,
+            'nested_param' => true
           },
-          'another_param' => 'some-value',
+          'another_param' => 'some-value'
         }
       )
     end

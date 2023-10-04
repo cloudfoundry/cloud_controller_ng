@@ -9,8 +9,8 @@ module VCAP::CloudController
           'versions' => '808,810',
           'page' => 1,
           'per_page' => 5,
-          'order_by' => 'created_at',
-          }
+          'order_by' => 'created_at'
+        }
       end
 
       it 'returns the correct AppRevisionsListMessage' do
@@ -26,23 +26,23 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = AppRevisionsListMessage.from_params(params)
 
-        expect(message.requested?(:versions)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
+        expect(message).to be_requested(:versions)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:order_by)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           AppRevisionsListMessage.from_params({
-            versions: [],
-            page: 1,
-            per_page: 5,
-            order_by: 'created_at',
-          })
-        }.not_to raise_error
+                                                versions: [],
+                                                page: 1,
+                                                per_page: 5,
+                                                order_by: 'created_at'
+                                              })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -53,7 +53,7 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates versions is an array' do
           message = AppRevisionsListMessage.from_params(versions: 'not array')
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:versions].length).to eq 1
         end
       end

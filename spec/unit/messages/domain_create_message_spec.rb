@@ -16,6 +16,7 @@ module VCAP::CloudController
 
       context 'when no params are given' do
         let(:params) {}
+
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors[:name]).to include("can't be blank")
@@ -44,7 +45,7 @@ module VCAP::CloudController
         context 'when a valid long multi-subdomain name is given' do
           let(:params) do
             {
-              name: (['a'] * 126).join('.'),
+              name: (['a'] * 126).join('.')
             }
           end
 
@@ -52,6 +53,7 @@ module VCAP::CloudController
             expect(subject).to be_valid
           end
         end
+
         context 'when not a string' do
           let(:params) do
             { name: 5 }
@@ -67,7 +69,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (MIN_DOMAIN_NAME_LENGTH - 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include "is too short (minimum is #{MIN_DOMAIN_NAME_LENGTH} characters)"
           end
         end
@@ -76,7 +78,7 @@ module VCAP::CloudController
           let(:params) { { name: 'B' * (MAX_DOMAIN_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include "is too long (maximum is #{MAX_DOMAIN_NAME_LENGTH} characters)"
           end
         end
@@ -85,16 +87,16 @@ module VCAP::CloudController
           let(:params) { { name: 'idontlikedots' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to match ['does not comply with RFC 1035 standards', 'must contain at least one "."']
           end
         end
 
         context 'when the subdomain is too long' do
-          let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
+          let(:params) { { name: ('B' * (MAX_SUBDOMAIN_LENGTH + 1)) + '.example.com' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include 'subdomains must each be at most 63 characters'
           end
         end
@@ -103,16 +105,16 @@ module VCAP::CloudController
           let(:params) { { name: '_!@#$%^&*().swag' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include 'must consist of alphanumeric characters and hyphens'
           end
         end
 
         context 'when it does not conform to RFC 1035' do
-          let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
+          let(:params) { { name: ('B' * (MAX_SUBDOMAIN_LENGTH + 1)) + '.example.com' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:name]).to include 'does not comply with RFC 1035 standards'
           end
         end
@@ -123,7 +125,7 @@ module VCAP::CloudController
           let(:params) { { internal: 'banana' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:internal]).to include 'must be a boolean'
           end
         end
@@ -134,7 +136,7 @@ module VCAP::CloudController
           let(:params) { { router_group: 'banana' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:router_group]).to include 'must be an object'
           end
         end
@@ -143,7 +145,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              router_group: {},
+              router_group: {}
             }
           end
 
@@ -157,7 +159,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              router_group: { guid: 32 },
+              router_group: { guid: 32 }
             }
           end
 
@@ -173,8 +175,8 @@ module VCAP::CloudController
               name: 'name.com',
               router_group: {
                 guid: 'guid',
-                notguid: 'not-guid',
-              },
+                notguid: 'not-guid'
+              }
             }
           end
 
@@ -212,7 +214,7 @@ module VCAP::CloudController
               internal: true,
               router_group: {
                 guid: 'guid'
-              },
+              }
             }
           end
 
@@ -242,7 +244,7 @@ module VCAP::CloudController
           let(:params) { { relationships: 'banana' } }
 
           it 'is not valid' do
-            expect(subject).to be_invalid
+            expect(subject).not_to be_valid
             expect(subject.errors[:relationships]).to include "'relationships' is not an object"
           end
         end
@@ -265,7 +267,7 @@ module VCAP::CloudController
           let(:params) do
             {
               name: 'name.com',
-              relationships: { organization: { data: { guid: 32 } } },
+              relationships: { organization: { data: { guid: 32 } } }
             }
           end
 
@@ -380,8 +382,8 @@ module VCAP::CloudController
           }
         end
 
-        it 'should be invalid' do
-          expect(subject).to_not be_valid
+        it 'is invalid' do
+          expect(subject).not_to be_valid
           expect(subject.errors[:base]).to include('Cannot associate an internal domain with an organization')
         end
       end
@@ -397,7 +399,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'should be valid' do
+        it 'is valid' do
           expect(subject).to be_valid
         end
       end
@@ -429,7 +431,7 @@ module VCAP::CloudController
       context 'shared_organizations_guids' do
         it 'makes the guid accessible' do
           expect(subject).to be_valid
-          expect(subject.shared_organizations_guids).to eq(%w(guid1 guid2))
+          expect(subject.shared_organizations_guids).to eq(%w[guid1 guid2])
         end
       end
 

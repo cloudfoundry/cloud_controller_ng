@@ -23,7 +23,7 @@ module VCAP::CloudController
       def invalid_after_guid!
         raise CloudController::Errors::ApiError.new_from_details(
           'UnprocessableEntity',
-          'After guid filter must be a valid app usage event guid.',
+          'After guid filter must be a valid app usage event guid.'
         )
       end
     end

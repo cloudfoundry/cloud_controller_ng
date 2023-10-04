@@ -25,7 +25,7 @@ module VCAP::CloudController
         expect(last_response.body).to eq '{}'
 
         expect(task.reload.state).to eq 'SUCCEEDED'
-        expect(task.reload.failure_reason).to eq(nil)
+        expect(task.reload.failure_reason).to be_nil
       end
 
       context 'task fails' do
@@ -55,7 +55,7 @@ module VCAP::CloudController
           post url, MultiJson.dump(task_response)
 
           expect(last_response.status).to eq(404)
-          expect(last_response.body).to match /NotFound/
+          expect(last_response.body).to match(/NotFound/)
         end
       end
 

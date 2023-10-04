@@ -20,9 +20,7 @@ class BackgroundJobEnvironment
     VCAP::CloudController::DB.load_models(@config.get(:db), @logger)
     @config.configure_components
 
-    if readiness_port && readiness_port > 0
-      listen_on_readiness_port(readiness_port)
-    end
+    listen_on_readiness_port(readiness_port) if readiness_port && readiness_port > 0
 
     yield if block_given?
   end

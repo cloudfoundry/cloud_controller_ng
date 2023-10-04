@@ -32,7 +32,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'includes all the brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to contain_exactly(
             broker, space_scoped_broker_1, space_scoped_broker_2, space_scoped_broker_3
@@ -51,7 +51,7 @@ module VCAP::CloudController
         let(:filters) { { space_guids: [space_1.guid, space_2.guid] } }
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to contain_exactly(space_scoped_broker_1, space_scoped_broker_2)
         end
@@ -61,7 +61,7 @@ module VCAP::CloudController
         let(:filters) { { space_guids: ['invalid-space-guid'] } }
 
         it 'includes no brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to be_empty
         end
@@ -71,43 +71,46 @@ module VCAP::CloudController
         let(:filters) { { names: [space_scoped_broker_1.name, space_scoped_broker_3.name] } }
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to contain_exactly(space_scoped_broker_1, space_scoped_broker_3)
         end
       end
 
       context 'when filtering by space guid and names' do
-        let(:filters) { {  space_guids: [space_1.guid, space_2.guid],
-                           names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
-        }
+        let(:filters) do
+          { space_guids: [space_1.guid, space_2.guid],
+            names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
+        end
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to contain_exactly(space_scoped_broker_1)
         end
       end
 
       context 'when filtering by space guid and invalid name' do
-        let(:filters) { {  space_guids: [space_1.guid, space_2.guid],
-                           names: ['invalid-name'] }
-        }
+        let(:filters) do
+          { space_guids: [space_1.guid, space_2.guid],
+            names: ['invalid-name'] }
+        end
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to be_empty
         end
       end
 
       context 'when filtering by invalid space guid and names' do
-        let(:filters) { {  space_guids: ['invalid-space-1'],
-                           names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
-        }
+        let(:filters) do
+          { space_guids: ['invalid-space-1'],
+            names: [space_scoped_broker_1.name, space_scoped_broker_3.name] }
+        end
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
 
           expect(brokers).to be_empty
         end
@@ -120,7 +123,7 @@ module VCAP::CloudController
           let(:filters) { {} }
 
           it 'includes only the brokers in the permitted spaces' do
-            brokers = fetcher.fetch(message: message, permitted_space_guids: permitted_space_guids).all
+            brokers = fetcher.fetch(message:, permitted_space_guids:).all
 
             expect(brokers).to contain_exactly(
               space_scoped_broker_1, space_scoped_broker_2
@@ -133,7 +136,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [space_1.guid, space_2.guid] } }
 
           it 'includes only the brokers in the permitted spaces' do
-            brokers = fetcher.fetch(message: message, permitted_space_guids: permitted_space_guids).all
+            brokers = fetcher.fetch(message:, permitted_space_guids:).all
 
             expect(brokers).to contain_exactly(
               space_scoped_broker_1
@@ -146,7 +149,7 @@ module VCAP::CloudController
           let(:filters) { { space_guids: [space_2.guid] } }
 
           it 'includes no brokers' do
-            brokers = fetcher.fetch(message: message, permitted_space_guids: permitted_space_guids).all
+            brokers = fetcher.fetch(message:, permitted_space_guids:).all
 
             expect(brokers).to be_empty
           end
@@ -158,12 +161,12 @@ module VCAP::CloudController
             {
               space_guids: [space_2.guid],
               label_selector: 'dog in (poodle,scooby-doo)',
-              names: [space_scoped_broker_1.name],
+              names: [space_scoped_broker_1.name]
             }
           end
 
           it 'includes no brokers' do
-            brokers = fetcher.fetch(message: message, permitted_space_guids: permitted_space_guids).all
+            brokers = fetcher.fetch(message:, permitted_space_guids:).all
             expect(brokers).to be_empty
           end
         end
@@ -178,7 +181,7 @@ module VCAP::CloudController
         end
 
         it 'includes the relevant brokers' do
-          brokers = fetcher.fetch(message: message).all
+          brokers = fetcher.fetch(message:).all
           expect(brokers).to contain_exactly(broker)
         end
 
@@ -187,12 +190,12 @@ module VCAP::CloudController
             {
               space_guids: [space_1.guid, space_2.guid],
               label_selector: 'dog in (poodle,scooby-doo)',
-              names: [space_scoped_broker_1.name],
+              names: [space_scoped_broker_1.name]
             }
           end
 
           it 'includes the relevant brokers' do
-            brokers = fetcher.fetch(message: message).all
+            brokers = fetcher.fetch(message:).all
             expect(brokers).to contain_exactly(space_scoped_broker_1)
           end
         end

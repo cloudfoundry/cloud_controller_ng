@@ -34,7 +34,7 @@ module VCAP::CloudController
       expect(hash['description']).to eq(TestConfig.config_instance.get(:info, :description))
       expect(hash['authorization_endpoint']).to eq(TestConfig.config_instance.get(:login, :url))
       expect(hash['token_endpoint']).to eq(TestConfig.config_instance.get(:uaa, :url))
-      expect(hash['allow_debug']).to eq(true)
+      expect(hash['allow_debug']).to be(true)
     end
 
     describe 'account capacity' do
@@ -43,24 +43,24 @@ module VCAP::CloudController
       describe 'for an admin' do
         let(:current_user) { make_user_with_default_space(admin: true) }
 
-        it 'should return admin limits for an admin' do
+        it 'returns admin limits for an admin' do
           get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
-            'memory' => AccountCapacity::ADMIN_MEM,
-            'app_uris' => AccountCapacity::ADMIN_URIS,
-            'services' => AccountCapacity::ADMIN_SERVICES,
-            'apps' => AccountCapacity::ADMIN_APPS
-          })
+                                         'memory' => AccountCapacity::ADMIN_MEM,
+                                         'app_uris' => AccountCapacity::ADMIN_URIS,
+                                         'services' => AccountCapacity::ADMIN_SERVICES,
+                                         'apps' => AccountCapacity::ADMIN_APPS
+                                       })
         end
       end
 
       describe 'for a user with no default space' do
         let(:current_user) { make_user }
 
-        it 'should not return service usage' do
+        it 'does not return service usage' do
           get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
@@ -71,31 +71,31 @@ module VCAP::CloudController
       describe 'for a user with default space' do
         let(:current_user) { make_user_with_default_space }
 
-        it 'should return default limits for a user' do
+        it 'returns default limits for a user' do
           get '/info'
           expect(last_response.status).to eq(200)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
-            'memory' => AccountCapacity::DEFAULT_MEM,
-            'app_uris' => AccountCapacity::DEFAULT_URIS,
-            'services' => AccountCapacity::DEFAULT_SERVICES,
-            'apps' => AccountCapacity::DEFAULT_APPS
-          })
+                                         'memory' => AccountCapacity::DEFAULT_MEM,
+                                         'app_uris' => AccountCapacity::DEFAULT_URIS,
+                                         'services' => AccountCapacity::DEFAULT_SERVICES,
+                                         'apps' => AccountCapacity::DEFAULT_APPS
+                                       })
         end
 
         context 'with no apps and services' do
-          it 'should return 0 apps and service usage' do
+          it 'returns 0 apps and service usage' do
             get '/info'
             expect(last_response.status).to eq(200)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({
-              'memory' => 0,
-              'apps' => 0,
-              'services' => 0
-            })
+                                          'memory' => 0,
+                                          'apps' => 0,
+                                          'services' => 0
+                                        })
           end
         end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
                 space: current_user.default_space,
                 state: 'STARTED',
                 instances: 2,
-                memory: 128,
+                memory: 128
               )
             end
 
@@ -124,17 +124,17 @@ module VCAP::CloudController
             end
           end
 
-          it 'should return 2 apps and 3 services' do
+          it 'returns 2 apps and 3 services' do
             get '/info'
             expect(last_response.status).to eq(200)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({
-              'memory' => 128 * 4,
-              'apps' => 2,
-              'services' => 3
-            })
+                                          'memory' => 128 * 4,
+                                          'apps' => 2,
+                                          'services' => 3
+                                        })
           end
         end
       end

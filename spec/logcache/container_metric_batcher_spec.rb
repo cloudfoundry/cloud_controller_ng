@@ -4,12 +4,13 @@ require 'utils/time_utils'
 
 RSpec.describe Logcache::ContainerMetricBatcher do
   subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid, logcache_filter: filter) }
+
   let(:wrapped_logcache_client) { instance_double(Logcache::Client, container_metrics: logcache_response) }
 
   let(:num_instances) { 11 }
   let(:process) { VCAP::CloudController::ProcessModel.make(instances: num_instances) }
   let(:process_guid) { process.guid }
-  let(:logcache_response) { Logcache::V1::ReadResponse.new(envelopes: envelopes) }
+  let(:logcache_response) { Logcache::V1::ReadResponse.new(envelopes:) }
   let(:envelopes) { Loggregator::V2::EnvelopeBatch.new }
 
   def generate_batch(size, offset: 0, last_timestamp: TimeUtils.to_nanoseconds(Time.now), cpu_percentage: 100)
@@ -19,26 +20,26 @@ RSpec.describe Logcache::ContainerMetricBatcher do
           timestamp: last_timestamp,
           source_id: process_guid,
           gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 4),
-            }),
-          instance_id: (offset + i).to_s,
+                                              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
+                                              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: (100 * i) + 2),
+                                              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: (100 * i) + 3),
+                                              'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: (100 * i) + 4)
+                                            }),
+          instance_id: (offset + i).to_s
         ),
         Loggregator::V2::Envelope.new(
           timestamp: last_timestamp,
           source_id: process_guid,
           gauge: Loggregator::V2::Gauge.new(metrics: {
-              'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 1),
-              'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 2),
-              'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 3),
-          }),
-          instance_id: (offset + i).to_s,
+                                              'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: (100 * i) + 1),
+                                              'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: (100 * i) + 2),
+                                              'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: (100 * i) + 3)
+                                            }),
+          instance_id: (offset + i).to_s
         )
       ]
     end
-    Loggregator::V2::EnvelopeBatch.new(batch: batch)
+    Loggregator::V2::EnvelopeBatch.new(batch:)
   end
 
   describe 'batches envelopes' do
@@ -57,42 +58,42 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'filters' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10)
+                                                }),
               instance_id: '2'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 9),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 8),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 7),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 9),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 8),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 7)
+                                                }),
               instance_id: '1'
-          ),
+            )
           ]
         )
-      }
+      end
       let(:filter) { ->(e) { e.gauge.metrics['cpu'].value == 10 } }
 
       it 'filters envelopes' do
@@ -116,69 +117,69 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'when given a mixture of expected metrics envelopes and others' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 300),
-                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 400),
-                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 500),
-              }),
-              instance_id: '1'
-              ),
-            Loggregator::V2::Envelope.new(
-              source_id: process_guid,
-              gauge: Loggregator::V2::Gauge.new(metrics: {
-                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-                }),
+                                                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 300),
+                                                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 400),
+                                                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 500)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 600),
-                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 700),
-                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 800),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13)
+                                                }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                                                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 600),
+                                                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 700),
+                                                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 800)
+                                                }),
               instance_id: '2'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
-                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
-                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
-                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
-                }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23)
+                                                }),
               instance_id: '2'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 900),
-                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1000),
-                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1100),
-              }),
+                                                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 900),
+                                                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1000),
+                                                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1100)
+                                                }),
               instance_id: '3'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
-                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
-                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
-                    'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
-                }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33)
+                                                }),
               instance_id: '3'
             )
           ]
         )
-      }
+      end
       let(:num_instances) { 3 }
 
       it 'returns an array of batched metrics' do
@@ -204,82 +205,82 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'when given a single envelope back' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [Loggregator::V2::Envelope.new(
             source_id: process_guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-              'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0.10),
-              'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11.0),
-              'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12.0),
-              'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13.0),
-              'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24.0),
-              'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25.0),
-              'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26.0),
-            }),
+                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 0.10),
+                                                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11.0),
+                                                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12.0),
+                                                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13.0),
+                                                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24.0),
+                                                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25.0),
+                                                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26.0)
+                                              }),
             instance_id: '1'
           )]
         )
-      }
+      end
 
       it 'returns an array of one batched envelope' do
-        expect(subject.first.instance_index).to eql(1)
-        expect(subject.first.cpu_percentage).to eql(0.10)
-        expect(subject.first.memory_bytes).to eql(11)
-        expect(subject.first.disk_bytes).to eql(12)
-        expect(subject.first.log_rate).to eql(13)
-        expect(subject.first.disk_bytes_quota).to eql(24)
-        expect(subject.first.memory_bytes_quota).to eql(25)
-        expect(subject.first.log_rate_limit).to eql(26)
+        expect(subject.first.instance_index).to be(1)
+        expect(subject.first.cpu_percentage).to be(0.10)
+        expect(subject.first.memory_bytes).to be(11)
+        expect(subject.first.disk_bytes).to be(12)
+        expect(subject.first.log_rate).to be(13)
+        expect(subject.first.disk_bytes_quota).to be(24)
+        expect(subject.first.memory_bytes_quota).to be(25)
+        expect(subject.first.log_rate_limit).to be(26)
       end
     end
 
     context 'when given multiple envelopes back' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
-                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
-                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26),
-              }),
-              instance_id: '1',
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+                                                  'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 24),
+                                                  'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 25),
+                                                  'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 26)
+                                                }),
+              instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
-                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 34),
-                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 35),
-                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 36),
-             }),
-              instance_id: '2',
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
+                                                  'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 34),
+                                                  'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 35),
+                                                  'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 36)
+                                                }),
+              instance_id: '2'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
-                'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 44),
-                'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 45),
-                'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 46),
-            }),
-              instance_id: '3',
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
+                                                  'disk_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 44),
+                                                  'memory_quota' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 45),
+                                                  'log_rate_limit' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 46)
+                                                }),
+              instance_id: '3'
             )
           ]
         )
-      }
+      end
       let(:num_instances) { 3 }
 
       it 'returns an array of batched metrics' do
@@ -314,42 +315,42 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'when given multiple metrics for the same instance' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23)
+                                                }),
               instance_id: '2'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
-                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
-                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
-                'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 33)
+                                                }),
               instance_id: '1'
             )
           ]
         )
-      }
+      end
       let(:num_instances) { 2 }
 
       it 'returns only the newest metric' do
@@ -361,7 +362,7 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'when there are envelopes for the same instance id across multiple pages' do
-      let(:call_time) { Time.at(1536269249, 784009.985) }
+      let(:call_time) { Time.at(1_536_269_249, 784_009.985) }
       let(:call_time_ns) { TimeUtils.to_nanoseconds(call_time) }
       let(:last_envelope_time_first_page) { call_time - 1.minute }
       let(:last_envelope_time_first_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_first_page) }
@@ -390,50 +391,50 @@ RSpec.describe Logcache::ContainerMetricBatcher do
     end
 
     context 'when given container metrics in separate envelopes' do
-      let(:envelopes) {
+      let(:envelopes) do
         Loggregator::V2::EnvelopeBatch.new(
           batch: [
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
-              }),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
-              }),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
-              }),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13)
+                                                }),
               instance_id: '1'
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
-                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
-                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
-                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23),
-              }),
+                                                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                                                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                                                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                                                  'log_rate' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 23)
+                                                }),
               instance_id: '2'
             )
           ]
         )
-      }
+      end
       let(:num_instances) { 2 }
 
       it 'returns a single envelope per instance' do
@@ -486,13 +487,13 @@ RSpec.describe Logcache::ContainerMetricBatcher do
             start_time = TimeUtils.to_nanoseconds((Time.now - lookback_window))
             end_time = TimeUtils.to_nanoseconds(Time.now)
             expect(wrapped_logcache_client).to have_received(:container_metrics).
-              with(hash_including(start_time: start_time, end_time: end_time))
+              with(hash_including(start_time:, end_time:))
           end
         end
       end
 
       context 'when log cache has more than 1000 envelopes for the time window' do
-        let(:call_time) { Time.at(1536269249, 784009.985) }
+        let(:call_time) { Time.at(1_536_269_249, 784_009.985) }
         let(:call_time_ns) { TimeUtils.to_nanoseconds(call_time) }
         let(:last_envelope_time_first_page) { call_time - 1.minute }
         let(:last_envelope_time_first_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_first_page) }

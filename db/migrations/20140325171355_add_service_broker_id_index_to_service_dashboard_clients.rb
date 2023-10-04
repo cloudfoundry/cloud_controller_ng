@@ -7,7 +7,7 @@ Sequel.migration do
   end
 
   down do
-    run <<-SQL
+    run <<-SQL.squish
       DELETE FROM service_dashboard_clients WHERE service_broker_id IS NULL
     SQL
 

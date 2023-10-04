@@ -110,13 +110,13 @@ each_run_block = proc do
     rspec_config.include ServiceBrokerHelpers
     rspec_config.include UserHelpers
     rspec_config.include UserHeaderHelpers
-    rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))
+    rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w[spec unit controllers])
     rspec_config.include ControllerHelpers, type: :api
-    rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
-    rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec acceptance))
-    rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec request))
-    rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec request))
-    rspec_config.include LifecycleSpecHelper, file_path: EscapedPath.join(%w(spec request lifecycle))
+    rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w[spec acceptance])
+    rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w[spec acceptance])
+    rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w[spec request])
+    rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w[spec request])
+    rspec_config.include LifecycleSpecHelper, file_path: EscapedPath.join(%w[spec request lifecycle])
     rspec_config.include ApiDsl, type: :api
     rspec_config.include LegacyApiDsl, type: :legacy_api
 
@@ -151,7 +151,7 @@ each_run_block = proc do
       VCAP::CloudController::SpecBootstrap.seed
     end
 
-    rspec_config.before :each do
+    rspec_config.before do
       Fog::Mock.reset
 
       if Fog.mock?
@@ -175,7 +175,7 @@ each_run_block = proc do
       allow(Redis).to receive(:new).and_return(mock_redis)
     end
 
-    rspec_config.around :each do |example|
+    rspec_config.around do |example|
       # DatabaseIsolation requires the api config context
       TestConfig.context = :api
       TestConfig.reset
@@ -184,10 +184,8 @@ each_run_block = proc do
       isolation.cleanly { example.run }
     end
 
-    rspec_config.after :each do
-      unless Sequel::Deprecation.output.string == ''
-        raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}"
-      end
+    rspec_config.after do
+      raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}" unless Sequel::Deprecation.output.string == ''
 
       Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
     end
@@ -196,7 +194,7 @@ each_run_block = proc do
       TmpdirCleaner.clean
     end
 
-    rspec_config.after :each do
+    rspec_config.after do
       Timecop.return
     end
 
@@ -206,7 +204,7 @@ each_run_block = proc do
       c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config_instance,
                                                               VCAP::CloudController::Metrics::RequestMetrics.new,
                                                               VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('request.logs')))
-      c.format = [:html, :json]
+      c.format = %i[html json]
       c.api_name = 'Cloud Foundry API'
       c.template_path = 'spec/api/documentation/templates'
       c.curl_host = 'https://api.[your-domain.com]'

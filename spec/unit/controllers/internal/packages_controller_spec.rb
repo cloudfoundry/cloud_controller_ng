@@ -6,19 +6,19 @@ module VCAP::CloudController
   module Internal
     RSpec.describe PackagesController do
       describe '#update' do
-        let!(:package) {
+        let!(:package) do
           VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        }
+        end
         let(:request_body) do
           {
-            'state'     => 'READY',
+            'state' => 'READY',
             'checksums' => [
               {
-                'type'  => 'sha1',
+                'type' => 'sha1',
                 'value' => 'potato'
               },
               {
-                'type'  => 'sha256',
+                'type' => 'sha256',
                 'value' => 'potatoest'
               }
             ],

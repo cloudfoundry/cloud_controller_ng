@@ -15,22 +15,22 @@ module CloudFoundry
         return call_app(env) unless @allowed_cors_domains.any? { |d| d =~ env['HTTP_ORIGIN'] }
 
         cors_headers = {
-          'Access-Control-Allow-Origin'      => env['HTTP_ORIGIN'],
+          'Access-Control-Allow-Origin' => env['HTTP_ORIGIN'],
           'Access-Control-Allow-Credentials' => 'true',
-          'Access-Control-Expose-Headers'    => "x-cf-warnings,x-app-staging-log,#{::VCAP::Request::HEADER_NAME.downcase},location,range"
+          'Access-Control-Expose-Headers' => "x-cf-warnings,x-app-staging-log,#{::VCAP::Request::HEADER_NAME.downcase},location,range"
         }
 
         preflight_headers = cors_headers.merge('Vary' => CORS_VARY_HEADER.join(','))
         if env['REQUEST_METHOD'] == 'OPTIONS'
-          return call_app(env) unless %w(get put delete post).include?(env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'].to_s.downcase)
+          return call_app(env) unless %w[get put delete post].include?(env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'].to_s.downcase)
 
           preflight_headers.merge!({
-            'Content-Type' => 'text/plain',
-            'Access-Control-Allow-Methods' => 'GET,PUT,POST,DELETE',
-            'Access-Control-Max-Age'       => '900',
-            'Access-Control-Allow-Headers' => Set.new(['origin', 'content-type', 'authorization']).
+                                     'Content-Type' => 'text/plain',
+                                     'Access-Control-Allow-Methods' => 'GET,PUT,POST,DELETE',
+                                     'Access-Control-Max-Age' => '900',
+                                     'Access-Control-Allow-Headers' => Set.new(%w[origin content-type authorization]).
               merge(env['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'].to_s.split(',').map(&:strip).map(&:downcase)).to_a.join(',')
-          })
+                                   })
         end
 
         return [200, preflight_headers, ''] if env['REQUEST_METHOD'] == 'OPTIONS'

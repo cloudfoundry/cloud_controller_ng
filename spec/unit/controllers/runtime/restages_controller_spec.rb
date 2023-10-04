@@ -5,6 +5,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RestagesController do
     let(:app_event_repository) { Repositories::AppEventRepository.new }
+
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'POST /v2/apps/:id/restage' do
@@ -14,16 +15,13 @@ module VCAP::CloudController
 
       before do
         allow(V2::AppStage).to receive(:new).and_return(app_stage)
-      end
-
-      before do
         set_current_user(account)
       end
 
       context 'as a user' do
         let(:account) { make_user_for_space(process.space) }
 
-        it 'should return 403' do
+        it 'returns 403' do
           restage_request
           expect(last_response.status).to eq(403)
         end
@@ -32,7 +30,7 @@ module VCAP::CloudController
       context 'as a space auditor' do
         let(:account) { make_auditor_for_space(process.space) }
 
-        it 'should return 403' do
+        it 'returns 403' do
           restage_request
           expect(last_response.status).to eq(403)
         end
@@ -73,7 +71,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['code']).to eq(170002)
+            expect(parsed_response['code']).to eq(170_002)
           end
         end
 
@@ -85,7 +83,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(404)
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['code']).to eq(100004)
+            expect(parsed_response['code']).to eq(100_004)
             expect(parsed_response['description']).to eq('The app could not be found: blub-blub-blub')
           end
         end
@@ -102,7 +100,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['code']).to eq(170001)
+            expect(parsed_response['code']).to eq(170_001)
             expect(parsed_response['description']).to eq('Staging error: App must have at least 1 instance to stage.')
           end
         end
@@ -120,7 +118,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(404)
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['code']).to eq(100004)
+            expect(parsed_response['code']).to eq(100_004)
             expect(parsed_response['description']).to match(/The app could not be found:/)
           end
         end
@@ -141,7 +139,7 @@ module VCAP::CloudController
               it 'correctly propagates the error' do
                 restage_request
                 expect(last_response.status).to eq(400)
-                expect(decoded_response['code']).to eq(320003)
+                expect(decoded_response['code']).to eq(320_003)
                 expect(decoded_response['description']).to match(/Docker support has not been enabled./)
               end
             end
@@ -155,18 +153,19 @@ module VCAP::CloudController
 
           context 'when the restage completes without error' do
             let(:user_audit_info) { UserAuditInfo.from_context(SecurityContext) }
+
             before do
               allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
             end
 
             it 'generates an audit.app.restage event' do
-              expect {
+              expect do
                 restage_request
-              }.to change { Event.count }.by(1)
+              end.to change(Event, :count).by(1)
 
               expect(last_response.status).to eq(201)
               expect(app_event_repository).to have_received(:record_app_restage).with(process,
-                user_audit_info)
+                                                                                      user_audit_info)
             end
           end
 
@@ -176,10 +175,10 @@ module VCAP::CloudController
             end
 
             it 'does not generate an audit.app.restage event' do
-              expect {
+              expect do
                 restage_request
-              }.to raise_error(/Error staging/) {
-                expect(app_event_repository).to_not have_received(:record_app_restage)
+              end.to raise_error(/Error staging/) {
+                expect(app_event_repository).not_to have_received(:record_app_restage)
               }
             end
           end

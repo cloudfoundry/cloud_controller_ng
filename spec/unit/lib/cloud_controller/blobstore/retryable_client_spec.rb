@@ -54,149 +54,150 @@ module CloudController
       describe 'retries' do
         let(:wrapped_client) { instance_double(NullClient) }
 
-        context '#exists?' do
+        describe '#exists?' do
           let(:key) { 'some-key' }
+
           before { allow(wrapped_client).to receive(:exists?).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.exists?(key)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:exists?).with(key).exactly(num_retries).times
           end
         end
 
-        context '#download_from_blobstore' do
+        describe '#download_from_blobstore' do
           let(:source_key) { 'some-key' }
           let(:destination_path) { 'some-path' }
 
           before { allow(wrapped_client).to receive(:download_from_blobstore).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.download_from_blobstore(source_key, destination_path)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:download_from_blobstore).with(source_key, destination_path, mode: nil).exactly(num_retries).times
           end
         end
 
-        context '#cp_to_blobstore' do
+        describe '#cp_to_blobstore' do
           let(:source_path) { 'some-path' }
           let(:destination_key) { 'some-key' }
 
           before { allow(wrapped_client).to receive(:cp_to_blobstore).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.cp_to_blobstore(source_path, destination_key)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:cp_to_blobstore).with(source_path, destination_key).exactly(num_retries).times
           end
         end
 
-        context '#cp_r_to_blobstore' do
+        describe '#cp_r_to_blobstore' do
           let(:source_dir) { 'some-dir' }
 
           before { allow(wrapped_client).to receive(:cp_r_to_blobstore).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.cp_r_to_blobstore(source_dir)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:cp_r_to_blobstore).with(source_dir).exactly(num_retries).times
           end
         end
 
-        context '#cp_file_between_keys' do
+        describe '#cp_file_between_keys' do
           let(:source_key) { 'some-key' }
           let(:destination_key) { 'some-destination-key' }
 
           before { allow(wrapped_client).to receive(:cp_file_between_keys).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.cp_file_between_keys(source_key, destination_key)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:cp_file_between_keys).with(source_key, destination_key).exactly(num_retries).times
           end
         end
 
-        context '#delete_all' do
+        describe '#delete_all' do
           let(:page_size) { 123 }
 
           before { allow(wrapped_client).to receive(:delete_all).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.delete_all(page_size)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:delete_all).with(page_size).exactly(num_retries).times
           end
         end
 
-        context '#delete_all_in_path' do
+        describe '#delete_all_in_path' do
           let(:path) { 'some-path' }
 
           before { allow(wrapped_client).to receive(:delete_all_in_path).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.delete_all_in_path(path)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:delete_all_in_path).with(path).exactly(num_retries).times
           end
         end
 
-        context '#delete' do
+        describe '#delete' do
           let(:key) { 'some-key' }
 
           before { allow(wrapped_client).to receive(:delete).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.delete(key)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:delete).with(key).exactly(num_retries).times
           end
         end
 
-        context '#delete_blob' do
+        describe '#delete_blob' do
           let(:blob) { 'some-blob' }
 
           before { allow(wrapped_client).to receive(:delete_blob).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.delete_blob(blob)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:delete_blob).with(blob).exactly(num_retries).times
           end
         end
 
-        context '#blob' do
+        describe '#blob' do
           let(:key) { 'some-blob' }
 
           before { allow(wrapped_client).to receive(:blob).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect {
+            expect do
               client.blob(key)
-            }.to raise_error RetryableError
+            end.to raise_error RetryableError
 
             expect(wrapped_client).to have_received(:blob).with(key).exactly(num_retries).times
           end
         end
 
-        context '#files_for' do
+        describe '#files_for' do
           let(:prefix) { 'pre' }
           let(:ignored_directory_prefixes) { ['no'] }
 
@@ -245,9 +246,9 @@ module CloudController
           operation = double(:operation)
           allow(operation).to receive(:call).and_raise(RetryableError.new)
 
-          expect {
+          expect do
             client.send(:with_retries, log_prefix, log_data) { operation.call }
-          }.to raise_error(RetryableError)
+          end.to raise_error(RetryableError)
 
           expect(operation).to have_received(:call).exactly(num_retries).times
         end
@@ -256,9 +257,9 @@ module CloudController
           operation = double(:operation)
           allow(operation).to receive(:call).and_raise(RetryableError.new)
 
-          expect {
+          expect do
             client.send(:with_retries, log_prefix, log_data) { operation.call }
-          }.to raise_error RetryableError
+          end.to raise_error RetryableError
 
           expect(logger).to have_received(:debug).exactly(num_retries).times
         end

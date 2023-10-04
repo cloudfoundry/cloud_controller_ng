@@ -18,7 +18,7 @@ class BaseHealthCheckPolicy
       'type' => { sym: :health_check_type, str: 'health check type' },
       'invocation_timeout' => { sym: :health_check_invocation_timeout, str: 'health check invocation timeout' },
       'interval' => { sym: :health_check_interval, str: 'health check interval' },
-      'endpoint' => { sym: :health_check_http_endpoint, str: 'health check endpoint' },
+      'endpoint' => { sym: :health_check_http_endpoint, str: 'health check endpoint' }
     }
   end
 
@@ -38,9 +38,9 @@ class BaseHealthCheckPolicy
 
     @errors.add(:health_check_timeout, :less_than_one) if @health_check_timeout < 1
     max_timeout = VCAP::CloudController::Config.config.get(:maximum_health_check_timeout)
-    if @health_check_timeout > max_timeout
-      @errors.add(@var_presenter['timeout'][:sym], "Maximum exceeded: max #{max_timeout}s")
-    end
+    return unless @health_check_timeout > max_timeout
+
+    @errors.add(@var_presenter['timeout'][:sym], "Maximum exceeded: max #{max_timeout}s")
   end
 
   def port_presence_invalid_message
@@ -64,9 +64,9 @@ class BaseHealthCheckPolicy
   end
 
   def validate_health_check_type_and_port_presence_are_in_agreement
-    if is_health_check_type_port && @process.ports == []
-      @errors.add(:ports, port_presence_invalid_message)
-    end
+    return unless is_health_check_type_port && @process.ports == []
+
+    @errors.add(:ports, port_presence_invalid_message)
   end
 
   def is_health_check_type_port
@@ -75,7 +75,7 @@ class BaseHealthCheckPolicy
 
   def validate_health_check_http_endpoint
     if @health_check_type == VCAP::CloudController::HealthCheckTypes::HTTP && \
-        !UriUtils.is_uri_path?(@health_check_http_endpoint)
+       !UriUtils.is_uri_path?(@health_check_http_endpoint)
       @errors.add(@var_presenter['endpoint'][:sym], http_endpoint_invalid_message)
     end
   end
@@ -83,10 +83,9 @@ class BaseHealthCheckPolicy
   def validate_type
     error_msg = 'must be one of ' + @valid_health_check_types.join(', ')
 
-    unless @health_check_type.nil?
-      unless @valid_health_check_types.include? @health_check_type
-        @errors.add(@var_presenter['type'][:sym], error_msg)
-      end
-    end
+    return if @health_check_type.nil?
+    return if @valid_health_check_types.include? @health_check_type
+
+    @errors.add(@var_presenter['type'][:sym], error_msg)
   end
 end

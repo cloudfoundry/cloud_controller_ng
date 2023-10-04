@@ -14,23 +14,32 @@ module CloudController::Presenters::V2
     describe '#entity_hash' do
       before do
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
+        VCAP::CloudController::Buildpack.make(name: 'schmuby')
+        process.app.lifecycle_data.update(
+          buildpacks:
+        )
+        process.desired_droplet.update(
+          buildpack_receipt_detect_output: 'detected buildpack',
+          buildpack_receipt_buildpack_guid: 'i am a buildpack guid'
+        )
+        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
       end
 
       let(:space) { VCAP::CloudController::Space.make }
       let(:stack) { VCAP::CloudController::Stack.make }
       let(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
-          name:             'utako',
-          space:            space,
-          stack:            stack,
+          name: 'utako',
+          space: space,
+          stack: stack,
           environment_json: { UNICORNS: 'RAINBOWS' },
-          memory:           1024,
-          disk_quota:       1024,
-          ports:            [1234],
-          state:            'STOPPED',
-          command:          'start',
-          enable_ssh:       true,
-          diego:            diego,
+          memory: 1024,
+          disk_quota: 1024,
+          ports: [1234],
+          state: 'STOPPED',
+          command: 'start',
+          enable_ssh: true,
+          diego: diego,
           created_at: Time.now,
           updated_at: Time.now,
           revision: revision
@@ -39,60 +48,49 @@ module CloudController::Presenters::V2
       let(:diego) { true }
       let(:buildpack) { 'https://github.com/custombuildpack' }
       let(:buildpacks) { [buildpack] }
-      let(:revision) { VCAP::CloudController::RevisionModel.make(
-        environment_variables: {}
-      )
-      }
-
-      before do
-        VCAP::CloudController::Buildpack.make(name: 'schmuby')
-        process.app.lifecycle_data.update(
-          buildpacks: buildpacks
+      let(:revision) do
+        VCAP::CloudController::RevisionModel.make(
+          environment_variables: {}
         )
-        process.desired_droplet.update(
-          buildpack_receipt_detect_output:  'detected buildpack',
-          buildpack_receipt_buildpack_guid: 'i am a buildpack guid',
-        )
-        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
       end
 
       it 'returns the app entity and associated urls' do
         expected_entity_hash = {
-          'name'                                      => 'utako',
-          'production'                                => anything,
-          'space_guid'                                => space.guid,
-          'stack_guid'                                => stack.guid,
-          'buildpack'                                 => 'https://github.com/custombuildpack',
-          'detected_buildpack'                        => 'detected buildpack',
-          'detected_buildpack_guid'                   => 'i am a buildpack guid',
-          'environment_json'                          => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
-          'memory'                                    => 1024,
-          'instances'                                 => 1,
-          'disk_quota'                                => 1024,
-          'log_rate_limit'                            => 1_048_576,
-          'state'                                     => 'STOPPED',
-          'version'                                   => process.version,
-          'command'                                   => 'start',
-          'console'                                   => anything,
-          'debug'                                     => anything,
-          'staging_task_id'                           => process.latest_build.guid,
-          'package_state'                             => 'PENDING',
-          'health_check_type'                         => 'port',
-          'health_check_timeout'                      => nil,
-          'health_check_http_endpoint'                => nil,
-          'staging_failed_reason'                     => anything,
-          'staging_failed_description'                => 'because',
-          'diego'                                     => true,
-          'docker_image'                              => nil,
-          'docker_credentials'                        => {
+          'name' => 'utako',
+          'production' => anything,
+          'space_guid' => space.guid,
+          'stack_guid' => stack.guid,
+          'buildpack' => 'https://github.com/custombuildpack',
+          'detected_buildpack' => 'detected buildpack',
+          'detected_buildpack_guid' => 'i am a buildpack guid',
+          'environment_json' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+          'memory' => 1024,
+          'instances' => 1,
+          'disk_quota' => 1024,
+          'log_rate_limit' => 1_048_576,
+          'state' => 'STOPPED',
+          'version' => process.version,
+          'command' => 'start',
+          'console' => anything,
+          'debug' => anything,
+          'staging_task_id' => process.latest_build.guid,
+          'package_state' => 'PENDING',
+          'health_check_type' => 'port',
+          'health_check_timeout' => nil,
+          'health_check_http_endpoint' => nil,
+          'staging_failed_reason' => anything,
+          'staging_failed_description' => 'because',
+          'diego' => true,
+          'docker_image' => nil,
+          'docker_credentials' => {
             'username' => nil,
-            'password' => nil,
+            'password' => nil
           },
-          'package_updated_at'                        => anything,
-          'detected_start_command'                    => anything,
-          'enable_ssh'                                => true,
-          'ports'                                     => [1234],
-          'relationship_key'                          => 'relationship_value'
+          'package_updated_at' => anything,
+          'detected_start_command' => anything,
+          'enable_ssh' => true,
+          'ports' => [1234],
+          'relationship_key' => 'relationship_value'
         }
 
         actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
@@ -106,8 +104,8 @@ module CloudController::Presenters::V2
 
         expect(v2_process_hash['metadata']).to eq(
           {
-            'guid'       => process.app.guid,
-            'url'        => 'controller-url',
+            'guid' => process.app.guid,
+            'url' => 'controller-url',
             'created_at' => process.created_at,
             'updated_at' => process.updated_at
           }
@@ -176,8 +174,8 @@ module CloudController::Presenters::V2
             actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_image']).to eq('someimage')
-            expect(actual_entity_hash['docker_credentials']['username']).to eq(nil)
-            expect(actual_entity_hash['docker_credentials']['password']).to eq(nil)
+            expect(actual_entity_hash['docker_credentials']['username']).to be_nil
+            expect(actual_entity_hash['docker_credentials']['password']).to be_nil
             expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
         end

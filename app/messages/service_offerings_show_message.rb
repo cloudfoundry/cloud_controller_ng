@@ -5,12 +5,12 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
     validates :fields, allow_nil: true, fields: {
       allowed: {
-        'service_broker' => ['guid', 'name']
+        'service_broker' => %w[guid name]
       }
     }
 
     def self.from_params(params)
-      super(params, [], fields: %w(fields))
+      super(params, [], fields: %w[fields])
     end
   end
 end

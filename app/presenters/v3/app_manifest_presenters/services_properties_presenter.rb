@@ -5,7 +5,7 @@ module VCAP::CloudController
         class ServicesPropertiesPresenter
           def to_hash(service_bindings:, **_)
             service_instance_names = service_bindings.map(&:service_instance_name)
-            { services: alphabetize(service_instance_names).presence, }
+            { services: alphabetize(service_instance_names).presence }
           end
 
           def alphabetize(array)

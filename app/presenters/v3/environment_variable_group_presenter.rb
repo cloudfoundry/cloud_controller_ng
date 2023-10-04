@@ -21,7 +21,7 @@ module VCAP::CloudController::Presenters::V3
       {
         self: {
           href: url_builder.build_url(path: "/v3/environment_variable_groups/#{env_group.name}")
-        },
+        }
       }
     end
   end

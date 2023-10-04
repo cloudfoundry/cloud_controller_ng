@@ -19,17 +19,17 @@ module CloudController
 
       def build_http_uri(path)
         URI::HTTP.build(
-          host:     @blobstore_options[:blobstore_host],
-          port:     @blobstore_options[:blobstore_external_port],
-          path:     path,
+          host: @blobstore_options[:blobstore_host],
+          port: @blobstore_options[:blobstore_external_port],
+          path: path
         )
       end
 
       def build_https_uri(path)
         URI::HTTPS.build(
-          host:     @blobstore_options[:blobstore_host],
-          port:     @blobstore_options[:blobstore_tls_port],
-          path:     path,
+          host: @blobstore_options[:blobstore_host],
+          port: @blobstore_options[:blobstore_tls_port],
+          path: path
         )
       end
     end

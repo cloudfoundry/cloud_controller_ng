@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
       {
         usage_summary: {
           started_instances: VCAP::CloudController::OrganizationInstanceUsageCalculator.get_instance_usage(org),
-          memory_in_mb: org.memory_used,
+          memory_in_mb: org.memory_used
         },
         links: build_links
       }

@@ -15,7 +15,8 @@ module Diego
         client_key_file,
         connect_timeout,
         send_timeout,
-        receive_timeout)
+        receive_timeout
+      )
     end
 
     def ping
@@ -39,7 +40,7 @@ module Diego
     end
 
     def desire_task(task_definition:, domain:, task_guid:)
-      request = protobuf_encode!({ task_definition: task_definition, domain: domain, task_guid: task_guid }, Bbs::Models::DesireTaskRequest)
+      request = protobuf_encode!({ task_definition:, domain:, task_guid: }, Bbs::Models::DesireTaskRequest)
 
       response = with_request_error_handling do
         client.post(Routes::DESIRE_TASK, request, headers)
@@ -50,7 +51,7 @@ module Diego
     end
 
     def task_by_guid(task_guid)
-      request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskByGuidRequest)
+      request = protobuf_encode!({ task_guid: }, Bbs::Models::TaskByGuidRequest)
 
       response = with_request_error_handling do
         client.post(Routes::TASK_BY_GUID, request, headers)
@@ -61,7 +62,7 @@ module Diego
     end
 
     def tasks(domain: '', cell_id: '')
-      request = protobuf_encode!({ domain: domain, cell_id: cell_id }, Bbs::Models::TasksRequest)
+      request = protobuf_encode!({ domain:, cell_id: }, Bbs::Models::TasksRequest)
 
       response = with_request_error_handling do
         client.post(Routes::LIST_TASKS, request, headers)
@@ -72,7 +73,7 @@ module Diego
     end
 
     def cancel_task(task_guid)
-      request = protobuf_encode!({ task_guid: task_guid }, Bbs::Models::TaskGuidRequest)
+      request = protobuf_encode!({ task_guid: }, Bbs::Models::TaskGuidRequest)
 
       response = with_request_error_handling do
         client.post(Routes::CANCEL_TASK, request, headers)
@@ -94,7 +95,7 @@ module Diego
     end
 
     def desired_lrp_by_process_guid(process_guid)
-      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::DesiredLRPByProcessGuidRequest)
+      request = protobuf_encode!({ process_guid: }, Bbs::Models::DesiredLRPByProcessGuidRequest)
 
       response = with_request_error_handling do
         client.post(Routes::DESIRED_LRP_BY_PROCESS_GUID, request, headers)
@@ -116,7 +117,7 @@ module Diego
     end
 
     def remove_desired_lrp(process_guid)
-      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::RemoveDesiredLRPRequest)
+      request = protobuf_encode!({ process_guid: }, Bbs::Models::RemoveDesiredLRPRequest)
 
       response = with_request_error_handling do
         client.post(Routes::REMOVE_DESIRED_LRP, request, headers)
@@ -127,7 +128,7 @@ module Diego
     end
 
     def retire_actual_lrp(actual_lrp_key)
-      request = protobuf_encode!({ actual_lrp_key: actual_lrp_key }, Bbs::Models::RetireActualLRPRequest)
+      request = protobuf_encode!({ actual_lrp_key: }, Bbs::Models::RetireActualLRPRequest)
 
       response = with_request_error_handling do
         client.post(Routes::RETIRE_ACTUAL_LRP, request, headers)
@@ -138,7 +139,7 @@ module Diego
     end
 
     def desired_lrp_scheduling_infos(domain)
-      request = protobuf_encode!({ domain: domain }, Bbs::Models::DesiredLRPsRequest)
+      request = protobuf_encode!({ domain: }, Bbs::Models::DesiredLRPsRequest)
 
       response = with_request_error_handling do
         client.post(Routes::DESIRED_LRP_SCHEDULING_INFOS, request, headers)
@@ -149,7 +150,7 @@ module Diego
     end
 
     def actual_lrps_by_process_guid(process_guid)
-      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::ActualLRPsRequest)
+      request = protobuf_encode!({ process_guid: }, Bbs::Models::ActualLRPsRequest)
 
       response = with_request_error_handling do
         client.post(Routes::ACTUAL_LRPS, request, headers)
@@ -159,10 +160,10 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::ActualLRPsResponse)
     end
 
-    def with_request_error_handling(&blk)
+    def with_request_error_handling
       tries ||= 3
       yield
-    rescue => e
+    rescue StandardError => e
       retry unless (tries -= 1).zero?
       raise RequestError.new(e.message)
     end
@@ -175,7 +176,7 @@ module Diego
       # See below link to understand proto3 message encoding
       # https://developers.google.com/protocol-buffers/docs/reference/ruby-generated#message
       protobuf_message_class.encode(protobuf_message_class.new(hash))
-    rescue => e
+    rescue StandardError => e
       raise EncodeError.new(e.message)
     end
 
@@ -185,7 +186,7 @@ module Diego
 
     def protobuf_decode!(message, protobuf_decoder)
       protobuf_decoder.decode(message)
-    rescue => e
+    rescue StandardError => e
       raise DecodeError.new(e.message)
     end
 

@@ -2,9 +2,7 @@ module VCAP::CloudController
   module ServiceUpdateValidator
     class << self
       def validate!(service_instance, space:, service_plan:, service:, update_attrs:)
-        if service_instance.is_a?(UserProvidedServiceInstance)
-          raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded')
-        end
+        raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded') if service_instance.is_a?(UserProvidedServiceInstance)
 
         validate_name_update(service_instance, update_attrs)
         prevent_changing_space(space, update_attrs)
@@ -22,29 +20,27 @@ module VCAP::CloudController
         return unless parameters
         return if SecurityContext.admin?
 
-        if ServicePlan.user_visible(SecurityContext.current_user).filter(guid: service_instance.service_plan.guid).empty?
-          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceWithInaccessiblePlanNotUpdateable', 'parameters')
-        end
+        return unless ServicePlan.user_visible(SecurityContext.current_user).filter(guid: service_instance.service_plan.guid).empty?
+
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceWithInaccessiblePlanNotUpdateable', 'parameters')
       end
 
       def validate_name_update(service_instance, update_attrs)
         return unless update_attrs['name'] && service_instance.shared?
 
-        if update_attrs['name'] != service_instance.name
-          raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
-        end
+        return unless update_attrs['name'] != service_instance.name
+
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
       end
 
       def validate_maintenance_info_update(service_plan, maintenance_info)
         return unless maintenance_info
 
-        if service_plan.maintenance_info.nil?
-          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSupported')
-        end
+        raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSupported') if service_plan.maintenance_info.nil?
 
-        unless VCAP::SemverValidator.valid?(maintenance_info['version'])
-          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSemver')
-        end
+        return if VCAP::SemverValidator.valid?(maintenance_info['version'])
+
+        raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSemver')
       end
 
       def prevent_changing_space(space, update_attrs)
@@ -52,9 +48,9 @@ module VCAP::CloudController
       end
 
       def prevent_maintenance_info_and_plan_update(current_plan, requested_plan_guid, requested_maintenance_info)
-        if plan_update_requested?(requested_plan_guid, current_plan) && requested_maintenance_info
-          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotUpdatableWhenChangingPlan')
-        end
+        return unless plan_update_requested?(requested_plan_guid, current_plan) && requested_maintenance_info
+
+        raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotUpdatableWhenChangingPlan')
       end
 
       def space_change_requested?(requested_space_guid, current_space)
@@ -68,20 +64,20 @@ module VCAP::CloudController
       def check_plan_still_valid(service_instance, current_plan, requested_plan_guid)
         requested_plan = requested_plan_guid ? ServicePlan.find(guid: requested_plan_guid) : current_plan
 
-        if !service_instance.valid_with_plan?(requested_plan)
-          unable_to_update_to_nonfree_plan!(service_instance)
-        end
+        return if service_instance.valid_with_plan?(requested_plan)
+
+        unable_to_update_to_nonfree_plan!(service_instance)
       end
 
       def validate_changing_plan(current_plan, service, service_instance, requested_plan_guid)
-        if plan_update_requested?(requested_plan_guid, current_plan)
-          plan_not_updateable! unless service_allows_plan_update?(service, current_plan)
+        return unless plan_update_requested?(requested_plan_guid, current_plan)
 
-          requested_plan = ServicePlan.find(guid: requested_plan_guid)
-          invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
+        plan_not_updateable! unless service_allows_plan_update?(service, current_plan)
 
-          unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings_dataset.any?
-        end
+        requested_plan = ServicePlan.find(guid: requested_plan_guid)
+        invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
+
+        unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings_dataset.any?
       end
 
       def invalid_plan?(requested_plan, service)

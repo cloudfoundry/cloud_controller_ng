@@ -11,7 +11,7 @@ module VCAP::CloudController
     it 'returns the correct properties' do
       expect(info.buildpack).to eq(buildpack_name_or_url)
       expect(info.buildpack_record).to eq(buildpack_record)
-      expect(info.buildpack_url).to eq(nil)
+      expect(info.buildpack_url).to be_nil
     end
 
     context 'when it is provided a buildpack url' do
@@ -28,7 +28,7 @@ module VCAP::CloudController
     describe '#buildpack_exists_in_db?' do
       context 'when there is a record' do
         it 'is true' do
-          expect(info.buildpack_exists_in_db?).to be_truthy
+          expect(info).to be_buildpack_exists_in_db
         end
       end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
         let(:buildpack_record) { nil }
 
         it 'is false' do
-          expect(info.buildpack_exists_in_db?).to be_falsey
+          expect(info).not_to be_buildpack_exists_in_db
         end
       end
     end
@@ -47,7 +47,7 @@ module VCAP::CloudController
         let(:buildpack_record) { Buildpack.make enabled: true }
 
         it 'is true' do
-          expect(info.buildpack_enabled?).to be_truthy
+          expect(info).to be_buildpack_enabled
         end
       end
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
         let(:buildpack_record) { Buildpack.make enabled: false }
 
         it 'is false' do
-          expect(info.buildpack_enabled?).to be_falsey
+          expect(info).not_to be_buildpack_enabled
         end
       end
     end

@@ -11,11 +11,11 @@ module VCAP::CloudController
 
     # NOTE: that "apps" here returns processes for v2 meta-reasons
     many_to_many :apps,
-      class:             'VCAP::CloudController::ProcessModel',
-      join_table:        BuildpackLifecycleDataModel.table_name,
-      left_primary_key:  :name, left_key: :stack,
-      right_primary_key: :app_guid, right_key: :app_guid,
-      conditions:        { type: ProcessTypes::WEB }
+                 class: 'VCAP::CloudController::ProcessModel',
+                 join_table: BuildpackLifecycleDataModel.table_name,
+                 left_primary_key: :name, left_key: :stack,
+                 right_primary_key: :app_guid, right_key: :app_guid,
+                 conditions: { type: ProcessTypes::WEB }
 
     one_to_many :labels, class: 'VCAP::CloudController::StackLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::StackAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -48,17 +48,15 @@ module VCAP::CloudController
     end
 
     def build_rootfs_image
-      super || self.name
+      super || name
     end
 
     def run_rootfs_image
-      super || self.name
+      super || name
     end
 
     def self.configure(file_path)
-      @config_file = if file_path
-                       ConfigFile.new(file_path)
-                     end
+      @config_file = (ConfigFile.new(file_path) if file_path)
     end
 
     def self.populate
@@ -73,13 +71,11 @@ module VCAP::CloudController
       raise MissingConfigFileError unless @config_file
 
       self[name: @config_file.default].tap do |found_stack|
-        unless found_stack
-          raise MissingDefaultStackError.new("Default stack with name '#{@config_file.default}' not found")
-        end
+        raise MissingDefaultStackError.new("Default stack with name '#{@config_file.default}' not found") unless found_stack
       end
     end
 
-    def self.user_visibility_filter(user)
+    def self.user_visibility_filter(_user)
       full_dataset_filter
     end
 
@@ -87,9 +83,7 @@ module VCAP::CloudController
       stack = find(name: hash['name'])
       if stack
         stack.set(hash)
-        if stack.modified?
-          Steno.logger('cc.stack').warn('stack.populate.collision', hash)
-        end
+        Steno.logger('cc.stack').warn('stack.populate.collision', hash) if stack.modified?
       else
         create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
       end
@@ -113,11 +107,11 @@ module VCAP::CloudController
       Schema = Membrane::SchemaParser.parse do
         {
           'default' => String,
-          'stacks'  => [{
-            'name'        => String,
+          'stacks' => [{
+            'name' => String,
             'description' => String,
             optional('build_rootfs_image') => String,
-            optional('run_rootfs_image') => String,
+            optional('run_rootfs_image') => String
           }]
         }
       end

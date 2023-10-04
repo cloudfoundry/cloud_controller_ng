@@ -3,18 +3,18 @@ module RuboCop
     module Migration
       class RequirePrimaryKey < RuboCop::Cop::Cop
         # Require all newly created tables to have a primary key defined
-        TABLE_CREATE_METHODS = %i{
+        TABLE_CREATE_METHODS = %i[
           create_table
-        }.freeze
+        ].freeze
         PRIMARY_KEY_WARNING = 'Please include a call to primary_key when creating a table.' +
-          ' This is to ensure compatibility with clustered databases.'.freeze
+                              ' This is to ensure compatibility with clustered databases.'.freeze
 
         def on_block(node)
           return unless creating_table?(node)
 
-          unless has_primary_key_call?(node) || has_vcap_migration_call?(node)
-            add_offense(node, location: :expression, message: PRIMARY_KEY_WARNING)
-          end
+          return if has_primary_key_call?(node) || has_vcap_migration_call?(node)
+
+          add_offense(node, location: :expression, message: PRIMARY_KEY_WARNING)
         end
 
         private

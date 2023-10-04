@@ -26,12 +26,12 @@ Sequel.migration do
 
     alter_table(:security_groups_spaces) do
       drop_foreign_key [:app_security_group_id], name: :fk_app_security_group_id
-      drop_index [:app_security_group_id, :space_id], name: 'asgs_spaces_ids'
+      drop_index %i[app_security_group_id space_id], name: 'asgs_spaces_ids'
 
       rename_column(:app_security_group_id, :security_group_id)
 
       add_foreign_key [:security_group_id], :security_groups, name: :fk_security_group_id
-      add_index [:security_group_id, :space_id], name: 'sgs_spaces_ids'
+      add_index %i[security_group_id space_id], name: 'sgs_spaces_ids'
     end
   end
 end

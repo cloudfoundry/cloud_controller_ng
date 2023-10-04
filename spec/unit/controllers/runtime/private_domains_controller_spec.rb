@@ -11,16 +11,16 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(PrivateDomainsController).to have_creatable_attributes({
-          name: { type: 'string', required: true },
-          owning_organization_guid: { type: 'string', required: true }
-        })
+                                                                        name: { type: 'string', required: true },
+                                                                        owning_organization_guid: { type: 'string', required: true }
+                                                                      })
       end
 
       it do
         expect(PrivateDomainsController).to have_updatable_attributes({
-          name: { type: 'string' },
-          owning_organization_guid: { type: 'string' }
-        })
+                                                                        name: { type: 'string' },
+                                                                        owning_organization_guid: { type: 'string' }
+                                                                      })
       end
     end
 
@@ -96,8 +96,9 @@ module VCAP::CloudController
       it do
         expect(PrivateDomainsController).to have_nested_routes(
           {
-            shared_organizations: [:get],
-          })
+            shared_organizations: [:get]
+          }
+        )
       end
 
       describe 'shared organizations associations' do
@@ -113,7 +114,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
           expect(entity).to have_key('shared_organizations_url')
-          expect(entity).to_not have_key('shared_organizations')
+          expect(entity).not_to have_key('shared_organizations')
         end
       end
     end
@@ -130,7 +131,7 @@ module VCAP::CloudController
         post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(130005)
+        expect(decoded_response['code']).to eq(130_005)
         expect(decoded_response['description']).to include(organization.name)
       end
     end

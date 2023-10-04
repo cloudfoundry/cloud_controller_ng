@@ -10,12 +10,10 @@ module TestConfig
       @context || :api
     end
 
-    def context=(context)
-      @context = context
-    end
+    attr_writer :context
 
-    def override(**overrides)
-      @config_instance = load(**overrides)
+    def override(**)
+      @config_instance = load(**)
     end
 
     def reset
@@ -34,7 +32,7 @@ module TestConfig
 
     def load(**overrides)
       config_hash = defaults.merge(overrides)
-      config = VCAP::CloudController::Config.new(config_hash, context: context)
+      config = VCAP::CloudController::Config.new(config_hash, context:)
       VCAP::CloudController::Config.instance_variable_set(:@instance, config)
       configure_components(config)
       config
@@ -42,36 +40,36 @@ module TestConfig
 
     def defaults
       config_file = File.join(Paths::CONFIG, 'cloud_controller.yml')
-      config_hash = VCAP::CloudController::Config.load_from_file(config_file, context: context).config_hash
+      config_hash = VCAP::CloudController::Config.load_from_file(config_file, context:).config_hash
 
       fog_connection = {
         blobstore_timeout: 5,
         provider: 'AWS',
         aws_access_key_id: 'fake_aws_key_id',
-        aws_secret_access_key: 'fake_secret_access_key',
+        aws_secret_access_key: 'fake_secret_access_key'
       }
 
       config_hash.update(
         nginx: { use_nginx: true },
         resource_pool: {
           resource_directory_key: 'spec-cc-resources',
-          fog_connection: fog_connection,
+          fog_connection: fog_connection
         },
         packages: {
           app_package_directory_key: 'cc-packages',
           fog_connection: fog_connection,
-          max_valid_packages_stored: 42,
+          max_valid_packages_stored: 42
         },
         buildpacks: {
           buildpack_directory_key: 'cc-buildpacks',
-          fog_connection: fog_connection,
+          fog_connection: fog_connection
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
           fog_connection: fog_connection,
-          max_staged_droplets_stored: 42,
+          max_staged_droplets_stored: 42
         },
-        db: DbConfig.new.config,
+        db: DbConfig.new.config
       )
 
       config_hash.deep_merge!(uaa: { internal_url: 'https://uaa.service.cf.internal' })
@@ -98,7 +96,7 @@ module TestConfig
     def is_using_local_blobstore?(config)
       res_pool_connection_provider = config.get(:resource_pool, :fog_connection)[:provider].downcase
       packages_connection_provider = config.get(:packages, :fog_connection)[:provider].downcase
-      return res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
+      res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
     end
   end
 end

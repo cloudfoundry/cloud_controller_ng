@@ -9,19 +9,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }
@@ -29,7 +29,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { AppModel.make(droplet:) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 
@@ -37,6 +37,7 @@ module VCAP::CloudController
         Fog.unmock!
         TestConfig.override(**staging_config)
       end
+
       after { FileUtils.rm_rf(workspace) }
 
       def get_and_redirect(url)
@@ -58,7 +59,7 @@ module VCAP::CloudController
         let(:tls_port) { Config.config.get(:tls_port) }
         let(:expected_redirect) { "https://#{hostname}:#{tls_port}/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download" }
 
-        it 'should redirect to the url provided by the blobstore_url_generator' do
+        it 'redirects to the url provided by the blobstore_url_generator' do
           upload_droplet
           get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
 
@@ -114,7 +115,7 @@ module VCAP::CloudController
       end
 
       context 'with an invalid app' do
-        it 'should return an error' do
+        it 'returns an error' do
           get_and_redirect '/internal/v2/droplets/bad/bogus/download'
           expect(last_response.status).to eq(404)
         end
@@ -126,19 +127,19 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection:            {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
-            app_package_directory_key: 'cc-packages',
+            app_package_directory_key: 'cc-packages'
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection:        {
-              provider:   'Local',
+            fog_connection: {
+              provider: 'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
-          },
+          }
         }
       end
       let(:staging_config) { original_staging_config }
@@ -146,7 +147,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { AppModel.make(droplet:) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 
@@ -154,6 +155,7 @@ module VCAP::CloudController
         Fog.unmock!
         TestConfig.override(**staging_config)
       end
+
       after { FileUtils.rm_rf(workspace) }
 
       def upload_droplet(target_droplet=droplet)
@@ -174,7 +176,7 @@ module VCAP::CloudController
 
           v3_app.update(revisions_enabled: true)
           revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
-          process.update(revision: revision)
+          process.update(revision:)
 
           get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
           expect(last_response.status).to eq(200), last_response.body
@@ -230,7 +232,7 @@ module VCAP::CloudController
       end
 
       context 'with an invalid app' do
-        it 'should return an error' do
+        it 'returns an error' do
           get '/internal/v4/droplets/bad/bogus/download'
           expect(last_response.status).to eq(404)
         end
@@ -241,7 +243,7 @@ module VCAP::CloudController
           allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         end
 
-        it 'should redirect to the url provided by the blobstore_url_generator' do
+        it 'redirects to the url provided by the blobstore_url_generator' do
           upload_droplet
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
 
@@ -264,7 +266,7 @@ module VCAP::CloudController
 
             v3_app.update(revisions_enabled: true)
             revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
-            process.update(revision: revision)
+            process.update(revision:)
 
             get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
 

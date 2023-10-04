@@ -26,24 +26,24 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       owner_klass.one_to_many :dogs
     end
 
-    it 'should add a <relation> method' do
+    it 'adds a <relation> method' do
       expect(@o.dogs).to be_empty
     end
 
-    it 'should add a add_<relation> method that takes an object' do
+    it 'adds a add_<relation> method that takes an object' do
       d = dog_klass.create
       @o.add_dog d
       expect(@o.dogs).to include(d)
     end
 
-    it 'should add a add_<relation> method that takes an id' do
+    it 'adds a add_<relation> method that takes an id' do
       d = dog_klass.create
       @o.add_dog d.id
       d.refresh
       expect(@o.dogs).to include(d)
     end
 
-    it 'should add a <relation>_ids= method that takes an array of ids' do
+    it 'adds a <relation>_ids= method that takes an array of ids' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -60,7 +60,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@o.dogs).to include(d2)
     end
 
-    it 'should add a add_<relation>_guids= method that takes a guid' do
+    it 'adds a add_<relation>_guids= method that takes a guid' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -77,9 +77,9 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@o.dogs).to include(d2)
     end
 
-    it 'should define a <relation>_ids accessor method' do
+    it 'defines a <relation>_ids accessor method' do
       expect(@o.dog_ids).to be_empty
-      expect(@o.dog_ids.respond_to?(:each)).to eq(true)
+      expect(@o.dog_ids.respond_to?(:each)).to be(true)
 
       d1 = dog_klass.create
       d2 = dog_klass.create
@@ -92,7 +92,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@o.dog_ids).to include(d2.id)
     end
 
-    it 'should allow multiple adds of the same id' do
+    it 'allows multiple adds of the same id' do
       d1 = dog_klass.create
       @o.add_dog d1
       @o.add_dog d1
@@ -101,7 +101,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@o.dogs.length).to eq(1)
     end
 
-    it 'should define a remove_<relation> method that takes an object' do
+    it 'defines a remove_<relation> method that takes an object' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -118,7 +118,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@o.dogs.length).to eq(1)
     end
 
-    it 'should define a remove_<relation> method that takes an id' do
+    it 'defines a remove_<relation> method that takes an id' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -164,24 +164,24 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@n2.dogs).to be_empty
     end
 
-    it 'should add a <relation> method' do
+    it 'adds a <relation> method' do
       expect(@d1.names).to be_empty
     end
 
-    it 'should add a add_<relation> method that takes an object' do
+    it 'adds a add_<relation> method that takes an object' do
       @d1.add_name @n1
       expect(@d1.names).to include(@n1)
       expect(@n1.dogs).to include(@d1)
     end
 
-    it 'should add a add_<relation> method that takes an id' do
+    it 'adds a add_<relation> method that takes an id' do
       @d1.add_name @n1.id
       expect(@d1.names).to include(@n1)
       @n1.refresh
       expect(@n1.dogs).to include(@d1)
     end
 
-    it 'should add a <relation>_ids= method that takes an array of ids' do
+    it 'adds a <relation>_ids= method that takes an array of ids' do
       @d1.name_ids = [@n1.id, @n2.id]
       @n1.refresh
       @n2.refresh
@@ -200,14 +200,14 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@n2.dogs).to include(@d1)
     end
 
-    it 'should add a add_<relation> method that takes a guid' do
+    it 'adds a add_<relation> method that takes a guid' do
       @d1.add_name_by_guid @n1.guid
       expect(@d1.names).to include(@n1)
       @n1.refresh
       expect(@n1.dogs).to include(@d1)
     end
 
-    it 'should add a <relation>_guids= method that takes an array of guids' do
+    it 'adds a <relation>_guids= method that takes an array of guids' do
       @d1.name_guids = [@n1.guid, @n2.guid]
       @n1.refresh
       @n2.refresh
@@ -226,9 +226,9 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@n2.dogs).to include(@d1)
     end
 
-    it 'should define a <relation>_ids accessor method' do
+    it 'defines a <relation>_ids accessor method' do
       expect(@d1.name_ids).to be_empty
-      expect(@d1.name_ids.respond_to?(:each)).to eq(true)
+      expect(@d1.name_ids.respond_to?(:each)).to be(true)
 
       @d1.name_ids = [@n1.id, @n2.id]
       expect(@d1.name_ids).to include(@n1.id)
@@ -239,14 +239,14 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@d1.name_ids).to include(@n2.id)
     end
 
-    it 'should allow multiple adds of the same object' do
+    it 'allows multiple adds of the same object' do
       @d1.add_name @n1
       @d1.add_name @n1
       expect(@d1.names).to include(@n1)
       expect(@d1.names.length).to eq(1)
     end
 
-    it 'should allow multiple adds of the same id' do
+    it 'allows multiple adds of the same id' do
       @d1.add_name @n1.id
       @d1.add_name @n1.id
       @n1.refresh
@@ -254,7 +254,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@d1.names.length).to eq(1)
     end
 
-    it 'should define a remove_<relation> method that takes an object' do
+    it 'defines a remove_<relation> method that takes an object' do
       @d1.add_name @n1
       @d1.add_name @n2
 
@@ -272,7 +272,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       expect(@d1.names.length).to eq(1)
     end
 
-    it 'should define a remove_<relation> method that takes an id' do
+    it 'defines a remove_<relation> method that takes an id' do
       @d1.add_name @n1
       @d1.add_name @n2
 
@@ -302,43 +302,45 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
 
   describe '#has_one_to_many?' do
     let!(:owner) { owner_klass.create }
+
     before { owner_klass.one_to_many :dogs }
 
-    it 'should return true when there are one_to_many associations' do
+    it 'returns true when there are one_to_many associations' do
       d = dog_klass.create
       owner.add_dog(d)
-      expect(owner.has_one_to_many?(:dogs)).to eq(true)
+      expect(owner.has_one_to_many?(:dogs)).to be(true)
     end
 
-    it 'should return false when there are NO one_to_many associations' do
-      expect(owner.has_one_to_many?(:dogs)).to eq(false)
+    it 'returns false when there are NO one_to_many associations' do
+      expect(owner.has_one_to_many?(:dogs)).to be(false)
     end
   end
 
   describe '#has_one_to_one?' do
     let!(:owner) { owner_klass.create }
+
     before { owner_klass.one_to_one :dog }
 
-    it 'should return true when there are one_to_one associations' do
+    it 'returns true when there are one_to_one associations' do
       d = dog_klass.create
       owner.dog = d
-      expect(owner.has_one_to_one?(:dog)).to eq(true)
+      expect(owner.has_one_to_one?(:dog)).to be(true)
     end
 
-    it 'should return false when there are NO one_to_one associations' do
-      expect(owner.has_one_to_one?(:dog)).to eq(false)
+    it 'returns false when there are NO one_to_one associations' do
+      expect(owner.has_one_to_one?(:dog)).to be(false)
     end
   end
 
   describe '#association_type' do
     let!(:owner) { owner_klass.create }
 
-    it 'should return one_to_one association type when it is defined' do
+    it 'returns one_to_one association type when it is defined' do
       owner_klass.one_to_one :dog
       expect(owner.association_type(:dog)).to eq(:one_to_one)
     end
 
-    it 'should return one_to_many association type when it is defined' do
+    it 'returns one_to_many association type when it is defined' do
       owner_klass.one_to_many :dog
       expect(owner.association_type(:dog)).to eq(:one_to_many)
     end
@@ -398,7 +400,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     let!(:middle) { middle_klass.create(guid: 'middle-guid') }
     let!(:other_middle) { middle_klass.create(guid: 'other_middle_guid') }
 
-    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle: middle) } }
+    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle:) } }
 
     context 'the default behaviour' do
       def initialize_relations
@@ -422,13 +424,13 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       it 'does not add a middle_guid accessor to bottom' do
         bottom = bottoms.first
 
-        expect {
+        expect do
           bottom.middle_guid
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
 
-        expect {
+        expect do
           bottom.middle_guid = 'hello'
-        }.to raise_error(NoMethodError)
+        end.to raise_error(NoMethodError)
       end
     end
 

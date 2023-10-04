@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:config_hash) do
       { level: 'fatal' }
     end
+
     subject(:configurer) { StenoConfigurer.new(config_hash) }
 
     before do
@@ -27,8 +28,7 @@ module VCAP::CloudController
       it 'calls Steno.init with the desired Steno config' do
         steno_config_hash = {}
         steno_config = double('Steno::Config')
-        allow(Steno::Config).to receive(:to_config_hash).and_return(steno_config_hash)
-        allow(Steno::Config).to receive(:new).and_return(steno_config)
+        allow(Steno::Config).to receive_messages(to_config_hash: steno_config_hash, new: steno_config)
 
         configurer.configure
 

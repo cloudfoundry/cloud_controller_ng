@@ -5,13 +5,13 @@ module VCAP::CloudController
   RSpec.describe ServiceCredentialBindingCreateMessage do
     subject { ServiceCredentialBindingCreateMessage }
 
-    let(:params) {
+    let(:params) do
       {
         type: 'app',
         name: 'some-name',
         parameters: {
-            some_param: 'very important',
-            another_param: 'epa'
+          some_param: 'very important',
+          another_param: 'epa'
         },
         relationships: {
           service_instance: { data: { guid: 'some-instance-guid' } }
@@ -21,7 +21,7 @@ module VCAP::CloudController
           annotations: { foz: 'baz' }
         }
       }
-    }
+    end
 
     describe '.from_params' do
       let(:message) { subject.new(params) }
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       it 'converts requested keys to symbols' do
         params.each do |key, _|
-          expect(message.requested?(key.to_sym)).to be_truthy
+          expect(message).to be_requested(key.to_sym)
         end
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       context 'type' do
         it 'accepts app and key' do
-          %w{app key}.each do |type|
+          %w[app key].each do |type|
             params[:type] = type
             expect(subject.new(params)).to be_valid
           end
@@ -85,14 +85,14 @@ module VCAP::CloudController
           params[:relationships][:foo] = {}
           params[:relationships].delete(:service_instance)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships Service instance can't be blank")
         end
 
         it 'returns an invalid message when there is relationship object is empty' do
           params[:relationships].delete(:service_instance)
 
-          expect(message).to_not be_valid
+          expect(message).not_to be_valid
           expect(message.errors.full_messages).to include("Relationships 'relationships' must include one or more valid relationships")
         end
       end

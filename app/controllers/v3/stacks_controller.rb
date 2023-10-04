@@ -23,6 +23,13 @@ class StacksController < ApplicationController
     )
   end
 
+  def show
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -46,13 +53,6 @@ class StacksController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     stack = StackUpdate.new.update(stack, message)
-
-    render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
-  end
-
-  def show
-    stack = Stack.find(guid: hashed_params[:guid])
-    stack_not_found! unless stack
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
   end

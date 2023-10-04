@@ -18,15 +18,15 @@ module VCAP::CloudController
         describe '#to_h' do
           it 'returns the container network information hash' do
             expect(container_info.to_h).to eq({
-              'properties' => {
-                'policy_group_id' => app.guid,
-                'app_id' => app.guid,
-                'space_id' => app.space.guid,
-                'org_id' => app.organization.guid,
-                'ports' => ports_str,
-                'container_workload' => container_workload
-              },
-            })
+                                                'properties' => {
+                                                  'policy_group_id' => app.guid,
+                                                  'app_id' => app.guid,
+                                                  'space_id' => app.space.guid,
+                                                  'org_id' => app.organization.guid,
+                                                  'ports' => ports_str,
+                                                  'container_workload' => container_workload
+                                                }
+                                              })
           end
         end
 
@@ -35,12 +35,12 @@ module VCAP::CloudController
             expect(container_info.to_bbs_network).to eq(
               ::Diego::Bbs::Models::Network.new(
                 properties: {
-                  'policy_group_id'    => app.guid,
-                  'app_id'             => app.guid,
-                  'space_id'           => app.space.guid,
-                  'org_id'             => app.organization.guid,
-                  'ports'              => ports_str,
-                  'container_workload' => container_workload,
+                  'policy_group_id' => app.guid,
+                  'app_id' => app.guid,
+                  'space_id' => app.space.guid,
+                  'org_id' => app.organization.guid,
+                  'ports' => ports_str,
+                  'container_workload' => container_workload
                 }
               )
             )

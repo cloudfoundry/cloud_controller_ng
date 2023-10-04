@@ -34,7 +34,7 @@ module VCAP::CloudController
           pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
         end
 
-        { pollable_job: pollable_job }
+        { pollable_job: }
       rescue Sequel::ValidationFailed => e
         raise InvalidServiceBroker.new(e.errors.full_messages.join(','))
       end

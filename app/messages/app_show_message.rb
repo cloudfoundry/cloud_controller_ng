@@ -8,7 +8,7 @@ module VCAP::CloudController
     validates_with IncludeParamValidator, valid_values: ['space', 'org', 'space.organization']
 
     def self.from_params(params)
-      super(params, %w(include))
+      super(params, %w[include])
     end
   end
 end

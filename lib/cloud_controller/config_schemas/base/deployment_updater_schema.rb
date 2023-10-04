@@ -11,12 +11,12 @@ module VCAP::CloudController
             logging: {
               level: String, # debug, info, etc.
               file: String, # Log file to use
-              syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
+              syslog: String # Name to associate with syslog messages (should start with 'vcap.')
             },
 
             pid_filename: String, # Pid filename to use
             readiness_port: {
-              deployment_updater: Integer,
+              deployment_updater: Integer
             },
             optional(:max_migration_duration_in_minutes) => Integer,
             db: {
@@ -29,7 +29,7 @@ module VCAP::CloudController
               connection_validation_timeout: Integer,
               optional(:ca_cert_path) => String,
               optional(:connection_expiration_timeout) => Integer,
-              optional(:connection_expiration_random_delay) => Integer,
+              optional(:connection_expiration_random_delay) => Integer
             },
 
             index: Integer, # Component index (cc-0, cc-1, etc)
@@ -72,7 +72,7 @@ module VCAP::CloudController
             },
 
             staging: {
-              timeout_in_seconds: Integer,
+              timeout_in_seconds: Integer
             },
 
             resource_pool: {
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
             optional(:credhub_api) => {
               internal_url: String,
-              ca_cert_path: String,
+              ca_cert_path: String
             },
 
             credential_references: {
@@ -121,7 +121,7 @@ module VCAP::CloudController
             optional(:routing_api) => {
               url: String,
               routing_client_name: String,
-              routing_client_secret: String,
+              routing_client_secret: String
             },
 
             statsd_host: String,
@@ -129,7 +129,7 @@ module VCAP::CloudController
 
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
-            custom_metric_tag_prefix_list: Array,
+            custom_metric_tag_prefix_list: Array
           }
         end
         # rubocop:enable Metrics/BlockLength

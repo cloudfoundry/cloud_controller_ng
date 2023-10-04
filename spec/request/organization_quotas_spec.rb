@@ -7,10 +7,10 @@ module VCAP::CloudController
     let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'org-quota-guid') }
     let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid', quota_definition: organization_quota) }
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
-    let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+    let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
     describe 'POST /v3/organization_quotas' do
-      let(:api_call) { lambda { |user_headers| post '/v3/organization_quotas', params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post '/v3/organization_quotas', params.to_json, user_headers } }
 
       let(:params) do
         {
@@ -18,7 +18,7 @@ module VCAP::CloudController
           relationships: {
             organizations: {
               data: [
-                { guid: org.guid },
+                { guid: org.guid }
               ]
             }
           }
@@ -45,25 +45,25 @@ module VCAP::CloudController
           },
           routes: {
             total_routes: nil,
-            total_reserved_ports: nil,
+            total_reserved_ports: nil
           },
           domains: {
-            total_domains: nil,
+            total_domains: nil
           },
           relationships: {
             organizations: {
-              data: [{ guid: 'organization-guid' }],
+              data: [{ guid: 'organization-guid' }]
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{params[:guid]}} }
           }
         }
       end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
         h['admin'] = {
           code: 201,
@@ -74,11 +74,9 @@ module VCAP::CloudController
 
       context 'using the default params' do
         it 'creates a organization_quota' do
-          expect {
+          expect do
             api_call.call(admin_header)
-          }.to change {
-            QuotaDefinition.count
-          }.by 1
+          end.to change(QuotaDefinition, :count).by 1
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -105,8 +103,8 @@ module VCAP::CloudController
               total_reserved_ports: 4
             },
             domains: {
-              total_domains: 7,
-            },
+              total_domains: 7
+            }
           }
         end
 
@@ -133,15 +131,15 @@ module VCAP::CloudController
               total_reserved_ports: 4
             },
             domains: {
-              total_domains: 7,
+              total_domains: 7
             },
             relationships: {
               organizations: {
-                data: [],
-              },
+                data: []
+              }
             },
             links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{params[:guid]}} }
             }
           }
         end
@@ -166,7 +164,7 @@ module VCAP::CloudController
         context 'when provided invalid arguments' do
           let(:params) do
             {
-              name: 555,
+              name: 555
             }
           end
 
@@ -181,7 +179,7 @@ module VCAP::CloudController
         context 'with a pre-existing name' do
           let(:params) do
             {
-              name: 'double-trouble',
+              name: 'double-trouble'
             }
           end
 
@@ -197,7 +195,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organization_quotas' do
-      let(:api_call) { lambda { |user_headers| get '/v3/organization_quotas', nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get '/v3/organization_quotas', nil, user_headers } }
 
       context 'when listing organization_quotas' do
         let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
@@ -218,7 +216,7 @@ module VCAP::CloudController
         it_behaves_like 'list_endpoint_with_common_filters' do
           let(:resource_klass) { VCAP::CloudController::QuotaDefinition }
           let(:api_call) do
-            lambda { |headers, filters| get "/v3/organization_quotas?#{filters}", nil, headers }
+            ->(headers, filters) { get "/v3/organization_quotas?#{filters}", nil, headers }
           end
           let(:headers) { admin_headers }
         end
@@ -248,7 +246,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(200)
             expect(
-              parsed_response['resources'].map { |org_quota| org_quota['guid'] }
+              parsed_response['resources'].pluck('guid')
             ).to eq([organization_quota.guid])
           end
         end
@@ -264,7 +262,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organization_quotas/:guid' do
-      let(:api_call) { lambda { |user_headers| get "/v3/organization_quotas/#{organization_quota.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/organization_quotas/#{organization_quota.guid}", nil, user_headers } }
 
       context 'when getting an organization_quota' do
         let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
@@ -313,7 +311,7 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organization_quotas/:guid' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, user_headers } }
 
       let(:params) do
         {
@@ -328,7 +326,7 @@ module VCAP::CloudController
           services: {
             paid_services_allowed: false,
             total_service_instances: 10,
-            total_service_keys: 20,
+            total_service_keys: 20
           },
           routes: {
             total_routes: 8,
@@ -356,29 +354,29 @@ module VCAP::CloudController
           services: {
             paid_services_allowed: false,
             total_service_instances: 10,
-            total_service_keys: 20,
+            total_service_keys: 20
           },
           routes: {
             total_routes: 8,
             total_reserved_ports: 4
           },
           domains: {
-            total_domains: 7,
+            total_domains: 7
           },
           relationships: {
             organizations: {
-              data: [{ guid: 'organization-guid' }],
+              data: [{ guid: 'organization-guid' }]
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
+            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{params[:guid]}} }
           }
         }
       end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403,
+          code: 403
         )
         h['admin'] = {
           code: 200,
@@ -399,23 +397,25 @@ module VCAP::CloudController
       end
 
       context 'update partial values' do
-        let(:org_quota_to_update) { VCAP::CloudController::QuotaDefinition.make(
-          guid: 'org_quota_to_update_guid',
-          name: 'update-me',
-          memory_limit: 8,
-          non_basic_services_allowed: true)
-        }
+        let(:org_quota_to_update) do
+          VCAP::CloudController::QuotaDefinition.make(
+            guid: 'org_quota_to_update_guid',
+            name: 'update-me',
+            memory_limit: 8,
+            non_basic_services_allowed: true
+          )
+        end
         let(:partial_params) do
           {
             name: 'don-quixote',
             apps: {
               per_app_tasks: 9,
-              total_memory_in_mb: nil,
+              total_memory_in_mb: nil
             },
             services: {
               total_service_instances: 14,
-              paid_services_allowed: false,
-            },
+              paid_services_allowed: false
+            }
           }
         end
 
@@ -451,7 +451,7 @@ module VCAP::CloudController
 
         let(:params) do
           {
-            name: organization_quota.name,
+            name: organization_quota.name
           }
         end
 
@@ -473,13 +473,14 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message(
             'Current usage exceeds new quota values. ' \
-            "This quota is applied to org '#{org.name}' which contains apps running with an unlimited log rate limit.")
+            "This quota is applied to org '#{org.name}' which contains apps running with an unlimited log rate limit."
+          )
         end
       end
     end
 
     describe 'POST /v3/organization_quotas/:guid/relationships/organizations' do
-      let(:api_call) { lambda { |user_headers| post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, user_headers } }
+      let(:api_call) { ->(user_headers) { post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, user_headers } }
 
       let(:org) { VCAP::CloudController::Organization.make }
       let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
@@ -497,7 +498,7 @@ module VCAP::CloudController
               { guid: org.guid }
             ],
             links: {
-              self: { href: "#{link_prefix}/v3/organization_quotas/#{org_quota.guid}/relationships/organizations" },
+              self: { href: "#{link_prefix}/v3/organization_quotas/#{org_quota.guid}/relationships/organizations" }
             }
           }
         end
@@ -548,22 +549,23 @@ module VCAP::CloudController
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message(
-            'Current usage exceeds new quota values. The org(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+            'Current usage exceeds new quota values. The org(s) being assigned this quota contain apps running with an unlimited log rate limit.'
+          )
         end
       end
     end
 
     describe 'DELETE /v3/organization_quotas/:guid/' do
       let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
-      let(:api_call) { lambda { |user_headers| delete "/v3/organization_quotas/#{org_quota.guid}", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { delete "/v3/organization_quotas/#{org_quota.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
-          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           last_job = VCAP::CloudController::PollableJobModel.last
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+          expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{last_job.guid}})
           expect(last_job.resource_type).to eq('organization_quota')
         end
       end
@@ -594,7 +596,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'the org quota is not  deleted and returns a 422' do
+        it 'the org quota is not deleted and returns a 422' do
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_headers
 
           delete "/v3/organization_quotas/#{org_quota.guid}", nil, admin_headers
@@ -622,7 +624,7 @@ def generate_org_quota_single_response(list_of_orgs)
     updated_at: iso8601,
     name: organization_quota.name,
     apps: {
-      total_memory_in_mb: 20480,
+      total_memory_in_mb: 20_480,
       per_process_memory_in_mb: nil,
       total_instances: nil,
       per_app_tasks: nil,
@@ -631,7 +633,7 @@ def generate_org_quota_single_response(list_of_orgs)
     services: {
       paid_services_allowed: true,
       total_service_instances: 60,
-      total_service_keys: nil,
+      total_service_keys: nil
     },
     routes: {
       total_routes: 1000,
@@ -642,11 +644,11 @@ def generate_org_quota_single_response(list_of_orgs)
     },
     relationships: {
       organizations: {
-        data: contain_exactly(*list_of_orgs)
+        data: match_array(list_of_orgs)
       }
     },
     links: {
-      self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{organization_quota.guid}) },
+      self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{organization_quota.guid}} }
     }
   }
 end
@@ -654,7 +656,7 @@ end
 def generate_org_quota_list_response(list_of_orgs, global_read)
   [
     generate_default_org_quota_response(global_read),
-    generate_org_quota_single_response(list_of_orgs),
+    generate_org_quota_single_response(list_of_orgs)
   ]
 end
 
@@ -671,7 +673,7 @@ def generate_default_org_quota_response(global_read)
     updated_at: iso8601,
     name: default_quota.name,
     apps: {
-      total_memory_in_mb: 10240,
+      total_memory_in_mb: 10_240,
       per_process_memory_in_mb: nil,
       total_instances: nil,
       per_app_tasks: nil,
@@ -680,7 +682,7 @@ def generate_default_org_quota_response(global_read)
     services: {
       paid_services_allowed: true,
       total_service_instances: 100,
-      total_service_keys: nil,
+      total_service_keys: nil
     },
     routes: {
       total_routes: 1000,
@@ -695,7 +697,7 @@ def generate_default_org_quota_response(global_read)
       }
     },
     links: {
-      self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{default_quota.guid}) },
+      self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organization_quotas/#{default_quota.guid}} }
     }
   }
 end

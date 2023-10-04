@@ -53,11 +53,11 @@ module CloudController
       end
 
       def_delegators :@upload_url_generator,
-        :droplet_upload_url,
-        :package_droplet_upload_url,
-        :buildpack_cache_upload_url,
-        :http_droplet_upload_url,
-        :http_buildpack_cache_upload_url
+                     :droplet_upload_url,
+                     :package_droplet_upload_url,
+                     :buildpack_cache_upload_url,
+                     :http_droplet_upload_url,
+                     :http_buildpack_cache_upload_url
     end
   end
 end

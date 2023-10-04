@@ -26,10 +26,10 @@ module CloudController
 
       def attributes(*keys)
         with_retries(__method__.to_s, {
-          args: {
-            keys: keys,
-          }
-        }) do
+                       args: {
+                         keys:
+                       }
+                     }) do
           wrapped_blob.attributes(*keys)
         end
       end
@@ -41,8 +41,8 @@ module CloudController
       end
 
       def_delegators :@wrapped_blob,
-        :file,
-        :key
+                     :file,
+                     :key
 
       private
 
@@ -53,11 +53,10 @@ module CloudController
         retries -= 1
 
         logger.debug("#{log_prefix}-retry",
-          {
-            error: e.message,
-            remaining_retries: retries
-          }.merge(log_data)
-        )
+                     {
+                       error: e.message,
+                       remaining_retries: retries
+                     }.merge(log_data))
         retry unless retries == 0
         raise e
       end

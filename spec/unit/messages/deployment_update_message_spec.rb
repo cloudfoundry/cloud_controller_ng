@@ -41,7 +41,7 @@ module VCAP::CloudController
         }
         message = DeploymentUpdateMessage.new(params)
         expect(message).not_to be_valid
-        expect(message.errors_on(:metadata)).to match_array(["'annotations' is not an object", "'labels' is not an object"])
+        expect(message.errors_on(:metadata)).to contain_exactly("'annotations' is not an object", "'labels' is not an object")
       end
     end
   end

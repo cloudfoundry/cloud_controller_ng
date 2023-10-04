@@ -1,11 +1,11 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
     def self.dependencies
-      [
-        :username_populating_collection_renderer,
-        :uaa_client,
-        :username_populating_object_renderer,
-        :user_event_repository
+      %i[
+        username_populating_collection_renderer
+        uaa_client
+        username_populating_object_renderer
+        user_event_repository
       ]
     end
 
@@ -23,11 +23,11 @@ module VCAP::CloudController
     end
 
     query_parameters :space_guid, :organization_guid,
-      :managed_organization_guid,
-      :billing_managed_organization_guid,
-      :audited_organization_guid,
-      :managed_space_guid,
-      :audited_space_guid
+                     :managed_organization_guid,
+                     :billing_managed_organization_guid,
+                     :audited_organization_guid,
+                     :managed_space_guid,
+                     :audited_space_guid
 
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)
@@ -121,14 +121,16 @@ module VCAP::CloudController
           user,
           name.to_s.singularize,
           UserAuditInfo.from_context(SecurityContext),
-          {})
+          {}
+        )
       elsif find_model == Organization
         @user_event_repository.record_organization_role_remove(
           Organization.first(guid: related_guid),
           user,
           name.to_s.singularize,
           UserAuditInfo.from_context(SecurityContext),
-          {})
+          {}
+        )
       end
 
       response

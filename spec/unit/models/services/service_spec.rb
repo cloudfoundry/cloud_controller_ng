@@ -18,7 +18,7 @@ module VCAP::CloudController
       describe 'urls' do
         it 'validates format of info_url' do
           service = Service.make_unsaved(info_url: 'bogus_url', service_broker: nil)
-          expect(service).to_not be_valid
+          expect(service).not_to be_valid
           expect(service.errors.on(:info_url)).to include 'must be a valid url'
         end
       end
@@ -26,21 +26,24 @@ module VCAP::CloudController
       context 'when the tags are longer than 2048 characters' do
         it 'raises an error on save' do
           super_long_tag = 'a' * 2049
-          expect {
+          expect do
             Service.make(label: 'super-long-service', tags: [super_long_tag])
-          }.to raise_error('Service tags for service super-long-service must be 2048 characters or less.')
+          end.to raise_error('Service tags for service super-long-service must be 2048 characters or less.')
         end
       end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
-                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
-                                    :instances_retrievable, :allow_context_updates
+      it {
+        expect(subject).to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
+                                             :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable,
+                                             :instances_retrievable, :allow_context_updates
       }
-      it { is_expected.to import_attributes :label, :description, :long_description, :info_url,
-                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
-                                    :instances_retrievable, :allow_context_updates
+
+      it {
+        expect(subject).to import_attributes :label, :description, :long_description, :info_url,
+                                             :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable,
+                                             :instances_retrievable, :allow_context_updates
       }
     end
 
@@ -65,6 +68,7 @@ module VCAP::CloudController
       let(:admin_user) { User.make }
       let(:nonadmin_user) { User.make }
       let!(:private_plan) { ServicePlan.make service: private_service, public: false }
+
       before do
         ServicePlan.make service: public_service, public: true
         ServicePlan.make service: public_service, public: false
@@ -89,7 +93,7 @@ module VCAP::CloudController
       it 'returns private services if a user can see a plan inside them' do
         ServicePlanVisibility.create(
           organization: nonadmin_org,
-          service_plan: private_plan,
+          service_plan: private_plan
         )
         expect(records(nonadmin_user)).to include(private_service, public_service)
       end
@@ -106,7 +110,7 @@ module VCAP::CloudController
 
           space.organization.add_user space_developer
 
-          private_broker = ServiceBroker.make space: space
+          private_broker = ServiceBroker.make(space:)
           service = Service.make(service_broker: private_broker, active: true)
           ServicePlan.make(service: service, active: true, public: false)
 
@@ -122,7 +126,7 @@ module VCAP::CloudController
 
           space.add_developer space_developer
 
-          private_broker = ServiceBroker.make space: space
+          private_broker = ServiceBroker.make(space:)
           service = Service.make(service_broker: private_broker, active: true)
           ServicePlan.make(service: service, active: true, public: false)
 
@@ -138,7 +142,7 @@ module VCAP::CloudController
 
           space.add_auditor space_auditor
 
-          private_broker = ServiceBroker.make space: space
+          private_broker = ServiceBroker.make(space:)
           service = Service.make(service_broker: private_broker, active: true)
           ServicePlan.make(service: service, active: true, public: false)
           records = Service.user_visible(space_auditor).all
@@ -153,7 +157,7 @@ module VCAP::CloudController
 
           space.add_manager space_manager
 
-          private_broker = ServiceBroker.make space: space
+          private_broker = ServiceBroker.make(space:)
           service = Service.make(service_broker: private_broker, active: true)
           ServicePlan.make(service: service, active: true, public: false)
           records = Service.user_visible(space_manager).all
@@ -164,8 +168,8 @@ module VCAP::CloudController
 
     describe '#tags' do
       it 'returns the provided service tags' do
-        service = Service.make(tags: %w(a b c))
-        expect(service.tags).to match_array(%w(a b c))
+        service = Service.make(tags: %w[a b c])
+        expect(service.tags).to match_array(%w[a b c])
       end
 
       context 'null tags in the database' do
@@ -207,12 +211,12 @@ module VCAP::CloudController
 
     describe '#purge' do
       let!(:event_repository) { double(Repositories::ServiceUsageEventRepository) }
-      let!(:service_plan) { ServicePlan.make(service: service) }
-      let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan: service_plan) }
-      let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
-      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+      let!(:service_plan) { ServicePlan.make(service:) }
+      let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan:) }
+      let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+      let!(:service_binding) { ServiceBinding.make(service_instance:) }
 
-      let!(:service_plan_2) { ServicePlan.make(service: service) }
+      let!(:service_plan_2) { ServicePlan.make(service:) }
       let!(:service_plan_visibility_2) { ServicePlanVisibility.make(service_plan: service_plan_2) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
@@ -277,9 +281,9 @@ module VCAP::CloudController
         end
 
         it 'raises the same error' do
-          expect {
+          expect do
             service.purge(event_repository)
-          }.to raise_error(RuntimeError, /Boom/)
+          end.to raise_error(RuntimeError, /Boom/)
         end
       end
 
@@ -291,7 +295,11 @@ module VCAP::CloudController
         end
 
         it 'rolls back the transaction and does not destroy any records' do
-          service.purge(event_repository) rescue nil
+          begin
+            service.purge(event_repository)
+          rescue StandardError
+            nil
+          end
 
           expect(Service.find(guid: service.guid)).to be
           expect(ServicePlan.first(guid: service_plan.guid)).to be
@@ -305,7 +313,11 @@ module VCAP::CloudController
         end
 
         it "does not leave the service in 'purging' state" do
-          service.purge(event_repository) rescue nil
+          begin
+            service.purge(event_repository)
+          rescue StandardError
+            nil
+          end
           expect(service.reload.purging).to be false
         end
       end
@@ -337,8 +349,8 @@ module VCAP::CloudController
 
       let(:expected_service_names) { [@private_service, @visible_service].map(&:label) }
 
-      before(:each) do
-        @private_broker = ServiceBroker.make(space: space)
+      before do
+        @private_broker = ServiceBroker.make(space:)
         @private_service = Service.make(service_broker: @private_broker, active: true, label: 'Private Service')
         @private_plan = ServicePlan.make(service: @private_service, public: false, name: 'Private Plan')
 
@@ -375,7 +387,7 @@ module VCAP::CloudController
       it 'only returns private broker services to Organization<Users>' do
         user = make_user_for_org(space.organization)
         visible_services = Service.space_or_org_visible_for_user(space, user).all
-        expect(visible_services.map(&:label)).to match_array [@visible_service.label]
+        expect(visible_services.map(&:label)).to contain_exactly(@visible_service.label)
       end
     end
 
@@ -403,7 +415,7 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: ['route_forwarding']) }
 
         it 'returns true' do
-          expect(service.route_service?).to be_truthy
+          expect(service).to be_route_service
         end
       end
 
@@ -411,7 +423,7 @@ module VCAP::CloudController
         let(:service) { Service.make(requires: []) }
 
         it 'returns false' do
-          expect(service.route_service?).to be_falsey
+          expect(service).not_to be_route_service
         end
       end
     end
@@ -429,7 +441,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"shareable":false}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -437,7 +449,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"other-key": "value"}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -445,7 +457,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: nil) }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
 
@@ -453,7 +465,7 @@ module VCAP::CloudController
         let(:service) { Service.make(extra: '{"not-json"}') }
 
         it 'returns false' do
-          expect(service).to_not be_shareable
+          expect(service).not_to be_shareable
         end
       end
     end

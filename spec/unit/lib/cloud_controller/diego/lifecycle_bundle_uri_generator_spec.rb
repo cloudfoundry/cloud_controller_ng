@@ -23,9 +23,9 @@ module VCAP::CloudController
       end
 
       it 'raises an error for a non http or https url' do
-        expect {
+        expect do
           LifecycleBundleUriGenerator.uri('ftp://bundle.example.com')
-        }.to raise_error(VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidCompiler, /invalid compiler URI/)
+        end.to raise_error(VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidCompiler, /invalid compiler URI/)
       end
     end
   end

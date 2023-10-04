@@ -23,13 +23,11 @@ Sequel.migration do
           ids << c[0]
         end
 
-        # rubocop:disable Layout/DotPosition
-        @db[<<-SQL, *@batched_commands.flatten, *ids].update
+        @db[<<-SQL.squish, *@batched_commands.flatten, *ids].update
           UPDATE droplets
           SET process_types = (CASE #{cases.join(' ')} ELSE process_types END)
           WHERE id IN (#{id_place_holders.join(',')})
         SQL
-        # rubocop:enable Layout/DotPosition
       end
 
       @batched_commands = []
@@ -42,7 +40,7 @@ Sequel.migration do
 
       self[:droplets].each do |droplet|
         MultiJson.load(droplet[:process_types])
-      rescue
+      rescue StandardError
         command      = droplet[:process_types].nil? ? '' : droplet[:process_types][8..-3]
         json_command = MultiJson.dump({ web: command })
         batcher.add_command(json_command, droplet[:id])

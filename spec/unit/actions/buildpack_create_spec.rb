@@ -8,6 +8,7 @@ module VCAP::CloudController
       let!(:buildpack1) { Buildpack.create(name: 'take-up-position-1', position: 1) }
       let!(:buildpack2) { Buildpack.create(name: 'take-up-position-2', position: 2) }
       let!(:buildpack3) { Buildpack.create(name: 'take-up-position-3', position: 3) }
+
       before do
         Stack.create(name: 'the-stack')
       end
@@ -18,15 +19,15 @@ module VCAP::CloudController
             name: 'the-name',
             stack: 'the-stack',
             enabled: false,
-            locked: true,
+            locked: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
           expect(buildpack.position).to eq(1)
-          expect(buildpack.enabled).to eq(false)
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.enabled).to be(false)
+          expect(buildpack.locked).to be(true)
         end
       end
 
@@ -39,20 +40,20 @@ module VCAP::CloudController
             locked: true,
             metadata: {
               labels: {
-                fruit: 'passionfruit',
+                fruit: 'passionfruit'
               },
               annotations: {
-                potato: 'adora',
-              },
-            },
+                potato: 'adora'
+              }
+            }
           )
           buildpack = BuildpackCreate.new.create(message)
 
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
           expect(buildpack.position).to eq(1)
-          expect(buildpack.enabled).to eq(false)
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.enabled).to be(false)
+          expect(buildpack.locked).to be(true)
           expect(buildpack.labels[0].key_name).to eq('fruit')
           expect(buildpack.annotations[0].value).to eq('adora')
         end
@@ -63,7 +64,7 @@ module VCAP::CloudController
           it 'creates a buildpack at the specified position and shifts subsequent buildpacks position' do
             message = BuildpackCreateMessage.new(
               name: 'the-name',
-              position: 2,
+              position: 2
             )
             buildpack = BuildpackCreate.new.create(message)
 
@@ -78,7 +79,7 @@ module VCAP::CloudController
           it 'creates a buildpack with a position just after the greatest position' do
             message = BuildpackCreateMessage.new(
               name: 'the-name',
-              position: 42,
+              position: 42
             )
             buildpack = BuildpackCreate.new.create(message)
 
@@ -92,11 +93,11 @@ module VCAP::CloudController
           message = BuildpackCreateMessage.new(
             name: 'the-name',
             stack: 'the-stack',
-            locked: true,
+            locked: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
-          expect(buildpack.enabled).to eq(true)
+          expect(buildpack.enabled).to be(true)
         end
       end
 
@@ -105,11 +106,11 @@ module VCAP::CloudController
           message = BuildpackCreateMessage.new(
             name: 'the-name',
             stack: 'the-stack',
-            enabled: true,
+            enabled: true
           )
           buildpack = BuildpackCreate.new.create(message)
 
-          expect(buildpack.locked).to eq(false)
+          expect(buildpack.locked).to be(false)
         end
       end
 
@@ -121,9 +122,9 @@ module VCAP::CloudController
             and_raise(Sequel::ValidationFailed.new(errors))
 
           message = BuildpackCreateMessage.new(name: 'foobar')
-          expect {
+          expect do
             BuildpackCreate.new.create(message)
-          }.to raise_error(BuildpackCreate::Error, 'blork is busted')
+          end.to raise_error(BuildpackCreate::Error, 'blork is busted')
         end
       end
 
@@ -131,9 +132,9 @@ module VCAP::CloudController
         it 'raises a human-friendly error' do
           message = BuildpackCreateMessage.new(name: 'the-name', stack: 'does-not-exist')
 
-          expect {
+          expect do
             BuildpackCreate.new.create(message)
-          }.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
+          end.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
         end
       end
 
@@ -146,10 +147,10 @@ module VCAP::CloudController
           end
 
           it 'raises a human-friendly error' do
-            message = BuildpackCreateMessage.new(name: name)
-            expect {
+            message = BuildpackCreateMessage.new(name:)
+            expect do
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
           end
         end
 
@@ -160,9 +161,9 @@ module VCAP::CloudController
 
           it 'raises a human-friendly error' do
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
-            expect {
+            expect do
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
           end
         end
       end

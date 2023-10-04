@@ -11,7 +11,7 @@ module VCAP
       let(:message) { ServiceInstanceCreateUserProvidedMessage.new(request) }
       let(:instance) { ServiceInstance.last }
       let(:name) { 'my-service-instance' }
-      let(:tags) { %w(foo bar baz) }
+      let(:tags) { %w[foo bar baz] }
 
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
@@ -129,13 +129,13 @@ module VCAP
 
           describe 'when already taken' do
             it 'raises an error' do
-              ServiceInstance.make(name: name, space: space)
+              ServiceInstance.make(name:, space:)
 
               expect { action.create(message) }.
                 to raise_error(
                   ServiceInstanceCreateUserProvided::InvalidUserProvidedServiceInstance,
-                     "The service instance name is taken: #{name}."
-                   )
+                  "The service instance name is taken: #{name}."
+                )
             end
           end
         end

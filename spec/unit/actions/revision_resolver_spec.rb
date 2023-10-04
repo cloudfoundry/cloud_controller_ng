@@ -8,8 +8,9 @@ module VCAP::CloudController
         app: app,
         process_types: {
           'web' => 'droplet_web_command',
-          'worker' => 'droplet_worker_command',
-        })
+          'worker' => 'droplet_worker_command'
+        }
+      )
     end
     let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
@@ -17,7 +18,7 @@ module VCAP::CloudController
     let!(:worker_process) { ProcessModel.make(app: app, type: 'worker') }
 
     before do
-      app.update(droplet: droplet)
+      app.update(droplet:)
     end
 
     describe '.update_app_revision' do
@@ -27,26 +28,26 @@ module VCAP::CloudController
         end
 
         it 'returns nil' do
-          expect {
+          expect do
             expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
-          }.not_to change { RevisionModel.count }
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
       context 'when app has no droplet' do
         it 'returns nil' do
           app.update(droplet_guid: nil)
-          expect {
+          expect do
             expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
-          }.not_to change { RevisionModel.count }
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
       context 'when it is the initial revision' do
         it 'creates a revision from the app values with the appropriate description' do
-          expect {
+          expect do
             RevisionResolver.update_app_revision(app, user_audit_info)
-          }.to change { RevisionModel.where(app: app).count }.by(1)
+          end.to change { RevisionModel.where(app:).count }.by(1)
 
           revision = RevisionModel.last
           expect(revision.app).to eq(app)
@@ -60,14 +61,13 @@ module VCAP::CloudController
       context 'when the latest revision is out of date' do
         it 'creates a revision from the app values with the appropriate description' do
           RevisionModel.make(:custom_web_command,
-            app: app,
-            droplet: app.droplet,
-            environment_variables: { 'foo' => 'bar' },
-          )
+                             app: app,
+                             droplet: app.droplet,
+                             environment_variables: { 'foo' => 'bar' })
 
-          expect {
+          expect do
             RevisionResolver.update_app_revision(app, user_audit_info)
-          }.to change { RevisionModel.where(app: app).count }.by(1)
+          end.to change { RevisionModel.where(app:).count }.by(1)
 
           revision = RevisionModel.last
           expect(revision.app).to eq(app)
@@ -78,18 +78,19 @@ module VCAP::CloudController
         end
 
         context 'when sidecars have been added' do
-          let!(:sidecar) { SidecarModel.make(app: app) }
+          let!(:sidecar) { SidecarModel.make(app:) }
+
           it 'creates a revision from the app values' do
             RevisionModel.make(
               app: app,
               droplet: app.droplet,
-              environment_variables: app.environment_variables,
+              environment_variables: app.environment_variables
             )
 
-            expect {
+            expect do
               RevisionResolver.update_app_revision(app, user_audit_info)
-            }.to change { RevisionModel.where(app: app).count }.by(1)
-            revision = RevisionModel.where(app: app).last
+            end.to change { RevisionModel.where(app:).count }.by(1)
+            revision = RevisionModel.where(app:).last
             expect(revision.sidecars.first.to_hash).to eq(sidecar.to_hash)
             expect(revision.description).to eq('Sidecars updated.')
           end
@@ -101,13 +102,13 @@ module VCAP::CloudController
           RevisionModel.make(
             app: app,
             droplet: app.droplet,
-            environment_variables: app.environment_variables,
+            environment_variables: app.environment_variables
           )
 
           revision = nil
-          expect {
+          expect do
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
-          }.to change { RevisionModel.where(app: app).count }.by(0), RevisionModel.last.description
+          end.not_to change { RevisionModel.where(app:).count }, RevisionModel.last.description
 
           expect(revision).to eq(app.latest_revision)
         end
@@ -117,11 +118,10 @@ module VCAP::CloudController
     describe '.rollback_app_revision' do
       let(:initial_revision) do
         RevisionModel.make(:custom_web_command,
-          version: 1,
-          droplet: droplet,
-          app: app,
-          environment_variables: { BISH: 'BASH', FOO: 'BAR' }
-        )
+                           version: 1,
+                           droplet: droplet,
+                           app: app,
+                           environment_variables: { BISH: 'BASH', FOO: 'BAR' })
       end
 
       before do
@@ -137,22 +137,21 @@ module VCAP::CloudController
         end
 
         it 'return nil' do
-          expect {
+          expect do
             expect(RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)).to be_nil
-          }.not_to change { RevisionModel.count }
+          end.not_to(change(RevisionModel, :count))
         end
       end
 
       context 'when revisions are enabled' do
-        let!(:latest_revision) {
+        let!(:latest_revision) do
           RevisionModel.make(:custom_web_command,
-            app: app,
-            droplet: app.droplet,
-            environment_variables: { 'foo' => 'bar' },
-            description: ['latest revision'],
-            version: 2
-          )
-        }
+                             app: app,
+                             droplet: app.droplet,
+                             environment_variables: { 'foo' => 'bar' },
+                             description: ['latest revision'],
+                             version: 2)
+        end
 
         context 'rolling back' do
           it 'creates a new rollback revision' do
@@ -181,11 +180,11 @@ module VCAP::CloudController
           it 'gives an error and does not create a revision' do
             RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
 
-            expect {
-              expect {
+            expect do
+              expect do
                 RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
-              }.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
-            }.not_to change { RevisionModel.count }
+              end.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
+            end.not_to(change(RevisionModel, :count))
           end
         end
       end

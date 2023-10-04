@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       def find_client_by_uaa_id(uaa_id)
-        where(uaa_id: uaa_id).first
+        where(uaa_id:).first
       end
 
       def claim_client(uaa_id, broker)
@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       def release_client(uaa_id)
-        where(uaa_id: uaa_id).delete
+        where(uaa_id:).delete
       end
 
       private

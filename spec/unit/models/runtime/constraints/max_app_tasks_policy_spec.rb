@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe MaxAppTasksPolicy do
+  subject(:validator) { MaxAppTasksPolicy.new(task, org, error_name) }
+
   let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(app_task_limit: 1) }
   let(:org) { space.organization }
   let(:space) { VCAP::CloudController::Space.make }
   let(:app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-  let(:task) { VCAP::CloudController::TaskModel.new(app: app) }
+  let(:task) { VCAP::CloudController::TaskModel.new(app:) }
   let(:error_name) { :app_task_limit_error }
-
-  subject(:validator) { MaxAppTasksPolicy.new(task, org, error_name) }
 
   before do
     org.quota_definition = quota_definition if org
@@ -44,7 +44,7 @@ RSpec.describe MaxAppTasksPolicy do
 
   context 'when the quota is exceeded' do
     before do
-      VCAP::CloudController::TaskModel.make(app: app)
+      VCAP::CloudController::TaskModel.make(app:)
     end
 
     it 'registers an error' do

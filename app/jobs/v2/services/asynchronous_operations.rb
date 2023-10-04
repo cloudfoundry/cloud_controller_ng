@@ -14,7 +14,7 @@ module VCAP::CloudController
         end
 
         def retry_job(retry_after_header: '')
-          update_polling_interval(retry_after_header: retry_after_header)
+          update_polling_interval(retry_after_header:)
           if Time.now + next_execution_in > end_timestamp
             end_timestamp_reached
           else
@@ -33,7 +33,7 @@ module VCAP::CloudController
         end
 
         def next_execution_in
-          poll_interval * default_polling_exponential_backoff**retry_number
+          poll_interval * (default_polling_exponential_backoff**retry_number)
         end
 
         def update_polling_interval(retry_after_header: '')

@@ -10,8 +10,8 @@ module VCAP::CloudController
 
       let(:message) do
         VCAP::CloudController::RouteDestinationUpdateMessage.new({
-          protocol: 'http2'
-        })
+                                                                   protocol: 'http2'
+                                                                 })
       end
 
       it 'updates the destination record' do
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       context 'when the given protocol is incompatible' do
         context 'for tcp route' do
-          let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
+          let(:routing_api_client) { double('routing_api_client', router_group:) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
           let(:tcp_route) do
             UAARequests.stub_all
@@ -32,6 +32,7 @@ module VCAP::CloudController
             VCAP::CloudController::Route.make(:tcp)
           end
           let!(:tcp_destination) { RouteMappingModel.make({ route: tcp_route }) }
+
           it 'does not update the destination record' do
             expect { RouteDestinationUpdate.update(tcp_destination, message) }.to raise_error(StandardError)
           end

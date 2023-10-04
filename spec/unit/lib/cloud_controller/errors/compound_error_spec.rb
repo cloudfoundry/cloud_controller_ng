@@ -8,7 +8,7 @@ module CloudController::Errors
       it 'returns the provided list of API errors' do
         errors = [
           ApiError.new_from_details('StagingError', 'message1'),
-          ApiError.new_from_details('UnprocessableEntity', 'message2'),
+          ApiError.new_from_details('UnprocessableEntity', 'message2')
         ]
         compound_error = CompoundError.new(errors)
         expect(compound_error.underlying_errors).to eq errors
@@ -19,7 +19,7 @@ module CloudController::Errors
       it 'returns the response code of the first error' do
         errors = [
           ApiError.new_from_details('StagingError', 'message1'),
-          ApiError.new_from_details('UnprocessableEntity', 'message2'),
+          ApiError.new_from_details('UnprocessableEntity', 'message2')
         ]
         compound_error = CompoundError.new(errors)
         expect(compound_error.response_code).to eq 400

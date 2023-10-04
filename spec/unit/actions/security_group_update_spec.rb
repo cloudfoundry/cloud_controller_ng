@@ -5,7 +5,7 @@ require 'messages/security_group_update_message'
 module VCAP::CloudController
   RSpec.describe SecurityGroupUpdate do
     describe 'update' do
-      let(:update_message) { VCAP::CloudController::SecurityGroupUpdateMessage.new(name: name) }
+      let(:update_message) { VCAP::CloudController::SecurityGroupUpdateMessage.new(name:) }
       let(:name) { 'my-security-group' }
 
       let!(:security_group) do
@@ -13,7 +13,7 @@ module VCAP::CloudController
           name: 'original-name',
           rules: [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }],
           running_default: false,
-          staging_default: true,
+          staging_default: true
         )
       end
 
@@ -23,9 +23,9 @@ module VCAP::CloudController
             name: name,
             globally_enabled: {
               running: true,
-              staging: false,
+              staging: false
             },
-            rules: [],
+            rules: []
           )
         end
 
@@ -48,9 +48,9 @@ module VCAP::CloudController
         let(:update_message) do
           VCAP::CloudController::SecurityGroupUpdateMessage.new(
             globally_enabled: {
-              running: true,
+              running: true
             },
-            rules: [],
+            rules: []
           )
         end
 
@@ -78,19 +78,19 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             SecurityGroupUpdate.update(security_group, update_message)
-          }.to raise_error(SecurityGroupUpdate::Error, 'blork is busted')
+          end.to raise_error(SecurityGroupUpdate::Error, 'blork is busted')
         end
       end
 
       context 'when a uniqueness error occurs due to the requested name' do
-        let!(:original) { VCAP::CloudController::SecurityGroup.make(name: name) }
+        let!(:original) { VCAP::CloudController::SecurityGroup.make(name:) }
 
         it 'raises a human-friendly error' do
-          expect {
+          expect do
             SecurityGroupUpdate.update(security_group, update_message)
-          }.to raise_error(SecurityGroupUpdate::Error, "Security group with name '#{name}' already exists.")
+          end.to raise_error(SecurityGroupUpdate::Error, "Security group with name '#{name}' already exists.")
         end
       end
     end

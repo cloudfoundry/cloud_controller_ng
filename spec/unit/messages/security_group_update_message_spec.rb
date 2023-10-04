@@ -10,9 +10,9 @@ module VCAP::CloudController
         name: 'security-group-name',
         globally_enabled: {
           running: true,
-          staging: false,
+          staging: false
         },
-        rules: rules,
+        rules: rules
       }
     end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
           type: 8,
           code: 0,
           description: 'Allow ping requests to private services'
-        },
+        }
       ]
     end
 
@@ -40,8 +40,8 @@ module VCAP::CloudController
 
       it 'populates the fields on the message' do
         expect(subject.name).to eq('security-group-name')
-        expect(subject.running).to eq(true)
-        expect(subject.staging).to eq(false)
+        expect(subject.running).to be(true)
+        expect(subject.staging).to be(false)
         expect(subject.rules).to eq(rules)
       end
     end
@@ -69,9 +69,9 @@ module VCAP::CloudController
           {
             globally_enabled: {
               running: true,
-              staging: false,
+              staging: false
             },
-            rules: rules,
+            rules: rules
           }
         end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
         let(:params) do
           {
             name: 'security-group-name',
-            rules: rules,
+            rules: rules
           }
         end
 
@@ -99,8 +99,8 @@ module VCAP::CloudController
             name: 'security-group-name',
             globally_enabled: {
               running: true,
-              staging: false,
-            },
+              staging: false
+            }
           }
         end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
         let(:params) { { name: 123 } }
 
         it 'raises a validation error' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
         end
       end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
         let(:params) { { name: 'B' * (OrganizationQuotasUpdateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1) } }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
         end
       end
@@ -132,7 +132,7 @@ module VCAP::CloudController
         let(:params) { { name: '' } }
 
         it 'is not valid' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:name]).to eq ['is too short (minimum is 1 character)']
         end
       end
@@ -142,13 +142,13 @@ module VCAP::CloudController
       let(:rules) do
         [
           {
-            protocol: 'blah',
-          },
+            protocol: 'blah'
+          }
         ]
       end
 
       it 'is invalid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
       end
     end
 
@@ -157,13 +157,13 @@ module VCAP::CloudController
         {
           globally_enabled: {
             bad: 'invalid',
-            alsobad: 'also-invalid',
-          },
+            alsobad: 'also-invalid'
+          }
         }
       end
 
       it 'is not valid' do
-        expect(subject).to be_invalid
+        expect(subject).not_to be_valid
         expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'staging'"])
       end
     end

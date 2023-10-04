@@ -4,6 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneExcessAppRevisions, job_context: :worker do
       let(:max_retained_revisions_per_app) { 15 }
+
       subject(:job) { PruneExcessAppRevisions.new(max_retained_revisions_per_app) }
 
       it { is_expected.to be_a_valid_job }
@@ -27,6 +28,28 @@ module VCAP::CloudController
 
           expect(RevisionModel.count).to eq(max_retained_revisions_per_app)
           expect(RevisionModel.map(&:version)).to match_array((36..50).to_a)
+        end
+
+        context 'logging' do
+          let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
+          end
+
+          it 'logs the number of revisions deleted' do
+            expect(RevisionModel.count).to eq(0)
+
+            total = 50
+            (1..50).each do |i|
+              RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+            end
+
+            job.perform
+
+            expect(fake_logger).to have_received(:info).with('Cleaning up excess app revisions')
+            expect(fake_logger).to have_received(:info).with("Cleaned up 35 revision rows for app #{app.guid}")
+          end
         end
 
         it 'destroys metadata associated with pruned revisions' do
@@ -55,15 +78,15 @@ module VCAP::CloudController
           expect(RevisionModel.count).to eq(0)
 
           process_commands = []
-          50.times do |i|
-            revision = RevisionModel.make(app: app)
+          50.times do |_i|
+            revision = RevisionModel.make(app:)
             process_commands << revision.process_commands
           end
           process_commands.flatten!
 
-          expect {
+          expect do
             job.perform
-          }.to change { RevisionProcessCommandModel.count }.by(-35)
+          end.to change(RevisionProcessCommandModel, :count).by(-35)
 
           expect(process_commands[0...35].none?(&:exists?))
           expect(process_commands[35...50].all?(&:exists?))
@@ -79,14 +102,14 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                RevisionModel.make(version: i + 1000 * app_index, app: current_app, created_at: Time.now - total + i)
+                RevisionModel.make(version: i + (1000 * app_index), app: current_app, created_at: Time.now - total + i)
               end
             end
 
             job.perform
 
-            expect(RevisionModel.where(app: app).count).to eq(15)
-            expect(RevisionModel.where(app: app).map(&:version)).to match_array((36..50).to_a)
+            expect(RevisionModel.where(app:).count).to eq(15)
+            expect(RevisionModel.where(app:).map(&:version)).to match_array((36..50).to_a)
 
             expect(RevisionModel.where(app: app_the_second).count).to eq(15)
             expect(RevisionModel.where(app: app_the_second).map(&:version)).to match_array((1036..1050).to_a)

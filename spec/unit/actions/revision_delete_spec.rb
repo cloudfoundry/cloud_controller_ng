@@ -12,37 +12,37 @@ module VCAP::CloudController
       it 'deletes the revision' do
         revision_delete.delete([revision, revision2])
 
-        expect(revision.exists?).to eq(false), 'Expected revision to not exist, but it does'
-        expect(revision2.exists?).to eq(false), 'Expected revision2 to not exist, but it does'
+        expect(revision.exists?).to be(false), 'Expected revision to not exist, but it does'
+        expect(revision2.exists?).to be(false), 'Expected revision2 to not exist, but it does'
       end
 
       it 'deletes associated labels' do
         label = RevisionLabelModel.make(resource_guid: revision.guid)
-        expect {
+        expect do
           revision_delete.delete(revision)
-        }.to change { RevisionLabelModel.count }.by(-1)
-        expect(label.exists?).to be_falsey
-        expect(revision.exists?).to be_falsey
+        end.to change(RevisionLabelModel, :count).by(-1)
+        expect(label).not_to exist
+        expect(revision).not_to exist
       end
 
       it 'deletes associated annotations' do
         annotation = RevisionAnnotationModel.make(resource_guid: revision.guid)
-        expect {
+        expect do
           revision_delete.delete(revision)
-        }.to change { RevisionAnnotationModel.count }.by(-1)
-        expect(annotation.exists?).to be_falsey
-        expect(revision.exists?).to be_falsey
+        end.to change(RevisionAnnotationModel, :count).by(-1)
+        expect(annotation).not_to exist
+        expect(revision).not_to exist
       end
 
       it 'deletes associated revision_process_commands' do
         process_command = revision.add_command_for_process_type('worker', 'foo rackup')
 
-        expect {
+        expect do
           revision_delete.delete(revision)
-        }.to change { RevisionProcessCommandModel.count }.by(-2)
+        end.to change(RevisionProcessCommandModel, :count).by(-2)
 
-        expect(process_command.exists?).to be_falsey
-        expect(revision.exists?).to be_falsey
+        expect(process_command).not_to exist
+        expect(revision).not_to exist
       end
 
       it 'deletes associated revision_sidecars' do

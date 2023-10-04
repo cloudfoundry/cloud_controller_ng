@@ -1,14 +1,14 @@
 require 'active_model'
 
 class RulesValidator < ActiveModel::Validator
-  ALLOWED_RULE_KEYS = [
-    :code,
-    :description,
-    :destination,
-    :log,
-    :ports,
-    :protocol,
-    :type,
+  ALLOWED_RULE_KEYS = %i[
+    code
+    description
+    destination
+    log
+    ports
+    protocol
+    type
   ].freeze
 
   def validate(record)
@@ -47,7 +47,7 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def valid_protocol(protocol)
-    protocol.is_a?(String) && %w(tcp udp icmp all).include?(protocol)
+    protocol.is_a?(String) && %w[tcp udp icmp all].include?(protocol)
   end
 
   def validate_allowed_keys(rule, record, index)
@@ -66,9 +66,9 @@ class RulesValidator < ActiveModel::Validator
   def validate_tcp_udp_protocol(rule, record, index)
     add_rule_error('ports are required for protocols of type TCP and UDP', record, index) unless rule[:ports]
 
-    unless valid_ports(rule[:ports])
-      add_rule_error('ports must be a valid single port, comma separated list of ports, or range or ports, formatted as a string', record, index)
-    end
+    return if valid_ports(rule[:ports])
+
+    add_rule_error('ports must be a valid single port, comma separated list of ports, or range or ports, formatted as a string', record, index)
   end
 
   def validate_icmp_protocol(rule, record, index)
@@ -99,7 +99,7 @@ class RulesValidator < ActiveModel::Validator
     end
 
     port_list = ports.split(',')
-    if !port_list.empty?
+    unless port_list.empty?
       return false unless port_list.all? { |p| /\A\s*\d+\s*\z/.match(p) }
       return false unless port_list.all? { |p| port_in_range(p.to_i) }
 
@@ -110,7 +110,7 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def port_in_range(port)
-    port > 0 && port < 65536
+    port > 0 && port < 65_536
   end
 
   def valid_destination_type(destination, record, index)
@@ -156,7 +156,7 @@ class RulesValidator < ActiveModel::Validator
       NetAddr::IPv4Net.parse(val)
     end
   rescue NetAddr::ValidationError
-    return nil
+    nil
   end
 
   def add_rule_error(message, record, index)

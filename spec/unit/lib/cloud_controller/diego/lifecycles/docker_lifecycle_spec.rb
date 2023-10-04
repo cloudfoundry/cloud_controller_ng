@@ -8,8 +8,7 @@ module VCAP::CloudController
       PackageModel.make(:docker,
                         docker_image: 'test-image',
                         docker_username: 'dockerusername',
-                        docker_password: 'dockerpassword',
-                       )
+                        docker_password: 'dockerpassword')
     end
     let(:staging_message) { BuildCreateMessage.new({}) }
 

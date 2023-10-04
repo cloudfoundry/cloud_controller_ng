@@ -134,32 +134,24 @@ module VCAP::CloudController
           Copilot::Sync.sync
 
           expect(Copilot::Adapter).to have_received(:bulk_sync) do |args|
-            expect(args[:routes]).to match_array([
-              { guid: route_1.guid, host: route_1.fqdn, path: route_1.path, internal: false, vip: nil },
-              { guid: route_2.guid, host: route_2.fqdn, path: route_2.path, internal: false, vip: nil }
-            ])
-            expect(args[:route_mappings]).to match_array([
-              {
-                capi_process_guid: web_process_model_1.guid,
-                route_guid: route_mapping_1.route_guid,
-                route_weight: 1
-              },
-              {
-                capi_process_guid: web_process_model_2.guid,
-                route_guid: route_mapping_2.route_guid,
-                route_weight: 1
-              }
-            ])
-            expect(args[:capi_diego_process_associations]).to match_array([
-              {
-                capi_process_guid: web_process_model_1.guid,
-                diego_process_guids: ['some-diego-process-guid-1']
-              },
-              {
-                capi_process_guid: web_process_model_2.guid,
-                diego_process_guids: ['some-diego-process-guid-2']
-              }
-            ])
+            expect(args[:routes]).to contain_exactly({ guid: route_1.guid, host: route_1.fqdn, path: route_1.path, internal: false, vip: nil },
+                                                     { guid: route_2.guid, host: route_2.fqdn, path: route_2.path, internal: false, vip: nil })
+            expect(args[:route_mappings]).to contain_exactly({
+                                                               capi_process_guid: web_process_model_1.guid,
+                                                               route_guid: route_mapping_1.route_guid,
+                                                               route_weight: 1
+                                                             }, {
+                                                               capi_process_guid: web_process_model_2.guid,
+                                                               route_guid: route_mapping_2.route_guid,
+                                                               route_weight: 1
+                                                             })
+            expect(args[:capi_diego_process_associations]).to contain_exactly({
+                                                                                capi_process_guid: web_process_model_1.guid,
+                                                                                diego_process_guids: ['some-diego-process-guid-1']
+                                                                              }, {
+                                                                                capi_process_guid: web_process_model_2.guid,
+                                                                                diego_process_guids: ['some-diego-process-guid-2']
+                                                                              })
           end
         end
       end

@@ -5,9 +5,9 @@ module VCAP::CloudController
     end
 
     def get(job_display_name)
-      if overwritten?(job_display_name)
-        @overwritten_job_priorities[job_display_name.to_sym]
-      end
+      return unless overwritten?(job_display_name)
+
+      @overwritten_job_priorities[job_display_name.to_sym]
     end
 
     private

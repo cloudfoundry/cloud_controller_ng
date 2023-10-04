@@ -17,12 +17,12 @@ module VCAP::CloudController
           type: 'basic',
           credentials: {
             username: 'user',
-            password: 'pass',
+            password: 'pass'
           }
         },
         metadata: {
-            labels: { potato: 'yam' },
-            annotations: { style: 'mashed' }
+          labels: { potato: 'yam' },
+          annotations: { style: 'mashed' }
         }
       }
     end

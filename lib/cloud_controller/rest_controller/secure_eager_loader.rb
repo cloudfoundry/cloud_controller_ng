@@ -6,7 +6,7 @@ module VCAP::CloudController::RestController
         dataset.model,
         default_visibility_filter,
         additional_visibility_filters,
-        depth,
+        depth
       )
 
       dataset.eager(eager_load_hash)
@@ -25,8 +25,7 @@ module VCAP::CloudController::RestController
 
       all_relationships = {}
       [associated_controller.to_one_relationships,
-       associated_controller.to_many_relationships,
-      ].each do |rel|
+       associated_controller.to_many_relationships].each do |rel|
         all_relationships.merge!(rel) if rel&.any?
       end
 
@@ -46,15 +45,13 @@ module VCAP::CloudController::RestController
         unless association_model_class
           raise ArgumentError.new(
             "Cannot resolve association #{association_name} on #{model_class} " \
-              'while trying to build eager loading hash'
+            'while trying to build eager loading hash'
           )
         end
 
         visibility_filter = default_visibility_filter
         additional_filter = additional_visibility_filters[relationship_name]
-        if additional_filter
-          visibility_filter = proc { |ds| additional_filter.call(default_visibility_filter.call(ds)) }
-        end
+        visibility_filter = proc { |ds| additional_filter.call(default_visibility_filter.call(ds)) } if additional_filter
 
         unless association.link_only?
           if depth > 0
@@ -64,7 +61,7 @@ module VCAP::CloudController::RestController
                 association_model_class.associated_class,
                 default_visibility_filter,
                 additional_visibility_filters,
-                depth - 1,
+                depth - 1
               )
             }
           elsif association.is_a?(ControllerDSL::ToOneAttribute)

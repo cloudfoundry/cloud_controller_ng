@@ -15,9 +15,9 @@ module VCAP::CloudController
     it 'does not update the shared segment' do
       shared_segment = IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
       message = IsolationSegmentUpdateMessage.new({})
-      expect {
+      expect do
         subject.update(shared_segment, message)
-      }.to raise_error(CloudController::Errors::ApiError, /Cannot update the shared Isolation Segment/)
+      end.to raise_error(CloudController::Errors::ApiError, /Cannot update the shared Isolation Segment/)
     end
 
     it 'does not update if the message does not request a name update' do
@@ -32,15 +32,15 @@ module VCAP::CloudController
 
       it 'updates the metadata' do
         message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
-          metadata: {
-            labels: {
-              freaky: 'wednesday',
-            },
-            annotations: {
-              hello: 'there'
-            }
-          },
-        })
+                                                                             metadata: {
+                                                                               labels: {
+                                                                                 freaky: 'wednesday'
+                                                                               },
+                                                                               annotations: {
+                                                                                 hello: 'there'
+                                                                               }
+                                                                             }
+                                                                           })
 
         subject.update(isolation_segment, message)
 
@@ -52,15 +52,15 @@ module VCAP::CloudController
 
       it 'removes the metadata' do
         message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
-          metadata: {
-            labels: {
-              freaky: nil,
-            },
-            annotations: {
-              hello: nil
-            }
-          },
-        })
+                                                                             metadata: {
+                                                                               labels: {
+                                                                                 freaky: nil
+                                                                               },
+                                                                               annotations: {
+                                                                                 hello: nil
+                                                                               }
+                                                                             }
+                                                                           })
 
         subject.update(isolation_segment, message)
 
@@ -70,12 +70,12 @@ module VCAP::CloudController
 
       it 'adds metadata' do
         message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
-          metadata: {
-            annotations: {
-              howdy: 'yooo'
-            }
-          },
-        })
+                                                                             metadata: {
+                                                                               annotations: {
+                                                                                 howdy: 'yooo'
+                                                                               }
+                                                                             }
+                                                                           })
 
         subject.update(isolation_segment, message)
 
@@ -90,9 +90,9 @@ module VCAP::CloudController
 
       it 'raises an InvalidIsolationSegment error' do
         message = IsolationSegmentUpdateMessage.new({})
-        expect {
+        expect do
           subject.update(isolation_segment, message)
-        }.to raise_error(IsolationSegmentUpdate::InvalidIsolationSegment, 'booooooo')
+        end.to raise_error(IsolationSegmentUpdate::InvalidIsolationSegment, 'booooooo')
       end
     end
 

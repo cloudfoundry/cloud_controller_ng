@@ -60,7 +60,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array can have at most 5000 resources')
         end
       end
@@ -73,7 +73,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('must have at least 1 resource')
         end
       end
@@ -91,7 +91,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-object checksum')
         end
       end
@@ -109,7 +109,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string checksum value')
         end
       end
@@ -127,7 +127,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'has the correct error message' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
         end
       end
@@ -136,15 +136,15 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         [true, 'x', 5.1, { size: 4 }].each do |size|
           it "has the correct error message when size is #{size}" do
             message = described_class.new({
-              resources: [
-                {
-                  checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
-                  size_in_bytes: size
-                }
-              ]
-            })
+                                            resources: [
+                                              {
+                                                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                                                size_in_bytes: size
+                                              }
+                                            ]
+                                          })
 
-            expect(message).to be_invalid
+            expect(message).not_to be_valid
             expect(message.errors[:resources]).to include('array contains at least one resource with a non-integer size_in_bytes')
           end
         end
@@ -153,16 +153,108 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
       context 'when the v3 resource size is negative' do
         it 'is invalid' do
           message = described_class.new({
+                                          resources: [
+                                            {
+                                              checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                                              size_in_bytes: -1
+                                            }
+                                          ]
+                                        })
+
+          expect(message).not_to be_valid
+          expect(message.errors[:resources]).to include('array contains at least one resource with a negative size_in_bytes')
+        end
+      end
+
+      context 'when the v3 mode is not a string' do
+        let(:params) do
+          {
             resources: [
               {
                 checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
-                size_in_bytes: -1
+                size_in_bytes: 36,
+                mode: 123
               }
             ]
-          })
+          }
+        end
 
-          expect(message).to be_invalid
-          expect(message.errors[:resources]).to include('array contains at least one resource with a negative size_in_bytes')
+        it 'has the correct error message' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string mode')
+        end
+      end
+
+      context 'when the v3 mode is not a POSIX mode' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: 'abcd'
+              }
+            ]
+          }
+        end
+
+        it 'has the correct error message' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with an incorrect mode')
+        end
+      end
+
+      context 'when the v3 mode is a valid full POSIX mode' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '100644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when the v3 mode is a valid partial POSIX mode and it just has the 4 octal permissions part' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '0644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when the v3 mode is a valid partial POSIX mode and it just has the 3 octal permissions part' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: 36,
+                mode: '644'
+              }
+            ]
+          }
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
 
@@ -183,7 +275,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
         end
 
         it 'prints only a single error message for that violation' do
-          expect(subject).to be_invalid
+          expect(subject).not_to be_valid
           expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
           expect(subject.errors[:resources]).to have(1).items
         end

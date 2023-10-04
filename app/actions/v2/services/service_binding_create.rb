@@ -14,7 +14,7 @@ module VCAP::CloudController
     class VolumeMountServiceDisabled < InvalidServiceBinding; end
     class SpaceMismatch < InvalidServiceBinding; end
 
-    PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
+    PERMITTED_BINDING_ATTRIBUTES = %i[credentials syslog_drain_url volume_mounts].freeze
 
     include VCAP::CloudController::LockCheck
 
@@ -32,10 +32,10 @@ module VCAP::CloudController
 
       binding = ServiceBinding.new(
         service_instance: service_instance,
-        app:              app,
-        credentials:      {},
-        type:             message.type,
-        name:             message.name,
+        app: app,
+        credentials: {},
+        type: message.type,
+        name: message.name
       )
       raise InvalidServiceBinding.new(binding.errors.full_messages.join(' ')) unless binding.valid?
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
           binding.save
           Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
         end
-      rescue => e
+      rescue StandardError => e
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
         cleanup_binding_without_db(binding)
         raise e

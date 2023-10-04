@@ -17,7 +17,7 @@ module VCAP::CloudController
                                             map(&:app_guid)
 
           guids_for_apps_with_deployments.each do |app_guid|
-            deployments_dataset = DeploymentModel.where(app_guid: app_guid)
+            deployments_dataset = DeploymentModel.where(app_guid:)
 
             deployments_to_keep = deployments_dataset.
                                   order(Sequel.desc(:created_at)).

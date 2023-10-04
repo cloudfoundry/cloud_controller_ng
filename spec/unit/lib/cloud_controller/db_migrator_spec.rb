@@ -9,28 +9,28 @@ RSpec.describe DBMigrator do
       expect(Sequel::Migrator).to receive(:is_current?).with(
         db,
         DBMigrator::SEQUEL_MIGRATIONS,
-        allow_missing_migration_files: true,
+        allow_missing_migration_files: true
       ).and_return(false, false, true)
 
       expect(Timeout).to receive(:timeout).with(60, anything).and_yield
       allow_any_instance_of(Object).to receive(:sleep).with(1).and_return(1)
-      expect {
+      expect do
         migrator.wait_for_migrations!
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it 'doesnt block when migrations are already current' do
       expect(Sequel::Migrator).to receive(:is_current?).with(
         db,
         DBMigrator::SEQUEL_MIGRATIONS,
-        allow_missing_migration_files: true,
-      ).and_return(true).at_most(2).times
+        allow_missing_migration_files: true
+      ).and_return(true).at_most(:twice)
 
       expect(Timeout).to receive(:timeout).with(60, anything).and_yield
       expect_any_instance_of(Object).not_to receive(:sleep)
-      expect {
+      expect do
         migrator.wait_for_migrations!
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it 'times out after max_migration_duration_in_minutes' do
@@ -39,12 +39,12 @@ RSpec.describe DBMigrator do
       expect(Sequel::Migrator).to receive(:is_current?).with(
         db,
         DBMigrator::SEQUEL_MIGRATIONS,
-        allow_missing_migration_files: true,
+        allow_missing_migration_files: true
       ).and_return(false)
 
-      expect {
+      expect do
         migrator.wait_for_migrations!
-      }.to raise_error(UncaughtThrowError)
+      end.to raise_error(UncaughtThrowError)
     end
   end
 end

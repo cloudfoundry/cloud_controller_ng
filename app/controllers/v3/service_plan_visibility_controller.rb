@@ -43,10 +43,10 @@ class ServicePlanVisibilityController < ApplicationController
     unprocessable!('Cannot delete visibilities from non-org-restricted plans') unless service_plan.visibility_type == ServicePlanVisibilityTypes::ORGANIZATION
 
     org = Organization.where(guid: hashed_params[:org_guid]).first
-    resource_not_found!(:organization) unless org.present?
+    resource_not_found!(:organization) if org.blank?
 
     to_delete = ServicePlanVisibility.where(service_plan: service_plan, organization: org).first
-    resource_not_found!(:service_plan_visibility) unless to_delete.present?
+    resource_not_found!(:service_plan_visibility) if to_delete.blank?
 
     ServicePlanVisibilityDelete.delete(to_delete)
     event_repository.record_service_plan_delete_visibility_event(service_plan, org)

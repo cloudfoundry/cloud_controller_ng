@@ -11,10 +11,10 @@ module VCAP::CloudController
     let(:space) { Space.make(organization: org) }
 
     before do
-      allow(uaa_client).to receive(:usernames_for_ids).with(['1', '2']).and_return({
-        '1' => 'Username1',
-        '2' => 'Username2'
-      })
+      allow(uaa_client).to receive(:usernames_for_ids).with(%w[1 2]).and_return({
+                                                                                  '1' => 'Username1',
+                                                                                  '2' => 'Username2'
+                                                                                })
 
       org.add_user(user1)
       org.add_user(user2)

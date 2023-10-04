@@ -11,9 +11,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
 
   define_method :truncate do |value, max_length|
     val = value.to_s
-    if val.size > max_length - 3
-      val = val[0...max_length] + '...'
-    end
+    val = val[0...max_length] + '...' if val.size > max_length - 3
     val
   end
 
@@ -45,7 +43,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
     end
 
     # ensure there are not extra fields returned unexpectedly
-    actual.each_key do |actual_key, actual_value|
+    actual.each_key do |actual_key, _actual_value|
       expect(expected).to have_key(actual_key)
     end
   end
@@ -65,30 +63,30 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
           when '+'
             summary << "+ #{key}: #{truncate(expected_value, 80)}"
           when '~'
-            next if expected_value.is_a?(Regexp) && expected_value.match(actual_value) rescue false
-            summary << "! #{key}:"
-            if expected_value.is_a?(Regexp)
-              expected_value = expected_value.inspect
+            begin
+              next if expected_value.is_a?(Regexp) && expected_value.match(actual_value)
+            rescue StandardError
+              false
             end
+            summary << "! #{key}:"
+            expected_value = expected_value.inspect if expected_value.is_a?(Regexp)
             summary << "  - #{truncate(expected_value, 80)}"
             summary << "  + #{truncate(actual_value, 80)}"
           end
         end
       end
-    rescue => ex
-      exception = "Error in hashdiff: #{ex} \n #{ex.backtrace[0..5]}"
+    rescue StandardError => e
+      exception = "Error in hashdiff: #{e} \n #{e.backtrace[0..5]}"
     end
 
     result = []
-    if !summary.empty?
-      result << "Summary:\n#{summary.map { |s| '      ' + s }.join("\n")}\n"
-    end
+    result << "Summary:\n#{summary.map { |s| '      ' + s }.join("\n")}\n" unless summary.empty?
     if !!@problem_keys
-      result << '' if !result.empty?
+      result << '' unless result.empty?
       result << "Bad keys: #{@problem_keys}"
     end
     if exception
-      result << '' if !result.empty?
+      result << '' unless result.empty?
       result << 'Exception:'
       result << exception
     end

@@ -22,7 +22,7 @@ module VCAP::CloudController::Presenters::V3
         total_services: 6,
         total_service_keys: 7,
         total_routes: 7,
-        total_reserved_route_ports: 2,
+        total_reserved_route_ports: 2
       )
     end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids: visible_space_guids, all_spaces_visible: all_spaces_visible).to_hash }
+      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids:, all_spaces_visible:).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(space_quota.guid)
@@ -51,10 +51,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:routes][:total_reserved_ports]).to eq(space_quota.total_reserved_route_ports)
 
         expect(result[:relationships][:organization][:data][:guid]).to eq(org.guid)
-        expect(result[:relationships][:spaces][:data]).to match_array([
-          { guid: space_1.guid },
-          { guid: space_2.guid }
-        ])
+        expect(result[:relationships][:spaces][:data]).to contain_exactly({ guid: space_1.guid }, { guid: space_2.guid })
 
         expect(result[:links][:self][:href]).to match(%r{/v3/space_quotas/#{space_quota.guid}$})
         expect(result[:links][:organization][:href]).to match(%r{/v3/organizations/#{org.guid}$})
@@ -95,10 +92,7 @@ module VCAP::CloudController::Presenters::V3
         let(:visible_space_guids) { [] }
 
         it 'displays all spaces' do
-          expect(result[:relationships][:spaces][:data]).to match_array([
-            { guid: space_1.guid },
-            { guid: space_2.guid }
-          ])
+          expect(result[:relationships][:spaces][:data]).to contain_exactly({ guid: space_1.guid }, { guid: space_2.guid })
         end
       end
     end

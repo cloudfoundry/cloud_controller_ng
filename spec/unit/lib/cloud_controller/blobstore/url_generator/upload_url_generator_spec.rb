@@ -13,8 +13,8 @@ module CloudController
         {
           blobstore_host: blobstore_host,
           blobstore_tls_port: tls_port,
-          user:           username,
-          password:       password,
+          user: username,
+          password: password
         }
       end
 

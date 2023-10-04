@@ -37,10 +37,10 @@ module VCAP::CloudController
         routes[SSH_ROUTES_KEY] = ssh_route if ssh_route
 
         ::Diego::Bbs::Models::DesiredLRPUpdate.new(
-          instances:   process.instances,
-          annotation:  process.updated_at.to_f.to_s,
+          instances: process.instances,
+          annotation: process.updated_at.to_f.to_s,
           metric_tags: metric_tags(process),
-          routes:      ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
+          routes: ::Diego::Bbs::Models::ProtoRoutes.new(routes:)
         )
       end
 
@@ -57,49 +57,49 @@ module VCAP::CloudController
           ports << DEFAULT_SSH_PORT
 
           routes[SSH_ROUTES_KEY] = MultiJson.dump({
-            container_port:   DEFAULT_SSH_PORT,
-            private_key:      ssh_key.private_key,
-            host_fingerprint: ssh_key.fingerprint
-          })
+                                                    container_port: DEFAULT_SSH_PORT,
+                                                    private_key: ssh_key.private_key,
+                                                    host_fingerprint: ssh_key.fingerprint
+                                                  })
         end
 
         {
-          process_guid:                     Diego::ProcessGuid.from_process(process),
-          instances:                        process.desired_instances,
-          environment_variables:            desired_lrp_builder.global_environment_variables,
-          start_timeout_ms:                 health_check_timeout_in_seconds * 1000,
-          disk_mb:                          process.disk_quota,
-          memory_mb:                        process.memory, # sums up
-          log_rate_limit:                   ::Diego::Bbs::Models::LogRateLimit.new(bytes_per_second: process.log_rate_limit),
-          privileged:                       desired_lrp_builder.privileged?,
-          ports:                            ports,
-          log_source:                       LRP_LOG_SOURCE,
-          log_guid:                         process.app_guid,
-          metrics_guid:                     process.app_guid,
-          metric_tags:                      metric_tags(process),
-          annotation:                       process.updated_at.to_f.to_s,
-          egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
-          cached_dependencies:              desired_lrp_builder.cached_dependencies,
-          legacy_download_user:             desired_lrp_builder.action_user,
+          process_guid: Diego::ProcessGuid.from_process(process),
+          instances: process.desired_instances,
+          environment_variables: desired_lrp_builder.global_environment_variables,
+          start_timeout_ms: health_check_timeout_in_seconds * 1000,
+          disk_mb: process.disk_quota,
+          memory_mb: process.memory, # sums up
+          log_rate_limit: ::Diego::Bbs::Models::LogRateLimit.new(bytes_per_second: process.log_rate_limit),
+          privileged: desired_lrp_builder.privileged?,
+          ports: ports,
+          log_source: LRP_LOG_SOURCE,
+          log_guid: process.app_guid,
+          metrics_guid: process.app_guid,
+          metric_tags: metric_tags(process),
+          annotation: process.updated_at.to_f.to_s,
+          egress_rules: Diego::EgressRules.new.running_protobuf_rules(process),
+          cached_dependencies: desired_lrp_builder.cached_dependencies,
+          legacy_download_user: desired_lrp_builder.action_user,
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
-          network:                          generate_network,
-          cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate,
-          action:                           MainLRPActionBuilder.build(process, desired_lrp_builder, ssh_key),
-          monitor:                          generate_monitor_action(desired_lrp_builder),
-          root_fs:                          desired_lrp_builder.root_fs,
-          setup:                            desired_lrp_builder.setup,
-          image_layers:                     desired_lrp_builder.image_layers,
-          domain:                           APP_LRP_DOMAIN,
-          volume_mounts:                    generate_volume_mounts,
-          PlacementTags:                    Array(IsolationSegmentSelector.for_space(process.space)),
-          check_definition:                 generate_healthcheck_definition(desired_lrp_builder),
-          routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
-          max_pids:                         @config.get(:diego, :pid_limit),
-          certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
+          network: generate_network,
+          cpu_weight: TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate,
+          action: MainLRPActionBuilder.build(process, desired_lrp_builder, ssh_key),
+          monitor: generate_monitor_action(desired_lrp_builder),
+          root_fs: desired_lrp_builder.root_fs,
+          setup: desired_lrp_builder.setup,
+          image_layers: desired_lrp_builder.image_layers,
+          domain: APP_LRP_DOMAIN,
+          volume_mounts: generate_volume_mounts,
+          PlacementTags: Array(IsolationSegmentSelector.for_space(process.space)),
+          check_definition: generate_healthcheck_definition(desired_lrp_builder),
+          routes: ::Diego::Bbs::Models::ProtoRoutes.new(routes:),
+          max_pids: @config.get(:diego, :pid_limit),
+          certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
-          image_username:                   process.desired_droplet.docker_receipt_username,
-          image_password:                   process.desired_droplet.docker_receipt_password,
+          image_username: process.desired_droplet.docker_receipt_username,
+          image_password: process.desired_droplet.docker_receipt_password
         }.compact
       end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
           'app_id' => METRIC_TAG_VALUE.new(static: process.app_guid),
           'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
           'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
-          'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
+          'app_name' => METRIC_TAG_VALUE.new(static: process.app.name)
         }
 
         metric_tag_label_prefixes = Config.config.get(:custom_metric_tag_prefix_list)
@@ -123,18 +123,18 @@ module VCAP::CloudController
           # These should not be overridden by app developers.  This list is based on
           # https://github.com/cloudfoundry/loggregator-agent-release/blob/8b714dc6f09cfa8a67d78ec974b77c0d7642f5a3/src/pkg/egress/v1/tagger.go#L32-L44
           # and is not expected to change
-          reserved_key_names = %w(deployment index ip job)
+          reserved_key_names = %w[deployment index ip job]
 
           process.app.labels.
-            select { |label|
+            select do |label|
               metric_tag_label_prefixes.include?(label.key_prefix) && !tags.key?(label.key_name)
-            }.
-            reject { |label|
+            end.
+            reject do |label|
               reserved_key_names.include?(label.key_name)
-            }.
-            each { |label|
+            end.
+            each do |label|
               tags[label.key_name] = METRIC_TAG_VALUE.new(static: label.value)
-            }
+            end
         end
 
         tags
@@ -151,18 +151,18 @@ module VCAP::CloudController
       def generate_routes(info)
         http_routes = (info['http_routes'] || []).map do |i|
           {
-            hostnames:         [i['hostname']],
-            port:              i['port'],
+            hostnames: [i['hostname']],
+            port: i['port'],
             route_service_url: i['route_service_url'],
             isolation_segment: IsolationSegmentSelector.for_space(process.space),
-            protocol:          i['protocol'],
+            protocol: i['protocol']
           }
         end
 
         {
-          CF_ROUTES_KEY       => MultiJson.dump(http_routes),
-          TCP_ROUTES_KEY      => MultiJson.dump((info['tcp_routes'] || [])),
-          INTERNAL_ROUTES_KEY => MultiJson.dump((info['internal_routes'] || [])),
+          CF_ROUTES_KEY => MultiJson.dump(http_routes),
+          TCP_ROUTES_KEY => MultiJson.dump((info['tcp_routes'] || [])),
+          INTERNAL_ROUTES_KEY => MultiJson.dump((info['internal_routes'] || []))
         }
       end
 
@@ -176,14 +176,14 @@ module VCAP::CloudController
 
         app_volume_mounts.each do |volume_mount|
           proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
-            driver:        volume_mount['driver'],
+            driver: volume_mount['driver'],
             container_dir: volume_mount['container_dir'],
-            mode:          volume_mount['mode']
+            mode: volume_mount['mode']
           )
 
           mount_config              = volume_mount['device']['mount_config'].present? ? volume_mount['device']['mount_config'].to_json : ''
           proto_volume_mount.shared = ::Diego::Bbs::Models::SharedDevice.new(
-            volume_id:    volume_mount['device']['volume_id'],
+            volume_id: volume_mount['device']['volume_id'],
             mount_config: mount_config
           )
           proto_volume_mounts.append(proto_volume_mount)
@@ -236,16 +236,14 @@ module VCAP::CloudController
               port: port,
               request_timeout_ms: timeout_ms,
               interval_ms: interval_ms
-            )
-          )
+            ))
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
               connect_timeout_ms: timeout_ms,
               interval_ms: interval_ms
-            )
-          )
+            ))
         end
       end
 
@@ -260,16 +258,14 @@ module VCAP::CloudController
               port: port,
               request_timeout_ms: timeout_ms,
               interval_ms: interval_ms
-            )
-          )
+            ))
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
               connect_timeout_ms: timeout_ms,
               interval_ms: interval_ms
-            )
-          )
+            ))
         end
       end
 
@@ -287,19 +283,17 @@ module VCAP::CloudController
 
       def build_action(lrp_builder, port, index)
         extra_args = []
-        if process.health_check_type == HealthCheckTypes::HTTP && index == 0
-          extra_args << "-uri=#{process.health_check_http_endpoint}"
-        end
+        extra_args << "-uri=#{process.health_check_http_endpoint}" if process.health_check_type == HealthCheckTypes::HTTP && index == 0
 
         extra_args << "-timeout=#{process.health_check_invocation_timeout}s" if process.health_check_invocation_timeout
 
         ::Diego::Bbs::Models::RunAction.new(
-          user:                lrp_builder.action_user,
-          path:                '/tmp/lifecycle/healthcheck',
-          args:                ["-port=#{port}"].concat(extra_args),
-          resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
-          log_source:          HEALTH_LOG_SOURCE,
-          suppress_log_output: true,
+          user: lrp_builder.action_user,
+          path: '/tmp/lifecycle/healthcheck',
+          args: ["-port=#{port}"].concat(extra_args),
+          resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
+          log_source: HEALTH_LOG_SOURCE,
+          suppress_log_output: true
         )
       end
 

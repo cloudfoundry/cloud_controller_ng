@@ -21,9 +21,7 @@ module VCAP
           end
         end
 
-        def fingerprint
-          key.fingerprint
-        end
+        delegate :fingerprint, to: :key
 
         private
 

@@ -5,6 +5,7 @@ module VCAP::CloudController
     RSpec.describe Sync, job_context: :clock do
       let(:processes_sync) { instance_double(Diego::ProcessesSync) }
       let(:tasks_sync) { instance_double(Diego::ProcessesSync) }
+
       subject(:job) { Sync.new }
 
       describe '#perform' do

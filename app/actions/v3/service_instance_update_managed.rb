@@ -36,10 +36,10 @@ module VCAP::CloudController
         service_name_changed = message.requested?(:name) && service_instance.service.allow_context_updates
         parameters_changed = message.requested?(:parameters)
         service_plan_changed = message.service_plan_guid &&
-          message.service_plan_guid != service_instance.service_plan.guid
+                               message.service_plan_guid != service_instance.service_plan.guid
 
         maintenance_info_changed = message.maintenance_info_version &&
-          message.maintenance_info_version != service_instance.maintenance_info&.fetch('version', nil)
+                                   message.maintenance_info_version != service_instance.maintenance_info&.fetch('version', nil)
 
         service_name_changed || parameters_changed || service_plan_changed || maintenance_info_changed
       end
@@ -111,7 +111,7 @@ module VCAP::CloudController
         else
           complete_instance_and_save(service_instance, details)
         end
-      rescue => e
+      rescue StandardError => e
         save_failed_state(service_instance, e)
 
         raise e
@@ -125,7 +125,7 @@ module VCAP::CloudController
         when 'succeeded'
           fetch_result = fetch_service_instance(client)
           complete_instance_and_save(service_instance, parse_response(fetch_result, details))
-          return PollingFinished
+          PollingFinished
         when 'in progress'
           save_last_operation(service_instance, details[:last_operation])
           ContinuePolling.call(details[:retry_after])
@@ -135,7 +135,7 @@ module VCAP::CloudController
         end
       rescue LastOperationFailedState => e
         raise e
-      rescue => e
+      rescue StandardError => e
         save_failed_state(service_instance, e)
         raise e
       end
@@ -184,7 +184,7 @@ module VCAP::CloudController
           {
             type: 'update',
             state: 'failed',
-            description: e.message,
+            description: e.message
           }
         )
       end
@@ -206,10 +206,8 @@ module VCAP::CloudController
 
         fetch_result = {}
         begin
-          if service_plan.service.instances_retrievable
-            fetch_result = client.fetch_service_instance(service_instance, user_guid: user_audit_info.user_guid)
-          end
-        rescue => e
+          fetch_result = client.fetch_service_instance(service_instance, user_guid: user_audit_info.user_guid) if service_plan.service.instances_retrievable
+        rescue StandardError => e
           logger.info('fetch-service-instance-failed', error: e.class.name, error_message: e.message)
         end
 
@@ -343,17 +341,16 @@ module VCAP::CloudController
       def raise_if_cannot_update!
         error_code = 'ServiceInstanceWithInaccessiblePlanNotUpdateable'.freeze
         update_error = ->(x) { UnprocessableUpdate.new_from_details(error_code, x) }
-        unless service_instance.service_plan.active?
-          raise update_error.call('parameters') unless message.parameters.nil?
-          raise update_error.call('name') if service_instance.service_plan.service.allow_context_updates && !message.name.nil?
-          raise update_error.call('maintenance_info') unless message.maintenance_info.nil? || maintenance_info_match(message, service_instance)
-        end
+        return if service_instance.service_plan.active?
+        raise update_error.call('parameters') unless message.parameters.nil?
+        raise update_error.call('name') if service_instance.service_plan.service.allow_context_updates && !message.name.nil?
+        raise update_error.call('maintenance_info') unless message.maintenance_info.nil? || maintenance_info_match(message, service_instance)
       end
 
       def raise_if_invalid_state!
-        if service_instance.create_failed?
-          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name)
-        end
+        return unless service_instance.create_failed?
+
+        raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.name)
       end
 
       def maintenance_info_match(message, object)

@@ -12,11 +12,11 @@ RSpec.describe 'String :name' do
       @c.create(str: 'abc')
     end
 
-    it 'should allow create with different case' do
+    it 'allows create with different case' do
       expect(@c.create(str: 'ABC')).to be_valid
     end
 
-    it 'should perform case sensitive search' do
+    it 'performs case sensitive search' do
       expect(@c.dataset[str: 'abc']).not_to be_nil
       expect(@c.dataset[str: 'aBC']).to be_nil
     end
@@ -31,11 +31,11 @@ RSpec.describe 'String :name' do
       @c.create(str: 'abc')
     end
 
-    it 'should allow create with different case' do
+    it 'allows create with different case' do
       expect(@c.create(str: 'ABC')).to be_valid
     end
 
-    it 'should perform case sensitive search' do
+    it 'performs case sensitive search' do
       expect(@c.dataset[str: 'abc']).not_to be_nil
       expect(@c.dataset[str: 'aBC']).to be_nil
     end
@@ -54,19 +54,19 @@ RSpec.describe 'String :name' do
       @c.create(str: 'abc')
     end
 
-    it 'should not allow create with different case due to sequel validations' do
-      expect {
+    it 'does not allow create with different case due to sequel validations' do
+      expect do
         @c.create(str: 'ABC')
-      }.to raise_error(Sequel::ValidationFailed)
+      end.to raise_error(Sequel::ValidationFailed)
     end
 
-    it 'should not allow create with different case due to db constraints' do
-      expect {
+    it 'does not allow create with different case due to db constraints' do
+      expect do
         @c.new(str: 'ABC').save(validate: false)
-      }.to raise_error(Sequel::DatabaseError)
+      end.to raise_error(Sequel::DatabaseError)
     end
 
-    it 'should perform case sensitive search' do
+    it 'performs case sensitive search' do
       expect(@c.dataset[str: 'abc']).not_to be_nil
       expect(@c.dataset[str: 'aBC']).not_to be_nil
     end
@@ -76,7 +76,7 @@ RSpec.describe 'String :name' do
     let(:table_name) { :unique_str_altered }
 
     context 'with defaults' do
-      it 'should not result in a case sensitive column' do
+      it 'does not result in a case sensitive column' do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(db_config.connection[table_name])
         @c.create(altered_to_default: 'abc')
@@ -86,7 +86,7 @@ RSpec.describe 'String :name' do
     end
 
     context 'with :case_insensitive => false' do
-      it 'should not result in a case sensitive column' do
+      it 'does not result in a case sensitive column' do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(db_config.connection[table_name])
         @c.create(altered_to_case_sensitive: 'abc')
@@ -96,7 +96,7 @@ RSpec.describe 'String :name' do
     end
 
     context 'with :case_insensitive => true' do
-      it 'should change the column' do
+      it 'changes the column' do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(db_config.connection[table_name])
         @c.create(altered_to_case_insensitive: 'abc')

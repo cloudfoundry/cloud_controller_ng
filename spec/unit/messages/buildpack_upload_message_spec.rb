@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       let(:stat_double) { instance_double(File::Stat, size: 2) }
+
       before do
         allow(File).to receive(:stat).and_return(stat_double)
       end
@@ -51,6 +52,7 @@ module VCAP::CloudController
 
       context 'when the path is not provided' do
         let(:opts) { {} }
+
         it 'is not valid' do
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
@@ -83,7 +85,7 @@ module VCAP::CloudController
       context 'when the bits name is not provided' do
         let(:opts) { { bits_path: '/tmp/bar' } }
 
-        it ' is not valid' do
+        it 'is not valid' do
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors[:base]).to include('A buildpack zip file must be uploaded as \'bits\'')
@@ -93,7 +95,7 @@ module VCAP::CloudController
       context 'when the file is not a zip' do
         let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
 
-        it ' is not valid' do
+        it 'is not valid' do
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors.full_messages[0]).to include('buildpack.tgz is not a zip')
@@ -126,7 +128,7 @@ module VCAP::CloudController
       context 'when given nil' do
         it 'sets bits_path to nil' do
           upload_message.bits_path = nil
-          expect(upload_message.bits_path).to eq(nil)
+          expect(upload_message.bits_path).to be_nil
         end
       end
     end
@@ -145,8 +147,8 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = BuildpackUploadMessage.create_from_params(params)
 
-        expect(message.requested?(:bits_path)).to be_truthy
-        expect(message.requested?(:bits_name)).to be_truthy
+        expect(message).to be_requested(:bits_path)
+        expect(message).to be_requested(:bits_name)
       end
     end
   end

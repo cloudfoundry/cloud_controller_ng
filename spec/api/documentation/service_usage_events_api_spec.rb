@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-RSpec.resource 'Service Usage Events', type: [:api, :legacy_api] do
+RSpec.resource 'Service Usage Events', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
   let(:guid) { VCAP::CloudController::ServiceUsageEvent.first.guid }
@@ -13,13 +13,13 @@ RSpec.resource 'Service Usage Events', type: [:api, :legacy_api] do
 
   get '/v2/service_usage_events' do
     field :guid, 'The guid of the event.', required: false
-    field :state, 'The desired state of the service.', required: false, readonly: true, valid_values: ['CREATED', 'DELETED', 'UPDATED']
+    field :state, 'The desired state of the service.', required: false, readonly: true, valid_values: %w[CREATED DELETED UPDATED]
     field :org_guid, 'The GUID of the organization.', required: false, readonly: true
     field :space_guid, 'The GUID of the space.', required: false, readonly: true
     field :space_name, 'The name of the space.', required: false, readonly: true
     field :service_instance_guid, 'The GUID of the service instance.', required: false, readonly: true
     field :service_instance_name, 'The name of the service instance.', required: false, readonly: true
-    field :service_instance_type, 'The type of the service instance.', required: false, readonly: true, valid_values: ['managed_service_instance', 'user_provided_service_instance']
+    field :service_instance_type, 'The type of the service instance.', required: false, readonly: true, valid_values: %w[managed_service_instance user_provided_service_instance]
     field :service_plan_guid, 'The GUID for the service plan.', required: false, readonly: true
     field :service_plan_name, 'The name for the service plan.', required: false, readonly: true
     field :service_guid, 'The GUID of the service.', required: false, readonly: true

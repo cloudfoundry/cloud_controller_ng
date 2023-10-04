@@ -11,7 +11,7 @@ Sequel.migration do
       foreign_key [:space_id], :spaces, name: :spaces_application_supporters_space_fk
       foreign_key [:user_id], :users, name: :spaces_application_supporters_user_fk
 
-      index [:space_id, :user_id], unique: true, name: :spaces_application_supporters_user_space_index
+      index %i[space_id user_id], unique: true, name: :spaces_application_supporters_user_space_index
       index :role_guid, name: :spaces_application_supporters_role_guid_index
       index :created_at, name: :spaces_application_supporters_created_at_index
       index :updated_at, name: :spaces_application_supporters_updated_at_index

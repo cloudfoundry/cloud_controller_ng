@@ -101,7 +101,7 @@ class FakeModelTables
       foreign_key :name_id, :names, null: false
 
       # needed to expose the many_to_many add flaw in native Sequel
-      index [:dog_id, :name_id], unique: true, name: 'dog_id_name_id_idx'
+      index %i[dog_id name_id], unique: true, name: 'dog_id_name_id_idx'
     end
 
     db.create_table :tops do

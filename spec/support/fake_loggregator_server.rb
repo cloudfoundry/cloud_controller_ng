@@ -15,7 +15,7 @@ class FakeLoggregatorServer
 
     @thread = Thread.new do
       loop do
-        stuff = @sock.recv(65536)
+        stuff = @sock.recv(65_536)
         envelope = ::Sonde::Envelope.decode(stuff)
         messages << envelope.logMessage
       rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError => e

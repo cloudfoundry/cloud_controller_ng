@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       def unauthenticated_visibility_filter
-        { id: self.public_visible.map(&:id) }
+        { id: public_visible.map(&:id) }
       end
 
       def space_or_org_visible_for_user(space, user)
@@ -142,13 +142,13 @@ module VCAP::CloudController
 
     def purge(event_repository)
       db.transaction do
-        self.update(purging: true)
+        update(purging: true)
         service_plans.each do |plan|
           plan.service_instances_dataset.each do |instance|
             ServiceInstancePurger.new(event_repository).purge(instance)
           end
         end
-        self.destroy
+        destroy
       end
     end
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
     end
 
     def public?
-      self.service_plans.any?(&:public)
+      service_plans.any?(&:public)
     end
 
     alias_method :provider, :deleted_field

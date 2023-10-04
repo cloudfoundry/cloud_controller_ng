@@ -21,8 +21,8 @@ class SidecarsController < ApplicationController
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SidecarPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: base_url(resource: 'sidecars'),
-      )
+      path: base_url(resource: 'sidecars')
+    )
   end
 
   def index_by_process
@@ -35,8 +35,8 @@ class SidecarsController < ApplicationController
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SidecarPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
-      path: base_url(resource: 'sidecars'),
-      )
+      path: base_url(resource: 'sidecars')
+    )
   end
 
   def show
@@ -46,7 +46,7 @@ class SidecarsController < ApplicationController
     app = sidecar.app
     resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
 
-    render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :ok, json: Presenters::V3::SidecarPresenter.new(sidecar)
   end
 
   def create
@@ -62,17 +62,17 @@ class SidecarsController < ApplicationController
 
     TelemetryLogger.v3_emit(
       'create-sidecar',
-        {
-          'app-id' => app.guid,
-          'user-id' => current_user.guid,
-        },
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      },
       {
         'origin' => 'user',
         'memory-in-mb' => sidecar.memory,
-        'process-types' => sidecar.process_types,
+        'process-types' => sidecar.process_types
       }
     )
-    render status: 201, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :created, json: Presenters::V3::SidecarPresenter.new(sidecar)
   rescue SidecarCreate::InvalidSidecar => e
     unprocessable!(e.message)
   end
@@ -91,7 +91,7 @@ class SidecarsController < ApplicationController
 
     sidecar = SidecarUpdate.update(sidecar, message)
 
-    render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+    render status: :ok, json: Presenters::V3::SidecarPresenter.new(sidecar)
   rescue SidecarUpdate::InvalidSidecar => e
     unprocessable!(e.message)
   end

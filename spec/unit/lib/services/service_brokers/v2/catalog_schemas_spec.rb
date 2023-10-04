@@ -14,7 +14,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
         end
 
-        it 'should build the service instance schema' do
+        it 'builds the service instance schema' do
           expect(schemas.service_instance).to be_an_instance_of(ServiceInstanceSchema)
         end
       end
@@ -22,18 +22,17 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when schemas has no service_instance' do
         let(:schema_data) { {} }
 
-        it 'should not build the service instance schema' do
+        it 'does not build the service instance schema' do
           expect(schemas.service_instance).to be_nil
         end
       end
 
       context 'when schemas service_instance is not a hash' do
         let(:schema_data) do
-          { 'service_instance' => 'not a hash'
-          }
+          { 'service_instance' => 'not a hash' }
         end
 
-        it 'should not build the service instance schema' do
+        it 'does not build the service instance schema' do
           expect(schemas.service_instance).to be_nil
         end
       end
@@ -49,7 +48,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
         end
 
-        it 'should build the service binding schema' do
+        it 'builds the service binding schema' do
           expect(schemas.service_binding).to be_an_instance_of(ServiceBindingSchema)
         end
       end
@@ -57,7 +56,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when schemas has no service_binding' do
         let(:schema_data) { {} }
 
-        it 'should not build the service binding schema' do
+        it 'does not build the service binding schema' do
           expect(schemas.service_binding).to be_nil
         end
       end
@@ -69,7 +68,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
         end
 
-        it 'should not build the service binding schema' do
+        it 'does not build the service binding schema' do
           expect(schemas.service_binding).to be_nil
         end
       end
@@ -79,7 +78,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when service instance schema & service binding schema are not present' do
         let(:schema_data) { {} }
 
-        it 'should be valid' do
+        it 'is valid' do
           expect(schemas).to be_valid
         end
       end
@@ -92,7 +91,7 @@ module VCAP::Services::ServiceBrokers::V2
           schemas.valid?
         end
 
-        it 'should not duplicate errors' do
+        it 'does not duplicate errors' do
           expect(schemas.errors.messages.length).to eq 1
         end
       end
@@ -101,8 +100,8 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the service instance data is not a hash' do
           let(:schema_data) { { 'service_instance' => 'not a hash' } }
 
-          it 'should not be valid' do
-            expect(schemas).to_not be_valid
+          it 'is not valid' do
+            expect(schemas).not_to be_valid
             expect(schemas.errors.messages.length).to eq 1
             expect(schemas.errors.messages.first).to match 'Schemas service_instance must be a hash, but has value \"not a hash\"'
           end
@@ -123,7 +122,7 @@ module VCAP::Services::ServiceBrokers::V2
           before { allow(ServiceInstanceSchema).to receive(:new).and_return(service_instance_schema) }
 
           it 'is invalid and adds a nested error' do
-            expect(schemas).to_not be_valid
+            expect(schemas).not_to be_valid
             expect(schemas.errors.nested_errors[service_instance_schema]).to eq('whoops')
           end
         end
@@ -133,8 +132,8 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the service binding data is not a hash' do
           let(:schema_data) { { 'service_binding' => 'not a hash' } }
 
-          it 'should not be valid' do
-            expect(schemas).to_not be_valid
+          it 'is not valid' do
+            expect(schemas).not_to be_valid
             expect(schemas.errors.messages.length).to eq 1
             expect(schemas.errors.messages.first).to match 'Schemas service_binding must be a hash, but has value \"not a hash\"'
           end
@@ -155,7 +154,7 @@ module VCAP::Services::ServiceBrokers::V2
           before { allow(ServiceBindingSchema).to receive(:new).and_return(service_binding_schema) }
 
           it 'is invalid and adds a nested error' do
-            expect(schemas).to_not be_valid
+            expect(schemas).not_to be_valid
             expect(schemas.errors.nested_errors[service_binding_schema]).to eq('whoops')
           end
         end

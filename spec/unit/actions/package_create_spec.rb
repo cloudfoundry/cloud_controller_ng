@@ -6,29 +6,29 @@ module VCAP::CloudController
     let(:app) { AppModel.make }
     let(:type) { 'docker' }
     let(:relationships) { { app: { data: { guid: app.guid } } } }
-    let(:message) {
+    let(:message) do
       PackageCreateMessage.new({
-        type: type,
-        relationships: relationships,
-        metadata: {
-          labels: {
-            release: 'stable',
-            'seriouseats.com/potato' => 'mashed'
-          },
-          annotations: {
-            anno: 'tations'
-          }
-        }
-      })
-    }
-    let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_email: user_email) }
+                                 type: type,
+                                 relationships: relationships,
+                                 metadata: {
+                                   labels: {
+                                     release: 'stable',
+                                     'seriouseats.com/potato' => 'mashed'
+                                   },
+                                   annotations: {
+                                     anno: 'tations'
+                                   }
+                                 }
+                               })
+    end
+    let(:user_audit_info) { UserAuditInfo.new(user_guid:, user_email:) }
 
     describe '#create' do
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'user@example.com' }
 
       it 'creates the package with the correct values' do
-        result = described_class.create(message: message, user_audit_info: user_audit_info)
+        result = described_class.create(message:, user_audit_info:)
 
         expect(app.packages.first).to eq(result)
         created_package = PackageModel.find(guid: result.guid)
@@ -51,11 +51,11 @@ module VCAP::CloudController
               'annotations' => {
                 'anno' => 'tations'
               }
-            },
+            }
           }
         )
 
-        described_class.create(message: message, user_audit_info: user_audit_info)
+        described_class.create(message:, user_audit_info:)
       end
 
       describe 'docker packages' do
@@ -76,7 +76,7 @@ module VCAP::CloudController
         end
 
         it 'persists docker info' do
-          result = described_class.create(message: message, user_audit_info: user_audit_info)
+          result = described_class.create(message:, user_audit_info:)
 
           expect(app.packages.first).to eq(result)
           created_package = PackageModel.find(guid: result.guid)
@@ -102,7 +102,7 @@ module VCAP::CloudController
             }
           )
 
-          described_class.create(message: message, user_audit_info: user_audit_info)
+          described_class.create(message:, user_audit_info:)
         end
       end
 
@@ -112,7 +112,7 @@ module VCAP::CloudController
           let(:url) { nil }
 
           it 'sets the state to CREATED_STATE' do
-            result = described_class.create(message: message, user_audit_info: user_audit_info)
+            result = described_class.create(message:, user_audit_info:)
             expect(result.type).to eq('bits')
             expect(result.state).to eq(PackageModel::CREATED_STATE)
           end
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
         context 'when the type is docker' do
           it 'sets the state to READY_STATE' do
-            result = described_class.create(message: message, user_audit_info: user_audit_info)
+            result = described_class.create(message:, user_audit_info:)
             expect(result.type).to eq('docker')
             expect(result.state).to eq(PackageModel::READY_STATE)
           end
@@ -133,9 +133,9 @@ module VCAP::CloudController
         end
 
         it 'raises an InvalidPackage error' do
-          expect {
-            described_class.create(message: message, user_audit_info: user_audit_info)
-          }.to raise_error(PackageCreate::InvalidPackage, 'the message')
+          expect do
+            described_class.create(message:, user_audit_info:)
+          end.to raise_error(PackageCreate::InvalidPackage, 'the message')
         end
       end
     end

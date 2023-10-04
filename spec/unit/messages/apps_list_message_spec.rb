@@ -16,7 +16,7 @@ module VCAP::CloudController
           'order_by' => 'created_at',
           'include' => 'space,space.organization',
           'label_selector' => 'foo in (stuff,things)',
-          'lifecycle_type' => 'buildpack',
+          'lifecycle_type' => 'buildpack'
         }
       end
 
@@ -24,8 +24,8 @@ module VCAP::CloudController
         message = AppsListMessage.from_params(params)
 
         expect(message).to be_a(AppsListMessage)
-        expect(message.names).to eq(['name1', 'name2'])
-        expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.names).to eq(%w[name1 name2])
+        expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.organization_guids).to eq(['orgguid'])
         expect(message.space_guids).to eq(['spaceguid'])
         expect(message.stacks).to eq(['cflinxfs3'])
@@ -43,26 +43,26 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = AppsListMessage.from_params(params)
 
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:guids)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
-        expect(message.requested?(:order_by)).to be_truthy
-        expect(message.requested?(:include)).to be_truthy
-        expect(message.requested?(:label_selector)).to be_truthy
-        expect(message.requested?(:lifecycle_type)).to be_truthy
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:guids)
+        expect(message).to be_requested(:organization_guids)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
+        expect(message).to be_requested(:order_by)
+        expect(message).to be_requested(:include)
+        expect(message).to be_requested(:label_selector)
+        expect(message).to be_requested(:lifecycle_type)
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: ['name1', 'name2'],
-          guids: ['guid1', 'guid2'],
-          organization_guids: ['orgguid1', 'orgguid2'],
-          space_guids: ['spaceguid1', 'spaceguid2'],
+          names: %w[name1 name2],
+          guids: %w[guid1 guid2],
+          organization_guids: %w[orgguid1 orgguid2],
+          space_guids: %w[spaceguid1 spaceguid2],
           page: 1,
           per_page: 5,
           order_by: 'created_at',
@@ -73,27 +73,27 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids, :space_guids, :include, :label_selector, :lifecycle_type]
+        expected_params = %i[names guids organization_guids space_guids include label_selector lifecycle_type]
         expect(AppsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           AppsListMessage.from_params({
-                                names: [],
-                                guids: [],
-                                organization_guids: [],
-                                space_guids: [],
-                                page: 1,
-                                per_page: 5,
-                                order_by: 'created_at',
-                                include: ['space', 'space.organization'],
-                                label_selector: 'foo in (stuff,things)',
-                                lifecycle_type: 'buildpack',
-                              })
-        }.not_to raise_error
+                                        names: [],
+                                        guids: [],
+                                        organization_guids: [],
+                                        space_guids: [],
+                                        page: 1,
+                                        per_page: 5,
+                                        order_by: 'created_at',
+                                        include: ['space', 'space.organization'],
+                                        label_selector: 'foo in (stuff,things)',
+                                        lifecycle_type: 'buildpack'
+                                      })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -129,31 +129,31 @@ module VCAP::CloudController
       describe 'validations' do
         it 'validates names is an array' do
           message = AppsListMessage.from_params names: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
           message = AppsListMessage.from_params guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates organization_guids is an array' do
           message = AppsListMessage.from_params organization_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do
           message = AppsListMessage.from_params space_guids: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:space_guids].length).to eq 1
         end
 
         it 'validates stacks is an array' do
           message = AppsListMessage.from_params stacks: 'not array'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:stacks].length).to eq 1
         end
 
@@ -168,21 +168,21 @@ module VCAP::CloudController
           message = AppsListMessage.from_params 'include' => 'space.organization,space'
           expect(message).to be_valid
           message = AppsListMessage.from_params 'include' => 'borg,spaceship'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           message = AppsListMessage.from_params 'include' => 'space.organization,spaceship'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
         end
 
         it 'invalidates duplicates in the includes field' do
           message = AppsListMessage.from_params 'include' => 'space.organization,space.organization'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:base].length).to eq 1
           expect(message.errors[:base][0]).to match(/Duplicate included resource: 'space.organization'/)
         end
 
         it 'validates lifecycle_type is one of two values' do
           message = AppsListMessage.from_params lifecycle_type: 'not-buildpack-or-docker'
-          expect(message).to be_invalid
+          expect(message).not_to be_valid
           expect(message.errors[:base].length).to eq 1
         end
 

@@ -24,7 +24,7 @@ RSpec.describe 'Service Broker API integration' do
       expect(
         a_request(method, url).
           with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }.
-          with(basic_auth: ['username', 'password'])
+          with(basic_auth: %w[username password])
       ).to have_been_made
     end
 
@@ -36,6 +36,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 401' do
         let(:broker_response_status) { 401 }
 
@@ -43,6 +44,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 403' do
         let(:broker_response_status) { 403 }
 
@@ -50,6 +52,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 422' do
         let(:broker_response_status) { 422 }
 
@@ -57,6 +60,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 502' do
         let(:broker_response_status) { 502 }
 
@@ -64,6 +68,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(last_response).to have_status_code(502)
         end
       end
+
       context 'when broker returns 500' do
         let(:broker_response_status) { 500 }
 
@@ -77,7 +82,7 @@ RSpec.describe 'Service Broker API integration' do
       describe 'fetching the catalog' do
         shared_examples 'a catalog fetch request' do
           it 'makes request to correct endpoint with basic auth' do
-            expect(a_request(:get, 'http://broker-url/v2/catalog').with(basic_auth: ['username', 'password'])).to have_been_made
+            expect(a_request(:get, 'http://broker-url/v2/catalog').with(basic_auth: %w[username password])).to have_been_made
           end
 
           it 'uses correct version header' do
@@ -90,12 +95,12 @@ RSpec.describe 'Service Broker API integration' do
             stub_catalog_fetch(broker_response_status)
 
             post('/v2/service_brokers', {
-                name: broker_name,
-                broker_url: 'http://' + broker_url,
-                auth_username: broker_auth_username,
-                auth_password: broker_auth_password
-              }.to_json,
-              admin_headers)
+              name: broker_name,
+              broker_url: 'http://' + broker_url,
+              auth_username: broker_auth_username,
+              auth_password: broker_auth_password
+            }.to_json,
+                 admin_headers)
           end
 
           it_behaves_like 'a catalog fetch request'
@@ -115,8 +120,8 @@ RSpec.describe 'Service Broker API integration' do
             stub_catalog_fetch(broker_response_status)
 
             put("/v2/service_brokers/#{@broker_guid}",
-              {}.to_json,
-              admin_headers)
+                {}.to_json,
+                admin_headers)
           end
 
           it_behaves_like 'a catalog fetch request'
@@ -134,10 +139,10 @@ RSpec.describe 'Service Broker API integration' do
       let(:plan_guid) { @plan_guid }
       let(:request_from_cc_to_broker) do
         {
-          service_id:        'service-guid-here',
-          plan_id:           'plan1-guid-here',
+          service_id: 'service-guid-here',
+          plan_id: 'plan1-guid-here',
           organization_guid: org_guid,
-          space_guid:        space_guid,
+          space_guid: space_guid
         }
       end
 
@@ -156,12 +161,12 @@ RSpec.describe 'Service Broker API integration' do
             to_return(status: broker_response_status, body: broker_response_body)
 
           post('/v2/service_instances',
-            {
-              name:              'test-service',
-              space_guid:        space_guid,
-              service_plan_guid: plan_guid
-            }.to_json,
-            admin_headers)
+               {
+                 name: 'test-service',
+                 space_guid: space_guid,
+                 service_plan_guid: plan_guid
+               }.to_json,
+               admin_headers)
         end
 
         include_examples 'broker errors'
@@ -177,7 +182,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: ['username', 'password'])).to have_been_made
+          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: %w[username password])).to have_been_made
         end
 
         context 'when the response from broker does not contain a dashboard_url' do
@@ -200,7 +205,7 @@ RSpec.describe 'Service Broker API integration' do
           let(:broker_response_status) { 409 }
 
           it 'makes the request to the broker' do
-            expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: ['username', 'password'])).to have_been_made
+            expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: %w[username password])).to have_been_made
           end
 
           it 'responds to user with 409' do
@@ -215,11 +220,11 @@ RSpec.describe 'Service Broker API integration' do
       let(:broker_response_body) do
         {
           credentials: {
-            uri:      'mysql://mysqluser:pass@mysqlhost:3306/dbname',
+            uri: 'mysql://mysqluser:pass@mysqlhost:3306/dbname',
             username: 'mysqluser',
             password: 'pass',
-            host:     'mysqlhost',
-            port:     3306,
+            host: 'mysqlhost',
+            port: 3306,
             database: 'dbname'
           }
         }.to_json
@@ -249,8 +254,8 @@ RSpec.describe 'Service Broker API integration' do
             to_return(status: broker_response_status, body: broker_response_body)
 
           post('/v2/service_bindings',
-            { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-            admin_headers)
+               { app_guid:, service_instance_guid: }.to_json,
+               admin_headers)
         end
 
         include_examples 'broker errors'
@@ -260,7 +265,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$}).with(basic_auth: ['username', 'password'])).
+          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$}).with(basic_auth: %w[username password])).
             to have_been_made
         end
 
@@ -331,9 +336,8 @@ RSpec.describe 'Service Broker API integration' do
             to_return(status: broker_response_status, body: '{}')
 
           delete("v2/service_bindings/#{@binding_guid}",
-            '{}',
-            admin_headers
-          )
+                 '{}',
+                 admin_headers)
         end
 
         include_examples 'broker errors'
@@ -389,9 +393,8 @@ RSpec.describe 'Service Broker API integration' do
             to_return(status: broker_response_status, body: broker_response_body)
 
           delete("v2/service_instances/#{service_instance_guid}",
-            '{}',
-            admin_headers
-          )
+                 '{}',
+                 admin_headers)
         end
 
         include_examples 'broker errors'

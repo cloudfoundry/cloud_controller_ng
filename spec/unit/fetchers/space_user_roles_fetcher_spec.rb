@@ -29,7 +29,7 @@ module VCAP::CloudController
         space.add_developer(developer)
       end
 
-      it 'should return a list of all users with their associated roles' do
+      it 'returns a list of all users with their associated roles' do
         users = SpaceUserRolesFetcher.new.fetch(space).to_a
         expect(users).to include(everything_user, manager, auditor, developer)
         expect(users).not_to include(not_a_user)

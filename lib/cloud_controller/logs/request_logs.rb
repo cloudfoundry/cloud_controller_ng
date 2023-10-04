@@ -30,8 +30,7 @@ module VCAP::CloudController
         return if @incomplete_requests.delete(request_id).nil?
 
         @logger.info("Completed #{status} vcap-request-id: #{request_id}",
-                     { status_code: status }
-        )
+                     { status_code: status })
       end
 
       def log_incomplete_requests
@@ -59,7 +58,11 @@ module VCAP::CloudController
 
       def anonymize_ip(request_ip)
         # Remove last octet of ip if EU GDPR compliance is needed
-        ip = IPAddr.new(request_ip) rescue nil
+        ip = begin
+          IPAddr.new(request_ip)
+        rescue StandardError
+          nil
+        end
         if VCAP::CloudController::Config.config.get(:logging, :anonymize_ips) && ip.nil?.!
           if ip.ipv4?
             ip.to_string.split('.')[0...-1].join('.') + '.0'
@@ -67,7 +70,11 @@ module VCAP::CloudController
             ip.to_string.split(':')[0...-5].join(':') + ':0000:0000:0000:0000:0000'
           end
         else
-          ip.to_string rescue request_ip
+          begin
+            ip.to_string
+          rescue StandardError
+            request_ip
+          end
         end
       end
     end

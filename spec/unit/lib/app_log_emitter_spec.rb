@@ -3,6 +3,7 @@ require 'spec_helper'
 module VCAP
   RSpec.describe AppLogEmitter do
     let(:logger) { instance_double(::Steno::Logger) }
+
     before do
       AppLogEmitter.logger = logger
       AppLogEmitter.fluent_emitter = nil
@@ -31,7 +32,8 @@ module VCAP
       let(:fluent_emitter) { instance_double(FluentEmitter) }
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app) { VCAP::CloudController::AppModel.make(space:) }
+
       before do
         AppLogEmitter.fluent_emitter = fluent_emitter
       end
@@ -59,11 +61,12 @@ module VCAP
     describe 'when the loggregator emitter is set' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app) { VCAP::CloudController::AppModel.make(space:) }
       let(:emitter) { LoggregatorEmitter::Emitter.new('127.0.0.1:1234', 'cloud_controller', 'API', 1) }
-      before {
+
+      before do
         AppLogEmitter.emitter = emitter
-      }
+      end
 
       context 'when the app exists' do
         let(:expected_tags) do

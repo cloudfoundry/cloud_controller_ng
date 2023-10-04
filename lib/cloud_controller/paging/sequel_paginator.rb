@@ -13,9 +13,7 @@ module VCAP::CloudController
       order_type = Sequel.send(order_direction, Sequel.qualify(table_name, order_by))
       dataset = dataset.order(order_type)
 
-      if order_by != 'id' && has_guid_column
-        dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid)))
-      end
+      dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid))) if order_by != 'id' && has_guid_column
 
       records, count = if can_paginate_with_window_function?(dataset)
                          paginate_with_window_function(dataset, per_page, page, table_name)
@@ -34,11 +32,11 @@ module VCAP::CloudController
 
     def paginate_with_window_function(dataset, per_page, page, table_name)
       dataset = dataset.from_self if dataset.opts[:distinct]
-      if dataset.opts[:graph]
-        dataset = dataset.add_graph_aliases(pagination_total_results: [table_name, :pagination_total_results, Sequel.function(:count).*.over])
-      else
-        dataset = dataset.select_append(Sequel.as(Sequel.function(:count).*.over, :pagination_total_results))
-      end
+      dataset = if dataset.opts[:graph]
+                  dataset.add_graph_aliases(pagination_total_results: [table_name, :pagination_total_results, Sequel.function(:count).*.over])
+                else
+                  dataset.select_append(Sequel.as(Sequel.function(:count).*.over, :pagination_total_results))
+                end
       records = dataset.limit(per_page, (page - 1) * per_page).all
       count = records.any? ? records.first[:pagination_total_results] : 0
       records.each { |x| x.values.delete(:pagination_total_results) }

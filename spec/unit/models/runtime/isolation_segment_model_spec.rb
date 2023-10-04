@@ -18,9 +18,9 @@ module VCAP::CloudController
 
         context 'when the space is not part of an entitled organization' do
           it 'does not add the space' do
-            expect {
+            expect do
               isolation_segment_model.add_space(space_1)
-            }.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization/)
+            end.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization/)
           end
         end
 
@@ -113,61 +113,61 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'requires a name' do
-        expect {
+        expect do
           IsolationSegmentModel.make(name: nil)
-        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
+        end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
-        expect {
+        expect do
           IsolationSegmentModel.make(name: '')
-        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
+        end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do
         IsolationSegmentModel.make(name: 'segment1')
 
-        expect {
+        expect do
           IsolationSegmentModel.make(name: 'segment1')
-        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
+        end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'uniqueness is case insensitive' do
         IsolationSegmentModel.make(name: 'lowercase')
 
-        expect {
+        expect do
           IsolationSegmentModel.make(name: 'lowerCase')
-        }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
+        end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
-      it 'should allow standard ascii characters' do
-        expect {
-          IsolationSegmentModel.make(name: "A -_- word 2!?()\'\"&+.")
-        }.to_not raise_error
+      it 'allows standard ascii characters' do
+        expect do
+          IsolationSegmentModel.make(name: "A -_- word 2!?()'\"&+.")
+        end.not_to raise_error
       end
 
-      it 'should allow backslash characters' do
-        expect {
+      it 'allows backslash characters' do
+        expect do
           IsolationSegmentModel.make(name: 'a \\ word')
-        }.to_not raise_error
+        end.not_to raise_error
       end
 
-      it 'should allow unicode characters' do
-        expect {
+      it 'allows unicode characters' do
+        expect do
           IsolationSegmentModel.make(name: '防御力¡')
-        }.to_not raise_error
+        end.not_to raise_error
       end
 
-      it 'should not allow newline characters' do
-        expect {
+      it 'does not allow newline characters' do
+        expect do
           IsolationSegmentModel.make(name: "a \n word")
-        }.to raise_error(Sequel::ValidationFailed)
+        end.to raise_error(Sequel::ValidationFailed)
       end
 
-      it 'should not allow escape characters' do
-        expect {
+      it 'does not allow escape characters' do
+        expect do
           IsolationSegmentModel.make(name: "a \e word")
-        }.to raise_error(Sequel::ValidationFailed)
+        end.to raise_error(Sequel::ValidationFailed)
       end
     end
 
@@ -191,14 +191,14 @@ module VCAP::CloudController
 
       it 'deletes metadata on destroy' do
         isolation_segment_model.destroy
-        expect(label.exists?).to be_falsey
-        expect(annotation.exists?).to be_falsey
+        expect(label).not_to exist
+        expect(annotation).not_to exist
       end
 
       it 'complains when we delete the iso seg' do
-        expect {
+        expect do
           isolation_segment_model.delete
-        }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end.to raise_error(Sequel::ForeignKeyConstraintViolation)
       end
     end
   end

@@ -11,7 +11,7 @@ module VCAP::CloudController
             type: 'basic',
             credentials: {
               username: 'user',
-              password: 'pass',
+              password: 'pass'
             }
           }
         }
@@ -25,9 +25,9 @@ module VCAP::CloudController
             type: 'basic',
             credentials: {
               username: 'user',
-              password: '[PRIVATE DATA HIDDEN]',
+              password: '[PRIVATE DATA HIDDEN]'
             }
-          },
+          }
         }.with_indifferent_access)
       end
     end

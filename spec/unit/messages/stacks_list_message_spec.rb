@@ -9,7 +9,7 @@ module VCAP::CloudController
           'names' => 'name1,name2',
           'default' => 'true',
           'page' => 1,
-          'per_page' => 5,
+          'per_page' => 5
         }
       end
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
         message = StacksListMessage.from_params(params)
 
         expect(message).to be_a(StacksListMessage)
-        expect(message.names).to eq(%w(name1 name2))
+        expect(message.names).to eq(%w[name1 name2])
         expect(message.default).to eq('true')
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
@@ -26,37 +26,37 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = StacksListMessage.from_params(params)
 
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:default)).to be_truthy
-        expect(message.requested?(:page)).to be_truthy
-        expect(message.requested?(:per_page)).to be_truthy
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:default)
+        expect(message).to be_requested(:page)
+        expect(message).to be_requested(:per_page)
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-          names: %w(name1 name2),
+          names: %w[name1 name2],
           default: 'true',
           page: 1,
-          per_page: 5,
+          per_page: 5
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :default]
+        expected_params = %i[names default]
         expect(StacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
+        expect do
           StacksListMessage.from_params({
-            names: [],
-            default: true,
-          })
-        }.not_to raise_error
+                                          names: [],
+                                          default: true
+                                        })
+        end.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -75,13 +75,13 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates names is an array' do
         message = StacksListMessage.from_params names: 'not array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates that default is boolean-like' do
         message = StacksListMessage.from_params({ default: 'maybe' })
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:default].length).to eq 1
       end
 

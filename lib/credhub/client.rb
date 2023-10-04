@@ -17,7 +17,7 @@ module Credhub
 
     attr_reader :credhub_url, :uaa_client
 
-    def with_request_error_handling(&_block)
+    def with_request_error_handling(&)
       response = yield
 
       case response.status
@@ -67,9 +67,7 @@ module Credhub
     def self.from_response(response)
       response_body = JSON.parse(response.body)
       error_message = response_body['error']
-      if response_body['error_description']
-        error_message += ": #{response_body['error_description']}"
-      end
+      error_message += ": #{response_body['error_description']}" if response_body['error_description']
       new(error_message)
     end
   end

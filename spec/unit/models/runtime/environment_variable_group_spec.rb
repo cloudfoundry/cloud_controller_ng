@@ -94,9 +94,9 @@ module VCAP::CloudController
     describe '#validate' do
       describe 'environment_variables' do
         it 'validates them' do
-          expect {
+          expect do
             EnvironmentVariableGroup.make(environment_json: { 'VCAP_SERVICES' => {} })
-          }.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
+          end.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
         end
       end
     end
@@ -115,11 +115,11 @@ module VCAP::CloudController
           allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
           var_group = EnvironmentVariableGroup.make(environment_json: { 'name' => 'value' })
 
-          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(12345)
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(12_345)
           var_group.update(environment_json: { 'name' => 'new_value' })
 
           expect(var_group.environment_json).to eq({ 'name' => 'new_value' })
-          expect(var_group.encryption_iterations).to eq 12345
+          expect(var_group.encryption_iterations).to eq 12_345
         end
       end
     end

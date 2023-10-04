@@ -27,9 +27,7 @@ module VCAP::CloudController
         request_attrs['parameters']
       )
 
-      if errors.present?
-        raise errors.first
-      end
+      raise errors.first if errors.present?
 
       service_key
     end

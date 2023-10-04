@@ -3,7 +3,7 @@ Sequel.migration do
     alter_table :service_dashboard_clients do
       add_column :service_broker_id, Integer
     end
-    run <<-SQL
+    run <<-SQL.squish
       UPDATE service_dashboard_clients
         SET service_broker_id = (
           SELECT services.service_broker_id

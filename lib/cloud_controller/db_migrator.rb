@@ -31,9 +31,7 @@ class DBMigrator
     Sequel.extension :migration
     logger = Steno.logger('cc.db.wait_until_current')
 
-    unless db_is_current_or_newer_than_local_migrations?
-      logger.info('waiting indefinitely for database schema to be current')
-    end
+    logger.info('waiting indefinitely for database schema to be current') unless db_is_current_or_newer_than_local_migrations?
 
     timeout_message = 'ccdb.max_migration_duration_in_minutes exceeded'
     Timeout.timeout(@timeout_in_minutes * 60, message: timeout_message) do
@@ -45,7 +43,7 @@ class DBMigrator
 
   private
 
-  TWO_WEEKS = 20160
+  TWO_WEEKS = 20_160
   def default_two_weeks(duration_in_minutes)
     return TWO_WEEKS if duration_in_minutes.nil?
 

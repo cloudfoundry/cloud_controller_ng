@@ -18,7 +18,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
   let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
   let(:maximum_polling_duration) { nil }
   let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan:, space:) }
 
   let(:user_info) { instance_double(Object) }
   let(:parameters) { { foo: 'bar' } }
@@ -27,9 +27,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
     let(:poll_response) { { finished: false } }
     let(:action) do
       double('BindingAction', {
-        bind: nil,
-        poll: poll_response
-      })
+               bind: nil,
+               poll: poll_response
+             })
     end
 
     before do
@@ -48,7 +48,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           expect(action).to have_received(:bind).with(
             binding,
             parameters: parameters,
-            accepts_incomplete: true,
+            accepts_incomplete: true
           )
 
           expect(subject.finished).to be_truthy
@@ -59,13 +59,13 @@ RSpec.shared_examples 'create binding job' do |binding_type|
         context 'computes the maximum duration' do
           before do
             TestConfig.override(
-              broker_client_max_async_poll_duration_minutes: 90009
+              broker_client_max_async_poll_duration_minutes: 90_009
             )
             subject.perform
           end
 
           it 'sets to the default value' do
-            expect(subject.maximum_duration_seconds).to eq(90009.minutes)
+            expect(subject.maximum_duration_seconds).to eq(90_009.minutes)
           end
 
           context 'when the plan defines a duration' do
@@ -76,13 +76,14 @@ RSpec.shared_examples 'create binding job' do |binding_type|
             end
           end
         end
+
         it 'calls bind and then poll' do
           subject.perform
 
           expect(action).to have_received(:bind).with(
             binding,
             parameters: parameters,
-            accepts_incomplete: true,
+            accepts_incomplete: true
           )
 
           expect(action).to have_received(:poll).with(binding)
@@ -96,9 +97,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
           end
 
           it 'raises an API error' do
-            expect {
+            expect do
               subject.perform
-            }.to raise_error(
+            end.to raise_error(
               CloudController::Errors::ApiError,
               'The service binding is invalid: The broker responded asynchronously but does not support fetching binding data'
             )
@@ -110,9 +111,9 @@ RSpec.shared_examples 'create binding job' do |binding_type|
     context 'subsequent times' do
       let(:new_action) do
         double('BindingDouble', {
-          bind: nil,
-          poll: poll_response,
-        })
+                 bind: nil,
+                 poll: poll_response
+               })
       end
 
       before do
@@ -140,7 +141,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
 
       context 'the maximum duration' do
         it 'recomputes the value' do
-          subject.maximum_duration_seconds = 90009
+          subject.maximum_duration_seconds = 90_009
           TestConfig.override(broker_client_max_async_poll_duration_minutes: 8088)
           subject.perform
           expect(subject.maximum_duration_seconds).to eq(8088.minutes)
@@ -148,7 +149,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
 
         context 'when the plan value changes between calls' do
           before do
-            subject.maximum_duration_seconds = 90009
+            subject.maximum_duration_seconds = 90_009
             service_plan.update(maximum_polling_duration: 5000)
             subject.perform
           end
@@ -167,7 +168,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
         it 'raises an error' do
           expect { subject.perform }.to raise_error(
             CloudController::Errors::ApiError,
-              /create could not be completed: delete in progress/
+            /create could not be completed: delete in progress/
           )
 
           binding.reload
@@ -198,7 +199,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
 
         expect { subject.perform }.to raise_error(
           VCAP::CloudController::V3::CreateBindingAsyncJob::BindingNotFound,
-          /The binding could not be found/,
+          /The binding could not be found/
         )
       end
     end
@@ -209,7 +210,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
 
         expect { subject.perform }.to raise_error(
           CloudController::Errors::ApiError,
-          'bind could not be completed: StandardError',
+          'bind could not be completed: StandardError'
         )
 
         binding.reload
@@ -224,7 +225,7 @@ RSpec.shared_examples 'create binding job' do |binding_type|
 
         expect { subject.perform }.to raise_error(
           CloudController::Errors::ApiError,
-          'bind could not be completed: StandardError',
+          'bind could not be completed: StandardError'
         )
 
         binding.reload

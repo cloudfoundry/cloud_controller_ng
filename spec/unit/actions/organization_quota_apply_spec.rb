@@ -11,15 +11,15 @@ module VCAP::CloudController
       let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
       let(:message) do
         VCAP::CloudController::OrganizationQuotaApplyMessage.new({
-          data: [{ guid: org.guid }]
-        })
+                                                                   data: [{ guid: org.guid }]
+                                                                 })
       end
 
       context 'when applying quota to an org' do
         it 'associates given org with the quota' do
-          expect {
+          expect do
             subject.apply(org_quota, message)
-          }.to change { org_quota.organizations.count }.by 1
+          end.to change { org_quota.organizations.count }.by 1
 
           expect(org_quota.organizations.count).to eq(1)
           expect(org_quota.organizations[0].guid).to eq(org.guid)
@@ -32,9 +32,9 @@ module VCAP::CloudController
           errors.add(:blork, 'is busted')
           expect(org_quota).to receive(:add_organization).and_raise(Sequel::ValidationFailed.new(errors))
 
-          expect {
+          expect do
             subject.apply(org_quota, message)
-          }.to raise_error(OrganizationQuotaApply::Error, 'blork is busted')
+          end.to raise_error(OrganizationQuotaApply::Error, 'blork is busted')
         end
       end
 
@@ -43,14 +43,14 @@ module VCAP::CloudController
 
         let(:message_with_invalid_org_guid) do
           VCAP::CloudController::OrganizationQuotaApplyMessage.new({
-            data: [{ guid: invalid_org_guid }]
-          })
+                                                                     data: [{ guid: invalid_org_guid }]
+                                                                   })
         end
 
         it 'raises a human-friendly error' do
-          expect {
+          expect do
             subject.apply(org_quota, message_with_invalid_org_guid)
-          }.to raise_error(OrganizationQuotaApply::Error, "Organizations with guids [\"#{invalid_org_guid}\"] do not exist")
+          end.to raise_error(OrganizationQuotaApply::Error, "Organizations with guids [\"#{invalid_org_guid}\"] do not exist")
         end
       end
 
@@ -61,11 +61,11 @@ module VCAP::CloudController
         let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 2000) }
 
         it 'raises an error' do
-          expect {
+          expect do
             subject.apply(org_quota, message)
-          }.to raise_error(OrganizationQuotaApply::Error,
-            'Current usage exceeds new quota values. ' \
-            'The org(s) being assigned this quota contain apps running with an unlimited log rate limit.')
+          end.to raise_error(OrganizationQuotaApply::Error,
+                             'Current usage exceeds new quota values. ' \
+                             'The org(s) being assigned this quota contain apps running with an unlimited log rate limit.')
         end
       end
     end

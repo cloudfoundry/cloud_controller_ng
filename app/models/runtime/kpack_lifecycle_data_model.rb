@@ -30,18 +30,18 @@ module VCAP::CloudController
     end
 
     def buildpack_models
-      return []
+      []
     end
 
     def first_custom_buildpack_url
-      return nil
+      nil
     end
 
     # def buildpacks=(new_buildpacks) end
 
     def to_hash
       {
-        buildpacks: buildpacks
+        buildpacks:
       }
     end
 

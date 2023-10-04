@@ -1,5 +1,5 @@
 Sequel.migration do
-  TABLE_NAMES = %w(
+  TABLE_NAMES = %w[
     app_events
     app_usage_events
     apps
@@ -29,12 +29,12 @@ Sequel.migration do
     spaces
     stacks
     users
-  ).freeze
+  ].freeze
 
   up do
     if self.class.name.match?(/mysql/i)
       TABLE_NAMES.each do |table|
-        run <<-SQL
+        run <<-SQL.squish
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
         SQL
       end
@@ -44,7 +44,7 @@ Sequel.migration do
   down do
     if self.class.name.match?(/mysql/i)
       TABLE_NAMES.each do |table|
-        run <<-SQL
+        run <<-SQL.squish
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
         SQL
       end

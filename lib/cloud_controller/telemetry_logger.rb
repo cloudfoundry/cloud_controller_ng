@@ -3,7 +3,7 @@ require 'openssl'
 
 module VCAP::CloudController
   class TelemetryLogger
-    INTEGER_FIELDS = %w(instance-count memory-in-mb disk-in-mb).freeze
+    INTEGER_FIELDS = %w[instance-count memory-in-mb disk-in-mb].freeze
     class << self
       def init(logger)
         @logger = logger
@@ -28,14 +28,14 @@ module VCAP::CloudController
       def emit(event_name, entries, raw_entries={})
         return if logger.nil?
 
-        converted_entries = raw_entries.merge(raw_entries.select { |k, v|
+        converted_entries = raw_entries.merge(raw_entries.select do |k, _v|
           INTEGER_FIELDS.include?(k)
-        }.transform_values(&:to_i))
+        end.transform_values(&:to_i))
 
         resp = {
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => Time.now.to_datetime.rfc3339,
-          event_name => converted_entries.merge(anonymize(entries)),
+          event_name => converted_entries.merge(anonymize(entries))
         }
         logger.info(JSON.generate(resp))
       end

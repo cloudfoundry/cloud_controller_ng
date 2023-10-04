@@ -19,7 +19,7 @@ module CloudController::Presenters::V2
 
       let(:space) { VCAP::CloudController::Space.make }
       let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
 
       it 'returns the domain entity and associated urls' do
         expect(subject.entity_hash(controller, domain, opts, depth, parents, orphans)).to eq(

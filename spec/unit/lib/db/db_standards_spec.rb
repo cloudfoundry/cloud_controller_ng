@@ -22,19 +22,19 @@ RSpec.describe 'DB Schema' do
 
       if connection.supports_foreign_key_parsing?
         connection.foreign_key_list(table).each do |fk|
-          unless fk[:name].nil?
-            it "the foreign key #{table}.#{fk[:name]}'s name should not be longer than 63 characters" do
-              expect(fk[:name].length).to be <= 63
-            end
+          next if fk[:name].nil?
+
+          it "the foreign key #{table}.#{fk[:name]}'s name should not be longer than 63 characters" do
+            expect(fk[:name].length).to be <= 63
           end
         end
       end
 
-      if connection.supports_index_parsing?
-        connection.indexes(table).each_key do |name|
-          it "the index #{table}.#{name}'s name should not be longer than 63 characters" do
-            expect(name.length).to be <= 63
-          end
+      next unless connection.supports_index_parsing?
+
+      connection.indexes(table).each_key do |name|
+        it "the index #{table}.#{name}'s name should not be longer than 63 characters" do
+          expect(name.length).to be <= 63
         end
       end
     end

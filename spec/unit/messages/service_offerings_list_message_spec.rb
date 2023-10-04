@@ -23,22 +23,22 @@ module VCAP::CloudController
         expect(message).to be_valid
         expect(message).to be_a(described_class)
         expect(message.available).to eq('true')
-        expect(message.service_broker_guids).to eq(%w(one two))
-        expect(message.service_broker_names).to eq(%w(zhou qin))
-        expect(message.names).to eq(%w(service_offering1 other_2))
-        expect(message.space_guids).to eq(%w(space_1 space_2))
-        expect(message.organization_guids).to eq(%w(organization_1 organization_2))
+        expect(message.service_broker_guids).to eq(%w[one two])
+        expect(message.service_broker_names).to eq(%w[zhou qin])
+        expect(message.names).to eq(%w[service_offering1 other_2])
+        expect(message.space_guids).to eq(%w[space_1 space_2])
+        expect(message.organization_guids).to eq(%w[organization_1 organization_2])
       end
 
       it 'converts requested keys to symbols' do
         message = described_class.from_params(params)
 
-        expect(message.requested?(:available)).to be_truthy
-        expect(message.requested?(:names)).to be_truthy
-        expect(message.requested?(:service_broker_guids)).to be_truthy
-        expect(message.requested?(:service_broker_names)).to be_truthy
-        expect(message.requested?(:space_guids)).to be_truthy
-        expect(message.requested?(:organization_guids)).to be_truthy
+        expect(message).to be_requested(:available)
+        expect(message).to be_requested(:names)
+        expect(message).to be_requested(:service_broker_guids)
+        expect(message).to be_requested(:service_broker_names)
+        expect(message).to be_requested(:space_guids)
+        expect(message).to be_requested(:organization_guids)
       end
 
       it 'accepts an empty set' do

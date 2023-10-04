@@ -20,10 +20,10 @@ class TableRecreator
 
     DBMigrator.new(db).apply_migrations
 
-    unless without_fake_tables
-      fake_model_tables = FakeModelTables.new(db)
-      fake_model_tables.create_tables
-    end
+    return if without_fake_tables
+
+    fake_model_tables = FakeModelTables.new(db)
+    fake_model_tables.create_tables
   end
 
   private
@@ -31,9 +31,9 @@ class TableRecreator
   attr_reader :db
 
   def prepare_database
-    if db.database_type == :postgres
-      db.execute('CREATE EXTENSION IF NOT EXISTS citext')
-    end
+    return unless db.database_type == :postgres
+
+    db.execute('CREATE EXTENSION IF NOT EXISTS citext')
   end
 
   def drop_table_unsafely(table)

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class JobTimeoutCalculator
-    JOBS_WITH_TIMEOUTS = %i(app_usage_events_cleanup blobstore_delete diego_sync).freeze
+    JOBS_WITH_TIMEOUTS = %i[app_usage_events_cleanup blobstore_delete diego_sync].freeze
 
     def initialize(config)
       @config = config

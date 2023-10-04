@@ -27,7 +27,7 @@ module VCAP::CloudController::Presenters::V3
         },
         weight: destination.weight,
         port: destination.presented_port,
-        protocol: destination.protocol,
+        protocol: destination.protocol
       }
     end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
       links = {
         destintions: {
           href: url_builder.build_url(path: "/v3/routes/#{destination.route_guid}/destinations")
-        },
+        }
       }
 
       links[:route] = {

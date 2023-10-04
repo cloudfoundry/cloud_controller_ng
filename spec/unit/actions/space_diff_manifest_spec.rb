@@ -4,7 +4,7 @@ require 'actions/space_diff_manifest'
 module VCAP::CloudController
   RSpec.describe SpaceDiffManifest do
     describe 'generate_diff' do
-      let(:default_manifest) {
+      let(:default_manifest) do
         {
           'applications' => [
             {
@@ -22,8 +22,8 @@ module VCAP::CloudController
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
                   'log-rate-limit-per-second' => '1M',
-                  'health-check-type' =>  process1.health_check_type,
-                  'readiness-health-check-type' =>  process1.readiness_health_check_type
+                  'health-check-type' => process1.health_check_type,
+                  'readiness-health-check-type' => process1.readiness_health_check_type
                 },
                 {
                   'type' => process2.type,
@@ -31,14 +31,14 @@ module VCAP::CloudController
                   'memory' => '1024M',
                   'disk_quota' => '1024M',
                   'log-rate-limit-per-second' => '1M',
-                  'health-check-type' =>  process2.health_check_type,
-                  'readiness-health-check-type' =>  process2.readiness_health_check_type
+                  'health-check-type' => process2.health_check_type,
+                  'readiness-health-check-type' => process2.readiness_health_check_type
                 }
               ]
-            },
+            }
           ]
         }
-      }
+      end
 
       let(:app_manifests) { default_manifest['applications'] }
       let(:space) { Space.make }
@@ -78,10 +78,8 @@ module VCAP::CloudController
         end
 
         it 'returns the correct diff' do
-          expect(subject).to match_array([
-            { 'op' => 'add', 'path' => '/applications/0/random-route', 'value' => true },
-            { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' },
-          ])
+          expect(subject).to contain_exactly({ 'op' => 'add', 'path' => '/applications/0/random-route', 'value' => true },
+                                             { 'op' => 'replace', 'path' => '/applications/0/stack', 'was' => process1.stack.name, 'value' => 'big brother' })
         end
       end
 
@@ -93,13 +91,14 @@ module VCAP::CloudController
 
           it 'returns the correct diff' do
             expect(subject).to contain_exactly(
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' }
             )
           end
         end
 
         context 'when processes do not change' do
           let!(:process1) { ProcessModel.make(app: app1_model, memory: 256) }
+
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '256M'
           end
@@ -132,8 +131,8 @@ module VCAP::CloudController
           expect(subject).to eq([
             { 'op' => 'add', 'path' => '/applications/0/metadata', 'value' => {
               'labels' => { 'foo' => 'bar' },
-              'annotations' => { 'baz' => 'qux' },
-            } },
+              'annotations' => { 'baz' => 'qux' }
+            } }
           ])
         end
       end
@@ -157,7 +156,7 @@ module VCAP::CloudController
                 'name' => 'foo',
                 'parameters' => { 'baz' => 'qux' }
               }
-            ] },
+            ] }
           ])
         end
       end
@@ -175,7 +174,7 @@ module VCAP::CloudController
       context 'when there is a change inside of a nested array' do
         before do
           default_manifest['applications'][0]['sidecars'] = [
-            { 'name' => 'sidecar1', 'command' => 'bundle exec rake lol', 'process_types' => ['web', 'worker'] }
+            { 'name' => 'sidecar1', 'command' => 'bundle exec rake lol', 'process_types' => %w[web worker] }
           ]
         end
 
@@ -185,9 +184,9 @@ module VCAP::CloudController
               'op' => 'add',
               'path' => '/applications/0/sidecars',
               'value' => [
-                { 'name' => 'sidecar1', 'command' => 'bundle exec rake lol', 'process_types' => ['web', 'worker'] }
+                { 'name' => 'sidecar1', 'command' => 'bundle exec rake lol', 'process_types' => %w[web worker] }
               ]
-            },
+            }
           ])
         end
       end
@@ -202,7 +201,7 @@ module VCAP::CloudController
               'name' => 'sidecar1',
               'command' => 'bundle exec rake lol',
               'process_types' => ['web'],
-              'memory' => '500M',
+              'memory' => '500M'
             }
           ]
         end
@@ -213,8 +212,8 @@ module VCAP::CloudController
               'op' => 'replace',
               'path' => '/applications/0/sidecars/0/command',
               'value' => 'bundle exec rake lol',
-              'was' => 'bundle exec rackup',
-            },
+              'was' => 'bundle exec rackup'
+            }
           ])
         end
       end
@@ -229,7 +228,7 @@ module VCAP::CloudController
           ]
 
           default_manifest['applications'][0]['metadata'] = {
-           'foo' => 'bar'
+            'foo' => 'bar'
           }
           default_manifest['applications'][0]['sidecars'] = [
             {
@@ -247,10 +246,10 @@ module VCAP::CloudController
         let(:app_manifests) do
           [
             {
-              'name' => 'new-app',
+              'name' => 'new-app'
             },
             {
-              'name' => 'newer-app',
+              'name' => 'newer-app'
             }
           ]
         end
@@ -258,7 +257,7 @@ module VCAP::CloudController
         it 'returns the correct diff' do
           expect(subject).to eq([
             { 'op' => 'add', 'path' => '/applications/0/name', 'value' => 'new-app' },
-            { 'op' => 'add', 'path' => '/applications/1/name', 'value' => 'newer-app' },
+            { 'op' => 'add', 'path' => '/applications/1/name', 'value' => 'newer-app' }
           ])
         end
       end
@@ -270,6 +269,7 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['disk_quota'] = '1G'
             default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '1024K'
           end
+
           it 'returns an empty diff' do
             expect(subject).to eq([])
           end
@@ -285,6 +285,7 @@ module VCAP::CloudController
             default_manifest['applications'][0]['processes'][0]['readiness-health-check-interval'] = 20
             default_manifest['applications'][0]['processes'][0]['log-rate-limit-per-second'] = '2G'
           end
+
           it 'returns the diff formatted' do
             expect(subject).to eq([
               { 'op' => 'add', 'path' => '/applications/0/processes/0/health-check-interval', 'value' => 10 },
@@ -293,13 +294,13 @@ module VCAP::CloudController
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/disk_quota', 'value' => '4096M', 'was' => '1024M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/log-rate-limit-per-second', 'value' => '2G', 'was' => '1M' },
               { 'op' => 'replace', 'path' => '/applications/0/processes/0/health-check-type', 'value' => 'process', 'was' => 'port' },
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/readiness-health-check-type', 'value' => 'port', 'was' => 'process' },
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/readiness-health-check-type', 'value' => 'port', 'was' => 'process' }
             ])
           end
         end
 
         context 'when updating sidecar configurations' do
-          let(:default_manifest) {
+          let(:default_manifest) do
             {
               'applications' => [
                 {
@@ -315,13 +316,13 @@ module VCAP::CloudController
                       'name' => sidecar_model.name,
                       'process_types' => [sidecar_process_type_model.type],
                       'command' => sidecar_model.command,
-                      'memory' => '2G',
+                      'memory' => '2G'
                     }
                   ]
-                },
+                }
               ]
             }
-          }
+          end
           let!(:sidecar_process_model) { ProcessModel.make(app: app1_model) }
           let!(:sidecar_model) { SidecarModel.make(app: app1_model, memory: 2048) }
           let!(:sidecar_process_type_model) { SidecarProcessTypeModel.make(type: sidecar_process_model.type, sidecar: sidecar_model) }
@@ -441,7 +442,7 @@ module VCAP::CloudController
       end
 
       context 'when the user passes in a v2 manifest' do
-        let(:default_manifest) {
+        let(:default_manifest) do
           {
             'applications' => [
               {
@@ -450,18 +451,16 @@ module VCAP::CloudController
               }
             ]
           }
-        }
+        end
 
         it 'returns the correct diff' do
-          expect(subject).to match_array([
-            { 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => process1.instances, 'value' => 5 },
-          ])
+          expect(subject).to contain_exactly({ 'op' => 'replace', 'path' => '/applications/0/instances', 'was' => process1.instances, 'value' => 5 })
         end
       end
 
       context 'when the user passes in protocols manifest' do
         context 'when it is same protocol' do
-          let(:default_manifest) {
+          let(:default_manifest) do
             {
               'applications' => [
                 {
@@ -475,15 +474,15 @@ module VCAP::CloudController
                 }
               ]
             }
-          }
+          end
 
           it 'returns an empty diff if the field is equivalent' do
-            expect(subject).to match_array([])
+            expect(subject).to be_empty
           end
         end
 
         context 'when it is different protocol' do
-          let(:default_manifest) {
+          let(:default_manifest) do
             {
               'applications' => [
                 {
@@ -497,12 +496,10 @@ module VCAP::CloudController
                 }
               ]
             }
-          }
+          end
 
           it 'returns an empty diff if the field is equivalent' do
-            expect(subject).to match_array([
-              { 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' },
-            ])
+            expect(subject).to contain_exactly({ 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' })
           end
         end
       end

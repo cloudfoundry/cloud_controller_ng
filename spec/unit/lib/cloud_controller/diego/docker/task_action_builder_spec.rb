@@ -8,19 +8,19 @@ module VCAP::CloudController
 
         let(:config) do
           Config.new({
-            diego: {
-              lifecycle_bundles: {
-                docker: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz'
-              },
-              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-            }
-          })
+                       diego: {
+                         lifecycle_bundles: {
+                           docker: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz'
+                         },
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads
+                       }
+                     })
         end
 
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:lifecycle_data) do
           {
-            droplet_path: 'user/image',
+            droplet_path: 'user/image'
           }
         end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_APPLICATION', value: '{"greg":"pants"}'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'MEMORY_LIMIT', value: '256m'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}')
           ]
         end
         let(:enable_declarative_asset_downloads) { false }
@@ -42,12 +42,12 @@ module VCAP::CloudController
         describe '#action' do
           let(:run_task_action) do
             ::Diego::Bbs::Models::RunAction.new(
-              user:            'root',
-              path:            '/tmp/lifecycle/launcher',
-              args:            ['app', command, '{}'],
-              log_source:      'APP/TASK/my-task',
+              user: 'root',
+              path: '/tmp/lifecycle/launcher',
+              args: ['app', command, '{}'],
+              log_source: 'APP/TASK/my-task',
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env:             generated_environment,
+              env: generated_environment
             )
           end
 
@@ -73,9 +73,9 @@ module VCAP::CloudController
             let(:lifecycle_data) { 'docker://invalid-docker-path' }
 
             it 'throws an error' do
-              expect {
+              expect do
                 task_action_builder.stack
-              }.to raise_error(//)
+              end.to raise_error(//)
             end
           end
         end
@@ -84,9 +84,9 @@ module VCAP::CloudController
           it 'returns a cached dependency for the correct lifecycle given the stack' do
             expect(task_action_builder.cached_dependencies).to eq([
               ::Diego::Bbs::Models::CachedDependency.new(
-                from:      'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
-                to:        '/tmp/lifecycle',
-                cache_key: 'docker-lifecycle',
+                from: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
+                to: '/tmp/lifecycle',
+                cache_key: 'docker-lifecycle'
               )
             ])
           end
@@ -103,9 +103,9 @@ module VCAP::CloudController
             let(:config) { Config.new({ diego: { lifecycle_bundles: {} } }) }
 
             it 'returns an error' do
-              expect {
+              expect do
                 task_action_builder.cached_dependencies
-              }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+              end.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
             end
           end
         end
@@ -125,7 +125,7 @@ module VCAP::CloudController
                   url: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
                   destination_path: '/tmp/lifecycle',
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
-                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
                 )
               )
             end
@@ -134,9 +134,9 @@ module VCAP::CloudController
               let(:config) { Config.new({ diego: { lifecycle_bundles: {}, enable_declarative_asset_downloads: true } }) }
 
               it 'returns an error' do
-                expect {
+                expect do
                   task_action_builder.image_layers
-                }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+                end.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
               end
             end
           end

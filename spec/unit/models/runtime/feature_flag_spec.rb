@@ -30,7 +30,7 @@ module VCAP::CloudController
           it 'does not allow creation of a feature flag that has no corresponding default' do
             subject.name    = 'not-a-real-value'
             subject.enabled = false
-            expect(subject).to_not be_valid
+            expect(subject).not_to be_valid
           end
         end
       end
@@ -39,45 +39,45 @@ module VCAP::CloudController
         subject(:feature_flag) { FeatureFlag.make }
 
         it 'shoud allow standard ascii characters' do
-          feature_flag.error_message = "A -_- word 2!?()\'\'&+."
-          expect {
+          feature_flag.error_message = "A -_- word 2!?()''&+."
+          expect do
             feature_flag.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow backslash characters' do
+        it 'allows backslash characters' do
           feature_flag.error_message = 'a\\word'
-          expect {
+          expect do
             feature_flag.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should allow unicode characters' do
+        it 'allows unicode characters' do
           feature_flag.error_message = '防御力¡'
-          expect {
+          expect do
             feature_flag.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
-        it 'should not allow newline characters' do
+        it 'does not allow newline characters' do
           feature_flag.error_message = "one\ntwo"
-          expect {
+          expect do
             feature_flag.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should not allow escape characters' do
+        it 'does not allow escape characters' do
           feature_flag.error_message = "a\e word"
-          expect {
+          expect do
             feature_flag.save
-          }.to raise_error(Sequel::ValidationFailed)
+          end.to raise_error(Sequel::ValidationFailed)
         end
 
-        it 'should allow an empty error_message' do
+        it 'allows an empty error_message' do
           feature_flag.error_message = nil
-          expect {
+          expect do
             feature_flag.save
-          }.to_not raise_error
+          end.not_to raise_error
         end
       end
     end
@@ -96,27 +96,27 @@ module VCAP::CloudController
           FeatureFlag.create(name: key, enabled: !default_value)
         end
 
-        it 'should return the override value' do
+        it 'returns the override value' do
           expect(FeatureFlag.enabled?(key)).to eq(!default_value)
           expect(FeatureFlag.disabled?(key)).to eq(default_value)
         end
       end
 
       context 'when the feature flag is not overridden' do
-        it 'should return the default value' do
+        it 'returns the default value' do
           expect(FeatureFlag.enabled?(key)).to eq(default_value)
-          expect(FeatureFlag.disabled?(key)).to_not eq(default_value)
+          expect(FeatureFlag.disabled?(key)).not_to eq(default_value)
         end
       end
 
       context 'when feature flag does not exist' do
         it 'blows up somehow' do
-          expect {
+          expect do
             FeatureFlag.enabled?(:bogus_feature_flag)
-          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
-          expect {
+          end.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+          expect do
             FeatureFlag.disabled?(:bogus_feature_flag)
-          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+          end.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
           it 'is always enabled' do
             FeatureFlag.create(name: 'blahrgha', enabled: false)
 
-            expect(FeatureFlag.enabled?(:blahrgha)).to eq(true)
+            expect(FeatureFlag.enabled?(:blahrgha)).to be(true)
           end
         end
 
@@ -139,7 +139,7 @@ module VCAP::CloudController
           it 'is false if the flag is disabled' do
             FeatureFlag.create(name: 'normal', enabled: false)
 
-            expect(FeatureFlag.enabled?(:normal)).to eq(false)
+            expect(FeatureFlag.enabled?(:normal)).to be(false)
           end
         end
       end
@@ -156,7 +156,7 @@ module VCAP::CloudController
           it 'is always enabled' do
             FeatureFlag.create(name: 'potato', enabled: false)
 
-            expect(FeatureFlag.enabled?(:potato)).to eq(true)
+            expect(FeatureFlag.enabled?(:potato)).to be(true)
           end
         end
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
           it 'is false if the flag is disabled' do
             FeatureFlag.create(name: 'normal', enabled: false)
 
-            expect(FeatureFlag.enabled?(:normal)).to eq(false)
+            expect(FeatureFlag.enabled?(:normal)).to be(false)
           end
         end
       end
@@ -182,7 +182,7 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to_not raise_error
+          expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.not_to raise_error
         end
       end
 
@@ -219,9 +219,9 @@ module VCAP::CloudController
 
       context 'when the flag does not exist' do
         it 'blows up somehow' do
-          expect {
+          expect do
             FeatureFlag.raise_unless_enabled!(:bogus_feature_flag)
-          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+          end.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end
     end

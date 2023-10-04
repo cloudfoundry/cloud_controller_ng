@@ -34,7 +34,7 @@ module VCAP::CloudController
         isolation_segment_models = subject.all
 
         shared_isolation_segment_model = VCAP::CloudController::IsolationSegmentModel[guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID]
-        expect(isolation_segment_models).to match_array([shared_isolation_segment_model, isolation_segment_model_1, isolation_segment_model_2, isolation_segment_model_3])
+        expect(isolation_segment_models).to contain_exactly(shared_isolation_segment_model, isolation_segment_model_1, isolation_segment_model_2, isolation_segment_model_3)
       end
 
       context 'filters' do
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
           it 'returns the correct set of isosegs' do
             isolation_segment_models = subject.all
-            expect(isolation_segment_models).to match_array([isolation_segment_model_3])
+            expect(isolation_segment_models).to contain_exactly(isolation_segment_model_3)
           end
         end
       end

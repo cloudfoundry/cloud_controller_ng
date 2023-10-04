@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers
     def delete(brokers)
       remove(brokers.first)
       VCAP::CloudController::Jobs::DeleteActionJob::NO_ERRORS
-    rescue
+    rescue StandardError
       brokers.first.update(state: VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
       raise
     end
@@ -31,8 +31,8 @@ module VCAP::Services::ServiceBrokers
       cached_services_and_plans = {}
       broker.services.each do |service|
         cached_services_and_plans[service.guid] = {
-            service: service,
-            plans: service.service_plans
+          service: service,
+          plans: service.service_plans
         }
       end
 

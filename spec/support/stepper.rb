@@ -163,7 +163,7 @@ class Stepper
       thread = Thread.start do
         sleep 0.01
         block.call
-      rescue => e
+      rescue StandardError => e
         puts e if debug
         abort!
         errors << e

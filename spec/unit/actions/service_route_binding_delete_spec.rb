@@ -17,7 +17,7 @@ module VCAP::CloudController
 
         expect(binding_event_repo).to have_received(:record_delete).with(
           binding,
-          user_audit_info,
+          user_audit_info
         )
       end
 
@@ -48,13 +48,13 @@ module VCAP::CloudController
 
     RSpec.describe ServiceRouteBindingDelete do
       let(:space) { Space.make }
-      let(:route) { Route.make(space: space) }
+      let(:route) { Route.make(space:) }
       let(:route_service_url) { 'https://route_service_url.com' }
       let(:last_operation_type) { 'create' }
       let(:last_operation_state) { 'succeeded' }
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
-          { service_instance: service_instance, route: route, route_service_url: route_service_url },
+          { service_instance:, route:, route_service_url: },
           { type: last_operation_type, state: last_operation_state }
         )
       end
@@ -76,7 +76,7 @@ module VCAP::CloudController
       describe '#blocking_operation_in_progress?' do
         let(:service_offering) { Service.make(requires: ['route_forwarding']) }
         let(:service_plan) { ServicePlan.make(service: service_offering) }
-        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
 
         it_behaves_like 'blocking operation in progress'
       end
@@ -85,7 +85,7 @@ module VCAP::CloudController
         context 'managed service instance' do
           let(:service_offering) { Service.make(requires: ['route_forwarding']) }
           let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+          let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
 
           it_behaves_like 'service binding deletion', RouteBinding
 
@@ -110,19 +110,19 @@ module VCAP::CloudController
               allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
             end
 
-            it 'should log audit start_create' do
+            it 'logs audit start_create' do
               action.delete(binding)
 
               expect(binding_event_repo).to have_received(:record_start_delete).with(
                 binding,
-                user_audit_info,
+                user_audit_info
               )
             end
           end
         end
 
         context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make(space: space, route_service_url: route_service_url) }
+          let(:service_instance) { UserProvidedServiceInstance.make(space:, route_service_url:) }
           let(:perform_action) { action.delete(binding) }
 
           it_behaves_like 'successful route binding delete'
@@ -132,16 +132,16 @@ module VCAP::CloudController
       describe '#poll' do
         let(:service_offering) { Service.make(requires: ['route_forwarding']) }
         let(:service_plan) { ServicePlan.make(service: service_offering) }
-        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
 
         let(:description) { Sham.description }
         let(:state) { 'in progress' }
         let(:last_operation_response) do
           {
             last_operation: {
-              state: state,
-              description: description,
-            },
+              state:,
+              description:
+            }
           }
         end
         let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }

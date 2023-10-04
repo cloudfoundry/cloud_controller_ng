@@ -5,10 +5,10 @@ module VCAP::CloudController
     module V3
       class AppDropletRelationshipPresenter < ToOneRelationshipPresenter
         def initialize(resource_path:, related_instance:, relationship_name:, related_resource_name:, app_model:)
-          super(resource_path: resource_path,
-                related_instance: related_instance,
-                relationship_name: relationship_name,
-                related_resource_name: related_resource_name)
+          super(resource_path:,
+                related_instance:,
+                relationship_name:,
+                related_resource_name:)
 
           @app_model = app_model
         end

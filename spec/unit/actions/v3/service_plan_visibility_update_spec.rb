@@ -24,9 +24,9 @@ module VCAP
             context 'and its being updated do "organization"' do
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
-              let(:params) {
+              let(:params) do
                 { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
-              }
+              end
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
               it 'updates the visibility' do
@@ -56,9 +56,9 @@ module VCAP
             context 'and its being updated do "organization"' do
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
-              let(:params) {
+              let(:params) do
                 { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
-              }
+              end
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
               it 'updates the visibility' do
@@ -86,9 +86,9 @@ module VCAP
 
             context 'and its being updated to "organization"' do
               let(:new_org_guid) { Organization.make.guid }
-              let(:params) {
+              let(:params) do
                 { type: 'organization', organizations: [{ guid: new_org_guid }] }
-              }
+              end
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
               it 'replaces the current list of organizations by default' do
@@ -134,7 +134,7 @@ module VCAP
                 updated_plan = subject.update(service_plan, message)
                 expect(updated_plan.reload.visibility_type).to eq 'admin'
                 expect(updated_plan.service_plan_visibilities).to be_empty
-                expect(ServicePlanVisibility.where(service_plan: service_plan).all).to be_empty
+                expect(ServicePlanVisibility.where(service_plan:).all).to be_empty
               end
             end
 
@@ -145,7 +145,7 @@ module VCAP
                 updated_plan = subject.update(service_plan, message)
                 expect(updated_plan.reload.visibility_type).to eq 'public'
                 expect(updated_plan.service_plan_visibilities).to be_empty
-                expect(ServicePlanVisibility.where(service_plan: service_plan).all).to be_empty
+                expect(ServicePlanVisibility.where(service_plan:).all).to be_empty
               end
             end
           end
@@ -162,9 +162,9 @@ module VCAP
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'admin' }) }
 
             it 'fails to update' do
-              expect {
+              expect do
                 subject.update(service_plan, message)
-              }.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, 'cannot update plans with visibility type \'space\'')
+              end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, 'cannot update plans with visibility type \'space\'')
 
               expect(service_plan.reload.visibility_type).to eq 'space'
             end
@@ -182,9 +182,9 @@ module VCAP
             end
 
             it 'errors' do
-              expect {
+              expect do
                 subject.update(service_plan, message)
-              }.to raise_error(ServicePlanVisibilityUpdate::Error, 'type is invalid')
+              end.to raise_error(ServicePlanVisibilityUpdate::Error, 'type is invalid')
             end
           end
 
@@ -193,9 +193,9 @@ module VCAP
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'organization', organizations: [{ guid: 'some-fake-org' }] }) }
 
             it 'errors nicely' do
-              expect {
+              expect do
                 subject.update(service_plan, message)
-              }.to raise_error(ServicePlanVisibilityUpdate::Error, 'Could not find Organization with guid: some-fake-org')
+              end.to raise_error(ServicePlanVisibilityUpdate::Error, 'Could not find Organization with guid: some-fake-org')
             end
           end
         end

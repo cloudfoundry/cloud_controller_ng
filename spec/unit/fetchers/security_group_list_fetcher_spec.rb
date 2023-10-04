@@ -23,14 +23,14 @@ module VCAP::CloudController
         security_group_1.add_space(associated_space)
         security_group_1.add_staging_space(associated_space)
         associations = security_groups.where(guid: security_group_1.guid).all.first.associations
-        [:spaces, :staging_spaces].each do |key|
+        %i[spaces staging_spaces].each do |key|
           expect(associations[key].length).to eq(1)
           expect(associations[key].first.keys).to contain_exactly(:guid)
         end
       end
     end
 
-    context '#fetch_all' do
+    describe '#fetch_all' do
       let(:security_groups) { fetcher.fetch_all(message) }
 
       include_examples 'eager loading'
@@ -54,6 +54,7 @@ module VCAP::CloudController
 
       context 'when we filter on guid' do
         let(:filters) { { guids: [security_group_1.guid] } }
+
         it 'returns only the security groups with the specified guids' do
           expect(security_groups.all).to contain_exactly(security_group_1)
         end
@@ -61,6 +62,7 @@ module VCAP::CloudController
 
       context 'when we filter on name' do
         let(:filters) { { names: [security_group_1.name] } }
+
         it 'returns only the security groups with the specified names' do
           expect(security_groups.all).to contain_exactly(security_group_1)
         end

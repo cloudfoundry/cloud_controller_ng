@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe AppEnvironmentVariablesPresenter do
     let(:app) do
       VCAP::CloudController::AppModel.make(
-        environment_variables: { 'CUSTOM_ENV_VAR' => 'hello' },
+        environment_variables: { 'CUSTOM_ENV_VAR' => 'hello' }
       )
     end
 
@@ -16,18 +16,18 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the app environment variables as json' do
         expect(result).to eq({
-          var: {
-            CUSTOM_ENV_VAR: 'hello'
-          },
-          links: {
-            self: {
-              href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables",
-            },
-            app: {
-              href: "#{link_prefix}/v3/apps/#{app.guid}",
-            }
-          }
-        })
+                               var: {
+                                 CUSTOM_ENV_VAR: 'hello'
+                               },
+                               links: {
+                                 self: {
+                                   href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables"
+                                 },
+                                 app: {
+                                   href: "#{link_prefix}/v3/apps/#{app.guid}"
+                                 }
+                               }
+                             })
       end
     end
   end

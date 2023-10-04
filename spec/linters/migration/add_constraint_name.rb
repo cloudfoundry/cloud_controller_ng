@@ -4,13 +4,13 @@ module RuboCop
       class AddConstraintName < RuboCop::Cop::Cop
         # Postgres and MySQL have different naming conventions, so if we need to remove them we cannot predict accurately what the constraint name would be.
         MSG = 'Please explicitly name your index or constraint.'.freeze
-        CONSTRAINT_METHODS = %i{
+        CONSTRAINT_METHODS = %i[
           add_unique_constraint add_constraint add_foreign_key add_index add_primary_key add_full_text_index add_spatial_index
           unique_constraint constraint foreign_key index primary_key full_text_index spatial_index
-        }.freeze
-        COLUMN_ADDING_METHODS = %i{
+        ].freeze
+        COLUMN_ADDING_METHODS = %i[
           add_column column String Integer
-        }.freeze
+        ].freeze
 
         def on_block(node)
           node.each_descendant(:send) do |send_node|
@@ -53,7 +53,7 @@ module RuboCop
         end
 
         def add_column_missing_name?(opts)
-          return true if opts.type == :sym && %i{index primary_key unique}.include?(sym_opts_name(opts))
+          return true if opts.type == :sym && %i[index primary_key unique].include?(sym_opts_name(opts))
 
           needs_named_index             = false
           needs_named_primary_key       = false

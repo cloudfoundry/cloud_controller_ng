@@ -9,8 +9,8 @@ class MinLogRateLimitPolicy
   def validate
     return unless @process.log_rate_limit
 
-    if @process.log_rate_limit < -1
-      @errors.add(:log_rate_limit, ERROR_MSG)
-    end
+    return unless @process.log_rate_limit < -1
+
+    @errors.add(:log_rate_limit, ERROR_MSG)
   end
 end

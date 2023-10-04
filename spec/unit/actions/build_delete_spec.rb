@@ -13,7 +13,7 @@ module VCAP::CloudController
       it 'deletes and cancels the build record' do
         build_delete.delete([build])
 
-        expect(build.exists?).to eq(false), 'Expected build to not exist, but it does'
+        expect(build.exists?).to be(false), 'Expected build to not exist, but it does'
         expect(cancel_action).to have_received(:cancel).with([build])
       end
     end

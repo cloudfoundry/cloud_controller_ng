@@ -8,12 +8,12 @@ module VCAP::CloudController
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
     end
 
-    register_allowed_keys [
-      :name,
-      :tags,
-      :parameters,
-      :relationships,
-      :maintenance_info
+    register_allowed_keys %i[
+      name
+      tags
+      parameters
+      relationships
+      maintenance_info
     ]
 
     validates_with NoAdditionalKeysValidator
@@ -51,9 +51,9 @@ module VCAP::CloudController
     private
 
     def tags_must_be_strings
-      if tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
-        errors.add(:tags, 'must be a list of strings')
-      end
+      return unless tags.present? && tags.is_a?(Array) && tags.any? { |i| !i.is_a?(String) }
+
+      errors.add(:tags, 'must be a list of strings')
     end
 
     class Relationships < BaseMessage

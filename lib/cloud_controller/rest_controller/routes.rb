@@ -22,7 +22,7 @@ module VCAP::CloudController::RestController
         end
       end
 
-      [:post, :get, :put, :delete, :patch].each do |verb|
+      %i[post get put delete patch].each do |verb|
         define_method(verb) do |*args, &blk|
           (path, method) = *args
           define_route(verb, path, method, &blk)
@@ -64,10 +64,10 @@ module VCAP::CloudController::RestController
             end
           end
 
-          if route_for.include?(:delete)
-            delete "#{path_guid}/#{name}/:other_id" do |api, id, other_id|
-              api.dispatch(:remove_related, id, name, other_id)
-            end
+          next unless route_for.include?(:delete)
+
+          delete "#{path_guid}/#{name}/:other_id" do |api, id, other_id|
+            api.dispatch(:remove_related, id, name, other_id)
           end
         end
       end

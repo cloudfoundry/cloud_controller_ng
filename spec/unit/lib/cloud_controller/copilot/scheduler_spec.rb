@@ -8,7 +8,7 @@ module VCAP::CloudController
       TestConfig.override(
         copilot: {
           enabled: true,
-          sync_frequency_in_seconds: 42,
+          sync_frequency_in_seconds: 42
         }
       )
     end

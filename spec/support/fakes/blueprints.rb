@@ -25,18 +25,18 @@ Sham.define do
   extra               { |index| "extra-#{index}" }
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
-  status              { |_| %w(active suspended canceled).sample(1).first }
+  status              { |_| %w[active suspended canceled].sample(1).first }
   error_message       { |index| "error-message-#{index}" }
   sequence_id         { |index| index }
   stack               { |index| "cflinuxfs-#{index}" }
 end
 
 module VCAP::CloudController
-  %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
+  %w[App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
      Process Revision Route RouteBinding ServiceBinding ServiceKey ServiceInstance ServiceOffering ServiceBroker Space Stack
-     ServicePlan Task User/.each do |root|
-    "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
-    "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
+     ServicePlan Task User].each do |root|
+    "VCAP::CloudController::#{root}LabelModel".constantize.blueprint {}
+    "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint {}
   end
 
   IsolationSegmentModel.blueprint do
@@ -86,7 +86,7 @@ module VCAP::CloudController
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet_guid: guid) }
     kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
-    package { PackageModel.make(app: app) }
+    package { PackageModel.make(app:) }
     droplet { DropletModel.make(:docker, build: object.save) }
   end
 
@@ -165,7 +165,7 @@ module VCAP::CloudController
     status_value { VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE }
     status_reason { VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON }
     app { AppModel.make }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     deploying_web_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }
     original_web_process_instance_count { 1 }
   end
@@ -180,7 +180,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
@@ -193,7 +193,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
@@ -204,7 +204,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::CANCELING_STATE }
     memory_in_mb { 256 }
@@ -215,7 +215,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::SUCCEEDED_STATE }
     memory_in_mb { 256 }
@@ -226,7 +226,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(app: app) }
+    droplet { DropletModel.make(app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::PENDING_STATE }
     memory_in_mb { 256 }
@@ -378,7 +378,7 @@ module VCAP::CloudController
     gateway_data               { 'some data' }
     dashboard_url              { Sham.url }
     syslog_drain_url           { Sham.url }
-    tags                       { ['a-tag', 'another-tag'] }
+    tags                       { %w[a-tag another-tag] }
     route_service_url          { Sham.url }
     maintenance_info           { 'maintenance info' }
   end
@@ -687,7 +687,7 @@ module VCAP::CloudController
         {
           'protocol' => 'udp',
           'ports' => '8080',
-          'destination' => '198.41.191.47/1',
+          'destination' => '198.41.191.47/1'
         }
       ]
     end
@@ -710,7 +710,7 @@ module VCAP::CloudController
     environment_json do
       {
         'MOTD' => 'Because of your smile, you make life more beautiful.',
-        'COROPRATE_PROXY_SERVER' => 'abc:8080',
+        'COROPRATE_PROXY_SERVER' => 'abc:8080'
       }
     end
   end

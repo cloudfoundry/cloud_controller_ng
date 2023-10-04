@@ -6,9 +6,9 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
-          'order_by'  => 'created_at',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'created_at',
           'app_guids' => 'appguid1,appguid2',
           'states' => 'DEPLOYED,CANCELED',
           'status_values' => 'red,green',
@@ -23,10 +23,10 @@ module VCAP::CloudController
         expect(message).to be_a(DeploymentsListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.app_guids).to match_array(['appguid1', 'appguid2'])
-        expect(message.states).to match_array(['CANCELED', 'DEPLOYED'])
-        expect(message.status_values).to match_array(['red', 'green'])
-        expect(message.status_reasons).to match_array([''])
+        expect(message.app_guids).to match_array(%w[appguid1 appguid2])
+        expect(message.states).to match_array(%w[CANCELED DEPLOYED])
+        expect(message.status_values).to match_array(%w[red green])
+        expect(message.status_reasons).to contain_exactly('')
         expect(message.order_by).to eq('created_at')
         expect(message.label_selector).to eq('key=value')
         expect(message).to be_valid
@@ -49,14 +49,14 @@ module VCAP::CloudController
     describe 'validations' do
       it 'accepts a set of params' do
         message = DeploymentsListMessage.from_params({
-          app_guids: [],
-          page:      1,
-          per_page:  5,
-          order_by:  'created_at',
-          states: [],
-          status_values: [],
-          status_reasons: [],
-        })
+                                                       app_guids: [],
+                                                       page: 1,
+                                                       per_page: 5,
+                                                       order_by: 'created_at',
+                                                       states: [],
+                                                       status_values: [],
+                                                       status_reasons: []
+                                                     })
         expect(message).to be_valid
       end
 
@@ -74,32 +74,32 @@ module VCAP::CloudController
 
       it 'reject an invalid order_by param' do
         message = DeploymentsListMessage.from_params({
-          order_by:  'fail!',
-        })
+                                                       order_by: 'fail!'
+                                                     })
         expect(message).not_to be_valid
       end
 
       it 'validates app_guids is an array' do
         message = DeploymentsListMessage.from_params app_guids: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:app_guids].length).to eq 1
       end
 
       it 'validates states is an array' do
         message = DeploymentsListMessage.from_params states: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:states].length).to eq 1
       end
 
       it 'validates status_reasons is an array' do
         message = DeploymentsListMessage.from_params status_reasons: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:status_reasons].length).to eq 1
       end
 
       it 'validates status_values is an array' do
         message = DeploymentsListMessage.from_params status_values: 'tricked you, not an array'
-        expect(message).to be_invalid
+        expect(message).not_to be_valid
         expect(message.errors[:status_values].length).to eq 1
       end
 

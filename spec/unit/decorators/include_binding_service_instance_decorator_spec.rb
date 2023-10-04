@@ -7,9 +7,9 @@ module VCAP
       RSpec.describe IncludeBindingServiceInstanceDecorator do
         subject(:decorator) { described_class }
         let(:bindings) { Array.new(3) { klazz.make } }
-        let(:instances) {
+        let(:instances) do
           bindings.map { |b| Presenters::V3::ServiceInstancePresenter.new(b.service_instance).to_hash }
-        }
+        end
 
         it 'decorates the given hash with service instances from bindings' do
           dict = { foo: 'bar' }
@@ -19,11 +19,11 @@ module VCAP
         end
 
         it 'does not overwrite other included fields' do
-          dict = { foo: 'bar', included: { fruits: ['tomato', 'banana'] } }
+          dict = { foo: 'bar', included: { fruits: %w[tomato banana] } }
           hash = subject.decorate(dict, bindings)
           expect(hash[:foo]).to eq('bar')
           expect(hash[:included][:service_instances]).to match_array(instances)
-          expect(hash[:included][:fruits]).to match_array(['tomato', 'banana'])
+          expect(hash[:included][:fruits]).to match_array(%w[tomato banana])
         end
 
         it 'does not include duplicates' do
@@ -33,11 +33,11 @@ module VCAP
 
         describe '.match?' do
           it 'matches include arrays containing "app"' do
-            expect(decorator.match?(['potato', 'service_instance', 'turnip'])).to be_truthy
+            expect(decorator).to be_match(%w[potato service_instance turnip])
           end
 
           it 'does not match other include arrays' do
-            expect(decorator.match?(['potato', 'turnip'])).to be_falsey
+            expect(decorator).not_to be_match(%w[potato turnip])
           end
         end
       end

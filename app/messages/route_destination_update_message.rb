@@ -17,9 +17,9 @@ module VCAP::CloudController
     private
 
     def validate_protocol?
-      unless protocol.is_a?(String) && RouteMappingModel::VALID_PROTOCOLS.include?(protocol)
-        errors.add(:destination, "protocol must be 'http1', 'http2' or 'tcp'.")
-      end
+      return if protocol.is_a?(String) && RouteMappingModel::VALID_PROTOCOLS.include?(protocol)
+
+      errors.add(:destination, "protocol must be 'http1', 'http2' or 'tcp'.")
     end
   end
 end

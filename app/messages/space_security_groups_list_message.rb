@@ -11,7 +11,7 @@ module VCAP::CloudController
     validates :names, allow_nil: true, array: true
 
     def self.from_params(params)
-      super(params, %w(names))
+      super(params, %w[names])
     end
   end
 end

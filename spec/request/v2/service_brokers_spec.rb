@@ -4,6 +4,7 @@ RSpec.describe 'ServiceBrokers' do
   describe 'PUT /v2/service_brokers' do
     context 'when ccng fails to parse the service broker endpoint' do
       let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+
       before do
         stub_request(:get, 'https://broker.example.com/v2/catalog').
           to_return(status: 200, body: "<!doctype html>
@@ -16,7 +17,7 @@ RSpec.describe 'ServiceBrokers' do
 
       it 'returns a descriptive error' do
         req_body = {
-          broker_url: 'https://broker.example.com',
+          broker_url: 'https://broker.example.com'
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
@@ -28,6 +29,7 @@ RSpec.describe 'ServiceBrokers' do
 
     context 'when the service broker endpoint returns an error' do
       let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+
       before do
         stub_request(:get, 'https://broker.example.com/v2/catalog').
           to_return(status: 403, body: "<!doctype html>
@@ -40,7 +42,7 @@ RSpec.describe 'ServiceBrokers' do
 
       it 'returns a descriptive error' do
         req_body = {
-          broker_url: 'https://broker.example.com',
+          broker_url: 'https://broker.example.com'
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
@@ -117,7 +119,7 @@ RSpec.describe 'ServiceBrokers' do
         end
       end
 
-      it 'should register the service broker' do
+      it 'registers the service broker' do
         req_body = {
           name: 'service-broker-name',
           broker_url: 'https://broker.example.com',
@@ -145,9 +147,9 @@ RSpec.describe 'ServiceBrokers' do
         big_string = 'x' * 65 * 1024
 
         schemas = {
-        'service_instance' => {
-          'create' =>  {
-            'parameters' => {
+          'service_instance' => {
+            'create' => {
+              'parameters' => {
                 'type' => 'object',
                 'foo' => big_string
               }
@@ -163,7 +165,7 @@ RSpec.describe 'ServiceBrokers' do
           end
         end
 
-        it 'should not allow schema bigger than 64KB' do
+        it 'does not allow schema bigger than 64KB' do
           req_body = {
             name: 'service-broker-name',
             broker_url: 'https://broker.example.com',

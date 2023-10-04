@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     describe '#resource_sizes' do
-      it 'should return resources with sizes' do
+      it 'returns resources with sizes' do
         @resource_pool.add_directory(@tmpdir)
 
         without_sizes = @descriptors.map do |d|
@@ -33,7 +33,7 @@ module VCAP::CloudController
     end
 
     describe '#add_path' do
-      it 'should walk the fs tree and add only allowable files' do
+      it 'walks the fs tree and add only allowable files' do
         expect(@resource_pool).to receive(:add_path).exactly(@total_allowed_files).times
         @resource_pool.add_directory(@tmpdir)
       end
@@ -47,29 +47,29 @@ module VCAP::CloudController
         @resource_pool.maximum_size = @maximum_size
       end
 
-      it 'should return true for a size between min and max size' do
+      it 'returns true for a size between min and max size' do
         expect(@resource_pool.size_allowed?(@minimum_size + 1)).to be true
       end
 
-      it 'should return false for a size < min size' do
+      it 'returns false for a size < min size' do
         expect(@resource_pool.size_allowed?(@minimum_size - 1)).to be false
       end
 
-      it 'should return false for a size > max size' do
+      it 'returns false for a size > max size' do
         expect(@resource_pool.size_allowed?(@maximum_size + 1)).to be false
       end
 
-      it 'should return false for a nil size' do
-        expect(@resource_pool.size_allowed?(nil)).to be nil
+      it 'returns false for a nil size' do
+        expect(@resource_pool.size_allowed?(nil)).to be_nil
       end
     end
 
     describe '#mode_allowed?' do
-      it 'should return true for a mode >= 600' do
+      it 'returns true for a mode >= 600' do
         expect(@resource_pool.mode_allowed?('666')).to be true
       end
 
-      it 'should return false for a mode < 600' do
+      it 'returns false for a mode < 600' do
         expect(@resource_pool.mode_allowed?('444')).to be false
       end
     end

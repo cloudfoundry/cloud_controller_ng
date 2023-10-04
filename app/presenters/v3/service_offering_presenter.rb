@@ -38,15 +38,15 @@ module VCAP::CloudController
                 bindable: service_offering.bindable?,
                 instances_retrievable: service_offering.instances_retrievable?,
                 bindings_retrievable: service_offering.bindings_retrievable?,
-                allow_context_updates: service_offering.allow_context_updates?,
+                allow_context_updates: service_offering.allow_context_updates?
               }
             },
             relationships: build_relationships,
             metadata: {
               labels: hashified_labels(service_offering.labels),
-              annotations: hashified_annotations(service_offering.annotations),
+              annotations: hashified_annotations(service_offering.annotations)
             },
-            links: build_links,
+            links: build_links
           }
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [service_offering]) }

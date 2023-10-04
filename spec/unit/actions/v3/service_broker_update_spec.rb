@@ -33,7 +33,7 @@ module VCAP
           let(:request) { { name: 'new-name' } }
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
 
@@ -48,7 +48,7 @@ module VCAP
           end
 
           it 'is false' do
-            expect(action.update_broker_needed?).to be_falsey
+            expect(action).not_to be_update_broker_needed
           end
         end
 
@@ -56,7 +56,7 @@ module VCAP
           let(:request) { { url: 'new-url' } }
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
 
@@ -73,7 +73,7 @@ module VCAP
           end
 
           it 'is true' do
-            expect(action.update_broker_needed?).to be_truthy
+            expect(action).to be_update_broker_needed
           end
         end
       end
@@ -116,9 +116,9 @@ module VCAP
           }
         end
 
-        let(:service_broker_update_request) {
+        let(:service_broker_update_request) do
           ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
-        }
+        end
 
         it 'does not update the broker in the DB' do
           action.enqueue_update
@@ -162,7 +162,7 @@ module VCAP
             service_broker_update_request.guid,
             existing_service_broker.guid,
             previous_state,
-            user_audit_info: user_audit_info
+            user_audit_info:
           ).once
         end
 
@@ -261,7 +261,7 @@ module VCAP
               service_broker_update_request.guid,
               existing_service_broker.guid,
               '',
-              user_audit_info: user_audit_info
+              user_audit_info:
             ).once
           end
         end

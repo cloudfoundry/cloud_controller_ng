@@ -46,9 +46,7 @@ module VCAP::CloudController::RoutingApi
 
     def router_group_guid(name)
       router_groups.find do |rtr_group|
-        if rtr_group.name == name
-          return rtr_group.guid
-        end
+        return rtr_group.guid if rtr_group.name == name
       end
     end
 

@@ -17,7 +17,7 @@ RSpec.describe 'Revisions' do
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42, droplet: droplet) }
     let!(:revision_worker_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(revision: revision, process_type: 'worker', process_command: './work') }
     let!(:revision_sidecar) { VCAP::CloudController::RevisionSidecarModel.make(revision: revision, name: 'my-sidecar', command: 'run-sidecar', memory: 300) }
-    let(:api_call) { lambda { |user_headers| get "/v3/revisions/#{revision.guid}", nil, user_headers } }
+    let(:api_call) { ->(user_headers) { get "/v3/revisions/#{revision.guid}", nil, user_headers } }
     let(:revision_model_response_object) do
       {
         'guid' => revision.guid,
@@ -44,22 +44,22 @@ RSpec.describe 'Revisions' do
           },
           'environment_variables' => {
             'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-          },
+          }
         },
         'metadata' => { 'labels' => {}, 'annotations' => {} },
-        'processes' =>  {
+        'processes' => {
           'web' => {
-            'command' => nil,
+            'command' => nil
           },
           'worker' => {
-            'command' => './work',
-          },
+            'command' => './work'
+          }
         },
         'sidecars' => [{
           'name' => 'my-sidecar',
           'command' => 'run-sidecar',
           'process_types' => ['web'],
-          'memory_in_mb' => 300,
+          'memory_in_mb' => 300
         }],
         'deployable' => true
       }
@@ -80,12 +80,12 @@ RSpec.describe 'Revisions' do
 
     context 'gets all revisions for an app' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-        let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions", { per_page: '2' }, user_headers } }
+        let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/revisions", { per_page: '2' }, user_headers } }
         let(:revision_response_objects) do
           [
             {
               'guid' => revision.guid,
-              'version' =>  revision.version,
+              'version' => revision.version,
               'description' => revision.description,
               'droplet' => {
                 'guid' => revision.droplet_guid
@@ -104,24 +104,24 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
                 },
                 'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'environment_variables' => {
                   'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-                },
+                }
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'processes' => {
                 'web' => {
-                  'command' => nil,
-                },
+                  'command' => nil
+                }
               },
               'sidecars' => [],
               'deployable' => true
             },
             {
               'guid' => revision2.guid,
-              'version' =>  revision2.version,
+              'version' => revision2.version,
               'description' => revision2.description,
               'droplet' => {
                 'guid' => revision2.droplet_guid
@@ -140,17 +140,17 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
                 },
                 'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
                 'environment_variables' => {
                   'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
-                },
+                }
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'processes' => {
                 'web' => {
-                  'command' => nil,
-                },
+                  'command' => nil
+                }
               },
               'sidecars' => [],
               'deployable' => true
@@ -180,14 +180,14 @@ RSpec.describe 'Revisions' do
           let(:excluded_params) { [:deployable] }
           let(:params) do
             {
-              page:   '2',
-              per_page:   '10',
-              order_by:   'updated_at',
+              page: '2',
+              per_page: '10',
+              order_by: 'updated_at',
               guids: app_model.guid.to_s,
-              versions:   '1,2',
-              label_selector:   'foo,bar',
-              created_ats:  "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
-              updated_ats: { gt: Time.now.utc.iso8601 },
+              versions: '1,2',
+              label_selector: 'foo,bar',
+              created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
+              updated_ats: { gt: Time.now.utc.iso8601 }
             }
           end
         end
@@ -225,7 +225,7 @@ RSpec.describe 'Revisions' do
               'resources' => [
                 {
                   'guid' => revision.guid,
-                  'version' =>  revision.version,
+                  'version' => revision.version,
                   'relationships' => {
                     'app' => {
                       'data' => {
@@ -244,24 +244,24 @@ RSpec.describe 'Revisions' do
                       'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
                     },
                     'app' => {
-                      'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                      'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                     },
                     'environment_variables' => {
                       'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-                    },
+                    }
                   },
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'processes' => {
                     'web' => {
-                      'command' => nil,
-                    },
+                      'command' => nil
+                    }
                   },
                   'sidecars' => [],
                   'deployable' => true
                 },
                 {
                   'guid' => revision3.guid,
-                  'version' =>  revision3.version,
+                  'version' => revision3.version,
                   'description' => revision3.description,
                   'droplet' => {
                     'guid' => revision3.droplet_guid
@@ -280,17 +280,17 @@ RSpec.describe 'Revisions' do
                       'href' => "#{link_prefix}/v3/revisions/#{revision3.guid}"
                     },
                     'app' => {
-                      'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                      'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                     },
                     'environment_variables' => {
                       'href' => "#{link_prefix}/v3/revisions/#{revision3.guid}/environment_variables"
-                    },
+                    }
                   },
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'processes' => {
                     'web' => {
-                      'command' => nil,
-                    },
+                      'command' => nil
+                    }
                   },
                   'sidecars' => [],
                   'deployable' => true
@@ -319,9 +319,10 @@ RSpec.describe 'Revisions' do
             expect(last_response.status).to eq(200)
 
             parsed_response = MultiJson.load(last_response.body)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(revisionB.guid, revisionC.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(revisionB.guid, revisionC.guid)
           end
         end
+
         context 'filtering by guids' do
           before do
             VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: false
@@ -330,30 +331,33 @@ RSpec.describe 'Revisions' do
           let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model) }
           # .make updates the resource after creating it, over writing our passed in updated_at timestamp
           # Therefore we cannot use shared_examples as the updated_at will not be as written
-          let!(:resource_1) {
+          let!(:resource_1) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:01Z',
               updated_at: '2020-05-26T18:47:01Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
-          let!(:resource_2) {
+              app: app_model
+            )
+          end
+          let!(:resource_2) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:02Z',
               updated_at: '2020-05-26T18:47:02Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
-          let!(:resource_3) {
+              app: app_model
+            )
+          end
+          let!(:resource_3) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:03Z',
               updated_at: '2020-05-26T18:47:03Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
+              app: app_model
+            )
+          end
 
           after do
             VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: true
@@ -363,7 +367,7 @@ RSpec.describe 'Revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?guids=#{resource_1.guid},#{resource_2.guid}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
         end
 
@@ -375,38 +379,42 @@ RSpec.describe 'Revisions' do
           let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model) }
           # .make updates the resource after creating it, over writing our passed in updated_at timestamp
           # Therefore we cannot use shared_examples as the updated_at will not be as written
-          let!(:resource_1) {
+          let!(:resource_1) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:01Z',
               updated_at: '2020-05-26T18:47:01Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
-          let!(:resource_2) {
+              app: app_model
+            )
+          end
+          let!(:resource_2) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:02Z',
               updated_at: '2020-05-26T18:47:02Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
-          let!(:resource_3) {
+              app: app_model
+            )
+          end
+          let!(:resource_3) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:03Z',
               updated_at: '2020-05-26T18:47:03Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
-          let!(:resource_4) {
+              app: app_model
+            )
+          end
+          let!(:resource_4) do
             VCAP::CloudController::RevisionModel.create(
               created_at: '2020-05-26T18:47:04Z',
               updated_at: '2020-05-26T18:47:04Z',
               droplet: droplet,
               description: '',
-              app: app_model)
-          }
+              app: app_model
+            )
+          end
 
           after do
             VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: true
@@ -416,14 +424,14 @@ RSpec.describe 'Revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
 
           it 'filters by the updated_at' do
             get "/v3/apps/#{app_model.guid}/revisions?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
 
             expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(resource_1.guid, resource_2.guid)
+            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
           end
         end
       end
@@ -445,7 +453,7 @@ RSpec.describe 'Revisions' do
           annotations: {
             quality: 'p sus'
           }
-        },
+        }
       }.to_json
     end
 
@@ -473,14 +481,14 @@ RSpec.describe 'Revisions' do
           'updated_at' => iso8601,
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}",
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
             },
             'app' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             },
             'environment_variables' => {
               'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-            },
+            }
           },
           'metadata' => {
             'labels' => { 'freaky' => 'thursday' },
@@ -488,8 +496,8 @@ RSpec.describe 'Revisions' do
           },
           'processes' => {
             'web' => {
-              'command' => nil,
-            },
+              'command' => nil
+            }
           },
           'sidecars' => [],
           'deployable' => true
@@ -498,7 +506,7 @@ RSpec.describe 'Revisions' do
     end
 
     context 'permissions' do
-      let(:api_call) { lambda { |user_headers| patch "/v3/revisions/#{revision.guid}", update_request, user_headers } }
+      let(:api_call) { ->(user_headers) { patch "/v3/revisions/#{revision.guid}", update_request, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
@@ -535,12 +543,13 @@ RSpec.describe 'Revisions' do
       space.add_developer(user)
     end
 
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(
-      app: app_model,
-      version: 43,
-      environment_variables: { 'key' => 'value' },
-    )
-    }
+    let!(:revision2) do
+      VCAP::CloudController::RevisionModel.make(
+        app: app_model,
+        version: 43,
+        environment_variables: { 'key' => 'value' }
+      )
+    end
 
     it 'gets the environment variables for the revision' do
       get "/v3/revisions/#{revision2.guid}/environment_variables", nil, user_header
@@ -555,7 +564,7 @@ RSpec.describe 'Revisions' do
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables" },
             'revision' => { 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}" },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
           }
         }
       )
@@ -570,12 +579,12 @@ RSpec.describe 'Revisions' do
     let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
-      let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_headers } }
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_headers } }
       let(:revision_response_objects) do
         [
           {
             'guid' => revision.guid,
-            'version' =>  revision.version,
+            'version' => revision.version,
             'description' => revision.description,
             'droplet' => {
               'guid' => revision.droplet_guid
@@ -594,24 +603,24 @@ RSpec.describe 'Revisions' do
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
               },
               'app' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'processes' => {
               'web' => {
-                'command' => nil,
-              },
+                'command' => nil
+              }
             },
             'sidecars' => [],
             'deployable' => true
           },
           {
             'guid' => revision2.guid,
-            'version' =>  revision2.version,
+            'version' => revision2.version,
             'description' => revision2.description,
             'droplet' => {
               'guid' => revision2.droplet_guid
@@ -630,17 +639,17 @@ RSpec.describe 'Revisions' do
                 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
               },
               'app' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               },
               'environment_variables' => {
                 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
-              },
+              }
             },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'processes' => {
               'web' => {
-                'command' => nil,
-              },
+                'command' => nil
+              }
             },
             'sidecars' => [],
             'deployable' => true

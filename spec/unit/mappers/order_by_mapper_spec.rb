@@ -15,7 +15,7 @@ module VCAP::CloudController
           let(:order_by) { '+name' }
 
           it 'returns the modifed order_by and order_direction "asc"' do
-            expect(OrderByMapper.from_param(order_by)).to eq(['name', 'asc'])
+            expect(OrderByMapper.from_param(order_by)).to eq(%w[name asc])
           end
         end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
           let(:order_by) { '-name' }
 
           it 'returns the modifed order_by and order_direction "desc"' do
-            expect(OrderByMapper.from_param(order_by)).to eq(['name', 'desc'])
+            expect(OrderByMapper.from_param(order_by)).to eq(%w[name desc])
           end
         end
       end
@@ -32,7 +32,7 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:order_by) { 'name' }
       let(:order_direction) { 'desc' }
-      let(:pagination_options) { PaginationOptions.new(order_by: order_by, order_direction: order_direction) }
+      let(:pagination_options) { PaginationOptions.new(order_by:, order_direction:) }
 
       it 'returns a hash where the prefix of order_by describes the order_direction' do
         expect(OrderByMapper.to_param_hash(pagination_options)).

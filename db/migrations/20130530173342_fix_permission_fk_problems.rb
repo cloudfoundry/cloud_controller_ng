@@ -29,21 +29,21 @@ end
 
 Sequel.migration do
   up do
-    [:users, :managers, :billing_managers, :auditors].each do |perm|
+    %i[users managers billing_managers auditors].each do |perm|
       cleanup_permission_table(:organization, perm)
     end
 
-    [:developers, :managers, :auditors].each do |perm|
+    %i[developers managers auditors].each do |perm|
       cleanup_permission_table(:space, perm)
     end
 
     foreign_key_list(:app_events).each do |fk|
-      if fk[:columns] == [:fk_app_events_app_id]
-        alter_table :app_events do
-          drop_constraint fk[:name], type: :foreign_key
-          drop_column :fk_app_events_app_id
-          add_foreign_key [:app_id], :apps, name: :fk_app_events_app_id
-        end
+      next unless fk[:columns] == [:fk_app_events_app_id]
+
+      alter_table :app_events do
+        drop_constraint fk[:name], type: :foreign_key
+        drop_column :fk_app_events_app_id
+        add_foreign_key [:app_id], :apps, name: :fk_app_events_app_id
       end
     end
   end

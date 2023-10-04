@@ -35,7 +35,7 @@ module VCAP
               ports: process.open_ports,
               docker_image: process.actual_droplet.docker_receipt_image,
               execution_metadata: process.execution_metadata,
-              start_command: process.command,
+              start_command: process.command
             }
           end
         end

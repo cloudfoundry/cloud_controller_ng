@@ -11,11 +11,11 @@ module VCAP::CloudController::RestController
     let(:serializer) { PreloadedObjectSerializer.new }
     let(:renderer_opts) do
       {
-        default_results_per_page: default_results_per_page,
-        max_results_per_page: max_results_per_page,
-        max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer,
-        max_total_results: max_total_results
+        default_results_per_page:,
+        max_results_per_page:,
+        max_inline_relations_depth:,
+        collection_transformer:,
+        max_total_results:
       }
     end
     let(:default_results_per_page) { 100_000 }
@@ -27,13 +27,13 @@ module VCAP::CloudController::RestController
     describe '#render_json' do
       let(:opts) do
         {
-            page: page,
-            results_per_page: results_per_page,
-            inline_relations_depth: inline_relations_depth,
-            orphan_relations: orphan_relations,
-            exclude_relations: exclude_relations,
-            include_relations: include_relations,
-            max_total_results: max_total_results
+          page:,
+          results_per_page:,
+          inline_relations_depth:,
+          orphan_relations:,
+          exclude_relations:,
+          include_relations:,
+          max_total_results:
         }
       end
       let(:page) { nil }
@@ -122,6 +122,7 @@ module VCAP::CloudController::RestController
               page: 11
             }
           end
+
           it 'renders json response' do
             expect(render_json_call).to be_instance_of(String)
           end
@@ -135,6 +136,7 @@ module VCAP::CloudController::RestController
               page: 10
             }
           end
+
           it 'renders json response' do
             expect(render_json_call).to be_instance_of(String)
           end
@@ -148,6 +150,7 @@ module VCAP::CloudController::RestController
               page: 10
             }
           end
+
           it 'raises ApiError error' do
             expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, 'The query parameter is invalid: (page * per_page) must be less than 100')
           end
@@ -160,9 +163,9 @@ module VCAP::CloudController::RestController
           let(:inline_relations_depth) { 11 }
 
           it 'raises BadQueryParameter error' do
-            expect {
+            expect do
               render_json_call
-            }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
+            end.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
           end
         end
 
@@ -225,8 +228,8 @@ module VCAP::CloudController::RestController
           it 'does not include orphan-relations in next_url and prev_url' do
             prev_url = JSON.parse(render_json_call)['prev_url']
             next_url = JSON.parse(render_json_call)['next_url']
-            expect(prev_url).to_not include('orphan-relations')
-            expect(next_url).to_not include('orphan-relations')
+            expect(prev_url).not_to include('orphan-relations')
+            expect(next_url).not_to include('orphan-relations')
           end
         end
       end
@@ -263,8 +266,8 @@ module VCAP::CloudController::RestController
           it 'does not include exclude-relations in next_url and prev_url' do
             prev_url = JSON.parse(render_json_call)['prev_url']
             next_url = JSON.parse(render_json_call)['next_url']
-            expect(prev_url).to_not include('exclude-relations')
-            expect(next_url).to_not include('exclude-relations')
+            expect(prev_url).not_to include('exclude-relations')
+            expect(next_url).not_to include('exclude-relations')
           end
         end
       end
@@ -301,8 +304,8 @@ module VCAP::CloudController::RestController
           it 'does not include include-relations in next_url and prev_url' do
             prev_url = JSON.parse(render_json_call)['prev_url']
             next_url = JSON.parse(render_json_call)['next_url']
-            expect(prev_url).to_not include('include-relations')
-            expect(next_url).to_not include('include-relations')
+            expect(prev_url).not_to include('include-relations')
+            expect(next_url).not_to include('include-relations')
           end
         end
       end
@@ -386,7 +389,7 @@ module VCAP::CloudController::RestController
 
           it 'does not include order-by in url params' do
             next_url = JSON.parse(render_json_call)['next_url']
-            expect(next_url).to_not include('order-by')
+            expect(next_url).not_to include('order-by')
           end
         end
 
@@ -425,6 +428,7 @@ module VCAP::CloudController::RestController
 
       context 'when request_params are given' do
         let(:results_per_page) { 1 }
+
         before do
           VCAP::CloudController::TestModel.make
           VCAP::CloudController::TestModel.make
@@ -434,6 +438,7 @@ module VCAP::CloudController::RestController
 
         context 'at page 1' do
           let(:page) { 1 }
+
           it 'has a next link with the q' do
             result = JSON.parse(render_json_call)
             expect(result['prev_url']).to be_nil
@@ -443,6 +448,7 @@ module VCAP::CloudController::RestController
 
         context 'at page 2' do
           let(:page) { 2 }
+
           it 'has a prev link with the q' do
             result = JSON.parse(render_json_call)
             expect(result['prev_url']).to include('q=organization_guid:1234')
@@ -452,6 +458,7 @@ module VCAP::CloudController::RestController
 
         context 'at page 3' do
           let(:page) { 2 }
+
           it 'has a prev link with the q' do
             result = JSON.parse(render_json_call)
             expect(result['prev_url']).to include('q=organization_guid:1234')

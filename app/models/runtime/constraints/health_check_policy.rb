@@ -7,6 +7,6 @@ class HealthCheckPolicy < BaseHealthCheckPolicy
     # being stored as nil in the db
     return true if @health_check_type.nil?
 
-    return false
+    false
   end
 end

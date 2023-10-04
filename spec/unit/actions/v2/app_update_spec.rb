@@ -5,7 +5,8 @@ module VCAP::CloudController
   RSpec.describe V2::AppUpdate do
     let(:access_validator) { double('access_validator', validate_access: true) }
     let(:stagers) { instance_double(Stagers) }
-    subject(:app_update) { V2::AppUpdate.new(access_validator: access_validator, stagers: stagers) }
+
+    subject(:app_update) { V2::AppUpdate.new(access_validator:, stagers:) }
 
     describe 'update' do
       context 'updating the process' do
@@ -13,18 +14,18 @@ module VCAP::CloudController
         let(:app) { process.app }
         let(:request_attrs) do
           {
-            'production'                 => false,
-            'memory'                     => 4,
-            'instances'                  => 2,
-            'disk_quota'                 => 30,
-            'command'                    => 'new-command',
-            'health_check_type'          => 'http',
-            'health_check_timeout'       => 20,
+            'production' => false,
+            'memory' => 4,
+            'instances' => 2,
+            'disk_quota' => 30,
+            'command' => 'new-command',
+            'health_check_type' => 'http',
+            'health_check_timeout' => 20,
             'health_check_http_endpoint' => '/health',
-            'diego'                      => true,
-            'enable_ssh'                 => false,
-            'ports'                      => [8080],
-            'route_guids'                => [],
+            'diego' => true,
+            'enable_ssh' => false,
+            'ports' => [8080],
+            'route_guids' => []
           }
         end
 
@@ -32,7 +33,7 @@ module VCAP::CloudController
           it 'updates the process' do
             app_update.update(app, process, request_attrs)
 
-            expect(process.production).to eq(false)
+            expect(process.production).to be(false)
             expect(process.memory).to eq(4)
             expect(process.instances).to eq(2)
             expect(process.disk_quota).to eq(30)
@@ -40,7 +41,7 @@ module VCAP::CloudController
             expect(process.health_check_type).to eq('http')
             expect(process.health_check_timeout).to eq(20)
             expect(process.health_check_http_endpoint).to eq('/health')
-            expect(process.diego).to eq(true)
+            expect(process.diego).to be(true)
             expect(process.ports).to eq([8080])
             expect(process.route_guids).to eq([])
           end
@@ -58,9 +59,9 @@ module VCAP::CloudController
               request_attrs = {
                 'command' => 'java'
               }
-              expect {
+              expect do
                 app_update.update(app, process, request_attrs)
-              }.to raise_error(/update this process while a deployment is in flight/)
+              end.to raise_error(/update this process while a deployment is in flight/)
             end
 
             it 'raises an error when stopping a deploying app' do
@@ -68,9 +69,9 @@ module VCAP::CloudController
                 'state' => 'STOPPED'
               }
 
-              expect {
+              expect do
                 app_update.update(app, process, request_attrs)
-              }.to raise_error(/Cannot stop the app while it is deploying, please cancel the deployment before stopping the app/)
+              end.to raise_error(/Cannot stop the app while it is deploying, please cancel the deployment before stopping the app/)
             end
 
             it 'raises an error when scaling instances on a deploying app' do
@@ -78,9 +79,9 @@ module VCAP::CloudController
                 'instances' => '2'
               }
 
-              expect {
+              expect do
                 app_update.update(app, process, request_attrs)
-              }.to raise_error(/scale this process while a deployment is in flight/)
+              end.to raise_error(/scale this process while a deployment is in flight/)
             end
 
             it 'raises an error when scaling memory on a deploying app' do
@@ -88,9 +89,9 @@ module VCAP::CloudController
                 'memory' => '1025'
               }
 
-              expect {
+              expect do
                 app_update.update(app, process, request_attrs)
-              }.to raise_error(/scale this process while a deployment is in flight/)
+              end.to raise_error(/scale this process while a deployment is in flight/)
             end
 
             it 'raises an error when scaling disk on a deploying app' do
@@ -98,9 +99,9 @@ module VCAP::CloudController
                 'disk_quota' => '256'
               }
 
-              expect {
+              expect do
                 app_update.update(app, process, request_attrs)
-              }.to raise_error(/scale this process while a deployment is in flight/)
+              end.to raise_error(/scale this process while a deployment is in flight/)
             end
           end
 
@@ -110,7 +111,7 @@ module VCAP::CloudController
             it 'still updates the non-web processes' do
               app_update.update(app, process, request_attrs)
 
-              expect(process.production).to eq(false)
+              expect(process.production).to be(false)
               expect(process.memory).to eq(4)
               expect(process.instances).to eq(2)
               expect(process.disk_quota).to eq(30)
@@ -118,7 +119,7 @@ module VCAP::CloudController
               expect(process.health_check_type).to eq('http')
               expect(process.health_check_timeout).to eq(20)
               expect(process.health_check_http_endpoint).to eq('/health')
-              expect(process.diego).to eq(true)
+              expect(process.diego).to be(true)
               expect(process.ports).to eq([8080])
               expect(process.route_guids).to eq([])
             end
@@ -132,10 +133,10 @@ module VCAP::CloudController
         stack   = Stack.make(name: 'stack-name')
 
         request_attrs = {
-          'name'             => 'maria',
+          'name' => 'maria',
           'environment_json' => { 'KEY' => 'val' },
-          'stack_guid'       => stack.guid,
-          'buildpack'        => 'http://example.com/buildpack',
+          'stack_guid' => stack.guid,
+          'buildpack' => 'http://example.com/buildpack',
           'enable_ssh' => false
         }
 
@@ -166,7 +167,7 @@ module VCAP::CloudController
             package: package,
             process_types: {
               'web' => 'webby'
-            },
+            }
           )
         end
 
@@ -179,7 +180,7 @@ module VCAP::CloudController
           app.update(revisions_enabled: true)
 
           request_attrs = {
-            'state' => ProcessModel::STARTED,
+            'state' => ProcessModel::STARTED
           }
 
           app_update.update(app, process, request_attrs)
@@ -195,11 +196,12 @@ module VCAP::CloudController
         let(:new_stack) { Stack.make }
         let(:request_attrs) do
           {
-            'instances'                  => 2,
-            'stack_guid'                 => new_stack.guid,
+            'instances' => 2,
+            'stack_guid' => new_stack.guid,
             'state' => current_state
           }
         end
+
         context 'with a started bits app' do
           context 'not requesting a state change' do
             it 'updates the process' do
@@ -222,6 +224,7 @@ module VCAP::CloudController
             end
           end
         end
+
         context 'with a unstarted bits app' do
           let(:current_state) { 'STOPPED' }
 
@@ -237,9 +240,9 @@ module VCAP::CloudController
 
           context 'requesting state change to STARTED' do
             it 'raises an error' do
-              expect {
+              expect do
                 app_update.update(process.app, process, { 'state' => 'STARTED' })
-              }.to raise_error(/bits have not been uploaded/)
+              end.to raise_error(/bits have not been uploaded/)
             end
           end
         end
@@ -255,42 +258,42 @@ module VCAP::CloudController
           it 'does NOT allow a public git url' do
             request_attrs = { 'buildpack' => 'http://example.com/buildpack' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
 
           it 'does NOT allow a public http url' do
             request_attrs = { 'buildpack' => 'http://example.com/foo' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
 
           it 'does allow a buildpack name' do
             admin_buildpack = Buildpack.make
             request_attrs   = { 'buildpack' => admin_buildpack.name }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.not_to raise_error
+            end.not_to raise_error
           end
 
           it 'does not allow a private git url' do
             request_attrs = { 'buildpack' => 'git://github.com/johndoe/my-buildpack.git' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
 
           it 'does not allow a private git url with ssh schema' do
             request_attrs = { 'buildpack' => 'ssh://git@example.com/foo.git' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            end.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
         end
 
@@ -300,7 +303,7 @@ module VCAP::CloudController
             app     = process.app
 
             request_attrs = {
-              'buildpack' => nil,
+              'buildpack' => nil
             }
 
             app_update.update(app, process, request_attrs)
@@ -313,7 +316,7 @@ module VCAP::CloudController
             app     = process.app
 
             request_attrs = {
-              'buildpack' => '',
+              'buildpack' => ''
             }
 
             app_update.update(app, process, request_attrs)
@@ -340,17 +343,17 @@ module VCAP::CloudController
           let(:process) do
             ProcessModelFactory.make(
               instances: 1,
-              state:     'STARTED'
+              state: 'STARTED'
             )
           end
 
           it 'marks the app for re-staging' do
-            expect(process.needs_staging?).to eq(false)
+            expect(process.needs_staging?).to be(false)
 
             app_update.update(app, process, request_attrs)
 
-            expect(process.needs_staging?).to eq(true)
-            expect(process.staged?).to eq(false)
+            expect(process.needs_staging?).to be(true)
+            expect(process.staged?).to be(false)
           end
         end
 
@@ -378,13 +381,13 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make }
 
           it 'does not mark the app for staging' do
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
 
             app_update.update(app, process, request_attrs)
             process.reload
 
-            expect(process.staged?).to be_falsey
+            expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
           end
         end
@@ -398,17 +401,17 @@ module VCAP::CloudController
           it 'raises an error setting buildpack' do
             request_attrs = { 'buildpack' => 'https://buildpack.example.com' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(/Lifecycle type cannot be changed/)
+            end.to raise_error(/Lifecycle type cannot be changed/)
           end
 
           it 'raises an error setting stack' do
             request_attrs = { 'stack_guid' => 'phat-stackz' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(/Lifecycle type cannot be changed/)
+            end.to raise_error(/Lifecycle type cannot be changed/)
           end
         end
 
@@ -419,9 +422,9 @@ module VCAP::CloudController
           it 'raises an error' do
             request_attrs = { 'docker_image' => 'repo/great-image' }
 
-            expect {
+            expect do
               app_update.update(app, process, request_attrs)
-            }.to raise_error(/Lifecycle type cannot be changed/)
+            end.to raise_error(/Lifecycle type cannot be changed/)
           end
         end
       end
@@ -449,7 +452,7 @@ module VCAP::CloudController
         context 'when docker credentials are requested' do
           it 'creates a new docker package with those credentials' do
             request_attrs = {
-              'docker_image'       => 'repo/new-image',
+              'docker_image' => 'repo/new-image',
               'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' }
             }
 
@@ -474,16 +477,16 @@ module VCAP::CloudController
 
               expect(process.reload.docker_image).to eq('repo/original-image')
               expect(process.latest_package).to eq(original_package)
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
             end
           end
 
           context 'but it changes credentials' do
             it 'creates a new docker package and triggers staging' do
               request_attrs = {
-                'docker_image'       => 'repo/original-image',
+                'docker_image' => 'repo/original-image',
                 'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' },
-                'state'              => 'STARTED',
+                'state' => 'STARTED'
               }
 
               expect(process.reload.docker_image).to eq('repo/original-image')
@@ -495,7 +498,7 @@ module VCAP::CloudController
               expect(process.docker_username).to eq('bob')
               expect(process.docker_password).to eq('secret')
               expect(process.latest_package).not_to eq(original_package)
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
             end
           end
         end
@@ -513,7 +516,8 @@ module VCAP::CloudController
 
         it 'creates a new docker package' do
           request_attrs = { 'docker_credentials' => {
-            'username' => 'user', 'password' => 'secret' } }
+            'username' => 'user', 'password' => 'secret'
+          } }
 
           expect(process.docker_image).to eq('repo/original-image')
           expect(process.docker_username).to be_nil
@@ -531,10 +535,11 @@ module VCAP::CloudController
 
           it 'raises an error' do
             request_attrs = { 'docker_credentials' => {
-              'username' => 'user', 'password' => 'secret' } }
+              'username' => 'user', 'password' => 'secret'
+            } }
 
             expect { app_update.update(process.app, process, request_attrs) }.to raise_error(CloudController::Errors::ApiError,
-              /Docker credentials can only be supplied for apps with a 'docker_image'/)
+                                                                                             /Docker credentials can only be supplied for apps with a 'docker_image'/)
           end
         end
       end
@@ -558,7 +563,7 @@ module VCAP::CloudController
             end
 
             it 'requests to be staged' do
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).to have_received(:stage)
             end
@@ -575,16 +580,16 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect {
+                expect do
                   app_update.update(app, process, request_attrs)
-                }.to raise_error(/Staging through the v2 API is disabled/)
+                end.to raise_error(/Staging through the v2 API is disabled/)
               end
             end
           end
 
           context 'when the app does not need staging' do
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end
@@ -601,9 +606,9 @@ module VCAP::CloudController
               end
 
               it 'does not raise an error' do
-                expect {
+                expect do
                   app_update.update(app, process, request_attrs)
-                }.not_to raise_error
+                end.not_to raise_error
               end
             end
           end
@@ -619,7 +624,7 @@ module VCAP::CloudController
             end
 
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_truthy
+              expect(process).to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end
@@ -627,7 +632,7 @@ module VCAP::CloudController
 
           context 'when the app does not need staging' do
             it 'does not request to be staged' do
-              expect(process.needs_staging?).to be_falsey
+              expect(process).not_to be_needs_staging
               app_update.update(app, process, request_attrs)
               expect(app_stage).not_to have_received(:stage)
             end
@@ -639,9 +644,9 @@ module VCAP::CloudController
         let(:process) { ProcessModel.make(instances: 1) }
 
         it 'raises an error' do
-          expect {
+          expect do
             app_update.update(process.app, process, { 'state' => 'STARTED' })
-          }.to raise_error(/bits have not been uploaded/)
+          end.to raise_error(/bits have not been uploaded/)
         end
 
         context 'and there is a staged droplet' do
@@ -650,9 +655,9 @@ module VCAP::CloudController
           end
 
           it 'does not raise an error' do
-            expect {
+            expect do
               app_update.update(process.app, process, { 'state' => 'STARTED' })
-            }.not_to raise_error
+            end.not_to raise_error
           end
         end
       end
@@ -704,9 +709,9 @@ module VCAP::CloudController
           let(:state) { 'STOPPED' }
 
           it 'raises an error' do
-            expect {
+            expect do
               app_update.update(app, process, { 'state' => 'ohio' })
-            }.to raise_error(/state must be one of/)
+            end.to raise_error(/state must be one of/)
           end
         end
       end

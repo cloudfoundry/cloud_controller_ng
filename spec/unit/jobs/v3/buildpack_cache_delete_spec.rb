@@ -35,15 +35,15 @@ module VCAP::CloudController
 
       describe '#perform' do
         it 'deletes all matching blobs' do
-          expect(blobstore.exists?(path_1)).to be_truthy
-          expect(blobstore.exists?(path_2)).to be_truthy
-          expect(blobstore.exists?(path_3)).to be_truthy
+          expect(blobstore).to exist(path_1)
+          expect(blobstore).to exist(path_2)
+          expect(blobstore).to exist(path_3)
 
           job.perform
 
-          expect(blobstore.exists?(path_1)).to be_falsey
-          expect(blobstore.exists?(path_2)).to be_falsey
-          expect(blobstore.exists?(path_3)).to be_truthy
+          expect(blobstore).not_to exist(path_1)
+          expect(blobstore).not_to exist(path_2)
+          expect(blobstore).to exist(path_3)
         end
 
         it 'knows its job name' do

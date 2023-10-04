@@ -63,7 +63,7 @@ module VCAP::CloudController
               org_restricted_offering_1,
               org_restricted_offering_2,
               org_restricted_offering_3,
-              org_restricted_offering_4,
+              org_restricted_offering_4
             )
           end
         end
@@ -75,8 +75,8 @@ module VCAP::CloudController
           it 'includes public plans and ones for those orgs' do
             service_offerings = fetcher.fetch(
               message,
-              readable_orgs_query: readable_orgs_query,
-              readable_spaces_query: readable_spaces_query,
+              readable_orgs_query:,
+              readable_spaces_query:
             ).all
 
             expect(service_offerings).to contain_exactly(
@@ -84,7 +84,7 @@ module VCAP::CloudController
               public_offering_2,
               org_restricted_offering_1,
               org_restricted_offering_3,
-              org_restricted_offering_4,
+              org_restricted_offering_4
             )
           end
         end
@@ -96,8 +96,8 @@ module VCAP::CloudController
           it 'includes public plans, ones for those spaces and ones for those orgs' do
             service_offerings = fetcher.fetch(
               message,
-              readable_orgs_query: readable_orgs_query,
-              readable_spaces_query: readable_spaces_query,
+              readable_orgs_query:,
+              readable_spaces_query:
             ).all
 
             expect(service_offerings).to contain_exactly(
@@ -106,7 +106,7 @@ module VCAP::CloudController
               space_scoped_offering_3,
               space_scoped_offering_4,
               org_restricted_offering_3,
-              org_restricted_offering_4,
+              org_restricted_offering_4
             )
           end
         end
@@ -144,7 +144,7 @@ module VCAP::CloudController
 
             it 'only shows public plans when there are no matches' do
               message = ServiceOfferingsListMessage.from_params({
-                organization_guids: 'non-matching-guid',
+                organization_guids: 'non-matching-guid'
               }.with_indifferent_access)
 
               service_offerings = ServiceOfferingListFetcher.fetch(message, omniscient: true).all
@@ -164,8 +164,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
 
               expect(service_offerings).to contain_exactly(org_restricted_offering_1, public_offering)
@@ -183,8 +183,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering)
@@ -204,8 +204,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering, org_restricted_offering_1, space_scoped_offering_1)
@@ -242,8 +242,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
               expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
             end
@@ -259,8 +259,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
               expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
             end
@@ -277,8 +277,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
 
               expect(service_offerings).to contain_exactly(public_offering)
@@ -318,8 +318,8 @@ module VCAP::CloudController
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
-                readable_orgs_query: readable_orgs_query,
-                readable_spaces_query: readable_spaces_query,
+                readable_orgs_query:,
+                readable_spaces_query:
               ).all
               expect(service_offerings).to contain_exactly(public_offering)
             end
@@ -358,12 +358,12 @@ module VCAP::CloudController
         describe 'the `service_broker_guids` filter' do
           let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
           let!(:service_offering_1) do
-            offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+            offering = VCAP::CloudController::Service.make(service_broker:)
             VCAP::CloudController::ServicePlan.make(public: true, service: offering)
             offering
           end
           let!(:service_offering_2) do
-            offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+            offering = VCAP::CloudController::Service.make(service_broker:)
             VCAP::CloudController::ServicePlan.make(public: true, service: offering)
             offering
           end
@@ -377,7 +377,7 @@ module VCAP::CloudController
             expect(service_offerings).to contain_exactly(
               service_offering_1,
               service_offering_2,
-              service_offering_3,
+              service_offering_3
             )
           end
         end
@@ -385,12 +385,12 @@ module VCAP::CloudController
         describe 'the `service_broker_names` filter' do
           let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
           let!(:service_offering_1) do
-            offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+            offering = VCAP::CloudController::Service.make(service_broker:)
             VCAP::CloudController::ServicePlan.make(public: true, service: offering)
             offering
           end
           let!(:service_offering_2) do
-            offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+            offering = VCAP::CloudController::Service.make(service_broker:)
             VCAP::CloudController::ServicePlan.make(public: true, service: offering)
             offering
           end
@@ -404,7 +404,7 @@ module VCAP::CloudController
             expect(service_offerings).to contain_exactly(
               service_offering_1,
               service_offering_2,
-              service_offering_4,
+              service_offering_4
             )
           end
         end
@@ -421,7 +421,7 @@ module VCAP::CloudController
           it 'filters the service offerings with matching names' do
             expect(service_offerings).to contain_exactly(
               service_offering_1,
-              service_offering_3,
+              service_offering_3
             )
           end
         end
@@ -469,7 +469,7 @@ module VCAP::CloudController
     end
 
     def make_space_scoped_offering(space)
-      service_broker = ServiceBroker.make(space: space)
+      service_broker = ServiceBroker.make(space:)
       Service.make(service_broker: service_broker, label: "space-scoped-#{Sham.name}")
     end
 

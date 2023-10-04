@@ -28,13 +28,11 @@ module VCAP::CloudController
         end
 
         def error(job, _)
-          if !File.exist?(@local_path)
-            @max_attempts = 1
-          end
+          @max_attempts = 1 unless File.exist?(@local_path)
 
-          if job.attempts >= max_attempts - 1
-            FileUtils.rm_f(@local_path)
-          end
+          return unless job.attempts >= max_attempts - 1
+
+          FileUtils.rm_f(@local_path)
         end
 
         def job_name_in_configuration

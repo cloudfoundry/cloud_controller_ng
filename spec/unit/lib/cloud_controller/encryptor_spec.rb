@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'generating some salt' do
       it 'returns a short, random string' do
-        expect(salt.length).to eql(16)
+        expect(salt.length).to be(16)
         expect(salt).not_to eql(Encryptor.generate_salt)
       end
     end
@@ -38,7 +38,7 @@ module VCAP::CloudController
         let(:encrypted_death_string) { 'UsFVj9hjohvzOwlJQ4tqHA==' }
         let(:encrypted_legacy_string) { 'a6FHdu9k3+CCSjvzIX+i7w==' }
 
-        before(:each) do
+        before do
           Encryptor.db_encryption_key = 'legacy-crypto-key'
           Encryptor.database_encryption_keys = {
             foo: 'fooencryptionkey',
@@ -48,19 +48,19 @@ module VCAP::CloudController
 
         context 'when the label is found in the hash' do
           it 'will encrypt using the value corresponding to the label' do
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'death' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('death')
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_death_string)
           end
         end
 
         context 'when the label is not found in the hash' do
           it 'will encrypt using current db_encryption_key when the label is not nil' do
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'Inigo Montoya' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('Inigo Montoya')
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_legacy_string)
           end
 
           it 'will encrypt using current db_encryption_key when the label is nil' do
-            allow(Encryptor).to receive(:current_encryption_key_label) { nil }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return(nil)
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_legacy_string)
           end
         end
@@ -70,10 +70,10 @@ module VCAP::CloudController
         let(:salt) { 'FFFFFFFFFFFFFFFF' }
         let(:encrypted_legacy_string) { 'a6FHdu9k3+CCSjvzIX+i7w==' }
 
-        before(:each) do
+        before do
           Encryptor.db_encryption_key = 'legacy-crypto-key'
           Encryptor.database_encryption_keys = nil
-          allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+          allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
         end
 
         it 'will encrypt using db_encryption_key' do
@@ -105,7 +105,7 @@ module VCAP::CloudController
     describe '.decrypt' do
       let(:unencrypted_string) { 'some-string' }
 
-      before(:each) do
+      before do
         Encryptor.db_encryption_key = 'legacy-crypto-key'
         Encryptor.database_encryption_keys = {}
       end
@@ -120,7 +120,7 @@ module VCAP::CloudController
       end
 
       context 'when database_encryption_keys is configured' do
-        before(:each) do
+        before do
           Encryptor.database_encryption_keys = {
             foo: 'fooencryptionkey',
             death: 'headbangingdeathmetalkey'
@@ -128,8 +128,8 @@ module VCAP::CloudController
         end
 
         context 'when no encryption key label is passed' do
-          before(:each) do
-            allow(Encryptor).to receive(:current_encryption_key_label) { nil }
+          before do
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return(nil)
           end
 
           it 'decrypts using #db_encryption_key' do
@@ -141,7 +141,7 @@ module VCAP::CloudController
 
         context 'when encryption was done using a labelled key' do
           before do
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
           end
 
           it 'decrypts using the key specified by the passed label' do
@@ -214,40 +214,38 @@ module VCAP::CloudController
 
     before do
       allow(base_class).to receive(:columns) { columns }
-      allow(db).to receive(:transaction) do |&block|
-        block.call
-      end
+      allow(db).to receive(:transaction).and_yield
       base_class.send :attr_accessor, *columns # emulate Sequel super methods
     end
 
     describe '#set_field_as_encrypted' do
       context 'model does not have the salt column' do
-        let(:columns) { [:id, :name, :size, :encryption_key_label] }
+        let(:columns) { %i[id name size encryption_key_label] }
 
         context 'default name' do
           it 'raises an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name
-            }.to raise_error(RuntimeError, /salt/)
+            end.to raise_error(RuntimeError, /salt/)
           end
         end
 
         context 'explicit name' do
           it 'raises an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name, salt: :foobar
-            }.to raise_error(RuntimeError, /foobar/)
+            end.to raise_error(RuntimeError, /foobar/)
           end
         end
       end
 
       context 'model has the salt column' do
-        let(:columns) { [:id, :name, :size, :salt, :encryption_key_label, :encryption_iterations] }
+        let(:columns) { %i[id name size salt encryption_key_label encryption_iterations] }
 
         it 'does not raise an error' do
-          expect {
+          expect do
             base_class.send :set_field_as_encrypted, :name
-          }.to_not raise_error
+          end.not_to raise_error
         end
 
         it 'creates a salt generation method' do
@@ -262,12 +260,12 @@ module VCAP::CloudController
         end
 
         context 'explicit name' do
-          let(:columns) { [:id, :name, :size, :foobar, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[id name size foobar encryption_key_label encryption_iterations] }
 
           it 'does not raise an error' do
-            expect {
+            expect do
               base_class.send :set_field_as_encrypted, :name, salt: :foobar
-            }.to_not raise_error
+            end.not_to raise_error
           end
 
           it 'creates a salt generation method' do
@@ -278,17 +276,17 @@ module VCAP::CloudController
       end
 
       context 'model does not have the "encryption_key_label" column' do
-        let(:columns) { [:id, :name, :salt, :size] }
+        let(:columns) { %i[id name salt size] }
 
         it 'raises an error' do
-          expect {
+          expect do
             base_class.send :set_field_as_encrypted, :name
-          }.to raise_error(RuntimeError, /encryption_key_label/)
+          end.to raise_error(RuntimeError, /encryption_key_label/)
         end
       end
 
       context 'model does not have the "encryption_iterations" column' do
-        let(:columns) { [:id, :name, :salt, :encryption_key_label] }
+        let(:columns) { %i[id name salt encryption_key_label] }
 
         it 'raises and error' do
           expect { base_class.send :set_field_as_encrypted, :name }.to raise_error(RuntimeError, /encryption_iterations/)
@@ -297,7 +295,7 @@ module VCAP::CloudController
     end
 
     describe 'field-specific methods' do
-      let(:columns) { [:sekret, :salt, :encryption_key_label, :encryption_iterations] }
+      let(:columns) { %i[sekret salt encryption_key_label encryption_iterations] }
       let(:model_class) do
         Class.new(base_class) do
           set_field_as_encrypted :sekret
@@ -356,7 +354,7 @@ module VCAP::CloudController
         it 'decrypts by passing the salt and the underlying value to Encryptor' do
           subject.salt = 'asdf'
           subject.sekret_without_encryption = 'underlying'
-          expect(Encryptor).to receive(:decrypt).with('underlying', 'asdf', iterations: encryption_iterations, label: nil) { 'unencrypted' }
+          expect(Encryptor).to receive(:decrypt).with('underlying', 'asdf', iterations: encryption_iterations, label: nil).and_return('unencrypted')
           expect(subject.sekret).to eq 'unencrypted'
         end
       end
@@ -374,19 +372,19 @@ module VCAP::CloudController
 
           context 'when the value is nil' do
             it 'stores a default nil value without trying to encrypt' do
-              expect(subject.sekret_without_encryption).to_not be_nil
-              expect {
+              expect(subject.sekret_without_encryption).not_to be_nil
+              expect do
                 subject.sekret = nil
-              }.to change(subject, :sekret_without_encryption).to(nil)
+              end.to change(subject, :sekret_without_encryption).to(nil)
             end
           end
 
           context 'when the value is blank' do
             it 'stores a default nil value without trying to encrypt' do
-              expect(subject.sekret_without_encryption).to_not be_nil
-              expect {
+              expect(subject.sekret_without_encryption).not_to be_nil
+              expect do
                 subject.sekret = ''
-              }.to change(subject, :sekret_without_encryption).to(nil)
+              end.to change(subject, :sekret_without_encryption).to(nil)
             end
           end
         end
@@ -404,7 +402,7 @@ module VCAP::CloudController
 
           it 'encrypts by passing the value and salt to Encryptor' do
             subject.salt = salt
-            expect(Encryptor).to receive(:encrypt).with('unencrypted', salt) { 'encrypted' }
+            expect(Encryptor).to receive(:encrypt).with('unencrypted', salt).and_return('encrypted')
             subject.sekret = unencrypted_string
             expect(subject.sekret_without_encryption).to eq 'encrypted'
           end
@@ -416,10 +414,10 @@ module VCAP::CloudController
           end
 
           context 'model has a value for encryption_key_label' do
-            let(:columns) { [:sekret, :salt, :encryption_key_label, :encryption_iterations] }
+            let(:columns) { %i[sekret salt encryption_key_label encryption_iterations] }
 
             before do
-              allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+              allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
               subject.salt = salt
               subject.encryption_key_label = 'foo'
               subject.sekret = unencrypted_string
@@ -445,10 +443,10 @@ module VCAP::CloudController
             foo: 'fooencryptionkey',
             bar: 'headbangingdeathmetalkey'
           }
-          allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+          allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
           subject.sekret = unencrypted_string
           expect(subject.sekret).to eq(unencrypted_string)
-          allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
+          allow(Encryptor).to receive(:current_encryption_key_label).and_return('bar')
         end
 
         it 'updates encryption_key_label in the record when encrypting' do
@@ -487,14 +485,14 @@ module VCAP::CloudController
 
           it 're-encrypts the field after it has been serialized (the encryptor only works for strings, not hashes)' do
             subject.sekret = { 'foo' => 'bar' }
-            expect(subject.sekret_without_serialization).to eq(%({\"foo\":\"bar\"}))
+            expect(subject.sekret_without_serialization).to eq(%({"foo":"bar"}))
             expect(subject.sekret).to eq({ 'foo' => 'bar' })
             expect(subject.encryption_key_label).to eq(Encryptor.current_encryption_key_label)
           end
         end
 
         context 'and the model has another encrypted field' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
           let(:multi_field_class) do
             Class.new(base_class) do
@@ -512,13 +510,13 @@ module VCAP::CloudController
           let(:subject) { multi_field_class.new }
 
           before do
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
           end
 
           it 're-encrypts that field with the new key' do
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('bar')
             subject.sekret = 'nu'
 
             expect(subject.encryption_key_label).to eq('bar')
@@ -528,7 +526,7 @@ module VCAP::CloudController
         end
 
         context 'and the model is a subclass of the class with encrypted fields' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
 
           let(:sti_class_parent) do
@@ -556,10 +554,10 @@ module VCAP::CloudController
 
           before do
             allow(Encryptor).to receive(:encrypt).and_call_original
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
-            allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
+            allow(Encryptor).to receive(:current_encryption_key_label).and_return('bar')
           end
 
           it 're-encrypts all fields from the superclass' do
@@ -583,11 +581,11 @@ module VCAP::CloudController
           Encryptor.database_encryption_keys = {
             foo: 'fooencryptionkey'
           }
-          allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
-          allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
+          allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
           subject.sekret = unencrypted_string
           expect(subject.sekret).to eq(unencrypted_string)
-          allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(100_001)
         end
 
         it 'updates encryption_iterations in the record when encrypting' do
@@ -598,7 +596,7 @@ module VCAP::CloudController
         end
 
         context 'and the model has another encrypted field' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
           let(:multi_field_class) do
             Class.new(base_class) do
@@ -616,13 +614,13 @@ module VCAP::CloudController
           let(:subject) { multi_field_class.new }
 
           before do
-            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
           end
 
           it 're-encrypts all fields with the new iteration count' do
-            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(100_001)
             subject.sekret = 'nu'
 
             expect(subject.encryption_iterations).to eq(100_001)
@@ -633,7 +631,7 @@ module VCAP::CloudController
         end
 
         context 'and the model is a subclass of the class with encrypted fields' do
-          let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label, :encryption_iterations] }
+          let(:columns) { %i[sekret salt sekret2 sekret2_salt encryption_key_label encryption_iterations] }
           let(:unencrypted_string2) { 'announce presence with authority' }
 
           let(:sti_class_parent) do
@@ -661,10 +659,10 @@ module VCAP::CloudController
 
           before do
             allow(Encryptor).to receive(:encrypt).and_call_original
-            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
-            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(100_001)
           end
 
           it 're-encrypts all fields from the superclass' do
@@ -681,7 +679,7 @@ module VCAP::CloudController
       end
 
       describe 'alternative storage column is specified' do
-        let(:columns) { [:sekret, :salt, :encrypted_sekret, :encryption_key_label, :encryption_iterations] }
+        let(:columns) { %i[sekret salt encrypted_sekret encryption_key_label encryption_iterations] }
 
         let(:model_class) do
           Class.new(base_class) do
@@ -690,9 +688,9 @@ module VCAP::CloudController
         end
 
         it 'stores the encrypted value in that column' do
-          expect(subject.encrypted_sekret).to eq nil
+          expect(subject.encrypted_sekret).to be_nil
           subject.sekret = 'asdf'
-          expect(subject.encrypted_sekret).to_not eq nil
+          expect(subject.encrypted_sekret).not_to be_nil
           expect(subject.sekret).to eq 'asdf'
         end
       end

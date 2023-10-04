@@ -14,7 +14,7 @@ module VCAP::CloudController
         description: config.get(:info, :description),
         authorization_endpoint: config.get(:login, :url),
         token_endpoint: config.get(:uaa, :url),
-        allow_debug: true,
+        allow_debug: true
       }
 
       # If there is a logged in user, give out additional information

@@ -6,7 +6,7 @@ module VCAP::CloudController
           def to_hash(app:, **_)
             {
               name: app.name,
-              env: app.environment_variables.presence,
+              env: app.environment_variables.presence
             }
           end
         end

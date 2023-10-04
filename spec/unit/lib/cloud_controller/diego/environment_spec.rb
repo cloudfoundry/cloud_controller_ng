@@ -12,7 +12,7 @@ module VCAP::CloudController::Diego
         'APP_KEY2' => { 'nested' => 'data' },
         'APP_KEY3' => [1, 2, 3],
         'APP_KEY4' => 1,
-        'APP_KEY5' => true,
+        'APP_KEY5' => true
       }
     end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController::Diego
         { 'name' => 'APP_KEY5', 'value' => 'true' },
         { 'name' => 'VCAP_APPLICATION', 'value' => encoded_vcap_application_json },
         { 'name' => 'MEMORY_LIMIT', 'value' => '200m' },
-        { 'name' => 'VCAP_SERVICES', 'value' => encoded_vcap_services_json },
+        { 'name' => 'VCAP_SERVICES', 'value' => encoded_vcap_services_json }
       ])
     end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController::Diego
       it 'is added first' do
         expect(Environment.new(process, initial_env).as_json.slice(0..1)).to eq([
           { 'name' => 'a', 'value' => 'b' },
-          { 'name' => 'last', 'value' => 'one' },
+          { 'name' => 'last', 'value' => 'one' }
         ])
       end
     end
@@ -63,6 +63,7 @@ module VCAP::CloudController::Diego
       before do
         allow(process).to receive(:database_uri).and_return('fake-database-uri')
       end
+
       it 'includes DATABASE_URL' do
         expect(Environment.new(process).as_json).to include('name' => 'DATABASE_URL', 'value' => 'fake-database-uri')
       end

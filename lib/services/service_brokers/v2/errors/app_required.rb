@@ -3,7 +3,7 @@ module VCAP::Services
     module V2
       module Errors
         class AppRequired < HttpResponseError
-          def initialize(uri, method, response)
+          def initialize(_uri, method, response)
             message = 'This service supports generation of credentials through binding an application only.'
             super(message, method, response)
           end

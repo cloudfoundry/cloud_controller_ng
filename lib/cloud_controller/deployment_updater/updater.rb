@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       def with_error_logging(error_message)
         yield
-      rescue => e
+      rescue StandardError => e
         error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
         logger.error(
           error_message,
@@ -75,7 +75,7 @@ module VCAP::CloudController
             last_healthy_at: Time.now,
             state: DeploymentModel::DEPLOYING_STATE,
             status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
-            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
+            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON
           )
 
           if deploying_web_process.instances >= deployment.original_web_process_instance_count
@@ -173,7 +173,7 @@ module VCAP::CloudController
             process: process,
             config: Config.config,
             stop_in_runtime: true,
-            revision: deploying_web_process.revision,
+            revision: deploying_web_process.revision
           )
         end
       end

@@ -6,9 +6,7 @@ module VCAP::CloudController
       def filter(message, dataset, klass)
         dataset = advanced_filtering(message, dataset, klass)
 
-        if message.requested?(:guids)
-          dataset = dataset.where("#{klass.table_name}__guid": message.guids)
-        end
+        dataset = dataset.where("#{klass.table_name}__guid": message.guids) if message.requested?(:guids)
 
         dataset
       end
@@ -48,7 +46,7 @@ module VCAP::CloudController
               upper_bound = Time.at(lower_bound + 0.999999).utc
 
               (Sequel.qualify(klass.table_name, filter) <= upper_bound) &
-              (Sequel.qualify(klass.table_name, filter) >= lower_bound)
+                (Sequel.qualify(klass.table_name, filter) >= lower_bound)
             end
 
             dataset = dataset.where(Sequel.|(*bounds_expressions))

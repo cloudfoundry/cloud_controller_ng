@@ -6,7 +6,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_attrs) { { code: 200, body: {} } }
 
       context 'when headers are passed as attrs' do
-        it 'should allow case-insensitive access to headers' do
+        it 'allows case-insensitive access to headers' do
           res = HttpResponse.new(response_attrs.merge({ headers: { 'HeAdEr-KeY' => 'value' } }))
 
           expect(res['Header-Key']).to eql('value')
@@ -14,13 +14,13 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when no headers are passed' do
-        it 'should not raise' do
+        it 'does not raise' do
           expect { HttpResponse.new(response_attrs) }.not_to raise_error
         end
       end
 
       context 'when no message is given' do
-        it 'should derive it from the status code' do
+        it 'derives it from the status code' do
           res = HttpResponse.new(response_attrs)
 
           expect(res.message).to eql('OK')

@@ -23,9 +23,9 @@ module VCAP::CloudController
     private
 
     def check_not_shared!(isolation_segment)
-      if isolation_segment.is_shared_segment?
-        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Cannot update the shared Isolation Segment')
-      end
+      return unless isolation_segment.is_shared_segment?
+
+      raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Cannot update the shared Isolation Segment')
     end
 
     def check_not_assigned!(isolation_segment)

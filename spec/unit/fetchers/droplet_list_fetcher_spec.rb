@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       it 'returns all of the droplets' do
         results = fetcher.fetch_all(message)
-        expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1, staged_droplet_for_app2])
+        expect(results).to contain_exactly(staged_droplet_for_app1, failed_droplet_for_app1, staged_droplet_for_app2)
       end
 
       context 'filtering space guids' do
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
         it 'returns all of the droplets with the requested app guids' do
           results = fetcher.fetch_all(message).all
-          expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid])
+          expect(results.map(&:guid)).to contain_exactly(staged_droplet_for_app1.guid, failed_droplet_for_app1.guid)
         end
       end
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         it 'returns all of the droplets with the requested app guids' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1])
+          expect(results).to contain_exactly(staged_droplet_for_app1, failed_droplet_for_app1)
         end
       end
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
 
         it 'returns all of the droplets with the requested states' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_droplet_for_app1, staged_droplet_for_app2, expired_droplet_for_other_app])
+          expect(results).to contain_exactly(staged_droplet_for_app1, staged_droplet_for_app2, expired_droplet_for_other_app)
         end
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
         it 'returns all of the droplets with the requested guids' do
           results = fetcher.fetch_all(message).all
-          expect(results).to match_array([staged_droplet_for_app1, failed_droplet_for_app1])
+          expect(results).to contain_exactly(staged_droplet_for_app1, failed_droplet_for_app1)
         end
       end
 
@@ -70,25 +70,25 @@ module VCAP::CloudController
 
           it 'returns all of the droplets with the requested guids' do
             results = fetcher.fetch_all(message).all
-            expect(results).to match_array([staged_droplet_for_app2])
+            expect(results).to contain_exactly(staged_droplet_for_app2)
           end
         end
 
         context 'when the organization_guids are invalid' do
           let(:filters) { { organization_guids: ['hi-riz'], space_guids: [app2.space.guid] } }
 
-          it 'returns no droplets ' do
+          it 'returns no droplets' do
             results = fetcher.fetch_all(message).all
-            expect(results).to match_array([])
+            expect(results).to be_empty
           end
         end
 
         context 'when the space_guids are invalid' do
           let(:filters) { { organization_guids: [app2.organization.guid], space_guids: ['hi-riz'] } }
 
-          it 'returns no droplets ' do
+          it 'returns no droplets' do
             results = fetcher.fetch_all(message).all
-            expect(results).to match_array([])
+            expect(results).to be_empty
           end
         end
       end
@@ -99,22 +99,23 @@ module VCAP::CloudController
 
           it 'returns all of the droplets with the requested guids' do
             results = fetcher.fetch_all(message).all
-            expect(results).to match_array([staged_droplet_for_app2])
+            expect(results).to contain_exactly(staged_droplet_for_app2)
           end
         end
 
         context 'when the organization_guids are invalid' do
           let(:filters) { { organization_guids: ['hi-riz'] } }
 
-          it 'returns no droplets ' do
+          it 'returns no droplets' do
             results = fetcher.fetch_all(message).all
-            expect(results).to match_array([])
+            expect(results).to be_empty
           end
         end
       end
 
       context 'filtering labels' do
-        let(:message) do DropletsListMessage.from_params({ 'label_selector' => 'key=value' })
+        let(:message) do
+          DropletsListMessage.from_params({ 'label_selector' => 'key=value' })
         end
         let!(:droplet1Label) { DropletLabelModel.make(key_name: 'key', value: 'value', droplet: staged_droplet_for_app1) }
         let!(:droplet2Label) { DropletLabelModel.make(key_name: 'key2', value: 'value2', droplet: failed_droplet_for_app1) }
@@ -149,7 +150,7 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets in the requested spaces' do
         results = fetcher.fetch_for_spaces(message, space_guids).all
-        expect(results.map(&:guid)).to match_array([staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, staged_droplet_for_app2.guid])
+        expect(results.map(&:guid)).to contain_exactly(staged_droplet_for_app1.guid, failed_droplet_for_app1.guid, staged_droplet_for_app2.guid)
       end
 
       it 'returns no droplets when no spaces are provided' do
@@ -162,7 +163,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets for the requested app guids' do
           results = fetcher.fetch_for_spaces(message, space_guids).all
-          expect(results).to match_array([staged_droplet_for_app2, expired_droplet_for_app3])
+          expect(results).to contain_exactly(staged_droplet_for_app2, expired_droplet_for_app3)
         end
       end
 
@@ -172,7 +173,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested droplet states' do
           results = fetcher.fetch_for_spaces(message, space_guids).all
-          expect(results).to match_array([failed_droplet_for_app1, staged_droplet_for_app1, staged_droplet_for_app2])
+          expect(results).to contain_exactly(failed_droplet_for_app1, staged_droplet_for_app1, staged_droplet_for_app2)
         end
       end
 
@@ -181,7 +182,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested droplet guids' do
           results = fetcher.fetch_for_spaces(message, space_guids).all
-          expect(results).to match_array([failed_droplet_for_app1, staged_droplet_for_app2])
+          expect(results).to contain_exactly(failed_droplet_for_app1, staged_droplet_for_app2)
         end
       end
 
@@ -190,7 +191,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested space guids' do
           results = fetcher.fetch_for_spaces(message, space_guids).all
-          expect(results.map(&:guid)).to match_array([failed_droplet_for_app1.guid, staged_droplet_for_app1.guid])
+          expect(results.map(&:guid)).to contain_exactly(failed_droplet_for_app1.guid, staged_droplet_for_app1.guid)
         end
       end
     end
@@ -213,11 +214,12 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets for the requested app' do
         _app, results = fetcher.fetch_for_app(message)
-        expect(results.all).to match_array([staged_droplet, failed_droplet])
+        expect(results.all).to contain_exactly(staged_droplet, failed_droplet)
       end
 
       context 'when app does not exist' do
         let(:filters) { { app_guid: 'made up guid lol' } }
+
         it 'returns nil' do
           returned_app, results = fetcher.fetch_for_app(message)
           expect(returned_app).to be_nil
@@ -231,7 +233,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _app, results = fetcher.fetch_for_app(message)
-          expect(results.all).to match_array([failed_droplet])
+          expect(results.all).to contain_exactly(failed_droplet)
         end
       end
 
@@ -245,7 +247,7 @@ module VCAP::CloudController
 
           it 'returns the current droplet' do
             _app, results = fetcher.fetch_for_app(message)
-            expect(results.all).to match_array([staged_droplet])
+            expect(results.all).to contain_exactly(staged_droplet)
           end
         end
 
@@ -256,7 +258,7 @@ module VCAP::CloudController
 
           it 'returns an empty list' do
             _app, results = fetcher.fetch_for_app(message)
-            expect(results.all).to match_array([])
+            expect(results.all).to be_empty
           end
         end
       end
@@ -280,11 +282,12 @@ module VCAP::CloudController
 
       it 'returns all of the desired droplets for the requested package' do
         _package, results = fetcher.fetch_for_package(message)
-        expect(results.all).to match_array([staged_droplet, failed_droplet])
+        expect(results.all).to contain_exactly(staged_droplet, failed_droplet)
       end
 
       context 'when package does not exist' do
         let(:filters) { { package_guid: 'made up guid lol' } }
+
         it 'returns nil' do
           returned_package, results = fetcher.fetch_for_package(message)
           expect(returned_package).to be_nil
@@ -298,7 +301,7 @@ module VCAP::CloudController
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _package, results = fetcher.fetch_for_package(message)
-          expect(results.all).to match_array([failed_droplet])
+          expect(results.all).to contain_exactly(failed_droplet)
         end
       end
     end

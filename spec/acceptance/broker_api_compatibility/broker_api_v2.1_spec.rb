@@ -27,13 +27,13 @@ RSpec.describe 'Service Broker API integration' do
             to_return(status: 200, body: '{}')
 
           post('/v2/service_bindings',
-            { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-            admin_headers)
+               { app_guid:, service_instance_guid: }.to_json,
+               admin_headers)
         end
 
         it 'sends the app_guid as part of the request' do
           expect(a_request(:put, %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/.*$}).
-            with(body: hash_including(app_guid: app_guid))).
+            with(body: hash_including(app_guid:))).
             to have_been_made
         end
       end

@@ -25,9 +25,7 @@ module VCAP::CloudController
                      exclude(id: RouteBinding.select(:route_id)).
                      delete
 
-      if delete_count > 0
-        route_event_repository.record_route_delete_request(route, user_audit_info, false)
-      end
+      route_event_repository.record_route_delete_request(route, user_audit_info, false) if delete_count > 0
     rescue Sequel::ForeignKeyConstraintViolation => e
       @logger.info("Tried to delete route '#{route.guid}', got error: #{e}")
     end
@@ -35,9 +33,7 @@ module VCAP::CloudController
     private
 
     def do_delete(recursive, route)
-      if !recursive && route.service_instance.present?
-        raise ServiceInstanceAssociationError.new
-      end
+      raise ServiceInstanceAssociationError.new if !recursive && route.service_instance.present?
 
       route_event_repository.record_route_delete_request(route, user_audit_info, recursive)
 

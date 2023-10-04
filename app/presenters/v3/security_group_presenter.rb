@@ -9,7 +9,7 @@ module VCAP::CloudController::Presenters::V3
       all_spaces_visible: false,
       visible_space_guids: []
     )
-      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      super(resource, show_secrets:, censored_message:)
       @visible_space_guids = visible_space_guids
       @all_spaces_visible = all_spaces_visible
     end
@@ -23,7 +23,7 @@ module VCAP::CloudController::Presenters::V3
         rules: security_group.rules,
         globally_enabled: {
           running: security_group.running_default,
-          staging: security_group.staging_default,
+          staging: security_group.staging_default
         },
         relationships: {
           running_spaces: {
@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
             data: space_guid_hash_for(security_group.staging_spaces)
           }
         },
-        links: build_links,
+        links: build_links
       }
     end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController::Presenters::V3
 
     def build_links
       {
-        self: { href: url_builder.build_url(path: "/v3/security_groups/#{security_group.guid}") },
+        self: { href: url_builder.build_url(path: "/v3/security_groups/#{security_group.guid}") }
       }
     end
   end

@@ -21,7 +21,7 @@ module VCAP::CloudController
         body['bogus'] = 'field'
         message = RevisionsUpdateMessage.new(body)
 
-        expect(message).to_not be_valid
+        expect(message).not_to be_valid
         expect(message.errors.full_messages).to include("Unknown field(s): 'bogus'")
       end
 

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class RouteAccess < BaseAccess
-    def create?(route, params=nil)
+    def create?(route, _params=nil)
       can_write_to_route(route, true)
     end
 
@@ -8,11 +8,11 @@ module VCAP::CloudController
       context.queryer.can_read_route?(route.space_id)
     end
 
-    def read_for_update?(route, params=nil)
+    def read_for_update?(route, _params=nil)
       can_write_to_route(route, false)
     end
 
-    def update?(route, params=nil)
+    def update?(route, _params=nil)
       can_write_to_route(route, false)
     end
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
       read_for_update?(object, params)
     end
 
-    def index?(_, params=nil)
+    def index?(_, _params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end
@@ -53,12 +53,12 @@ module VCAP::CloudController
       admin_user? || has_write_scope?
     end
 
-    def can_remove_related_object_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def can_remove_related_object_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
-    def read_related_object_for_update_with_token?(*args)
-      read_for_update_with_token?(*args)
+    def read_related_object_for_update_with_token?(*)
+      read_for_update_with_token?(*)
     end
 
     def update_with_token?(_)

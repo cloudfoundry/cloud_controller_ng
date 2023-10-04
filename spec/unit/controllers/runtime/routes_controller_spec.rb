@@ -15,16 +15,15 @@ module VCAP::CloudController
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'name' => 'TCP1', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'name' => 'TCP2', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_3, 'name' => 'TCP3', 'type' => 'tcp', 'reservable_ports' => '50000-50001' }),
-        RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
+        RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' })
       ]
     end
     let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
     let(:route_event_repository) { instance_double(Repositories::RouteEventRepository).as_null_object }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
-      allow(CloudController::DependencyLocator.instance).to receive(:app_event_repository).and_return(app_event_repository)
-      allow(CloudController::DependencyLocator.instance).to receive(:route_event_repository).and_return(route_event_repository)
+      allow(CloudController::DependencyLocator.instance).to receive_messages(routing_api_client:, app_event_repository:,
+                                                                             route_event_repository:)
       allow(routing_api_client).to receive(:router_group).with(tcp_group_1).and_return(router_groups[0])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
       allow(routing_api_client).to receive(:router_group).with(tcp_group_3).and_return(router_groups[2])
@@ -43,20 +42,21 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::RoutesController).to have_creatable_attributes(
-          host:        { type: 'string', default: '' },
+          host: { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
-          space_guid:  { type: 'string', required: true },
-          path:        { type: 'string' },
-          port:        { type: 'integer' }
+          space_guid: { type: 'string', required: true },
+          path: { type: 'string' },
+          port: { type: 'integer' }
         )
       end
+
       it do
         expect(VCAP::CloudController::RoutesController).to have_updatable_attributes(
-          host:        { type: 'string' },
+          host: { type: 'string' },
           domain_guid: { type: 'string' },
-          space_guid:  { type: 'string' },
-          path:        { type: 'string' },
-          port:        { type: 'integer' }
+          space_guid: { type: 'string' },
+          path: { type: 'string' },
+          port: { type: 'integer' }
         )
       end
     end
@@ -70,63 +70,77 @@ module VCAP::CloudController
           @domain_b = PrivateDomain.make(owning_organization: @org_b)
           @obj_b    = Route.make(domain: @domain_b, space: @space_b)
         end
+
         describe 'Org Level Permissions' do
           describe 'OrgManager' do
             let(:member_a) { @org_a_manager }
             let(:member_b) { @org_b_manager }
+
             include_examples 'permission enumeration', 'OrgManager',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'OrgUser' do
             let(:member_a) { @org_a_member }
             let(:member_b) { @org_b_member }
+
             include_examples 'permission enumeration', 'OrgUser',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 0
           end
+
           describe 'BillingManager' do
             let(:member_a) { @org_a_billing_manager }
             let(:member_b) { @org_b_billing_manager }
+
             include_examples 'permission enumeration', 'BillingManager',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 0
           end
+
           describe 'Auditor' do
             let(:member_a) { @org_a_auditor }
             let(:member_b) { @org_b_auditor }
+
             include_examples 'permission enumeration', 'Auditor',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 1
           end
         end
+
         describe 'App Space Level Permissions' do
           describe 'SpaceManager' do
             let(:member_a) { @space_a_manager }
             let(:member_b) { @space_b_manager }
+
             include_examples 'permission enumeration', 'SpaceManager',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'Developer' do
             let(:member_a) { @space_a_developer }
             let(:member_b) { @space_b_developer }
+
             include_examples 'permission enumeration', 'Developer',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 1
           end
+
           describe 'SpaceAuditor' do
             let(:member_a) { @space_a_auditor }
             let(:member_b) { @space_b_auditor }
+
             include_examples 'permission enumeration', 'SpaceAuditor',
-                             name:      'route',
-                             path:      '/v2/routes',
+                             name: 'route',
+                             path: '/v2/routes',
                              enumerate: 1
           end
         end
@@ -145,7 +159,7 @@ module VCAP::CloudController
 
         let(:organization) { Organization.make }
         let(:http_domain) { PrivateDomain.make(owning_organization: organization) }
-        let(:space) { Space.make(organization: organization) }
+        let(:space) { Space.make(organization:) }
         let(:route) { Route.make(domain: http_domain, space: space) }
         let!(:docker_process) do
           ProcessModelFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
@@ -180,7 +194,7 @@ module VCAP::CloudController
         delete "v2/routes/#{route.guid}"
 
         expect(last_response.status).to eq 204
-        expect(route.exists?).to be_falsey
+        expect(route).not_to exist
       end
 
       context 'when async=true' do
@@ -188,11 +202,11 @@ module VCAP::CloudController
           delete "v2/routes/#{route.guid}?async=true"
 
           expect(last_response.status).to eq 202
-          expect(route.exists?).to be_truthy
+          expect(route).to exist
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-          expect(route.exists?).to be_falsey
+          expect(route).not_to exist
         end
       end
 
@@ -250,10 +264,10 @@ module VCAP::CloudController
       let(:req) do
         {
           domain_guid: domain_guid,
-          space_guid:  space.guid,
-          host:        host,
-          port:        port,
-          path:        path
+          space_guid: space.guid,
+          host: host,
+          port: port,
+          path: path
         }
       end
 
@@ -281,10 +295,10 @@ module VCAP::CloudController
         let(:host) { 'api' }
         let(:req) do
           { domain_guid: system_domain.guid,
-            space_guid:  space.guid,
-            host:        host,
-            port:        nil,
-            path:        '/foo' }
+            space_guid: space.guid,
+            host: host,
+            port: nil,
+            path: '/foo' }
         end
 
         before { TestConfig.override(system_hostnames: [host]) }
@@ -293,7 +307,7 @@ module VCAP::CloudController
           post '/v2/routes', MultiJson.dump(req)
 
           expect(last_response).to have_status_code(400)
-          expect(decoded_response['code']).to eq(210003)
+          expect(decoded_response['code']).to eq(210_003)
           expect(decoded_response['error_code']).to eq('CF-RouteHostTaken')
           expect(decoded_response['description']).to eq('The host is taken: api is a system domain')
         end
@@ -327,7 +341,7 @@ module VCAP::CloudController
           post '/v2/routes', MultiJson.dump(host: 'myexample!*', domain_guid: domain_guid, space_guid: space.guid)
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['code']).to eq(210001)
+          expect(decoded_response['code']).to eq(210_001)
         end
       end
 
@@ -339,7 +353,7 @@ module VCAP::CloudController
           post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain_guid, space_guid: space.guid)
 
           expect(last_response).to have_status_code(400)
-          expect(decoded_response['code']).to eq(210003)
+          expect(decoded_response['code']).to eq(210_003)
         end
       end
 
@@ -384,7 +398,7 @@ module VCAP::CloudController
             post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain_guid, space_guid: space.guid, path: path)
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(210004)
+            expect(decoded_response['code']).to eq(210_004)
           end
         end
       end
@@ -395,10 +409,10 @@ module VCAP::CloudController
         let(:req) do
           {
             domain_guid: shared_domain.guid,
-            space_guid:  another_space.guid,
-            host:        host,
-            port:        nil,
-            path:        '/foo'
+            space_guid: another_space.guid,
+            host: host,
+            port: nil,
+            path: '/foo'
           }
         end
 
@@ -424,8 +438,8 @@ module VCAP::CloudController
           let(:req) do
             {
               domain_guid: shared_domain.guid,
-              space_guid:  space.guid,
-              host:        host,
+              space_guid: space.guid,
+              host: host
             }
           end
 
@@ -443,13 +457,13 @@ module VCAP::CloudController
       context 'private domains' do
         let(:private_domain) { PrivateDomain.make(owning_organization_guid: space.organization.guid) }
         let(:routing_api_client) { double('routing_api_client', enabled?: true) }
-        let(:router_group) {
+        let(:router_group) do
           RoutingApi::RouterGroup.new({
-            'guid'             => 'tcp-guid',
-            'type'             => 'tcp',
-            'reservable_ports' => '1024-65535'
-          })
-        }
+                                        'guid' => 'tcp-guid',
+                                        'type' => 'tcp',
+                                        'reservable_ports' => '1024-65535'
+                                      })
+        end
 
         before do
           allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
@@ -484,7 +498,7 @@ module VCAP::CloudController
 
         context 'host is wildcard' do
           before do
-            set_current_user_as_admin(user: user)
+            set_current_user_as_admin(user:)
           end
 
           it 'returns RouteInvalid' do
@@ -505,16 +519,16 @@ module VCAP::CloudController
             taken_port = 1024
             post '/v2/routes', MultiJson.dump(host: '',
                                               domain_guid: tcp_domain.guid,
-                                              space_guid:  space.guid,
+                                              space_guid: space.guid,
                                               port: taken_port)
 
             post '/v2/routes', MultiJson.dump(host: '',
                                               domain_guid: another_tcp_domain.guid,
-                                              space_guid:  space.guid,
+                                              space_guid: space.guid,
                                               port: taken_port)
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(210005)
+            expect(decoded_response['code']).to eq(210_005)
             expect(decoded_response['error_code']).to eq('CF-RoutePortTaken')
           end
         end
@@ -567,7 +581,7 @@ module VCAP::CloudController
             {
               domain_guid: orphaned_shared_domain.guid,
               space_guid: space.guid,
-              port: 1234,
+              port: 1234
             }
           end
 
@@ -585,7 +599,7 @@ module VCAP::CloudController
         end
 
         context 'generate_port' do
-          let(:generated_port) { 10005 }
+          let(:generated_port) { 10_005 }
           let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
           let(:domain_guid) { domain.guid }
           let(:port) { nil }
@@ -607,8 +621,8 @@ module VCAP::CloudController
             end
 
             context 'and a port is specified' do
-              let(:port) { 10500 }
-              let(:generated_port) { 14098 }
+              let(:port) { 10_500 }
+              let(:generated_port) { 14_098 }
               let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
               let(:domain_guid) { domain.guid }
               let(:port_override_warning) { 'Specified+port+ignored.+Random+port+generated.' }
@@ -703,13 +717,13 @@ module VCAP::CloudController
           context 'when queried with a private http domain' do
             let(:private_domain) { PrivateDomain.make(owning_organization_guid: space.organization.guid) }
             let(:routing_api_client) { double('routing_api_client', enabled?: true) }
-            let(:router_group) {
+            let(:router_group) do
               RoutingApi::RouterGroup.new({
-                'guid'             => 'tcp-guid',
-                'type'             => 'tcp',
-                'reservable_ports' => '1024-65535'
-              })
-            }
+                                            'guid' => 'tcp-guid',
+                                            'type' => 'tcp',
+                                            'reservable_ports' => '1024-65535'
+                                          })
+            end
 
             before do
               allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
@@ -728,7 +742,7 @@ module VCAP::CloudController
 
           context 'when not requesting a randomly generated port' do
             context 'when a port is specified' do
-              let(:port) { 10500 }
+              let(:port) { 10_500 }
 
               it 'creates a route with the requested port' do
                 post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
@@ -751,7 +765,7 @@ module VCAP::CloudController
             post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: shared_domain.guid, space_guid: space.guid)
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(310005)
+            expect(decoded_response['code']).to eq(310_005)
             expect(decoded_response['error_code']).to eq('CF-SpaceQuotaTotalRoutesExceeded')
           end
         end
@@ -766,7 +780,7 @@ module VCAP::CloudController
             post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: shared_domain.guid, space_guid: space.guid)
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(310006)
+            expect(decoded_response['code']).to eq(310_006)
           end
         end
 
@@ -782,7 +796,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include 'You have exceeded the total reserved route ports for your organization\'s quota.'
-            expect(decoded_response['code']).to eq(310009)
+            expect(decoded_response['code']).to eq(310_009)
           end
         end
 
@@ -798,7 +812,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(400)
             expect(last_response.body).to include 'You have exceeded the total reserved route ports for your space\'s quota.'
-            expect(decoded_response['code']).to eq(310010)
+            expect(decoded_response['code']).to eq(310_010)
           end
         end
       end
@@ -824,7 +838,7 @@ module VCAP::CloudController
       let(:space) do
         Space.make(
           space_quota_definition: space_quota_definition,
-                   organization: space_quota_definition.organization
+          organization: space_quota_definition.organization
         )
       end
       let(:user) { User.make }
@@ -838,7 +852,7 @@ module VCAP::CloudController
       end
 
       describe 'tcp routes' do
-        let(:port) { 18000 }
+        let(:port) { 18_000 }
         let(:new_port) { 514 }
         let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
         let(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
@@ -857,7 +871,7 @@ module VCAP::CloudController
         end
 
         context 'when updating a route with a new port value that is not null' do
-          let(:new_port) { 20000 }
+          let(:new_port) { 20_000 }
           let(:req) do
             { port: new_port }
           end
@@ -887,6 +901,7 @@ module VCAP::CloudController
           context 'when the routing api client raises a UaaUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
                 and_raise(RoutingApi::UaaUnavailable)
@@ -903,6 +918,7 @@ module VCAP::CloudController
           context 'when the routing api client raises a RoutingApiUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             let!(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
+
             before do
               allow_any_instance_of(RouteValidator).to receive(:validate).
                 and_raise(RoutingApi::RoutingApiUnavailable)
@@ -923,8 +939,8 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
-      let(:route) { Route.make(domain: domain, space: space) }
+      let(:space) { Space.make(organization:) }
+      let(:route) { Route.make(domain:, space:) }
 
       context 'as a space auditor' do
         before do
@@ -938,7 +954,7 @@ module VCAP::CloudController
           get "/v2/routes/#{route.guid}"
 
           expect(last_response.status).to eq 200
-          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+          expect(decoded_response['entity']['domain_guid']).not_to be_nil
         end
       end
 
@@ -949,7 +965,7 @@ module VCAP::CloudController
           get "/v2/routes/#{route.guid}"
 
           expect(last_response.status).to eq 200
-          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+          expect(decoded_response['entity']['domain_guid']).not_to be_nil
         end
       end
     end
@@ -957,9 +973,9 @@ module VCAP::CloudController
     describe 'GET /v2/routes' do
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
-      let!(:first_route) { Route.make(domain: domain, space: space) }
-      let!(:second_route) { Route.make(domain: domain, space: space) }
+      let(:space) { Space.make(organization:) }
+      let!(:first_route) { Route.make(domain:, space:) }
+      let!(:second_route) { Route.make(domain:, space:) }
 
       let(:other_org) { Organization.make }
       let(:other_domain) { PrivateDomain.make(owning_organization: other_org) }
@@ -971,7 +987,7 @@ module VCAP::CloudController
       end
 
       context 'related resources' do
-        it 'should contain links to the apps and route_mappings resources' do
+        it 'contains links to the apps and route_mappings resources' do
           get 'v2/routes'
           expect(last_response.status).to eq(200), last_response.body
 
@@ -1006,7 +1022,7 @@ module VCAP::CloudController
           let(:first_route_info) { decoded_response.fetch('resources')[0] }
           let(:second_route_info) { decoded_response.fetch('resources')[1] }
           let(:third_route_info) { decoded_response.fetch('resources')[2] }
-          let(:space1) { Space.make(organization: organization) }
+          let(:space1) { Space.make(organization:) }
 
           let(:organization2) { Organization.make }
           let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
@@ -1082,6 +1098,7 @@ module VCAP::CloudController
 
             context 'at page 1' do
               let(:page) { 1 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1096,6 +1113,7 @@ module VCAP::CloudController
 
             context 'at page 2' do
               let(:page) { 2 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1110,6 +1128,7 @@ module VCAP::CloudController
 
             context 'at page 3' do
               let(:page) { 3 }
+
               it 'passes the org_guid filter into the next_url' do
                 get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
                 expect(last_response.status).to eq(200), last_response.body
@@ -1125,7 +1144,7 @@ module VCAP::CloudController
       end
 
       context 'when user can read globally' do
-        it 'should return all the routes' do
+        it 'returns all the routes' do
           get 'v2/routes'
           expect(last_response.status).to eq(200), last_response.body
 
@@ -1143,7 +1162,7 @@ module VCAP::CloudController
           set_current_user(developer)
         end
 
-        it 'should return just the routes the user can access' do
+        it 'returns just the routes the user can access' do
           get 'v2/routes'
 
           expect(last_response.status).to eq(200), last_response.body
@@ -1158,13 +1177,13 @@ module VCAP::CloudController
     describe 'GET /v2/routes/ inline related resources' do
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
-      let(:route) { Route.make(domain: domain, space: space) }
+      let(:space) { Space.make(organization:) }
+      let(:route) { Route.make(domain:, space:) }
       let(:myapp) { AppModel.make(name: 'myapp') }
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
 
       let!(:webproc1) { ProcessModel.make(app: myapp, type: 'web', created_at: 1.day.ago) }
-      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.day.ago) }
+      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.days.ago) }
 
       before { set_current_user_as_admin }
 
@@ -1219,10 +1238,10 @@ module VCAP::CloudController
             end
           end
 
-          context ' when the path does exist' do
+          context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
-              let(:route) { Route.make(path: path) }
+              let(:route) { Route.make(path:) }
 
               it 'returns a NO_CONTENT (204)' do
                 get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{path}"
@@ -1232,7 +1251,7 @@ module VCAP::CloudController
 
             context 'when the path is url encoded' do
               let(:path) { '/my%20path' }
-              let(:route) { Route.make(path: path) }
+              let(:route) { Route.make(path:) }
 
               it 'returns a NO_CONTENT' do
                 uri_encoded_path = '%2Fmy%2520path'
@@ -1291,6 +1310,7 @@ module VCAP::CloudController
           let(:tcp_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
           let(:tcp_2_domain) { SharedDomain.make(router_group_guid: 'tcp-group-1') }
           let(:tcp_route) { Route.make(domain: tcp_domain, host: '', port: 1234) }
+
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
           end
@@ -1330,10 +1350,10 @@ module VCAP::CloudController
             end
           end
 
-          context ' when the path does exist' do
+          context 'when the path does exist' do
             context 'when the path does not contain url encoding' do
               let(:path) { '/my_path' }
-              let(:route) { Route.make(path: path) }
+              let(:route) { Route.make(path:) }
 
               it 'returns a NO_CONTENT (204)' do
                 get "/v2/routes/reserved/domain/#{route.domain_guid}?host=#{route.host}&path=#{path}"
@@ -1343,7 +1363,7 @@ module VCAP::CloudController
 
             context 'when the path is url encoded' do
               let(:path) { '/my%20path' }
-              let(:route) { Route.make(path: path) }
+              let(:route) { Route.make(path:) }
 
               it 'returns a NO_CONTENT' do
                 uri_encoded_path = '%2Fmy%2520path'
@@ -1432,7 +1452,7 @@ module VCAP::CloudController
             get "v2/routes/#{route.guid}/apps"
 
             expect(last_response.status).to eq(200), last_response.body
-            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to match_array([app_model.guid, process2.app.guid])
+            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(app_model.guid, process2.app.guid)
           end
         end
       end
@@ -1458,6 +1478,7 @@ module VCAP::CloudController
           before do
             set_current_user_as_admin
           end
+
           it 'returns all route_mappings of the route' do
             get "/v2/routes/#{route.guid}/route_mappings"
 
@@ -1498,7 +1519,7 @@ module VCAP::CloudController
         put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
         expect(last_response.status).to eq(201)
 
-        expect(route.reload.apps).to match_array([process])
+        expect(route.reload.apps).to contain_exactly(process)
 
         mapping = RouteMappingModel.last
         expect(mapping.route).to eq(route)
@@ -1552,12 +1573,12 @@ module VCAP::CloudController
         end
 
         it 'reports success' do
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
 
           put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
         end
       end
 
@@ -1597,7 +1618,7 @@ module VCAP::CloudController
           put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
-          expect(route.reload.apps).to match_array([process])
+          expect(route.reload.apps).to contain_exactly(process)
 
           mapping = RouteMappingModel.last
           expect(mapping.route).to eq(route)
@@ -1632,13 +1653,13 @@ module VCAP::CloudController
       end
 
       it 'removes the association' do
-        expect(route.reload.apps).to match_array([process])
+        expect(route.reload.apps).to contain_exactly(process)
 
         delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
         expect(last_response.status).to eq(204)
 
         expect(route.reload.apps).to be_empty
-        expect(route_mapping.exists?).to be_falsey
+        expect(route_mapping).not_to exist
       end
 
       context 'when the route does not exist' do
@@ -1661,13 +1682,13 @@ module VCAP::CloudController
         before { route_mapping.destroy }
 
         it 'succeeds' do
-          expect(route.reload.apps).to match_array([])
+          expect(route.reload.apps).to be_empty
 
           delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
           expect(last_response.status).to eq(204)
 
           expect(route.reload.apps).to be_empty
-          expect(route_mapping.exists?).to be_falsey
+          expect(route_mapping).not_to exist
         end
       end
 

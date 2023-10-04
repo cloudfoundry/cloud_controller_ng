@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe BuildpackDelete, job_context: :worker do
       subject(:job) { BuildpackDelete.new(guid: buildpack_guid, timeout: timeout) }
       let(:buildpack_guid) { buildpack.guid }
-      let(:timeout) { 90000 }
+      let(:timeout) { 90_000 }
 
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
       it 'enqueues a job to delete the buildpack from the blobstore' do
         job.perform
 
-        expect(BuildpackBitsDelete).to have_received(:delete_when_safe).with(buildpack.key, 90000)
+        expect(BuildpackBitsDelete).to have_received(:delete_when_safe).with(buildpack.key, 90_000)
       end
 
       context 'when the buildpack does not exist' do

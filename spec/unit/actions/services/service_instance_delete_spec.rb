@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
 
-    subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository: event_repository) }
+    subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository:) }
 
     describe '#delete' do
       let!(:route_service_instance) { ManagedServiceInstance.make(:routing) }
@@ -43,39 +43,39 @@ module VCAP::CloudController
       it 'deletes all the service_instances and logs events' do
         expect(event_repository).to receive(:record_service_instance_event).with(:delete, instance_of(ManagedServiceInstance), {}).twice
         expect(event_repository).to receive(:record_user_provided_service_instance_event).with(:delete, instance_of(UserProvidedServiceInstance), {}).once
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { ServiceInstance.count }.by(-3)
+        end.to change(ServiceInstance, :count).by(-3)
       end
 
       it 'deletes all the bindings for all the service instance' do
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { ServiceBinding.count }.by(-4)
+        end.to change(ServiceBinding, :count).by(-4)
       end
 
       it 'deletes all the route bindings for all the service instance' do
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { RouteBinding.count }.by(-2)
+        end.to change(RouteBinding, :count).by(-2)
       end
 
       it 'deletes associated labels' do
         labels = service_instance_dataset.map { |si| ServiceInstanceLabelModel.make(resource_guid: si.guid) }
 
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { ServiceInstanceLabelModel.count }.by(-labels.length)
-        expect(labels.none?(&:exists?)).to be_truthy
+        end.to change(ServiceInstanceLabelModel, :count).by(-labels.length)
+        expect(labels).to be_none(&:exists?)
       end
 
       it 'deletes associated annotations' do
         annotations = service_instance_dataset.map { |si| ServiceInstanceAnnotationModel.make(resource_guid: si.guid) }
 
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { ServiceInstanceAnnotationModel.count }.by(-annotations.length)
-        expect(annotations.none?(&:exists?)).to be_truthy
+        end.to change(ServiceInstanceAnnotationModel, :count).by(-annotations.length)
+        expect(annotations).to be_none(&:exists?)
       end
 
       it 'deletes user provided service instances' do
@@ -84,13 +84,13 @@ module VCAP::CloudController
         expect(errors).to be_empty
         expect(warnings).to be_empty
 
-        expect(user_provided_instance.exists?).to be_falsey
+        expect(user_provided_instance).not_to exist
       end
 
       it 'deletes service keys associated with the service instance' do
-        expect {
+        expect do
           service_instance_delete.delete(service_instance_dataset)
-        }.to change { ServiceKey.count }.by(-1)
+        end.to change(ServiceKey, :count).by(-1)
       end
 
       it 'unshares shared managed service instance and records only one unshare event' do
@@ -113,8 +113,8 @@ module VCAP::CloudController
         expect(errors).to be_empty
         expect(warnings).to be_empty
 
-        expect(route_service_instance.exists?).to be_falsey
-        expect(instance_operation_1.exists?).to be_falsey
+        expect(route_service_instance).not_to exist
+        expect(instance_operation_1).not_to exist
       end
 
       it 'defaults accepts_incomplete to false' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
         subject(:service_instance_delete) do
           ServiceInstanceDelete.new(
             accepts_incomplete: true,
-            event_repository: event_repository,
+            event_repository: event_repository
           )
         end
 
@@ -144,7 +144,7 @@ module VCAP::CloudController
         end
 
         context 'when there is a service binding' do
-          let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+          let(:service_binding) { ServiceBinding.make(service_instance:) }
 
           context 'when the broker responds asynchronously to the unbind call' do
             before do
@@ -158,15 +158,15 @@ module VCAP::CloudController
             end
 
             it 'returns an error' do
-              errors, _ = service_instance_delete.delete([service_instance])
+              errors, = service_instance_delete.delete([service_instance])
               expect(errors).to have(1).item
               error = errors.first
 
               app_name = service_binding.app.name
               instance_name = service_instance.name
               expect(error).to be_instance_of(CloudController::Errors::ApiError)
-              expect(error.message).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
-              expect(error.message).to match "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress\.$"
+              expect(error.message).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n"
+              expect(error.message).to match "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress.$"
             end
           end
 
@@ -190,8 +190,8 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple service bindings' do
-          let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
-          let(:service_binding2) { ServiceBinding.make(service_instance: service_instance) }
+          let(:service_binding) { ServiceBinding.make(service_instance:) }
+          let(:service_binding2) { ServiceBinding.make(service_instance:) }
 
           context 'when the broker responds asynchronously to all unbind calls' do
             before do
@@ -200,7 +200,7 @@ module VCAP::CloudController
             end
 
             it 'returns all errors' do
-              errors, _ = service_instance_delete.delete([service_instance])
+              errors, = service_instance_delete.delete([service_instance])
               expect(errors).to have(1).item
               error = errors.first
 
@@ -208,9 +208,9 @@ module VCAP::CloudController
               instance_name = service_instance.name
 
               expect(error).to be_instance_of(CloudController::Errors::ApiError)
-              expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
-              expect(msg).to match "\tAn operation for the service binding between app #{service_binding.app.name} and service instance #{instance_name} is in progress\."
-              expect(msg).to match "\tAn operation for the service binding between app #{service_binding2.app.name} and service instance #{instance_name} is in progress\."
+              expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n"
+              expect(msg).to match "\tAn operation for the service binding between app #{service_binding.app.name} and service instance #{instance_name} is in progress."
+              expect(msg).to match "\tAn operation for the service binding between app #{service_binding2.app.name} and service instance #{instance_name} is in progress."
             end
           end
 
@@ -220,23 +220,23 @@ module VCAP::CloudController
             end
 
             it 'returns all errors' do
-              errors, _ = service_instance_delete.delete([service_instance])
+              errors, = service_instance_delete.delete([service_instance])
               expect(errors).to have(1).item
               error = errors.first
 
               app_name = service_binding.app.name
               instance_name = service_instance.name
               expect(error).to be_instance_of(CloudController::Errors::ApiError)
-              expect(error.message).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
-              expect(error.message).to match "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress\.$"
+              expect(error.message).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n"
+              expect(error.message).to match "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress.$"
             end
           end
         end
 
         context 'when there is a binding with operation in progress' do
-          let(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
+          let(:service_binding_1) { ServiceBinding.make(service_instance:) }
           let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', service_binding_id: service_binding_1.id) }
-          let(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+          let(:service_binding_2) { ServiceBinding.make(service_instance:) }
 
           before do
             stub_unbind(service_binding_1, accepts_incomplete: true, status: 202, body: {}.to_json)
@@ -244,7 +244,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error that does not contain duplicate messages' do
-            errors, _ = service_instance_delete.delete([service_instance])
+            errors, = service_instance_delete.delete([service_instance])
             expect(errors).to have(1).item
             error = errors.first
 
@@ -252,9 +252,9 @@ module VCAP::CloudController
             instance_name = service_instance.name
 
             expect(error).to be_instance_of(CloudController::Errors::ApiError)
-            expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
-            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_1.app.name} and service instance #{instance_name} is in progress\."
-            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_2.app.name} and service instance #{instance_name} is in progress\."
+            expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n"
+            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_1.app.name} and service instance #{instance_name} is in progress."
+            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_2.app.name} and service instance #{instance_name} is in progress."
 
             expect(msg.split("\t")).to have(3).items
           end
@@ -301,7 +301,7 @@ module VCAP::CloudController
           stub_unbind(service_binding_1, status: 500)
         end
 
-        it 'should leave the service instance unchanged' do
+        it 'leaves the service instance unchanged' do
           original_attrs = managed_service_instance.as_json
           service_instance_delete.delete(service_instance_dataset)
 
@@ -311,7 +311,7 @@ module VCAP::CloudController
             to have_been_made.times(1)
 
           expect(managed_service_instance.as_json).to eq(original_attrs)
-          expect(service_binding_1.exists?).to be_truthy
+          expect(service_binding_1).to exist
         end
       end
 
@@ -320,7 +320,7 @@ module VCAP::CloudController
           stub_deprovision(route_service_instance, status: 500)
         end
 
-        it 'should mark the service instance as failed' do
+        it 'marks the service instance as failed' do
           service_instance_delete.delete(service_instance_dataset)
           route_service_instance.reload
 
@@ -335,7 +335,7 @@ module VCAP::CloudController
         before do
           route_service_instance.service_instance_operation = ServiceInstanceOperation.make(
             state: 'in progress',
-            type: 'update',
+            type: 'update'
           )
         end
 
@@ -358,7 +358,7 @@ module VCAP::CloudController
         before do
           service_instance.service_instance_operation = ServiceInstanceOperation.make(
             state: 'in progress',
-            type: 'create',
+            type: 'create'
           )
         end
 
@@ -367,12 +367,12 @@ module VCAP::CloudController
             stub_deprovision(service_instance)
           end
 
-          it 'should delete the instance' do
+          it 'deletes the instance' do
             expect(event_repository).to receive(:record_service_instance_event).
               with(:delete, instance_of(ManagedServiceInstance), {}).once
-            expect {
+            expect do
               service_instance_delete.delete([service_instance])
-            }.to change { ServiceInstance.count }.by(-1)
+            end.to change(ServiceInstance, :count).by(-1)
           end
 
           it 'tells broker to deprovision the service' do
@@ -381,7 +381,7 @@ module VCAP::CloudController
             expect(a_request(:delete, broker_url)).to have_been_made
           end
 
-          it 'should not return any errors' do
+          it 'does not return any errors' do
             errors, warnings = service_instance_delete.delete([service_instance])
             expect(warnings).to be_empty
             expect(errors.length).to eq 0
@@ -392,7 +392,7 @@ module VCAP::CloudController
           subject(:service_instance_delete) do
             ServiceInstanceDelete.new(
               accepts_incomplete: true,
-              event_repository: event_repository,
+              event_repository: event_repository
             )
           end
 
@@ -429,10 +429,10 @@ module VCAP::CloudController
             expect(inner_job.poll_interval).to eq(60)
           end
 
-          it 'should not delete the instance' do
-            expect {
+          it 'does not delete the instance' do
+            expect do
               service_instance_delete.delete([service_instance])
-            }.to change { ServiceInstance.count }.by(0)
+            end.not_to(change(ServiceInstance, :count))
           end
 
           context 'when there is an error during service instance delete' do
@@ -464,9 +464,9 @@ module VCAP::CloudController
         end
 
         it 'does not rollback previous deletions of service instances' do
-          expect {
+          expect do
             service_instance_delete.delete(service_instance_dataset)
-          }.to change { ServiceInstance.count }.by(-2)
+          end.to change(ServiceInstance, :count).by(-2)
         end
 
         it 'returns errors it has captured' do
@@ -493,9 +493,9 @@ module VCAP::CloudController
         end
 
         it 'does not rollback previous deletions of service instances' do
-          expect {
+          expect do
             service_instance_delete.delete(service_instance_dataset)
-          }.to change { ServiceInstance.count }.by(-2)
+          end.to change(ServiceInstance, :count).by(-2)
         end
 
         it 'propagates service unbind error' do
@@ -504,14 +504,14 @@ module VCAP::CloudController
           expect(errors).to have(1).item
           error = errors.first
           expect(error).to be_instance_of(CloudController::Errors::ApiError)
-          expect(error.message).to match "^Deletion of service instance #{route_service_instance.name} failed because one or more associated resources could not be deleted\.\n\n"
+          expect(error.message).to match "^Deletion of service instance #{route_service_instance.name} failed because one or more associated resources could not be deleted.\n\n"
           expect(error.message).to match 'The service broker returned an invalid response'
         end
 
         it 'does not attempt to delete that service instance' do
           service_instance_delete.delete(service_instance_dataset)
-          expect(route_service_instance.exists?).to be_truthy
-          expect(managed_service_instance.exists?).to be_falsey
+          expect(route_service_instance).to exist
+          expect(managed_service_instance).not_to exist
 
           broker_url_1 = deprovision_url(route_service_instance, accepts_incomplete: nil)
           broker_url_2 = deprovision_url(managed_service_instance, accepts_incomplete: nil)
@@ -526,9 +526,9 @@ module VCAP::CloudController
         end
 
         it 'does not rollback previous deletions of service instances' do
-          expect {
+          expect do
             service_instance_delete.delete(service_instance_dataset)
-          }.to change { ServiceInstance.count }.by(-2)
+          end.to change(ServiceInstance, :count).by(-2)
         end
 
         it 'propagates service unbind error' do
@@ -537,14 +537,14 @@ module VCAP::CloudController
           expect(errors).to have(1).item
           error = errors.first
           expect(error).to be_instance_of(CloudController::Errors::ApiError)
-          expect(error.message).to match "^Deletion of service instance #{managed_service_instance.name} failed because one or more associated resources could not be deleted\.\n\n"
+          expect(error.message).to match "^Deletion of service instance #{managed_service_instance.name} failed because one or more associated resources could not be deleted.\n\n"
           expect(error.message).to match 'The service broker returned an invalid response'
         end
 
         it 'does not attempt to delete that service instance' do
           service_instance_delete.delete(service_instance_dataset)
-          expect(route_service_instance.exists?).to be_falsey
-          expect(managed_service_instance.exists?).to be_truthy
+          expect(route_service_instance).not_to exist
+          expect(managed_service_instance).to exist
 
           broker_url_1 = deprovision_url(route_service_instance, accepts_incomplete: nil)
           broker_url_2 = deprovision_url(managed_service_instance, accepts_incomplete: nil)
@@ -567,7 +567,7 @@ module VCAP::CloudController
           service_binding_deleter = instance_double(ServiceBindingDelete)
           allow(service_binding_deleter).to receive(:delete) do |service_bindings|
             service_bindings.each(&:destroy)
-            [[], ['warning-1', 'warning-2']]
+            [[], %w[warning-1 warning-2]]
           end
 
           allow(ServiceBindingDelete).to receive(:new).and_return(service_binding_deleter)
@@ -576,7 +576,7 @@ module VCAP::CloudController
         it 'returns the warnings for all service instances' do
           errors, warnings = service_instance_delete.delete(service_instance_dataset.limit(2))
           expect(errors).to be_empty
-          expect(warnings).to match_array(['warning-1', 'warning-2', 'warning-1', 'warning-2'])
+          expect(warnings).to match_array(%w[warning-1 warning-2 warning-1 warning-2])
         end
       end
 
@@ -589,9 +589,9 @@ module VCAP::CloudController
         end
 
         it 'does not rollback previous deletions of service instances' do
-          expect {
+          expect do
             service_instance_delete.delete([managed_service_instance, route_service_instance])
-          }.to change { ServiceInstance.count }.by(-1)
+          end.to change(ServiceInstance, :count).by(-1)
         end
 
         it 'returns the unbinding error' do
@@ -614,9 +614,9 @@ module VCAP::CloudController
         end
 
         it 'does not rollback previous deletions of service instances' do
-          expect {
+          expect do
             service_instance_delete.delete([route_service_instance, managed_service_instance])
-          }.to change { ServiceInstance.count }.by(-1)
+          end.to change(ServiceInstance, :count).by(-1)
         end
 
         it 'returns errors it has captured' do

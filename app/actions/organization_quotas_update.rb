@@ -9,9 +9,7 @@ module VCAP::CloudController
     def self.update(quota, message)
       if log_rate_limit(message) != QuotaDefinition::UNLIMITED
         orgs = orgs_with_unlimited_processes(quota)
-        if orgs.any?
-          unlimited_processes_exist_error!(orgs)
-        end
+        unlimited_processes_exist_error!(orgs) if orgs.any?
       end
 
       quota.db.transaction do
@@ -40,15 +38,13 @@ module VCAP::CloudController
 
       quota
     rescue Sequel::ValidationFailed => e
-      if e.errors.on(:name)&.include?(:unique)
-        raise Error.new("Organization Quota '#{message.name}' already exists.")
-      end
+      raise Error.new("Organization Quota '#{message.name}' already exists.") if e.errors.on(:name)&.include?(:unique)
 
       raise Error.new(e.message)
     end
 
     def self.default_if_nil(message_value, default)
-      return message_value.nil? ? default : message_value
+      message_value.nil? ? default : message_value
     end
 
     def self.memory_limit(message)
@@ -110,14 +106,14 @@ module VCAP::CloudController
     def self.unlimited_processes_exist_error!(orgs)
       named_orgs = orgs.take(MAX_ORGS_TO_LIST_ON_FAILURE).map(&:name).join("', '")
       message = 'This quota is applied to ' +
-        if orgs.size == 1
-          "org '#{named_orgs}' which contains"
-        elsif orgs.size > MAX_ORGS_TO_LIST_ON_FAILURE
-          "orgs '#{named_orgs}' and #{orgs.drop(MAX_ORGS_TO_LIST_ON_FAILURE).size}" \
-          ' other orgs which contain'
-        else
-          "orgs '#{named_orgs}' which contain"
-        end + ' apps running with an unlimited log rate limit.'
+                if orgs.size == 1
+                  "org '#{named_orgs}' which contains"
+                elsif orgs.size > MAX_ORGS_TO_LIST_ON_FAILURE
+                  "orgs '#{named_orgs}' and #{orgs.drop(MAX_ORGS_TO_LIST_ON_FAILURE).size} " \
+                    'other orgs which contain'
+                else
+                  "orgs '#{named_orgs}' which contain"
+                end + ' apps running with an unlimited log rate limit.'
 
       raise Error.new("Current usage exceeds new quota values. #{message}")
     end

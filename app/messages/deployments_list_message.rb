@@ -2,11 +2,11 @@ require 'messages/metadata_list_message'
 
 module VCAP::CloudController
   class DeploymentsListMessage < MetadataListMessage
-    register_allowed_keys [
-      :app_guids,
-      :states,
-      :status_reasons,
-      :status_values,
+    register_allowed_keys %i[
+      app_guids
+      states
+      status_reasons
+      status_values
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -17,7 +17,7 @@ module VCAP::CloudController
     validates :status_values, array: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(app_guids states status_reasons status_values))
+      super(params, %w[app_guids states status_reasons status_values])
     end
   end
 end
