@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       def validate_binding!(binding, route, service_instance)
         if binding
-          already_exists! if route.service_instance == service_instance && (binding.create_succeeded? || binding.create_in_progress? || binding.last_operation.nil?)
+          already_exists! if binding.create_succeeded? || binding.create_in_progress?
           incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
         end
       end

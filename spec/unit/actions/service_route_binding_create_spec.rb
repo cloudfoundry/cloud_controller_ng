@@ -83,8 +83,6 @@ module VCAP::CloudController
 
             context 'when no last service route binding operation exists' do
               it 'raises an error' do
-                RouteBinding.make(service_instance: service_instance, route: route)
-
                 expect {
                   action.precursor(service_instance, route, message: message)
                 }.to raise_error(
@@ -124,7 +122,7 @@ module VCAP::CloudController
               before do
                 binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
               end
-              it 'updates and returns the existing binding' do
+              it 'deletes the existing binding and creates a new one' do
                 b = action.precursor(service_instance, route, message: message)
 
                 expect(b.guid).not_to eq(binding.guid)
@@ -133,7 +131,7 @@ module VCAP::CloudController
               end
             end
 
-            context "when the last binding operation is in 'delete in progress' state" do
+            context "when the last service route binding operation is in 'delete in progress' state" do
               before do
                 binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
               end
