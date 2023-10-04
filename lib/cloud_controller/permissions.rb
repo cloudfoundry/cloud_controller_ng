@@ -260,7 +260,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_app_guids
-    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).pluck(:guid)
+    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).select_map(:guid)
   end
 
   def readable_space_quota_guids
