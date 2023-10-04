@@ -1631,9 +1631,9 @@ RSpec.describe 'v3 service route bindings' do
       context "when last binding operation is in 'create succeeded' state" do
         before do
           binding.save_with_new_operation({}, {
-            type: 'create',
-            state: 'succeeded'
-          })
+                                            type: 'create',
+                                            state: 'succeeded'
+                                          })
         end
 
         it 'returns the parameters' do
@@ -1641,7 +1641,7 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to include(
             { 'abra' => 'kadabra', 'kadabra' => 'alakazan' }
-         )
+          )
         end
       end
 
@@ -1658,10 +1658,10 @@ RSpec.describe 'v3 service route bindings' do
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(
             include({
-              'detail' => 'Creation of route binding in progress',
-              'title' => 'CF-ResourceNotFound',
-              'code' => 10010,
-            })
+                      'detail' => 'Creation of route binding in progress',
+                      'title' => 'CF-ResourceNotFound',
+                      'code' => 10_010
+                    })
           )
         end
       end
@@ -1669,57 +1669,57 @@ RSpec.describe 'v3 service route bindings' do
       context "when last binding operation is in 'create failed' state" do
         before do
           binding.save_with_new_operation({}, {
-            type: 'create',
-            state: 'failed'
-          })
+                                            type: 'create',
+                                            state: 'failed'
+                                          })
         end
 
         it 'returns an error' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Creation of route binding failed',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-         }))
+                                                                 'detail' => 'Creation of route binding failed',
+                                                                 'title' => 'CF-ResourceNotFound',
+                                                                 'code' => 10_010
+                                                               }))
         end
       end
 
       context "when last binding operation is in 'delete failed' state" do
         before do
           binding.save_with_new_operation({}, {
-            type: 'delete',
-            state: 'failed'
-          })
+                                            type: 'delete',
+                                            state: 'failed'
+                                          })
         end
 
         it 'returns an error' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Deletion of route binding failed',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          }))
+                                                                 'detail' => 'Deletion of route binding failed',
+                                                                 'title' => 'CF-ResourceNotFound',
+                                                                 'code' => 10_010
+                                                               }))
         end
       end
 
       context "when last binding operation is in 'delete in progress' state" do
         before do
           binding.save_with_new_operation({}, {
-            type: 'delete',
-            state: 'in progress'
-          })
+                                            type: 'delete',
+                                            state: 'in progress'
+                                          })
         end
 
         it 'returns an error' do
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(404)
           expect(parsed_response['errors']).to include(include({
-            'detail' => 'Deletion of route binding in progress',
-            'title' => 'CF-ResourceNotFound',
-            'code' => 10010,
-          }))
+                                                                 'detail' => 'Deletion of route binding in progress',
+                                                                 'title' => 'CF-ResourceNotFound',
+                                                                 'code' => 10_010
+                                                               }))
         end
       end
     end
