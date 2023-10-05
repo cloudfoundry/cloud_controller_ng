@@ -565,7 +565,6 @@ module VCAP::CloudController::Metrics
 
       before do
         allow(statsd_updater).to receive(:update_log_counts)
-        allow(prometheus_updater).to receive(:update_log_counts)
 
         allow(log_counter).to receive(:counts).and_return(count)
       end
@@ -587,26 +586,6 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#update!' do
-      before do
-        allow(statsd_updater).to receive(:update_user_count)
-        allow(statsd_updater).to receive(:update_job_queue_length)
-        allow(statsd_updater).to receive(:update_thread_info)
-        allow(statsd_updater).to receive(:update_failed_job_count)
-        allow(statsd_updater).to receive(:update_vitals)
-        allow(statsd_updater).to receive(:update_log_counts)
-        allow(statsd_updater).to receive(:update_task_stats)
-        allow(statsd_updater).to receive(:update_deploying_count)
-
-        allow(prometheus_updater).to receive(:update_user_count)
-        allow(prometheus_updater).to receive(:update_job_queue_length)
-        allow(prometheus_updater).to receive(:update_thread_info)
-        allow(prometheus_updater).to receive(:update_failed_job_count)
-        allow(prometheus_updater).to receive(:update_vitals)
-        allow(prometheus_updater).to receive(:update_log_counts)
-        allow(prometheus_updater).to receive(:update_task_stats)
-        allow(prometheus_updater).to receive(:update_deploying_count)
-      end
-
       it 'calls all update methods' do
         expect(periodic_updater).to receive(:update_user_count).once
         expect(periodic_updater).to receive(:update_job_queue_length).once
@@ -616,6 +595,7 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_log_counts).once
         expect(periodic_updater).to receive(:update_task_stats).once
         expect(periodic_updater).to receive(:update_deploying_count).once
+
         periodic_updater.update!
       end
     end
