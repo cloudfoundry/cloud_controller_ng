@@ -7,8 +7,6 @@ RSpec.describe 'Metrics' do
   let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
 
   before do
-    # locator = CloudController::DependencyLocator.instance
-    # allow(locator).to receive(:prometheus_updater).and_return(VCAP::CloudController::Metrics::PrometheusUpdater.new(Prometheus::Client::Registry.new))
     allow(EventMachine).to receive(:connection_count).and_return(123)
 
     allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
@@ -23,7 +21,7 @@ RSpec.describe 'Metrics' do
     end
   end
 
-  it 'succeeds' do
+  it 'can be called several times' do
     get '/internal/v4/metrics', nil
 
     expect(last_response.status).to eq 200
@@ -40,7 +38,6 @@ RSpec.describe 'Metrics' do
       cc_total_users = Prometheus::Client.registry.get(:cc_total_users)
       cc_total_users.set(0) unless cc_total_users.nil?
 
-      # Prometheus::Client::Config::data_store = nil
       10.times do
         VCAP::CloudController::User.make
       end
@@ -69,17 +66,20 @@ RSpec.describe 'Metrics' do
   end
 
   context 'cc_job_queue_length' do
-    # NOTE: Because there is no easy way to enqueue a job that will
-    #       stick around for long enough to appear in the metrics,
-    #       we're only testing that the metric is emitted in the output.
-    #       If you can figure out how to actually get a job enqueued that
-    #       will show up in the "job queue length" metric, please do update
-    #       the test!
+    before do
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), {queue: 'cc_api_0', run_at: Time.now + 1.day})
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), {queue: 'cc_generic', run_at: Time.now + 1.day})
+    end
+
+    after do
+      Delayed::Job.dataset.delete
+    end
+
     it 'includes job queue length metric in output' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_job_queue_length_cc_api_0 [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_job_queue_length_total [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_job_queue_length_cc_api_0 1\.0/)
+      expect(last_response.body).to match(/cc_job_queue_length_total 2\.0/)
     end
   end
 
