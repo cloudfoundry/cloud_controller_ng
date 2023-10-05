@@ -79,15 +79,15 @@ module VCAP::CloudController
           end
 
           context 'route binding already exists' do
-            let!(:binding) { RouteBinding.make(service_instance: service_instance, route: route) }
+            let!(:binding) { RouteBinding.make(service_instance:, route:) }
 
             context 'when no last service route binding operation exists' do
               it 'raises an error' do
-                expect {
-                  action.precursor(service_instance, route, message: message)
-                }.to raise_error(
+                expect do
+                  action.precursor(service_instance, route, message:)
+                end.to raise_error(
                   ServiceRouteBindingCreate::RouteBindingAlreadyExists,
-                  'The route and service instance are already bound',
+                  'The route and service instance are already bound'
                 )
               end
             end
@@ -98,9 +98,9 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, route, message:) }.to raise_error(
                   ServiceRouteBindingCreate::RouteBindingAlreadyExists,
-                  'The route and service instance are already bound',
+                  'The route and service instance are already bound'
                 )
               end
             end
@@ -111,10 +111,10 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, route, message:) }.to raise_error(
                   ServiceRouteBindingCreate::RouteBindingAlreadyExists,
                   'The route and service instance are already bound'
-               )
+                )
               end
             end
 
@@ -122,11 +122,12 @@ module VCAP::CloudController
               before do
                 binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
               end
+
               it 'deletes the existing binding and creates a new one' do
-                b = action.precursor(service_instance, route, message: message)
+                b = action.precursor(service_instance, route, message:)
 
                 expect(b.guid).not_to eq(binding.guid)
-                expect(b.create_in_progress?).to be_truthy
+                expect(b).to be_create_in_progress
                 expect { binding.reload }.to raise_error Sequel::NoExistingObject
               end
             end
@@ -137,7 +138,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, route, message:) }.to raise_error(
                   ServiceRouteBindingCreate::UnprocessableCreate,
                   'The binding is getting deleted or its deletion failed'
                 )
@@ -150,7 +151,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, route, message: message) }.to raise_error(
+                expect { action.precursor(service_instance, route, message:) }.to raise_error(
                   ServiceRouteBindingCreate::UnprocessableCreate,
                   'The binding is getting deleted or its deletion failed'
                 )

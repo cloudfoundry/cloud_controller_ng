@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       def precursor(service_instance, route, message:)
         validate_service_instance!(service_instance, route)
-        binding = RouteBinding.first(service_instance: service_instance, route: route)
+        binding = RouteBinding.first(service_instance:, route:)
         validate_binding!(binding, route, service_instance)
 
         binding_details = {
@@ -58,11 +58,11 @@ module VCAP::CloudController
         operation_in_progress! if service_instance.operation_in_progress?
       end
 
-      def validate_binding!(binding, route, service_instance)
-        if binding
-          already_exists! if binding.create_succeeded? || binding.create_in_progress?
-          incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
-        end
+      def validate_binding!(binding, _route, _service_instance)
+        return unless binding
+
+        already_exists! if binding.create_succeeded? || binding.create_in_progress?
+        incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
       end
 
       def permitted_binding_attributes
