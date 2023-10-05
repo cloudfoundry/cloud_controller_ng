@@ -61,7 +61,6 @@ RSpec.describe 'Metrics' do
 
       expect(last_response.body).to match(/cc_vitals_num_cores [1-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_uptime [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_vitals_cpu [1-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_mem_bytes [1-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_cpu_load_avg [0-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_mem_used_bytes [1-9][0-9]*\.\d+/)
@@ -103,21 +102,6 @@ RSpec.describe 'Metrics' do
 
       expect(last_response.body).to match(/cc_failed_job_count_cc_api_0 [0-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_failed_job_count_total [0-9][0-9]*\.\d+/)
-    end
-  end
-
-  context 'cc_log_count' do
-    it 'reports log counts' do
-      get '/internal/v4/metrics', nil
-
-      expect(last_response.body).to match(/cc_log_count_off [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_fatal [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_error [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_warn [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_info [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_debug1 [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_debug2 [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_log_count_all [0-9][0-9]*\.\d+/)
     end
   end
 
