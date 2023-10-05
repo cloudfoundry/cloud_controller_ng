@@ -80,13 +80,6 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    def update_log_counts(counts)
-      counts.each do |key, value|
-        metric_key = :"cc_log_count_#{key.to_s.underscore}"
-        update_gauge_metric(metric_key, value, "Log count for log level '#{key}'")
-      end
-    end
-
     def update_task_stats(total_running_tasks, total_memory_in_mb)
       update_gauge_metric(:cc_tasks_running_count, total_running_tasks, 'Total running tasks')
       update_gauge_metric(:cc_tasks_running_memory_in_mb, total_memory_in_mb, 'Total memory consumed by running tasks')

@@ -172,6 +172,7 @@ module VCAP::CloudController::Metrics
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_mem_bytes }
         expect(metric.get).to eq 1
 
+        # test that metric is not being emitted via prometheus
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu }
         expect(metric).to eq nil
 
@@ -179,52 +180,7 @@ module VCAP::CloudController::Metrics
         expect(metric.get).to eq 4
       end
     end
-
-    describe '#update_log_counts' do
-      it 'updates log counts' do
-        counts = {
-          off: 1,
-          fatal: 2,
-          error: 3,
-          warn: 4,
-          info: 5,
-          debug: 6,
-          debug1: 7,
-          debug2: 8,
-          all: 9
-        }
-
-        updater.update_log_counts(counts)
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_off }
-        expect(metric.get).to eq 1
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_fatal }
-        expect(metric.get).to eq 2
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_error }
-        expect(metric.get).to eq 3
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_warn }
-        expect(metric.get).to eq 4
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_info }
-        expect(metric.get).to eq 5
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_debug }
-        expect(metric.get).to eq 6
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_debug1 }
-        expect(metric.get).to eq 7
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_debug2 }
-        expect(metric.get).to eq 8
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_log_count_all }
-        expect(metric.get).to eq 9
-      end
-    end
-
+    
     describe '#update_task_stats' do
       it 'records the number of running tasks and task memory' do
         updater.update_task_stats(5, 512)
