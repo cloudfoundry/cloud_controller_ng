@@ -17,6 +17,7 @@ module CloudController
           aws_secret_access_key: 'fake_secret_access_key'
         }
       end
+
       let(:directory_key) { 'a-directory-key' }
 
       subject(:client) do
@@ -355,41 +356,122 @@ module CloudController
             end
           end
 
-          context 'encryption' do
+          context 'storage options' do
             let(:files) { double(:files, create: true) }
 
             before do
               allow_any_instance_of(FogClient).to receive(:files).and_return(files)
             end
 
-            context 'when encryption type is specified' do
-              let(:client_with_encryption) do
-                FogClient.new(connection_config: connection_config,
-                              directory_key: directory_key,
-                              storage_options: { encryption: 'my-algo' })
+            context 'aws' do
+              context 'when encryption type is specified' do
+                let(:client_with_encryption) do
+                  FogClient.new(connection_config: connection_config,
+                                directory_key: directory_key,
+                                aws_storage_options: { encryption: 'my-algo' })
+                end
+
+                it 'passes the encryption options to aws' do
+                  path = File.join(local_dir, 'empty_file.png')
+                  FileUtils.touch(path)
+
+                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                  expect(files).to have_received(:create).with(key: anything,
+                                                               body: anything,
+                                                               content_type: anything,
+                                                               public: anything,
+                                                               'x-amz-server-side-encryption' => 'my-algo')
+                end
               end
 
-              it 'passes the encryption options to aws' do
-                path = File.join(local_dir, 'empty_file.png')
-                FileUtils.touch(path)
+              context 'when encryption type is not specified' do
+                let(:client_with_encryption) do
+                  FogClient.new(connection_config:,
+                                directory_key:)
+                end
 
-                client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+                it 'does not pass the encryption options to aws' do
+                  path = File.join(local_dir, 'empty_file.png')
+                  FileUtils.touch(path)
 
-                expect(files).to have_received(:create).with(key: anything,
-                                                             body: anything,
-                                                             content_type: anything,
-                                                             public: anything,
-                                                             'x-amz-server-side-encryption' => 'my-algo')
+                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                  expect(files).to have_received(:create).with(key: anything,
+                                                               body: anything,
+                                                               content_type: anything,
+                                                               public: anything)
+                end
               end
             end
 
-            context 'when encryption type is not specified' do
-              let(:client_with_encryption) do
-                FogClient.new(connection_config:,
-                              directory_key:)
+            context 'gcp' do
+              let(:gcp_connection_config) do
+                {
+                  provider: 'Google',
+                  google_project: 'gcs_project',
+                  google_client_email: 'gcs_service_account_email',
+                  google_json_key_string: 'gcs_service_account_json_key'
+                }
               end
 
-              it 'does not pass the encryption options to aws' do
+              context 'when uniform flag is specified' do
+                let(:client_with_encryption) do
+                  FogClient.new(connection_config: gcp_connection_config,
+                                directory_key: directory_key,
+                                gcp_storage_options: { uniform: false, other: 'thing' })
+                end
+
+                it 'passes the storage options to gcp' do
+                  path = File.join(local_dir, 'empty_file.png')
+                  FileUtils.touch(path)
+
+                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                  expect(files).to have_received(:create).with(key: anything,
+                                                               body: anything,
+                                                               content_type: anything,
+                                                               public: anything,
+                                                               uniform: false,
+                                                               other: 'thing')
+                end
+              end
+
+              context 'when gcp uniform flag is not specified' do
+                let(:client_with_encryption) do
+                  FogClient.new(connection_config: gcp_connection_config,
+                                directory_key: directory_key)
+                end
+
+                it 'has empty storage options' do
+                  path = File.join(local_dir, 'empty_file.png')
+                  FileUtils.touch(path)
+
+                  client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
+
+                  expect(files).to have_received(:create).with(key: anything,
+                                                               body: anything,
+                                                               content_type: anything,
+                                                               public: anything)
+                end
+              end
+            end
+
+            context 'AzureRM' do
+              let(:az_connection_config) do
+                {
+                  provider: 'AzureRM',
+                  environment: 'env',
+                  azure_storage_account_name: 'account',
+                  azure_storage_access_key: 'key'
+                }
+              end
+              let(:client_with_encryption) do
+                FogClient.new(connection_config: az_connection_config,
+                              directory_key: directory_key)
+              end
+
+              it 'has empty storage options' do
                 path = File.join(local_dir, 'empty_file.png')
                 FileUtils.touch(path)
 
@@ -451,7 +533,7 @@ module CloudController
             let(:client) do
               FogClient.new(connection_config: connection_config,
                             directory_key: directory_key,
-                            storage_options: { encryption: encryption, other: 'thing' })
+                            aws_storage_options: { encryption: encryption, other: 'thing' })
             end
             let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
             let(:src_file) { double(:file, copy: true, nil?: false) }

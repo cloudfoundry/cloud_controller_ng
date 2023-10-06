@@ -176,6 +176,7 @@ resource_pool:
     blobstore_timeout: 5
     provider: "Local"
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 packages:
   app_package_directory_key: "cc-packages"
@@ -185,6 +186,7 @@ packages:
     blobstore_timeout: 5
     provider: "Local"
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
@@ -193,6 +195,7 @@ droplets:
     blobstore_timeout: 5
     provider: "Local"
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
@@ -200,6 +203,7 @@ buildpacks:
     blobstore_timeout: 5
     provider: "Local"
   fog_aws_storage_options: {}
+  fog_gcp_storage_options: {}
 
 registry_buddy:
   host: "127.0.0.1"
