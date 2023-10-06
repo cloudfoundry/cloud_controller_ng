@@ -67,8 +67,8 @@ RSpec.describe 'Metrics' do
 
   context 'cc_job_queue_length' do
     before do
-      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), {queue: 'cc_api_0', run_at: Time.now + 1.day})
-      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), {queue: 'cc_generic', run_at: Time.now + 1.day})
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.day })
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.day })
     end
 
     after do

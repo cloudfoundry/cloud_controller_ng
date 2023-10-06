@@ -174,13 +174,13 @@ module VCAP::CloudController::Metrics
 
         # test that metric is not being emitted via prometheus
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu }
-        expect(metric).to eq nil
+        expect(metric).to be_nil
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_num_cores }
         expect(metric.get).to eq 4
       end
     end
-    
+
     describe '#update_task_stats' do
       it 'records the number of running tasks and task memory' do
         updater.update_task_stats(5, 512)

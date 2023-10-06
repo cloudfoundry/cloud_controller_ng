@@ -68,8 +68,7 @@ module CloudController
                    Steno.logger('cc.api'),
                    VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
                    prometheus_updater
-                 )
-        )
+                 ))
     end
 
     def prometheus_updater
