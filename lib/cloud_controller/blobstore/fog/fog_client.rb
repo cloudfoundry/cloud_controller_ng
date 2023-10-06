@@ -20,14 +20,16 @@ module CloudController
                      root_dir: nil,
                      min_size: nil,
                      max_size: nil,
-                     storage_options: nil)
+                     aws_storage_options: nil,
+                     gcp_storage_options: nil)
         @root_dir = root_dir
         @connection_config = connection_config
         @directory_key = directory_key
         @cdn = cdn
         @min_size = min_size || 0
         @max_size = max_size
-        @storage_options = storage_options
+        @aws_storage_options = aws_storage_options
+        @gcp_storage_options = gcp_storage_options
       end
 
       def local?
@@ -136,12 +138,23 @@ module CloudController
       end
 
       def formatted_storage_options
-        return {} unless @storage_options && @storage_options[:encryption]
+        if connection.service.equal?(Fog::AWS::Storage)
+          return {} unless @aws_storage_options && @aws_storage_options[:encryption]
 
-        opts = @storage_options.dup
-        encrypt_opt = opts.delete(:encryption)
-        opts['x-amz-server-side-encryption'] = encrypt_opt
-        opts
+          opts = @aws_storage_options.dup
+          encrypt_opt = opts.delete(:encryption)
+          opts['x-amz-server-side-encryption'] = encrypt_opt
+          opts
+
+        elsif [Fog::Storage::GoogleJSON, Fog::Storage::GoogleXML].include?(connection.service)
+          return {} unless @gcp_storage_options
+
+          @gcp_storage_options
+
+        else
+          {}
+
+        end
       end
 
       def delete_file(file)

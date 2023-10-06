@@ -46,7 +46,8 @@ module CloudController
                                                           root_dir: anything,
                                                           min_size: anything,
                                                           max_size: anything,
-                                                          storage_options: { encryption: 'my organic algo' })
+                                                          aws_storage_options: { encryption: 'my organic algo' },
+                                                          gcp_storage_options: anything)
           end
 
           context 'fog methods' do
@@ -59,6 +60,25 @@ module CloudController
                 client.download_from_blobstore('key', 'dest', mode: 775)
               end
             end
+          end
+        end
+
+        context 'when a gcp uniform option is requested' do
+          before do
+            options.merge!(fog_gcp_storage_options: { uniform: false })
+          end
+
+          it 'passes the specified uniform option to the fog client' do
+            allow(FogClient).to receive(:new).and_call_original
+            ClientProvider.provide(options: options, directory_key: 'key')
+            expect(FogClient).to have_received(:new).with(connection_config: anything,
+                                                          directory_key: anything,
+                                                          cdn: anything,
+                                                          root_dir: anything,
+                                                          min_size: anything,
+                                                          max_size: anything,
+                                                          aws_storage_options: anything,
+                                                          gcp_storage_options: { uniform: false })
           end
         end
 
@@ -76,7 +96,8 @@ module CloudController
                                                           root_dir: anything,
                                                           min_size: anything,
                                                           max_size: anything,
-                                                          storage_options: anything)
+                                                          aws_storage_options: anything,
+                                                          gcp_storage_options: anything)
           end
         end
 

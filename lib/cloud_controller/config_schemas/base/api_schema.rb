@@ -144,13 +144,15 @@ module VCAP::CloudController
               minimum_size: Integer,
               resource_directory_key: String,
               fog_connection: Hash,
-              fog_aws_storage_options: Hash
+              fog_aws_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             buildpacks: {
               buildpack_directory_key: String,
               fog_connection: Hash,
-              fog_aws_storage_options: Hash
+              fog_aws_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             packages: {
@@ -159,6 +161,7 @@ module VCAP::CloudController
               app_package_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
+              fog_gcp_storage_options: Hash,
               optional(:image_registry) => {
                 base_path: String
               }
@@ -168,7 +171,8 @@ module VCAP::CloudController
               droplet_directory_key: String,
               max_staged_droplets_stored: Integer,
               fog_connection: Hash,
-              fog_aws_storage_options: Hash
+              fog_aws_storage_options: Hash,
+              fog_gcp_storage_options: Hash
             },
 
             optional(:registry_buddy) => {
