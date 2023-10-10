@@ -5,7 +5,7 @@ module VCAP::CloudController::Metrics
   RSpec.describe RequestMetrics do
     let(:statsd_client) { double(:statsd_client) }
     let(:prometheus_client) { double(:prometheus_client) }
-    let!(:request_metrics) { RequestMetrics.new(statsd_client, prometheus_client) } # TODO: probably doesn't need to be a let!, just a let
+    let(:request_metrics) { RequestMetrics.new(statsd_client, prometheus_client) }
 
     before do
       allow(prometheus_client).to receive(:update_gauge_metric)

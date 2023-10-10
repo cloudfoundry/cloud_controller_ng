@@ -311,18 +311,8 @@ class ServiceCredentialBindingsController < ApplicationController
     config.get(:volume_services_enabled)
   end
 
-  def uaa_client
-    @uaa_client ||= UaaClient.new(
-      uaa_target: config.get(:uaa, :internal_url),
-      client_id: config.get(:cc_service_key_client_name),
-      secret: config.get(:cc_service_key_client_secret),
-      ca_file: config.get(:uaa, :ca_file)
-    )
-  end
-
   def credhub_client
-    # TODO: use the credhub client provided by `DependencyLocator`
-    @credhub_client ||= Credhub::Client.new(config.get(:credhub_api, :internal_url), uaa_client)
+    @credhub_client ||= CloudController::DependencyLocator.instance.credhub_client
   end
 
   def fetch_credentials_value(name)
