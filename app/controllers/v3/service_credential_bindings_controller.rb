@@ -147,6 +147,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def parameters
     ensure_service_credential_binding_is_accessible!
+    not_found_with_message!(service_credential_binding) unless service_credential_binding.create_succeeded?
 
     fetcher = ServiceBindingRead.new
     parameters = fetcher.fetch_parameters(service_credential_binding)
