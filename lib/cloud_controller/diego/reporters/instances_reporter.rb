@@ -37,7 +37,7 @@ module VCAP::CloudController
           instances[actual_lrp.actual_lrp_key.index] = result
         end
 
-        fill_unreported_instances_with_down_instances(instances, process)
+        fill_unreported_instances_with_down_instances(instances, process, flat: true)
       rescue StandardError => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
 

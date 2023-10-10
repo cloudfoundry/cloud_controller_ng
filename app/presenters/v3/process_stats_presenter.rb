@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         def instance_stats_hash(index, stats)
           case stats[:state]
-          when 'DOWN'
+          when VCAP::CloudController::Diego::LRP_DOWN
             down_instance_stats_hash(index, stats)
           else
             found_instance_stats_hash(index, stats)
@@ -55,7 +55,7 @@ module VCAP::CloudController
             type: @type,
             index: index,
             state: stats[:state],
-            uptime: stats[:uptime],
+            uptime: stats.dig(:stats, :uptime),
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]
           }

@@ -103,8 +103,10 @@ module VCAP::CloudController::Presenters::V3
           },
           2 => {
             state: 'DOWN',
-            uptime: 0,
-            details: 'you must construct additional pylons'
+            details: 'you must construct additional pylons',
+            stats: {
+              uptime: 0
+            }
           }
         }
       end

@@ -44,13 +44,13 @@ module VCAP::CloudController
           result[actual_lrp.actual_lrp_key.index] = info
         end
 
-        fill_unreported_instances_with_down_instances(result, process)
+        fill_unreported_instances_with_down_instances(result, process, flat: false)
 
         warnings = [log_cache_errors].compact
         [result, warnings]
       rescue CloudController::Errors::NoRunningInstances => e
         logger.info('stats_for_app.error', error: e.to_s)
-        [fill_unreported_instances_with_down_instances({}, process), []]
+        [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
       rescue StandardError => e
         logger.error('stats_for_app.error', error: e.to_s)
         raise e if e.is_a?(CloudController::Errors::ApiError) && e.name == 'ServiceUnavailable'
