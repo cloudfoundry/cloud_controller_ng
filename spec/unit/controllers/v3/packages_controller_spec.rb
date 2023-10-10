@@ -443,6 +443,50 @@ RSpec.describe PackagesController, type: :controller do
       VCAP::CloudController::AnnotationsUpdate.update(package, annotations, VCAP::CloudController::PackageAnnotationModel)
     end
 
+    context 'when updating docker credentials' do
+      before do
+        set_current_user_as_admin
+      end
+
+      context 'but the package is bits' do
+        describe 'it does not update the package' do
+          let(:message) do
+            {
+              username: 'Walz',
+              password: 'Absolutely secret'
+            }
+          end
+
+          it 'fails' do
+            patch :update, params: { guid: package.guid }.merge(message), as: :json
+            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_error_message('Cannot update Docker credentials for a buildpack app.')
+          end
+        end
+      end
+
+      context 'and the package is docker' do
+        before do
+          package.type = 'docker'
+          package.save
+        end
+
+        describe 'it updates the package' do
+          let(:message) do
+            {
+              username: 'Walz',
+              password: 'Absolutely secret'
+            }
+          end
+
+          it 'succeeds' do
+            patch :update, params: { guid: package.guid }.merge(message), as: :json
+            expect(response).to have_http_status(:ok)
+          end
+        end
+      end
+    end
+
     context 'when the user is an admin' do
       before do
         set_current_user_as_admin
