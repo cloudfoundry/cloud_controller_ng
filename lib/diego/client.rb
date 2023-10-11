@@ -164,18 +164,18 @@ module Diego
     def with_request_error_handling
       delay = 0.25
       max_delay = 5
-      retry_until = Time.now + 60 # retry for 1 minute from now
+      retry_until = Time.now.utc + 60 # retry for 1 minute from now
       factor = 2
 
       begin
         yield
       rescue StandardError => e
-        if Time.now > retry_until
+        if Time.now.utc > retry_until
           @logger.error('Unable to establish a connection to diego backend, no more retries, raising an exception.')
           raise RequestError.new(e.message)
         else
           sleep_time = [delay, max_delay].min
-          @logger.info("Attempting to connect to the diego backend. Total #{(retry_until - Time.now).round(2)} seconds remaining. Next retry after #{sleep_time} seconds delay.")
+          @logger.info("Attempting to connect to the diego backend. Total #{(retry_until - Time.now.utc).round(2)} seconds remaining. Next retry after #{sleep_time} seconds.")
           sleep(sleep_time)
           delay *= factor
           retry

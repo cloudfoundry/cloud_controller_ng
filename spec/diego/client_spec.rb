@@ -806,7 +806,7 @@ module Diego
           expect do
             subject.with_request_error_handling do
               attempts += 1
-              Timecop.travel(Time.now + 50)
+              Timecop.travel(Time.now.utc + 50)
               raise 'Error!'
             end
           end.to raise_error(RequestError, 'Error!')
@@ -818,7 +818,7 @@ module Diego
         end
 
         it 'stops retrying after 60 seconds and raises an exception' do
-          start_time = Time.now
+          start_time = Time.now.utc
           Timecop.freeze do
             expect do
               subject.with_request_error_handling do
@@ -861,14 +861,14 @@ module Diego
 
         it 'raises an error after 17 attempts in approximately 1 minute when each yield call immediately' do
           attempts = 0
-          start_time = Time.now
+          start_time = Time.now.utc
           expect do
             subject.with_request_error_handling do
               attempts += 1
               raise RequestError
             end
           end.to raise_error(RequestError)
-          end_time = Time.now
+          end_time = Time.now.utc
           duration = end_time.to_f - start_time.to_f
 
           expect(attempts).to be_within(1).of(17)
