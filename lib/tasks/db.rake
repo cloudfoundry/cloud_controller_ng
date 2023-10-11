@@ -129,7 +129,7 @@ namespace :db do
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
 
     latest_migration_in_db = db[:schema_migrations].order(Sequel.desc(:filename)).first[:filename]
-    latest_migration_in_dir = File.basename(Dir['db/migrations/*'].max)
+    latest_migration_in_dir = File.basename(Dir['db/migrations/*.rb'].max)
 
     unless latest_migration_in_db == latest_migration_in_dir
       puts "Expected latest migration #{latest_migration_in_db} to equal #{latest_migration_in_dir}"
