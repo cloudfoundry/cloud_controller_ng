@@ -8,6 +8,7 @@ module Diego
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:,
                    connect_timeout:, send_timeout:, receive_timeout:)
       ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
+      @logger = Steno.logger('cc.diego.client')
       @client = build_client(
         url,
         ca_cert_file,
@@ -161,11 +162,25 @@ module Diego
     end
 
     def with_request_error_handling
-      tries ||= 3
-      yield
-    rescue StandardError => e
-      retry unless (tries -= 1).zero?
-      raise RequestError.new(e.message)
+      delay = 0.25
+      max_delay = 5
+      retry_until = Time.now + 60 # retry for 1 minute from now
+      factor = 2
+
+      begin
+        yield
+      rescue StandardError => e
+        if Time.now > retry_until
+          @logger.error('Unable to establish a connection to diego backend, no more retries, raising an exception.')
+          raise RequestError.new(e.message)
+        else
+          sleep_time = [delay, max_delay].min
+          @logger.info("Attempting to connect to the diego backend. Total #{(retry_until - Time.now).round(2)} seconds remaining. Next retry after #{sleep_time} seconds delay.")
+          sleep(sleep_time)
+          delay *= factor
+          retry
+        end
+      end
     end
 
     private
