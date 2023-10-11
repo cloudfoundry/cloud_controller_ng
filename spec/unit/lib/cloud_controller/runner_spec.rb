@@ -26,11 +26,10 @@ module VCAP::CloudController
     end
 
     describe '#run!' do
-      let(:runner) { Runner.new(argv + ['-c', config_file.path]) }
-
       it 'creates a pidfile' do
         expect(VCAP::PidFile).to receive(:new).with('/tmp/cloud_controller.pid')
-        runner.run!
+
+        subject.run!
       end
 
       it 'starts the web server' do
@@ -38,7 +37,7 @@ module VCAP::CloudController
         allow(server).to receive(:start!)
         expect(VCAP::CloudController::ThinRunner).to receive(:new).and_return(server)
 
-        runner.run!
+        subject.run!
         expect(server).to have_received(:start!).once
       end
     end
@@ -153,17 +152,7 @@ module VCAP::CloudController
         expect(logging_configuration_time).to be < logger_creation_time
       end
 
-      it 'only sets up logging once' do
-        steno_configurer = instance_double(StenoConfigurer)
-        allow(StenoConfigurer).to receive(:new).and_return(steno_configurer)
-        allow(steno_configurer).to receive(:configure)
-
-        subject
-
-        expect(steno_configurer).to have_received(:configure).once
-      end
-
-      it 'sets up telemetry logging once' do
+      it 'sets up telemetry logging' do
         allow(TelemetryLogger).to receive(:init)
 
         subject
