@@ -232,8 +232,11 @@ module VCAP::CloudController
       end
 
       context 'when not using with nginx' do
+        let(:staging_config) do
+          original_staging_config.merge({ nginx: { use_nginx: false } })
+        end
+
         before do
-          TestConfig.override(**staging_config.merge(nginx: { use_nginx: false }))
           package_blobstore = instance_double(CloudController::Blobstore::Client, blob: create_test_blob, local?: true)
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
         end
@@ -485,7 +488,9 @@ module VCAP::CloudController
       end
 
       context 'when not using with nginx' do
-        before { TestConfig.override(**staging_config.merge(nginx: { use_nginx: false })) }
+        let(:staging_config) do
+          original_staging_config.merge({ nginx: { use_nginx: false } })
+        end
 
         it 'succeeds for valid droplets' do
           encoded_expected_body = Base64.encode64(upload_droplet)

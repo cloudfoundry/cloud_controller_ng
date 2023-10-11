@@ -10,12 +10,11 @@ module VCAP::CloudController
 
     describe 'PUT /v2/app/:id/bits' do
       before do
-        TestConfig.override(
-          **config_override.merge(
-            directories: { tmpdir: File.dirname(valid_zip.path) },
-            kubernetes: {}
-          )
+        config_override.merge!(
+          directories: { tmpdir: File.dirname(valid_zip.path) },
+          kubernetes: {}
         )
+        TestConfig.override(**config_override)
       end
 
       let(:tmpdir) { Dir.mktmpdir }

@@ -526,6 +526,8 @@ RSpec/Rails/NegationBeValid:
   Enabled: true
 RSpec/Rails/TravelAround:
   Enabled: true
+Style/SingleLineDoEndBlock:
+  Enabled: true
 ### Broken Cops that break code
 Lint/ShadowedException: # Brakes "bundle exec rake rubocop" if enabled
   Enabled: false
