@@ -54,7 +54,7 @@ module VCAP::CloudController
           ##       so feed in the entire value!
           update_duration_ms = update_duration * 1000
           statsd_client.timing('cc.deployments.update.duration', update_duration_ms)
-          prometheus_updater.report_deployment_duration(update_duration_ms)
+          prometheus_updater.report_deployment_duration(update_duration)
 
           logger.info("Update loop took #{update_duration}s")
 

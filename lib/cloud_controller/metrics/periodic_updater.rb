@@ -46,9 +46,9 @@ module VCAP::CloudController::Metrics
     def update_task_stats
       running_tasks = VCAP::CloudController::TaskModel.where(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
       running_task_count = running_tasks.count
-      running_task_memory = running_tasks.sum(:memory_in_mb)
-      running_task_memory = 0 if running_task_memory.nil?
-      [@statsd_updater, @prometheus_updater].each { |u| u.update_task_stats(running_task_count, running_task_memory) }
+      running_task_memory = running_task_memory.nil? ? 0 : running_tasks.sum(:memory_in_mb)
+      @statsd_updater.update_task_stats(running_task_count, running_task_memory)
+      @prometheus_updater.update_task_stats(running_task_count, running_task_memory * 1000 * 1000)
     end
 
     def update_log_counts
@@ -85,7 +85,8 @@ module VCAP::CloudController::Metrics
       end
 
       pending_job_count_by_queue.reverse_merge!(@known_job_queues)
-      [@statsd_updater, @prometheus_updater].each { |u| u.update_job_queue_length(pending_job_count_by_queue, total) }
+      @statsd_updater.update_job_queue_length(pending_job_count_by_queue, total)
+      @prometheus_updater.update_job_queue_length(pending_job_count_by_queue)
     end
 
     def update_thread_info
@@ -105,7 +106,8 @@ module VCAP::CloudController::Metrics
       end
 
       failed_jobs_by_queue.reverse_merge!(@known_job_queues)
-      [@statsd_updater, @prometheus_updater].each { |u| u.update_failed_job_count(failed_jobs_by_queue, total) }
+      @statsd_updater.update_failed_job_count(failed_jobs_by_queue, total)
+      @prometheus_updater.update_failed_job_count(failed_jobs_by_queue)
     end
 
     def update_vitals

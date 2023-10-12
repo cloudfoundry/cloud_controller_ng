@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         @prometheus_updater.decrement_gauge_metric(:cc_requests_outstanding_gauge, 'Requests Outstanding Gauge')
-        @prometheus_updater.increment_gauge_metric(:cc_requests_completed, 'Requests Completed')
+        @prometheus_updater.increment_counter_metric(:cc_requests_completed, 'Requests Completed')
       end
     end
   end
