@@ -7,9 +7,8 @@ module VCAP::CloudController
   module Jobs
     module Diego
       class Sync < VCAP::CloudController::Jobs::CCJob
-        def initialize(statsd=Statsd.new, prometheus_updater=VCAP::CloudController::Metrics::PrometheusUpdater.new)
+        def initialize(statsd=Statsd.new)
           @statsd = statsd
-          @prometheus_updater = prometheus_updater
         end
 
         def perform
@@ -28,7 +27,6 @@ module VCAP::CloudController
             elapsed_ms = ((finish - start) * 1000).round
 
             @statsd.timing('cc.diego_sync.duration', elapsed_ms)
-            @prometheus_updater.report_diego_cell_sync_duration((finish - start))
           end
         end
 

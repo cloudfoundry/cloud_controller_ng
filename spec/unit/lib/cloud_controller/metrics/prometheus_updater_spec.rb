@@ -193,14 +193,6 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_synced_invalid_lrps' do
-      it 'records number of running tasks and task memory to statsd' do
-        updater.update_synced_invalid_lrps(5)
-        metric = prom_client.metrics.find { |m| m.name == :cc_diego_sync_invalid_desired_lrps }
-        expect(metric.get).to eq 5
-      end
-    end
-
     describe '#start_staging_request_received' do
       it 'increments "cc_staging_requested"' do
         updater.start_staging_request_received
@@ -240,32 +232,6 @@ module VCAP::CloudController::Metrics
         metric = prom_client.metrics.find { |m| m.name == :cc_staging_failed_duration }
         # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
         expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20_000, '+Inf' => 1 })
-      end
-    end
-
-    describe '#report_diego_cell_sync_duration' do
-      it 'reports diego cell sync duration' do
-        duration_ns = 20 * 1e9
-
-        updater.report_diego_cell_sync_duration(duration_ns)
-        metric = prom_client.metrics.find { |m| m.name == :cc_diego_sync_duration }
-        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20_000_000_000.0 })
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_diego_sync_duration_gauge }
-        expect(metric.get).to eq duration_ns
-      end
-    end
-
-    describe '#report_deployment_duration' do
-      it 'reports deployments update duration' do
-        duration_ns = 20 * 1e9
-
-        updater.report_deployment_duration(duration_ns)
-        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_update_duration }
-        expect(metric.get).to eq({ 'count' => 1.0, 'sum' => 20_000_000_000.0 })
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_update_duration_gauge }
-        expect(metric.get).to eq duration_ns
       end
     end
   end
