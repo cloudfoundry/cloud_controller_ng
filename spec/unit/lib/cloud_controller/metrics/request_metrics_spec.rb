@@ -11,6 +11,7 @@ module VCAP::CloudController::Metrics
       allow(prometheus_client).to receive(:update_gauge_metric)
       allow(prometheus_client).to receive(:decrement_gauge_metric)
       allow(prometheus_client).to receive(:increment_gauge_metric)
+      allow(prometheus_client).to receive(:increment_counter_metric)
     end
 
     describe '#start_request' do
@@ -57,7 +58,7 @@ module VCAP::CloudController::Metrics
         request_metrics.complete_request(status)
 
         expect(prometheus_client).to have_received(:decrement_gauge_metric).with(:cc_requests_outstanding_gauge, kind_of(String))
-        expect(prometheus_client).to have_received(:increment_gauge_metric).with(:cc_requests_completed, kind_of(String))
+        expect(prometheus_client).to have_received(:increment_counter_metric).with(:cc_requests_completed, kind_of(String))
       end
 
       it 'normalizes http status codes in statsd' do

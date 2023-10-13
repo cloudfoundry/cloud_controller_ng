@@ -56,7 +56,7 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_task_stats
 
         expect(statsd_updater).to have_received(:update_task_stats).with(anything, 513)
-        expect(prometheus_updater).to have_received(:update_task_stats).with(anything, 513)
+        expect(prometheus_updater).to have_received(:update_task_stats).with(anything, 513_000_000)
       end
 
       context 'when there are no running tasks' do
@@ -256,7 +256,7 @@ module VCAP::CloudController::Metrics
           expected_total = 1
 
           expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
         end
       end
 
@@ -270,7 +270,7 @@ module VCAP::CloudController::Metrics
           expected_total = 0
 
           expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
         end
       end
 
@@ -289,7 +289,7 @@ module VCAP::CloudController::Metrics
         expected_total = 3
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
       end
 
       it 'finds jobs which have not been attempted yet' do
@@ -306,7 +306,7 @@ module VCAP::CloudController::Metrics
         expected_total = 2
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
       end
 
       it 'ignores jobs that have already been attempted' do
@@ -321,7 +321,7 @@ module VCAP::CloudController::Metrics
         expected_total = 0
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
       end
 
       it '"resets" pending job count to 0 after they have been emitted' do
@@ -337,7 +337,7 @@ module VCAP::CloudController::Metrics
         expected_total = 2
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
 
         Delayed::Job.dataset.delete
         periodic_updater.update_job_queue_length
@@ -349,7 +349,7 @@ module VCAP::CloudController::Metrics
         expected_total = 0
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
       end
     end
 
@@ -374,7 +374,7 @@ module VCAP::CloudController::Metrics
           expected_total = 1
 
           expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue)
         end
       end
 
@@ -392,7 +392,7 @@ module VCAP::CloudController::Metrics
           expected_total = 0
 
           expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+          expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue)
         end
       end
 
@@ -414,7 +414,7 @@ module VCAP::CloudController::Metrics
         expected_total = 3
 
         expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue)
       end
 
       it '"resets" failed job count to 0 after they have been emitted' do
@@ -431,7 +431,7 @@ module VCAP::CloudController::Metrics
         expected_total = 2
 
         expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue)
 
         Delayed::Job.dataset.delete
         periodic_updater.update_failed_job_count
@@ -443,7 +443,7 @@ module VCAP::CloudController::Metrics
         expected_total = 0
 
         expect(statsd_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
-        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
+        expect(prometheus_updater).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue)
       end
     end
 

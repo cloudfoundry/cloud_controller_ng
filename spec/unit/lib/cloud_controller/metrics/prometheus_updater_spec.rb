@@ -60,23 +60,17 @@ module VCAP::CloudController::Metrics
       it 'records the length of the delayed job queues and total' do
         expected_local_length   = 5
         expected_generic_length = 6
-        total                   = expected_local_length + expected_generic_length
 
         pending_job_count_by_queue = {
           cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
-        updater.update_job_queue_length(pending_job_count_by_queue, total)
+        updater.update_job_queue_length(pending_job_count_by_queue)
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_job_queue_length_cc_local }
-        expect(metric.get).to eq 5
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_job_queue_length_cc_generic }
-        expect(metric.get).to eq 6
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_job_queue_length_total }
-        expect(metric.get).to eq 11
+        metric = prom_client.get :cc_job_queues_length_total
+        expect(metric.get(labels: { queue: 'cc_local' })).to eq 5
+        expect(metric.get(labels: { queue: 'cc_generic' })).to eq 6
       end
     end
 
@@ -84,23 +78,17 @@ module VCAP::CloudController::Metrics
       it 'records the number of failed jobs in the delayed job queue and the total to statsd' do
         expected_local_length   = 5
         expected_generic_length = 6
-        total                   = expected_local_length + expected_generic_length
 
         failed_jobs_by_queue = {
           cc_local: expected_local_length,
           cc_generic: expected_generic_length
         }
 
-        updater.update_failed_job_count(failed_jobs_by_queue, total)
+        updater.update_failed_job_count(failed_jobs_by_queue)
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_failed_job_count_cc_local }
-        expect(metric.get).to eq 5
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_failed_job_count_cc_generic }
-        expect(metric.get).to eq 6
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_failed_job_count_total }
-        expect(metric.get).to eq 11
+        metric = prom_client.get :cc_failed_jobs_total
+        expect(metric.get(labels: { queue: 'cc_local' })).to eq 5
+        expect(metric.get(labels: { queue: 'cc_generic' })).to eq 6
       end
     end
 
@@ -209,29 +197,27 @@ module VCAP::CloudController::Metrics
 
     describe '#report_staging_success_metrics' do
       it 'records staging success metrics' do
+        # 20 seconds
         duration_ns = 20 * 1e9
 
         updater.report_staging_success_metrics(duration_ns)
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_succeeded }
-        expect(metric.get).to eq 1
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_succeeded_duration }
+        metric = prom_client.get :cc_staging_succeeded_duration_seconds
         # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20_000, '+Inf' => 1 })
+        expect(metric.get).to eq({ '+Inf' => 1.0, '10' => 0.0, '30' => 1.0, '300' => 1.0, '5' => 0.0, '60' => 1.0, '600' => 1.0, '890' => 1.0, 'sum' => 20.0 })
       end
     end
 
     describe '#report_staging_failure_metrics' do
       it 'emits staging failure metrics' do
-        duration_ns = 20 * 1e9
+        # 20 seconds
+        duration_ns = 900 * 1e9
 
         updater.report_staging_failure_metrics(duration_ns)
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_failed }
-        expect(metric.get).to eq 1
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_failed_duration }
+        metric = prom_client.get :cc_staging_failed_duration_seconds
         # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '10000.0' => 0, '15000.0' => 0, '20000.0' => 1, '25000.0' => 1, '30000.0' => 1, 'sum' => 20_000, '+Inf' => 1 })
+        expect(metric.get).to eq({ '+Inf' => 1.0, '10' => 0.0, '30' => 0.0, '300' => 0.0, '5' => 0.0, '60' => 0.0, '600' => 0.0, '890' => 0.0, 'sum' => 900.0 })
       end
     end
   end

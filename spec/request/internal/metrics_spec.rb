@@ -75,11 +75,11 @@ RSpec.describe 'Metrics' do
       Delayed::Job.dataset.delete
     end
 
-    it 'includes job queue length metric in output' do
+    it 'includes job queue length metric labelled for each queue' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_job_queue_length_cc_api_0 1\.0/)
-      expect(last_response.body).to match(/cc_job_queue_length_total 2\.0/)
+      expect(last_response.body).to match(/cc_job_queues_length_total{queue="cc_api_0"} 1\.0/)
+      expect(last_response.body).to match(/cc_job_queues_length_total{queue="cc_generic"} 1\.0/)
     end
   end
 
@@ -97,11 +97,22 @@ RSpec.describe 'Metrics' do
   end
 
   context 'cc_failed_job_count' do
+    before do
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.day })
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.day })
+
+      Delayed::Job.dataset.update(failed_at: Time.now.utc)
+    end
+
+    after do
+      Delayed::Job.dataset.delete
+    end
+
     it 'reports failed job count' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_failed_job_count_cc_api_0 [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_failed_job_count_total [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_failed_jobs_total{queue="cc_api_0"} 1\.0/)
+      expect(last_response.body).to match(/cc_failed_jobs_total{queue="cc_generic"} 1\.0/)
     end
   end
 
