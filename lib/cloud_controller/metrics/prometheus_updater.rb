@@ -56,11 +56,11 @@ module VCAP::CloudController::Metrics
     end
 
     def update_deploying_count(deploying_count)
-      update_gauge_metric(:cc_deployments_deploying, deploying_count, 'Number of in progress deployments')
+      update_gauge_metric(:cc_deployments_in_progress_total, deploying_count, 'Number of in progress deployments')
     end
 
     def update_user_count(user_count)
-      update_gauge_metric(:cc_total_users, user_count, 'Number of users')
+      update_gauge_metric(:cc_users_total, user_count, 'Number of users')
     end
 
     def update_job_queue_length(pending_job_count_by_queue)
@@ -94,12 +94,12 @@ module VCAP::CloudController::Metrics
     end
 
     def update_task_stats(total_running_tasks, total_memory_in_bytes)
-      update_gauge_metric(:cc_tasks_running_count, total_running_tasks, 'Total running tasks')
-      update_gauge_metric(:cc_tasks_running_memory_in_mb, total_memory_in_bytes, 'Total memory consumed by running tasks')
+      update_gauge_metric(:cc_running_tasks_total, total_running_tasks, 'Total running tasks')
+      update_gauge_metric(:cc_running_tasks_memory_bytes, total_memory_in_bytes, 'Total memory consumed by running tasks')
     end
 
     def start_staging_request_received
-      increment_counter_metric(:cc_staging_requested, 'Number of staging requests')
+      increment_counter_metric(:cc_staging_requested_total, 'Number of staging requests')
     end
 
     def report_staging_success_metrics(duration_ns)

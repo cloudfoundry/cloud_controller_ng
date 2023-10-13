@@ -22,12 +22,12 @@ module VCAP::CloudController::Metrics
         expected_deploying_count = 7
 
         updater.update_deploying_count(expected_deploying_count)
-        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_deploying }
+        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_in_progress_total }
         expect(metric).to be_present
         expect(metric.get).to eq 7
 
         updater.update_deploying_count(expected_deploying_count)
-        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_deploying }
+        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_in_progress_total }
         expect(metric).to be_present
         expect(metric.get).to eq 7
       end
@@ -38,7 +38,7 @@ module VCAP::CloudController::Metrics
         expected_deploying_count = 7
 
         updater.update_deploying_count(expected_deploying_count)
-        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_deploying }
+        metric = prom_client.metrics.find { |m| m.name == :cc_deployments_in_progress_total }
         expect(metric).to be_present
         expect(metric.get).to eq 7
       end
@@ -50,7 +50,7 @@ module VCAP::CloudController::Metrics
 
         updater.update_user_count(expected_user_count)
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_total_users }
+        metric = prom_client.metrics.find { |m| m.name == :cc_users_total }
         expect(metric).to be_present
         expect(metric.get).to eq 5
       end
@@ -173,10 +173,10 @@ module VCAP::CloudController::Metrics
       it 'records the number of running tasks and task memory' do
         updater.update_task_stats(5, 512)
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_tasks_running_count }
+        metric = prom_client.metrics.find { |m| m.name == :cc_running_tasks_total }
         expect(metric.get).to eq 5
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_tasks_running_memory_in_mb }
+        metric = prom_client.metrics.find { |m| m.name == :cc_running_tasks_memory_bytes }
         expect(metric.get).to eq 512
       end
     end
@@ -185,12 +185,12 @@ module VCAP::CloudController::Metrics
       it 'increments "cc_staging_requested"' do
         updater.start_staging_request_received
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested }
+        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested_total }
         expect(metric.get).to eq 1
 
         updater.start_staging_request_received
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested }
+        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested_total }
         expect(metric.get).to eq 2
       end
     end

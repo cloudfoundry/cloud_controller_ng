@@ -48,7 +48,7 @@ RSpec.describe 'Metrics' do
 
       expect(last_response.status).to eq 200
 
-      expect(last_response.body).to include('cc_total_users 10.0')
+      expect(last_response.body).to include('cc_users_total 10.0')
     end
   end
 
@@ -120,8 +120,8 @@ RSpec.describe 'Metrics' do
     it 'reports task stats' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_tasks_running_count [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_tasks_running_memory_in_mb [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_running_tasks_total [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_running_tasks_memory_bytes [0-9][0-9]*\.\d+/)
     end
   end
 
@@ -129,7 +129,69 @@ RSpec.describe 'Metrics' do
     it 'reports deploying_count' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_deployments_deploying [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_deployments_in_progress_total [0-9][0-9]*\.\d+/)
+    end
+  end
+
+  context 'cc_staging_requested' do
+    it 'reports cc_staging_requested' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_staging_requested [0-9][0-9]*\.\d+/)
+    end
+  end
+
+  context 'cc_staging_succeeded_duration_seconds' do
+    it 'reports cc_staging_succeeded_duration_seconds' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="5"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="5"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="10"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="30"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="60"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="300"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="600"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="890"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_bucket{le="\+Inf"} [0-9][0-9]*\.\d+/)
+
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_sum [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_succeeded_duration_seconds_count [0-9][0-9]*\.\d+/)
+    end
+  end
+
+  context 'cc_staging_failed_duration_seconds' do
+    it 'reports cc_staging_failed_duration_seconds' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="5"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="5"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="10"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="30"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="60"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="300"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="600"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="890"} [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_bucket{le="\+Inf"} [0-9][0-9]*\.\d+/)
+
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_sum [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_failed_duration_seconds_count [0-9][0-9]*\.\d+/)
+    end
+  end
+
+  context 'cc_requests_completed' do
+    it 'reports cc_requests_completed' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_requests_completed [0-9][0-9]*\.\d+/)
+    end
+  end
+
+  context 'cc_requests_outstanding_gauge' do
+    it 'reports cc_requests_outstanding_gauge' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_requests_outstanding_gauge [0-9][0-9]*\.\d+/)
     end
   end
 end
