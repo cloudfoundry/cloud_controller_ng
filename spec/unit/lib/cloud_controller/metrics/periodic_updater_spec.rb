@@ -523,7 +523,7 @@ module VCAP::CloudController::Metrics
         end
 
         expect(prometheus_updater).to have_received(:update_vitals) do |expected_vitals|
-          expect(expected_vitals[:uptime]).to be_within(1).of(Time.now.to_i - start_time.to_i)
+          expect(expected_vitals[:started_at]).to eq(start_time.to_i)
           expect(expected_vitals[:cpu_load_avg]).to eq(0.5)
           expect(expected_vitals[:mem_used_bytes]).to eq(542)
           expect(expected_vitals[:mem_free_bytes]).to eq(927)

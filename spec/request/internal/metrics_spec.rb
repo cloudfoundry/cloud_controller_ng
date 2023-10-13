@@ -57,7 +57,7 @@ RSpec.describe 'Metrics' do
       get '/internal/v4/metrics', nil
 
       expect(last_response.body).to match(/cc_vitals_num_cores [1-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_vitals_uptime [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_vitals_started_at [0-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_mem_bytes [1-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_cpu_load_avg [0-9][0-9]*\.\d+/)
       expect(last_response.body).to match(/cc_vitals_mem_used_bytes [1-9][0-9]*\.\d+/)

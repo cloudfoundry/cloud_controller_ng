@@ -123,7 +123,12 @@ module VCAP::CloudController::Metrics
         num_cores: VCAP::HostSystem.new.num_cores
       }
 
-      [@statsd_updater, @prometheus_updater].each { |u| u.update_vitals(vitals) }
+      @statsd_updater.update_vitals(vitals)
+
+      prom_vitals = vitals.clone
+      prom_vitals.delete(:uptime)
+      prom_vitals[:started_at] = @start_time.to_i
+      @prometheus_updater.update_vitals(prom_vitals)
     end
 
     def thread_info
