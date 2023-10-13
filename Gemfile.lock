@@ -156,7 +156,7 @@ GEM
       http-cookie (~> 1.0.0)
     faraday_middleware (0.14.0)
       faraday (>= 0.7.4, < 1.0)
-    ffi (1.15.5)
+    ffi (1.16.3)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
@@ -254,7 +254,7 @@ GEM
       google-protobuf (~> 3.23)
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.0.1)
-    honeycomb-beeline (3.0.0)
+    honeycomb-beeline (3.0.1)
       libhoney (>= 1.14.2)
     http (5.1.1)
       addressable (~> 2.8)
