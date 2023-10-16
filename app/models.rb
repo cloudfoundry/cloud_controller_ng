@@ -1,5 +1,5 @@
 require 'models/runtime/space'
-
+require 'models/helpers/metadata_model_mixin'
 require 'models/runtime/app_model'
 require 'models/runtime/build_model'
 require 'models/runtime/route_mapping_model'
