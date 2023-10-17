@@ -65,7 +65,7 @@ gem 'fog-google', '~> 1.22.0'
 gem 'fog-local'
 gem 'fog-openstack'
 
-gem 'cf-uaa-lib', '~> 4.0.3'
+gem 'cf-uaa-lib', '~> 4.0.4'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
