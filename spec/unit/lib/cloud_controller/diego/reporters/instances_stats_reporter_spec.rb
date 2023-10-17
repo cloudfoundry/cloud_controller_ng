@@ -234,7 +234,9 @@ module VCAP::CloudController
             {
               0 => {
                 state: 'DOWN',
-                uptime: 0
+                stats: {
+                  uptime: 0
+                }
               }
             }
           end
@@ -292,7 +294,9 @@ module VCAP::CloudController
               {
                 0 => {
                   state: 'DOWN',
-                  uptime: 0
+                  stats: {
+                    uptime: 0
+                  }
                 }
               }
             end
