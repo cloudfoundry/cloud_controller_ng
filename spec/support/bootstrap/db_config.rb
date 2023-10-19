@@ -63,7 +63,7 @@ class DbConfig
   end
 
   def default_name
-    if ENV['TEST_ENV_NUMBER']
+    unless ENV['TEST_ENV_NUMBER'].nil? or ENV['TEST_ENV_NUMBER'].empty?
       "cc_test_#{ENV['TEST_ENV_NUMBER']}"
     else
       'cc_test'
