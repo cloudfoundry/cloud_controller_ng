@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class AsgLatestUpdate
     class AsgTimestamp < Sequel::Model
+      plugin :microsecond_timestamp_precision
     end
     private_constant :AsgTimestamp
 
