@@ -2,29 +2,35 @@
 
 set -e -u
 
+SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
+
 function bootDB {
   db="$1"
-   
-  launchDB="(/postgres-entrypoint.sh postgres &> /var/log/postgres-boot.log) &"
-  testConnection="psql -h localhost -U postgres -c '\conninfo'"
-  createTestDB="psql -h localhost -U postgres -c 'create database cc_test'"
+
+  if [ "${db}" = "postgres" ]; then
+    launchDB="(/postgres-entrypoint.sh postgres &> /var/log/postgres-boot.log) &"
+    testConnection="psql -h localhost -U postgres -c '\conninfo'"
+  elif [ "${db}" = "mysql" ]  || [ "${db}" = "mysql-5.6" ] || [ "${db}" = "mysql8" ]; then
+    launchDB="(MYSQL_ROOT_PASSWORD=password /mysql-entrypoint.sh mysqld &> /var/log/mysql-boot.log) &"
+    testConnection="mysql -h localhost -u root -D mysql -e '\s;' --password='password'"
+  else
+    echo "skipping database"
+    return 0
+  fi
 
   echo -n "booting ${db}"
   eval "$launchDB"
   for _ in $(seq 1 60); do
     if eval "${testConnection}" &> /dev/null; then
-      break
+      echo "connection established to ${db}"
+      return 0
     fi
     echo -n "."
     sleep 1
   done
-
-  if eval "${testConnection}" &> /dev/null; then
-    echo "connection established to ${db}"
-  else 
-    echo "unable to connect to ${db}"
-    exit 1
-  fi
+  eval "${testConnection}" || true
+  echo "unable to connect to ${db}"
+  exit 1
 }
 
 function moreSetup {
@@ -39,5 +45,6 @@ export GOPATH=$PWD
 
 bootDB "${DB:-"notset"}"
 moreSetup
+
 set +e
-exec /bin/bash
+exec /bin/bash "$@"
