@@ -19,9 +19,8 @@ module VCAP::CloudController
 
     describe 'last_update' do
       it 'returns the last update timestamp' do
-        AsgLatestUpdate.const_get(:AsgTimestamp).create last_update: Time.parse("2019-01-01T01:01:01.1234+00:00")
-        expect(AsgLatestUpdate.last_update.to_datetime.rfc3339(6)).to eq "2019-01-01T01:01:01.123400+00:00"
-
+        AsgLatestUpdate.const_get(:AsgTimestamp).create last_update: Time.parse('2019-01-01T01:01:01.1234+00:00')
+        expect(AsgLatestUpdate.last_update.to_datetime.rfc3339(6)).to eq '2019-01-01T01:01:01.123400+00:00'
       end
 
       context 'when there is no previous update' do

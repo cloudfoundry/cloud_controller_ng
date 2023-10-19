@@ -4,16 +4,17 @@ require 'migrations/helpers/migration_shared_context'
 RSpec.describe 'migration to enable microsecond precision on asg last updated table', isolation: :truncation do
   include_context 'migration' do
     let(:migration_filename) { '20231016094900_microsecond_timestamp_msql_asg_update.rb' }
-    let(:ds) { db[:asg_timestamps].with_extend do
+    let(:ds) do
+      db[:asg_timestamps].with_extend do
         def supports_timestamp_usecs?
           true
         end
+
         def timestamp_precision
           6
         end
+      end
     end
-
-    }
   end
 
   describe 'asg_timestamps table' do
