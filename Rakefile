@@ -28,7 +28,7 @@ task default: default_tasks
 task rubocop_autocorrect: :environment do
   require 'rubocop'
   cli = RuboCop::CLI.new
-  exit_code = cli.run(%w[--auto-correct --fail-level autocorrect])
+  exit_code = cli.run(%w[--autocorrect --fail-level autocorrect])
   exit(exit_code) if exit_code != 0
 end
 

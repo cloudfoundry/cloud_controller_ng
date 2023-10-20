@@ -13,7 +13,7 @@ begin
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
       abort 'No files have changed; consider running rake rubocop:local instead' if changelist.empty?
       cli = RuboCop::CLI.new
-      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
+      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--autocorrect'))
       exit(exit_code) if exit_code != 0
     end
 
@@ -28,7 +28,7 @@ begin
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
       abort 'No local files; consider running rake rubocop:changed instead' if changelist.empty?
       cli = RuboCop::CLI.new
-      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
+      exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--autocorrect'))
       exit(exit_code) if exit_code != 0
     end
   end
