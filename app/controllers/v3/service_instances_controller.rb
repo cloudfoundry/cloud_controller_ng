@@ -199,6 +199,8 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(service_instance.space_id, service_instance.space.organization_id)
 
+    service_event_repository.record_user_provided_service_instance_event(:show, service_instance)
+
     render status: :ok, json: (service_instance.credentials || {})
   end
 

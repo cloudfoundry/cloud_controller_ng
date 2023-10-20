@@ -138,17 +138,17 @@ module VCAP::CloudController
       status_code = status_from_operation_state(service_instance)
       headers = { 'Location' => "#{self.class.path}/#{service_instance.guid}" } if status_code == HTTP::ACCEPTED
 
-      [
-        status_code,
-        headers,
-        object_renderer.render_json(self.class, service_instance, @opts)
-      ]
+      [status_code, headers, object_renderer.render_json(self.class, service_instance, @opts)]
     rescue LockCheck::ServiceBindingLockedError => e
       raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
     end
 
     def read(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+
+      method = service_instance.instance_of?(UserProvidedServiceInstance) ? :record_user_provided_service_instance_event : :record_service_instance_event
+      @services_event_repository.send(method, :show, service_instance)
+
       object_renderer.render_json(self.class, service_instance, @opts)
     end
 

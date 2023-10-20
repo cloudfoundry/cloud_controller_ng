@@ -491,6 +491,12 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances/:guid/credentials' do
+    let(:space_dev_headers) do
+      org.add_user(user)
+      space.add_developer(user)
+      headers_for(user)
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
       let(:credentials) { { 'fake-key' => 'fake-value' } }
@@ -525,6 +531,23 @@ RSpec.describe 'V3 service instances' do
       msi = VCAP::CloudController::ManagedServiceInstance.make(space:)
       get "/v3/service_instances/#{msi.guid}/credentials", nil, admin_headers
       expect(last_response).to have_status_code(404)
+    end
+
+    it 'records an audit event' do
+      upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: {})
+      get "/v3/service_instances/#{upsi.guid}/credentials", nil, space_dev_headers
+      expect(last_response).to have_status_code(200)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+                                        type: 'audit.user_provided_service_instance.show',
+                                        actor: user.guid,
+                                        actee: upsi.guid,
+                                        actee_type: 'user_provided_service_instance',
+                                        actee_name: upsi.name,
+                                        space_guid: space.guid,
+                                        organization_guid: space.organization.guid
+                                      })
     end
   end
 

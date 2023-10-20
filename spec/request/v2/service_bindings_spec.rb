@@ -311,6 +311,23 @@ RSpec.describe 'ServiceBindings' do
       get "/v2/service_bindings/#{non_displayed_binding.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(404)
     end
+
+    it 'creates an audit event' do
+      get "/v2/service_bindings/#{service_binding1.guid}", nil, headers_for(user)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.service_binding.show')
+      expect(event.actee).to eq(service_binding1.guid)
+      expect(event.actee_type).to eq('service_binding')
+      expect(event.metadata).to match(
+        {
+          'request' => {
+            'app_guid' => service_binding1.app_guid,
+            'service_instance_guid' => service_binding1.service_instance_guid
+          }
+        }
+      )
+    end
   end
 
   describe 'POST /v2/service_bindings' do

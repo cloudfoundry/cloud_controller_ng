@@ -73,6 +73,8 @@ module VCAP::CloudController
         e.name == 'NotAuthorized' ? raise(CloudController::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)) : raise(e)
       end
 
+      @services_event_repository.record_service_key_event(:show, service_key)
+
       [HTTP::OK,
        { 'Location' => "#{self.class.path}/#{service_key.guid}" },
        object_renderer.render_json(self.class, service_key, @opts)]

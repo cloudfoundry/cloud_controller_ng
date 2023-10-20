@@ -76,6 +76,23 @@ module VCAP::CloudController
         )
       end
 
+      def record_show(service_binding, user_audit_info)
+        metadata = {
+          request: {
+            service_instance_guid: service_binding.service_instance_guid
+          }
+        }
+
+        metadata[:request].merge!({ app_guid: service_binding.app_guid }) if service_binding.try(:app_guid)
+
+        record_event(
+          type: "audit.#{@actee_name}.show",
+          service_binding: service_binding,
+          user_audit_info: user_audit_info,
+          metadata: metadata
+        )
+      end
+
       private
 
       def censor_request_attributes(request)

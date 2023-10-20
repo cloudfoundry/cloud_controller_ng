@@ -617,6 +617,25 @@ RSpec.describe 'v3 service credential bindings' do
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(200)
       end
+
+      it 'logs an audit event' do
+        api_call.call(admin_headers)
+        event = VCAP::CloudController::Event.find(type: 'audit.service_binding.show')
+
+        expect(event.type).to eq('audit.service_binding.show')
+        expect(event.actee_type).to eq('service_binding')
+
+        expect(event.metadata).to match(
+          {
+            'request' => {
+              'app_guid' => app_binding.app_guid,
+              'service_instance_guid' => app_binding.service_instance_guid
+            }
+          }
+        )
+
+        expect(event.actee).to eq(app_binding.guid)
+      end
     end
 
     context "last binding operation is in 'create in progress' state" do
@@ -791,6 +810,23 @@ RSpec.describe 'v3 service credential bindings' do
           expect(last_response).to have_status_code(200)
           expect(credhub_server_stub).not_to have_been_requested
           expect(parsed_response['credentials']).to eq(key_binding.credentials)
+        end
+
+        it 'logs an audit event' do
+          api_call.call(admin_headers)
+          event = VCAP::CloudController::Event.find(type: 'audit.service_key.show')
+
+          expect(event.actee).to eq(key_binding.guid)
+          expect(event.type).to eq('audit.service_key.show')
+          expect(event.actee_type).to eq('service_key')
+
+          expect(event.metadata).to match(
+            {
+              'request' => {
+                'service_instance_guid' => key_binding.service_instance_guid
+              }
+            }
+          )
         end
       end
 
