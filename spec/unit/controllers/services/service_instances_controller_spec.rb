@@ -2,6 +2,7 @@ require 'spec_helper'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
+# rubocop:disable Metrics/ModuleLength
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceInstancesController, :services do
     let(:service_broker_url_regex) { %r{http://example.com/v2/service_instances/(.*)} }
@@ -1563,6 +1564,22 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
+
+        it 'creates a service audit event for showing the service instance' do
+          set_current_user(developer)
+          get "v2/service_instances/#{service_instance.guid}"
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.show')
+          expect(event.type).to eq('audit.service_instance.show')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(developer.guid)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+        end
       end
 
       context 'with a user provided service instance' do
@@ -1580,6 +1597,21 @@ module VCAP::CloudController
           get "v2/service_instances/#{service_instance.guid}"
           expect(last_response.status).to eq(200)
           expect(decoded_response.fetch('entity').fetch('service_bindings_url')).to include('user_provided_service_instances')
+        end
+
+        it 'creates a service audit event for showing the service instance' do
+          get "v2/service_instances/#{service_instance.guid}"
+
+          event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.show')
+          expect(event.type).to eq('audit.user_provided_service_instance.show')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(developer.guid)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('user_provided_service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
         end
       end
     end
@@ -5482,3 +5514,4 @@ module VCAP::CloudController
     end
   end
 end
+# rubocop:enable Metrics/ModuleLength

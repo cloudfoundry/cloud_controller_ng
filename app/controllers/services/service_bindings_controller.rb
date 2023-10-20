@@ -22,11 +22,16 @@ module VCAP::CloudController
     get path_guid, :read
 
     def read(guid)
-      obj = find_guid(guid)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) if obj.v2_app.blank?
+      service_binding = find_guid(guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) if service_binding.v2_app.blank?
 
-      validate_access(:read, obj)
-      object_renderer.render_json(self.class, obj, @opts)
+      validate_access(:read, service_binding)
+
+      Repositories::ServiceGenericBindingEventRepository.new(
+        Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+      ).record_show(service_binding, UserAuditInfo.from_context(SecurityContext))
+
+      object_renderer.render_json(self.class, service_binding, @opts)
     end
 
     post path, :create

@@ -131,7 +131,7 @@ class ServiceCredentialBindingsController < ApplicationController
     not_found! unless can_read_secrets_in_the_binding_space?
     not_found_with_message!(service_credential_binding) unless service_credential_binding.create_succeeded?
 
-    credentials = if service_credential_binding[:type] == 'key' && service_credential_binding.credhub_reference?
+    credentials = if service_credential_binding.is_a?(ServiceKey) && service_credential_binding.credhub_reference?
                     fetch_credentials_value(service_credential_binding.credhub_reference)
                   else
                     service_credential_binding.credentials
@@ -141,6 +141,16 @@ class ServiceCredentialBindingsController < ApplicationController
       binding: service_credential_binding,
       credentials: credentials
     ).to_hash
+
+    type = if service_credential_binding.is_a?(ServiceKey)
+             Repositories::ServiceGenericBindingEventRepository::SERVICE_KEY_CREDENTIAL_BINDING
+           else
+             Repositories::ServiceGenericBindingEventRepository::SERVICE_APP_CREDENTIAL_BINDING
+           end
+    Repositories::ServiceGenericBindingEventRepository.new(type).record_show(
+      service_credential_binding,
+      user_audit_info
+    )
 
     render status: :ok, json: details
   end

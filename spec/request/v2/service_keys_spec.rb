@@ -89,6 +89,23 @@ RSpec.describe 'ServiceKeys' do
         }
       )
     end
+
+    it 'creates an audit event' do
+      get "/v2/service_keys/#{service_key1.guid}", nil, headers_for(user)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.service_key.show')
+      expect(event.actee).to eq(service_key1.guid)
+      expect(event.actee_type).to eq('service_key')
+      expect(event.metadata).to match(
+        {
+          'request' => {
+            'name' => service_key1.name,
+            'service_instance_guid' => service_key1.service_instance_guid
+          }
+        }
+      )
+    end
   end
 
   describe 'GET /v2/service_keys/:guid/parameters' do
