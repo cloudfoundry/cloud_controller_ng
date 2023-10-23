@@ -358,8 +358,6 @@ GEM
     pry-byebug (3.10.1)
       byebug (~> 11.0)
       pry (>= 0.13, < 0.15)
-    psych (5.1.1.1)
-      stringio
     public_suffix (5.0.3)
     puma (5.6.7)
       nio4r (~> 2.0)
@@ -528,7 +526,6 @@ GEM
     steno (1.3.4)
       fluent-logger
       yajl-ruby (~> 1.0)
-    stringio (3.0.8)
     talentbox-delayed_job_sequel (4.3.0)
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 6.0)
@@ -619,7 +616,6 @@ DEPENDENCIES
   posix-spawn (~> 0.3.15)
   prometheus-client
   pry-byebug
-  psych (>= 4.0.4)
   public_suffix
   puma
   rack-test
