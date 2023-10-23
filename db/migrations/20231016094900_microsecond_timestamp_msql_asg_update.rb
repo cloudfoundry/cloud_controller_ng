@@ -1,6 +1,8 @@
-require 'date'
 Sequel.migration do
   up do
+    MIN_SERVER_VERSION = 50605
+    raise "Unsupported MySQL version #{self.server_version}, required >= #{MIN_SERVER_VERSION}" if self.server_version < MIN_SERVER_VERSION
+
     if self.class.name.match?(/mysql/i)
       run <<-SQL.squish
         ALTER TABLE asg_timestamps MODIFY last_update TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
