@@ -63,10 +63,10 @@ class DbConfig
   end
 
   def default_name
-    if ENV['TEST_ENV_NUMBER'].nil? || ENV['TEST_ENV_NUMBER'].empty?
-      'cc_test'
-    else
+    if ENV['TEST_ENV_NUMBER'].presence
       "cc_test_#{ENV.fetch('TEST_ENV_NUMBER')}"
+    else
+      'cc_test'
     end
   end
 end
