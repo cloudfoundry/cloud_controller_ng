@@ -1,7 +1,7 @@
 Sequel.migration do
   up do
-    MIN_SERVER_VERSION = 50605
-    raise "Unsupported MySQL version #{self.server_version}, required >= #{MIN_SERVER_VERSION}" if self.server_version < MIN_SERVER_VERSION
+    MIN_SERVER_VERSION = 50_605
+    raise "Unsupported MySQL version #{server_version}, required >= #{MIN_SERVER_VERSION}" if server_version < MIN_SERVER_VERSION
 
     if self.class.name.match?(/mysql/i)
       run <<-SQL.squish
