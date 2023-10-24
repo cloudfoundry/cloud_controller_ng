@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     describe 'start!' do
       it 'starts the puma server' do
-        expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration), events: anything).and_call_original
+        expect(Puma::Launcher).to receive(:new).with(an_instance_of(Puma::Configuration), log_writer: anything, events: anything).and_call_original
         expect_any_instance_of(Puma::Launcher).to receive(:run)
         subject.start!
       end
