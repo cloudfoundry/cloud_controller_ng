@@ -73,7 +73,15 @@ module VCAP::CloudController
         puma_launcher.config.final_options[:before_fork].first.call
       end
 
-      it 'sets up metrics updates in the after_worker_fork' do
+      it 'logs incomplete requests on worker shutdown' do
+        expect(request_logs).to receive(:log_incomplete_requests)
+        subject.start!
+        puma_launcher = subject.instance_variable_get(:@puma_launcher)
+
+        puma_launcher.config.final_options[:before_worker_shutdown].first.call
+      end
+
+      it 'sets up metrics updates in the Events:on_booted hook' do
         subject.start!
         puma_launcher = subject.instance_variable_get(:@puma_launcher)
 
@@ -81,7 +89,7 @@ module VCAP::CloudController
         allow(Thread).to receive(:new).and_yield
         allow(EM).to receive(:run).and_yield
         expect(EM).to receive(:run)
-        puma_launcher.config.final_options[:after_worker_fork].first.call
+        puma_launcher.events.fire(:on_booted)
       end
 
       it 'logs an error if an exception is raised' do
@@ -102,15 +110,9 @@ module VCAP::CloudController
       end
     end
 
-    describe '#stop!' do
-      it 'stops puma and EM, logs incomplete requests' do
-        expect(request_logs).to receive(:log_incomplete_requests)
+    describe 'Events:on_stopped' do
+      it 'stops EM' do
         expect(EM).to receive(:stop)
-        subject.stop!
-      end
-
-      it 'gets called when the launcher stops' do
-        expect(subject).to receive(:stop!)
         subject.instance_variable_get(:@puma_launcher).events.fire(:on_stopped)
       end
     end
