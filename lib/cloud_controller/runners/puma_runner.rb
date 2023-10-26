@@ -6,14 +6,26 @@ module VCAP::CloudController
   class PumaRunner
     def initialize(config, app, logger, periodic_updater, request_logs)
       @logger = logger
+
       puma_config = Puma::Configuration.new do |conf|
         if config.get(:nginx, :use_nginx)
           conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
         else
           conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
         end
-        conf.threads(0, config.get(:puma, :max_threads)) if config.get(:puma, :max_threads)
-        conf.workers config.get(:puma, :workers) if config.get(:puma, :workers)
+
+        conf.workers(config.get(:puma, :workers) || 1)
+        conf.threads(0, config.get(:puma, :max_threads) || 1)
+
+        # In theory there shouldn't be any open connections when shutting down Puma as they have either been gracefully
+        # drained or forcefully terminated (after cc.nginx_drain_timeout) by Nginx. Puma has some built-in (i.e. not
+        # changeable) timeouts as well as some configurable timeouts.
+
+        # Reduce the worker shutdown timeout to 15 seconds (default is 30).
+        conf.worker_shutdown_timeout(15)
+        # Reduce the thread shutdown timeout to 10 seconds (4 [force_shutdown_after] + 5 [SHUTDOWN_GRACE_TIME] + 1)
+        conf.force_shutdown_after(4)
+
         conf.app app
         conf.before_fork do
           Sequel::Model.db.disconnect
@@ -22,7 +34,9 @@ module VCAP::CloudController
           request_logs.log_incomplete_requests if request_logs
         end
       end
+
       log_writer = Puma::LogWriter.stdio
+
       events = Puma::Events.new
       events.on_booted do
         Thread.new do
@@ -39,7 +53,7 @@ module VCAP::CloudController
     def start!
       @puma_launcher.run
     rescue StandardError => e
-      @logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+      @logger.error "Encountered error: #{e}\n#{e.backtrace&.join("\n")}"
       raise e
     end
   end
