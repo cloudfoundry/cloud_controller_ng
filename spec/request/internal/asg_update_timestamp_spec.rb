@@ -11,7 +11,7 @@ RSpec.describe 'App Security Group Update Timestamp' do
 
       expect(last_response).to have_status_code(200)
       parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response['last_update']).to eq('1970-01-01T00:00:00Z')
+      expect(parsed_response['last_update']).to eq('1970-01-01T00:00:00.000000000+00:00')
     end
   end
 end
