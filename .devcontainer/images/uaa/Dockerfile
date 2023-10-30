@@ -1,11 +1,11 @@
 # Build image
-FROM openjdk:11.0-jdk AS builder
+FROM sapmachine:21-jdk-headless-ubuntu-jammy AS builder
 
 WORKDIR /uaa
 
 # Patch admin client, add authority password.write
 COPY PatchAdminOAuthClient.java /PatchAdminOAuthClient.java
-RUN apt-get  update && apt-get install jq -y \
+RUN apt-get  update && apt-get install jq git curl -y \
   && git clone -b $(curl -s https://api.github.com/repos/cloudfoundry/uaa/releases/latest | jq -r '.tag_name') https://github.com/cloudfoundry/uaa.git . --recursive --depth=1 --shallow-submodules \
   && git clone -b $(curl -s https://api.github.com/repos/pivotal/credhub-release/releases/latest | jq -r '.tag_name') https://github.com/pivotal/credhub-release /credhub-release --recursive --depth=1 --shallow-submodules \
   && javac /PatchAdminOAuthClient.java -d / \
@@ -35,7 +35,7 @@ RUN yq  e '.issuer.uri = "http://localhost:8080"' -i /uaa.yml \
   && yq ea 'select(fi == 0) * select(fi == 1)' -i /uaa.yml /credhub-uaa.yml
 
 # Runtime image
-FROM tomcat:9-jdk11
+FROM tomcat:9-jdk21
 
 # Copy config file from yq image
 COPY --from=yq /uaa.yml /uaa.yml
