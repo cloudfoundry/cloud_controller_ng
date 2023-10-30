@@ -29,6 +29,7 @@ module VCAP::CloudController
 
           info = {
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
+            routable: actual_lrp.routable,
             isolation_segment: desired_lrp.PlacementTags.first,
             stats: {
               name: process.name,

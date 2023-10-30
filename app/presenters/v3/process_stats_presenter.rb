@@ -35,6 +35,7 @@ module VCAP::CloudController
             type: @type,
             index: index,
             state: stats[:state],
+            routable: stats[:routable],
             host: stats[:stats][:host],
             instance_internal_ip: stats[:stats][:net_info][:instance_address],
             uptime: stats[:stats][:uptime],
@@ -55,6 +56,7 @@ module VCAP::CloudController
             type: @type,
             index: index,
             state: stats[:state],
+            routable: stats[:routable],
             uptime: stats.dig(:stats, :uptime),
             isolation_segment: stats[:isolation_segment],
             details: stats[:details]

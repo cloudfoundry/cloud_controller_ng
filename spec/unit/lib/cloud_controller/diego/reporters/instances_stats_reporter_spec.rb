@@ -13,12 +13,14 @@ module VCAP::CloudController
 
       let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
       let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
+      let(:is_routable) { true }
 
       def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
         ::Diego::Bbs::Models::ActualLRP.new(
           actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(index:),
           actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid:),
           state: state,
+          routable: is_routable,
           placement_error: error,
           since: since
         )
@@ -78,6 +80,7 @@ module VCAP::CloudController
           {
             0 => {
               state: 'RUNNING',
+              routable: is_routable,
               isolation_segment: 'isolation-segment-name',
               stats: {
                 name: process.name,
@@ -113,6 +116,15 @@ module VCAP::CloudController
 
         it 'returns a map of stats & states per index in the correct units' do
           expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
+        end
+
+        context 'when process is not routable' do
+          let(:is_routable) { false }
+
+          it 'sets the routable property to false' do
+            response, = instances_reporter.stats_for_app(process)
+            expect(response[0][:routable]).to be(false)
+          end
         end
 
         it 'passes a process_id filter' do
@@ -257,6 +269,7 @@ module VCAP::CloudController
             {
               0 => {
                 state: 'RUNNING',
+                routable: true,
                 isolation_segment: 'isolation-segment-name',
                 stats: {
                   name: process.name,
@@ -388,6 +401,7 @@ module VCAP::CloudController
             {
               0 => {
                 state: 'RUNNING',
+                routable: true,
                 isolation_segment: 'isolation-segment-name',
                 stats: {
                   name: process.name,

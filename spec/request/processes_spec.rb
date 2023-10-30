@@ -521,6 +521,7 @@ RSpec.describe 'Processes' do
       {
         0 => {
           state: 'RUNNING',
+          routable: true,
           details: 'some-details',
           isolation_segment: 'very-isolated',
           stats: {
@@ -554,6 +555,7 @@ RSpec.describe 'Processes' do
           'type' => 'worker',
           'index' => 0,
           'state' => 'RUNNING',
+          'routable' => true,
           'isolation_segment' => 'very-isolated',
           'details' => 'some-details',
           'usage' => {
