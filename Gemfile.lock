@@ -100,6 +100,7 @@ GEM
     azure_mgmt_traffic_manager (0.9.0)
       ms_rest_azure (~> 0.7.0)
     backport (1.2.0)
+    base64 (0.1.1)
     beefcake (1.0.0)
     benchmark (0.2.1)
     bigdecimal (3.1.4)
@@ -330,7 +331,8 @@ GEM
     net-ssh (7.2.0)
     netaddr (2.0.6)
     netrc (0.11.0)
-    newrelic_rpm (9.5.0)
+    newrelic_rpm (9.6.0)
+      base64
     nio4r (2.5.9)
     nokogiri (1.15.4)
       mini_portile2 (~> 2.8.2)
