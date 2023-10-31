@@ -168,7 +168,8 @@ module VCAP::CloudController
         @log_counter,
         Steno.logger('cc.api'),
         [
-          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
+          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
+          VCAP::CloudController::Metrics::PrometheusUpdater.new
         ]
       )
     end

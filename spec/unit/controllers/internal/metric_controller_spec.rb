@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
 
       before do
+        Timecop.freeze
         allow(EventMachine).to receive(:connection_count).and_return(123)
 
         allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
@@ -21,12 +22,28 @@ module VCAP::CloudController
         end
       end
 
+      after { Timecop.return }
+
       describe '#index' do
         it 'returns a 200' do
           get '/internal/v4/metrics'
 
           expect(last_response.status).to eq 200
           expect(last_response.body).to match(/cc_vitals_num_cores [1-9][0-9]*.\d+/)
+        end
+
+        it 'returns the correct uptime' do
+          get '/internal/v4/metrics'
+
+          expect(last_response.body).to include('cc_vitals_uptime 0.0')
+
+          Timecop.travel(60.seconds)
+          get '/internal/v4/metrics'
+          expect(last_response.body).to include('cc_vitals_uptime 60.0')
+
+          Timecop.travel(30.seconds)
+          get '/internal/v4/metrics'
+          expect(last_response.body).to include('cc_vitals_uptime 90.0')
         end
       end
     end

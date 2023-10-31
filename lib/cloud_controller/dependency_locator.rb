@@ -40,6 +40,7 @@ module CloudController
     def initialize
       @config = VCAP::CloudController::Config.config
       @dependencies = {}
+      @start_time = Time.now.utc
     end
 
     def config
@@ -331,6 +332,11 @@ module CloudController
       )
     end
 
+    def periodic_updater
+      @dependencies[:periodic_updater] ||
+        register(:periodic_updater, build_periodic_updater)
+    end
+
     def statsd_client
       @dependencies[:statsd_client] ||
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
@@ -430,6 +436,18 @@ module CloudController
                                                                                collection_transformer:,
                                                                                max_total_results:
                                                                              })
+    end
+
+    def build_periodic_updater
+      VCAP::CloudController::Metrics::PeriodicUpdater.new(
+        Time.now.utc,
+        Steno::Sink::Counter.new,
+        Steno.logger('cc.api'),
+        [
+          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
+          VCAP::CloudController::Metrics::PrometheusUpdater.new
+        ]
+      )
     end
   end
 end

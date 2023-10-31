@@ -514,6 +514,16 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#periodic_updater' do
+    it 'returns the periodic updater' do
+      expected_updater = double(VCAP::CloudController::Metrics::PeriodicUpdater)
+
+      allow(VCAP::CloudController::Metrics::PeriodicUpdater.to(receive(:new).and_return(expected_updater)))
+
+      expect(locator.periodic_updater).to eq(expected_updater)
+    end
+  end
+
   describe '#bbs_stager_client' do
     let(:diego_client) { double }
 
