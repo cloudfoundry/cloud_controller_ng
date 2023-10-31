@@ -91,15 +91,8 @@ We do not recommend using internal API endpoints for anything other than their i
 
 **Auth Mechanism:** mTLS
 
-### GET /internal/v4/syslog_drain_urls
-**Description:** Return list of syslog drain urls from logging services
-
-**Intended Consumer:** Loggregator
-
-**Auth Mechanism:** mTLS
-
 ### GET /internal/v5/syslog_drain_urls
-**Description:** Return list of syslog drain urls from logging services. Intends to replace v4 version. 
+**Description:** Return list of syslog drain urls from logging services.
 
 **Intended Consumer:** Loggregator
 
