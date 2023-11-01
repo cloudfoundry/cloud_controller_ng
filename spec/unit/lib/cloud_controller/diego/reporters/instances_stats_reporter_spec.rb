@@ -16,14 +16,15 @@ module VCAP::CloudController
       let(:is_routable) { true }
 
       def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
-        ::Diego::Bbs::Models::ActualLRP.new(
+        lrp = ::Diego::Bbs::Models::ActualLRP.new(
           actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(index:),
           actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid:),
           state: state,
-          routable: is_routable,
           placement_error: error,
           since: since
         )
+        lrp.routable = is_routable unless is_routable.nil?
+        lrp
       end
 
       before { Timecop.freeze(Time.at(1.day.ago.to_i)) }
@@ -124,6 +125,16 @@ module VCAP::CloudController
           it 'sets the routable property to false' do
             response, = instances_reporter.stats_for_app(process)
             expect(response[0][:routable]).to be(false)
+          end
+        end
+
+        context 'when diego does not send the routable property' do
+          let(:is_routable) { nil }
+
+          it 'does not include the routable property in stats' do
+            response, = instances_reporter.stats_for_app(process)
+            expect(response[0]).to have_key(:routable)
+            expect(response[0][:routable]).to be_nil
           end
         end
 

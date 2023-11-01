@@ -163,6 +163,44 @@ module VCAP::CloudController::Presenters::V3
         )
       end
 
+      context 'diego does not provide the "routable" field' do
+        let(:stats_for_process) do
+          {
+            0 => {
+              state: 'RUNNING',
+              routable: nil,
+              isolation_segment: 'hecka-compliant',
+              stats: {
+                name: process.name,
+                uris: process.uris,
+                host: 'myhost',
+                net_info: net_info_1,
+                uptime: 12_345,
+                mem_quota: process[:memory] * 1024 * 1024,
+                disk_quota: process[:disk_quota] * 1024 * 1024,
+                log_rate_limit: process[:log_rate_limit],
+                fds_quota: process.file_descriptors,
+                usage: {
+                  time: '2015-12-08 16:54:48 -0800',
+                  cpu: 80,
+                  mem: 128,
+                  disk: 1024,
+                  log_rate: 2048
+                }
+              }
+            }
+          }
+        end
+
+        it 'does not set routable, with state of RUNNING' do
+          result = presenter.present_stats_hash
+
+          expect(result[0][:state]).to eq('RUNNING')
+          expect(result[0]).to have_key(:routable)
+          expect(result[0][:routable]).to be_nil
+        end
+      end
+
       context 'the process is running, but not routable due to failed readiness check in diego' do
         let(:stats_for_process) do
           {

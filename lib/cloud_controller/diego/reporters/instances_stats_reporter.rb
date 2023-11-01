@@ -29,7 +29,6 @@ module VCAP::CloudController
 
           info = {
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
-            routable: actual_lrp.routable,
             isolation_segment: desired_lrp.PlacementTags.first,
             stats: {
               name: process.name,
@@ -41,7 +40,9 @@ module VCAP::CloudController
               fds_quota: process.file_descriptors
             }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index))
           }
-          info[:details]                          = actual_lrp.placement_error if actual_lrp.placement_error.present?
+          info[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
+
+          info[:routable] = (actual_lrp.routable if actual_lrp.optional_routable)
           result[actual_lrp.actual_lrp_key.index] = info
         end
 

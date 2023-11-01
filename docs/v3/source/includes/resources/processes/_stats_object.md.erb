@@ -14,7 +14,7 @@ Name | Type | Description
 **type** | _string_ | Process type; a unique identifier for processes belonging to an app
 **index** | _integer_ | The zero-based index of running instances
 **state** | _string_ | The state of the instance; valid values are `RUNNING`, `CRASHED`, `STARTING`, `DOWN`
-**routable** | _boolean_ | Whether or not the instance is routable (determined by the readiness check of the app)
+**routable** | _boolean_ | Whether or not the instance is routable (determined by the readiness check of the app). If app readiness checks and routability are unsupported by Diego, this will return as `null`.
 **usage** | _object_ | Object containing actual usage data for the instance; the value is `{}` when usage data is unavailable
 **usage.time** | _[timestamp](#timestamps)_ | The time when the usage was requested
 **usage.cpu** | _number_ | The current cpu usage of the instance
