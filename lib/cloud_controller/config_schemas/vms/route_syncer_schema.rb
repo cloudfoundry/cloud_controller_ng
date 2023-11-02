@@ -37,18 +37,8 @@ module VCAP::CloudController
               optional(:pbkdf2_hmac_iterations) => Integer
             },
 
-            internal_route_vip_range: String,
+            internal_route_vip_range: String
 
-            copilot: {
-              sync_frequency_in_seconds: Integer,
-              enabled: bool,
-              host: String,
-              port: Integer,
-              client_ca_file: String,
-              client_key_file: String,
-              client_chain_file: String,
-              optional(:temporary_istio_domains) => Array
-            }
           }
         end
 

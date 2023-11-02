@@ -1,5 +1,3 @@
-require 'cloud_controller/copilot/adapter'
-
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
     DEFAULT_PROTOCOL_MAPPING = { 'tcp' => 'tcp', 'http' => 'http1' }.freeze
@@ -43,14 +41,6 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       { space: Space.user_visible(user) }
-    end
-
-    def after_destroy
-      super
-
-      db.after_commit do
-        Copilot::Adapter.unmap_route(self)
-      end
     end
 
     def adapted_weight

@@ -278,38 +278,6 @@ module VCAP::CloudController
           RouteMappingModel.make(valid_route_mapping_opts)
         end.to change(RouteMappingModel, :count).by(1)
       end
-
-      describe 'copilot integration', isolation: :truncation do
-        before do
-          allow(Copilot::Adapter).to receive(:unmap_route)
-        end
-
-        context 'on delete' do
-          let!(:route_mapping) do
-            RouteMappingModel.make({
-                                     app: app_model,
-                                     route: route,
-                                     process_type: 'buckeyes',
-                                     app_port: -1
-                                   })
-          end
-
-          it 'unmaps the route in copilot' do
-            expect(Copilot::Adapter).to receive(:unmap_route).with(route_mapping)
-            route_mapping.destroy
-          end
-
-          context 'when the delete is part of a transaction' do
-            it 'only executes after the transaction is completed' do
-              RouteMappingModel.db.transaction do
-                route_mapping.destroy
-                expect(Copilot::Adapter).not_to have_received(:unmap_route)
-              end
-              expect(Copilot::Adapter).to have_received(:unmap_route).with(route_mapping)
-            end
-          end
-        end
-      end
     end
   end
 end

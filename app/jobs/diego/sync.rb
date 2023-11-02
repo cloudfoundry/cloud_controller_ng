@@ -1,7 +1,6 @@
 require 'cloud_controller/diego/processes_sync'
 require 'cloud_controller/diego/tasks_sync'
 require 'statsd'
-require 'cloud_controller/copilot/sync'
 
 module VCAP::CloudController
   module Jobs

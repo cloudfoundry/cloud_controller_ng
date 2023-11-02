@@ -4,7 +4,6 @@ require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/egress_rules'
-require 'cloud_controller/backends/copilot_runner_delegator'
 
 module VCAP::CloudController
   class Runners
@@ -13,9 +12,7 @@ module VCAP::CloudController
     end
 
     def runner_for_process(process)
-      # TODO: stop using this Copilot wrapper since no more Copilot
-      # see: https://github.com/cloudfoundry/istio-release#deprecated
-      CopilotRunnerDelegator.new(diego_runner(process), process)
+      diego_runner(process)
     end
 
     def diego_processes(batch_size, last_id)

@@ -140,21 +140,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        describe 'copilot integration' do
-          before do
-            allow(Copilot::Adapter).to receive(:map_route)
-          end
-
-          it 'delegates to the copilot handler to notify copilot' do
-            expect do
-              subject.add(params, route, apps_hash, user_audit_info)
-              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
-              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
-              expect(Copilot::Adapter).not_to have_received(:map_route).with(have_attributes(process_type: 'existing'))
-            end.to change(RouteMappingModel, :count).by(2)
-          end
-        end
       end
 
       context 'when a fully equal destination already exists' do
@@ -641,22 +626,6 @@ module VCAP::CloudController
           end
         end
 
-        describe 'copilot integration' do
-          before do
-            allow(Copilot::Adapter).to receive(:map_route)
-            allow(Copilot::Adapter).to receive(:unmap_route)
-          end
-
-          it 'delegates to the copilot handler to notify copilot' do
-            expect do
-              subject.replace(params, route, apps_hash, user_audit_info)
-              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
-              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
-              expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
-            end.to change(RouteMappingModel, :count).by(1)
-          end
-        end
-
         context 'when deleting a the last destination for a port' do
           let(:params) { [] }
 
@@ -813,17 +782,6 @@ module VCAP::CloudController
             perform_validation: false,
             updated_ports: [3001]
           )
-        end
-      end
-
-      describe 'copilot integration' do
-        before do
-          allow(Copilot::Adapter).to receive(:unmap_route)
-        end
-
-        it 'delegates to the copilot handler to notify copilot' do
-          subject.delete(existing_destination, route, user_audit_info)
-          expect(Copilot::Adapter).to have_received(:unmap_route).with(existing_destination)
         end
       end
 
