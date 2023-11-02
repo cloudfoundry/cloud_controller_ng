@@ -59,6 +59,7 @@ module VCAP::CloudController::Presenters::V3
         {
           0 => {
             state: 'RUNNING',
+            routable: true,
             isolation_segment: 'hecka-compliant',
             stats: {
               name: process.name,
@@ -82,6 +83,7 @@ module VCAP::CloudController::Presenters::V3
           1 => {
             state: 'CRASHED',
             details: 'some-details',
+            routable: false,
             stats: {
               name: process.name,
               uris: process.uris,
@@ -103,6 +105,7 @@ module VCAP::CloudController::Presenters::V3
           },
           2 => {
             state: 'DOWN',
+            routable: false,
             details: 'you must construct additional pylons',
             stats: {
               uptime: 0
@@ -117,6 +120,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:type]).to eq(process.type)
         expect(result[0][:index]).to eq(0)
         expect(result[0][:state]).to eq('RUNNING')
+        expect(result[0][:routable]).to be(true)
         expect(result[0][:details]).to be_nil
         expect(result[0][:isolation_segment]).to eq('hecka-compliant')
         expect(result[0][:host]).to eq('myhost')
@@ -136,6 +140,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:type]).to eq(process.type)
         expect(result[1][:index]).to eq(1)
         expect(result[1][:state]).to eq('CRASHED')
+        expect(result[1][:routable]).to be(false)
         expect(result[1][:details]).to eq('some-details')
         expect(result[1][:isolation_segment]).to be_nil
         expect(result[1][:host]).to eq('toast')
@@ -151,10 +156,86 @@ module VCAP::CloudController::Presenters::V3
           type: process.type,
           index: 2,
           state: 'DOWN',
+          routable: false,
           uptime: 0,
           isolation_segment: nil,
           details: 'you must construct additional pylons'
         )
+      end
+
+      context 'diego does not provide the "routable" field' do
+        let(:stats_for_process) do
+          {
+            0 => {
+              state: 'RUNNING',
+              routable: nil,
+              isolation_segment: 'hecka-compliant',
+              stats: {
+                name: process.name,
+                uris: process.uris,
+                host: 'myhost',
+                net_info: net_info_1,
+                uptime: 12_345,
+                mem_quota: process[:memory] * 1024 * 1024,
+                disk_quota: process[:disk_quota] * 1024 * 1024,
+                log_rate_limit: process[:log_rate_limit],
+                fds_quota: process.file_descriptors,
+                usage: {
+                  time: '2015-12-08 16:54:48 -0800',
+                  cpu: 80,
+                  mem: 128,
+                  disk: 1024,
+                  log_rate: 2048
+                }
+              }
+            }
+          }
+        end
+
+        it 'does not set routable, with state of RUNNING' do
+          result = presenter.present_stats_hash
+
+          expect(result[0][:state]).to eq('RUNNING')
+          expect(result[0]).to have_key(:routable)
+          expect(result[0][:routable]).to be_nil
+        end
+      end
+
+      context 'the process is running, but not routable due to failed readiness check in diego' do
+        let(:stats_for_process) do
+          {
+            0 => {
+              state: 'RUNNING',
+              routable: false,
+              isolation_segment: 'hecka-compliant',
+              stats: {
+                name: process.name,
+                uris: process.uris,
+                host: 'myhost',
+                net_info: net_info_1,
+                uptime: 12_345,
+                mem_quota: process[:memory] * 1024 * 1024,
+                disk_quota: process[:disk_quota] * 1024 * 1024,
+                log_rate_limit: process[:log_rate_limit],
+                fds_quota: process.file_descriptors,
+                usage: {
+                  time: '2015-12-08 16:54:48 -0800',
+                  cpu: 80,
+                  mem: 128,
+                  disk: 1024,
+                  log_rate: 2048
+                }
+              }
+            }
+          }
+        end
+
+        it 'sets routable to false, with state of RUNNING' do
+          result = presenter.present_stats_hash
+
+          expect(result[0][:state]).to eq('RUNNING')
+          expect(result[0][:routable]).to be(false)
+        end
       end
 
       context 'the process is running on opi and not diego, so *_tls_proxy_ports are not included in the port struct' do

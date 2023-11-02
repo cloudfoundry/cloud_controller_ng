@@ -40,7 +40,9 @@ module VCAP::CloudController
               fds_quota: process.file_descriptors
             }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index))
           }
-          info[:details]                          = actual_lrp.placement_error if actual_lrp.placement_error.present?
+          info[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
+
+          info[:routable] = (actual_lrp.routable if actual_lrp.optional_routable)
           result[actual_lrp.actual_lrp_key.index] = info
         end
 
