@@ -14906,6 +14906,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The state of the instance; valid values are <code class="prettyprint">RUNNING</code>, <code class="prettyprint">CRASHED</code>, <code class="prettyprint">STARTING</code>, <code class="prettyprint">DOWN</code></td>
 </tr>
 <tr>
+<td><strong>routable</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the instance is routable (determined by the readiness check of the app). If app readiness checks and routability are unsupported by Diego, this will return as <code class="prettyprint">null</code>.</td>
+</tr>
+<tr>
 <td><strong>usage</strong></td>
 <td><em>object</em></td>
 <td>Object containing actual usage data for the instance; the value is <code class="prettyprint">{}</code> when usage data is unavailable</td>
