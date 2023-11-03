@@ -163,7 +163,8 @@ module VCAP::CloudController
                     order("#{ProcessModel.table_name}__id".to_sym).
                     limit(BATCH_SIZE)
 
-        processes.select("#{ProcessModel.table_name}__id".to_sym, "#{ProcessModel.table_name}__guid".to_sym, "#{ProcessModel.table_name}__version".to_sym, "#{ProcessModel.table_name}__updated_at".to_sym)
+        processes.select("#{ProcessModel.table_name}__id".to_sym, "#{ProcessModel.table_name}__guid".to_sym, "#{ProcessModel.table_name}__version".to_sym,
+                         "#{ProcessModel.table_name}__updated_at".to_sym)
       end
 
       def bbs_apps_client
