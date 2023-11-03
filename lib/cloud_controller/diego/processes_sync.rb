@@ -29,9 +29,9 @@ module VCAP::CloudController
             diego_lrp    = diego_lrps.delete(process_guid)
 
             if diego_lrp.nil?
-              to_desire.append(process.guid)
+              to_desire.append(process.id)
             elsif process.updated_at.to_f.to_s != diego_lrp.annotation
-              to_update[process.guid] = diego_lrp
+              to_update[process.id] = diego_lrp
             end
           end
         end
@@ -87,7 +87,7 @@ module VCAP::CloudController
       def update_processes(to_update)
         batched_processes(to_update.keys) do |processes|
           processes.each do |process|
-            workpool.submit(process, to_update[process.guid]) do |p, l|
+            workpool.submit(process, to_update[process.id]) do |p, l|
               logger.info('updating-lrp', process_guid: p.guid, app_guid: p.app_guid)
               bbs_apps_client.update_app(p, l)
               logger.info('update-lrp', process_guid: p.guid)
@@ -145,7 +145,7 @@ module VCAP::CloudController
         processes = ProcessModel.
                     diego.
                     runnable.
-                    where(Sequel.lit("#{ProcessModel.table_name}.guid IN ?", ids)).
+                    where(Sequel.lit("#{ProcessModel.table_name}.id IN ?", ids)).
                     order("#{ProcessModel.table_name}__id".to_sym).
                     eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data })
         if FeatureFlag.enabled?(:diego_docker)
@@ -164,7 +164,7 @@ module VCAP::CloudController
                     order("#{ProcessModel.table_name}__id".to_sym).
                     limit(BATCH_SIZE)
 
-        processes.select("#{ProcessModel.table_name}__guid".to_sym, "#{ProcessModel.table_name}__version".to_sym, "#{ProcessModel.table_name}__updated_at".to_sym)
+        processes.select("#{ProcessModel.table_name}__id".to_sym, "#{ProcessModel.table_name}__guid".to_sym, "#{ProcessModel.table_name}__version".to_sym, "#{ProcessModel.table_name}__updated_at".to_sym)
       end
 
       def bbs_apps_client
