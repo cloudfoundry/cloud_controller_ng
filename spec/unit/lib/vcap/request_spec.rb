@@ -113,11 +113,22 @@ module VCAP
       end
 
       let(:user_guid) { SecureRandom.uuid }
+      let(:data) { {} }
+
+      before do
+        allow(Steno.config.context).to receive(:data).and_return(data)
+      end
 
       it 'sets the new user_guid on the Steno logger context' do
         Request.user_guid = user_guid
 
-        expect(Steno.config.context.data['user_guid']).to eq user_guid
+        expect(Steno.config.context.data.fetch('user_guid')).to eq user_guid
+      end
+
+      it 'deletes from the Steno logger context when set to nil' do
+        Request.user_guid = nil
+
+        expect(Steno.config.context.data.key?('user_guid')).to be false
       end
     end
   end
