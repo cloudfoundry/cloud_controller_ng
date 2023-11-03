@@ -21,26 +21,24 @@ module VCAP::CloudController
         @bump_freshness = true
         diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
         logger.info('fetched-scheduling-infos')
-        to_update = []
-        to_create = []
-        to_update_lrp = {}
+        to_desire = []
+        to_update = {}
         batched_processes_for_update do |processes|
           processes.each do |process|
             process_guid = ProcessGuid.from_process(process)
             diego_lrp    = diego_lrps.delete(process_guid)
 
             if diego_lrp.nil?
-              to_create.append(process.guid)
+              to_desire.append(process.guid)
             elsif process.updated_at.to_f.to_s != diego_lrp.annotation
-              to_update_lrp[process.guid] = diego_lrp
-              to_update.append(process.guid)
+              to_update[process.guid] = diego_lrp
             end
           end
         end
 
-        update_processes(to_update, to_update_lrp)
-        create_processes(to_create)
-        delete_processes(diego_lrps)
+        update_processes(to_update)
+        desire_processes(to_desire)
+        delete_lrps(diego_lrps)
 
         workpool.drain
 
@@ -86,10 +84,10 @@ module VCAP::CloudController
         @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
       end
 
-      def update_processes(to_update, to_update_lrp)
-        batched_processes(to_update) do |processes|
+      def update_processes(to_update)
+        batched_processes(to_update.keys) do |processes|
           processes.each do |process|
-            workpool.submit(process, to_update_lrp[process.guid]) do |p, l|
+            workpool.submit(process, to_update[process.guid]) do |p, l|
               logger.info('updating-lrp', process_guid: p.guid, app_guid: p.app_guid)
               bbs_apps_client.update_app(p, l)
               logger.info('update-lrp', process_guid: p.guid)
@@ -98,7 +96,7 @@ module VCAP::CloudController
         end
       end
 
-      def create_processes(to_create)
+      def desire_processes(to_create)
         batched_processes(to_create) do |processes|
           processes.each do |process|
             workpool.submit(process) do |p|
@@ -110,7 +108,7 @@ module VCAP::CloudController
         end
       end
 
-      def delete_processes(to_delete)
+      def delete_lrps(to_delete)
         to_delete.each_key do |process_guid_to_delete|
           workpool.submit(process_guid_to_delete) do |guid|
             logger.info('deleting-lrp', process_guid: guid)
