@@ -23,7 +23,7 @@ module VCAP::CloudController
         logger.info('fetched-scheduling-infos')
         to_desire = []
         to_update = {}
-        batched_processes_for_update do |processes|
+        batched_processes_for_sync do |processes|
           processes.each do |process|
             process_guid = ProcessGuid.from_process(process)
             diego_lrp    = diego_lrps.delete(process_guid)
@@ -122,7 +122,7 @@ module VCAP::CloudController
         error.backtrace.present? ? error.backtrace.join("\n") + "\n..." : ''
       end
 
-      def batched_processes_for_update
+      def batched_processes_for_sync
         last_id = 0
 
         loop do
