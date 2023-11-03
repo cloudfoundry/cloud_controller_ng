@@ -146,7 +146,6 @@ module VCAP::CloudController
                     diego.
                     runnable.
                     where(Sequel.lit("#{ProcessModel.table_name}.id IN ?", ids)).
-                    order("#{ProcessModel.table_name}__id".to_sym).
                     eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data })
         if FeatureFlag.enabled?(:diego_docker)
           processes.select_all(ProcessModel.table_name)
