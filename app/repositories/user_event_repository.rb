@@ -1,20 +1,22 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class UserEventRepository
-      def record_space_role_add(space, assignee, role, actor_audit_info, request_attrs={})
-        record_space_role_event("audit.user.space_#{role}_add", space, assignee, actor_audit_info, request_attrs)
+      def record_space_role_add(space, assignee, role_type, actor_audit_info, request_attrs={})
+        record_space_role_event(EventTypes.get("USER_#{role_type}_ADD"), space, assignee, actor_audit_info, request_attrs)
       end
 
-      def record_space_role_remove(space, assignee, role, actor_audit_info, request_attrs={})
-        record_space_role_event("audit.user.space_#{role}_remove", space, assignee, actor_audit_info, request_attrs)
+      def record_space_role_remove(space, assignee, role_type, actor_audit_info, request_attrs={})
+        record_space_role_event(EventTypes.get("USER_#{role_type}_REMOVE"), space, assignee, actor_audit_info, request_attrs)
       end
 
-      def record_organization_role_add(organization, assignee, role, actor_audit_info, request_attrs={})
-        record_organization_role_event("audit.user.organization_#{role}_add", organization, assignee, actor_audit_info, request_attrs)
+      def record_organization_role_add(organization, assignee, role_type, actor_audit_info, request_attrs={})
+        record_organization_role_event(EventTypes.get("USER_#{role_type}_ADD"), organization, assignee, actor_audit_info, request_attrs)
       end
 
-      def record_organization_role_remove(organization, assignee, role, actor_audit_info, request_attrs={})
-        record_organization_role_event("audit.user.organization_#{role}_remove", organization, assignee, actor_audit_info, request_attrs)
+      def record_organization_role_remove(organization, assignee, role_type, actor_audit_info, request_attrs={})
+        record_organization_role_event(EventTypes.get("USER_#{role_type}_REMOVE"), organization, assignee, actor_audit_info, request_attrs)
       end
 
       private

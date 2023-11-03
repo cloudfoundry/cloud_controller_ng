@@ -1,3 +1,5 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class DropletEventRepository
@@ -10,7 +12,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.droplet.create',
+          type: EventTypes::APP_DROPLET_CREATE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -33,7 +35,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.droplet.create',
+          type: EventTypes::APP_DROPLET_CREATE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -59,7 +61,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.droplet.create',
+          type: EventTypes::APP_DROPLET_CREATE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -80,7 +82,7 @@ module VCAP::CloudController
         metadata = { droplet_guid: droplet.guid }
 
         Event.create(
-          type: 'audit.app.droplet.delete',
+          type: EventTypes::APP_DROPLET_DELETE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -102,7 +104,7 @@ module VCAP::CloudController
         metadata = { droplet_guid: droplet.guid }
 
         Event.create(
-          type: 'audit.app.droplet.download',
+          type: EventTypes::APP_DROPLET_DOWNLOAD,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -123,7 +125,7 @@ module VCAP::CloudController
         metadata = { droplet_guid: droplet.guid }
 
         Event.create(
-          type: 'audit.app.droplet.upload',
+          type: EventTypes::APP_DROPLET_UPLOAD,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,

@@ -470,7 +470,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Associate Role Space Events' do
-      user_event_repository.record_space_role_add(test_space, test_assignee, 'auditor', user_audit_info)
+      user_event_repository.record_space_role_add(test_space, test_assignee, 'space_auditor', user_audit_info)
 
       client.get '/v2/events?q=type:audit.user.space_auditor_add', {}, headers
       expect(status).to eq(200)
@@ -487,7 +487,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Remove Role Space Events' do
-      user_event_repository.record_space_role_remove(test_space, test_assignee, 'auditor', user_audit_info)
+      user_event_repository.record_space_role_remove(test_space, test_assignee, 'space_auditor', user_audit_info)
 
       client.get '/v2/events?q=type:audit.user.space_auditor_remove', {}, headers
       expect(status).to eq(200)

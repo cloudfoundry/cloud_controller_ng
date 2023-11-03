@@ -1,3 +1,5 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class PackageEventRepository
@@ -9,9 +11,8 @@ module VCAP::CloudController
           package_guid: package.guid,
           request: request_attrs
         }
-        type = 'audit.app.package.create'
 
-        create_event(package, type, user_audit_info, metadata)
+        create_event(package, EventTypes::APP_PACKAGE_CREATE, user_audit_info, metadata)
       end
 
       def self.record_app_package_copy(package, user_audit_info, source_package_guid)
@@ -23,7 +24,7 @@ module VCAP::CloudController
             source_package_guid:
           }
         }
-        type = 'audit.app.package.create'
+        type = EventTypes::APP_PACKAGE_CREATE
 
         create_event(package, type, user_audit_info, metadata)
       end
@@ -31,33 +32,29 @@ module VCAP::CloudController
       def self.record_app_package_upload(package, user_audit_info)
         VCAP::AppLogEmitter.emit(package.app_guid, "Uploading app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
-        type     = 'audit.app.package.upload'
 
-        create_event(package, type, user_audit_info, metadata)
+        create_event(package, EventTypes::APP_PACKAGE_UPLOAD, user_audit_info, metadata)
       end
 
       def self.record_app_upload_bits(package, user_audit_info)
         VCAP::AppLogEmitter.emit(package.app_guid, "Uploading bits for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
-        type     = 'audit.app.upload-bits'
 
-        create_event(package, type, user_audit_info, metadata)
+        create_event(package, EventTypes::APP_UPLOAD_BITS, user_audit_info, metadata)
       end
 
       def self.record_app_package_delete(package, user_audit_info)
         VCAP::AppLogEmitter.emit(package.app_guid, "Deleting app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
-        type     = 'audit.app.package.delete'
 
-        create_event(package, type, user_audit_info, metadata)
+        create_event(package, EventTypes::APP_PACKAGE_DELETE, user_audit_info, metadata)
       end
 
       def self.record_app_package_download(package, user_audit_info)
         VCAP::AppLogEmitter.emit(package.app_guid, "Downloading app package for app with guid #{package.app_guid}")
         metadata = { package_guid: package.guid }
-        type     = 'audit.app.package.download'
 
-        create_event(package, type, user_audit_info, metadata)
+        create_event(package, EventTypes::APP_PACKAGE_DOWNLOAD, user_audit_info, metadata)
       end
 
       def self.create_event(package, type, user_audit_info, metadata)

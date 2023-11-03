@@ -14,12 +14,10 @@ module VCAP::CloudController
       let(:assigner_audit_info) { UserAuditInfo.new(user_email: assigner_email, user_name: assigner_username, user_guid: assigner.guid) }
 
       describe 'space role events' do
-        let(:roles) { %i[manager developer auditor] }
-
-        describe '#record_space_role_add' do
-          it 'records the event correctly' do
-            roles.each do |role|
-              event = subject.record_space_role_add(space, assignee, role, assigner_audit_info, request_attrs)
+        Roles::SPACE_ROLE_NAMES.each do |role|
+          describe "#record_space_#{role}_add" do
+            it 'records the event correctly' do
+              event = subject.record_space_role_add(space, assignee, "space_#{role}", assigner_audit_info, request_attrs)
               event.reload
               expect(event.space).to eq(space)
               expect(event.type).to eq("audit.user.space_#{role}_add")
@@ -33,12 +31,10 @@ module VCAP::CloudController
               expect(event.metadata).to eq({ 'request' => request_attrs })
             end
           end
-        end
 
-        describe '#record_space_role_remove' do
-          it 'records the event correctly' do
-            roles.each do |role|
-              event = subject.record_space_role_remove(space, assignee, role, assigner_audit_info, request_attrs)
+          describe "#record_space_#{role}_remove" do
+            it 'records the event correctly' do
+              event = subject.record_space_role_remove(space, assignee, "space_#{role}", assigner_audit_info, request_attrs)
               event.reload
               expect(event.space).to eq(space)
               expect(event.type).to eq("audit.user.space_#{role}_remove")
@@ -56,12 +52,10 @@ module VCAP::CloudController
       end
 
       describe 'organization role events' do
-        let(:roles) { %i[user manager billing_manager auditor] }
-
-        describe '#record_organization_role_add' do
-          it 'records the event correctly' do
-            roles.each do |role|
-              event = subject.record_organization_role_add(org, assignee, role, assigner_audit_info, request_attrs)
+        Roles::ORG_ROLE_NAMES.each do |role|
+          describe "#record_organization_#{role}_add" do
+            it 'records the event correctly' do
+              event = subject.record_organization_role_add(org, assignee, "organization_#{role}", assigner_audit_info, request_attrs)
               event.reload
               expect(event.organization_guid).to eq(org.guid)
               expect(event.type).to eq("audit.user.organization_#{role}_add")
@@ -74,12 +68,10 @@ module VCAP::CloudController
               expect(event.metadata).to eq({ 'request' => request_attrs })
             end
           end
-        end
 
-        describe '#record_organization_role_remove' do
-          it 'records the event correctly' do
-            roles.each do |role|
-              event = subject.record_organization_role_remove(org, assignee, role, assigner_audit_info, request_attrs)
+          describe "#record_organization_#{role}_remove" do
+            it 'records the event correctly' do
+              event = subject.record_organization_role_remove(org, assignee, "organization_#{role}", assigner_audit_info, request_attrs)
               event.reload
               expect(event.organization_guid).to eq(org.guid)
               expect(event.type).to eq("audit.user.organization_#{role}_remove")

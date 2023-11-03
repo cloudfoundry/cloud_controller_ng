@@ -1,13 +1,15 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class RevisionEventRepository
       def self.record_create(revision, app, user_audit_info)
         VCAP::AppLogEmitter.emit(revision.app_guid, "Creating revision for app with guid #{app.guid}")
-        create_revision_event('audit.app.revision.create', app, revision, user_audit_info)
+        create_revision_event(EventTypes::APP_REVISION_CREATE, app, revision, user_audit_info)
       end
 
       def self.record_show_environment_variables(revision, app, user_audit_info)
-        create_revision_event('audit.app.revision.environment_variables.show', app, revision, user_audit_info)
+        create_revision_event(EventTypes::APP_REVISION_ENV_VARS_SHOW, app, revision, user_audit_info)
       end
 
       def self.create_revision_event(type, app, revision, user_audit_info)

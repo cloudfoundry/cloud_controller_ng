@@ -1,9 +1,11 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class OrphanedBlobEventRepository
       def self.record_delete(directory_key, blob_key)
         Event.create(
-          type: 'blob.remove_orphan',
+          type: EventTypes::BLOB_REMOVE_ORPHAN,
           actor: 'system',
           actor_type: 'system',
           actor_name: 'system',

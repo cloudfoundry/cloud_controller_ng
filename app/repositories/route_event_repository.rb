@@ -1,4 +1,5 @@
 require 'repositories/mixins/app_manifest_event_mixins'
+require 'repositories/event_types'
 
 module VCAP::CloudController
   module Repositories
@@ -8,7 +9,7 @@ module VCAP::CloudController
       def record_route_create(route, actor_audit_info, request_attrs, manifest_triggered: false)
         Event.create(
           space: route.space,
-          type: 'audit.route.create',
+          type: EventTypes::ROUTE_CREATE,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -26,7 +27,7 @@ module VCAP::CloudController
       def record_route_update(route, actor_audit_info, request_attrs)
         Event.create(
           space: route.space,
-          type: 'audit.route.update',
+          type: EventTypes::ROUTE_UPDATE,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -44,7 +45,7 @@ module VCAP::CloudController
       def record_route_share(route, actor_audit_info, target_space_guids)
         Event.create(
           space: route.space,
-          type: 'audit.route.share',
+          type: EventTypes::ROUTE_SHARE,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -62,7 +63,7 @@ module VCAP::CloudController
       def record_route_unshare(route, actor_audit_info, target_space_guid)
         Event.create(
           space: route.space,
-          type: 'audit.route.unshare',
+          type: EventTypes::ROUTE_UNSHARE,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -80,7 +81,7 @@ module VCAP::CloudController
       def record_route_transfer_owner(route, actor_audit_info, original_space, target_space_guid)
         Event.create(
           space: original_space,
-          type: 'audit.route.transfer-owner',
+          type: EventTypes::ROUTE_TRANSFER_OWNER,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -97,7 +98,7 @@ module VCAP::CloudController
 
       def record_route_delete_request(route, actor_audit_info, recursive)
         Event.create(
-          type: 'audit.route.delete-request',
+          type: EventTypes::ROUTE_DELETE_REQUEST,
           actee: route.guid,
           actee_type: 'route',
           actee_name: route.host,
@@ -116,7 +117,7 @@ module VCAP::CloudController
 
       def record_route_map(route_mapping, actor_audit_info)
         Event.create(
-          type: 'audit.app.map-route',
+          type: EventTypes::APP_MAP_ROUTE,
           actee: route_mapping.app_guid,
           actee_type: 'app',
           actee_name: route_mapping.app.name,
@@ -139,7 +140,7 @@ module VCAP::CloudController
 
       def record_route_unmap(route_mapping, actor_audit_info)
         Event.create(
-          type: 'audit.app.unmap-route',
+          type: EventTypes::APP_UNMAP_ROUTE,
           actee: route_mapping.app_guid,
           actee_type: 'app',
           actee_name: route_mapping.app.name,

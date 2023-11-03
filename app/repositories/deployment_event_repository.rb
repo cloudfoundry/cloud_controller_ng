@@ -1,3 +1,5 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class DeploymentEventRepository
@@ -13,7 +15,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.deployment.create',
+          type: EventTypes::APP_DEPLOYMENT_CREATE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,
@@ -37,7 +39,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.deployment.cancel',
+          type: EventTypes::APP_DEPLOYMENT_CANCEL,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,

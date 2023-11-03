@@ -1,13 +1,15 @@
+require 'repositories/event_types'
+
 module VCAP
   module CloudController
     module Repositories
       class TaskEventRepository
         def record_task_create(task, user_audit_info)
-          record_event(task, user_audit_info, 'audit.app.task.create')
+          record_event(task, user_audit_info, EventTypes::APP_TASK_CREATE)
         end
 
         def record_task_cancel(task, user_audit_info)
-          record_event(task, user_audit_info, 'audit.app.task.cancel')
+          record_event(task, user_audit_info, EventTypes::APP_TASK_CANCEL)
         end
 
         private
