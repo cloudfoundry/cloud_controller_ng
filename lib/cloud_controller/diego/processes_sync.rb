@@ -36,8 +36,8 @@ module VCAP::CloudController
           end
         end
 
-        update_processes(to_update)
-        desire_processes(to_desire)
+        update_lrps(to_update)
+        desire_lrps(to_desire)
         delete_lrps(diego_lrps)
 
         workpool.drain
@@ -84,7 +84,7 @@ module VCAP::CloudController
         @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
       end
 
-      def update_processes(to_update)
+      def update_lrps(to_update)
         batched_processes(to_update.keys) do |processes|
           processes.each do |process|
             workpool.submit(process, to_update[process.id]) do |p, l|
@@ -96,8 +96,8 @@ module VCAP::CloudController
         end
       end
 
-      def desire_processes(to_create)
-        batched_processes(to_create) do |processes|
+      def desire_lrps(to_desire)
+        batched_processes(to_desire) do |processes|
           processes.each do |process|
             workpool.submit(process) do |p|
               logger.info('desiring-lrp', process_guid: p.guid, app_guid: p.app_guid)
