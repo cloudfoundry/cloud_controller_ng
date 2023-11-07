@@ -4282,7 +4282,205 @@ to three instances), and stopping an application.</p>
 
 <p>Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.</p>
 
-<p>For more information and a list of all possible event types, see the <a href="https://docs.cloudfoundry.org/running/managing-cf/audit-events.html">Cloud Foundry docs</a>.</p>
+<p>For more information, see the <a href="https://docs.cloudfoundry.org/running/managing-cf/audit-events.html">Cloud Foundry docs</a>.</p>
+
+<h4 id="audit-event-types">Audit Event Types</h4>
+
+<h5 id="app-lifecycle">App lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.app.apply_manifest</code></li>
+<li><code class="prettyprint">audit.app.build.create</code></li>
+<li><code class="prettyprint">audit.app.copy-bits</code></li>
+<li><code class="prettyprint">audit.app.create</code></li>
+<li><code class="prettyprint">audit.app.delete-request</code></li>
+<li><code class="prettyprint">audit.app.deployment.cancel</code></li>
+<li><code class="prettyprint">audit.app.deployment.create</code></li>
+<li><code class="prettyprint">audit.app.droplet.create</code></li>
+<li><code class="prettyprint">audit.app.droplet.delete</code></li>
+<li><code class="prettyprint">audit.app.droplet.download</code></li>
+<li><code class="prettyprint">audit.app.droplet.mapped</code></li>
+<li><code class="prettyprint">audit.app.droplet.upload</code></li>
+<li><code class="prettyprint">audit.app.environment.show</code></li>
+<li><code class="prettyprint">audit.app.environment_variables.show</code></li>
+<li><code class="prettyprint">audit.app.map-route</code></li>
+<li><code class="prettyprint">audit.app.package.create</code></li>
+<li><code class="prettyprint">audit.app.package.delete</code></li>
+<li><code class="prettyprint">audit.app.package.download</code></li>
+<li><code class="prettyprint">audit.app.package.upload</code></li>
+<li><code class="prettyprint">audit.app.process.crash</code></li>
+<li><code class="prettyprint">audit.app.process.create</code></li>
+<li><code class="prettyprint">audit.app.process.delete</code></li>
+<li><code class="prettyprint">audit.app.process.rescheduling</code></li>
+<li><code class="prettyprint">audit.app.process.scale</code></li>
+<li><code class="prettyprint">audit.app.process.terminate_instance</code></li>
+<li><code class="prettyprint">audit.app.process.update</code></li>
+<li><code class="prettyprint">audit.app.restage</code></li>
+<li><code class="prettyprint">audit.app.restart</code></li>
+<li><code class="prettyprint">audit.app.revision.create</code></li>
+<li><code class="prettyprint">audit.app.revision.environment_variables.show</code></li>
+<li><code class="prettyprint">audit.app.ssh-authorized</code></li>
+<li><code class="prettyprint">audit.app.ssh-unauthorized</code></li>
+<li><code class="prettyprint">audit.app.start</code></li>
+<li><code class="prettyprint">audit.app.stop</code></li>
+<li><code class="prettyprint">audit.app.task.cancel</code></li>
+<li><code class="prettyprint">audit.app.task.create</code></li>
+<li><code class="prettyprint">audit.app.unmap-route</code></li>
+<li><code class="prettyprint">audit.app.update</code></li>
+<li><code class="prettyprint">audit.app.upload-bits</code></li>
+</ul>
+
+<h5 id="organization-lifecycle">Organization lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.organization.create</code></li>
+<li><code class="prettyprint">audit.organization.delete-request</code></li>
+<li><code class="prettyprint">audit.organization.update</code></li>
+</ul>
+
+<h5 id="route-lifecycle">Route lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.route.create</code></li>
+<li><code class="prettyprint">audit.route.delete-request</code></li>
+<li><code class="prettyprint">audit.route.share</code></li>
+<li><code class="prettyprint">audit.route.transfer-owner</code></li>
+<li><code class="prettyprint">audit.route.unshare</code></li>
+<li><code class="prettyprint">audit.route.update</code></li>
+</ul>
+
+<h5 id="service-lifecycle">Service lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service.create</code></li>
+<li><code class="prettyprint">audit.service.delete</code></li>
+<li><code class="prettyprint">audit.service.update</code></li>
+</ul>
+
+<h5 id="service_binding-lifecycle">Service_binding lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_binding.create</code></li>
+<li><code class="prettyprint">audit.service_binding.delete</code></li>
+<li><code class="prettyprint">audit.service_binding.show</code></li>
+<li><code class="prettyprint">audit.service_binding.start_create</code></li>
+<li><code class="prettyprint">audit.service_binding.start_delete</code></li>
+<li><code class="prettyprint">audit.service_binding.update</code></li>
+</ul>
+
+<h5 id="service_broker-lifecycle">Service_broker lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_broker.create</code></li>
+<li><code class="prettyprint">audit.service_broker.delete</code></li>
+<li><code class="prettyprint">audit.service_broker.update</code></li>
+</ul>
+
+<h5 id="service_dashboard_client-lifecycle">Service_dashboard_client lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_dashboard_client.create</code></li>
+<li><code class="prettyprint">audit.service_dashboard_client.delete</code></li>
+</ul>
+
+<h5 id="service_instance-lifecycle">Service_instance lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_instance.bind_route</code></li>
+<li><code class="prettyprint">audit.service_instance.create</code></li>
+<li><code class="prettyprint">audit.service_instance.delete</code></li>
+<li><code class="prettyprint">audit.service_instance.purge</code></li>
+<li><code class="prettyprint">audit.service_instance.share</code></li>
+<li><code class="prettyprint">audit.service_instance.show</code></li>
+<li><code class="prettyprint">audit.service_instance.start_create</code></li>
+<li><code class="prettyprint">audit.service_instance.start_delete</code></li>
+<li><code class="prettyprint">audit.service_instance.start_update</code></li>
+<li><code class="prettyprint">audit.service_instance.unbind_route</code></li>
+<li><code class="prettyprint">audit.service_instance.unshare</code></li>
+<li><code class="prettyprint">audit.service_instance.update</code></li>
+</ul>
+
+<h5 id="service_key-lifecycle">Service_key lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_key.create</code></li>
+<li><code class="prettyprint">audit.service_key.delete</code></li>
+<li><code class="prettyprint">audit.service_key.show</code></li>
+<li><code class="prettyprint">audit.service_key.start_create</code></li>
+<li><code class="prettyprint">audit.service_key.start_delete</code></li>
+<li><code class="prettyprint">audit.service_key.update</code></li>
+</ul>
+
+<h5 id="service_plan-lifecycle">Service_plan lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_plan.create</code></li>
+<li><code class="prettyprint">audit.service_plan.delete</code></li>
+<li><code class="prettyprint">audit.service_plan.update</code></li>
+</ul>
+
+<h5 id="service_plan_visibility-lifecycle">Service_plan_visibility lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_plan_visibility.create</code></li>
+<li><code class="prettyprint">audit.service_plan_visibility.delete</code></li>
+<li><code class="prettyprint">audit.service_plan_visibility.update</code></li>
+</ul>
+
+<h5 id="service_route_binding-lifecycle">Service_route_binding lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.service_route_binding.create</code></li>
+<li><code class="prettyprint">audit.service_route_binding.delete</code></li>
+<li><code class="prettyprint">audit.service_route_binding.start_create</code></li>
+<li><code class="prettyprint">audit.service_route_binding.start_delete</code></li>
+<li><code class="prettyprint">audit.service_route_binding.update</code></li>
+</ul>
+
+<h5 id="space-lifecycle">Space lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.space.create</code></li>
+<li><code class="prettyprint">audit.space.delete-request</code></li>
+<li><code class="prettyprint">audit.space.update</code></li>
+</ul>
+
+<h5 id="user-lifecycle">User lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.user.organization_auditor_add</code></li>
+<li><code class="prettyprint">audit.user.organization_auditor_remove</code></li>
+<li><code class="prettyprint">audit.user.organization_billing_manager_add</code></li>
+<li><code class="prettyprint">audit.user.organization_billing_manager_remove</code></li>
+<li><code class="prettyprint">audit.user.organization_manager_add</code></li>
+<li><code class="prettyprint">audit.user.organization_manager_remove</code></li>
+<li><code class="prettyprint">audit.user.organization_user_add</code></li>
+<li><code class="prettyprint">audit.user.organization_user_remove</code></li>
+<li><code class="prettyprint">audit.user.space_auditor_add</code></li>
+<li><code class="prettyprint">audit.user.space_auditor_remove</code></li>
+<li><code class="prettyprint">audit.user.space_developer_add</code></li>
+<li><code class="prettyprint">audit.user.space_developer_remove</code></li>
+<li><code class="prettyprint">audit.user.space_manager_add</code></li>
+<li><code class="prettyprint">audit.user.space_manager_remove</code></li>
+<li><code class="prettyprint">audit.user.space_supporter_add</code></li>
+<li><code class="prettyprint">audit.user.space_supporter_remove</code></li>
+</ul>
+
+<h5 id="user_provided_service_instance-lifecycle">User_provided_service_instance lifecycle</h5>
+
+<ul>
+<li><code class="prettyprint">audit.user_provided_service_instance.create</code></li>
+<li><code class="prettyprint">audit.user_provided_service_instance.delete</code></li>
+<li><code class="prettyprint">audit.user_provided_service_instance.show</code></li>
+<li><code class="prettyprint">audit.user_provided_service_instance.update</code></li>
+</ul>
+
+<h5 id="special-events">Special events</h5>
+
+<ul>
+<li><code class="prettyprint">app.crash</code></li>
+<li><code class="prettyprint">blob.remove_orphan</code></li>
+</ul>
 <h3 id="the-audit-event-object">The audit event object</h3>
 <pre class="highlight plaintext"><code>Example Audit Event object
 </code></pre>
@@ -4490,7 +4688,7 @@ to three instances), and stopping an application.</p>
 <h3 id="list-audit-events">List audit events</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/audit_events"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/audit_events"</span>     <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
