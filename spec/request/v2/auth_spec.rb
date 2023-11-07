@@ -44,6 +44,33 @@ RSpec.describe 'Auth' do
     it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
   end
 
+  context 'developer without read token' do
+    let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:no_read_headers) { headers_for(user, scopes: %w[cloud_controller.user]) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    describe 'GET /v2 endpoints' do
+      it 'errors on request' do
+        get '/v2/apps', nil, no_read_headers
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
+
+        get '/v2/organizations', nil, no_read_headers
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
+
+        get '/v2/spaces', nil, no_read_headers
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
+      end
+    end
+  end
+
   context 'space supporter' do
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
@@ -61,7 +88,7 @@ RSpec.describe 'Auth' do
           expect(last_response.status).to eq(403)
           expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 
-          get '/v2/orgs', nil, user_header
+          get '/v2/organizations', nil, user_header
           expect(last_response.status).to eq(403)
           expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 

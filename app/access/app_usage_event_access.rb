@@ -61,8 +61,7 @@ module VCAP::CloudController
     end
 
     def index_with_token?(_)
-      # This can return true because the index endpoints filter objects based on user visibilities
-      true
+      admin_user? || admin_read_only_user?
     end
 
     def index?(_object_class, _params=nil)

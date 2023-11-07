@@ -18,10 +18,10 @@ module VCAP::CloudController
     end
 
     index_table = {
-      unauthenticated: true,
+      unauthenticated: false,
       reader_and_writer: true,
       reader: true,
-      writer: true,
+      writer: false,
 
       admin: true,
       admin_read_only: true,
