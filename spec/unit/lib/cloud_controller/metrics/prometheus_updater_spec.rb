@@ -199,21 +199,19 @@ module VCAP::CloudController::Metrics
         updater.report_staging_success_metrics(duration_ns)
 
         metric = prom_client.get :cc_staging_succeeded_duration_seconds
-        # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '+Inf' => 1.0, '10' => 0.0, '30' => 1.0, '300' => 1.0, '5' => 0.0, '60' => 1.0, '600' => 1.0, '890' => 1.0, 'sum' => 20.0 })
+        expect(metric.get).to eq({ '5' => 0.0, '10' => 0.0, '30' => 1.0, '60' => 1.0, '300' => 1.0, '600' => 1.0, '890' => 1.0, 'sum' => 20.0, '+Inf' => 1.0 })
       end
     end
 
     describe '#report_staging_failure_metrics' do
       it 'emits staging failure metrics' do
-        # 20 seconds
+        # 900 seconds
         duration_ns = 900 * 1e9
 
         updater.report_staging_failure_metrics(duration_ns)
 
         metric = prom_client.get :cc_staging_failed_duration_seconds
-        # expected buckets for duration, in millis : 10000, 15000, 20000, 25000, 30000
-        expect(metric.get).to eq({ '+Inf' => 1.0, '10' => 0.0, '30' => 0.0, '300' => 0.0, '5' => 0.0, '60' => 0.0, '600' => 0.0, '890' => 0.0, 'sum' => 900.0 })
+        expect(metric.get).to eq({ '5' => 0.0, '10' => 0.0, '30' => 0.0, '60' => 0.0, '300' => 0.0, '600' => 0.0, '890' => 0.0, 'sum' => 900.0, '+Inf' => 1.0 })
       end
     end
   end
