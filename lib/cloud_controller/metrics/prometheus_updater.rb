@@ -86,8 +86,6 @@ module VCAP::CloudController::Metrics
 
     def update_vitals(vitals)
       vitals.each do |key, value|
-        next if key.to_s.underscore == 'cpu'
-
         metric_key = :"cc_vitals_#{key.to_s.underscore}"
         update_gauge_metric(metric_key, value, "CloudController Vitals: #{key}")
       end

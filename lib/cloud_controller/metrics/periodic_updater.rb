@@ -127,6 +127,7 @@ module VCAP::CloudController::Metrics
 
       prom_vitals = vitals.clone
       prom_vitals.delete(:uptime)
+      prom_vitals.delete(:cpu)
       prom_vitals[:started_at] = @start_time.to_i
       @prometheus_updater.update_vitals(prom_vitals)
     end

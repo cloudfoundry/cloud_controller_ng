@@ -160,10 +160,6 @@ module VCAP::CloudController::Metrics
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_mem_bytes }
         expect(metric.get).to eq 1
 
-        # test that metric is not being emitted via prometheus
-        metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu }
-        expect(metric).to be_nil
-
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_num_cores }
         expect(metric.get).to eq 4
       end

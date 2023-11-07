@@ -528,7 +528,6 @@ module VCAP::CloudController::Metrics
           expect(expected_vitals[:mem_used_bytes]).to eq(542)
           expect(expected_vitals[:mem_free_bytes]).to eq(927)
           expect(expected_vitals[:mem_bytes]).to eq(1.1.to_i)
-          expect(expected_vitals[:cpu]).to eq(2.to_f)
           expect(expected_vitals[:num_cores]).to eq(4)
         end
       end
