@@ -30,7 +30,7 @@ module VCAP::CloudController::Metrics
       it 'increments outstanding requests for prometheus' do
         request_metrics.start_request
 
-        expect(prometheus_client).to have_received(:increment_gauge_metric).with(:cc_requests_outstanding_gauge, kind_of(String))
+        expect(prometheus_client).to have_received(:increment_gauge_metric).with(:cc_requests_outstanding_total, kind_of(String))
       end
     end
 
@@ -57,8 +57,8 @@ module VCAP::CloudController::Metrics
       it 'increments completed and decrements outstanding for prometheus' do
         request_metrics.complete_request(status)
 
-        expect(prometheus_client).to have_received(:decrement_gauge_metric).with(:cc_requests_outstanding_gauge, kind_of(String))
-        expect(prometheus_client).to have_received(:increment_counter_metric).with(:cc_requests_completed, kind_of(String))
+        expect(prometheus_client).to have_received(:decrement_gauge_metric).with(:cc_requests_outstanding_total, kind_of(String))
+        expect(prometheus_client).to have_received(:increment_counter_metric).with(:cc_requests_completed_total, kind_of(String))
       end
 
       it 'normalizes http status codes in statsd' do

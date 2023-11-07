@@ -133,11 +133,11 @@ RSpec.describe 'Metrics' do
     end
   end
 
-  context 'cc_staging_requested' do
-    it 'reports cc_staging_requested' do
+  context 'cc_staging_requested_total' do
+    it 'reports cc_staging_requested_total' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_staging_requested [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_staging_requested_total [0-9][0-9]*\.\d+/)
     end
   end
 
@@ -179,19 +179,19 @@ RSpec.describe 'Metrics' do
     end
   end
 
-  context 'cc_requests_completed' do
-    it 'reports cc_requests_completed' do
+  context 'cc_requests_completed_total' do
+    it 'reports cc_requests_completed_total' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_requests_completed [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_requests_completed_total [0-9][0-9]*\.\d+/)
     end
   end
 
-  context 'cc_requests_outstanding_gauge' do
-    it 'reports cc_requests_outstanding_gauge' do
+  context 'cc_requests_outstanding_total' do
+    it 'reports cc_requests_outstanding_total' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).to match(/cc_requests_outstanding_gauge [0-9][0-9]*\.\d+/)
+      expect(last_response.body).to match(/cc_requests_outstanding_total [0-9][0-9]*\.\d+/)
     end
   end
 end

@@ -8,7 +8,7 @@ module VCAP::CloudController::Metrics
       # Register all metrics, to initialize them for discoverability
       @registry.gauge(:cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue]) unless @registry.exist?(:cc_job_queues_length_total)
       @registry.gauge(:cc_failed_jobs_total, docstring: 'Number of failed jobs of worker processes', labels: [:queue]) unless @registry.exist?(:cc_failed_jobs_total)
-      @registry.counter(:cc_staging_requested, docstring: 'Number of staging requests') unless @registry.exist?(:cc_staging_requested)
+      @registry.counter(:cc_staging_requested_total, docstring: 'Number of staging requests') unless @registry.exist?(:cc_staging_requested_total)
 
       unless @registry.exist?(:cc_staging_succeeded_duration_seconds)
         @registry.histogram(:cc_staging_succeeded_duration_seconds,
@@ -21,8 +21,8 @@ module VCAP::CloudController::Metrics
                             buckets: duration_buckets)
       end
 
-      @registry.gauge(:cc_requests_outstanding_gauge, docstring: 'Requests Outstanding Gauge') unless @registry.exist?(:cc_requests_outstanding_gauge)
-      @registry.counter(:cc_requests_completed, docstring: 'Requests Completed') unless @registry.exist?(:cc_requests_completed)
+      @registry.gauge(:cc_requests_outstanding_total, docstring: 'Requests Outstanding') unless @registry.exist?(:cc_requests_outstanding_total)
+      @registry.counter(:cc_requests_completed_total, docstring: 'Requests Completed') unless @registry.exist?(:cc_requests_completed_total)
     end
 
     def update_gauge_metric(metric, value, message, labels: {})
