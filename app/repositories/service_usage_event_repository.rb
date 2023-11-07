@@ -1,4 +1,5 @@
 require 'database/old_record_cleanup'
+require 'repositories/event_types'
 
 module VCAP::CloudController
   module Repositories

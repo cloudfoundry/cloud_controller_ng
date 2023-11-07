@@ -116,21 +116,11 @@ module VCAP::CloudController
       user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       if find_model == Space
-        @user_event_repository.record_space_role_remove(
-          Space.first(guid: related_guid),
-          user,
-          name.to_s.singularize,
-          UserAuditInfo.from_context(SecurityContext),
-          {}
-        )
+        @user_event_repository.record_space_role_remove(Space.first(guid: related_guid), user, "space_#{name.to_s.singularize}", UserAuditInfo.from_context(SecurityContext))
+
       elsif find_model == Organization
-        @user_event_repository.record_organization_role_remove(
-          Organization.first(guid: related_guid),
-          user,
-          name.to_s.singularize,
-          UserAuditInfo.from_context(SecurityContext),
-          {}
-        )
+        @user_event_repository.record_organization_role_remove(Organization.first(guid: related_guid), user, "organization_#{name.to_s.singularize}",
+                                                               UserAuditInfo.from_context(SecurityContext))
       end
 
       response
@@ -160,15 +150,13 @@ module VCAP::CloudController
 
       after_update(user)
 
-      role = if relationship.eql?(:audited_spaces)
-               'auditor'
-             elsif relationship.eql?(:managed_spaces)
-               'manager'
-             else
-               'developer'
-             end
-
-      @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext))
+      if relationship.eql?(:audited_spaces)
+        @user_event_repository.record_space_role_add(space, user, RoleTypes::SPACE_AUDITOR, UserAuditInfo.from_context(SecurityContext))
+      elsif relationship.eql?(:managed_spaces)
+        @user_event_repository.record_space_role_add(space, user, RoleTypes::SPACE_MANAGER, UserAuditInfo.from_context(SecurityContext))
+      else
+        @user_event_repository.record_space_role_add(space, user, RoleTypes::SPACE_DEVELOPER, UserAuditInfo.from_context(SecurityContext))
+      end
 
       [HTTP::CREATED, object_renderer.render_json(self.class, user, @opts)]
     end
@@ -199,17 +187,16 @@ module VCAP::CloudController
 
       after_update(user)
 
-      role = if relationship.eql?(:billing_managed_organizations)
-               'billing_manager'
-             elsif relationship.eql?(:audited_organizations)
-               'auditor'
-             elsif relationship.eql?(:managed_organizations)
-               'manager'
-             else
-               'user'
-             end
-
-      @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, role, UserAuditInfo.from_context(SecurityContext))
+      if relationship.eql?(:billing_managed_organizations)
+        @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, RoleTypes::ORGANIZATION_BILLING_MANAGER,
+                                                            UserAuditInfo.from_context(SecurityContext))
+      elsif relationship.eql?(:audited_organizations)
+        @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, RoleTypes::ORGANIZATION_AUDITOR, UserAuditInfo.from_context(SecurityContext))
+      elsif relationship.eql?(:managed_organizations)
+        @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, RoleTypes::ORGANIZATION_MANAGER, UserAuditInfo.from_context(SecurityContext))
+      else
+        @user_event_repository.record_organization_role_add(Organization.first(guid: org_guid), user, RoleTypes::ORGANIZATION_USER, UserAuditInfo.from_context(SecurityContext))
+      end
 
       [HTTP::CREATED, object_renderer.render_json(self.class, user, @opts)]
     end

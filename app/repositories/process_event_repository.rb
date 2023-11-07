@@ -1,5 +1,6 @@
 require 'repositories/mixins/app_manifest_event_mixins'
 require 'repositories/mixins/truncation_mixin'
+require 'repositories/event_types'
 
 module VCAP::CloudController
   module Repositories
@@ -17,7 +18,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.create',
+          type: EventTypes::APP_PROCESS_CREATE,
           actor_guid: user_audit_info.user_guid,
           actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
@@ -30,7 +31,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.delete',
+          type: EventTypes::APP_PROCESS_DELETE,
           actor_guid: user_audit_info.user_guid,
           actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
@@ -54,7 +55,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.update',
+          type: EventTypes::APP_PROCESS_UPDATE,
           actor_guid: user_audit_info.user_guid,
           actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
@@ -73,7 +74,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.scale',
+          type: EventTypes::APP_PROCESS_SCALE,
           actor_guid: user_audit_info.user_guid,
           actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
@@ -86,7 +87,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.terminate_instance',
+          type: EventTypes::APP_PROCESS_TERMINATE_INSTANCE,
           actor_guid: user_audit_info.user_guid,
           actor_name: user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
@@ -104,7 +105,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.crash',
+          type: EventTypes::APP_PROCESS_CRASH,
           actor_guid: process.guid,
           actor_name: process.type,
           actor_type: 'process',
@@ -117,7 +118,7 @@ module VCAP::CloudController
 
         create_event(
           process: process,
-          type: 'audit.app.process.rescheduling',
+          type: EventTypes::APP_PROCESS_RESCHEDULING,
           actor_guid: process.guid,
           actor_name: process.type,
           actor_type: 'process',

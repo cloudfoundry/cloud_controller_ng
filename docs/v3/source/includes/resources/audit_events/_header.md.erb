@@ -1,0 +1,155 @@
+## Audit Events
+
+Audit events help Cloud Foundry operators monitor actions taken against resources (such as apps) via user or system actions.
+
+For more information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/running/managing-cf/audit-events.html).
+
+#### Audit Event Types
+
+##### App lifecycle
+- `audit.app.apply_manifest`
+- `audit.app.build.create`
+- `audit.app.copy-bits`
+- `audit.app.create`
+- `audit.app.delete-request`
+- `audit.app.deployment.cancel`
+- `audit.app.deployment.create`
+- `audit.app.droplet.create`
+- `audit.app.droplet.delete`
+- `audit.app.droplet.download`
+- `audit.app.droplet.mapped`
+- `audit.app.droplet.upload`
+- `audit.app.environment.show`
+- `audit.app.environment_variables.show`
+- `audit.app.map-route`
+- `audit.app.package.create`
+- `audit.app.package.delete`
+- `audit.app.package.download`
+- `audit.app.package.upload`
+- `audit.app.process.crash`
+- `audit.app.process.create`
+- `audit.app.process.delete`
+- `audit.app.process.rescheduling`
+- `audit.app.process.scale`
+- `audit.app.process.terminate_instance`
+- `audit.app.process.update`
+- `audit.app.restage`
+- `audit.app.restart`
+- `audit.app.revision.create`
+- `audit.app.revision.environment_variables.show`
+- `audit.app.ssh-authorized`
+- `audit.app.ssh-unauthorized`
+- `audit.app.start`
+- `audit.app.stop`
+- `audit.app.task.cancel`
+- `audit.app.task.create`
+- `audit.app.unmap-route`
+- `audit.app.update`
+- `audit.app.upload-bits`
+
+##### Organization lifecycle
+- `audit.organization.create`
+- `audit.organization.delete-request`
+- `audit.organization.update`
+
+##### Route lifecycle
+- `audit.route.create`
+- `audit.route.delete-request`
+- `audit.route.share`
+- `audit.route.transfer-owner`
+- `audit.route.unshare`
+- `audit.route.update`
+
+##### Service lifecycle
+- `audit.service.create`
+- `audit.service.delete`
+- `audit.service.update`
+
+##### Service_binding lifecycle
+- `audit.service_binding.create`
+- `audit.service_binding.delete`
+- `audit.service_binding.show`
+- `audit.service_binding.start_create`
+- `audit.service_binding.start_delete`
+- `audit.service_binding.update`
+
+##### Service_broker lifecycle
+- `audit.service_broker.create`
+- `audit.service_broker.delete`
+- `audit.service_broker.update`
+
+##### Service_dashboard_client lifecycle
+- `audit.service_dashboard_client.create`
+- `audit.service_dashboard_client.delete`
+
+##### Service_instance lifecycle
+- `audit.service_instance.bind_route`
+- `audit.service_instance.create`
+- `audit.service_instance.delete`
+- `audit.service_instance.purge`
+- `audit.service_instance.share`
+- `audit.service_instance.show`
+- `audit.service_instance.start_create`
+- `audit.service_instance.start_delete`
+- `audit.service_instance.start_update`
+- `audit.service_instance.unbind_route`
+- `audit.service_instance.unshare`
+- `audit.service_instance.update`
+
+##### Service_key lifecycle
+- `audit.service_key.create`
+- `audit.service_key.delete`
+- `audit.service_key.show`
+- `audit.service_key.start_create`
+- `audit.service_key.start_delete`
+- `audit.service_key.update`
+
+##### Service_plan lifecycle
+- `audit.service_plan.create`
+- `audit.service_plan.delete`
+- `audit.service_plan.update`
+
+##### Service_plan_visibility lifecycle
+- `audit.service_plan_visibility.create`
+- `audit.service_plan_visibility.delete`
+- `audit.service_plan_visibility.update`
+
+##### Service_route_binding lifecycle
+- `audit.service_route_binding.create`
+- `audit.service_route_binding.delete`
+- `audit.service_route_binding.start_create`
+- `audit.service_route_binding.start_delete`
+- `audit.service_route_binding.update`
+
+##### Space lifecycle
+- `audit.space.create`
+- `audit.space.delete-request`
+- `audit.space.update`
+
+##### User lifecycle
+- `audit.user.organization_auditor_add`
+- `audit.user.organization_auditor_remove`
+- `audit.user.organization_billing_manager_add`
+- `audit.user.organization_billing_manager_remove`
+- `audit.user.organization_manager_add`
+- `audit.user.organization_manager_remove`
+- `audit.user.organization_user_add`
+- `audit.user.organization_user_remove`
+- `audit.user.space_auditor_add`
+- `audit.user.space_auditor_remove`
+- `audit.user.space_developer_add`
+- `audit.user.space_developer_remove`
+- `audit.user.space_manager_add`
+- `audit.user.space_manager_remove`
+- `audit.user.space_supporter_add`
+- `audit.user.space_supporter_remove`
+
+##### User_provided_service_instance lifecycle
+- `audit.user_provided_service_instance.create`
+- `audit.user_provided_service_instance.delete`
+- `audit.user_provided_service_instance.show`
+- `audit.user_provided_service_instance.update`
+
+##### Special events
+- `app.crash`
+- `blob.remove_orphan`

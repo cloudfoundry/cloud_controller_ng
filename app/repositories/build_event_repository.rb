@@ -1,3 +1,5 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class BuildEventRepository
@@ -10,7 +12,7 @@ module VCAP::CloudController
         }
 
         Event.create(
-          type: 'audit.app.build.create',
+          type: EventTypes::APP_BUILD_CREATE,
           actor: user_audit_info.user_guid,
           actor_type: 'user',
           actor_name: user_audit_info.user_email,

@@ -248,7 +248,7 @@ module VCAP::CloudController
         @user_event_repository.record_organization_role_remove(
           org,
           user,
-          role,
+          "organization_#{role}",
           UserAuditInfo.from_context(SecurityContext),
           request_attrs
         )
@@ -334,7 +334,7 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:update, guid)
       org.send("add_#{role}", user)
 
-      @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
+      @user_event_repository.record_organization_role_add(org, user, "organization_#{role}", UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
     end
@@ -348,7 +348,7 @@ module VCAP::CloudController
       @user_event_repository.record_organization_role_remove(
         Organization.first(guid:),
         user,
-        role.to_s,
+        "organization_#{role}",
         UserAuditInfo.from_context(SecurityContext),
         {}
       )
@@ -370,19 +370,19 @@ module VCAP::CloudController
       end
 
       organization.users.each do |user|
-        @user_event_repository.record_organization_role_add(organization, user, 'user', user_audit_info, request_attrs)
+        @user_event_repository.record_organization_role_add(organization, user, RoleTypes::ORGANIZATION_USER, user_audit_info, request_attrs)
       end
 
       organization.auditors.each do |auditor|
-        @user_event_repository.record_organization_role_add(organization, auditor, 'auditor', user_audit_info, request_attrs)
+        @user_event_repository.record_organization_role_add(organization, auditor, RoleTypes::ORGANIZATION_AUDITOR, user_audit_info, request_attrs)
       end
 
       organization.billing_managers.each do |billing_manager|
-        @user_event_repository.record_organization_role_add(organization, billing_manager, 'billing_manager', user_audit_info, request_attrs)
+        @user_event_repository.record_organization_role_add(organization, billing_manager, RoleTypes::ORGANIZATION_BILLING_MANAGER, user_audit_info, request_attrs)
       end
 
       organization.managers.each do |manager|
-        @user_event_repository.record_organization_role_add(organization, manager, 'manager', user_audit_info, request_attrs)
+        @user_event_repository.record_organization_role_add(organization, manager, RoleTypes::ORGANIZATION_MANAGER, user_audit_info, request_attrs)
       end
     end
 
@@ -432,7 +432,7 @@ module VCAP::CloudController
           @user_event_repository.record_organization_role_add(
             organization,
             user,
-            role,
+            "organization_#{role}",
             user_audit_info,
             request_attrs
           )
@@ -445,7 +445,7 @@ module VCAP::CloudController
           @user_event_repository.record_organization_role_remove(
             organization,
             user,
-            role,
+            "organization_#{role}",
             user_audit_info,
             request_attrs
           )

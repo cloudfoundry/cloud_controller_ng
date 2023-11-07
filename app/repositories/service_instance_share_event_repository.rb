@@ -1,10 +1,12 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class ServiceInstanceShareEventRepository
       class << self
         def record_share_event(service_instance, target_space_guids, user_audit_info)
           Event.create(
-            type: 'audit.service_instance.share',
+            type: EventTypes::SERVICE_INSTANCE_SHARE,
             actor: user_audit_info.user_guid,
             actor_type: 'user',
             actor_name: user_audit_info.user_email,
@@ -23,7 +25,7 @@ module VCAP::CloudController
 
         def record_unshare_event(service_instance, target_space_guid, user_audit_info)
           Event.create(
-            type: 'audit.service_instance.unshare',
+            type: EventTypes::SERVICE_INSTANCE_UNSHARE,
             actor: user_audit_info.user_guid,
             actor_type: 'user',
             actor_name: user_audit_info.user_email,

@@ -1,9 +1,11 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class OrganizationEventRepository
       def record_organization_create(organization, user_audit_info, request_attrs)
         Event.create(
-          type: 'audit.organization.create',
+          type: EventTypes::ORGANIZATION_CREATE,
           actee: organization.guid,
           organization_guid: organization.guid,
           actee_type: 'organization',
@@ -21,7 +23,7 @@ module VCAP::CloudController
 
       def record_organization_update(organization, user_audit_info, request_attrs)
         Event.create(
-          type: 'audit.organization.update',
+          type: EventTypes::ORGANIZATION_UPDATE,
           actee: organization.guid,
           organization_guid: organization.guid,
           actee_type: 'organization',
@@ -39,7 +41,7 @@ module VCAP::CloudController
 
       def record_organization_delete_request(organization, user_audit_info, request_attrs)
         Event.create(
-          type: 'audit.organization.delete-request',
+          type: EventTypes::ORGANIZATION_DELETE_REQUEST,
           actee: organization.guid,
           organization_guid: organization.guid,
           actee_type: 'organization',

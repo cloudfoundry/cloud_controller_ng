@@ -19,13 +19,13 @@ module VCAP::CloudController
 
       case type
       when RoleTypes::SPACE_AUDITOR
-        create_space_auditor(user, space)
+        create_space_auditor(user, space, type)
       when RoleTypes::SPACE_DEVELOPER
-        create_space_developer(user, space)
+        create_space_developer(user, space, type)
       when RoleTypes::SPACE_MANAGER
-        create_space_manager(user, space)
+        create_space_manager(user, space, type)
       when RoleTypes::SPACE_SUPPORTER
-        create_space_supporter(user, space)
+        create_space_supporter(user, space, type)
       else
         error!("Role type '#{type}' is invalid.")
       end
@@ -39,13 +39,13 @@ module VCAP::CloudController
 
       case type
       when RoleTypes::ORGANIZATION_USER
-        create_organization_user(user, organization)
+        create_organization_user(user, organization, type)
       when RoleTypes::ORGANIZATION_AUDITOR
-        create_organization_auditor(user, organization)
+        create_organization_auditor(user, organization, type)
       when RoleTypes::ORGANIZATION_MANAGER
-        create_organization_manager(user, organization)
+        create_organization_manager(user, organization, type)
       when RoleTypes::ORGANIZATION_BILLING_MANAGER
-        create_organization_billing_manager(user, organization)
+        create_organization_billing_manager(user, organization, type)
       else
         error!("Role type '#{type}' is invalid.")
       end
@@ -59,52 +59,44 @@ module VCAP::CloudController
       @event_repo ||= Repositories::UserEventRepository.new
     end
 
-    def create_space_auditor(user, space)
-      record_space_event(space, user, 'auditor')
+    def create_space_auditor(user, space, role_type)
+      event_repo.record_space_role_add(space, user, role_type, @user_audit_info, @message.audit_hash)
       SpaceAuditor.create(user_id: user.id, space_id: space.id)
     end
 
-    def create_space_developer(user, space)
-      record_space_event(space, user, 'developer')
+    def create_space_developer(user, space, role_type)
+      event_repo.record_space_role_add(space, user, role_type, @user_audit_info, @message.audit_hash)
       SpaceDeveloper.create(user_id: user.id, space_id: space.id)
     end
 
-    def create_space_manager(user, space)
-      record_space_event(space, user, 'manager')
+    def create_space_manager(user, space, role_type)
+      event_repo.record_space_role_add(space, user, role_type, @user_audit_info, @message.audit_hash)
       SpaceManager.create(user_id: user.id, space_id: space.id)
     end
 
-    def create_space_supporter(user, space)
-      record_space_event(space, user, 'supporter')
+    def create_space_supporter(user, space, role_type)
+      event_repo.record_space_role_add(space, user, role_type, @user_audit_info, @message.audit_hash)
       SpaceSupporter.create(user_id: user.id, space_id: space.id)
     end
 
-    def create_organization_user(user, organization)
-      record_organization_event(organization, user, 'user')
+    def create_organization_user(user, organization, role_type)
+      event_repo.record_organization_role_add(organization, user, role_type, @user_audit_info, @message.audit_hash)
       OrganizationUser.create(user_id: user.id, organization_id: organization.id)
     end
 
-    def create_organization_auditor(user, organization)
-      record_organization_event(organization, user, 'auditor')
+    def create_organization_auditor(user, organization, role_type)
+      event_repo.record_organization_role_add(organization, user, role_type, @user_audit_info, @message.audit_hash)
       OrganizationAuditor.create(user_id: user.id, organization_id: organization.id)
     end
 
-    def create_organization_manager(user, organization)
-      record_organization_event(organization, user, 'manager')
+    def create_organization_manager(user, organization, role_type)
+      event_repo.record_organization_role_add(organization, user, role_type, @user_audit_info, @message.audit_hash)
       OrganizationManager.create(user_id: user.id, organization_id: organization.id)
     end
 
-    def create_organization_billing_manager(user, organization)
-      record_organization_event(organization, user, 'billing_manager')
+    def create_organization_billing_manager(user, organization, role_type)
+      event_repo.record_organization_role_add(organization, user, role_type, @user_audit_info, @message.audit_hash)
       OrganizationBillingManager.create(user_id: user.id, organization_id: organization.id)
-    end
-
-    def record_space_event(space, user, short_event_type)
-      event_repo.record_space_role_add(space, user, short_event_type, @user_audit_info, @message.audit_hash)
-    end
-
-    def record_organization_event(org, user, short_event_type)
-      event_repo.record_organization_role_add(org, user, short_event_type, @user_audit_info, @message.audit_hash)
     end
 
     def space_validation_error!(type, error, user, space)

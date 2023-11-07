@@ -1,4 +1,5 @@
 require 'repositories/mixins/app_manifest_event_mixins'
+require 'repositories/event_types'
 
 module VCAP::CloudController
   module Repositories
@@ -10,7 +11,7 @@ module VCAP::CloudController
           attrs = censor_request_attributes(request)
 
           record_event(
-            type: 'audit.service_binding.start_create',
+            type: EventTypes::SERVICE_BINDING_START_CREATE,
             service_binding: service_binding,
             user_audit_info: user_audit_info,
             metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
@@ -21,7 +22,7 @@ module VCAP::CloudController
           attrs = censor_request_attributes(request)
 
           record_event(
-            type: 'audit.service_binding.create',
+            type: EventTypes::SERVICE_BINDING_CREATE,
             service_binding: service_binding,
             user_audit_info: user_audit_info,
             metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
@@ -30,7 +31,7 @@ module VCAP::CloudController
 
         def record_start_delete(service_binding, user_audit_info)
           record_event(
-            type: 'audit.service_binding.start_delete',
+            type: EventTypes::SERVICE_BINDING_START_DELETE,
             service_binding: service_binding,
             user_audit_info: user_audit_info,
             metadata: {
@@ -44,7 +45,7 @@ module VCAP::CloudController
 
         def record_delete(service_binding, user_audit_info)
           record_event(
-            type: 'audit.service_binding.delete',
+            type: EventTypes::SERVICE_BINDING_DELETE,
             service_binding: service_binding,
             user_audit_info: user_audit_info,
             metadata: {

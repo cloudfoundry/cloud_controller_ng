@@ -1,4 +1,5 @@
 require 'repositories/mixins/app_manifest_event_mixins'
+require 'repositories/event_types'
 
 module VCAP::CloudController
   module Repositories
@@ -17,7 +18,7 @@ module VCAP::CloudController
         attrs = censor_request_attributes(request)
 
         record_event(
-          type: "audit.#{@actee_name}.start_create",
+          type: EventTypes.get("#{@actee_name}_start_create".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
@@ -28,7 +29,7 @@ module VCAP::CloudController
         attrs = censor_request_attributes(request)
 
         record_event(
-          type: "audit.#{@actee_name}.create",
+          type: EventTypes.get("#{@actee_name}_create".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
@@ -39,7 +40,7 @@ module VCAP::CloudController
         attrs = censor_request_attributes(request)
 
         record_event(
-          type: "audit.#{@actee_name}.update",
+          type: EventTypes.get("#{@actee_name}_update".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: add_manifest_triggered(manifest_triggered, { request: attrs })
@@ -48,7 +49,7 @@ module VCAP::CloudController
 
       def record_start_delete(service_binding, user_audit_info)
         record_event(
-          type: "audit.#{@actee_name}.start_delete",
+          type: EventTypes.get("#{@actee_name}_start_delete".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: {
@@ -63,7 +64,7 @@ module VCAP::CloudController
 
       def record_delete(service_binding, user_audit_info)
         record_event(
-          type: "audit.#{@actee_name}.delete",
+          type: EventTypes.get("#{@actee_name}_delete".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: {
@@ -86,7 +87,7 @@ module VCAP::CloudController
         metadata[:request].merge!({ app_guid: service_binding.app_guid }) if service_binding.try(:app_guid)
 
         record_event(
-          type: "audit.#{@actee_name}.show",
+          type: EventTypes.get("#{@actee_name}_show".upcase),
           service_binding: service_binding,
           user_audit_info: user_audit_info,
           metadata: metadata

@@ -1,10 +1,12 @@
+require 'repositories/event_types'
+
 module VCAP::CloudController
   module Repositories
     class SpaceEventRepository
       def record_space_create(space, user_audit_info, request_attrs)
         Event.create(
           space: space,
-          type: 'audit.space.create',
+          type: EventTypes::SPACE_CREATE,
           actee: space.guid,
           actee_type: 'space',
           actee_name: space.name,
@@ -22,7 +24,7 @@ module VCAP::CloudController
       def record_space_update(space, user_audit_info, request_attrs)
         Event.create(
           space: space,
-          type: 'audit.space.update',
+          type: EventTypes::SPACE_UPDATE,
           actee: space.guid,
           actee_type: 'space',
           actee_name: space.name,
@@ -39,7 +41,7 @@ module VCAP::CloudController
 
       def record_space_delete_request(space, user_audit_info, recursive)
         Event.create(
-          type: 'audit.space.delete-request',
+          type: EventTypes::SPACE_DELETE_REQUEST,
           actee: space.guid,
           actee_type: 'space',
           actee_name: space.name,
