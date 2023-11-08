@@ -29,10 +29,12 @@ Content-Type: application/json
 
 #### Optional parameters
 
-Name | Type | Description
----- | ---- | -----------
-**metadata.labels** | [_label object_](#labels) | Labels applied to the package
+Name | Type                                | Description
+---- |-------------------------------------| -----------
+**metadata.labels** | [_label object_](#labels)           | Labels applied to the package
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the package
+**username**  | string  | The username for the image’s registry. Only possible for Docker package.
+**password**  | string  | The password for the image’s registry. Only possible for Docker package.
 
 #### Permitted roles
  |

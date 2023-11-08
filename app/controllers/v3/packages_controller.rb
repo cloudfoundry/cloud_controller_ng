@@ -125,6 +125,7 @@ class PackagesController < ApplicationController
 
     package, space = PackageFetcher.new.fetch(hashed_params[:guid])
     package_not_found! unless package && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unprocessable_non_docker_package_update! if package.type != PackageModel::DOCKER_TYPE && (message.username || message.password)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
@@ -210,6 +211,10 @@ class PackagesController < ApplicationController
 
   def unprocessable_non_docker_package!
     unprocessable!('Cannot create bits package for a Docker app.')
+  end
+
+  def unprocessable_non_docker_package_update!
+    unprocessable!('Cannot update Docker credentials for a buildpack app.')
   end
 
   def unprocessable_app!
