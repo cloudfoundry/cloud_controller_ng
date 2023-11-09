@@ -11,6 +11,8 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
+    one_to_many(:orgs_visibility, clone: :service_plan_visibilities) { |ds| ds.select(:service_plan_id).distinct }
+
     one_to_many :labels, class: 'VCAP::CloudController::ServicePlanLabelModel', key: :resource_guid, primary_key: :guid
     add_association_dependencies labels: :destroy
 
@@ -180,7 +182,7 @@ module VCAP::CloudController
 
       return ServicePlanVisibilityTypes::SPACE if broker_space_scoped?
 
-      return ServicePlanVisibilityTypes::ORGANIZATION unless service_plan_visibilities_dataset.empty?
+      return ServicePlanVisibilityTypes::ORGANIZATION unless orgs_visibility.empty?
 
       ServicePlanVisibilityTypes::ADMIN
     end
