@@ -6,10 +6,10 @@ module VCAP::CloudController
       def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
         super(ServicePlan,
               message,
-              omniscient:,
-              readable_orgs_query:,
-              readable_spaces_query:,
-              eager_loaded_associations:)
+              omniscient: omniscient,
+              readable_orgs_query: readable_orgs_query,
+              readable_spaces_query: readable_spaces_query,
+              eager_loaded_associations: eager_loaded_associations.append(:orgs_visibility))
       end
 
       private
