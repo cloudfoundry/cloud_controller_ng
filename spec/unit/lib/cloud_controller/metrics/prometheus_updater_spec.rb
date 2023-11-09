@@ -134,19 +134,18 @@ module VCAP::CloudController::Metrics
     describe '#update_vitals' do
       it 'updates vitals' do
         vitals = {
-          uptime: 33,
+          started_at: 1_699_522_477.0,
           cpu_load_avg: 0.5,
           mem_used_bytes: 542,
           mem_free_bytes: 927,
           mem_bytes: 1,
-          cpu: 2.0,
           num_cores: 4
         }
 
         updater.update_vitals(vitals)
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_vitals_uptime }
-        expect(metric.get).to eq 33
+        metric = prom_client.metrics.find { |m| m.name == :cc_vitals_started_at }
+        expect(metric.get).to eq 1_699_522_477.0
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu_load_avg }
         expect(metric.get).to eq 0.5
