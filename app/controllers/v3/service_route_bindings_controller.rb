@@ -120,8 +120,6 @@ class ServiceRouteBindingsController < ApplicationController
   rescue ServiceBindingRead::NotSupportedError
     bad_request!('user provided service instances do not support fetching route bindings parameters.') if @route_binding.service_instance.user_provided_instance?
     bad_request!('this service does not support fetching route bindings parameters.')
-  rescue LockCheck::ServiceBindingLockedError
-    unprocessable!('There is an operation in progress for the service route binding.')
   end
 
   private
