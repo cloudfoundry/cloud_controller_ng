@@ -48,7 +48,7 @@ module VCAP::CloudController::Metrics
       running_task_count = running_tasks.count
       running_task_memory = running_tasks.sum(:memory_in_mb) || 0
       @statsd_updater.update_task_stats(running_task_count, running_task_memory)
-      @prometheus_updater.update_task_stats(running_task_count, running_task_memory * 1000 * 1000)
+      @prometheus_updater.update_task_stats(running_task_count, running_task_memory * 1024 * 1024)
     end
 
     def update_log_counts

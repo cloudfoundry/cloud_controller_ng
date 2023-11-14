@@ -56,7 +56,7 @@ module VCAP::CloudController::Metrics
         periodic_updater.update_task_stats
 
         expect(statsd_updater).to have_received(:update_task_stats).with(anything, 513)
-        expect(prometheus_updater).to have_received(:update_task_stats).with(anything, 513_000_000)
+        expect(prometheus_updater).to have_received(:update_task_stats).with(anything, 537_919_488)
       end
 
       context 'when there are no running tasks' do
