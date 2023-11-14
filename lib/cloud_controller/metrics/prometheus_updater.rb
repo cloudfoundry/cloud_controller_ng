@@ -13,7 +13,7 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding' },
       { type: :counter, name: :cc_requests_completed_total, docstring: 'Requests completed' },
       { type: :gauge, name: :cc_thread_info_thread_count, docstring: 'Thread count' },
-      { type: :gauge, name: :cc_thread_info_event_machine_connection_count, docstring: 'Event Machine connection count' },
+      { type: :gauge, name: :cc_thread_info_event_machine_connection_count, docstring: 'EventMachine connection count' },
       { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_size, docstring: 'EventMachine thread queue size' },
       { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_num_waiting, docstring: 'EventMachine num waiting in thread' },
       { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_size, docstring: 'EventMachine queue size' },
