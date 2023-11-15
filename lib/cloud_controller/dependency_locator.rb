@@ -64,16 +64,23 @@ module CloudController
         register(:periodic_updater,
                  VCAP::CloudController::Metrics::PeriodicUpdater.new(
                    Time.now.utc,
-                   Steno::Sink::Counter.new,
+                   log_counter,
                    Steno.logger('cc.api'),
-                   VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
+                   statsd_updater,
                    prometheus_updater
                  ))
     end
 
     def prometheus_updater
-      register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new) unless @dependencies[:prometheus_updater]
-      @dependencies[:prometheus_updater]
+      @dependencies[:prometheus_updater] || register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
+    end
+
+    def statsd_updater
+      @dependencies[:statsd_updater] || register(:statsd_updater, VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client))
+    end
+
+    def log_counter
+      @dependencies[:log_counter] || register(:log_counter, Steno::Sink::Counter.new)
     end
 
     def stagers
@@ -344,8 +351,12 @@ module CloudController
     end
 
     def statsd_client
-      @dependencies[:statsd_client] ||
+      if @dependencies[:statsd_client]
+        @dependencies[:statsd_client]
+      else
+        Statsd.logger = Steno.logger('statsd.client')
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
+      end
     end
 
     private

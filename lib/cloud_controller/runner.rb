@@ -28,12 +28,12 @@ module VCAP::CloudController
       secrets_hash = parse_secrets
       parse_config(secrets_hash)
 
-      @log_counter = Steno::Sink::Counter.new
       setup_cloud_controller
 
       request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
 
-      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client, prometheus_updater)
+      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(CloudController::DependencyLocator.instance.statsd_client,
+                                                                           CloudController::DependencyLocator.instance.prometheus_updater)
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, request_logs)
 
@@ -118,7 +118,7 @@ module VCAP::CloudController
       @setup_logging = true
 
       StenoConfigurer.new(@config.get(:logging)).configure do |steno_config_hash|
-        steno_config_hash[:sinks] << @log_counter
+        steno_config_hash[:sinks] << CloudController::DependencyLocator.instance.log_counter
       end
     end
 
@@ -163,26 +163,7 @@ module VCAP::CloudController
     end
 
     def periodic_updater
-      @periodic_updater ||= VCAP::CloudController::Metrics::PeriodicUpdater.new(
-        Time.now.utc,
-        @log_counter,
-        Steno.logger('cc.api'),
-        VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client),
-        prometheus_updater
-      )
-      CloudController::DependencyLocator.instance.register(:periodic_updater, @periodic_updater)
-    end
-
-    def statsd_client
-      return @statsd_client if @statsd_client
-
-      logger.info("configuring statsd server at #{@config.get(:statsd_host)}:#{@config.get(:statsd_port)}")
-      Statsd.logger = Steno.logger('statsd.client')
-      @statsd_client = Statsd.new(@config.get(:statsd_host), @config.get(:statsd_port))
-    end
-
-    def prometheus_updater
-      CloudController::DependencyLocator.instance.prometheus_updater
+      CloudController::DependencyLocator.instance.periodic_updater
     end
   end
 end
