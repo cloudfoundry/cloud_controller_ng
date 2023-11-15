@@ -177,15 +177,15 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#start_staging_request_received' do
-      it 'increments "cc_staging_requested_total"' do
+      it 'increments "cc_staging_requests_total"' do
         updater.start_staging_request_received
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested_total }
+        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requests_total }
         expect(metric.get).to eq 1
 
         updater.start_staging_request_received
 
-        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requested_total }
+        metric = prom_client.metrics.find { |m| m.name == :cc_staging_requests_total }
         expect(metric.get).to eq 2
       end
     end

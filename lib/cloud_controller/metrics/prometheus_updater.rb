@@ -7,7 +7,7 @@ module VCAP::CloudController::Metrics
     METRICS = [
       { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue] },
       { type: :gauge, name: :cc_failed_jobs_total, docstring: 'Number of failed jobs of worker processes', labels: [:queue] },
-      { type: :counter, name: :cc_staging_requested_total, docstring: 'Number of staging requests' },
+      { type: :counter, name: :cc_staging_requests_total, docstring: 'Number of staging requests' },
       { type: :histogram, name: :cc_staging_succeeded_duration_seconds, docstring: 'Durations of successful staging events', buckets: DURATION_BUCKETS },
       { type: :histogram, name: :cc_staging_failed_duration_seconds, docstring: 'Durations of failed staging events', buckets: DURATION_BUCKETS },
       { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding' },
@@ -118,7 +118,7 @@ module VCAP::CloudController::Metrics
     end
 
     def start_staging_request_received
-      increment_counter_metric(:cc_staging_requested_total)
+      increment_counter_metric(:cc_staging_requests_total)
     end
 
     def report_staging_success_metrics(duration_ns)
