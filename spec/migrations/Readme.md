@@ -17,8 +17,6 @@ At present, the Cloud Controller (CC) supports both Postgres and MySQL in variou
 1. A size should always be specified for a string (and text should not be used). Postgres and MySQL have different size limits on String and TEXT fields. To ensure data can be migrated across the two databases (and others in future) without issues, a maximum size should always be specified. A rubocop linter has enforced this since 2017-07-30.
    1. For MySQL, `String` is `varchar(255)`, `String, text: true` has a max size of 16_000 for UTF-8-encoded DBs.
    1. For Postgres, both `String` and `String, text: true` are TEXT and have a max size of ~1GB.
-1. In Postgres, default indexes are established for primary key and unique key columns. Conversely, an index for a foreign key column isn't automatically generated - it has to be manually added via a migration. In contrast to this, MySQL automatically creates these indexes.
-
 
 ### Rules when writing migrations
 
