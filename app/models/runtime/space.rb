@@ -27,10 +27,10 @@ module VCAP::CloudController
                 primary_key: :guid,
                 key: :isolation_segment_guid
 
-    define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer
-    define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
-    define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
-    define_user_group :supporters, reciprocal: :supporter_spaces, before_add: :validate_supporter
+    define_user_group :developers, reciprocal: :spaces, before_add: :validate_developer, order: :space_id
+    define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager, order: :space_id
+    define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor, order: :space_id
+    define_user_group :supporters, reciprocal: :supporter_spaces, before_add: :validate_supporter, order: :space_id
 
     many_to_one :organization, before_set: :validate_change_organization
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
     one_to_many :app_events,
                 dataset: -> { AppEvent.filter(app: apps) }
 
-    one_to_many :default_users, class: 'VCAP::CloudController::User', key: :default_space_id
+    one_to_many :default_users, class: 'VCAP::CloudController::User', key: :default_space_id, order: :id
 
     one_to_many :domains,
                 dataset: -> { organization.domains_dataset },
