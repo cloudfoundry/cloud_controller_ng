@@ -360,6 +360,8 @@ Rails/DurationArithmetic:
   Enabled: true
 Rails/EagerEvaluationLogMessage:
   Enabled: true
+Rails/EnvLocal:
+  Enabled: true
 Rails/ExpandedDateRange:
   Enabled: true
 Rails/FindById:
