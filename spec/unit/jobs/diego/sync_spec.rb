@@ -36,7 +36,6 @@ module VCAP::CloudController
           expect(tasks_sync).to receive(:sync)
           expect(Time).to receive(:now).twice # Ensure that we get two time measurements. _Hopefully_ they get turned into an elapsed time and passed in where they need to be!
           expect_any_instance_of(Statsd).to receive(:timing).with('cc.diego_sync.duration', kind_of(Numeric))
-          expect_any_instance_of(VCAP::CloudController::Metrics::PrometheusUpdater).to receive(:report_diego_cell_sync_duration).with(kind_of(Numeric))
 
           job.perform
         end

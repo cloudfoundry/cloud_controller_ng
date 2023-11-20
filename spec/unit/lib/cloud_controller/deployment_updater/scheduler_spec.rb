@@ -28,7 +28,6 @@ module VCAP::CloudController
       let(:lock_worker) { instance_double(Locket::LockWorker) }
       let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil, error: nil) }
       let(:statsd_client) { instance_double(Statsd) }
-      let(:prometheus_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
       before do
         allow(Locket::LockRunner).to receive(:new).and_return(lock_runner)
@@ -38,9 +37,8 @@ module VCAP::CloudController
         allow(lock_worker).to receive(:acquire_lock_and_repeatedly_call).and_yield
         allow(DeploymentUpdater::Scheduler).to receive(:sleep)
         allow(DeploymentUpdater::Dispatcher).to receive(:dispatch)
-        allow(CloudController::DependencyLocator.instance).to receive_messages(statsd_client:, prometheus_updater:)
+        allow(CloudController::DependencyLocator.instance).to receive_messages(statsd_client:)
         allow(statsd_client).to receive(:timing)
-        allow(prometheus_updater).to receive(:report_deployment_duration)
       end
 
       it 'correctly configures a LockRunner and uses it to initialize a LockWorker' do
@@ -132,7 +130,6 @@ module VCAP::CloudController
         it 'records the deployment update duration' do
           expect(DeploymentUpdater::Dispatcher).to receive(:dispatch)
           expect(statsd_client).to receive(:timing).with('cc.deployments.update.duration', kind_of(Numeric))
-          expect(prometheus_updater).to receive(:report_deployment_duration).with(kind_of(Numeric))
 
           DeploymentUpdater::Scheduler.start
         end

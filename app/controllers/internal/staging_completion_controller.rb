@@ -115,7 +115,7 @@ module VCAP::CloudController
     end
 
     def prometheus_updater
-      @prometheus_updater ||= VCAP::CloudController::Metrics::PrometheusUpdater.new # this should be using singleton
+      CloudController::DependencyLocator.instance.prometheus_updater
     end
 
     attr_reader :stagers
