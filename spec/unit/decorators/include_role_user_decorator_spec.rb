@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
         allow(uaa_client).to receive(:users_for_ids).with([user1.guid, user2.guid]).and_return(user_uaa_info)
       end
 

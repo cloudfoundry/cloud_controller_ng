@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module UaaOriginValidator
     def validate_origin_for_username!(origin, username)
-      origins_for_username = @uaa_client.origins_for_username(username)
+      origins_for_username = @uaa_username_lookup_client.origins_for_username(username)
       if origin.present?
         unless origins_for_username.include?(origin)
           message = "username: '#{username}', origin: '#{origin}'"
