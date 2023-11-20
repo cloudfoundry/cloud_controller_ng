@@ -167,8 +167,6 @@ class ServiceCredentialBindingsController < ApplicationController
     raise CloudController::Errors::ApiError.
       new_from_details('ServiceFetchBindingParametersNotSupported').
       with_response_code(502)
-  rescue LockCheck::ServiceBindingLockedError => e
-    raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
   end
 
   private
