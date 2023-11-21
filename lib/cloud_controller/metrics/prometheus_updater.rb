@@ -12,12 +12,6 @@ module VCAP::CloudController::Metrics
       { type: :histogram, name: :cc_staging_failed_duration_seconds, docstring: 'Durations of failed staging events', buckets: DURATION_BUCKETS },
       { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding' },
       { type: :counter, name: :cc_requests_completed_total, docstring: 'Requests completed' },
-      { type: :gauge, name: :cc_thread_info_thread_count, docstring: 'Thread count' },
-      { type: :gauge, name: :cc_thread_info_event_machine_connection_count, docstring: 'EventMachine connection count' },
-      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_size, docstring: 'EventMachine thread queue size' },
-      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_num_waiting, docstring: 'EventMachine num waiting in thread' },
-      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_size, docstring: 'EventMachine queue size' },
-      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_num_waiting, docstring: 'EventMachine requests waiting in queue' },
       { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at' },
       { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes' },
       { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg' },
@@ -30,26 +24,21 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments' }
     ].freeze
 
+    THIN_METRICS = [
+      { type: :gauge, name: :cc_thread_info_thread_count, docstring: 'Thread count' },
+      { type: :gauge, name: :cc_thread_info_event_machine_connection_count, docstring: 'EventMachine connection count' },
+      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_size, docstring: 'EventMachine thread queue size' },
+      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_num_waiting, docstring: 'EventMachine num waiting in thread' },
+      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_size, docstring: 'EventMachine queue size' },
+      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_num_waiting, docstring: 'EventMachine requests waiting in queue' }
+    ].freeze
+
     def initialize(registry=Prometheus::Client.registry)
       @registry = registry
 
       # Register all metrics, to initialize them for discoverability
-      METRICS.map do |metric|
-        register_metric(metric[:type], metric[:name], metric[:docstring], labels: metric[:labels] || {}, buckets: metric[:buckets] || {}) unless @registry.exist?(metric[:name])
-      end
-    end
-
-    def register_metric(type, name, message, labels: {}, buckets: {})
-      case type
-      when :gauge
-        @registry.gauge(name, docstring: message, labels: labels)
-      when :counter
-        @registry.counter(name, docstring: message, labels: labels)
-      when :histogram
-        @registry.histogram(name, docstring: message, labels: labels, buckets: buckets)
-      else
-        throw ArgumentError("Metric type #{type} does not exist.")
-      end
+      METRICS.each { |metric| register(metric) }
+      THIN_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config.get(:webserver) == 'thin'
     end
 
     def update_gauge_metric(metric, value, labels: {})
@@ -90,7 +79,7 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    def update_thread_info(thread_info)
+    def update_thread_info_thin(thread_info)
       update_gauge_metric(:cc_thread_info_thread_count, thread_info[:thread_count])
       update_gauge_metric(:cc_thread_info_event_machine_connection_count, thread_info[:event_machine][:connection_count])
       update_gauge_metric(:cc_thread_info_event_machine_threadqueue_size, thread_info[:event_machine][:threadqueue][:size])
@@ -130,6 +119,23 @@ module VCAP::CloudController::Metrics
     end
 
     private
+
+    def register(metric)
+      register_metric(metric[:type], metric[:name], metric[:docstring], labels: metric[:labels] || {}, buckets: metric[:buckets] || {}) unless @registry.exist?(metric[:name])
+    end
+
+    def register_metric(type, name, message, labels: {}, buckets: {})
+      case type
+      when :gauge
+        @registry.gauge(name, docstring: message, labels: labels)
+      when :counter
+        @registry.counter(name, docstring: message, labels: labels)
+      when :histogram
+        @registry.histogram(name, docstring: message, labels: labels, buckets: buckets)
+      else
+        throw ArgumentError("Metric type #{type} does not exist.")
+      end
+    end
 
     def nanoseconds_to_seconds(time_ns)
       (time_ns / 1e9).to_f

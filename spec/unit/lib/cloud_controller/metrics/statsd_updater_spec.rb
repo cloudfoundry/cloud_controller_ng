@@ -86,7 +86,7 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_thread_info' do
+    describe '#update_thread_info_thin' do
       let(:batch) { double(:batch) }
 
       before do
@@ -110,7 +110,7 @@ module VCAP::CloudController::Metrics
           }
         }
 
-        updater.update_thread_info(thread_info)
+        updater.update_thread_info_thin(thread_info)
 
         expect(batch).to have_received(:gauge).with('cc.thread_info.thread_count', 5)
         expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.connection_count', 10)

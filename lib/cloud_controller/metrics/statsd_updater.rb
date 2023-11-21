@@ -23,7 +23,7 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    def update_thread_info(thread_info)
+    def update_thread_info_thin(thread_info)
       @statsd.batch do |batch|
         batch.gauge('cc.thread_info.thread_count', thread_info[:thread_count])
         batch.gauge('cc.thread_info.event_machine.connection_count', thread_info[:event_machine][:connection_count])

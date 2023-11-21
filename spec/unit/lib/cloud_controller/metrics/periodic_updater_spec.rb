@@ -72,7 +72,7 @@ module VCAP::CloudController::Metrics
       before do
         allow(statsd_updater).to receive(:update_user_count)
         allow(statsd_updater).to receive(:update_job_queue_length)
-        allow(statsd_updater).to receive(:update_thread_info)
+        allow(statsd_updater).to receive(:update_thread_info_thin)
         allow(statsd_updater).to receive(:update_failed_job_count)
         allow(statsd_updater).to receive(:update_vitals)
         allow(statsd_updater).to receive(:update_log_counts)
@@ -81,7 +81,7 @@ module VCAP::CloudController::Metrics
 
         allow(prometheus_updater).to receive(:update_user_count)
         allow(prometheus_updater).to receive(:update_job_queue_length)
-        allow(prometheus_updater).to receive(:update_thread_info)
+        allow(prometheus_updater).to receive(:update_thread_info_thin)
         allow(prometheus_updater).to receive(:update_failed_job_count)
         allow(prometheus_updater).to receive(:update_vitals)
         allow(prometheus_updater).to receive(:update_log_counts)
@@ -449,10 +449,8 @@ module VCAP::CloudController::Metrics
 
     describe '#update_thread_info' do
       before do
-        allow(statsd_updater).to receive(:update_thread_info)
-        allow(prometheus_updater).to receive(:update_thread_info)
-
-        periodic_updater.update_thread_info
+        allow(statsd_updater).to receive(:update_thread_info_thin)
+        allow(prometheus_updater).to receive(:update_thread_info_thin)
       end
 
       it 'contains EventMachine data and send it to all updaters' do
@@ -471,8 +469,10 @@ module VCAP::CloudController::Metrics
           }
         }
 
-        expect(statsd_updater).to have_received(:update_thread_info).with(expected_thread_info)
-        expect(prometheus_updater).to have_received(:update_thread_info).with(expected_thread_info)
+        periodic_updater.update_thread_info
+
+        expect(statsd_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
+        expect(prometheus_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
       end
 
       context 'when resultqueue and/or threadqueue is not a queue' do
@@ -495,7 +495,23 @@ module VCAP::CloudController::Metrics
             }
           }
 
-          expect(statsd_updater).to have_received(:update_thread_info).with(expected_thread_info)
+          periodic_updater.update_thread_info
+
+          expect(statsd_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
+          expect(prometheus_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
+        end
+      end
+
+      context 'when Puma is configured as webserver' do
+        before do
+          TestConfig.override(webserver: 'puma')
+        end
+
+        it 'does not send EventMachine data to updaters' do
+          periodic_updater.update_thread_info
+
+          expect(statsd_updater).not_to have_received(:update_thread_info_thin)
+          expect(prometheus_updater).not_to have_received(:update_thread_info_thin)
         end
       end
     end

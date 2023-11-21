@@ -90,9 +90,10 @@ module VCAP::CloudController::Metrics
     end
 
     def update_thread_info
-      local_thread_info = thread_info
+      return unless VCAP::CloudController::Config.config.get(:webserver) == 'thin'
 
-      [@statsd_updater, @prometheus_updater].each { |u| u.update_thread_info(local_thread_info) }
+      local_thread_info = thread_info_thin
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_thread_info_thin(local_thread_info) }
     end
 
     def update_failed_job_count
@@ -132,7 +133,7 @@ module VCAP::CloudController::Metrics
       @prometheus_updater.update_vitals(prom_vitals)
     end
 
-    def thread_info
+    def thread_info_thin
       threadqueue = EM.instance_variable_get(:@threadqueue) || []
       resultqueue = EM.instance_variable_get(:@resultqueue) || []
       {
