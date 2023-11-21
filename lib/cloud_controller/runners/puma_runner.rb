@@ -31,12 +31,13 @@ module VCAP::CloudController
           Sequel::Model.db.disconnect
         end
       end
-      events = Puma::Events.new($stdout, $stderr)
+      log_writer = Puma::LogWriter.stdio
+      events = Puma::Events.new
       events.on_stopped do
         stop!
       end
 
-      @puma_launcher = Puma::Launcher.new(puma_config, events:)
+      @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
     end
 
     def start!
