@@ -4,60 +4,77 @@ require 'fileutils'
 module VCAP
   module CloudController
     class Drain
+      NGINX_FINAL_TIMEOUT = 10
+      CCNG_FINAL_TIMEOUT = 20
+      SLEEP_INTERVAL = 1
+
       def initialize(log_path)
         @log_path = log_path
       end
 
-      def log_invocation(args)
-        log_info("Drain invoked with #{args.map(&:inspect).join(' ')}")
-      end
-
       def shutdown_nginx(pid_path, timeout=30)
-        nginx_timeout = timeout
-        nginx_interval = 1
         pid = File.read(pid_path).to_i
-        process_name = File.basename(pid_path)
-        send_signal(pid, 'QUIT', 'Nginx') # request nginx graceful shutdown
-        wait_for_pid(pid, process_name, nginx_timeout, nginx_interval) # wait until nginx is shut down
-        return unless alive?(pid, process_name)
+        process_name = File.basename(pid_path, '.pid')
 
-        send_signal(pid, 'TERM', 'Nginx') # nginx force shutdown
+        # Initiate graceful shutdown.
+        send_signal('QUIT', pid, process_name)
+        return if wait_for_shutdown(pid, process_name, timeout)
+
+        # Graceful shutdown did not succeed, initiate forceful shutdown.
+        send_signal('TERM', pid, process_name)
+
+        # Wait some additional time for nginx to be terminated; otherwise write an error log message.
+        log_shutdown_error(pid, process_name) unless wait_for_shutdown(pid, process_name, NGINX_FINAL_TIMEOUT)
       end
 
       def shutdown_cc(pid_path)
         pid = File.read(pid_path).to_i
-        send_signal(pid, 'TERM', 'cc_ng')
+        process_name = File.basename(pid_path, '.pid')
+
+        # Initiate shutdown.
+        send_signal('TERM', pid, process_name)
+
+        # Wait some additional time for cloud controller to be terminated; otherwise write an error log message.
+        log_shutdown_error(pid, process_name) unless wait_for_shutdown(pid, process_name, CCNG_FINAL_TIMEOUT)
       end
 
       private
 
-      def send_signal(pid, signal, program)
-        log_info("Sending signal #{signal} to #{program} with pid #{pid}.")
+      def send_signal(signal, pid, process_name)
+        log_info("Sending signal '#{signal}' to process '#{process_name}' with pid '#{pid}'")
         Process.kill(signal, pid)
       rescue Errno::ESRCH => e
-        log_info("#{program} not running: Pid no longer exists: #{e}")
+        log_info("Process '#{process_name}' is not running: Pid no longer exists: #{e}")
       rescue Errno::ENOENT => e
-        log_info("#{program} not running: Pid file no longer exists: #{e}")
+        log_info("Process '#{process_name}' is not running: Pid file no longer exists: #{e}")
       end
 
-      def wait_for_pid(pid, process_name, timeout, interval)
-        while alive?(pid, process_name) && timeout > 0
-          log_info("Waiting #{timeout}s for #{process_name} to shutdown")
-          sleep(interval)
-          timeout -= interval
+      def wait_for_shutdown(pid, process_name, timeout)
+        terminated = terminated?(pid, process_name)
+        while !terminated && timeout > 0
+          log_info("Waiting #{timeout}s for process '#{process_name}' with pid '#{pid}' to shutdown")
+          sleep(SLEEP_INTERVAL)
+          timeout -= SLEEP_INTERVAL
+          terminated = terminated?(pid, process_name)
         end
+        terminated
+      end
+
+      def terminated?(pid, process_name)
+        Process.getpgid(pid)
+        false
+      rescue Errno::ESRCH
+        log_info("Process '#{process_name}' with pid '#{pid}' is not running")
+        true
       end
 
       def log_info(message)
         logger.info("cc.drain: #{message}")
       end
 
-      def alive?(pid, process_name)
-        Process.getpgid(pid)
-        true
-      rescue Errno::ESRCH
-        log_info("#{process_name} with pid '#{pid}' not running")
-        false
+      def log_shutdown_error(pid, process_name)
+        message = "Process '#{process_name}' with pid '#{pid}' is still running - this indicates an error in the shutdown procedure!"
+        logger.error("cc.drain: #{message}")
       end
 
       def logger
