@@ -175,6 +175,9 @@ module VCAP::CloudController
               optional(:priorities) => Hash
             },
 
+            statsd_host: String,
+            statsd_port: Integer,
+
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
             custom_metric_tag_prefix_list: Array

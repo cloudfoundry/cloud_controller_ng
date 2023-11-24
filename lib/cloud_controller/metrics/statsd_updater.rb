@@ -2,7 +2,7 @@ require 'statsd'
 
 module VCAP::CloudController::Metrics
   class StatsdUpdater
-    def initialize(statsd=Statsd.new)
+    def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client)
       @statsd = statsd
     end
 

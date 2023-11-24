@@ -111,7 +111,7 @@ module VCAP::CloudController
     end
 
     def statsd_updater
-      @statsd_updater ||= VCAP::CloudController::Metrics::StatsdUpdater.new
+      CloudController::DependencyLocator.instance.statsd_updater
     end
 
     def prometheus_updater

@@ -157,6 +157,7 @@ module VCAP::CloudController
       end
 
       it 'schedules the frequent inline jobs' do
+        allow_any_instance_of(CloudController::DependencyLocator).to receive(:statsd_client).and_return(instance_double(Statsd))
         allow(clock).to receive(:schedule_daily_job)
         allow(clock).to receive(:schedule_frequent_worker_job)
         expect(clock).to receive(:schedule_frequent_inline_job) do |args, &block|

@@ -10,7 +10,7 @@ module VCAP::CloudController
       class BBSFetchError < Error
       end
 
-      def initialize(config:, statsd_updater: VCAP::CloudController::Metrics::StatsdUpdater.new)
+      def initialize(config:, statsd_updater: CloudController::DependencyLocator.instance.statsd_updater)
         @config   = config
         @workpool = WorkPool.new(50, store_exceptions: true)
         @statsd_updater = statsd_updater
