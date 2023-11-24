@@ -8,7 +8,7 @@ module VCAP::CloudController
       get '/internal/v4/metrics', :index
 
       def index
-        CloudController::DependencyLocator.instance.periodic_updater.update!
+        CloudController::DependencyLocator.instance.periodic_updater.update! unless VCAP::CloudController::Config.config.get(:webserver) == 'puma'
         [200, Prometheus::Client::Formats::Text.marshal(Prometheus::Client.registry)]
       end
     end
