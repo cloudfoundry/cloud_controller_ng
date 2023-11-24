@@ -5,23 +5,23 @@ module VCAP::CloudController::Metrics
     DURATION_BUCKETS = [5, 10, 30, 60, 300, 600, 890].freeze
 
     METRICS = [
-      { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue] },
-      { type: :gauge, name: :cc_failed_jobs_total, docstring: 'Number of failed jobs of worker processes', labels: [:queue] },
+      { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue], aggregation: :most_recent },
+      { type: :gauge, name: :cc_failed_jobs_total, docstring: 'Number of failed jobs of worker processes', labels: [:queue], aggregation: :most_recent },
       { type: :counter, name: :cc_staging_requests_total, docstring: 'Number of staging requests' },
       { type: :histogram, name: :cc_staging_succeeded_duration_seconds, docstring: 'Durations of successful staging events', buckets: DURATION_BUCKETS },
       { type: :histogram, name: :cc_staging_failed_duration_seconds, docstring: 'Durations of failed staging events', buckets: DURATION_BUCKETS },
-      { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding' },
+      { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding', aggregation: :sum },
       { type: :counter, name: :cc_requests_completed_total, docstring: 'Requests completed' },
-      { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at' },
-      { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes' },
-      { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg' },
-      { type: :gauge, name: :cc_vitals_mem_used_bytes, docstring: 'CloudController Vitals: mem_used_bytes' },
-      { type: :gauge, name: :cc_vitals_mem_free_bytes, docstring: 'CloudController Vitals: mem_free_bytes' },
-      { type: :gauge, name: :cc_vitals_num_cores, docstring: 'CloudController Vitals: num_cores' },
-      { type: :gauge, name: :cc_running_tasks_total, docstring: 'Total running tasks' },
-      { type: :gauge, name: :cc_running_tasks_memory_bytes, docstring: 'Total memory consumed by running tasks' },
-      { type: :gauge, name: :cc_users_total, docstring: 'Number of users' },
-      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments' }
+      { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_used_bytes, docstring: 'CloudController Vitals: mem_used_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_free_bytes, docstring: 'CloudController Vitals: mem_free_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_num_cores, docstring: 'CloudController Vitals: num_cores', aggregation: :most_recent },
+      { type: :gauge, name: :cc_running_tasks_total, docstring: 'Total running tasks', aggregation: :most_recent },
+      { type: :gauge, name: :cc_running_tasks_memory_bytes, docstring: 'Total memory consumed by running tasks', aggregation: :most_recent },
+      { type: :gauge, name: :cc_users_total, docstring: 'Number of users', aggregation: :most_recent },
+      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent }
     ].freeze
 
     THIN_METRICS = [
@@ -121,17 +121,22 @@ module VCAP::CloudController::Metrics
     private
 
     def register(metric)
-      register_metric(metric[:type], metric[:name], metric[:docstring], labels: metric[:labels] || {}, buckets: metric[:buckets] || {}) unless @registry.exist?(metric[:name])
+      return if @registry.exist?(metric[:name])
+
+      register_metric(metric[:type], metric[:name], metric[:docstring], labels: metric[:labels] || [], buckets: metric[:buckets] || [], aggregation: metric[:aggregation])
     end
 
-    def register_metric(type, name, message, labels: {}, buckets: {})
+    def register_metric(type, name, message, labels:, buckets:, aggregation:)
+      store_settings = {}
+      store_settings[:aggregation] = aggregation if aggregation.present? && Prometheus::Client.config.data_store.instance_of?(Prometheus::Client::DataStores::DirectFileStore)
+
       case type
       when :gauge
-        @registry.gauge(name, docstring: message, labels: labels)
+        @registry.gauge(name, docstring: message, labels: labels, store_settings: store_settings)
       when :counter
-        @registry.counter(name, docstring: message, labels: labels)
+        @registry.counter(name, docstring: message, labels: labels, store_settings: store_settings)
       when :histogram
-        @registry.histogram(name, docstring: message, labels: labels, buckets: buckets)
+        @registry.histogram(name, docstring: message, labels: labels, buckets: buckets, store_settings: store_settings)
       else
         throw ArgumentError("Metric type #{type} does not exist.")
       end
