@@ -24,7 +24,6 @@ module CloudController
 
     def default_dependencies
       {
-        statsd_client: dependency_locator.statsd_client,
         object_renderer: dependency_locator.object_renderer,
         collection_renderer: dependency_locator.paginated_collection_renderer
       }
