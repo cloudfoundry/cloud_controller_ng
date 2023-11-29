@@ -24,6 +24,7 @@ module VCAP::CloudController::Metrics
       EM.add_periodic_timer(30)  { catch_error { update_log_counts } }
       EM.add_periodic_timer(30)  { catch_error { update_task_stats } }
       EM.add_periodic_timer(30)  { catch_error { update_deploying_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_webserver_stats } }
     end
 
     def update!
@@ -35,6 +36,7 @@ module VCAP::CloudController::Metrics
       update_log_counts
       update_task_stats
       update_deploying_count
+      update_webserver_stats
     end
 
     def catch_error
@@ -131,6 +133,24 @@ module VCAP::CloudController::Metrics
       prom_vitals.delete(:cpu)
       prom_vitals[:started_at] = @start_time.to_i
       @prometheus_updater.update_vitals(prom_vitals)
+    end
+
+    def update_webserver_stats
+      return unless VCAP::CloudController::Config.config.get(:webserver) == 'puma'
+
+      local_stats = Puma.stats_hash
+      worker_count = local_stats[:booted_workers]
+      worker_stats = []
+      local_stats[:worker_status].each do |worker_status|
+        worker_stats << {
+          started_at: Time.parse(worker_status[:started_at]).utc.to_i,
+          index: worker_status[:index],
+          pid: worker_status[:pid],
+          thread_count: worker_status[:last_status][:running],
+          backlog: worker_status[:last_status][:backlog]
+        }
+      end
+      @prometheus_updater.update_webserver_stats_puma(worker_count, worker_stats)
     end
 
     def thread_info_thin

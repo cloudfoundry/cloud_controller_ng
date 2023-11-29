@@ -176,6 +176,37 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe '#update_webserver_stats_puma' do
+      before do
+        TestConfig.override(webserver: 'puma')
+      end
+
+      it 'contains Puma stats' do
+        worker_count = 2
+        worker_stats = [
+          { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0 },
+          { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1 }
+        ]
+
+        updater.update_webserver_stats_puma(worker_count, worker_stats)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_count }
+        expect(metric.get).to eq(2)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_started_at }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(1_701_263_705)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(1_701_263_710)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_thread_count }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(1)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(2)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_backlog }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(0)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(1)
+      end
+    end
+
     describe '#start_staging_request_received' do
       it 'increments "cc_staging_requests_total"' do
         updater.start_staging_request_received
