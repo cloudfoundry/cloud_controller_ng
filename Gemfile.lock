@@ -276,7 +276,7 @@ GEM
     json-diff (0.4.1)
     json-schema (4.1.1)
       addressable (>= 2.8)
-    json_pure (2.6.3)
+    json_pure (2.7.0)
     jwt (2.7.1)
     kramdown (2.4.0)
       rexml
