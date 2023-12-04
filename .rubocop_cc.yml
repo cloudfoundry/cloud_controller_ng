@@ -180,6 +180,8 @@ Lint/IncompatibleIoSelectWithFiberScheduler:
   Enabled: true
 Lint/LambdaWithoutLiteralBlock:
   Enabled: true
+Lint/LiteralAssignmentInCondition:
+  Enabled: true
 Lint/MixedCaseRange:
   Enabled: true
 Lint/NoReturnInBeginEndBlocks:
@@ -325,6 +327,8 @@ Style/ReturnNilInPredicateMethodDefinition:
 Style/SelectByRegexp:
   Enabled: true
 Style/StringChars:
+  Enabled: true
+Style/SuperWithArgsParentheses:
   Enabled: true
 Style/SwapValues:
   Enabled: true
