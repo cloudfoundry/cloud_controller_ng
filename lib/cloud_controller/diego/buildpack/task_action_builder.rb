@@ -104,7 +104,7 @@ module VCAP::CloudController
         end
 
         def lifecycle_bundle_key
-          "buildpack/#{lifecycle_stack}".to_sym
+          :"buildpack/#{lifecycle_stack}"
         end
 
         private

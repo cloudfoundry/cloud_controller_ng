@@ -201,7 +201,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_event_repository.record_user_provided_service_instance_event(:show, service_instance)
 
-    render status: :ok, json: (service_instance.credentials || {})
+    render status: :ok, json: service_instance.credentials || {}
   end
 
   def parameters

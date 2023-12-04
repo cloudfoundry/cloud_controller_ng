@@ -51,7 +51,7 @@ module VCAP::CloudController
 
         if fields.include?(key)
           val.each do |resource, selectors|
-            params["#{key}[#{resource}]".to_sym] = selectors.join(',')
+            params[:"#{key}[#{resource}]"] = selectors.join(',')
           end
         else
           params[key] = val.is_a?(Array) ? val.map { |v| v.gsub(',', CGI.escape(',')) }.join(',') : val

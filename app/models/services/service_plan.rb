@@ -5,9 +5,9 @@ module VCAP::CloudController
     many_to_one :service
     one_to_many :service_instances
 
-    one_to_many :service_plan_visibilities, clearer: (lambda do
+    one_to_many :service_plan_visibilities, clearer: lambda {
       service_plan_visibilities_dataset.delete
-    end)
+    }
 
     add_association_dependencies service_plan_visibilities: :destroy
 

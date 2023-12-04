@@ -35,7 +35,7 @@ module VCAP::Services
             { 'description' => nil }.to_json,  # description is null
             { 'description' => true }.to_json, # description is not a String
             { 'foo' => 'bar' }.to_json,        # description is not a key in the body
-            'string'                          # body is not a hash
+            'string' # body is not a hash
           ].each do |fake_body|
             context "when the body is '#{fake_body}'" do
               let(:response_body) { fake_body }

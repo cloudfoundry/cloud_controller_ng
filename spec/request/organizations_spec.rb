@@ -1705,7 +1705,7 @@ module VCAP::CloudController
       created_at: iso8601,
       updated_at: iso8601,
       username: username,
-      presentation_name: (username.presence || guid),
+      presentation_name: username.presence || guid,
       origin: origin,
       metadata: {
         labels: {},

@@ -16,9 +16,9 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
-        dataset = dataset.where("#{IsolationSegmentModel.table_name}__guid".to_sym => message.guids) if message.requested?(:guids)
+        dataset = dataset.where("#{IsolationSegmentModel.table_name}__guid": message.guids) if message.requested?(:guids)
 
-        dataset = dataset.where("#{IsolationSegmentModel.table_name}__name".to_sym => message.names) if message.requested?(:names)
+        dataset = dataset.where("#{IsolationSegmentModel.table_name}__name": message.names) if message.requested?(:names)
 
         if message.requested?(:organization_guids)
           dataset = dataset.join(:organizations_isolation_segments, {

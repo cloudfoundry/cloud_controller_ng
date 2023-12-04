@@ -149,8 +149,8 @@ end
 module VCAP
   module Migration
     def self.timestamps(migration, table_key)
-      created_at_idx = "#{table_key}_created_at_index".to_sym if table_key
-      updated_at_idx = "#{table_key}_updated_at_index".to_sym if table_key
+      created_at_idx = :"#{table_key}_created_at_index" if table_key
+      updated_at_idx = :"#{table_key}_updated_at_index" if table_key
       migration.Timestamp :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
       migration.Timestamp :updated_at
       migration.index :created_at, name: created_at_idx
@@ -158,7 +158,7 @@ module VCAP
     end
 
     def self.guid(migration, table_key)
-      guid_idx = "#{table_key}_guid_index".to_sym if table_key
+      guid_idx = :"#{table_key}_guid_index" if table_key
       migration.String :guid, null: false
       migration.index :guid, unique: true, name: guid_idx
     end
@@ -175,9 +175,9 @@ module VCAP
       migration.String :key_name, size: 63
       migration.String :value, size: 63
 
-      migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: "fk_#{table_key}_resource_guid".to_sym
-      migration.index [:resource_guid], name: "fk_#{table_key}_resource_guid_index".to_sym
-      migration.index %i[key_prefix key_name value], name: "#{table_key}_compound_index".to_sym
+      migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: :"fk_#{table_key}_resource_guid"
+      migration.index [:resource_guid], name: :"fk_#{table_key}_resource_guid_index"
+      migration.index %i[key_prefix key_name value], name: :"#{table_key}_compound_index"
     end
 
     def self.annotations_common(migration, table_key, foreign_resource_table_key)
@@ -186,18 +186,18 @@ module VCAP
       migration.String :key, size: 1000
       migration.String :value, size: 5000
 
-      migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: "fk_#{table_key}_resource_guid".to_sym
-      migration.index [:resource_guid], name: "fk_#{table_key}_resource_guid_index".to_sym
+      migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: :"fk_#{table_key}_resource_guid"
+      migration.index [:resource_guid], name: :"fk_#{table_key}_resource_guid_index"
     end
 
     def self.create_permission_table(migration, name, name_short, permission)
       name = name.to_s
-      join_table = "#{name.pluralize}_#{permission}".to_sym
-      join_table_short = "#{name_short}_#{permission}".to_sym
-      id_attr = "#{name}_id".to_sym
-      idx_name = "#{name_short}_#{permission}_idx".to_sym
-      fk_name = "#{join_table_short}_#{name_short}_fk".to_sym
-      fk_user = "#{join_table_short}_user_fk".to_sym
+      join_table = :"#{name.pluralize}_#{permission}"
+      join_table_short = :"#{name_short}_#{permission}"
+      id_attr = :"#{name}_id"
+      idx_name = :"#{name_short}_#{permission}_idx"
+      fk_name = :"#{join_table_short}_#{name_short}_fk"
+      fk_user = :"#{join_table_short}_user_fk"
       table = name.pluralize.to_sym
 
       migration.create_table(join_table) do

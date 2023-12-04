@@ -20,7 +20,7 @@ module VCAP::CloudController
         diego.
         runnable.
         where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
-        order("#{ProcessModel.table_name}__id".to_sym).
+        order(:"#{ProcessModel.table_name}__id").
         limit(batch_size).
         eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all
@@ -31,8 +31,8 @@ module VCAP::CloudController
       ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{ProcessModel.table_name}__guid".to_sym => diego_process_guids.map { |pg| Diego::ProcessGuid.cc_process_guid(pg) }).
-        order("#{ProcessModel.table_name}__id".to_sym).
+        where("#{ProcessModel.table_name}__guid": diego_process_guids.map { |pg| Diego::ProcessGuid.cc_process_guid(pg) }).
+        order(:"#{ProcessModel.table_name}__id").
         eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
         select { |process| diego_process_guids.include?(Diego::ProcessGuid.from_process(process)) }
@@ -43,16 +43,16 @@ module VCAP::CloudController
                    diego.
                    runnable.
                    where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
-                   order("#{ProcessModel.table_name}__id".to_sym).
+                   order(:"#{ProcessModel.table_name}__id").
                    limit(batch_size)
 
       diego_apps = diego_apps.buildpack_type unless FeatureFlag.enabled?(:diego_docker)
 
       diego_apps.select_map([
-        "#{ProcessModel.table_name}__id".to_sym,
-        "#{ProcessModel.table_name}__guid".to_sym,
-        "#{ProcessModel.table_name}__version".to_sym,
-        "#{ProcessModel.table_name}__updated_at".to_sym
+        :"#{ProcessModel.table_name}__id",
+        :"#{ProcessModel.table_name}__guid",
+        :"#{ProcessModel.table_name}__version",
+        :"#{ProcessModel.table_name}__updated_at"
       ])
     end
 

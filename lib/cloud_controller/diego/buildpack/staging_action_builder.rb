@@ -212,7 +212,7 @@ module VCAP::CloudController
         end
 
         def lifecycle_bundle_key
-          "buildpack/#{lifecycle_data[:stack]}".to_sym
+          :"buildpack/#{lifecycle_data[:stack]}"
         end
 
         def upload_buildpack_artifacts_cache_uri

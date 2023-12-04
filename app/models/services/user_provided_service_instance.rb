@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     def not_valid_host?
-      (!URI(route_service_url).host || URI(route_service_url).host.to_s[0] == '.')
+      !URI(route_service_url).host || URI(route_service_url).host.to_s[0] == '.'
     end
   end
 end

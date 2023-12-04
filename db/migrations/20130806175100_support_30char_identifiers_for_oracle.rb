@@ -45,21 +45,21 @@ def rename_index(table, columns, opts={})
 end
 
 def rename_common_indexes(table, table_key)
-  rename_index(table, :created_at, name: "#{table_key}_created_at_index".to_sym)
-  rename_index(table, :updated_at, name: "#{table_key}_updated_at_index".to_sym)
-  rename_index(table, :guid, unique: true, name: "#{table_key}_guid_index".to_sym)
+  rename_index(table, :created_at, name: :"#{table_key}_created_at_index")
+  rename_index(table, :updated_at, name: :"#{table_key}_updated_at_index")
+  rename_index(table, :guid, unique: true, name: :"#{table_key}_guid_index")
 end
 
 def rename_permission_table(name, name_short, permission)
   name = name.to_s
-  join_table = "#{name.pluralize}_#{permission}".to_sym
-  join_table_short = "#{name_short}_#{permission}".to_sym
-  id_attr = "#{name}_id".to_sym
-  idx_name = "#{name_short}_#{permission}_idx".to_sym
-  fk_name = "#{join_table}_#{name}_fk".to_sym
-  fk_user = "#{join_table}_user_fk".to_sym
-  fk_name_short = "#{join_table_short}_#{name_short}_fk".to_sym
-  fk_user_short = "#{join_table_short}_user_fk".to_sym
+  join_table = :"#{name.pluralize}_#{permission}"
+  join_table_short = :"#{name_short}_#{permission}"
+  id_attr = :"#{name}_id"
+  idx_name = :"#{name_short}_#{permission}_idx"
+  fk_name = :"#{join_table}_#{name}_fk"
+  fk_user = :"#{join_table}_user_fk"
+  fk_name_short = :"#{join_table_short}_#{name_short}_fk"
+  fk_user_short = :"#{join_table_short}_user_fk"
 
   rename_foreign_key(join_table, fk_name, fk_name_short) do |db, alter_table|
     rename_foreign_key_internal(db, alter_table, join_table, fk_user, fk_user_short) do |db, alter_table|

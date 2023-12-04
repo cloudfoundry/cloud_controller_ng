@@ -92,7 +92,7 @@ module VCAP::CloudController
       end
 
       def runnable
-        staged.where("#{ProcessModel.table_name}__state".to_sym => STARTED).where { instances > 0 }
+        staged.where("#{ProcessModel.table_name}__state": STARTED).where { instances > 0 }
       end
 
       def diego
@@ -466,7 +466,7 @@ module VCAP::CloudController
                     union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).select(:guid)
 
       {
-        "#{ProcessModel.table_name}__app_guid".to_sym => AppModel.where(space: space_guids.all).select(:guid)
+        "#{ProcessModel.table_name}__app_guid": AppModel.where(space: space_guids.all).select(:guid)
       }
     end
 
@@ -598,8 +598,8 @@ module VCAP::CloudController
     end
 
     def footprint_changed?
-      (column_changed?(:production) || column_changed?(:memory) ||
-        column_changed?(:instances))
+      column_changed?(:production) || column_changed?(:memory) ||
+        column_changed?(:instances)
     end
 
     class << self

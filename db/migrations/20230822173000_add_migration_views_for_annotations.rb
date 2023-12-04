@@ -32,14 +32,14 @@ Sequel.migration do
   up do
     annotation_tables.each do |table|
       transaction do
-        create_view("#{table}_migration_view".to_sym, self[table.to_sym].select { [id, guid, created_at, updated_at, resource_guid, key_prefix, key.as(key_name), value] })
+        create_view(:"#{table}_migration_view", self[table.to_sym].select { [id, guid, created_at, updated_at, resource_guid, key_prefix, key.as(key_name), value] })
       end
     end
   end
   down do
     annotation_tables.each do |table|
       transaction do
-        drop_view("#{table}_migration_view".to_sym, if_exists: true)
+        drop_view(:"#{table}_migration_view", if_exists: true)
       end
     end
   end
