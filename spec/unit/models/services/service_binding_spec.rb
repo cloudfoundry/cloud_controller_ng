@@ -111,7 +111,8 @@ module VCAP::CloudController
 
         describe 'the associated app' do
           it 'allows changing to the same app' do
-            binding.app = binding.app
+            app_from_binding = binding.app
+            binding.app = app_from_binding
             expect { binding.save }.not_to raise_error
           end
 
@@ -123,7 +124,8 @@ module VCAP::CloudController
 
         describe 'the associated service instance' do
           it 'allows changing to the same service instance' do
-            binding.service_instance = binding.service_instance
+            service_instance_from_binding = binding.service_instance
+            binding.service_instance = service_instance_from_binding
             expect { binding.save }.not_to raise_error
           end
 
