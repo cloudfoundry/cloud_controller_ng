@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        params.each do |key, _|
+        params.each_key do |key|
           expect(message).to be_requested(key.to_sym)
         end
       end

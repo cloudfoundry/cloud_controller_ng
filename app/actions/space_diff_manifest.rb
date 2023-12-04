@@ -205,7 +205,7 @@ module VCAP::CloudController
           if manifest_app_hash_resource.nil?
             existing_value.delete_at(i)
           else
-            resource.each do |k, _v|
+            resource.each_key do |k|
               existing_value[i].delete(k) if manifest_app_hash_resource[k].nil?
             end
           end

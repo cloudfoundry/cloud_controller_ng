@@ -14,7 +14,7 @@ module VCAP::CloudController
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     SELECT_NEWEST_PROCESS = lambda { |_, processes|
       newest_processes = {}
-      processes.group_by(&:app_guid).each do |_, processes_for_app|
+      processes.group_by(&:app_guid).each_value do |processes_for_app|
         newest_process = processes_for_app.max_by { |p| [p.created_at, p.id] }
         newest_processes[newest_process.guid] = newest_process
       end

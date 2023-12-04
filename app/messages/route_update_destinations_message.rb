@@ -74,7 +74,7 @@ module VCAP::CloudController
         app_to_ports_hash[dst[:app]] << dst[:port]
       end
 
-      app_to_ports_hash.each do |_, port_array|
+      app_to_ports_hash.each_value do |port_array|
         if port_array.length > 10
           errors.add(:process, 'must have at most 10 exposed ports.')
           break
