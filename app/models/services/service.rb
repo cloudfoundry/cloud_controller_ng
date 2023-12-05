@@ -36,9 +36,8 @@ module VCAP::CloudController
 
       def user_visibility_filter(current_user, operation=nil)
         visible_plans = ServicePlan.user_visible(current_user, operation)
-        ids_from_plans = visible_plans.map(&:service_id).uniq
 
-        { id: ids_from_plans }
+        { id: visible_plans.select(:service_id).distinct }
       end
 
       def user_visibility_for_read(current_user, _admin_override)
