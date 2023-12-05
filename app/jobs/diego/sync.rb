@@ -6,7 +6,7 @@ module VCAP::CloudController
   module Jobs
     module Diego
       class Sync < VCAP::CloudController::Jobs::CCJob
-        def initialize(statsd=Statsd.new)
+        def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client)
           @statsd = statsd
         end
 

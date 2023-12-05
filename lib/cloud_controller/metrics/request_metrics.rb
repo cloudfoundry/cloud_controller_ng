@@ -3,7 +3,7 @@ require 'statsd'
 module VCAP::CloudController
   module Metrics
     class RequestMetrics
-      def initialize(statsd=Statsd.new, prometheus_updater=CloudController::DependencyLocator.instance.prometheus_updater)
+      def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client, prometheus_updater=CloudController::DependencyLocator.instance.prometheus_updater)
         @counter = 0
         @statsd = statsd
         @prometheus_updater = prometheus_updater

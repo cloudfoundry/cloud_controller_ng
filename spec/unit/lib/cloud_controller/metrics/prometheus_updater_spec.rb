@@ -92,7 +92,7 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_thread_info' do
+    describe '#update_thread_info_thin' do
       it 'contains EventMachine data' do
         thread_info = {
           thread_count: 5,
@@ -109,7 +109,7 @@ module VCAP::CloudController::Metrics
           }
         }
 
-        updater.update_thread_info(thread_info)
+        updater.update_thread_info_thin(thread_info)
 
         metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_thread_count }
         expect(metric.get).to eq 5

@@ -13,6 +13,7 @@ require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
 require 'cloud_controller/runners/thin_runner'
 require 'cloud_controller/runners/puma_runner'
+require 'prometheus/client/data_stores/direct_file_store'
 
 module VCAP::CloudController
   class Runner
@@ -95,6 +96,7 @@ module VCAP::CloudController
     private
 
     def setup_cloud_controller
+      setup_metrics
       setup_logging
       setup_telemetry_logging
       setup_db
@@ -110,6 +112,24 @@ module VCAP::CloudController
       pid_file.unlink_at_exit
     rescue StandardError
       raise "ERROR: Can't create pid file #{@config.get(:pid_filename)}"
+    end
+
+    def setup_metrics
+      return if @setup_metrics
+
+      @setup_metrics = true
+
+      return unless @config.get(:webserver) == 'puma'
+
+      prometheus_dir = File.join(@config.get(:directories, :tmpdir), 'prometheus')
+      FileUtils.mkdir_p(prometheus_dir)
+
+      # Resetting metrics on startup
+      Dir["#{prometheus_dir}/*.bin"].each do |file_path|
+        File.unlink(file_path)
+      end
+
+      Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
     end
 
     def setup_logging

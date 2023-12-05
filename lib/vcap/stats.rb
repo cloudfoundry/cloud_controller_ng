@@ -5,9 +5,14 @@ module VCAP
   class Stats
     class << self
       def process_memory_bytes_and_cpu
-        rss, pcpu = `ps -o rss=,pcpu= -p #{Process.pid}`.split.map(&:to_i)
-        rss_bytes = rss * 1024
-        [rss_bytes, pcpu]
+        rss = []
+        pcpu = []
+
+        ps_out = ps_pid
+        ps_out += ps_ppid if VCAP::CloudController::Config.config.get(:webserver) == 'puma'
+        ps_out.split.each_with_index { |e, i| i.even? ? rss << e : pcpu << e }
+
+        [rss.map(&:to_i).sum * 1024, pcpu.map(&:to_f).sum.round]
       end
 
       def memory_used_bytes
@@ -22,6 +27,20 @@ module VCAP
 
       def cpu_load_average
         Vmstat.load_average.one_minute
+      end
+
+      private
+
+      def ps_pid
+        `ps -o rss=,pcpu= -p #{Process.pid}`
+      end
+
+      def ps_ppid
+        if RUBY_PLATFORM.match?(/darwin/)
+          `ps ax -o ppid,rss,pcpu | awk '$1 == #{Process.pid} { print $2,$3 }'`
+        else
+          `ps -o rss=,pcpu= --ppid #{Process.pid}`
+        end
       end
     end
   end

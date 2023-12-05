@@ -4,7 +4,7 @@ require 'cloud_controller/diego/desire_app_handler'
 module VCAP::CloudController
   module Diego
     class Messenger
-      def initialize(statsd_updater=VCAP::CloudController::Metrics::StatsdUpdater.new, prometheus_updater=CloudController::DependencyLocator.instance.prometheus_updater)
+      def initialize(statsd_updater=CloudController::DependencyLocator.instance.statsd_updater, prometheus_updater=CloudController::DependencyLocator.instance.prometheus_updater)
         @statsd_updater = statsd_updater
         @prometheus_updater = prometheus_updater
       end
