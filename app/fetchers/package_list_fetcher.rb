@@ -26,7 +26,7 @@ module VCAP::CloudController
       private
 
       def table_column_name(table_class, name)
-        "#{table_class.table_name}__#{name}".to_sym
+        :"#{table_class.table_name}__#{name}"
       end
 
       def joined_dataset

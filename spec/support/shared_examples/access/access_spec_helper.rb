@@ -53,7 +53,7 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
         actual_with_token = false
         actual_without_token = false
         begin
-          actual_with_token = subject.can?("#{operation}_with_token".to_sym, object)
+          actual_with_token = subject.can?(:"#{operation}_with_token", object)
 
           actual_without_token = if respond_to?(:op_params)
                                    subject.can?(operation, object, op_params)

@@ -88,10 +88,10 @@ module VCAP::CloudController
 
         column_map = {
           app_name: :parent_app__name,
-          guid: "#{ProcessModel.table_name}__guid".to_sym,
-          app_guid: "#{ProcessModel.table_name}__guid".to_sym,
-          state: "#{ProcessModel.table_name}__state".to_sym,
-          previous_state: "#{ProcessModel.table_name}__state".to_sym,
+          guid: :"#{ProcessModel.table_name}__guid",
+          app_guid: :"#{ProcessModel.table_name}__guid",
+          state: :"#{ProcessModel.table_name}__state",
+          previous_state: :"#{ProcessModel.table_name}__state",
           package_state: Sequel.case(
             [
               [{ latest_droplet__state: DropletModel::FAILED_STATE }, 'FAILED'],
@@ -101,15 +101,15 @@ module VCAP::CloudController
             'PENDING'
           ),
           previous_package_state: 'UNKNOWN',
-          instance_count: "#{ProcessModel.table_name}__instances".to_sym,
-          previous_instance_count: "#{ProcessModel.table_name}__instances".to_sym,
-          memory_in_mb_per_instance: "#{ProcessModel.table_name}__memory".to_sym,
-          previous_memory_in_mb_per_instance: "#{ProcessModel.table_name}__memory".to_sym,
+          instance_count: :"#{ProcessModel.table_name}__instances",
+          previous_instance_count: :"#{ProcessModel.table_name}__instances",
+          memory_in_mb_per_instance: :"#{ProcessModel.table_name}__memory",
+          previous_memory_in_mb_per_instance: :"#{ProcessModel.table_name}__memory",
           buildpack_guid: :desired_droplet__buildpack_receipt_buildpack_guid,
           buildpack_name: :desired_droplet__buildpack_receipt_buildpack,
-          space_guid: "#{Space.table_name}__guid".to_sym,
-          space_name: "#{Space.table_name}__name".to_sym,
-          org_guid: "#{Organization.table_name}__guid".to_sym,
+          space_guid: :"#{Space.table_name}__guid",
+          space_name: :"#{Space.table_name}__name",
+          org_guid: :"#{Organization.table_name}__guid",
           created_at: Sequel.datetime_class.now,
           parent_app_name: :parent_app__name,
           parent_app_guid: :parent_app__guid
@@ -141,8 +141,8 @@ module VCAP::CloudController
             table_alias: :latest_droplet
           ).
           select(*column_map.values).
-          where("#{ProcessModel.table_name}__state".to_sym => 'STARTED').
-          order("#{ProcessModel.table_name}__id".to_sym)
+          where("#{ProcessModel.table_name}__state": 'STARTED').
+          order(:"#{ProcessModel.table_name}__id")
 
         AppUsageEvent.insert(column_map.keys, usage_query)
       end

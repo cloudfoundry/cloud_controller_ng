@@ -3,11 +3,11 @@
 # Helper method to cleanup erroneous fk columns in permission tables
 def cleanup_permission_table(name, permission)
   name = name.to_s
-  join_table = "#{name.pluralize}_#{permission}".to_sym
-  id_attr = "#{name}_id".to_sym
-  fk_name = "#{name}_fk".to_sym
-  new_fk_name = "#{join_table}_#{name}_fk".to_sym
-  new_fk_user = "#{join_table}_user_fk".to_sym
+  join_table = :"#{name.pluralize}_#{permission}"
+  id_attr = :"#{name}_id"
+  fk_name = :"#{name}_fk"
+  new_fk_name = :"#{join_table}_#{name}_fk"
+  new_fk_user = :"#{join_table}_user_fk"
   table = name.pluralize.to_sym
   # rename based on finding an fk that references one of the bad columns
   foreign_key_list(join_table).each do |fk|

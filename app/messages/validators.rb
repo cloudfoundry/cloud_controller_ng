@@ -300,11 +300,11 @@ module VCAP::CloudController::Validators
     end
 
     def properly_formatted_data(data)
-      (data.is_a?(Array) && data.all? { |hsh| is_a_guid_hash?(hsh) })
+      data.is_a?(Array) && data.all? { |hsh| is_a_guid_hash?(hsh) }
     end
 
     def has_correct_structure?(value)
-      (value.is_a?(Hash) && value[:data] && properly_formatted_data(value[:data]))
+      value.is_a?(Hash) && value[:data] && properly_formatted_data(value[:data])
     end
 
     def is_a_guid_hash?(hsh)

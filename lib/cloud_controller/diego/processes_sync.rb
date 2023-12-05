@@ -160,11 +160,11 @@ module VCAP::CloudController
                     diego.
                     runnable.
                     where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
-                    order("#{ProcessModel.table_name}__id".to_sym).
+                    order(:"#{ProcessModel.table_name}__id").
                     limit(BATCH_SIZE)
 
-        processes.select("#{ProcessModel.table_name}__id".to_sym, "#{ProcessModel.table_name}__guid".to_sym, "#{ProcessModel.table_name}__version".to_sym,
-                         "#{ProcessModel.table_name}__updated_at".to_sym)
+        processes.select(:"#{ProcessModel.table_name}__id", :"#{ProcessModel.table_name}__guid", :"#{ProcessModel.table_name}__version",
+                         :"#{ProcessModel.table_name}__updated_at")
       end
 
       def bbs_apps_client

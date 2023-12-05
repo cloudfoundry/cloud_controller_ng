@@ -74,7 +74,7 @@ class BaseHealthCheckPolicy
   end
 
   def validate_health_check_http_endpoint
-    if @health_check_type == VCAP::CloudController::HealthCheckTypes::HTTP && \
+    if @health_check_type == VCAP::CloudController::HealthCheckTypes::HTTP &&
        !UriUtils.is_uri_path?(@health_check_http_endpoint)
       @errors.add(@var_presenter['endpoint'][:sym], http_endpoint_invalid_message)
     end

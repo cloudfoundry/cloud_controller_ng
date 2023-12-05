@@ -38,7 +38,7 @@ module VCAP::CloudController::RestController
           # Since we are using STI in some models (e.g. Domain, ServiceInstance)
           # we are not able to find association on the parent class defined on a child class.
           # We are assuming that parent will have an association with a suffix.
-          association_name = "#{association_name}_sti_eager_load".to_sym
+          association_name = :"#{association_name}_sti_eager_load"
           association_model_class = model_class.association_reflection(association_name)
         end
 

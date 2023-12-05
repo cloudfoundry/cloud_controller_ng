@@ -237,7 +237,7 @@ module VCAP::CloudController::RestController
     #
     # @param [Roles] The roles for the current user or client.
     def validate_access(operation, obj, *)
-      if @access_context.cannot?("#{operation}_with_token".to_sym, obj)
+      if @access_context.cannot?(:"#{operation}_with_token", obj)
         obj = obj.to_s if obj.is_a? Class
         logger.info('allowy.access-denied.insufficient-scope', op: "#{operation}_with_token", obj: obj, user: user, roles: roles)
         raise CloudController::Errors::ApiError.new_from_details('InsufficientScope')

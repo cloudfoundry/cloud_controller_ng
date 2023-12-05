@@ -82,7 +82,7 @@ module VCAP::CloudController
     define_routes
 
     def filter_dataset(dataset)
-      dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => ProcessTypes::WEB)
+      dataset.where("#{RouteMappingModel.table_name}__process_type": ProcessTypes::WEB)
     end
 
     def get_app_port(process_guid, app_port)

@@ -53,7 +53,7 @@ module LegacyApiDsl
   def field_is_url_and_relationship_not_present?(json, field)
     return unless field =~ /(.*)_url$/
 
-    !json["#{Regexp.last_match[1]}_guid".to_sym]
+    !json[:"#{Regexp.last_match[1]}_guid"]
   end
 
   def audited_event(event)

@@ -7,7 +7,7 @@ module VCAP::CloudController
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
 
-      @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
+      @ok_read = admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user)
     end
 
     def read_for_update?(_object, _params=nil)

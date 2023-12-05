@@ -182,8 +182,8 @@ module VCAP::CloudController
     VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
-      put "/v2/organizations/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
-      put "/v2/organizations/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
+      put "/v2/organizations/:guid/#{plural_role}/:user_id", :"add_#{role}_by_user_id"
+      put "/v2/organizations/:guid/#{plural_role}", :"add_#{role}_by_username"
 
       define_method("add_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
@@ -213,10 +213,10 @@ module VCAP::CloudController
     VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
-      delete "/v2/organizations/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
-      delete "/v2/organizations/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
+      delete "/v2/organizations/:guid/#{plural_role}/:user_id", :"remove_#{role}_by_user_id"
+      delete "/v2/organizations/:guid/#{plural_role}", :"remove_#{role}_by_username"
 
-      post "/v2/organizations/:guid/#{plural_role}/remove", "remove_#{role}_by_username".to_sym
+      post "/v2/organizations/:guid/#{plural_role}/remove", :"remove_#{role}_by_username"
 
       define_method("remove_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:unset_roles_by_username)
@@ -340,7 +340,7 @@ module VCAP::CloudController
     end
 
     def remove_role(guid, role, user_id)
-      response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
+      response = remove_related(guid, :"#{role}s", user_id, Organization)
 
       user = User.first(guid: user_id)
       user.username = '' unless user.username

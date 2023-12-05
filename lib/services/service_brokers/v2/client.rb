@@ -411,7 +411,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def hashified_public_annotations(annotations)
       public_annotations = []
-      annotations.each do |annotation, _|
+      annotations.each do |annotation|
         prefix, = VCAP::CloudController::MetadataHelpers.extract_prefix(annotation.key_name)
         public_annotations.append(annotation) if annotation.key_prefix.present? || prefix.present?
       end

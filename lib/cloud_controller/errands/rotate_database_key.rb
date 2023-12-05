@@ -71,7 +71,7 @@ module VCAP::CloudController
 
       def encrypt_field(field, row)
         field_name = field[:field_name]
-        row.public_send("#{field_name}=".to_sym, row.public_send(field_name.to_sym))
+        row.public_send(:"#{field_name}=", row.public_send(field_name.to_sym))
       end
     end
   end

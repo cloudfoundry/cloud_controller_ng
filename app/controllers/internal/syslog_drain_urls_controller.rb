@@ -14,18 +14,18 @@ module VCAP::CloudController
                            where(Sequel.lit('syslog_drain_url IS NOT NULL')).
                            where(Sequel.lit("syslog_drain_url != ''")).
                            group(
-                             "#{AppModel.table_name}__guid".to_sym,
-                             "#{AppModel.table_name}__name".to_sym,
-                             "#{Space.table_name}__name".to_sym,
-                             "#{Organization.table_name}__name".to_sym
+                             :"#{AppModel.table_name}__guid",
+                             :"#{AppModel.table_name}__name",
+                             :"#{Space.table_name}__name",
+                             :"#{Organization.table_name}__name"
                            ).
                            select(
-                             "#{AppModel.table_name}__guid".to_sym,
-                             "#{AppModel.table_name}__name".to_sym,
-                             aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
+                             :"#{AppModel.table_name}__guid",
+                             :"#{AppModel.table_name}__name",
+                             aggregate_function(:"#{ServiceBinding.table_name}__syslog_drain_url").as(:syslog_drain_urls)
                            ).
-                           select_append("#{Space.table_name}__name___space_name".to_sym).
-                           select_append("#{Organization.table_name}__name___organization_name".to_sym).
+                           select_append(:"#{Space.table_name}__name___space_name").
+                           select_append(:"#{Organization.table_name}__name___organization_name").
                            order(:guid).
                            limit(batch_size).
                            offset(last_id).

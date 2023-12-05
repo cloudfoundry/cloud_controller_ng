@@ -62,7 +62,7 @@ module VCAP::CloudController
         PackageModel.make(app: app_model1)
         options = { page:, per_page: }
         pagination_options = PaginationOptions.new(options)
-        new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid".to_sym => "#{AppModel.table_name}__guid".to_sym)
+        new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid": :"#{AppModel.table_name}__guid")
 
         paginated_result = nil
         expect do

@@ -22,7 +22,7 @@ module VCAP::CloudController
         def cached_dependencies
           return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
+          lifecycle_bundle_key = :"buildpack/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
         def image_layers
           return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
+          lifecycle_bundle_key = :"buildpack/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
