@@ -338,6 +338,7 @@ GEM
     nokogiri (1.15.5-x86_64-linux)
       racc (~> 1.4)
     oj (3.16.1)
+    openssl (3.2.0)
     os (1.1.4)
     palm_civet (1.1.0)
     parallel (1.23.0)
@@ -607,6 +608,7 @@ DEPENDENCIES
   newrelic_rpm
   nokogiri (>= 1.10.5)
   oj
+  openssl (>= 3.2)
   palm_civet
   parallel_tests
   pg
