@@ -4,19 +4,14 @@ require 'cloud_controller/diego/desire_app_handler'
 module VCAP::CloudController
   module Diego
     class Messenger
-      def initialize(statsd_updater=CloudController::DependencyLocator.instance.statsd_updater, prometheus_updater=CloudController::DependencyLocator.instance.prometheus_updater)
-        @statsd_updater = statsd_updater
-        @prometheus_updater = prometheus_updater
-      end
-
       def send_stage_request(_config, staging_details)
         logger.info('staging.begin', package_guid: staging_details.package.guid)
 
         staging_guid = staging_details.staging_guid
 
         bbs_stager_client.stage(staging_guid, staging_details)
-        @statsd_updater.start_staging_request_received
-        @prometheus_updater.start_staging_request_received
+        statsd_updater.start_staging_request_received
+        prometheus_updater.start_staging_request_received
       end
 
       def send_stop_staging_request(staging_guid)
@@ -60,6 +55,14 @@ module VCAP::CloudController
 
       def bbs_stager_client
         CloudController::DependencyLocator.instance.bbs_stager_client
+      end
+
+      def statsd_updater
+        CloudController::DependencyLocator.instance.statsd_updater
+      end
+
+      def prometheus_updater
+        CloudController::DependencyLocator.instance.prometheus_updater
       end
     end
   end
