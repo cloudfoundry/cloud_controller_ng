@@ -4,9 +4,7 @@ require 'cloud_controller/diego/bbs_stager_client'
 module VCAP::CloudController
   module Diego
     RSpec.describe Messenger do
-      subject(:messenger) { Messenger.new(statsd_updater, prometheus_updater) }
-      let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater) }
-      let(:prometheus_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
+      subject(:messenger) { Messenger.new }
 
       let(:bbs_stager_client) { instance_double(BbsStagerClient) }
       let(:config) { TestConfig.config_instance }
@@ -20,6 +18,8 @@ module VCAP::CloudController
       end
 
       describe '#send_stage_request' do
+        let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater) }
+        let(:prometheus_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
         let(:package) { PackageModel.make }
         let(:droplet) { DropletModel.make(package:) }
         let(:staging_guid) { droplet.guid }
@@ -31,6 +31,8 @@ module VCAP::CloudController
         end
 
         before do
+          CloudController::DependencyLocator.instance.register(:statsd_updater, statsd_updater)
+          CloudController::DependencyLocator.instance.register(:prometheus_updater, prometheus_updater)
           staging_details.lifecycle = instance_double(BuildpackLifecycle, type: Lifecycles::BUILDPACK)
           allow(bbs_stager_client).to receive(:stage)
           allow(statsd_updater).to receive(:start_staging_request_received)
