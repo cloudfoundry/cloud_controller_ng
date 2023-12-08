@@ -392,11 +392,10 @@ module VCAP::CloudController
           expect { uaa_client.users_for_ids([userid_1]) }.to raise_error(UaaUnavailable)
         end
 
-        it 'retry, raises an exception after 16 attempts in minute and logs the error' do
+        it 'retries, raises an exception after 17 attempts' do
           expect { uaa_client.users_for_ids([userid_1]) }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with("Failed to retrieve details from UAA: #{uaa_error.inspect}").exactly(16).times
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./).exactly(16).times
-          expect(mock_logger).to have_received(:error).with(/Unable to establish a connection to UAA, no more retries/).once
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -442,16 +441,9 @@ module VCAP::CloudController
 
         context 'when token is invalid or expired twice' do
           let(:auth_header) { 'bearer invalid' }
-          let(:mock_logger) { double(:steno_logger, error: nil, info: nil) }
 
-          before do
-            allow(uaa_client).to receive_messages(logger: mock_logger)
-          end
-
-          it 'retries once and then raise an exception' do
+          it 'fails immediately without retries' do
             expect { uaa_client.users_for_ids([userid_1, userid_2]) }.to raise_error(CF::UAA::InvalidToken)
-            expect(mock_logger).to have_received(:error).with(/UAA request for token failed/)
-            expect(mock_logger).not_to have_received(:error).with('Unable to establish a connection to UAA, no more retries')
             expect(uaa_client).not_to receive(:sleep)
           end
         end
@@ -688,16 +680,14 @@ module VCAP::CloudController
 
       context 'when UAA is unavailable' do
         before do
-          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
-          allow(uaa_client).to receive_messages(logger: mock_logger)
-          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
+          allow(uaa_client).to receive(:query).and_raise(UaaUnavailable)
+          allow(uaa_client).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises an exception UaaUnavailable' do
+        it 'retries, raises an exception after 17 attempts' do
           expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with(/Failed to retrieve details from UAA:/).exactly(16).times
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./).exactly(16).times
-          expect(mock_logger).to have_received(:error).with(/Unable to establish a connection to UAA, no more retries/).once
+          expect(uaa_client).to have_received(:query).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -706,15 +696,13 @@ module VCAP::CloudController
           scim = double('scim')
           allow(scim).to receive(:query).and_raise(CF::UAA::TargetError)
           allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive_messages(logger: mock_logger)
           allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises an exception UaaUnavailable' do
+        it 'retries, raises an exception after 17 attempts' do
           expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with(/Failed to retrieve details from UAA:/).exactly(16).times
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./).exactly(16).times
-          expect(mock_logger).to have_received(:error).with(/Unable to establish a connection to UAA, no more retries/).once
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -723,15 +711,13 @@ module VCAP::CloudController
           scim = double('scim')
           allow(scim).to receive(:query).and_raise(CF::UAA::BadTarget)
           allow(uaa_client).to receive(:scim).and_return(scim)
-          allow(uaa_client).to receive_messages(logger: mock_logger)
           allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises an exception UaaUnavailable' do
+        it 'retries, raises an exception after 17 attempts' do
           expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with(/Failed to retrieve details from UAA:/).exactly(16).times
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./).exactly(16).times
-          expect(mock_logger).to have_received(:error).with(/Unable to establish a connection to UAA, no more retries/).once
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
     end
@@ -838,10 +824,7 @@ module VCAP::CloudController
     end
 
     describe '#with_request_error_handling' do
-      let(:mock_logger) { double(:steno_logger, error: nil, info: nil) }
-
       before do
-        allow(uaa_client).to receive_messages(logger: mock_logger)
         allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
       end
 
@@ -864,15 +847,14 @@ module VCAP::CloudController
           expect { subject.with_request_error_handling(&successful_block) }.not_to raise_error
         end
 
-        it 'retries once for invalidToken exception only' do
+        it 'fails immediately if invalidToken exception has been thrown' do
           expect { subject.with_request_error_handling { raise CF::UAA::InvalidToken } }.to raise_error(CF::UAA::InvalidToken)
-          expect(mock_logger).to have_received(:error).with(/UAA request for token failed/)
-          expect(mock_logger).not_to have_received(:error).with('Unable to establish a connection to UAA, no more retries')
           expect(uaa_client).not_to receive(:sleep)
         end
 
         it 'retries and eventually raises an error when the block fails' do
           attempts = 0
+
           expect do
             subject.with_request_error_handling do
               attempts += 1
@@ -880,15 +862,13 @@ module VCAP::CloudController
               raise UaaUnavailable
             end
           end.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./)
-          expect(mock_logger).to have_received(:error).with(/Unable to establish a connection to UAA/)
-          expect(mock_logger).to have_received(:error).twice
-          expect(mock_logger).to have_received(:info).once
+          expect(uaa_client).to have_received(:sleep).exactly(1).times
           expect(attempts).to eq(2)
         end
 
         it 'stops retrying after 60 seconds and raises an exception' do
           start_time = Time.now.utc
+
           Timecop.freeze do
             expect do
               subject.with_request_error_handling do
@@ -897,13 +877,13 @@ module VCAP::CloudController
               end
             end.to raise_error(UaaUnavailable)
           end
-          expected_log = 'Unable to establish a connection to UAA, no more retries, raising an exception.'
-          expect(mock_logger).to have_received(:error).with(expected_log)
+          expect(uaa_client).not_to receive(:sleep)
         end
 
         it 'raises an error after 17 attempts in approximately 1 minute when each yield call immediately' do
           attempts = 0
           start_time = Time.now.utc
+
           expect do
             subject.with_request_error_handling do
               attempts += 1
@@ -912,10 +892,9 @@ module VCAP::CloudController
           end.to raise_error(UaaUnavailable)
           end_time = Time.now.utc
           duration = end_time.to_f - start_time.to_f
-
           expect(attempts).to be_within(1).of(17)
           expect(duration).to be_within(1).of(62)
-          expect(mock_logger).to have_received(:info).with(/Attempting to connect to the UAA./).exactly(16).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
     end
