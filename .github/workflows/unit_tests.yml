@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["postgres:10", "postgres:14"]
+        image: ["postgres:11", "postgres:16"]
     services:
       postgres:
         image: ${{ matrix.image }}
