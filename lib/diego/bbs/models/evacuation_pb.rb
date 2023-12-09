@@ -20,6 +20,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :actual_lrp_net_info, :message, 3, "diego.bbs.models.ActualLRPNetInfo"
     repeated :actual_lrp_internal_routes, :message, 5, "diego.bbs.models.ActualLRPInternalRoute"
     map :metric_tags, :string, :string, 6
+    optional :availability_zone, :string, 8
     oneof :optional_routable do
       optional :Routable, :bool, 7
     end

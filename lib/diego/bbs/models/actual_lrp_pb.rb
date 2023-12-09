@@ -51,6 +51,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :presence, :enum, 10, "diego.bbs.models.ActualLRP.Presence"
     repeated :actual_lrp_internal_routes, :message, 11, "diego.bbs.models.ActualLRPInternalRoute"
     map :metric_tags, :string, :string, 12
+    optional :availability_zone, :string, 14
     oneof :optional_routable do
       optional :routable, :bool, 13
     end
