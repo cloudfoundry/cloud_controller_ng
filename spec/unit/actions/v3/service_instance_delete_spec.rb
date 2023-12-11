@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'actions/v3/service_instance_delete'
 require 'cloud_controller/user_audit_info'
 
@@ -702,14 +702,49 @@ module VCAP::CloudController
             allow(client).to receive(:fetch_service_instance_last_operation).and_raise(StandardError, 'boom')
           end
 
-          it 'updates the last operation description and continues to poll' do
-            result = action.poll
-            expect(result[:finished]).to be_falsey
+          it 'sets the last operation to failed and raises the error' do
+            expect do
+              action.poll
+            end.to raise_error(
+              StandardError,
+              'boom'
+            )
 
             expect(ServiceInstance.first.last_operation.type).to eq('delete')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')
             expect(ServiceInstance.first.last_operation.broker_provided_operation).to be_nil
             expect(ServiceInstance.first.last_operation.description).to eq('boom')
+          end
+        end
+
+        context 'when fetching the last operation from the broker fails' do
+          let(:broker_response) do
+            VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
+              code: '502',
+              body: {}.to_json
+            )
+          end
+
+          let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
+
+          before do
+            allow(client).to receive(:fetch_service_instance_last_operation).and_raise(bad_response_exception)
+          end
+
+          it 'leaves the last operation in its previous state' do
+            action.poll
+
+            expect(ServiceInstance.first.last_operation.type).to eq('delete')
+            expect(ServiceInstance.first.last_operation.state).to eq('in progress')
+            expect(ServiceInstance.first.last_operation.broker_provided_operation).to eq(operation_id)
+            expect(ServiceInstance.first.last_operation.description).to be_nil
+          end
+
+          it 'continues polling' do
+            result = action.poll
+
+            expect(result[:finished]).to be_falsey
+            expect(result[:retry_after]).to be_nil
           end
         end
       end

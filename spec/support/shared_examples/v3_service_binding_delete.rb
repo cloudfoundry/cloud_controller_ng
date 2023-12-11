@@ -263,7 +263,7 @@ RSpec.shared_examples 'polling service binding deletion' do
       end
     end
 
-    context 'fetching last operations fails' do
+    context 'fetching last operations fails with RuntimeError' do
       before do
         allow(broker_client).to receive(:fetch_and_handle_service_binding_last_operation).and_raise(RuntimeError.new('some error'))
       end
@@ -275,6 +275,38 @@ RSpec.shared_examples 'polling service binding deletion' do
         expect(binding.last_operation.type).to eq('delete')
         expect(binding.last_operation.state).to eq('failed')
         expect(binding.last_operation.description).to eq('some error')
+      end
+    end
+
+    context 'fetching last operations fails with ServiceBrokerBadResponse' do
+      let(:broker_response) do
+        VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
+          code: '502',
+          body: {}.to_json
+        )
+      end
+
+      let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
+
+      before do
+        allow(broker_client).to receive(:fetch_service_binding_last_operation).and_raise(bad_response_exception)
+      end
+
+      it 'leaves the last operation in its previous state' do
+        action.poll(binding)
+
+        binding.reload
+        expect(binding.last_operation.type).to eq('delete')
+        expect(binding.last_operation.state).to eq('in progress')
+        expect(binding.last_operation.broker_provided_operation).to eq(broker_provided_operation)
+        expect(binding.last_operation.description).to eq(description)
+      end
+
+      it 'continues polling' do
+        result = action.poll(binding)
+
+        expect(result[:finished]).to be_falsey
+        expect(result[:retry_after]).to be_nil
       end
     end
   end
