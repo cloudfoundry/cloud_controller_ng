@@ -128,10 +128,6 @@ class ApplicationController < ActionController::Base
     @logger ||= Steno.logger('cc.api')
   end
 
-  def statsd_client
-    @statsd_client ||= CloudController::DependencyLocator.instance.statsd_client
-  end
-
   def permission_queryer
     @permission_queryer ||= VCAP::CloudController::Permissions.new(VCAP::CloudController::SecurityContext.current_user)
   end
