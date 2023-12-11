@@ -2,38 +2,6 @@ require 'spec_helper'
 require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
-  RSpec.shared_examples 'a degenerated deployment' do
-    let!(:deployment_process_model) { DeploymentProcessModel.make(deployment: scaling_deployment, process_guid: 'some_guid') }
-
-    before do
-      allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
-    end
-
-    it 'finalizes the deployment, sets the status, and logs' do
-      subject.dispatch
-
-      deployment = scaling_deployment.reload
-      expect(logger).to have_received(:warn).with(
-        'finalized-degenerate-deployment',
-        deployment: deployment.guid,
-        app: deployment.app.guid
-      )
-      expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-      expect(deployment.status_reason).to eq(DeploymentModel::DEGENERATE_STATUS_REASON)
-    end
-
-    it 'does not scale the deployment' do
-      subject.dispatch
-      expect(updater).not_to have_received(:scale)
-    end
-
-    it 'processes the deployment only once' do
-      subject.dispatch
-      subject.dispatch
-      expect(logger).to have_received(:warn).with('finalized-degenerate-deployment', anything).once
-    end
-  end
-
   RSpec.describe DeploymentUpdater::Dispatcher do
     subject(:dispatcher) { DeploymentUpdater::Dispatcher }
 
@@ -81,42 +49,6 @@ module VCAP::CloudController
           subject.dispatch
           expect(updater).to have_received(:cancel)
         end
-      end
-
-      context 'when the deploying_web_process_guid is nil' do
-        let!(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE, deploying_web_process: nil) }
-
-        it_behaves_like 'a degenerated deployment'
-      end
-
-      context 'when the deploying_web_process_guid is nil and state is DEPLOYED' do
-        let!(:scaling_deployment) do
-          DeploymentModel.make(state: DeploymentModel::DEPLOYED_STATE,
-                               status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-                               status_reason: DeploymentModel::DEPLOYED_STATUS_REASON,
-                               deploying_web_process: nil)
-        end
-
-        before do
-          allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
-        end
-
-        it 'does not change the status_reason to DEGENERATE' do
-          subject.dispatch
-          deployment = scaling_deployment.reload
-
-          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
-        end
-      end
-
-      context 'when the deploying_web_process_guid references a non-existent process' do
-        let!(:scaling_deployment) do
-          deployment = DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE)
-          deployment.deploying_web_process.destroy
-          deployment
-        end
-
-        it_behaves_like 'a degenerated deployment'
       end
     end
   end

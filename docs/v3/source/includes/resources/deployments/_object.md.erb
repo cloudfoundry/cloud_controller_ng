@@ -13,7 +13,7 @@ Name | Type | Description
 **created_at** | _[timestamp](#timestamps)_ | The time with zone when the object was created
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **status.value** | _string_ | The current status of the deployment; valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not)
-**status.reason** | _string_ | The reason for the status of the deployment;<br>following list represents valid values:<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>- `DEGENERATE` (the deployment was created incorrectly by the system)
+**status.reason** | _string_ | The reason for the status of the deployment;<br>following list represents valid values:<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>
 **status.details** | _object_ | The details for the status of the deployment shows a timestamp of the last successful healthcheck
 **strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling` only
 **droplet.guid** | _string_ | The droplet guid that the deployment is transitioning the app to
