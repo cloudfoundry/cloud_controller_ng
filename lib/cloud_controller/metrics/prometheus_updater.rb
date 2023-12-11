@@ -2,6 +2,19 @@ require 'prometheus/client'
 
 module VCAP::CloudController::Metrics
   class PrometheusUpdater
+    # We want to label worker metrics with the worker's pid. By default, this label is reserved
+    # within the Prometheus::Client, thus we modify the BASE_RESERVED_LABELS constant.
+    # Nevertheless, the pid label should be used with caution, i.e. only for metrics that are
+    # aggregated and thus don't have the pid label set automatically!
+    def self.allow_pid_label
+      return unless Prometheus::Client::LabelSetValidator.const_get(:BASE_RESERVED_LABELS).include?(:pid)
+
+      reserved_labels = Prometheus::Client::LabelSetValidator.const_get(:BASE_RESERVED_LABELS).dup
+      reserved_labels.delete_if { |l| l == :pid }
+      Prometheus::Client::LabelSetValidator.send(:remove_const, :BASE_RESERVED_LABELS)
+      Prometheus::Client::LabelSetValidator.const_set(:BASE_RESERVED_LABELS, reserved_labels.freeze)
+    end
+
     DURATION_BUCKETS = [5, 10, 30, 60, 300, 600, 890].freeze
 
     METRICS = [
@@ -33,12 +46,22 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_num_waiting, docstring: 'EventMachine requests waiting in queue' }
     ].freeze
 
+    PUMA_METRICS = [
+      { type: :gauge, name: :cc_puma_worker_count, docstring: 'Puma worker count', aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_started_at, docstring: 'Puma worker: started_at', labels: %i[index pid], aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_thread_count, docstring: 'Puma worker: thread count', labels: %i[index pid], aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_backlog, docstring: 'Puma worker: backlog', labels: %i[index pid], aggregation: :most_recent }
+    ].freeze
+
     def initialize(registry=Prometheus::Client.registry)
+      self.class.allow_pid_label
+
       @registry = registry
 
       # Register all metrics, to initialize them for discoverability
       METRICS.each { |metric| register(metric) }
       THIN_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config.get(:webserver) == 'thin'
+      PUMA_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config.get(:webserver) == 'puma'
     end
 
     def update_gauge_metric(metric, value, labels: {})
@@ -104,6 +127,20 @@ module VCAP::CloudController::Metrics
     def update_task_stats(total_running_tasks, total_memory_in_bytes)
       update_gauge_metric(:cc_running_tasks_total, total_running_tasks)
       update_gauge_metric(:cc_running_tasks_memory_bytes, total_memory_in_bytes)
+    end
+
+    def update_webserver_stats_puma(worker_count, worker_stats)
+      update_gauge_metric(:cc_puma_worker_count, worker_count)
+
+      worker_stats.each do |stats|
+        index = stats.delete(:index)
+        pid = stats.delete(:pid)
+
+        stats.each do |key, value|
+          metric_key = :"cc_puma_worker_#{key.to_s.underscore}"
+          update_gauge_metric(metric_key, value, labels: { index:, pid: })
+        end
+      end
     end
 
     def start_staging_request_received
