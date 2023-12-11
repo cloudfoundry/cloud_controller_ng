@@ -106,3 +106,8 @@ group :development do
   gem 'spring'
   gem 'spring-commands-rspec'
 end
+
+gem "opentelemetry-sdk", "~> 1.3"
+gem "opentelemetry-instrumentation-all", "~> 0.54.0"
+
+gem "opentelemetry-exporter-otlp", "~> 0.26.1"
