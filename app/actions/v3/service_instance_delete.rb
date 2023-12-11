@@ -82,7 +82,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'delete', e.message)
       rescue StandardError => e
         update_last_operation_with_failure(e.message)
-        ContinuePolling.call(nil)
+        raise e
       end
 
       def update_last_operation_with_failure(message)

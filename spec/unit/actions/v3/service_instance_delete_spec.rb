@@ -702,9 +702,13 @@ module VCAP::CloudController
             allow(client).to receive(:fetch_service_instance_last_operation).and_raise(StandardError, 'boom')
           end
 
-          it 'updates the last operation description and continues to poll' do
-            result = action.poll
-            expect(result[:finished]).to be_falsey
+          it 'sets the last operation to failed and raises the error' do
+            expect do
+              action.poll
+            end.to raise_error(
+              StandardError,
+              'boom'
+            )
 
             expect(ServiceInstance.first.last_operation.type).to eq('delete')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')
