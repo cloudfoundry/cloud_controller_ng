@@ -88,7 +88,7 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 6.1.0'
   gem 'rspec-wait'
-  gem 'rubocop', '~> 1.58.0'
+  gem 'rubocop', '~> 1.59.0'
   gem 'rubocop-rails', '~> 2.22'
   gem 'rubocop-rspec', '~> 2.25'
   gem 'rubocop-sequel', '~> 0.3.4'
