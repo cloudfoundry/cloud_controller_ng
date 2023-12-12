@@ -20,7 +20,7 @@ module VCAP::CloudController
       VCAP::CloudController::ServiceKey.dataset.join(:service_instances, id: :service_instance_id).
         join(:spaces, id: :space_id).
         where(spaces__organization_id: @organization.id).
-        count || 0
+        count
     end
 
     def reserved_route_ports
