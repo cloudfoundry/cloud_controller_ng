@@ -4,9 +4,13 @@ services:
   # Postgres
   postgres:
     container_name: postgres
-    image: postgres:14
+    image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: supersecret
+    command: # logs every statement sent to the server. Slow, but helpful. Fills up disk Quickly !
+      - "postgres"
+      - "-c"
+      - "log_statement=all"
     ports:
       - "127.0.0.1:5432:5432"
     networks:
@@ -21,7 +25,7 @@ services:
   # MySQL
   mysql:
     container_name: mysql
-    image: mysql:8
+    image: mysql:8.2
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
     ports:
