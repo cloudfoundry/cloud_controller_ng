@@ -315,10 +315,11 @@ module VCAP::CloudController
       context 'when UAA is unavailable' do
         before do
           allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'returns an empty hash' do
-          expect(uaa_client.users_for_ids([userid_1])).to eq({})
+        it 'raises an exception' do
+          expect { uaa_client.users_for_ids([userid_1]) }.to raise_error(UaaUnavailable)
         end
       end
 
@@ -378,21 +379,23 @@ module VCAP::CloudController
 
       context 'when the endpoint returns an error' do
         let(:uaa_error) { CF::UAA::UAAError.new('some error') }
-        let(:mock_logger) { double(:steno_logger, error: nil) }
+        let(:mock_logger) { double(:steno_logger, error: nil, info: nil) }
 
         before do
           scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
           allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
+          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'returns an empty hash' do
-          expect(uaa_client.users_for_ids([userid_1])).to eq({})
+        it 'raises an exception' do
+          expect { uaa_client.users_for_ids([userid_1]) }.to raise_error(UaaUnavailable)
         end
 
-        it 'logs the error' do
-          uaa_client.users_for_ids([userid_1])
-          expect(mock_logger).to have_received(:error).with("Failed to retrieve users from UAA: #{uaa_error.inspect}")
+        it 'retries, raises an exception after 17 attempts' do
+          expect { uaa_client.users_for_ids([userid_1]) }.to raise_error(UaaUnavailable)
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -439,8 +442,9 @@ module VCAP::CloudController
         context 'when token is invalid or expired twice' do
           let(:auth_header) { 'bearer invalid' }
 
-          it 'retries once and then returns no usernames' do
-            expect(uaa_client.users_for_ids([userid_1, userid_2])).to eq({})
+          it 'fails immediately without retries' do
+            expect { uaa_client.users_for_ids([userid_1, userid_2]) }.to raise_error(CF::UAA::InvalidToken)
+            expect(uaa_client).not_to receive(:sleep)
           end
         end
       end
@@ -548,6 +552,7 @@ module VCAP::CloudController
       let(:username1) { 'user1@example.com' }
       let(:username2) { 'user2@example.com' }
       let(:partial_username) { 'user' }
+      let(:mock_logger) { double(:steno_logger, error: nil, info: nil) }
 
       context 'with usernames but no origins' do
         it 'returns the ids for the usernames' do
@@ -675,13 +680,14 @@ module VCAP::CloudController
 
       context 'when UAA is unavailable' do
         before do
-          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+          allow(uaa_client).to receive(:query).and_raise(UaaUnavailable)
+          allow(uaa_client).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises UaaUnavailable' do
-          expect do
-            uaa_client.ids_for_usernames_and_origins([username1], nil)
-          end.to raise_error(UaaUnavailable)
+        it 'retries, raises an exception after 17 attempts' do
+          expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
+          expect(uaa_client).to have_received(:query).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -690,12 +696,13 @@ module VCAP::CloudController
           scim = double('scim')
           allow(scim).to receive(:query).and_raise(CF::UAA::TargetError)
           allow(uaa_client).to receive(:scim).and_return(scim)
+          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises UaaUnavailable' do
-          expect do
-            uaa_client.ids_for_usernames_and_origins([username1], nil)
-          end.to raise_error(UaaUnavailable)
+        it 'retries, raises an exception after 17 attempts' do
+          expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
 
@@ -704,12 +711,13 @@ module VCAP::CloudController
           scim = double('scim')
           allow(scim).to receive(:query).and_raise(CF::UAA::BadTarget)
           allow(uaa_client).to receive(:scim).and_return(scim)
+          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
         end
 
-        it 'raises UaaUnavailable' do
-          expect do
-            uaa_client.ids_for_usernames_and_origins([username1], nil)
-          end.to raise_error(UaaUnavailable)
+        it 'retries, raises an exception after 17 attempts' do
+          expect { uaa_client.ids_for_usernames_and_origins([username1], nil) }.to raise_error(UaaUnavailable)
+          expect(uaa_client).to have_received(:scim).exactly(17).times
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
     end
@@ -811,6 +819,82 @@ module VCAP::CloudController
             uaa_client.origins_for_username(username)
           end.to raise_error(UaaUnavailable)
           expect(mock_logger).to have_received(:error).with("Failed to retrieve origins from UAA: #{uaa_error.inspect}")
+        end
+      end
+    end
+
+    describe '#with_request_error_handling' do
+      before do
+        allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
+      end
+
+      context 'when the block succeeds immediately' do
+        it 'does not sleep or raise an exception' do
+          expect { uaa_client.with_request_error_handling {} }.not_to raise_error
+        end
+      end
+
+      context 'when the block raises an exception' do
+        let(:successful_block) do
+          proc {
+            @count ||= 0
+            @count += 1
+            @count == 2 ? true : raise(UaaUnavailable)
+          }
+        end
+
+        it 'retries once and eventually succeeds' do
+          expect { subject.with_request_error_handling(&successful_block) }.not_to raise_error
+        end
+
+        it 'fails immediately if invalidToken exception has been thrown' do
+          expect { subject.with_request_error_handling { raise CF::UAA::InvalidToken } }.to raise_error(CF::UAA::InvalidToken)
+          expect(uaa_client).not_to receive(:sleep)
+        end
+
+        it 'retries and eventually raises an error when the block fails' do
+          attempts = 0
+
+          expect do
+            subject.with_request_error_handling do
+              attempts += 1
+              Timecop.travel(Time.now.utc + 50)
+              raise UaaUnavailable
+            end
+          end.to raise_error(UaaUnavailable)
+          expect(uaa_client).to have_received(:sleep).exactly(1).times
+          expect(attempts).to eq(2)
+        end
+
+        it 'stops retrying after 60 seconds and raises an exception' do
+          start_time = Time.now.utc
+
+          Timecop.freeze do
+            expect do
+              subject.with_request_error_handling do
+                Timecop.travel(start_time + 61)
+                raise UaaUnavailable
+              end
+            end.to raise_error(UaaUnavailable)
+          end
+          expect(uaa_client).not_to receive(:sleep)
+        end
+
+        it 'raises an error after 17 attempts in approximately 1 minute when each yield call immediately' do
+          attempts = 0
+          start_time = Time.now.utc
+
+          expect do
+            subject.with_request_error_handling do
+              attempts += 1
+              raise UaaUnavailable
+            end
+          end.to raise_error(UaaUnavailable)
+          end_time = Time.now.utc
+          duration = end_time.to_f - start_time.to_f
+          expect(attempts).to be_within(1).of(17)
+          expect(duration).to be_within(1).of(62)
+          expect(uaa_client).to have_received(:sleep).exactly(16).times
         end
       end
     end

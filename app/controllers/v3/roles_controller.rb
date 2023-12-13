@@ -28,6 +28,8 @@ class RolesController < ApplicationController
       message: message,
       decorators: decorators
     )
+  rescue UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def show
@@ -43,6 +45,8 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators:)
+  rescue UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def create

@@ -33,6 +33,8 @@ class UsersController < ApplicationController
     user_not_found! unless user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+  rescue VCAP::CloudController::UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def create

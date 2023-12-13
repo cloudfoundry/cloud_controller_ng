@@ -38,10 +38,7 @@ module VCAP::CloudController
     end
 
     def users_for_ids(user_ids)
-      fetch_users(user_ids)
-    rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve users from UAA: #{e.inspect}")
-      {}
+      with_request_error_handling { fetch_users(user_ids) }
     end
 
     def usernames_for_ids(user_ids)
@@ -64,22 +61,21 @@ module VCAP::CloudController
     end
 
     def ids_for_usernames_and_origins(usernames, origins, precise_username_match=true)
-      operator = precise_username_match ? 'eq' : 'co'
-      username_filter_string = usernames&.map { |u| "username #{operator} \"#{u}\"" }&.join(' or ')
-      origin_filter_string = origins&.map { |o| "origin eq \"#{o}\"" }&.join(' or ')
+      with_request_error_handling do
+        operator = precise_username_match ? 'eq' : 'co'
+        username_filter_string = usernames&.map { |u| "username #{operator} \"#{u}\"" }&.join(' or ')
+        origin_filter_string = origins&.map { |o| "origin eq \"#{o}\"" }&.join(' or ')
 
-      filter_string = construct_filter_string(username_filter_string, origin_filter_string)
+        filter_string = construct_filter_string(username_filter_string, origin_filter_string)
 
-      results = if precise_username_match
-                  query(:user_id, includeInactive: true, filter: filter_string)
-                else
-                  query(:user, filter: filter_string, attributes: 'id')
-                end
+        results = if precise_username_match
+                    query(:user_id, includeInactive: true, filter: filter_string)
+                  else
+                    query(:user, filter: filter_string, attributes: 'id')
+                  end
 
-      results['resources'].pluck('id')
-    rescue CF::UAA::UAAError => e
-      logger.error("Failed to retrieve user ids from UAA: #{e.inspect}")
-      raise UaaUnavailable
+        results['resources'].pluck('id')
+      end
     end
 
     def construct_filter_string(username_filter_string, origin_filter_string)
@@ -102,6 +98,32 @@ module VCAP::CloudController
 
     def info
       CF::UAA::Info.new(uaa_target, uaa_connection_opts)
+    end
+
+    def with_request_error_handling
+      delay = 0.25
+      max_delay = 5
+      retry_until = Time.now.utc + 60 # retry for 1 minute from now
+      factor = 2
+
+      begin
+        yield
+      rescue CF::UAA::InvalidToken => e
+        logger.error("UAA request for token failed: #{e.inspect}")
+        raise
+      rescue UaaUnavailable, CF::UAA::UAAError => e
+        if Time.now.utc > retry_until
+          logger.error('Unable to establish a connection to UAA, no more retries, raising an exception.')
+          raise UaaUnavailable
+        else
+          sleep_time = [delay, max_delay].min
+          logger.error("Failed to retrieve details from UAA: #{e.inspect}")
+          logger.info("Attempting to connect to the UAA. Total #{(retry_until - Time.now.utc).round(2)} seconds remaining. Next retry after #{sleep_time} seconds.")
+          sleep(sleep_time)
+          delay *= factor
+          retry
+        end
+      end
     end
 
     private
