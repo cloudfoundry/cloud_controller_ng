@@ -32,6 +32,13 @@ module VCAP::CloudController
           expect(key1).to eq(key2)
         end
       end
+
+      describe '#fingerprint' do
+        it 'returns an sha1 fingerprint' do
+          ssh_key = SSHKey.new(1024)
+          expect(ssh_key.fingerprint).to match(/([0-9a-f]{2}:){19}[0-9a-f]{2}/)
+        end
+      end
     end
   end
 end
