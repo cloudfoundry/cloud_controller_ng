@@ -274,6 +274,14 @@ module VCAP::CloudController
       User.where(id: Role.where(organization_id: id).distinct.select(:user_id))
     end
 
+    def running_and_pending_tasks_count
+      VCAP::CloudController::TaskModel.dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).
+        join(:apps, guid: :app_guid).
+        join(:spaces, guid: :space_guid).
+        where(spaces__organization_id: id).
+        count
+    end
+
     private
 
     def validate_default_isolation_segment
@@ -333,10 +341,6 @@ module VCAP::CloudController
 
     def started_app_log_rate_limit
       processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:log_rate_limit, :instances)) || 0
-    end
-
-    def running_and_pending_tasks_count
-      tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
     end
   end
 end

@@ -994,7 +994,13 @@ module VCAP::CloudController
         {
           usage_summary: {
             started_instances: 5,
-            memory_in_mb: 705 # (tasks: 200 * 2) + (processes: 101 + 2 * 102)
+            memory_in_mb: 705, # (tasks: 200 * 2) + (processes: 101 + 2 * 102)
+            routes: 0,
+            service_instances: 0,
+            reserved_ports: 0,
+            domains: 0,
+            per_app_tasks: 0,
+            service_keys: 0
           },
           links: {
             self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/usage_summary} },
