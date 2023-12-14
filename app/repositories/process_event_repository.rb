@@ -113,6 +113,25 @@ module VCAP::CloudController
         )
       end
 
+      def self.record_readiness_changed(process, readiness_changed_payload)
+        if readiness_changed_payload['ready']
+          VCAP::AppLogEmitter.emit(process.guid, "Process became ready with guid #{process.guid} payload: #{readiness_changed_payload}")
+          type = EventTypes::APP_PROCESS_READY
+        else
+          VCAP::AppLogEmitter.emit(process.guid, "Process became not ready with guid #{process.guid} payload: #{readiness_changed_payload}")
+          type = EventTypes::APP_PROCESS_NOT_READY
+        end
+
+        create_event(
+          process: process,
+          type: type,
+          actor_guid: process.guid,
+          actor_name: process.type,
+          actor_type: 'process',
+          metadata: readiness_changed_payload
+        )
+      end
+
       def self.record_rescheduling(process, rescheduling_payload)
         VCAP::AppLogEmitter.emit(process.app_guid, 'Process is being rescheduled')
 
