@@ -8,12 +8,12 @@ module VCAP::CloudController::Presenters::V3
         usage_summary: {
           started_instances: VCAP::CloudController::OrganizationInstanceUsageCalculator.get_instance_usage(org),
           memory_in_mb: org.memory_used,
-          total_routes: org_usage.routes,
-          total_service_instances: org_usage.service_instances,
-          total_reserved_ports: org_usage.reserved_route_ports,
-          total_domains: org_usage.private_domains,
+          routes: org_usage.routes,
+          service_instances: org_usage.service_instances,
+          reserved_ports: org_usage.reserved_route_ports,
+          domains: org_usage.private_domains,
           per_app_tasks: org_usage.app_tasks,
-          total_service_keys: org_usage.service_keys
+          service_keys: org_usage.service_keys
         },
         links: build_links
       }

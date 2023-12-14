@@ -995,12 +995,12 @@ module VCAP::CloudController
           usage_summary: {
             started_instances: 5,
             memory_in_mb: 705, # (tasks: 200 * 2) + (processes: 101 + 2 * 102)
-            total_routes: 0,
-            total_service_instances: 0,
-            total_reserved_ports: 0,
-            total_domains: 0,
+            routes: 0,
+            service_instances: 0,
+            reserved_ports: 0,
+            domains: 0,
             per_app_tasks: 0,
-            total_service_keys: 0
+            service_keys: 0
           },
           links: {
             self: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}/usage_summary} },
