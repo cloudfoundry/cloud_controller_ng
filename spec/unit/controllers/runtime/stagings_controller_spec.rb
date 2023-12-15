@@ -3,7 +3,7 @@ require 'spec_helper'
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 module VCAP::CloudController
-  RSpec.shared_examples 'droplet staging error handling' do
+  RSpec.shared_examples 'check content digest' do
     context 'when a content-md5 is specified' do
       it 'returns a 400 if the value does not match the md5 of the body' do
         post url, upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
@@ -11,11 +11,70 @@ module VCAP::CloudController
       end
 
       it 'succeeds if the value matches the md5 of the body' do
-        content_md5 = digester.digest(file_content)
+        content_md5 = digester_md5.digest(file_content)
         post url, upload_req, 'HTTP_CONTENT_MD5' => content_md5
         expect(last_response.status).to eq(200)
       end
     end
+
+    context 'when a content digest sha1 is specified' do
+      it 'returns a 400 if the value does not match the sha1 of the body' do
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => 'sha=:the+wrong+sha1:'
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'succeeds if the value matches the sha1 of the body' do
+        content_sha1 = digester_sha1.digest(file_content)
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => "sha=:#{content_sha1}:"
+        expect(last_response.status).to eq(200)
+      end
+    end
+
+    context 'when a content digest sha256 is specified' do
+      it 'returns a 400 if the value does not match the sha256 of the body' do
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => 'sha-256=:the+wrong+sha256:'
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'succeeds if the value matches the sha256 of the body' do
+        content_sha256 = digester_sha256.digest(file_content)
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => "sha-256=:#{content_sha256}:"
+        expect(last_response.status).to eq(200)
+      end
+    end
+
+    context 'when a content digest sha512 is specified' do
+      it 'returns a 400 if the value does not match the sha512 of the body' do
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => 'sha-512=:the+wrong+sha512:'
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'succeeds if the value matches the sha512 of the body' do
+        content_sha512 = digester_sha512.digest(file_content)
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => "sha-512=:#{content_sha512}:"
+        expect(last_response.status).to eq(200)
+      end
+    end
+
+    context 'when an invalid content digest format is specified' do
+      it 'returns a 400' do
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => 'D/I/G/E/S/T:'
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to include('invalid content digest header format')
+      end
+    end
+
+    context 'when an unsupported content digest algorithm is specified' do
+      it 'returns a 400' do
+        post url, upload_req, 'HTTP_CONTENT_DIGEST' => 'sha-42=:D/I/G/E/S/T:'
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to include('unsupported digest algorithm')
+      end
+    end
+  end
+
+  RSpec.shared_examples 'droplet staging error handling' do
+    include_examples 'check content digest'
 
     context 'with an invalid app' do
       it 'returns 404' do
@@ -115,7 +174,10 @@ module VCAP::CloudController
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
-    let(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5, type: :base64digest) }
+    let(:digester_md5) { Digester.new(algorithm: OpenSSL::Digest::MD5, type: :base64digest) }
+    let(:digester_sha1) { Digester.new(algorithm: OpenSSL::Digest::SHA1, type: :base64digest) }
+    let(:digester_sha256) { Digester.new(algorithm: OpenSSL::Digest::SHA256, type: :base64digest) }
+    let(:digester_sha512) { Digester.new(algorithm: OpenSSL::Digest::SHA512, type: :base64digest) }
 
     let(:buildpack_cache_blobstore) do
       CloudController::DependencyLocator.instance.buildpack_cache_blobstore
@@ -359,17 +421,8 @@ module VCAP::CloudController
           expect(last_response.status).to eq 200
         end
 
-        context 'when a content-md5 is specified' do
-          it 'returns a 400 if the value does not match the md5 of the body' do
-            post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
-            expect(last_response.status).to eq(400)
-          end
-
-          it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = digester.digest(file_content)
-            post "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
-            expect(last_response.status).to eq(200)
-          end
+        include_examples 'check content digest' do
+          let(:url) { "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload" }
         end
       end
 

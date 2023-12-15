@@ -71,7 +71,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
 
-      check_file_md5
+      check_content_digest
 
       upload_job = Jobs::V3::BuildpackCacheUpload.new(local_path: upload_path, app_guid: guid, stack_name: stack_name)
       Jobs::Enqueuer.new(upload_job, queue: Jobs::Queues.local(config)).enqueue
@@ -113,7 +113,7 @@ module VCAP::CloudController
 
       raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{droplet.guid}") unless upload_path
 
-      check_file_md5
+      check_content_digest
 
       logger.info 'v3-droplet.begin-upload', droplet_guid: droplet.guid
 
@@ -150,16 +150,29 @@ module VCAP::CloudController
       HashUtils.dig(params, 'file', :tempfile) || HashUtils.dig(params, 'upload', 'droplet', :tempfile)
     end
 
-    def check_file_md5
+    CONTENT_DIGEST_REGEX = %r{\s*(?<Algorithm>[a-zA-Z0-9-]*)\s*=\s*:(?<Base64Digest>[a-zA-Z0-9+/=]*):\s*}
+
+    def check_content_digest
       return if Rails.env.local?
 
-      digester = Digester.new(algorithm: OpenSSL::Digest::MD5, type: :base64digest)
-      file_md5 = digester.digest_path(upload_path)
-      header_md5 = env['HTTP_CONTENT_MD5']
+      content_digest = env['HTTP_CONTENT_DIGEST']
+      if content_digest.present?
+        result = content_digest.match(CONTENT_DIGEST_REGEX)
+        raise ApiError.new_from_details('StagingError', 'invalid content digest header format') if result.nil?
 
-      return unless header_md5.present? && file_md5 != header_md5
+        algorithm = result['Algorithm'].tr('-', '')
+        algorithm += '1' if algorithm == 'sha'
+        digest = result['Base64Digest']
+      else
+        algorithm = 'md5'
+        digest = env['HTTP_CONTENT_MD5']
+        return if digest.blank?
+      end
+      raise ApiError.new_from_details('StagingError', 'unsupported digest algorithm') unless %w[sha512 sha256 sha1 md5].include?(algorithm)
 
-      raise ApiError.new_from_details('StagingError', 'content md5 did not match')
+      digester = Digester.new(algorithm: OpenSSL::Digest.const_get(algorithm.upcase.to_sym), type: :base64digest)
+      path_digest = digester.digest_path(upload_path)
+      raise ApiError.new_from_details('StagingError', 'content digest did not match') if path_digest != digest
     end
   end
 end
