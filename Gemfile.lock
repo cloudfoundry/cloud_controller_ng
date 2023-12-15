@@ -226,9 +226,7 @@ GEM
       google-apis-core (>= 0.11.0, < 2.a)
     google-cloud-env (1.6.0)
       faraday (>= 0.17.3, < 3.0)
-    google-protobuf (3.24.2)
-    google-protobuf (3.24.2-x86_64-darwin)
-    google-protobuf (3.24.2-x86_64-linux)
+    google-protobuf (3.25.1)
     googleapis-common-protos (1.4.0)
       google-protobuf (~> 3.14)
       googleapis-common-protos-types (~> 1.2)
@@ -241,14 +239,8 @@ GEM
       multi_json (~> 1.11)
       os (>= 0.9, < 2.0)
       signet (>= 0.16, < 2.a)
-    grpc (1.57.0)
-      google-protobuf (~> 3.23)
-      googleapis-common-protos-types (~> 1.0)
-    grpc (1.57.0-x86_64-darwin)
-      google-protobuf (~> 3.23)
-      googleapis-common-protos-types (~> 1.0)
-    grpc (1.57.0-x86_64-linux)
-      google-protobuf (~> 3.23)
+    grpc (1.60.0)
+      google-protobuf (~> 3.25)
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.1.0)
     honeycomb-beeline (3.0.1)
@@ -262,7 +254,7 @@ GEM
     http-cookie (1.0.5)
       domain_name (~> 0.5)
     http-form_data (2.3.0)
-    http_parser.rb (0.6.0)
+    http_parser.rb (0.8.0)
     httpclient (2.8.3)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
@@ -333,10 +325,6 @@ GEM
     nio4r (2.5.9)
     nokogiri (1.15.5)
       mini_portile2 (~> 2.8.2)
-      racc (~> 1.4)
-    nokogiri (1.15.5-x86_64-darwin)
-      racc (~> 1.4)
-    nokogiri (1.15.5-x86_64-linux)
       racc (~> 1.4)
     oj (3.16.3)
       bigdecimal (>= 3.0)
@@ -411,7 +399,6 @@ GEM
     reverse_markdown (2.1.1)
       nokogiri
     rexml (3.2.6)
-    rfc822 (0.1.5)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
     rspec (3.12.0)
@@ -630,7 +617,6 @@ DEPENDENCIES
   rake
   redis
   retryable
-  rfc822
   roodi
   rspec (~> 3.12.0)
   rspec-collection_matchers
