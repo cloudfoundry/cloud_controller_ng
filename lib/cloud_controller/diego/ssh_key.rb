@@ -1,10 +1,11 @@
 require 'net/ssh'
+require 'sshkey'
 
 module VCAP
   module CloudController
     module Diego
       class SSHKey
-        def initialize(bits=1024)
+        def initialize(bits=2048)
           @bits = bits
         end
 
@@ -21,7 +22,9 @@ module VCAP
           end
         end
 
-        delegate :fingerprint, to: :key
+        def fingerprint
+          @fingerprint ||= ::SSHKey.new(key.to_der).sha1_fingerprint
+        end
 
         private
 

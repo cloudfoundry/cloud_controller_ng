@@ -527,6 +527,7 @@ GEM
     spring (4.1.3)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
+    sshkey (3.0.0)
     statsd-ruby (1.5.0)
     steno (1.3.4)
       fluent-logger
@@ -651,6 +652,7 @@ DEPENDENCIES
   spork!
   spring
   spring-commands-rspec
+  sshkey
   statsd-ruby (~> 1.5.0)
   steno
   talentbox-delayed_job_sequel (~> 4.3.0)
