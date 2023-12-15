@@ -8,7 +8,7 @@ module CloudFoundry
       end
       let(:user_guid) { 'user_guid' }
       let(:reset_interval_in_minutes) { 60 }
-      let(:user_guid_offset) { 1170.seconds }
+      let(:user_guid_offset) { 592.seconds }
 
       context "time is set to beginning of hour + the user's offset" do
         before { Timecop.freeze Time.now.beginning_of_hour + user_guid_offset }
