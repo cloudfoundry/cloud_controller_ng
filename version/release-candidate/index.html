@@ -6428,7 +6428,7 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status.reason</strong></td>
 <td><em>string</em></td>
-<td>The reason for the status of the deployment;<br>following list represents valid values:<br>1. If <strong>status.value</strong> is <code class="prettyprint">ACTIVE</code><br>- <code class="prettyprint">DEPLOYING</code><br>- <code class="prettyprint">CANCELING</code><br>2. If <strong>status.value</strong> is <code class="prettyprint">FINALIZED</code><br>- <code class="prettyprint">DEPLOYED</code><br>- <code class="prettyprint">CANCELED</code><br>- <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion)<br>- <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system)</td>
+<td>The reason for the status of the deployment;<br>following list represents valid values:<br>1. If <strong>status.value</strong> is <code class="prettyprint">ACTIVE</code><br>- <code class="prettyprint">DEPLOYING</code><br>- <code class="prettyprint">CANCELING</code><br>2. If <strong>status.value</strong> is <code class="prettyprint">FINALIZED</code><br>- <code class="prettyprint">DEPLOYED</code><br>- <code class="prettyprint">CANCELED</code><br>- <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion)<br></td>
 </tr>
 <tr>
 <td><strong>status.details</strong></td>
@@ -6874,7 +6874,7 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status_reasons</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of status reasons to filter by;<br>valid values include <code class="prettyprint">DEPLOYING</code>, <code class="prettyprint">CANCELING</code>, <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code>, and <code class="prettyprint">DEGENERATE</code></td>
+<td>Comma-delimited list of status reasons to filter by;<br>valid values include <code class="prettyprint">DEPLOYING</code>, <code class="prettyprint">CANCELING</code>, <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code></td>
 </tr>
 <tr>
 <td><strong>status_values</strong></td>
