@@ -178,6 +178,8 @@ Lint/EmptyInPattern:
   Enabled: true
 Lint/IncompatibleIoSelectWithFiberScheduler:
   Enabled: true
+Lint/ItWithoutArgumentsInBlock:
+  Enabled: true
 Lint/LambdaWithoutLiteralBlock:
   Enabled: true
 Lint/LiteralAssignmentInCondition:
