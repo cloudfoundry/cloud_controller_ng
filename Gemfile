@@ -47,6 +47,7 @@ gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
 gem 'unf'
 gem 'vmstat', '~> 2.3'
+gem 'xxhash'
 gem 'yajl-ruby'
 
 # Rails Components

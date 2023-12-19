@@ -563,6 +563,7 @@ GEM
     webrick (1.8.1)
     xml-simple (1.1.9)
       rexml
+    xxhash (0.5.0)
     yajl-ruby (1.4.3)
     yard (0.9.34)
     zeitwerk (2.6.12)
@@ -662,6 +663,7 @@ DEPENDENCIES
   vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
+  xxhash
   yajl-ruby
 
 BUNDLED WITH
