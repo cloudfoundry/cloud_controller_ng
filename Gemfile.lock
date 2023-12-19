@@ -343,7 +343,7 @@ GEM
     openssl (3.2.0)
     os (1.1.4)
     palm_civet (1.1.0)
-    parallel (1.23.0)
+    parallel (1.24.0)
     parallel_tests (4.3.0)
       parallel
     parser (3.2.2.4)
@@ -465,7 +465,7 @@ GEM
       rubocop (~> 1.41)
     rubocop-factory_bot (2.24.0)
       rubocop (~> 1.33)
-    rubocop-rails (2.22.2)
+    rubocop-rails (2.23.0)
       activesupport (>= 4.2.0)
       rack (>= 1.1)
       rubocop (>= 1.33.0, < 2.0)
@@ -641,7 +641,7 @@ DEPENDENCIES
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
   rubocop (~> 1.59.0)
-  rubocop-rails (~> 2.22)
+  rubocop-rails (~> 2.23)
   rubocop-rspec (~> 2.25)
   rubocop-sequel (~> 0.3.4)
   rubyzip (>= 1.3.0)
