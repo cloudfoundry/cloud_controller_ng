@@ -158,7 +158,7 @@ GEM
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
-    fluent-logger (0.9.0)
+    fluent-logger (0.9.1)
       msgpack (>= 1.0.0, < 2)
     fog-aliyun (0.4.0)
       addressable (~> 2.8.0)
@@ -317,7 +317,7 @@ GEM
       faraday (~> 0.9)
       faraday-cookie_jar (~> 0.0.6)
       ms_rest (~> 0.6.3)
-    msgpack (1.4.2)
+    msgpack (1.7.2)
     multi_json (1.15.0)
     multipart-parser (0.1.1)
     multipart-post (2.3.0)
