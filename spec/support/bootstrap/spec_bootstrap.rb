@@ -8,8 +8,8 @@ module VCAP::CloudController
   module SpecBootstrap
     @initialized = false
 
-    def self.init(recreate_tables: true)
-      return if @initialized && !recreate_tables
+    def self.init(recreate_test_tables: true, do_schema_migration: true)
+      return if @initialized && !recreate_test_tables
 
       @initialized = true
       ENV['CC_TEST'] = 'true'
@@ -27,9 +27,9 @@ module VCAP::CloudController
 
       db_config = DbConfig.new
 
-      if recreate_tables
+      if recreate_test_tables
         db_resetter = TableRecreator.new(db_config.connection)
-        db_resetter.recreate_tables
+        db_resetter.recreate_tables(without_migration: !do_schema_migration)
       end
 
       DB.load_models(db_config.config, db_config.db_logger)

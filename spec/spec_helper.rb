@@ -83,7 +83,11 @@ end
 
 each_run_block = proc do
   # Moving this line into the init-block means that changes in code files aren't detected.
-  VCAP::CloudController::SpecBootstrap.init
+  if ENV['NO_DB_MIGRATION']
+    VCAP::CloudController::SpecBootstrap.init(do_schema_migration: false)
+  else
+    VCAP::CloudController::SpecBootstrap.init(do_schema_migration: true)
+  end
 
   Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
