@@ -38,6 +38,7 @@ jobs:
 
   Test-Postgres:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -69,6 +70,7 @@ jobs:
 
   Test-Mysql:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
