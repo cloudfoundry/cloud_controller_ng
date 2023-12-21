@@ -1585,6 +1585,23 @@ RSpec.describe 'v3 service credential bindings' do
             api_call.call(space_dev_headers)
           end
         end
+
+        context 'database disconnect error during creation of enqueue bind job' do
+          before do
+            allow_any_instance_of(ServiceCredentialBindingsController).to receive(:enqueue_bind_job).and_raise(Sequel::DatabaseDisconnectError)
+          end
+
+          it 'rolls back the transaction' do
+            api_call.call(admin_headers)
+
+            expect(last_response).to have_status_code(503)
+            expect(parsed_response['errors']).to include(include({
+                                                                   'detail' => include('Database connection failure'),
+                                                                   'title' => 'CF-ServiceUnavailable',
+                                                                   'code' => 10_015
+                                                                 }))
+          end
+        end
       end
     end
 

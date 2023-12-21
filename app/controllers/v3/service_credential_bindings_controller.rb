@@ -216,21 +216,23 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create_app_binding(message, service_instance, app)
     action = V3::ServiceCredentialBindingAppCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(
-      service_instance,
-      app: app,
-      volume_mount_services_enabled: volume_services_enabled?,
-      message: message
-    )
-    log_telemetry(binding)
+    VCAP::CloudController::ServiceBinding.db.transaction do
+      binding = action.precursor(
+        service_instance,
+        app: app,
+        volume_mount_services_enabled: volume_services_enabled?,
+        message: message
+      )
+      log_telemetry(binding)
 
-    case service_instance
-    when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(:credential, binding.guid, message)
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-    when UserProvidedServiceInstance
-      action.bind(binding)
-      render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+      case service_instance
+      when ManagedServiceInstance
+        pollable_job_guid = enqueue_bind_job(:credential, binding.guid, message)
+        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+      when UserProvidedServiceInstance
+        action.bind(binding)
+        render status: :created, json: Presenters::V3::ServiceCredentialBindingPresenter.new(binding).to_hash
+      end
     end
   end
 

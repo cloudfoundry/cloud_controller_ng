@@ -46,15 +46,17 @@ class ServiceRouteBindingsController < ApplicationController
 
     check_parameters_support(service_instance, message)
     action = V3::ServiceRouteBindingCreate.new(user_audit_info, message.audit_hash)
-    precursor = action.precursor(service_instance, route, message:)
+    VCAP::CloudController::RouteBinding.db.transaction do
+      precursor = action.precursor(service_instance, route, message:)
 
-    case service_instance
-    when ManagedServiceInstance
-      pollable_job_guid = enqueue_bind_job(precursor.guid, message)
-      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
-    when UserProvidedServiceInstance
-      action.bind(precursor)
-      render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(precursor)
+      case service_instance
+      when ManagedServiceInstance
+        pollable_job_guid = enqueue_bind_job(precursor.guid, message)
+        head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+      when UserProvidedServiceInstance
+        action.bind(precursor)
+        render status: :created, json: Presenters::V3::ServiceRouteBindingPresenter.new(precursor)
+      end
     end
   rescue V3::ServiceRouteBindingCreate::UnprocessableCreate => e
     unprocessable!(e.message)
