@@ -23,6 +23,15 @@ namespace :spec do
     run_failed_specs
   end
 
+  desc 'Run tests on a already migrated database'
+  task no_recreate: ['db:pick'] do
+    if ARGV[1]
+      run_specs(ARGV[1])
+    else
+      run_specs_parallel('spec')
+    end
+  end
+
   def run_specs(path)
     sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress"
   end

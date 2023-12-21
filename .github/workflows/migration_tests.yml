@@ -1,0 +1,88 @@
+name: Backwards Compatibility Unit Tests
+concurrency:
+  group: '${{ github.workflow }}-${{ github.new_cc_ref || github.run_id }}'
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+    description: "This action tests backwards compatibility when db migrations are introduced. It tests database schema at new code(old_cc_ref) with unittests running old code(new_cc_ref) "
+    old_cc_ref:
+      description: 'Old Version of CC_NG that the backwards compatibility should be checked against'
+      required: true
+    new_cc_ref:
+      description: 'Old Version of CC_NG that needs testing for backwards incompatible changes'
+      required: true
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'db/migrations/**'
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  Test-Postgres-Backwards-Compatibillity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        image: ["postgres:10", "postgres:11", "postgres:16"]
+        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
+    services:
+      postgres:
+        image: ${{ matrix.image }}
+        env:
+          POSTGRES_PASSWORD: rootpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code to run the db migration with
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version[0] }}
+      - uses: ./.github/workflows/composite/setup
+      - name: Migrate Database
+        run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake db:parallel:recreate
+      - name: Checkout code to run the unit tests with
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version[1] }}
+      - name: Run Tests
+        run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake spec:no_recreate
+
+  Test-Mysql-Backwards-Compatibillity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        image: ["mysql:5.7", "mysql:8.0", "mysql:8.2"]
+        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
+    services:
+      mysql:
+        image: ${{ matrix.image }}
+        env:
+          MYSQL_DATABASE: cc_test
+          MYSQL_ROOT_PASSWORD: password
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
+    steps:
+      - name: Checkout code to run the db migration with
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version[0] }}
+      - uses: ./.github/workflows/composite/setup
+      - name: Migrate Database
+        run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake db:parallel:recreate
+      - name: Checkout code to run the unit tests with
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version[1] }}
+      - name: Run tests
+        run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake spec:no_recreate
