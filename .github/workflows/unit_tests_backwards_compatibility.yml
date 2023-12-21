@@ -28,7 +28,7 @@ jobs:
       max-parallel: 3
       matrix:
         image: ["postgres:10", "postgres:11", "postgres:16"]
-        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
+        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
     services:
       postgres:
         image: ${{ matrix.image }}
@@ -65,7 +65,7 @@ jobs:
       max-parallel: 3
       matrix:
         image: ["mysql:5.7", "mysql:8.0", "mysql:8.2"]
-        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
+        version: ${{ github.event_name == 'workflow_dispatch' && [[github.event.inputs.new_cc_ref, github.event.inputs.old_cc_ref]] || [[github.head_ref, github.event.pull_request.base.sha ]] }}
     services:
       mysql:
         image: ${{ matrix.image }}
