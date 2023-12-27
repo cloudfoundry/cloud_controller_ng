@@ -11,7 +11,7 @@ unless defined?(SPEC_HELPER_LOADED)
   require 'machinist/sequel'
   require 'machinist/object'
 
-  VCAP::CloudController::SpecBootstrap.init(recreate_tables: false)
+  VCAP::CloudController::SpecBootstrap.init(recreate_test_tables: false)
 
   require 'delayed_job_plugins/deserialization_retry'
   require 'delayed_job_plugins/after_enqueue_hook'

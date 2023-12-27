@@ -7,18 +7,20 @@ class TableRecreator
     @db = db
   end
 
-  def recreate_tables(without_fake_tables: false)
+  def recreate_tables(without_fake_tables: false, without_migration: false)
     prepare_database
 
-    (db.views - SAFE_VIEWS).each do |view|
-      db.drop_view(view)
-    end
+    unless without_migration
+      (db.views - SAFE_VIEWS).each do |view|
+        db.drop_view(view)
+      end
 
-    db.tables.each do |table|
-      drop_table_unsafely(table)
-    end
+      db.tables.each do |table|
+        drop_table_unsafely(table)
+      end
 
-    DBMigrator.new(db).apply_migrations
+      DBMigrator.new(db).apply_migrations
+    end
 
     return if without_fake_tables
 

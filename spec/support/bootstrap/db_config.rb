@@ -66,7 +66,7 @@ class DbConfig
     if ENV['TEST_ENV_NUMBER'].presence
       "cc_test_#{ENV.fetch('TEST_ENV_NUMBER')}"
     else
-      'cc_test'
+      'cc_test_1'
     end
   end
 end

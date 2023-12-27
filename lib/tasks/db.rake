@@ -222,8 +222,9 @@ namespace :db do
   end
 
   namespace :parallel do
-    desc 'Drop and create the database set in spec/support/bootstrap/db_config in parallel'
+    desc 'Drop and create / migrate the database set in spec/support/bootstrap/db_config in parallel'
     task recreate: %w[parallel:drop parallel:create]
+    task migrate: %w[parallel:migrate]
   end
 
   def connect
@@ -243,12 +244,16 @@ namespace :db do
   def migrate
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
+    require_relative '../../spec/support/bootstrap/db_config'
+    DbConfig.new
     DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
   def rollback(number_to_rollback)
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
+    require_relative '../../spec/support/bootstrap/db_config'
+    DbConfig.new
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end
 
