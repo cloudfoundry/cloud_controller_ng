@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'tasks/rake_config'
 
-RSpec.describe 'ensure migrations are current', isolation: :truncation do
+RSpec.describe 'ensure migrations are current', isolation: :truncation, type: :migration do
   before do
     allow(RakeConfig).to receive(:config).and_return(TestConfig.config_instance)
   end

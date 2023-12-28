@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
-RSpec.describe 'migration to clean up degenerate records from deployments records', isolation: :truncation do
+RSpec.describe 'migration to clean up degenerate records from deployments records', isolation: :truncation, type: :migration do
   include_context 'migration' do
     let(:migration_filename) { '20231205143526_remove_deployments_with_degenerate.rb' }
   end

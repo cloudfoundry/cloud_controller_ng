@@ -27,18 +27,18 @@ namespace :spec do
   task without_migrate: ['db:pick'] do
     # We exclude specs that test migration behaviour since this breaks/alters the DB in the middle of a test
     if ARGV[1]
-      run_specs(ARGV[1], 'NO_DB_MIGRATION=true', '--exclude-pattern spec/migrations --exclude-pattern unit/lib/vcap/sequel_case_insensitive_string_monkeypatch_spec.rb')
+      run_specs(ARGV[1], 'NO_DB_MIGRATION=true')
     else
-      run_specs_parallel('spec', 'NO_DB_MIGRATION=true', '--exclude-pattern spec/migrations --exclude-pattern unit/lib/vcap/sequel_case_insensitive_string_monkeypatch_spec.rb')
+      run_specs_parallel('spec', 'NO_DB_MIGRATION=true')
     end
   end
 
-  def run_specs(path, env_vars='', rspec_parameters='')
-    sh "#{env_vars} bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress #{rspec_parameters}"
+  def run_specs(path, env_vars='')
+    sh "#{env_vars} bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress"
   end
 
-  def run_specs_parallel(path, env_vars='', rspec_parameters='')
-    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ --single spec/acceptance/ #{rspec_parameters} -- #{path}"
+  def run_specs_parallel(path, env_vars='')
+    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ --single spec/acceptance/ -- #{path}"
   end
 
   def run_failed_specs

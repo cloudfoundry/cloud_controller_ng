@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'backfill status_value for deployments', isolation: :truncation do
+RSpec.describe 'backfill status_value for deployments', isolation: :truncation, type: :migration do
   let(:tmp_migrations_dir) { Dir.mktmpdir }
 
   before do
