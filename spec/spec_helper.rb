@@ -137,6 +137,9 @@ each_run_block = proc do
       @uaa_server = FakeUAAServer.new(6789)
       @uaa_server.start
     end
+    rspec_config.before(:all, type: :migration) do
+      skip 'Skipped due to NO_DB_MIGRATION env variable being set' if ENV['NO_DB_MIGRATION']
+    end
     rspec_config.after(:all, type: :integration) do
       WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs])
       @uaa_server.stop

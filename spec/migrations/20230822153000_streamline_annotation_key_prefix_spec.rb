@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
-RSpec.describe 'migration to streamline changes to annotation_key_prefix', isolation: :truncation do
+RSpec.describe 'migration to streamline changes to annotation_key_prefix', isolation: :truncation, type: :migration do
   include_context 'migration' do
     let(:migration_filename) { '20230822153000_streamline_annotation_key_prefix.rb' }
   end

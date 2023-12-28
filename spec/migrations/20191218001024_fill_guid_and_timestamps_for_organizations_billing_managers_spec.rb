@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'fill role_guid and timestamps for organizations_billing_managers table', isolation: :truncation do
+RSpec.describe 'fill role_guid and timestamps for organizations_billing_managers table', isolation: :truncation, type: :migration do
   let(:role_table) { :organizations_billing_managers }
   let(:filename) { '20191218001024_fill_guid_and_timestamps_for_organizations_billing_managers.rb' }
 

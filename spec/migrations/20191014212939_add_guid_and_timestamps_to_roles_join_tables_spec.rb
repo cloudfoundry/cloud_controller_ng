@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :truncation do
+RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :truncation, type: :migration do
   let(:db) { Sequel::Model.db }
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }

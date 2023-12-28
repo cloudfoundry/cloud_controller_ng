@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'migration to add unique index on service_instance_id to service_instance_operations', isolation: :truncation do
+RSpec.describe 'migration to add unique index on service_instance_id to service_instance_operations', isolation: :truncation, type: :migration do
   let(:filename) { '20220818142407_add_unique_index_to_service_instance_operations_service_instance_id.rb' }
   let(:tmp_migrations_dir) { Dir.mktmpdir }
   let(:db) { Sequel::Model.db }
