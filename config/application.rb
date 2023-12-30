@@ -14,7 +14,6 @@ class Application < Rails::Application
   config.middleware.delete Rack::ETag
   config.middleware.delete Rack::MethodOverride
 
-  config.autoloader = :zeitwerk
   Rails.autoloaders.main.ignore(Rails.root.join('app/**/*'))
 
   config.generators do |g|
