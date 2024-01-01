@@ -365,7 +365,8 @@ GEM
       nio4r (~> 2.0)
     racc (1.7.3)
     rack (2.2.8)
-    rack-protection (3.1.0)
+    rack-protection (3.2.0)
+      base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
     rack-test (2.1.0)
       rack (>= 1.3)
@@ -497,16 +498,16 @@ GEM
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.2)
-    sinatra (3.1.0)
+    sinatra (3.2.0)
       mustermann (~> 3.0)
       rack (~> 2.2, >= 2.2.4)
-      rack-protection (= 3.1.0)
+      rack-protection (= 3.2.0)
       tilt (~> 2.0)
-    sinatra-contrib (3.1.0)
-      multi_json
+    sinatra-contrib (3.2.0)
+      multi_json (>= 0.0.2)
       mustermann (~> 3.0)
-      rack-protection (= 3.1.0)
-      sinatra (= 3.1.0)
+      rack-protection (= 3.2.0)
+      sinatra (= 3.2.0)
       tilt (~> 2.0)
     solargraph (0.50.0)
       backport (~> 1.2)
@@ -647,7 +648,7 @@ DEPENDENCIES
   rubyzip (>= 1.3.0)
   sequel (~> 5.75)
   sequel_pg
-  sinatra (~> 3.1)
+  sinatra (~> 3.2)
   sinatra-contrib
   solargraph
   spork!
