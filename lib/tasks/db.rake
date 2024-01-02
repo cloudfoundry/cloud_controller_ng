@@ -244,16 +244,24 @@ namespace :db do
   def migrate
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
-    require_relative '../../spec/support/bootstrap/db_config'
-    DbConfig.new
+    begin
+      require_relative '../../spec/support/bootstrap/db_config'
+      DbConfig.new
+    rescue LoadError
+      # Only needed when running tests
+    end
     DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
   def rollback(number_to_rollback)
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
     db_logger = Steno.logger('cc.db.migrations')
-    require_relative '../../spec/support/bootstrap/db_config'
-    DbConfig.new
+    begin
+      require_relative '../../spec/support/bootstrap/db_config'
+      DbConfig.new
+    rescue LoadError
+      # Only needed when running tests
+    end
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end
 
