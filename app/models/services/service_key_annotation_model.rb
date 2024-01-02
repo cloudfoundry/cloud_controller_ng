@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServiceKeyAnnotationModel < Sequel::Model(:service_key_annotations_migration_view)
+  class ServiceKeyAnnotationModel < Sequel::Model(:service_key_annotations)
     set_primary_key :id
     many_to_one :service_key,
                 primary_key: :guid,

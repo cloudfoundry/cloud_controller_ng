@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class SpaceAnnotationModel < Sequel::Model(:space_annotations_migration_view)
+  class SpaceAnnotationModel < Sequel::Model(:space_annotations)
     set_primary_key :id
     many_to_one :space,
                 class: 'VCAP::CloudController::Space',

@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DeploymentAnnotationModel < Sequel::Model(:deployment_annotations_migration_view)
+  class DeploymentAnnotationModel < Sequel::Model(:deployment_annotations)
     set_primary_key :id
     many_to_one :deployment,
                 class: 'VCAP::CloudController::DeploymentModel',

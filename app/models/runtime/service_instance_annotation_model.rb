@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServiceInstanceAnnotationModel < Sequel::Model(:service_instance_annotations_migration_view)
+  class ServiceInstanceAnnotationModel < Sequel::Model(:service_instance_annotations)
     set_primary_key :id
     many_to_one :service_instance,
                 class: 'VCAP::CloudController::ServiceInstance',

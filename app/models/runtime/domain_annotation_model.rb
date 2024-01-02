@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DomainAnnotationModel < Sequel::Model(:domain_annotations_migration_view)
+  class DomainAnnotationModel < Sequel::Model(:domain_annotations)
     set_primary_key :id
     many_to_one :domain,
                 class: 'VCAP::CloudController::DomainModel',
