@@ -153,8 +153,6 @@ module VCAP::CloudController
     CONTENT_DIGEST_REGEX = %r{\s*(?<Algorithm>[a-zA-Z0-9-]*)\s*=\s*:(?<Base64Digest>[a-zA-Z0-9+/=]*):\s*}
 
     def check_content_digest
-      return if Rails.env.local?
-
       content_digest = env['HTTP_CONTENT_DIGEST']
       if content_digest.present?
         result = content_digest.match(CONTENT_DIGEST_REGEX)

@@ -16,6 +16,8 @@ class Application < Rails::Application
 
   Rails.autoloaders.main.ignore(Rails.root.join('app/**/*'))
 
+  config.active_support.cache_format_version = 7.0
+
   config.generators do |g|
     g.orm             false
     g.stylesheets     false
