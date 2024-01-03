@@ -29,11 +29,11 @@ module VCAP::CloudController
         describe 'labels_sti_eager_load' do
           it 'eager loads successfully' do
             binding = ServiceBinding.make
-            lb1 = ServiceBindingLabelModel.make(service_binding: binding)
-            lb2 = ServiceBindingLabelModel.make(service_binding: binding)
+            lb1 = ServiceBindingLabelModel.make(service_binding: binding, key_name: 'test1', value: 'bommel')
+            lb2 = ServiceBindingLabelModel.make(service_binding: binding, key_name: 'test2', value: 'bommel')
             key = ServiceKey.make
-            lk1 = ServiceKeyLabelModel.make(service_key: key)
-            lk2 = ServiceKeyLabelModel.make(service_key: key)
+            lk1 = ServiceKeyLabelModel.make(service_key: key, key_name: 'test1', value: 'bommel')
+            lk2 = ServiceKeyLabelModel.make(service_key: key, key_name: 'test2', value: 'bommel')
 
             eager_loaded_service_credential_bindings = nil
             expect do
@@ -54,11 +54,11 @@ module VCAP::CloudController
         describe 'annotations_sti_eager_load' do
           it 'eager loads successfully' do
             binding = ServiceBinding.make
-            lb1 = ServiceBindingAnnotationModel.make(service_binding: binding)
-            lb2 = ServiceBindingAnnotationModel.make(service_binding: binding)
+            lb1 = ServiceBindingAnnotationModel.make(service_binding: binding, key_name: 'test1', value: 'bommel')
+            lb2 = ServiceBindingAnnotationModel.make(service_binding: binding, key_name: 'test2', value: 'bommel')
             key = ServiceKey.make
-            lk1 = ServiceKeyAnnotationModel.make(service_key: key)
-            lk2 = ServiceKeyAnnotationModel.make(service_key: key)
+            lk1 = ServiceKeyAnnotationModel.make(service_key: key, key_name: 'test1', value: 'bommel')
+            lk2 = ServiceKeyAnnotationModel.make(service_key: key, key_name: 'test2', value: 'bommel')
 
             eager_loaded_service_credential_bindings = nil
             expect do

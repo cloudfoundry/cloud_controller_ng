@@ -1659,17 +1659,14 @@ RSpec.describe 'V3 service instances' do
       describe 'updates that do not require broker communication' do
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
+            guid: 'bommel',
             tags: %w[foo bar],
             space: space
           )
-          si.annotation_ids = [
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-          ]
-          si.label_ids = [
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ]
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
           si
         end
 
@@ -1757,19 +1754,16 @@ RSpec.describe 'V3 service instances' do
         let(:original_maintenance_info) { { version: '1.1.0' } }
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
+            guid: 'bommel',
             tags: %w[foo bar],
             space: space,
             service_plan: original_service_plan,
             maintenance_info: original_maintenance_info
           )
-          si.annotation_ids = [
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-          ]
-          si.label_ids = [
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ]
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
           si
         end
         let(:guid) { service_instance.guid }
@@ -2566,6 +2560,7 @@ RSpec.describe 'V3 service instances' do
     context 'user-provided service instance' do
       let!(:service_instance) do
         si = VCAP::CloudController::UserProvidedServiceInstance.make(
+          guid: 'bommel',
           space: space,
           name: 'foo',
           credentials: {
@@ -2576,14 +2571,10 @@ RSpec.describe 'V3 service instances' do
           route_service_url: 'https://bar.com',
           tags: %w[accounting mongodb]
         )
-        si.annotation_ids = [
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-        ]
-        si.label_ids = [
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-        ]
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
         si
       end
 

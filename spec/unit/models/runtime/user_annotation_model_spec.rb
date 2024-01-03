@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     it 'can be created' do
       user = User.make(guid: 'dora')
-      UserAnnotationModel.create(resource_guid: user.guid, key_prefix: 'something', key_name: 'release', value: 'stable')
+      UserAnnotationModel.make(resource_guid: user.guid, key_prefix: 'something', key_name: 'release', value: 'stable')
       expect(UserAnnotationModel.find(key_prefix: 'something', key_name: 'release').value).to eq 'stable'
     end
   end

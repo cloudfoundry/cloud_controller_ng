@@ -243,7 +243,7 @@ module VCAP::CloudController
           RouteMappingModel.make(app: oldest_web_process_with_instances.app, process_type: oldest_web_process_with_instances.type)
         end
 
-        let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid) }
+        let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid, key_name: 'test', value: 'bommel') }
 
         it 'destroys the oldest web process and ignores the original web process' do
           expect do

@@ -17,7 +17,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label = RevisionLabelModel.make(resource_guid: revision.guid)
+        label = RevisionLabelModel.make(resource_guid: revision.guid, key_name: 'test', value: 'bommel')
         expect do
           revision_delete.delete(revision)
         end.to change(RevisionLabelModel, :count).by(-1)
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation = RevisionAnnotationModel.make(resource_guid: revision.guid)
+        annotation = RevisionAnnotationModel.make(resource_guid: revision.guid, key_name: 'test', value: 'bommel')
         expect do
           revision_delete.delete(revision)
         end.to change(RevisionAnnotationModel, :count).by(-1)

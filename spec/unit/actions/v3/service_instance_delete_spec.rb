@@ -82,6 +82,7 @@ module VCAP::CloudController
         context 'user-provided service instances' do
           let!(:service_instance) do
             si = VCAP::CloudController::UserProvidedServiceInstance.make(
+              guid: 'bommel',
               name: 'foo',
               credentials: {
                 foo: 'bar',
@@ -91,14 +92,11 @@ module VCAP::CloudController
               route_service_url: 'https://bar.com',
               tags: %w[accounting mongodb]
             )
-            si.label_ids = [
-              VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-              VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-            ]
-            si.annotation_ids = [
-              VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-              VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-            ]
+            VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+            VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+            VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+
             si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'update', state: 'succeeded')
             si
           end

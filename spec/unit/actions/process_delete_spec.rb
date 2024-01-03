@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = ProcessLabelModel.make(resource_guid: process.guid)
+          label = ProcessLabelModel.make(resource_guid: process.guid, key_name: 'test1', value: 'bommel')
           expect do
             process_delete.delete([process])
           end.to change(ProcessLabelModel, :count).by(-1)
@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = ProcessAnnotationModel.make(resource_guid: process.guid)
+          annotation = ProcessAnnotationModel.make(resource_guid: process.guid, key_name: 'test1', value: 'bommel')
           expect do
             process_delete.delete([process])
           end.to change(ProcessAnnotationModel, :count).by(-1)

@@ -17,7 +17,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label = DeploymentLabelModel.make(resource_guid: deployment.guid)
+        label = DeploymentLabelModel.make(resource_guid: deployment.guid, key_name: 'test1', value: 'bommel')
         expect do
           deployment_delete.delete([deployment])
         end.to change(DeploymentLabelModel, :count).by(-1)
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation = DeploymentAnnotationModel.make(resource_guid: deployment.guid)
+        annotation = DeploymentAnnotationModel.make(resource_guid: deployment.guid, key_name: 'test1', value: 'bommel')
         expect do
           deployment_delete.delete([deployment])
         end.to change(DeploymentAnnotationModel, :count).by(-1)

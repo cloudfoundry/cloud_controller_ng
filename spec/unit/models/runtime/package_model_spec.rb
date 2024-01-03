@@ -117,8 +117,8 @@ module VCAP::CloudController
 
     describe 'metadata' do
       let(:package) { PackageModel.make }
-      let(:annotation) { PackageAnnotationModel.make(package:) }
-      let(:label) { PackageLabelModel.make(package:) }
+      let(:annotation) { PackageAnnotationModel.make(package: package, key_name: 'test1', value: 'bommel') }
+      let(:label) { PackageLabelModel.make(package: package, key_name: 'test1', value: 'bommel') }
 
       it 'can access its metadata' do
         expect(annotation.package.guid).to eq(package.guid)

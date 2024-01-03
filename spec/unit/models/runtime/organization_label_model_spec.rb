@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     it 'can be created' do
       org = Organization.make(name: 'dora_org')
-      OrganizationLabelModel.create(resource_guid: org.guid, key_name: 'release', value: 'stable')
+      OrganizationLabelModel.make(resource_guid: org.guid, key_name: 'release', value: 'stable')
       expect(OrganizationLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

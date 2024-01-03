@@ -50,6 +50,7 @@ module VCAP::CloudController
       let(:original_dashboard_url) { 'http://your-og-instance.com' }
       let!(:original_instance) do
         si = VCAP::CloudController::ManagedServiceInstance.make(
+          guid: 'bommel',
           service_plan: original_service_plan,
           name: original_name,
           tags: %w[accounting mongodb],
@@ -57,14 +58,13 @@ module VCAP::CloudController
           maintenance_info: original_maintenance_info,
           dashboard_url: original_dashboard_url
         )
-        si.label_ids = [
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-        ]
-        si.annotation_ids = [
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-        ]
+
+        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+
         si
       end
       let(:new_arbitrary_parameters) { { foo: 'bar' } }
@@ -1249,14 +1249,6 @@ module VCAP::CloudController
             maintenance_info: original_maintenance_info,
             dashboard_url: original_dashboard_url
           )
-          si.label_ids = [
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value'),
-            VCAP::CloudController::ServiceInstanceLabelModel.make(key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ]
-          si.annotation_ids = [
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value').id,
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy').id
-          ]
           si.save_with_new_operation(
             {},
             {
@@ -1265,6 +1257,10 @@ module VCAP::CloudController
               broker_provided_operation: operation_id
             }
           )
+          ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
           si
         end
 
