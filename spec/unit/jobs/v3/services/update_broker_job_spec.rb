@@ -19,7 +19,7 @@ module VCAP
           end
 
           let!(:label) do
-            ServiceBrokerLabelModel.create(
+            ServiceBrokerLabelModel.make(
               service_broker: broker,
               key_name: 'potato',
               value: 'yam'
@@ -27,7 +27,7 @@ module VCAP
           end
 
           let!(:annotation) do
-            ServiceBrokerAnnotationModel.create(
+            ServiceBrokerAnnotationModel.make(
               service_broker: broker,
               key_name: 'style',
               value: 'mashed'

@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     it 'can be created' do
       org = Organization.make(name: 'zrob-org')
-      OrganizationAnnotationModel.create(resource_guid: org.guid, key_prefix: 'us', key_name: 'state', value: 'Ohio')
-      expect(OrganizationAnnotationModel.find(key_prefix: 'us', key_name: 'state').value).to eq 'Ohio'
+      OrganizationAnnotationModel.make(resource_guid: org.guid, key_prefix: 'us', key_name: 'state', value: 'Ohio')
+      expect(OrganizationAnnotationModel.find(resource_guid: org.guid, key_prefix: 'us', key_name: 'state').value).to eq 'Ohio'
     end
   end
 end

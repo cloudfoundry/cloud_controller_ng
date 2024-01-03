@@ -1005,14 +1005,14 @@ module VCAP::CloudController
             let(:metric_tag_key_prefix) { 'metric.tag.cloudfoundry.org' }
 
             before do
-              AppLabelModel.create(
+              AppLabelModel.make(
                 app: app_model,
                 key_prefix: metric_tag_key_prefix,
                 key_name: 'DatadogValue',
                 value: 'woof'
               )
 
-              AppLabelModel.create(
+              AppLabelModel.make(
                 app: app_model,
                 key_prefix: 'nonmetric.tag.cloudfoundry.org',
                 key_name: 'SomeotherValue',
@@ -1032,7 +1032,7 @@ module VCAP::CloudController
 
               context 'when app labels tags match existing custom metrics tags' do
                 before do
-                  AppLabelModel.create(
+                  AppLabelModel.make(
                     app: app_model,
                     key_prefix: metric_tag_key_prefix,
                     key_name: 'organization_name',
@@ -1047,28 +1047,28 @@ module VCAP::CloudController
 
               context 'when app labels contain forbidden key_names' do
                 before do
-                  AppLabelModel.create(
+                  AppLabelModel.make(
                     app: app_model,
                     key_prefix: metric_tag_key_prefix,
                     key_name: 'deployment',
                     value: 'kafka'
                   )
 
-                  AppLabelModel.create(
+                  AppLabelModel.make(
                     app: app_model,
                     key_prefix: metric_tag_key_prefix,
                     key_name: 'index',
                     value: '999'
                   )
 
-                  AppLabelModel.create(
+                  AppLabelModel.make(
                     app: app_model,
                     key_prefix: metric_tag_key_prefix,
                     key_name: 'ip',
                     value: '127.0.0.1'
                   )
 
-                  AppLabelModel.create(
+                  AppLabelModel.make(
                     app: app_model,
                     key_prefix: metric_tag_key_prefix,
                     key_name: 'job',

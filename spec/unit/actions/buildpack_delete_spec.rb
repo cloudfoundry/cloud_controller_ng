@@ -45,8 +45,8 @@ module VCAP::CloudController
       end
 
       context 'when the buildpack has associated metadata' do
-        let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack.guid) }
-        let!(:annotation) { BuildpackAnnotationModel.make(resource_guid: buildpack.guid) }
+        let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
+        let!(:annotation) { BuildpackAnnotationModel.make(resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
 
         it 'deletes associated labels' do
           expect do

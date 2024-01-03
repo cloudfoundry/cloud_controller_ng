@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     it 'can be created' do
       user = User.make(guid: 'dora')
-      UserLabelModel.create(resource_guid: user.guid, key_name: 'release', value: 'stable')
+      UserLabelModel.make(resource_guid: user.guid, key_name: 'release', value: 'stable')
       expect(UserLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

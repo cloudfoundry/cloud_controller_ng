@@ -64,7 +64,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = PackageLabelModel.make(resource_guid: package.guid)
+          label = PackageLabelModel.make(resource_guid: package.guid, key_name: 'test', value: 'bommel')
           expect do
             package_delete.delete([package])
           end.to change(PackageLabelModel, :count).by(-1)
@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = PackageAnnotationModel.make(resource_guid: package.guid)
+          annotation = PackageAnnotationModel.make(resource_guid: package.guid, key_name: 'test', value: 'bommel')
           expect do
             package_delete.delete([package])
           end.to change(PackageAnnotationModel, :count).by(-1)

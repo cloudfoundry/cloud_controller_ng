@@ -176,8 +176,8 @@ module VCAP::CloudController
         let(:filters) { { 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
 
         before do
-          ServiceBrokerLabelModel.create(service_broker: broker, key_name: 'dog', value: 'scooby-doo')
-          ServiceBrokerLabelModel.create(service_broker: space_scoped_broker_1, key_name: 'dog', value: 'poodle')
+          ServiceBrokerLabelModel.make(service_broker: broker, key_name: 'dog', value: 'scooby-doo')
+          ServiceBrokerLabelModel.make(service_broker: space_scoped_broker_1, key_name: 'dog', value: 'poodle')
         end
 
         it 'includes the relevant brokers' do

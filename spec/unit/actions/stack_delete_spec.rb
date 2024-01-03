@@ -17,7 +17,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = StackLabelModel.make(resource_guid: stack.guid)
+          label = StackLabelModel.make(resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
           expect do
             stack_delete.delete(stack)
           end.to change(StackLabelModel, :count).by(-1)
@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = StackAnnotationModel.make(resource_guid: stack.guid)
+          annotation = StackAnnotationModel.make(resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
           expect do
             stack_delete.delete(stack)
           end.to change(StackAnnotationModel, :count).by(-1)

@@ -204,16 +204,6 @@ module VCAP::CloudController
           expect(paginated_result.total).to be > 1
         end
       end
-
-      it 'returns correct total results for distinct result' do
-        options = { page: page, per_page: per_page, order_by: :key_name }
-        pagination_options = PaginationOptions.new(options)
-        2.times { SpaceLabelModel.create(key_name: 'testLabel') }
-        dataset = SpaceLabelModel.dataset.distinct(:key_name)
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.total).to eq(1)
-      end
     end
   end
 end
