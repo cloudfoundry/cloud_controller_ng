@@ -1,32 +1,32 @@
-TABLE_BASE_NAMES = %w[
-  app
-  build
-  buildpack
-  deployment
-  domain
-  droplet
-  isolation_segment
-  organization
-  package
-  process
-  revision
-  route_binding
-  route
-  service_binding
-  service_broker
-  service_broker_update_request
-  service_instance
-  service_key
-  service_offering
-  service_plan
-  space
-  stack
-  task
-  user
-].freeze
-annotation_tables = TABLE_BASE_NAMES.map { |tbn| "#{tbn}_annotations" }.freeze
-
 Sequel.migration do
+  table_base_names = %w[
+    app
+    build
+    buildpack
+    deployment
+    domain
+    droplet
+    isolation_segment
+    organization
+    package
+    process
+    revision
+    route_binding
+    route
+    service_binding
+    service_broker
+    service_broker_update_request
+    service_instance
+    service_key
+    service_offering
+    service_plan
+    space
+    stack
+    task
+    user
+  ].freeze
+  annotation_tables = table_base_names.map { |tbn| "#{tbn}_annotations" }.freeze
+
   no_transaction # Disable automatic transactions
 
   up do

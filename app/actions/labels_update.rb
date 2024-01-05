@@ -12,16 +12,19 @@ module VCAP::CloudController
           prefix, name = VCAP::CloudController::MetadataHelpers.extract_prefix(label_key)
 
           if label_value.nil? && destroy_nil # Delete Label
-            label_klass.where(resource_guid: resource.guid, key_name: name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).try(:destroy)
+            label_klass.find(key_prefix: prefix.to_s, resource_guid: resource.guid, key_name: name)&.destroy
             next
           end
 
           begin
             tries ||= 2
             label_klass.db.transaction(savepoint: true) do
-              label = label_klass.where(resource_guid: resource.guid, key_name: name).where(Sequel.or([[:key_prefix, prefix], [:key_prefix, prefix.to_s]])).first
-              label ||= label_klass.create(resource_guid: resource.guid, key_name: name, key_prefix: prefix)
-              label.update(value: label_value)
+              label = label_klass.find(key_prefix: prefix.to_s, resource_guid: resource.guid, key_name: name)
+              if label.nil?
+                label_klass.create(resource_guid: resource.guid, key_name: name, key_prefix: prefix, value: label_value)
+              else
+                label.update(value: label_value)
+              end
             end
           rescue Sequel::UniqueConstraintViolation => e
             if (tries -= 1).positive?

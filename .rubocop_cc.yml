@@ -126,12 +126,8 @@ Style/ExpandPathArguments:
   Exclude:
     - 'db/migrations/20130911111938_encrypt_app_env_json.rb'
     - 'db/migrations/201805*'
-Rails/DangerousColumnNames: # Disabled for old migrations as we cannot change content of those
-  Enabled: true
-  Exclude:
-    - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
-    - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
-    - db/migrations/20221125134500_add_request_count_table.rb
+Rails/DangerousColumnNames: # Disabled, in comparison to active_record we need to add the id column manually in sequel
+  Enabled: false
 Rails/SkipsModelValidations: # We don`t want any model at all in migrations and migration specs
   Enabled: true
   Exclude:
