@@ -47,19 +47,19 @@ module VCAP::CloudController
         end
 
         context 'when the label is found in the hash' do
-          it 'will encrypt using the value corresponding to the label' do
+          it 'encrypts using the value corresponding to the label' do
             allow(Encryptor).to receive(:current_encryption_key_label).and_return('death')
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_death_string)
           end
         end
 
         context 'when the label is not found in the hash' do
-          it 'will encrypt using current db_encryption_key when the label is not nil' do
+          it 'encrypts using current db_encryption_key when the label is not nil' do
             allow(Encryptor).to receive(:current_encryption_key_label).and_return('Inigo Montoya')
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_legacy_string)
           end
 
-          it 'will encrypt using current db_encryption_key when the label is nil' do
+          it 'encrypts using current db_encryption_key when the label is nil' do
             allow(Encryptor).to receive(:current_encryption_key_label).and_return(nil)
             expect(Encryptor.encrypt(input, salt)).to eql(encrypted_legacy_string)
           end
@@ -76,7 +76,7 @@ module VCAP::CloudController
           allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
         end
 
-        it 'will encrypt using db_encryption_key' do
+        it 'encrypts using db_encryption_key' do
           expect(Encryptor.encrypt(input, salt)).to eql(encrypted_legacy_string)
         end
       end

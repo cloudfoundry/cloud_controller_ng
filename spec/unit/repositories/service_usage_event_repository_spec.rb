@@ -32,7 +32,7 @@ module VCAP::CloudController
         context 'with managed service instance' do
           let(:service_instance) { ManagedServiceInstance.make }
 
-          it 'will create an event which matches the service instance and custom state' do
+          it 'creates an event which matches the service instance and custom state' do
             event = repository.create_from_service_instance(service_instance, custom_state)
 
             expect(event.state).to eq(custom_state)
@@ -40,7 +40,7 @@ module VCAP::CloudController
           end
 
           context 'fails to create the event if no custom state provided' do
-            it 'will raise an error' do
+            it 'raises an error' do
               expect do
                 repository.create_from_service_instance(service_instance, nil)
               end.to raise_error(Sequel::NotNullConstraintViolation)
@@ -53,7 +53,7 @@ module VCAP::CloudController
                 service_instance.space = nil
               end
 
-              it 'will raise an error' do
+              it 'raises an error' do
                 expect do
                   repository.create_from_service_instance(service_instance, custom_state)
                 end.to raise_error(NoMethodError)
@@ -65,7 +65,7 @@ module VCAP::CloudController
         context 'with user provided service instance' do
           let(:service_instance) { UserProvidedServiceInstance.make }
 
-          it 'will create an event if service instance does not have a service plan' do
+          it 'creates an event if service instance does not have a service plan' do
             event = repository.create_from_service_instance(service_instance, custom_state)
 
             expect(event.state).to eq(custom_state)
@@ -93,7 +93,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'will purge all existing events' do
+        it 'purges all existing events' do
           ServiceInstance.each(&:destroy)
 
           expect do
@@ -170,7 +170,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'will delete events created before the specified cutoff time' do
+        it 'deletes events created before the specified cutoff time' do
           new_event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
 
           expect do
@@ -180,7 +180,7 @@ module VCAP::CloudController
           expect(ServiceUsageEvent.last).to eq(new_event.reload)
         end
 
-        it 'will keep the last record even if before the cutoff age' do
+        it 'keeps the last record even if before the cutoff age' do
           expect do
             repository.delete_events_older_than(cutoff_age_in_days)
           end.to change(ServiceUsageEvent, :count).to(1)

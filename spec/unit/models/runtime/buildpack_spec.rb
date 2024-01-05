@@ -50,7 +50,7 @@ module VCAP::CloudController
         context 'when there is a buildpack with nil stack' do
           let!(:buildpack) { Buildpack.create(name: 'oscar', stack: nil) }
 
-          it 'will allow updating a different field' do
+          it 'allows updating a different field' do
             expect do
               buildpack.update(filename: '/some/file')
             end.not_to raise_error

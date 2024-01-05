@@ -185,7 +185,7 @@ module VCAP::CloudController
         quota_definition.trial_db_allowed = true
       end
 
-      it 'will not change the value returned (deprecated)' do
+      it 'does not change the value returned (deprecated)' do
         expect do
           quota_definition.trial_db_allowed = true
         end.not_to(change do

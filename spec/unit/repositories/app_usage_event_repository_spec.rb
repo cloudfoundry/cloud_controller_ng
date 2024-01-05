@@ -26,7 +26,7 @@ module VCAP::CloudController
         let(:parent_app) { AppModel.make(name: 'parent-app') }
         let(:process) { ProcessModelFactory.make(app: parent_app, type: 'other') }
 
-        it 'will create an event which matches the app' do
+        it 'creates an event which matches the app' do
           event = repository.create_from_process(process)
           expect(event).to match_app(process)
           expect(event.parent_app_name).to eq('parent-app')
@@ -34,7 +34,7 @@ module VCAP::CloudController
           expect(event.process_type).to eq('other')
         end
 
-        it 'will create an event with default previous attributes' do
+        it 'creates an event with default previous attributes' do
           event = repository.create_from_process(process)
 
           default_instances = ProcessModel.db_schema[:instances][:default].to_i
@@ -48,7 +48,7 @@ module VCAP::CloudController
         context 'when a custom state is provided' do
           let(:custom_state) { 'CUSTOM' }
 
-          it 'will populate the event with the custom state' do
+          it 'populates the event with the custom state' do
             event = repository.create_from_process(process, custom_state)
             expect(event.state).to eq(custom_state)
 
@@ -64,14 +64,14 @@ module VCAP::CloudController
               process.reload
             end
 
-            it 'will create an event with pending package state' do
+            it 'creates an event with pending package state' do
               event = repository.create_from_process(process)
               expect(event).to match_app(process)
             end
           end
 
           context 'when the package is staged' do
-            it 'will create an event with staged package state' do
+            it 'creates an event with staged package state' do
               event = repository.create_from_process(process)
               expect(event).to match_app(process)
             end
@@ -83,7 +83,7 @@ module VCAP::CloudController
               process.reload
             end
 
-            it 'will create an event with failed package state' do
+            it 'creates an event with failed package state' do
               event = repository.create_from_process(process)
               expect(event).to match_app(process)
             end
@@ -98,7 +98,7 @@ module VCAP::CloudController
             )
           end
 
-          it 'will create an event that contains the detected buildpack guid and name' do
+          it 'creates an event that contains the detected buildpack guid and name' do
             event = repository.create_from_process(process)
             expect(event).to match_app(process)
             expect(event.buildpack_guid).to eq('buildpack-guid')
@@ -113,7 +113,7 @@ module VCAP::CloudController
             process.app.lifecycle_data.update(buildpacks: [buildpack_url])
           end
 
-          it 'will create an event with the buildpack url as the name' do
+          it 'creates an event with the buildpack url as the name' do
             event = repository.create_from_process(process)
             expect(event.buildpack_name).to eq('https://git.example.com/repo.git')
           end
@@ -127,7 +127,7 @@ module VCAP::CloudController
             end
           end
 
-          it 'will create an event without a buildpack guid' do
+          it 'creates an event without a buildpack guid' do
             event = repository.create_from_process(process)
             expect(event.buildpack_guid).to be_nil
           end
@@ -138,7 +138,7 @@ module VCAP::CloudController
             process.app.lifecycle_data.update(buildpacks: nil)
           end
 
-          it 'will create an event that does not contain buildpack name or guid' do
+          it 'creates an event that does not contain buildpack name or guid' do
             event = repository.create_from_process(process)
             expect(event.buildpack_guid).to be_nil
             expect(event.buildpack_name).to be_nil
@@ -150,7 +150,7 @@ module VCAP::CloudController
             process.state = nil
           end
 
-          it 'will raise an error' do
+          it 'raises an error' do
             expect do
               repository.create_from_process(process)
             end.to raise_error(Sequel::NotNullConstraintViolation)
@@ -518,7 +518,7 @@ module VCAP::CloudController
           allow(ProcessObserver).to receive(:updated)
         end
 
-        it 'will purge all existing events' do
+        it 'purges all existing events' do
           3.times { repository.create_from_process(process) }
 
           expect do
@@ -691,7 +691,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'will delete events created before the specified cutoff time' do
+        it 'deletes events created before the specified cutoff time' do
           process = ProcessModel.make
           repository.create_from_process(process)
 
@@ -702,7 +702,7 @@ module VCAP::CloudController
           expect(AppUsageEvent.last).to match_app(process)
         end
 
-        it 'will keep the last record even if before the cutoff age' do
+        it 'keeps the last record even if before the cutoff age' do
           expect do
             repository.delete_events_older_than(cutoff_age_in_days)
           end.to change(AppUsageEvent, :count).to(1)

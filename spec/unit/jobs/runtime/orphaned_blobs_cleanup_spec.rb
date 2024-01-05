@@ -261,7 +261,7 @@ module VCAP::CloudController
               [double(:blob, key: 're/al/')]
             end
 
-            it 'will never mark the blob as an orphan' do
+            it 'nevers mark the blob as an orphan' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
               expect(OrphanedBlob.count).to eq(0)
@@ -276,7 +276,7 @@ module VCAP::CloudController
               ]
             end
 
-            it 'will never mark the blob as an orphan' do
+            it 'nevers mark the blob as an orphan' do
               expect(OrphanedBlob.count).to eq(0)
               job.perform
               expect(OrphanedBlob.count).to eq(0)

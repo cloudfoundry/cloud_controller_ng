@@ -865,7 +865,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
 
       context 'when the org has not been entitled with the isolation segment' do
-        it 'will not assign an isolation segment to a space in a different org' do
+        it 'does not assign an isolation segment to a space in a different org' do
           patch :update_isolation_segment, params: { guid: space3.guid }.merge(update_message), as: :json
 
           expect(response).to have_http_status(:unprocessable_entity)
