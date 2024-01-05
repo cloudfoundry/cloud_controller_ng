@@ -484,6 +484,24 @@ RSpec.describe CloudController::DependencyLocator do
 
       expect(locator.statsd_client).to eq(expected_client)
     end
+
+    it 'returns the null statsd client' do
+      host = 'test-host'
+      port = 1234
+
+      TestConfig.override(
+        statsd_host: host,
+        statsd_port: port,
+        disable_statsd_metrics: true
+      )
+
+      expected_client = double(CloudController::NullStatsdClient)
+
+      allow(CloudController::NullStatsdClient).to receive(:new).
+        and_return(expected_client)
+
+      expect(locator.statsd_client).to eq(expected_client)
+    end
   end
 
   describe '#bbs_stager_client' do
