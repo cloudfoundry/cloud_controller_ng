@@ -63,7 +63,7 @@ module VCAP::CloudController
               RouteMappingModel.make(app: app, route: route2)
             end
 
-            it 'will update (or recreate) the route mapping with the new protocol' do
+            it 'updates (or recreates) the route mapping with the new protocol' do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
 
               route_mappings = app.reload.route_mappings

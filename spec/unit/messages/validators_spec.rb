@@ -629,25 +629,25 @@ module VCAP::CloudController::Validators
       end
 
       context 'requires a valid timestamp' do
-        it "won't accept a malformed timestamp" do
+        it 'does not accept a malformed timestamp' do
           message = timestamp_class.new({ field: [Time.now.utc.iso8601.to_s, 'bogus'] })
           expect(message).not_to be_valid
           expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
 
-        it "won't accept garbage" do
+        it 'does not accept garbage' do
           message = timestamp_class.new({ field: { gt: 123 } })
           expect(message).not_to be_valid
           expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
 
-        it "won't accept fractional seconds even though it's ISO 8601-compliant" do
+        it "does not accept fractional seconds even though it's ISO 8601-compliant" do
           message = timestamp_class.new({ field: { gt: '2020-06-30T12:34:56.78Z' } })
           expect(message).not_to be_valid
           expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
         end
 
-        it "won't accept local time zones even though it's ISO 8601-compliant" do
+        it "does not accept local time zones even though it's ISO 8601-compliant" do
           message = timestamp_class.new({ field: { gt: '2020-06-30T12:34:56.78-0700' } })
           expect(message).not_to be_valid
           expect(message.errors[:field]).to include("has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")

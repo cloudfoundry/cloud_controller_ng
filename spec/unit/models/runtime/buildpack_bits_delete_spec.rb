@@ -34,7 +34,7 @@ module VCAP::CloudController
     end
 
     context 'when the blob exists' do
-      it 'will create a job with attributes' do
+      it 'creates a job with attributes' do
         attrs = blobstore.blob(key).attributes
         job_attrs = {
           last_modified: attrs[:last_modified],
@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     context 'when the blob does not exist' do
-      it 'will not create a job' do
+      it 'does not create a job' do
         blobstore.delete(key)
 
         expect(Jobs::Runtime::BlobstoreDelete).not_to receive(:new)

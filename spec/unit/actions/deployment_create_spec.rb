@@ -904,7 +904,7 @@ module VCAP::CloudController
                                         })
           end
 
-          it 'will raise a DeploymentCreate::Error with the correct message' do
+          it 'raises a DeploymentCreate::Error with the correct message' do
             expect do
               expect do
                 DeploymentCreate.create(app:, message:, user_audit_info:)
