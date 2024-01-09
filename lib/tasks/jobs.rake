@@ -20,7 +20,7 @@ namespace :jobs do
     RakeConfig.context = :api
 
     CloudController::DelayedWorker.new(queues: [queue],
-                                       name: args.name).start_working
+                                       name: args.name).start_working(is_cc_local_worker: true)
   end
 
   desc 'Start a delayed_job worker.'
@@ -63,8 +63,8 @@ namespace :jobs do
       }
     end
 
-    def start_working
-      config = RakeConfig.config
+    def start_working(is_cc_local_worker: false)
+      config = RakeConfig.config(is_cc_local_worker:)
       BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
 
       logger = Steno.logger('cc-worker')

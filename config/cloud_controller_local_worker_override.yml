@@ -1,0 +1,3 @@
+# Configurations specific to cc local workers are overridden using this file in capi-release.
+# It will be merged with the cc_ng configuration file, and then cc local workers will be started with the resulting configuration file.
+---

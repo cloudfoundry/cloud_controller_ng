@@ -22,15 +22,7 @@ module VCAP::CloudController
     class << self
       def load_from_file(file_name, context: :api, secrets_hash: {})
         config = VCAP::CloudController::YAMLConfig.safe_load_file(file_name)
-        config = deep_symbolize_keys_except_in_arrays(config)
-        secrets_hash = deep_symbolize_keys_except_in_arrays(secrets_hash)
-        config = config.deep_merge(secrets_hash)
-
-        schema_class = schema_class_for_context(context, config)
-        schema_class.validate(config)
-
-        hash = merge_defaults(config)
-        @instance = new(hash, context:)
+        load_from_hash(config, context:, secrets_hash:)
       end
 
       def config
@@ -40,6 +32,22 @@ module VCAP::CloudController
       def schema_class_for_context(context, _config)
         module_name = 'Vms'
         const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
+      end
+
+      def read_file(file_name)
+        deep_symbolize_keys_except_in_arrays(VCAP::CloudController::YAMLConfig.safe_load_file(file_name)) || {}
+      end
+
+      def load_from_hash(config_hash, context: :api, secrets_hash: {})
+        config = deep_symbolize_keys_except_in_arrays(config_hash)
+        secrets_hash = deep_symbolize_keys_except_in_arrays(secrets_hash)
+        config = config.deep_merge(secrets_hash)
+
+        schema_class = schema_class_for_context(context, config)
+        schema_class.validate(config)
+
+        hash = merge_defaults(config)
+        @instance = new(hash, context:)
       end
 
       private
