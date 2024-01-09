@@ -65,8 +65,10 @@ Sequel.migration do
           run "LOCK TABLES #{table} WRITE, #{table}_temp WRITE;" if database_type == :mysql && db_supports_table_locks
         rescue Sequel::DatabaseError
           db_supports_table_locks = false
+          # rubocop:disable Layout/LineLength, Rails/Output
           p("Cannot guarantee consistent migration for table #{table} as your used user lacks the \"LOCK TABLE\" Permission or the database does not support locking tables (e.g. percona xtradb cluster).")
           p("Continuing to do the migration for table #{table}, there is a small chance of a migration failure due to lack of above feature but eventually reruns of this migration should succeed.")
+          # rubocop:enable Layout/LineLength, Rails/Output
         end
 
         # Updating the temporary column with truncated keys(should never chop of anything since the api just allows 63 chars)
