@@ -48,6 +48,7 @@ Sequel.migration do
   label_tables = table_base_names.map { |tbn| "#{tbn}_labels" }.freeze
 
   no_transaction # Disable automatic transactions
+  db_supports_table_locks = true
 
   up do
     (annotation_tables + label_tables).each do |table|
@@ -60,7 +61,13 @@ Sequel.migration do
 
         # Just allow selects on this table while the migration runs for full consistency
         run "LOCK TABLE #{table}, #{table}_temp IN SHARE MODE;" if database_type == :postgres
-        run "LOCK TABLES #{table} WRITE, #{table}_temp WRITE;" if database_type == :mysql
+        begin
+          run "LOCK TABLES #{table} WRITE, #{table}_temp WRITE;" if database_type == :mysql && db_supports_table_locks
+        rescue Sequel::DatabaseError
+          db_supports_table_locks = false
+          p("Cannot guarantee consistent migration for table #{table} as your used user lacks the \"LOCK TABLE\" Permission or the database does not support locking tables (e.g. percona xtradb cluster).")
+          p("Continuing to do the migration for table #{table}, there is a small chance of a migration failure due to lack of above feature but eventually reruns of this migration should succeed.")
+        end
 
         # Updating the temporary column with truncated keys(should never chop of anything since the api just allows 63 chars)
         # We run this in the DB as to minimize the time we hold the share mode lock on the table
@@ -97,7 +104,7 @@ Sequel.migration do
         end
       ensure
         # Be sure to unlock the table on errors as this does not happen automatically by rolling back a transaction mysql
-        run 'UNLOCK TABLES;' if database_type == :mysql
+        run 'UNLOCK TABLES;' if database_type == :mysql && db_supports_table_locks
       end
     end
   end
