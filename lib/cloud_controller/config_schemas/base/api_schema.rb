@@ -102,6 +102,7 @@ module VCAP::CloudController
             },
 
             staging: {
+              optional(:legacy_md5_buildpack_paths_enabled) => bool,
               timeout_in_seconds: Integer,
               minimum_staging_memory_mb: Integer,
               minimum_staging_disk_mb: Integer,

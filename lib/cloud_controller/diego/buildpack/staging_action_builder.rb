@@ -1,5 +1,6 @@
 require 'credhub/config_helpers'
 require 'diego/action_builder'
+require 'xxhash'
 
 module VCAP::CloudController
   module Diego
@@ -75,7 +76,7 @@ module VCAP::CloudController
             layer = {
               name: buildpack[:name],
               url: buildpack[:url],
-              destination_path: "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
+              destination_path: buildpack_path(buildpack[:key]),
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP
             }
@@ -107,7 +108,7 @@ module VCAP::CloudController
             buildpack_dependency = {
               name: buildpack[:name],
               from: buildpack[:url],
-              to: "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack[:key])}",
+              to: buildpack_path(buildpack[:key]),
               cache_key: buildpack[:key]
             }
             if buildpack[:sha256]
@@ -240,6 +241,14 @@ module VCAP::CloudController
           arr << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url) if credhub_url.present? && cred_interpolation_enabled?
 
           arr
+        end
+
+        def buildpack_path(buildpack_key)
+          if config.get(:staging, :legacy_md5_buildpack_paths_enabled)
+            "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack_key)}"
+          else
+            "/tmp/buildpacks/#{XXhash.xxh64(buildpack_key)}"
+          end
         end
       end
     end
