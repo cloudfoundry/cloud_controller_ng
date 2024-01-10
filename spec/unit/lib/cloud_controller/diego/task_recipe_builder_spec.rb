@@ -4,9 +4,11 @@ module VCAP::CloudController
   module Diego
     RSpec.describe TaskRecipeBuilder do
       subject(:task_recipe_builder) { TaskRecipeBuilder.new }
+      let(:org) { Organization.make(name: 'MyOrg', guid: 'org-guid') }
+      let(:space) { Space.make(name: 'MySpace', guid: 'space-guid', organization: org) }
+      let(:app) { AppModel.make(name: 'MyApp', guid: 'banana-guid', space: space) }
 
       describe '#build_staging_task' do
-        let(:app) { AppModel.make(guid: 'banana-guid') }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
             details.staging_guid = droplet.guid
@@ -150,6 +152,15 @@ module VCAP::CloudController
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cpu_weight).to eq(50)
 
+            expect(result.metric_tags.keys.size).to eq(7)
+            expect(result.metric_tags['source_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_id'].static).to eq('org-guid')
+            expect(result.metric_tags['space_id'].static).to eq('space-guid')
+            expect(result.metric_tags['app_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_name'].static).to eq('MyOrg')
+            expect(result.metric_tags['space_name'].static).to eq('MySpace')
+            expect(result.metric_tags['app_name'].static).to eq('MyApp')
+
             expect(result.completion_callback_url).to eq("https://#{internal_service_hostname}:#{tls_port}" \
                                                          "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
 
@@ -225,6 +236,18 @@ module VCAP::CloudController
           it 'sets the log source' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.log_source).to eq('STG')
+          end
+
+          it 'sets the metric tags' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+            expect(result.metric_tags.keys.size).to eq(7)
+            expect(result.metric_tags['source_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_id'].static).to eq('org-guid')
+            expect(result.metric_tags['space_id'].static).to eq('space-guid')
+            expect(result.metric_tags['app_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_name'].static).to eq('MyOrg')
+            expect(result.metric_tags['space_name'].static).to eq('MySpace')
+            expect(result.metric_tags['app_name'].static).to eq('MyApp')
           end
 
           it 'does not set the image layers' do
@@ -320,7 +343,6 @@ module VCAP::CloudController
       end
 
       describe '#build_app_task' do
-        let(:app) { AppModel.make(guid: 'banana-guid') }
         let(:task) do
           TaskModel.create(
             name: 'potato-task',
@@ -474,6 +496,15 @@ module VCAP::CloudController
             expect(result.placement_tags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
+
+            expect(result.metric_tags.keys.size).to eq(7)
+            expect(result.metric_tags['source_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_id'].static).to eq('org-guid')
+            expect(result.metric_tags['space_id'].static).to eq('space-guid')
+            expect(result.metric_tags['app_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_name'].static).to eq('MyOrg')
+            expect(result.metric_tags['space_name'].static).to eq('MySpace')
+            expect(result.metric_tags['app_name'].static).to eq('MyApp')
           end
 
           context 'when a volume mount is provided' do
@@ -615,6 +646,15 @@ module VCAP::CloudController
             expect(result.placement_tags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
+
+            expect(result.metric_tags.keys.size).to eq(7)
+            expect(result.metric_tags['source_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_id'].static).to eq('org-guid')
+            expect(result.metric_tags['space_id'].static).to eq('space-guid')
+            expect(result.metric_tags['app_id'].static).to eq('banana-guid')
+            expect(result.metric_tags['organization_name'].static).to eq('MyOrg')
+            expect(result.metric_tags['space_name'].static).to eq('MySpace')
+            expect(result.metric_tags['app_name'].static).to eq('MyApp')
 
             expect(result.image_username).to eq('dockerusername')
             expect(result.image_password).to eq('dockerpassword')

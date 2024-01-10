@@ -31,6 +31,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :since, :int64, 8
     optional :modification_tag, :message, 9, "diego.bbs.models.ModificationTag"
     optional :presence, :enum, 10, "diego.bbs.models.ActualLRP.Presence"
+    optional :availability_zone, :string, 12
     oneof :optional_routable do
       optional :Routable, :bool, 11
     end

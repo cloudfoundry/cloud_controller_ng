@@ -11,6 +11,8 @@ module VCAP::CloudController
     class TaskRecipeBuilder
       include ::Diego::ActionBuilder
 
+      METRIC_TAG_VALUE = ::Diego::Bbs::Models::MetricTagValue
+
       def initialize
         @egress_rules = Diego::EgressRules.new
       end
@@ -30,6 +32,7 @@ module VCAP::CloudController
           log_source: TASK_LOG_SOURCE,
           max_pids: config.get(:diego, :pid_limit),
           memory_mb: task.memory_in_mb,
+          metric_tags: metric_tags(task),
           network: generate_network(task, Protocol::ContainerNetworkInfo::TASK),
           privileged: config.get(:diego, :use_privileged_containers_for_running),
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
@@ -64,6 +67,7 @@ module VCAP::CloudController
           egress_rules: @egress_rules.staging_protobuf_rules(app_guid: staging_details.package.app_guid),
           log_guid: staging_details.package.app_guid,
           log_source: STAGING_LOG_SOURCE,
+          metric_tags: metric_tags(staging_details.package),
           memory_mb: staging_details.staging_memory_in_mb,
           log_rate_limit: ::Diego::Bbs::Models::LogRateLimit.new(bytes_per_second: staging_details.staging_log_rate_limit_bytes_per_second),
           network: generate_network(staging_details.package, Protocol::ContainerNetworkInfo::STAGING),
@@ -91,6 +95,18 @@ module VCAP::CloudController
       end
 
       private
+
+      def metric_tags(source)
+        {
+          'source_id' => METRIC_TAG_VALUE.new(static: source.app_guid),
+          'organization_id' => METRIC_TAG_VALUE.new(static: source.app.organization_guid),
+          'space_id' => METRIC_TAG_VALUE.new(static: source.space_guid),
+          'app_id' => METRIC_TAG_VALUE.new(static: source.app_guid),
+          'organization_name' => METRIC_TAG_VALUE.new(static: source.app.organization.name),
+          'space_name' => METRIC_TAG_VALUE.new(static: source.space.name),
+          'app_name' => METRIC_TAG_VALUE.new(static: source.app.name)
+        }
+      end
 
       def staging_completion_callback(config, staging_details)
         port   = config.get(:tls_port)
