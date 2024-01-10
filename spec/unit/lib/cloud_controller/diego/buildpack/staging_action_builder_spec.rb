@@ -21,7 +21,7 @@ module VCAP::CloudController
                          enable_declarative_asset_downloads: enable_declarative_asset_downloads
                        },
                        staging: {
-                         legacy_md5_buildpack_paths_enabled:,
+                         legacy_md5_buildpack_paths_enabled: legacy_md5_buildpack_paths_enabled,
                          minimum_staging_file_descriptor_limit: 4,
                          timeout_in_seconds: 90
                        }
