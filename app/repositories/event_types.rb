@@ -25,6 +25,8 @@ module VCAP::CloudController
         APP_PROCESS_CRASH = 'audit.app.process.crash'.freeze,
         APP_PROCESS_TERMINATE_INSTANCE = 'audit.app.process.terminate_instance'.freeze,
         APP_PROCESS_SCALE = 'audit.app.process.scale'.freeze,
+        APP_PROCESS_READY = 'audit.app.process.ready'.freeze,
+        APP_PROCESS_NOT_READY = 'audit.app.process.not-ready'.freeze,
 
         APP_DROPLET_CREATE = 'audit.app.droplet.create'.freeze,
         APP_DROPLET_UPLOAD = 'audit.app.droplet.upload'.freeze,

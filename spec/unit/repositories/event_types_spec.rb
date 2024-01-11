@@ -36,6 +36,8 @@ module VCAP::CloudController
            'audit.app.process.create',
            'audit.app.process.update',
            'audit.app.process.delete',
+           'audit.app.process.ready',
+           'audit.app.process.not-ready',
            'audit.app.process.rescheduling',
            'audit.app.process.crash',
            'audit.app.process.terminate_instance',

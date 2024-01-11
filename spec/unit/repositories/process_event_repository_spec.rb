@@ -255,6 +255,64 @@ module VCAP::CloudController
         end
       end
 
+      describe '.record_readiness_changed' do
+        let(:ready) { true }
+        let(:readiness_payload) do
+          {
+            'instance' => 'abc',
+            'index' => 3,
+            'cell_id' => 'some-cell',
+            'ready' => ready
+          }
+        end
+
+        context 'when the process is ready' do
+          it 'creates a new audit.app.process.ready event' do
+            event = ProcessEventRepository.record_readiness_changed(process, readiness_payload)
+            event.reload
+
+            expect(event.type).to eq('audit.app.process.ready')
+            expect(event.actor).to eq(process.guid)
+            expect(event.actor_type).to eq('process')
+            expect(event.actor_name).to eq('potato')
+            expect(event.actor_username).to eq('')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq('zach-loves-kittens')
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+
+            expect(event.metadata['instance']).to eq('abc')
+            expect(event.metadata['index']).to eq(3)
+            expect(event.metadata['cell_id']).to eq('some-cell')
+          end
+        end
+
+        context 'when the process is not ready' do
+          let(:ready) { false }
+
+          it 'creates a new audit.app.process.not-ready event' do
+            event = ProcessEventRepository.record_readiness_changed(process, readiness_payload)
+            event.reload
+
+            expect(event.type).to eq('audit.app.process.not-ready')
+            expect(event.actor).to eq(process.guid)
+            expect(event.actor_type).to eq('process')
+            expect(event.actor_name).to eq('potato')
+            expect(event.actor_username).to eq('')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq('zach-loves-kittens')
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+
+            expect(event.metadata['instance']).to eq('abc')
+            expect(event.metadata['index']).to eq(3)
+            expect(event.metadata['cell_id']).to eq('some-cell')
+          end
+        end
+      end
+
       describe '.record_rescheduling' do
         let(:rescheduling_payload) do
           {
