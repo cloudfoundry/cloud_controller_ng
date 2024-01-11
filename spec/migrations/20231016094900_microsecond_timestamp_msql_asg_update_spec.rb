@@ -5,11 +5,7 @@ RSpec.describe 'migration to enable microsecond precision on asg last updated ta
   include_context 'migration' do
     let(:migration_filename) { '20231016094900_microsecond_timestamp_msql_asg_update.rb' }
     let(:ds) do
-      db[:asg_timestamps].with_extend do
-        def supports_timestamp_usecs?
-          true
-        end
-      end
+      db[:asg_timestamps].with_extend(Sequel::Plugins::MicrosecondTimestampPrecision::DatasetMethods)
     end
   end
 
