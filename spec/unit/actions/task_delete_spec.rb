@@ -3,88 +3,27 @@ require 'actions/task_delete'
 
 module VCAP::CloudController
   RSpec.describe TaskDelete do
-    describe '#delete' do
+    describe '#delete_for_app' do
       subject(:task_delete) { described_class.new(user_audit_info) }
 
-      let!(:task1) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
-      let!(:task2) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
-      let(:task_dataset) { TaskModel.all }
+      let!(:app) { AppModel.make }
+      let!(:task1) { TaskModel.make(app: app, state: TaskModel::SUCCEEDED_STATE) }
+      let!(:task2) { TaskModel.make(app: app, state: TaskModel::FAILED_STATE) }
+      let!(:task3) { TaskModel.make(app: app, state: TaskModel::PENDING_STATE) }
+      let!(:task4) { TaskModel.make(app: app, state: TaskModel::RUNNING_STATE) }
+      let!(:task5) { TaskModel.make(app: app, state: TaskModel::CANCELING_STATE) }
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
       let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 
-      it 'deletes the tasks' do
-        expect do
-          task_delete.delete(task_dataset)
-        end.to change(TaskModel, :count).by(-2)
-        expect(task1).not_to exist
-        expect(task2).not_to exist
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:bbs_task_client).and_return(bbs_task_client)
       end
 
-      context 'when the task is running' do
-        let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
-
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:bbs_task_client).and_return(bbs_task_client)
-        end
-
-        context 'when talking with bbs client directly' do
-          it 'sends a cancel request to bbs_task_client' do
-            task_delete.delete(task_dataset)
-            expect(bbs_task_client).to have_received(:cancel_task).with(task1.guid)
-          end
-        end
-
-        it 'creates a task cancel audit event' do
-          task_delete.delete(task_dataset)
-
-          event = Event.order(:id).last
-          expect(event).not_to be_nil
-          expect(event.type).to eq('audit.app.task.cancel')
-          expect(event.metadata['task_guid']).to eq(task1.guid)
-          expect(event.actee).to eq(task1.app.guid)
-        end
-
-        context 'when deleting multiple tasks' do
-          context 'when some tasks are in terminal states' do
-            let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
-            let!(:task2) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
-            let!(:task3) { TaskModel.make(state: TaskModel::FAILED_STATE) }
-
-            it 'creates a TASK_STOPPED usage events non-terminal tasks' do
-              task_delete.delete(task_dataset)
-
-              task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
-              expect(task1_event).not_to be_nil
-              expect(task1_event.task_guid).to eq(task1.guid)
-              expect(task1_event.parent_app_guid).to eq(task1.app.guid)
-
-              task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
-              expect(task2_event).to be_nil
-
-              task3_event = AppUsageEvent.find(task_guid: task3.guid, state: 'TASK_STOPPED')
-              expect(task3_event).to be_nil
-            end
-          end
-
-          context 'when both tasks are not in terminal states' do
-            let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
-            let!(:task2) { TaskModel.make(state: TaskModel::PENDING_STATE) }
-
-            it 'creates a TASK_STOPPED usage events for the deleted tasks' do
-              task_delete.delete(task_dataset)
-
-              task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
-              expect(task1_event).not_to be_nil
-              expect(task1_event.task_guid).to eq(task1.guid)
-              expect(task1_event.parent_app_guid).to eq(task1.app.guid)
-
-              task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
-              expect(task2_event).not_to be_nil
-              expect(task2_event.task_guid).to eq(task2.guid)
-              expect(task2_event.parent_app_guid).to eq(task2.app.guid)
-            end
-          end
-        end
+      it 'deletes the tasks' do
+        expect do
+          task_delete.delete_for_app(app.guid)
+        end.to change(TaskModel, :count).by(-5)
+        [task1, task2, task3, task4, task5].each { |t| expect(t).not_to exist }
       end
 
       it 'deletes associated labels' do
@@ -92,12 +31,9 @@ module VCAP::CloudController
         label2 = TaskLabelModel.make(task: task2, key_name: 'test', value: 'bommel')
 
         expect do
-          task_delete.delete(task_dataset)
+          task_delete.delete_for_app(app.guid)
         end.to change(TaskLabelModel, :count).by(-2)
-        expect(label1).not_to exist
-        expect(task1).not_to exist
-        expect(label2).not_to exist
-        expect(task2).not_to exist
+        [label1, label2].each { |l| expect(l).not_to exist }
       end
 
       it 'deletes associated annotations' do
@@ -105,10 +41,37 @@ module VCAP::CloudController
         annotation2 = TaskAnnotationModel.make(task: task2, key_name: 'test', value: 'bommel')
 
         expect do
-          task_delete.delete(task_dataset)
+          task_delete.delete_for_app(app.guid)
         end.to change(TaskAnnotationModel, :count).by(-2)
-        expect(annotation1).not_to exist
-        expect(annotation2).not_to exist
+        [annotation1, annotation2].each { |a| expect(a).not_to exist }
+      end
+
+      it 'sends a cancel request to bbs_task_client for RUNNING tasks' do
+        task_delete.delete_for_app(app.guid)
+        expect(bbs_task_client).to have_received(:cancel_task).once
+        expect(bbs_task_client).to have_received(:cancel_task).with(task4.guid)
+      end
+
+      it 'creates an audit event for RUNNING tasks' do
+        task_delete.delete_for_app(app.guid)
+
+        events = Event.where(actee: app.guid).all
+        expect(events.size).to eq(1)
+        expect(events[0].type).to eq('audit.app.task.cancel')
+        expect(events[0].metadata['task_guid']).to eq(task4.guid)
+      end
+
+      it 'creates a usage event for non-terminal tasks' do
+        task_delete.delete_for_app(app.guid)
+
+        events = AppUsageEvent.where(parent_app_guid: app.guid).all
+        expect(events.size).to eq(3)
+        task_guids = [task3.guid, task4.guid, task5.guid]
+        events.each do |event|
+          expect(event.state).to eq('TASK_STOPPED')
+          expect(task_guids.delete(event.task_guid)).not_to be_nil
+        end
+        expect(task_guids).to be_empty
       end
     end
   end
