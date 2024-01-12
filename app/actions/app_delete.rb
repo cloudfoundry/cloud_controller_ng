@@ -70,7 +70,7 @@ module VCAP::CloudController
     def delete_subresources(app)
       PackageDelete.new(@user_audit_info).delete(app.packages)
       TaskDelete.new(@user_audit_info).delete_for_app(app.guid)
-      BuildDelete.new(StagingCancel.new(stagers)).delete(app.builds)
+      BuildDelete.new(StagingCancel.new(stagers)).delete_for_app(app.guid)
       DropletDelete.new(@user_audit_info).delete(app.droplets)
       DeploymentDelete.delete(app.deployments)
       RevisionDelete.delete(app.revisions)
