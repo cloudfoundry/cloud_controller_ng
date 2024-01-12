@@ -28,9 +28,8 @@ module VCAP::CloudController
                                     exclude(state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::CANCELING_STATE]).
                                     exclude(id: deployments_to_keep)
 
-            DeploymentDelete.delete(deployments_to_delete)
-
-            logger.info("Cleaned up #{deployments_to_delete.count} DeploymentModel rows for app #{app_guid}")
+            delete_count = DeploymentDelete.delete(deployments_to_delete)
+            logger.info("Cleaned up #{delete_count} DeploymentModel rows for app #{app_guid}")
           end
         end
 

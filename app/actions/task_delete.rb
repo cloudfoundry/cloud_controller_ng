@@ -4,11 +4,13 @@ module VCAP::CloudController
       @user_audit_info = user_audit_info
     end
 
-    def delete(tasks)
-      tasks.each do |task|
-        task.destroy
+    def delete_for_app(guid)
+      TaskModel.where(app_guid: guid).exclude(state: TaskModel::TERMINAL_STATES).each do |task|
         cancel_running_task(task)
+        task.destroy # needs to be done individually due to the 'after_destroy' hook
       end
+
+      TaskModel.where(app_guid: guid).delete
     end
 
     private

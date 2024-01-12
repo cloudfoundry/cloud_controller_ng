@@ -57,6 +57,7 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::DeploymentLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DeploymentAnnotationModel', key: :resource_guid, primary_key: :guid
 
+    add_association_dependencies historical_related_processes: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
