@@ -345,7 +345,7 @@ GEM
     parallel (1.24.0)
     parallel_tests (4.4.0)
       parallel
-    parser (3.3.0.2)
+    parser (3.3.0.3)
       ast (~> 2.4.1)
       racc
     pg (1.5.4)
@@ -448,11 +448,11 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.59.0)
+    rubocop (1.60.0)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
-      parser (>= 3.2.2.4)
+      parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 1.8, < 3.0)
       rexml (>= 3.2.5, < 4.0)
@@ -640,7 +640,7 @@ DEPENDENCIES
   rspec-rails (~> 6.1.0)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.59.0)
+  rubocop (~> 1.60.0)
   rubocop-rails (~> 2.23)
   rubocop-rspec (~> 2.26)
   rubocop-sequel (~> 0.3.4)
