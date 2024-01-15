@@ -7,6 +7,16 @@ module VCAP::CloudController
           deployment.destroy
         end
       end
+
+      def delete_for_app(guid)
+        DeploymentModel.db.transaction do
+          app_deployments_dataset = DeploymentModel.where(app_guid: guid)
+          DeploymentProcessModel.where(deployment_guid: app_deployments_dataset.select(:guid)).delete
+          DeploymentLabelModel.where(resource_guid: app_deployments_dataset.select(:guid)).delete
+          DeploymentAnnotationModel.where(resource_guid: app_deployments_dataset.select(:guid)).delete
+          app_deployments_dataset.delete
+        end
+      end
     end
   end
 end
