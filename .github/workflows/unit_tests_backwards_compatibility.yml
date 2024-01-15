@@ -12,6 +12,10 @@ on:
       new_cc_ref:
         description: 'New Version of CC_NG that needs testing for backwards incompatible changes'
         required: true
+      new_cc_repo:
+        description: 'New REPO of CC_NG that needs testing for backwards incompatible changes'
+        required: false
+        default: 'cloudfoundry/cloud_controller_ng'
   pull_request:
     branches: [ main ]
     paths:
@@ -50,7 +54,12 @@ jobs:
           ref: ${{ (
               github.event_name == 'workflow_dispatch'
               && github.event.inputs.new_cc_ref
-              || github.head_ref
+              || github.event.pull_request.head.ref
+            )}}
+          repository: ${{ (
+            github.event_name == 'workflow_dispatch'
+            && github.event.inputs.new_cc_repo
+            || github.event.pull_request.head.repo.full_name
             )}}
       - name: Setup Environment
         uses: ./.github/workflows/composite/setup
@@ -94,7 +103,12 @@ jobs:
           ref: ${{ (
             github.event_name == 'workflow_dispatch'
             && github.event.inputs.new_cc_ref
-            || github.head_ref
+            || github.event.pull_request.head.ref
+            )}}
+          repository: ${{ (
+            github.event_name == 'workflow_dispatch'
+            && github.event.inputs.new_cc_repo
+            || github.event.pull_request.head.repo.full_name
             )}}
       - name: Setup Environment
         uses: ./.github/workflows/composite/setup
