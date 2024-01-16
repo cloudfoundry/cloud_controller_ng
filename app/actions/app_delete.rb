@@ -73,7 +73,7 @@ module VCAP::CloudController
       BuildDelete.new(StagingCancel.new(stagers)).delete_for_app(app.guid)
       DropletDelete.new(@user_audit_info).delete(app.droplets)
       DeploymentDelete.delete_for_app(app.guid)
-      RevisionDelete.delete(app.revisions)
+      RevisionDelete.delete_for_app(app.guid)
       SidecarDelete.delete(app.sidecars)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
       ProcessDelete.new(@user_audit_info).delete(app.processes)
