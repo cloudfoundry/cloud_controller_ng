@@ -39,6 +39,9 @@ module VCAP::CloudController
       app     = builder.build(@config, request_metrics, request_logs)
 
       @server = if @config.get(:webserver) == 'puma'
+                  max_connections_per_process = @config.get(:puma, :max_connections)
+                  @config.set(:db, @config.get(:db).merge(max_connections: max_connections_per_process)) unless max_connections_per_process.nil?
+
                   VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
                 else
                   VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)

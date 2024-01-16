@@ -66,6 +66,34 @@ module VCAP::CloudController
         end
       end
 
+      describe 'setting max connections per process for puma' do
+        context 'when max connections per process value is specified' do
+          before do
+            TestConfig.override(webserver: 'puma', puma: { max_connections: 10 })
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'overrides the db max_connections' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(PumaRunner)
+            expect(subject.config.get(:puma, :max_connections)).to eq(10)
+            expect(subject.config.get(:db, :max_connections)).to eq(10)
+          end
+        end
+
+        context 'when max connections per process is not specified' do
+          before do
+            TestConfig.override(webserver: 'puma')
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'renders the default value from cc_ng' do
+            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(PumaRunner)
+            expect(subject.config.get(:puma, :max_connections)).to be_nil
+            expect(subject.config.get(:db, :max_connections)).to eq(42)
+          end
+        end
+      end
+
       it 'registers a log counter with the component' do
         log_counter = Steno::Sink::Counter.new
         expect(Steno::Sink::Counter).to receive(:new).once.and_return(log_counter)
