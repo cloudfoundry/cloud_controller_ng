@@ -28,7 +28,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       it_behaves_like 'SidecarDelete action' do
-        subject(:sidecar_delete) { SidecarDelete.delete([sidecar1, sidecar2]) }
+        subject(:sidecar_delete) { SidecarDelete.delete(SidecarModel.where(id: [sidecar1.id, sidecar2.id])) }
       end
     end
 

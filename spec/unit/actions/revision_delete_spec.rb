@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       it_behaves_like 'RevisionDelete action' do
-        subject(:revision_delete) { RevisionDelete.delete([revision1, revision2]) }
+        subject(:revision_delete) { RevisionDelete.delete(RevisionModel.where(id: [revision1.id, revision2.id])) }
       end
     end
 

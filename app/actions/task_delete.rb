@@ -10,12 +10,7 @@ module VCAP::CloudController
         task.destroy # needs to be done individually due to the 'after_destroy' hook
       end
 
-      TaskModel.db.transaction do
-        app_tasks_dataset = TaskModel.where(app_guid: guid)
-        TaskLabelModel.where(resource_guid: app_tasks_dataset.select(:guid)).delete
-        TaskAnnotationModel.where(resource_guid: app_tasks_dataset.select(:guid)).delete
-        app_tasks_dataset.delete
-      end
+      TaskModel.where(app_guid: guid).delete
     end
 
     private
