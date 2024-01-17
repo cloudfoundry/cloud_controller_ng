@@ -48,7 +48,7 @@ module VCAP::CloudController
     private
 
     def apply_sidecars(app, revision_sidecars)
-      SidecarDelete.delete(app.sidecars)
+      SidecarDelete.delete_for_app(app.guid)
       revision_sidecars.each { |rs| rehydrate(rs) }
     end
 
