@@ -448,6 +448,8 @@ Capybara/MatchStyle:
   Enabled: false
 Capybara/NegationMatcher:
   Enabled: false
+Capybara/RedundantWithinFind: # new in 2.20
+  Enabled: true
 Capybara/SpecificActions:
   Enabled: false
 Capybara/SpecificFinders:
@@ -461,6 +463,8 @@ Capybara/RSpec/PredicateMatcher:
 FactoryBot/AssociationStyle:
   Enabled: true
 FactoryBot/ConsistentParenthesesStyle:
+  Enabled: true
+FactoryBot/ExcessiveCreateList: # new in 2.25
   Enabled: true
 FactoryBot/FactoryAssociationWithStrategy:
   Enabled: true
