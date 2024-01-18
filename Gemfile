@@ -90,7 +90,7 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 6.1.0'
   gem 'rspec-wait'
-  gem 'rubocop', '~> 1.60.0'
+  gem 'rubocop', '~> 1.60.1'
   gem 'rubocop-rails', '~> 2.23'
   gem 'rubocop-rspec', '~> 2.26'
   gem 'rubocop-sequel', '~> 0.3.4'
