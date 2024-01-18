@@ -354,7 +354,7 @@ staging:
 
 statsd_host: "127.0.0.1"
 statsd_port: 8125
-disable_statsd_metrics: false
+enable_statsd_metrics: true
 
 perform_blob_cleanup: false
 

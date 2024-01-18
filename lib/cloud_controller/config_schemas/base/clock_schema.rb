@@ -177,7 +177,7 @@ module VCAP::CloudController
 
             statsd_host: String,
             statsd_port: Integer,
-            optional(:disable_statsd_metrics) => bool,
+            optional(:enable_statsd_metrics) => bool,
 
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,

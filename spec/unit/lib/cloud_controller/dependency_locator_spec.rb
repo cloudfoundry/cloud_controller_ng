@@ -492,7 +492,7 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.override(
         statsd_host: host,
         statsd_port: port,
-        disable_statsd_metrics: true
+        enable_statsd_metrics: false
       )
 
       expected_client = double(CloudController::NullStatsdClient)
