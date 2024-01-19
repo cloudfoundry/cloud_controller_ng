@@ -349,14 +349,11 @@ module CloudController
     def statsd_client
       if @dependencies[:statsd_client]
         @dependencies[:statsd_client]
+      elsif config.get(:enable_statsd_metrics) == true || config.get(:enable_statsd_metrics).nil?
+        Statsd.logger = Steno.logger('statsd.client')
+        register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
       else
-        config = CloudController::DependencyLocator.instance.config
-        if config.get(:enable_statsd_metrics) == true
-          Statsd.logger = Steno.logger('statsd.client')
-          register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
-        else
-          register(:statsd_client, NullStatsdClient.new)
-        end
+        register(:statsd_client, NullStatsdClient.new)
       end
     end
 

@@ -485,13 +485,8 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.statsd_client).to eq(expected_client)
     end
 
-    it 'returns the null statsd client' do
-      host = 'test-host'
-      port = 1234
-
+    it 'returns the null statsd client if enable_statsd_metrics is set to false' do
       TestConfig.override(
-        statsd_host: host,
-        statsd_port: port,
         enable_statsd_metrics: false
       )
 
@@ -509,7 +504,8 @@ RSpec.describe CloudController::DependencyLocator do
       TestConfig.context = :deployment_updater
       TestConfig.override(
         statsd_host: host,
-        statsd_port: port
+        statsd_port: port,
+        enable_statsd_metrics: nil
       )
 
       expected_client = double(Statsd)
