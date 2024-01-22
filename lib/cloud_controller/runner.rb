@@ -39,9 +39,6 @@ module VCAP::CloudController
       app     = builder.build(@config, request_metrics, request_logs)
 
       @server = if @config.get(:webserver) == 'puma'
-                  max_connections_per_process = @config.get(:puma, :max_connections)
-                  @config.set(:db, @config.get(:db).merge(max_connections: max_connections_per_process)) unless max_connections_per_process.nil?
-
                   VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
                 else
                   VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)
@@ -156,7 +153,14 @@ module VCAP::CloudController
 
     def setup_db
       db_logger = Steno.logger('cc.db')
-      DB.load_models(@config.get(:db), db_logger)
+      db_config = @config.get(:db)
+
+      if @config.get(:webserver) == 'puma'
+        max_db_connections_per_process = @config.get(:puma, :max_db_connections_per_process)
+        db_config.merge!(max_connections: max_db_connections_per_process) unless max_db_connections_per_process.nil?
+      end
+
+      DB.load_models(db_config, db_logger)
     end
 
     def setup_blobstore
