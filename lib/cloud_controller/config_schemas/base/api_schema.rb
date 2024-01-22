@@ -323,6 +323,7 @@ module VCAP::CloudController
 
             statsd_host: String,
             statsd_port: Integer,
+            optional(:enable_statsd_metrics) => bool,
             system_hostnames: [String],
             default_app_ssh_access: bool,
 

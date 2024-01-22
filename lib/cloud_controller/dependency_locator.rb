@@ -349,9 +349,11 @@ module CloudController
     def statsd_client
       if @dependencies[:statsd_client]
         @dependencies[:statsd_client]
-      else
+      elsif config.get(:enable_statsd_metrics) == true || config.get(:enable_statsd_metrics).nil?
         Statsd.logger = Steno.logger('statsd.client')
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
+      else
+        register(:statsd_client, NullStatsdClient.new)
       end
     end
 
@@ -439,6 +441,24 @@ module CloudController
                                                                                collection_transformer:,
                                                                                max_total_results:
                                                                              })
+    end
+  end
+
+  class NullStatsdClient
+    def timing(_key, _value)
+      # Null implementation
+    end
+
+    def increment(_key)
+      # Null implementation
+    end
+
+    def gauge(_stat, _value, _sample_rate=1)
+      # Null implementation
+    end
+
+    def batch
+      # Null implementation
     end
   end
 end
