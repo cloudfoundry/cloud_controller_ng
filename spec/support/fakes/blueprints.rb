@@ -627,7 +627,7 @@ module VCAP::CloudController
     app_guid { Sham.guid }
     droplet_guid { Sham.guid }
     admin_buildpack_name { 'admin-bp' }
-    build_guid { Sham.guid }
+    build { BuildModel.make }
   end
 
   KpackLifecycleDataModel.blueprint do
