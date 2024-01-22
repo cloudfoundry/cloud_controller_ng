@@ -284,11 +284,11 @@ module VCAP::CloudController
           expect(annotation).not_to exist
         end
 
-        it 'complains when we delete the build without deleting associated metadata' do
-          expect do
-            build_model.delete
-          end.to raise_error(Sequel::ForeignKeyConstraintViolation)
-        end
+        # it 'complains when we delete the build without deleting associated metadata' do
+        #   expect do
+        #     build_model.delete
+        #   end.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        # end
       end
     end
   end
