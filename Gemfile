@@ -4,6 +4,7 @@ gem 'addressable'
 gem 'allowy', '>= 2.1.0'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
+gem 'digest-xxhash'
 gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.2.7'
 gem 'fluent-logger'
@@ -47,7 +48,6 @@ gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
 gem 'unf'
 gem 'vmstat', '~> 2.3'
-gem 'xxhash'
 gem 'yajl-ruby'
 
 # Rails Components
