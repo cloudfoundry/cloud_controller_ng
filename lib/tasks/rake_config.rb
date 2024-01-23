@@ -6,19 +6,19 @@ class RakeConfig
 
     attr_writer :context
 
-    def config(is_cc_local_worker: false)
+    def config
       secrets_hash = {}
       # TODO: require secrets fetcher?
       secrets_hash = VCAP::CloudController::SecretsFetcher.fetch_secrets_from_file(secrets_file) unless secrets_file.nil?
 
-      api_config = VCAP::CloudController::Config.load_from_file(config_file, context:, secrets_hash:)
+      api_config_hash = VCAP::CloudController::Config.read_file(config_file)
 
-      if is_cc_local_worker
+      if context == :api
         local_worker_config_hash = VCAP::CloudController::Config.read_file(cc_local_worker_config_file)
-        return VCAP::CloudController::Config.load_from_hash(api_config.config_hash.deep_merge(local_worker_config_hash))
+        api_config_hash = api_config_hash.deep_merge(local_worker_config_hash)
       end
 
-      api_config
+      VCAP::CloudController::Config.load_from_hash(api_config_hash, context:, secrets_hash:)
     end
 
     private

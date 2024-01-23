@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     class << self
       def load_from_file(file_name, context: :api, secrets_hash: {})
-        config = VCAP::CloudController::YAMLConfig.safe_load_file(file_name)
+        config = read_file(file_name)
         load_from_hash(config, context:, secrets_hash:)
       end
 
