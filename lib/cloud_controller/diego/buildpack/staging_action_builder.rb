@@ -1,6 +1,6 @@
 require 'credhub/config_helpers'
 require 'diego/action_builder'
-require 'xxhash'
+require 'digest/xxhash'
 
 module VCAP::CloudController
   module Diego
@@ -247,7 +247,7 @@ module VCAP::CloudController
           if config.get(:staging, :legacy_md5_buildpack_paths_enabled)
             "/tmp/buildpacks/#{OpenSSL::Digest::MD5.hexdigest(buildpack_key)}"
           else
-            "/tmp/buildpacks/#{XXhash.xxh64(buildpack_key)}"
+            "/tmp/buildpacks/#{Digest::XXH64.hexdigest(buildpack_key)}"
           end
         end
       end

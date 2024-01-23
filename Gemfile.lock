@@ -132,6 +132,7 @@ GEM
     delayed_job (4.1.9)
       activesupport (>= 3.0, < 6.2)
     diff-lcs (1.5.0)
+    digest-xxhash (0.2.7)
     docile (1.1.5)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -563,7 +564,6 @@ GEM
     webrick (1.8.1)
     xml-simple (1.1.9)
       rexml
-    xxhash (0.5.0)
     yajl-ruby (1.4.3)
     yard (0.9.34)
     zeitwerk (2.6.12)
@@ -586,6 +586,7 @@ DEPENDENCIES
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
   debug (~> 1.9)
+  digest-xxhash
   em-http-request (~> 1.1)
   eventmachine (~> 1.2.7)
   fluent-logger
@@ -663,7 +664,6 @@ DEPENDENCIES
   vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
-  xxhash
   yajl-ruby
 
 BUNDLED WITH
