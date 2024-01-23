@@ -51,6 +51,8 @@ failed_jobs:
 completed_tasks:
   cutoff_age_in_days: 31
 
+cpu_weight_min_memory: 128 #mb
+cpu_weight_max_memory: 8192 #mb
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 default_app_log_rate_limit_in_bytes_per_second: 1_048_576

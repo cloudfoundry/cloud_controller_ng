@@ -1,24 +1,27 @@
 module VCAP
   module CloudController
     module Diego
-      MIN_CPU_PROXY = 128
-      MAX_CPU_PROXY = 8192
 
       class TaskCpuWeightCalculator
+        # Base 100% weight equals an 8G instance
+        BASE_WEIGHT = 8192
         def initialize(memory_in_mb:)
           @memory_in_mb = memory_in_mb
+          @min_cpu_proxy = VCAP::CloudController::Config.config.get(:cpu_weight_min_memory)
+          @max_cpu_proxy = VCAP::CloudController::Config.config.get(:cpu_weight_max_memory)
         end
 
         def calculate
-          return 100 if memory_in_mb > MAX_CPU_PROXY
+          # CPU weight scales linearly with memory between the configured min/max values and base 100% weight
+          numerator = [min_cpu_proxy, memory_in_mb].max
+          numerator = [max_cpu_proxy, numerator].min
 
-          numerator = [MIN_CPU_PROXY, memory_in_mb].max
-          100 * numerator / MAX_CPU_PROXY
+          100 * numerator / BASE_WEIGHT
         end
 
         private
 
-        attr_reader :memory_in_mb
+        attr_reader :memory_in_mb, :min_cpu_proxy, :max_cpu_proxy
       end
     end
   end

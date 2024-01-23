@@ -144,6 +144,8 @@ module VCAP::CloudController
               interpolate_service_bindings: bool
             },
 
+            cpu_weight_min_memory: Integer,
+            cpu_weight_max_memory: Integer,
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
             default_app_log_rate_limit_in_bytes_per_second: Integer,
