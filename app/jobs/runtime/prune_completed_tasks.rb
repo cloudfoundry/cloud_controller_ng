@@ -15,11 +15,17 @@ module VCAP::CloudController
           logger.info('Cleaning up old TaskModel rows')
           tasks_to_delete = TaskModel.where(state: prunable_states).where(Sequel.lit('updated_at < ?', cutoff_age))
           task_labels_to_delete = TaskLabelModel.where(task: tasks_to_delete)
-          deleted_label_count = Database::BatchDelete.new(task_labels_to_delete).delete
-          deleted_count = Database::BatchDelete.new(tasks_to_delete).delete
+          task_annotations_to_delete = TaskAnnotationModel.where(task: tasks_to_delete)
 
-          logger.info("Cleaned up #{deleted_label_count} TaskLabelModel rows")
-          logger.info("Cleaned up #{deleted_count} TaskModel rows")
+          TaskModel.db.transaction do
+            deleted_label_count = Database::BatchDelete.new(task_labels_to_delete).delete
+            deleted_annotations_count = Database::BatchDelete.new(task_annotations_to_delete).delete
+            deleted_count = Database::BatchDelete.new(tasks_to_delete).delete
+
+            logger.info("Cleaned up #{deleted_label_count} TaskLabelModel rows")
+            logger.info("Cleaned up #{deleted_annotations_count} TaskAnnotationModel rows")
+            logger.info("Cleaned up #{deleted_count} TaskModel rows")
+          end
         end
 
         def job_name_in_configuration
