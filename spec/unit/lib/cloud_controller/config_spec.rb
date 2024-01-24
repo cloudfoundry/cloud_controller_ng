@@ -48,6 +48,71 @@ module VCAP::CloudController
 
     subject(:config_instance) { Config.new(test_config_hash) }
 
+    describe '.read_file' do
+      it 'raises error if the file does not exist' do
+        expect do
+          Config.read_file('nonexistent.yml')
+        end.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
+      end
+
+      context 'read a file' do
+        context 'when the file has entries' do
+          let(:config_contents) do
+            {
+              'db' => {
+                'max_connections' => 2
+              }
+            }
+          end
+
+          let(:cc_local_worker_config_file) do
+            file = Tempfile.new('cc_local_config_file.yml')
+            file.write(YAML.dump(config_contents))
+            file.close
+            file
+          end
+
+          it 'returns a valid hash' do
+            config_hash = Config.read_file(cc_local_worker_config_file)
+            expect(config_hash[:db][:max_connections]).to eq(2)
+          end
+        end
+
+        context 'when empty YAML file is provided' do
+          let(:cc_local_worker_config_file) { 'config/cloud_controller_local_worker_override.yml' }
+
+          it 'returns an empty hash' do
+            config_hash = Config.read_file(cc_local_worker_config_file)
+            expect(config_hash).to eq({})
+          end
+        end
+      end
+    end
+
+    describe '.load_from_hash' do
+      it 'raises error if an empty hash is provided' do
+        expect do
+          Config.load_from_hash({}, context: :api)
+        end.to raise_error(Membrane::SchemaValidationError)
+      end
+
+      context 'when no config values are provided' do
+        let(:cc_config_hash) do
+          YAMLConfig.safe_load_file('config/cloud_controller.yml')
+        end
+
+        let(:config_hash) do
+          Config.load_from_hash(cc_config_hash, context: :api).config_hash
+        end
+
+        it 'has the default values' do
+          expect(config_hash[:db][:max_connections]).to eq(42)
+          expect(config_hash[:name]).to eq('api')
+          expect(config_hash[:local_route]).to eq('127.0.0.1')
+        end
+      end
+    end
+
     describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect do
