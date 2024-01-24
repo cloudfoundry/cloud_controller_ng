@@ -13,10 +13,12 @@ module VCAP::CloudController
         def perform
           logger = Steno.logger('cc.background')
           logger.info('Cleaning up old TaskModel rows')
-
           tasks_to_delete = TaskModel.where(state: prunable_states).where(Sequel.lit('updated_at < ?', cutoff_age))
-          deleted_count   = Database::BatchDelete.new(tasks_to_delete).delete
+          task_labels_to_delete = TaskLabelModel.where(task: tasks_to_delete)
+          deleted_label_count = Database::BatchDelete.new(task_labels_to_delete).delete
+          deleted_count = Database::BatchDelete.new(tasks_to_delete).delete
 
+          logger.info("Cleaned up #{deleted_label_count} TaskLabelModel rows")
           logger.info("Cleaned up #{deleted_count} TaskModel rows")
         end
 
