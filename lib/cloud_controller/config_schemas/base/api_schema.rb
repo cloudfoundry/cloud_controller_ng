@@ -264,7 +264,8 @@ module VCAP::CloudController
             webserver: String, # thin or puma
             optional(:puma) => {
               workers: Integer,
-              max_threads: Integer
+              max_threads: Integer,
+              optional(:max_db_connections_per_process) => Integer
             },
 
             install_buildpacks: [

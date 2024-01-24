@@ -66,6 +66,34 @@ module VCAP::CloudController
         end
       end
 
+      describe 'setting max db connections per process for puma' do
+        context 'when max db connections per process value is specified' do
+          before do
+            TestConfig.override(webserver: 'puma', puma: { max_db_connections_per_process: 10 })
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'overrides the db max_connections' do
+            expect(DB).to receive(:load_models).with(hash_including(max_connections: 10), an_instance_of(Steno::Logger))
+
+            subject
+          end
+        end
+
+        context 'when max db connections per process value is not specified' do
+          before do
+            TestConfig.override(webserver: 'puma')
+            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+          end
+
+          it 'renders the default value from cc_ng' do
+            expect(DB).to receive(:load_models).with(hash_including(max_connections: 42), an_instance_of(Steno::Logger))
+
+            subject
+          end
+        end
+      end
+
       it 'registers a log counter with the component' do
         log_counter = Steno::Sink::Counter.new
         expect(Steno::Sink::Counter).to receive(:new).once.and_return(log_counter)
