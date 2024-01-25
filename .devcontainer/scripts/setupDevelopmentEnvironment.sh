@@ -34,28 +34,6 @@ setupMariadb () {
     bundle exec rake db:recreate db:migrate db:seed
 }
 
-setupUAA () {
-    # Wait until ready
-    # shellcheck disable=SC2016
-    timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/info)" != "200" ]]; do sleep 5; done' || false
-
-    # Login
-    uaac target http://localhost:8080 --skip-ssl-validation
-    uaac token client get admin -s "adminsecret"
-
-    # Admin User
-    NEW_ADMIN_USERNAME="ccadmin"
-    NEW_ADMIN_PASSWORD="secret"
-    uaac user add ${NEW_ADMIN_USERNAME} -p ${NEW_ADMIN_PASSWORD} --emails fake@example.com
-    uaac member add cloud_controller.admin ${NEW_ADMIN_USERNAME}
-    uaac member add uaa.admin ${NEW_ADMIN_USERNAME}
-    uaac member add scim.read ${NEW_ADMIN_USERNAME}
-    uaac member add scim.write ${NEW_ADMIN_USERNAME}
-
-    # Dasboard User
-    uaac user add cc-service-dashboards -p some-sekret --emails fake2@example.com
-}
-
 # Install packages
 bundle config set --local with 'debug'
 bundle install
@@ -63,7 +41,6 @@ bundle install
 # Setup Containers
 setupPostgres || tee tmp/fail &
 setupMariadb || tee tmp/fail &
-setupUAA || tee tmp/fail &
 
 # CC config
 mkdir -p tmp
