@@ -1097,9 +1097,12 @@ module VCAP::CloudController
             end
           end
 
-          context 'cpu weight' do
-            context 'when the memory limit is between the minimum and maximum' do
-              before { process.memory = (MIN_CPU_PROXY + MAX_CPU_PROXY) / 2 }
+          context 'cpu weight with default max memory of 8G' do
+            let(:min_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_min_memory) }
+            let(:max_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_max_memory) }
+
+            context 'when the memory limit is between the minimum and default maximum' do
+              before { process.memory = (min_cpu_proxy + max_cpu_proxy) / 2 }
 
               it 'sets the cpu_weight to 100* value/max' do
                 lrp = builder.build_app_lrp
@@ -1108,21 +1111,58 @@ module VCAP::CloudController
             end
 
             context 'when the memory limit is below the minimum' do
-              before { process.memory = MIN_CPU_PROXY - 1 }
+              before { process.memory = min_cpu_proxy - 1 }
 
               it 'sets the cpu_weight to 100*min/max' do
                 lrp             = builder.build_app_lrp
-                expected_weight = (100 * MIN_CPU_PROXY / MAX_CPU_PROXY).to_i
+                expected_weight = (100 * min_cpu_proxy / max_cpu_proxy).to_i
                 expect(lrp.cpu_weight).to eq(expected_weight)
               end
             end
 
-            context 'when the memory limit exceeds the maximum' do
-              before { process.memory = MAX_CPU_PROXY + 1 }
+            context 'when the memory limit exceeds the default maximum (8192)' do
+              before { process.memory = max_cpu_proxy + 1 }
 
               it 'sets the cpu_weight to 100' do
                 lrp = builder.build_app_lrp
                 expect(lrp.cpu_weight).to eq(100)
+              end
+            end
+          end
+
+          context 'cpu weight with max memory more than 8G' do
+            let(:min_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_min_memory) }
+            let(:max_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_max_memory) }
+
+            before do
+              TestConfig.override(cpu_weight_max_memory: 16_384)
+            end
+
+            context 'when the memory limit is between the default maximum (8G) and 16G of memory' do
+              before { process.memory = 15_000 }
+
+              it 'returns a percentage above 100' do
+                lrp = builder.build_app_lrp
+                expected_weight = (100 * process.memory) / BASE_WEIGHT
+                expect(lrp.cpu_weight).to eq(expected_weight)
+              end
+            end
+
+            context 'when memory limit is equal to 16G' do
+              before { process.memory = BASE_WEIGHT * 2 }
+
+              it 'sets the cpu_weight to 200' do
+                lrp = builder.build_app_lrp
+                expect(lrp.cpu_weight).to eq(200)
+              end
+            end
+
+            context 'when memory limit is equal or above 16G' do
+              before { process.memory = BASE_WEIGHT * 4 }
+
+              it 'sets the cpu_weight to 200' do
+                lrp = builder.build_app_lrp
+                expect(lrp.cpu_weight).to eq(200)
               end
             end
           end

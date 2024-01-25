@@ -13,7 +13,7 @@ module VCAP::CloudController
           let(:memory) { min_cpu_proxy - 1 }
 
           it 'returns a percentage of the MIN / MAX' do
-            expected_weight = (100 * min_cpu_proxy) / max_cpu_proxy
+            expected_weight = (100 * min_cpu_proxy) / BASE_WEIGHT
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
@@ -27,11 +27,10 @@ module VCAP::CloudController
         end
 
         context 'when the memory limit is between the minimum value and maximum default values' do
-          # let(:memory) { (min_cpu_proxy + max_cpu_proxy) / 2 }
           let(:memory) { (min_cpu_proxy + max_cpu_proxy) / 2 }
 
           it 'returns a percentage that is different' do
-            expected_weight = (100 * memory) / max_cpu_proxy
+            expected_weight = (100 * memory) / BASE_WEIGHT
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
@@ -49,13 +48,13 @@ module VCAP::CloudController
           let(:memory) { 5000 }
 
           it 'returns a percentage of 100' do
-            expected_weight = (100 * memory) / 8192
+            expected_weight = (100 * memory) / BASE_WEIGHT
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
 
         context 'when memory limit is equal to the default maximum (8G)' do
-          let(:memory) { 8192 }
+          let(:memory) { BASE_WEIGHT }
 
           it 'returns 100' do
             expect(calculator.calculate).to eq(100)
@@ -66,13 +65,13 @@ module VCAP::CloudController
           let(:memory) { 15_000 }
 
           it 'returns a percentage above 100' do
-            expected_weight = (100 * memory) / 8192
+            expected_weight = (100 * memory) / BASE_WEIGHT
             expect(calculator.calculate).to eq(expected_weight)
           end
         end
 
         context 'when memory limit is equal to 16G' do
-          let(:memory) { 16_384 }
+          let(:memory) { BASE_WEIGHT * 2 }
 
           it 'returns 200' do
             expect(calculator.calculate).to eq(200)
@@ -80,7 +79,7 @@ module VCAP::CloudController
         end
 
         context 'when memory limit is equal or above 16G' do
-          let(:memory) { 32_768 }
+          let(:memory) { BASE_WEIGHT * 4 }
 
           it 'returns 200' do
             expect(calculator.calculate).to eq(200)

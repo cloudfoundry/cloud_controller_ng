@@ -1,10 +1,9 @@
 module VCAP
   module CloudController
     module Diego
-
+      # Base 100% weight equals an 8G instance
+      BASE_WEIGHT = 8192
       class TaskCpuWeightCalculator
-        # Base 100% weight equals an 8G instance
-        BASE_WEIGHT = 8192
         def initialize(memory_in_mb:)
           @memory_in_mb = memory_in_mb
           @min_cpu_proxy = VCAP::CloudController::Config.config.get(:cpu_weight_min_memory)
