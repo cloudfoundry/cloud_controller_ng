@@ -154,7 +154,7 @@ module VCAP::CloudController
 
       user_ids.each_slice(200) do |batch|
         filter_string = batch.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-        results = query(:user_id, filter: filter_string, count: batch.length)
+        results = query(:user_id, includeInactive: true, filter: filter_string, count: batch.length)
         results['resources'].each do |user|
           results_hash[user['id']] = user
         end
