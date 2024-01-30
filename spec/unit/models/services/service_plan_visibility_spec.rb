@@ -20,11 +20,24 @@ module VCAP::CloudController
           space = Space.make(organization:)
           private_broker = ServiceBroker.make(space:)
           service = Service.make service_broker: private_broker, active: true
-          plan = ServicePlan.make(service:)
+          plan = ServicePlan.make(service: service, public: false)
 
           expect do
             ServicePlanVisibility.create service_plan: plan, organization: organization
           end.to raise_error Sequel::ValidationFailed, 'service_plan is from a private broker'
+        end
+      end
+
+      context 'when the service plan visibility is for a public plan' do
+        it 'returns a validation error' do
+          organization = Organization.make
+          private_broker = ServiceBroker.make
+          service = Service.make service_broker: private_broker, active: true
+          plan = ServicePlan.make(service: service, public: true)
+
+          expect do
+            ServicePlanVisibility.create service_plan: plan, organization: organization
+          end.to raise_error Sequel::ValidationFailed, 'service_plan is publicly available'
         end
       end
     end

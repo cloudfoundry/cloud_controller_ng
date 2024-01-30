@@ -18,14 +18,14 @@ module VCAP::CloudController
     let!(:org2) { Organization.make }
 
     let!(:plan_1) do
-      plan = ServicePlan.make
+      plan = ServicePlan.make(public: false)
       ServicePlanVisibility.make(service_plan: plan, organization: org1)
       ServicePlanVisibility.make(service_plan: plan, organization: org2)
       plan
     end
 
     let!(:plan_2) do
-      plan = ServicePlan.make
+      plan = ServicePlan.make(public: false)
       ServicePlanVisibility.make(service_plan: plan, organization: org2)
       plan
     end

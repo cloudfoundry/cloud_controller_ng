@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     describe 'POST /v2/service_plan_visibilities' do
       let!(:organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make }
+      let!(:service_plan) { ServicePlan.make(public: false) }
 
       it 'creates the service plan visibility' do
         params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
@@ -97,7 +97,7 @@ module VCAP::CloudController
     describe 'PUT /v2/service_plan_visibilities/:guid' do
       let!(:organization) { Organization.make }
       let!(:new_organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make }
+      let!(:service_plan) { ServicePlan.make(public: false) }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
       it 'updates the service plan visibility' do
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/service_plan_visibilities/:guid' do
       let!(:organization) { Organization.make }
-      let!(:service_plan) { ServicePlan.make }
+      let!(:service_plan) { ServicePlan.make(public: false) }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
       it 'deletes the service plan visibility' do

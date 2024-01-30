@@ -566,7 +566,7 @@ module VCAP::CloudController
   end
 
   ServicePlanVisibility.blueprint do
-    service_plan { ServicePlan.make }
+    service_plan { ServicePlan.make(public: false) }
     organization { Organization.make }
   end
 

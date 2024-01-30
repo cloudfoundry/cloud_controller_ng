@@ -25,7 +25,7 @@ module VCAP::CloudController
       let!(:private_domain_2) { PrivateDomain.make(owning_organization: org_2) }
       let!(:service_broker) { ServiceBroker.make }
       let!(:service) { Service.make(service_broker:) }
-      let!(:service_plan) { ServicePlan.make(service:) }
+      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
       let!(:service_plan_visibility) do
         ServicePlanVisibility.make(organization_guid: org_1.guid, service_plan_guid: service_plan.guid)
       end
