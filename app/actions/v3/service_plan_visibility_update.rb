@@ -15,16 +15,13 @@ module VCAP::CloudController
 
         service_plan.db.transaction do
           service_plan.lock!
-
           service_plan.public = public?(type)
-
+          service_plan.save
           if org?(type)
             update_service_plan_visibilities(service_plan, requested_org_guids, append_organizations)
           else
             service_plan.remove_all_service_plan_visibilities
           end
-
-          service_plan.save
         end
 
         service_plan.reload

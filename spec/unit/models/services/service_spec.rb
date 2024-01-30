@@ -211,12 +211,12 @@ module VCAP::CloudController
 
     describe '#purge' do
       let!(:event_repository) { double(Repositories::ServiceUsageEventRepository) }
-      let!(:service_plan) { ServicePlan.make(service:) }
+      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
       let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan:) }
       let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
       let!(:service_binding) { ServiceBinding.make(service_instance:) }
 
-      let!(:service_plan_2) { ServicePlan.make(service:) }
+      let!(:service_plan_2) { ServicePlan.make(service: service, public: false) }
       let!(:service_plan_visibility_2) { ServicePlanVisibility.make(service_plan: service_plan_2) }
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }

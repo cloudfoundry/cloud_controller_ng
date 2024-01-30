@@ -7,7 +7,7 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :service }
       it { is_expected.to have_associated :service_instances, class: ManagedServiceInstance }
-      it { is_expected.to have_associated :service_plan_visibilities }
+      it { is_expected.to have_associated :service_plan_visibilities, { test_instance: ServicePlan.make(public: false) } }
       it { is_expected.to have_associated :labels, class: ServicePlanLabelModel }
       it { is_expected.to have_associated :annotations, class: ServicePlanAnnotationModel }
     end
@@ -153,7 +153,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:service_plan) { ServicePlan.make }
+      let(:service_plan) { ServicePlan.make(public: false) }
 
       it 'destroys associated dependencies' do
         service_plan_visibility = ServicePlanVisibility.make(service_plan:)

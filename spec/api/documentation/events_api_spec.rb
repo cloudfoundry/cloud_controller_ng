@@ -134,7 +134,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
 
     let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
     let(:test_service) { VCAP::CloudController::Service.make(service_broker: test_broker) }
-    let(:test_plan) { VCAP::CloudController::ServicePlan.make(service: test_service) }
+    let(:test_plan) { VCAP::CloudController::ServicePlan.make(service: test_service, public: false) }
     let(:test_plan_visibility) do
       VCAP::CloudController::ServicePlanVisibility.make(organization_guid: test_organization.guid, service_plan_guid: test_plan.guid)
     end
