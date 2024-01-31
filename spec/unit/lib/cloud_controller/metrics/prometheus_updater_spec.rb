@@ -4,7 +4,11 @@ require 'cloud_controller/metrics/prometheus_updater'
 module VCAP::CloudController::Metrics
   RSpec.describe PrometheusUpdater do
     let(:updater) { PrometheusUpdater.new(prom_client) }
-    let(:prom_client) { Prometheus::Client::Registry.new }
+    let(:tmpdir) { Dir.mktmpdir }
+    let(:prom_client) do
+      Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: tmpdir)
+      Prometheus::Client::Registry.new
+    end
 
     describe 'Prometheus creation guards work correctly' do
       # This might look to be a duplicate of 'records the current number of deployments that are DEPLOYING'
