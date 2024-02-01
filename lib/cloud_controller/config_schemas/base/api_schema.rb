@@ -35,6 +35,8 @@ module VCAP::CloudController
             app_domains: Array,
             disable_private_domain_cross_space_context_path_route_sharing: bool,
 
+            cpu_weight_min_memory: Integer,
+            cpu_weight_max_memory: Integer,
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
             default_app_log_rate_limit_in_bytes_per_second: Integer,

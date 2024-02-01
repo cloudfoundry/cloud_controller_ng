@@ -156,6 +156,8 @@ module VCAP::CloudController
 
             perform_blob_cleanup: bool,
 
+            cpu_weight_min_memory: Integer,
+            cpu_weight_max_memory: Integer,
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
             instance_file_descriptor_limit: Integer,

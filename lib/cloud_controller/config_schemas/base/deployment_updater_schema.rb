@@ -52,6 +52,8 @@ module VCAP::CloudController
               optional(:pbkdf2_hmac_iterations) => Integer
             },
 
+            cpu_weight_min_memory: Integer,
+            cpu_weight_max_memory: Integer,
             default_app_memory: Integer,
             default_app_disk_in_mb: Integer,
             maximum_app_disk_in_mb: Integer,
