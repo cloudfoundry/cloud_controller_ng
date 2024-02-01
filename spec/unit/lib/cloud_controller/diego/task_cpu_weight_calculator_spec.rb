@@ -41,7 +41,6 @@ module VCAP::CloudController
           TestConfig.override(cpu_weight_max_memory: 16_384)
         end
 
-        # let(:calculator) { TaskCpuWeightCalculator.new(memory, TestConfig.config_instance) }
         let(:calculator) { TaskCpuWeightCalculator.new(memory_in_mb: memory) }
 
         context 'when the memory limit is between the minimum value and maximum default values' do
