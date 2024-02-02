@@ -1605,7 +1605,7 @@ RSpec.describe 'v3 service credential bindings' do
           it 'rolls back the transaction' do
             api_call.call(admin_headers)
 
-            expect(service_instance.has_keys?).to be_falsey
+            expect(service_instance.service_keys.count).to eq(0)
           end
         end
       end
@@ -1839,7 +1839,7 @@ RSpec.describe 'v3 service credential bindings' do
         it 'rolls back the transaction' do
           api_call.call(admin_headers)
 
-          expect(service_instance.has_keys?).to be_falsey
+          expect(service_instance.service_keys.count).to eq(0)
         end
       end
     end
