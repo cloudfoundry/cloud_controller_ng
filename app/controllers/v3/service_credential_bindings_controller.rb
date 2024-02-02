@@ -181,7 +181,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create_key_binding(message, service_instance)
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
-    VCAP::CloudController::ServiceBinding.db.transaction do
+    VCAP::CloudController::ServiceKey.db.transaction do
       binding = action.precursor(service_instance, message:)
 
       pollable_job_guid = enqueue_bind_job(:key, binding.guid, message)

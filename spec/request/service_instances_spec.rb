@@ -1179,7 +1179,7 @@ RSpec.describe 'V3 service instances' do
           allow_any_instance_of(VCAP::CloudController::Jobs::Enqueuer).to receive(:enqueue_pollable).and_raise(Sequel::DatabaseDisconnectError)
         end
 
-        it 'rolls back the transaction' do
+        it 'raises the appropriate error' do
           api_call.call(admin_headers)
 
           expect(last_response).to have_status_code(503)
@@ -1188,6 +1188,12 @@ RSpec.describe 'V3 service instances' do
                                                                  'title' => 'CF-ServiceUnavailable',
                                                                  'code' => 10_015
                                                                }))
+        end
+
+        it 'does not create a service instance in the database' do
+          api_call.call(admin_headers)
+
+          expect(instance).to be_nil
         end
       end
 
