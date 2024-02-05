@@ -1010,7 +1010,7 @@ RSpec.describe 'v3 service route bindings' do
         it 'rolls back the transaction' do
           api_call.call(admin_headers)
 
-          expect(service_instance.service_keys.count).to eq(0)
+          expect(service_instance.routes.count).to eq(0)
         end
       end
     end
