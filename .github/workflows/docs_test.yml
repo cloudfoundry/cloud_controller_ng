@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: hmarr/debug-action@v2
+      - uses: hmarr/debug-action@v3
       - uses: actions/checkout@v4
       - name: Prepare setup
         run: cp -a .ruby-version docs/v3/.ruby-version

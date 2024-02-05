@@ -47,7 +47,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: hmarr/debug-action@v2
+      - uses: hmarr/debug-action@v3
       - name: Checkout code to run the db migration with
         uses: actions/checkout@v4
         with:
@@ -96,7 +96,7 @@ jobs:
         ports:
           - 3306:3306
     steps:
-      - uses: hmarr/debug-action@v2
+      - uses: hmarr/debug-action@v3
       - name: Checkout code to run the db migration with
         uses: actions/checkout@v4
         with:
