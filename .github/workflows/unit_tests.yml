@@ -24,7 +24,7 @@ jobs:
   Rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: hmarr/debug-action@v2
+    - uses: hmarr/debug-action@v3
     - uses: actions/checkout@v4
     - uses: ./.github/workflows/composite/setup
     - name: Run Rubocop
@@ -57,7 +57,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
-    - uses: hmarr/debug-action@v2
+    - uses: hmarr/debug-action@v3
     - uses: actions/checkout@v4
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
@@ -87,7 +87,7 @@ jobs:
         ports:
           - 3306:3306
     steps:
-    - uses: hmarr/debug-action@v2
+    - uses: hmarr/debug-action@v3
     - uses: actions/checkout@v4
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
