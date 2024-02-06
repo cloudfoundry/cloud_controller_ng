@@ -1586,12 +1586,12 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
-        context 'database disconnect error during creation of enqueue bind job' do
+        context 'when db is unavailable' do
           before do
             allow_any_instance_of(ServiceCredentialBindingsController).to receive(:enqueue_bind_job).and_raise(Sequel::DatabaseDisconnectError)
           end
 
-          it 'rolls back the transaction' do
+          it 'raises the appropriate error' do
             api_call.call(admin_headers)
 
             expect(last_response).to have_status_code(503)
@@ -1600,6 +1600,12 @@ RSpec.describe 'v3 service credential bindings' do
                                                                    'title' => 'CF-ServiceUnavailable',
                                                                    'code' => 10_015
                                                                  }))
+          end
+
+          it 'rolls back the transaction' do
+            api_call.call(admin_headers)
+
+            expect(service_instance.service_bindings.count).to eq(0)
           end
         end
       end
@@ -1812,6 +1818,29 @@ RSpec.describe 'v3 service credential bindings' do
         let(:audit) { VCAP::CloudController::Event.last }
 
         it_behaves_like 'service credential binding create endpoint', VCAP::CloudController::ServiceKey, false, 'service_key', 'service_keys'
+      end
+
+      context 'when db is unavailable' do
+        before do
+          allow_any_instance_of(ServiceCredentialBindingsController).to receive(:enqueue_bind_job).and_raise(Sequel::DatabaseDisconnectError)
+        end
+
+        it 'raises the appropriate error' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors']).to include(include({
+                                                                 'detail' => include('Database connection failure'),
+                                                                 'title' => 'CF-ServiceUnavailable',
+                                                                 'code' => 10_015
+                                                               }))
+        end
+
+        it 'rolls back the transaction' do
+          api_call.call(admin_headers)
+
+          expect(service_instance.service_keys.count).to eq(0)
+        end
       end
     end
   end

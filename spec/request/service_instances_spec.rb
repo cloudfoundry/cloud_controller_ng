@@ -1174,6 +1174,29 @@ RSpec.describe 'V3 service instances' do
         end
       end
 
+      describe 'when db is unavailable' do
+        before do
+          allow_any_instance_of(VCAP::CloudController::Jobs::Enqueuer).to receive(:enqueue_pollable).and_raise(Sequel::DatabaseDisconnectError)
+        end
+
+        it 'raises the appropriate error' do
+          api_call.call(admin_headers)
+
+          expect(last_response).to have_status_code(503)
+          expect(parsed_response['errors']).to include(include({
+                                                                 'detail' => include('Database connection failure'),
+                                                                 'title' => 'CF-ServiceUnavailable',
+                                                                 'code' => 10_015
+                                                               }))
+        end
+
+        it 'does not create a service instance in the database' do
+          api_call.call(admin_headers)
+
+          expect(instance).to be_nil
+        end
+      end
+
       describe 'service plan checks' do
         context 'does not exist' do
           let(:service_plan_guid) { 'does-not-exist' }

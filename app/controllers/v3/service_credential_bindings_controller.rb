@@ -66,7 +66,6 @@ class ServiceCredentialBindingsController < ApplicationController
     when 'key'
       unauthorized! unless can_write_to_active_space?(service_instance.space)
       suspended! unless is_space_active?(service_instance.space)
-
       create_key_binding(message, service_instance)
     end
   rescue V3::ServiceCredentialBindingAppCreate::UnprocessableCreate,
@@ -182,10 +181,12 @@ class ServiceCredentialBindingsController < ApplicationController
 
   def create_key_binding(message, service_instance)
     action = V3::ServiceCredentialBindingKeyCreate.new(user_audit_info, message.audit_hash)
-    binding = action.precursor(service_instance, message:)
+    VCAP::CloudController::ServiceKey.db.transaction do
+      binding = action.precursor(service_instance, message:)
 
-    pollable_job_guid = enqueue_bind_job(:key, binding.guid, message)
-    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+      pollable_job_guid = enqueue_bind_job(:key, binding.guid, message)
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job_guid}")
+    end
   end
 
   def build_create_message(params)
