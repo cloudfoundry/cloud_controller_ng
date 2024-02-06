@@ -123,7 +123,7 @@ class SecurityGroupsController < ApplicationController
     unprocessable_space! unless space
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
     suspended! unless permission_queryer.is_space_active?(space.id)
-    unprocessable_space! unless security_group.spaces.include?(space)
+    unprocessable_space! unless security_group.spaces_dataset.where(id: space.id).any?
 
     SecurityGroupUnapply.unapply_running(security_group, space)
 
@@ -140,7 +140,7 @@ class SecurityGroupsController < ApplicationController
     unprocessable_space! unless space
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
     suspended! unless permission_queryer.is_space_active?(space.id)
-    unprocessable_space! unless security_group.staging_spaces.include?(space)
+    unprocessable_space! unless security_group.staging_spaces_dataset.where(id: space.id).any?
 
     SecurityGroupUnapply.unapply_staging(security_group, space)
 

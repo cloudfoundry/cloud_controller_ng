@@ -12,16 +12,21 @@ module VCAP::CloudController
       @fields = fields[:'service_plan.service_offering'].to_set.intersection(self.class.allowed)
     end
 
-    # rubocop:todo Metrics/CyclomaticComplexity
     def decorate(hash, service_instances)
       managed_service_instances = service_instances.select(&:managed_instance?)
       return hash if managed_service_instances.empty?
 
-      hash[:included] ||= {}
-      plans = managed_service_instances.map(&:service_plan).uniq
-      offerings = plans.map(&:service).uniq
+      offerings = Service.
+                  join(:service_plans, service_id: :services__id).
+                  join(:service_instances, service_plan_id: :service_plans__id).
+                  where(service_instances__id: managed_service_instances.map(&:id)).
+                  distinct.
+                  order_by(:services__created_at).
+                  select(:services__label, :services__guid, :services__description, :services__tags, :services__extra, :services__service_broker_id).
+                  all
 
-      hash[:included][:service_offerings] = offerings.sort_by(&:created_at).map do |offering|
+      hash[:included] ||= {}
+      hash[:included][:service_offerings] = offerings.map do |offering|
         offering_view = {}
         offering_view[:name] = offering.name if @fields.include?('name')
         offering_view[:guid] = offering.guid if @fields.include?('guid')
@@ -43,7 +48,6 @@ module VCAP::CloudController
 
       hash
     end
-    # rubocop:enable Metrics/CyclomaticComplexity
 
     private
 

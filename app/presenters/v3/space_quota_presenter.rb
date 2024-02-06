@@ -56,12 +56,12 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def filtered_visible_spaces
-      visible_spaces = if @all_spaces_visible
-                         space_quota.spaces
-                       else
-                         space_quota.spaces.select { |space| @visible_space_guids.include? space.guid }
-                       end
-      visible_spaces.map { |space| { guid: space.guid } }
+      visible_spaces_dataset = if @all_spaces_visible
+                                 space_quota.spaces_dataset
+                               else
+                                 space_quota.spaces_dataset.where(guid: @visible_space_guids)
+                               end
+      visible_spaces_dataset.select_map(:guid).map { |guid| { guid: guid } }
     end
 
     def build_links

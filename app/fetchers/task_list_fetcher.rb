@@ -37,7 +37,8 @@ module VCAP::CloudController
       def filter_app_dataset(message, app_dataset)
         app_dataset = app_dataset.where(space_guid: message.space_guids) if message.requested?(:space_guids)
         if message.requested?(:organization_guids)
-          app_dataset = app_dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+          space_guids_from_orgs = Spaces.join(:organizations, id: :organization_id).where(organization__guid: message.organization_guids).select(:guid)
+          app_dataset = app_dataset.where(space_guid: space_guids_from_orgs)
         end
         app_dataset = app_dataset.where(guid: message.app_guids) if message.requested?(:app_guids)
         app_dataset

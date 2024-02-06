@@ -18,7 +18,7 @@ module VCAP::CloudController
         dataset = dataset.where(name: message.names) if message.requested? :names
 
         if message.requested? :organization_guids
-          org_ids = Organization.where(guid: message.organization_guids).map(:id)
+          org_ids = Organization.where(guid: message.organization_guids).select(:id)
           dataset = dataset.where(organization_id: org_ids)
         end
 

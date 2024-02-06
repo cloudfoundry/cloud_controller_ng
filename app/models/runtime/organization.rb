@@ -259,7 +259,7 @@ module VCAP::CloudController
     end
 
     def isolation_segment_guids
-      isolation_segment_models.map(&:guid)
+      isolation_segment_models_dataset.select_map(:guid)
     end
 
     def has_user?(user)

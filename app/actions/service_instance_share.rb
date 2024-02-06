@@ -54,12 +54,12 @@ module VCAP::CloudController
     end
 
     def validate_name_uniqueness!(service_instance, space)
-      if space.service_instances.map(&:name).include?(service_instance.name)
+      if space.service_instances_dataset.where(name: service_instance.name).any?
         error_msg = "A service instance called #{service_instance.name} already exists in #{space.name}."
         error!(error_msg)
       end
 
-      return unless space.service_instances_shared_from_other_spaces.map(&:name).include?(service_instance.name)
+      return unless space.service_instances_shared_from_other_spaces_dataset.where(name: service_instance.name).any?
 
       error_msg = "A service instance called #{service_instance.name} has already been shared with #{space.name}."
       error!(error_msg)

@@ -47,10 +47,9 @@ module VCAP::CloudController
     end
 
     def has_service_instances?
-      VCAP::CloudController::ServiceInstance.
-        join(:service_plans, id: :service_plan_id).
-        join(:services, id: :service_id).
-        where(services__service_broker_id: id).
+      services_dataset.
+        join(:service_plans, service_id: :services__id).
+        join(:service_instances, service_plan_id: :service_plans__id).
         any?
     end
 

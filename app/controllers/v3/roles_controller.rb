@@ -75,7 +75,7 @@ class RolesController < ApplicationController
 
       if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         org = Organization.find(id: role.organization_id)
-        no_space_role = Role.where(space_id: org.spaces.map(&:id), user_id: role.user_id).empty?
+        no_space_role = Role.where(space_id: org.spaces_dataset.select(:id), user_id: role.user_id).empty?
         unprocessable!('Cannot delete organization_user role while user has roles in spaces in that organization.') unless no_space_role
       end
     end

@@ -239,8 +239,8 @@ class VCAP::CloudController::Permissions
     space = VCAP::CloudController::Space.where(id: space_id).first
 
     space.has_member?(@user) || space.has_supporter?(@user) ||
-      @user.managed_organizations.map(&:id).include?(space.organization_id) ||
-      @user.audited_organizations.map(&:id).include?(space.organization_id)
+      @user.managed_organizations_dataset.where(id: space.organization_id).any? ||
+      @user.audited_organizations_dataset.where(id: space.organization_id).any?
   end
 
   def space_guids_with_readable_routes_query
