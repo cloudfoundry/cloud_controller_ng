@@ -53,6 +53,8 @@ Sequel.migration do
   up do
     (annotation_tables + label_tables).each do |table|
       transaction do
+        run 'SET work_mem = 65536;' if database_type == :postgres
+
         # Create Temporary table for use later on
         create_table! :"#{table}_temp", temp: true do
           primary_key :id, name: :id
