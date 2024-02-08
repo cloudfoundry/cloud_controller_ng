@@ -85,6 +85,7 @@ module VCAP::CloudController
             newrelic_enabled: bool,
 
             optional(:max_migration_duration_in_minutes) => Integer,
+            optional(:max_migration_statement_runtime_in_seconds) => Integer,
             db: {
               optional(:database) => Hash, # db connection hash for sequel
               max_connections: Integer, # max connections in the connection pool
