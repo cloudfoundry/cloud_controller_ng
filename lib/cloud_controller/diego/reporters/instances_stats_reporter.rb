@@ -120,7 +120,6 @@ module VCAP::CloudController
 
         [@logstats_client.container_metrics(
           source_guid: source_guid,
-          auth_token: VCAP::CloudController::SecurityContext.auth_token,
           logcache_filter: filter
         ), nil]
       rescue GRPC::BadStatus, CloudController::Errors::ApiError => e

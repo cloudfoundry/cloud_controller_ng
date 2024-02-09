@@ -10,7 +10,7 @@ module Logcache
       @logcache_client = logcache_client
     end
 
-    def container_metrics(source_guid:, logcache_filter:, auth_token: nil)
+    def container_metrics(source_guid:, logcache_filter:)
       now = Time.now
       start_time = TimeUtils.to_nanoseconds(now - 2.minutes)
       end_time = TimeUtils.to_nanoseconds(now)

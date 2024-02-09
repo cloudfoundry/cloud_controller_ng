@@ -110,9 +110,8 @@ module VCAP::CloudController
         before do
           allow(bbs_instances_client).to receive_messages(lrp_instances: bbs_actual_lrps_response, desired_lrp_instance: bbs_desired_lrp_response)
           allow(log_cache_client).to receive(:container_metrics).
-            with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
+            with(source_guid: process.app.guid, logcache_filter: anything).
             and_return(log_cache_response)
-          allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
         end
 
         it 'returns a map of stats & states per index in the correct units' do
@@ -197,7 +196,7 @@ module VCAP::CloudController
           it 'gets metrics for the process and does not filter on the source_id' do
             expect(log_cache_client).
               to receive(:container_metrics).
-              with(auth_token: 'my-token', source_guid: process.guid, logcache_filter: anything).
+              with(source_guid: process.guid, logcache_filter: anything).
               and_return(log_cache_response)
 
             expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
@@ -385,7 +384,7 @@ module VCAP::CloudController
 
             before do
               allow(log_cache_client).to receive(:container_metrics).
-                with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
+                with(source_guid: process.app.guid, logcache_filter: anything).
                 and_raise(error)
               allow(instances_reporter).to receive(:logger).and_return(mock_logger)
             end
@@ -434,7 +433,7 @@ module VCAP::CloudController
 
           before do
             allow(log_cache_client).to receive(:container_metrics).
-              with(auth_token: 'my-token', source_guid: process.app.guid, logcache_filter: anything).
+              with(source_guid: process.app.guid, logcache_filter: anything).
               and_raise(error)
             allow(instances_reporter).to receive(:logger).and_return(mock_logger)
           end
