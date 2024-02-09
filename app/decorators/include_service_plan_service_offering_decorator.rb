@@ -7,10 +7,10 @@ module VCAP::CloudController
 
       def decorate(hash, service_plans)
         hash[:included] ||= {}
-        service_offerings = Service.where(id: service_plans.map(&:service_id).uniq).
+        service_offerings = Service.where(id: service_plans.map(&:service_id).uniq).order(:created_at).
                             eager(Presenters::V3::ServiceOfferingPresenter.associated_resources).all
 
-        hash[:included][:service_offerings] = service_offerings.sort_by(&:created_at).map do |service_offering|
+        hash[:included][:service_offerings] = service_offerings.map do |service_offering|
           Presenters::V3::ServiceOfferingPresenter.new(service_offering).to_hash
         end
 

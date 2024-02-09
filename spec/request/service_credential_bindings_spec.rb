@@ -424,13 +424,25 @@ RSpec.describe 'v3 service credential bindings' do
           expect(guids).to contain_exactly(app_binding.app.guid, other_app_binding.app.guid)
         end
 
-        it 'can include `service_instance`' do
-          get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
-          expect(last_response).to have_status_code(200)
+        context 'when including `service_instance`' do
+          it 'includes service instances' do
+            get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
+            expect(last_response).to have_status_code(200)
 
-          expect(parsed_response['included']['service_instances']).to have(2).items
-          guids = parsed_response['included']['service_instances'].pluck('guid')
-          expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+            expect(parsed_response['included']['service_instances']).to have(2).items
+            guids = parsed_response['included']['service_instances'].pluck('guid')
+            expect(guids).to contain_exactly(instance.guid, other_instance.guid)
+          end
+
+          it 'eagerly loads service_instances to efficiently access service_instance_guid - only relevant for service keys' do
+            expect(VCAP::CloudController::IncludeBindingServiceInstanceDecorator).to receive(:decorate) do |_, bindings|
+              expect(bindings).not_to be_empty
+              bindings.each { |b| expect(b.associations).to include(:service_instance) if b.instance_of?(VCAP::CloudController::ServiceKey) }
+            end
+
+            get '/v3/service_credential_bindings?include=service_instance', nil, admin_headers
+            expect(last_response).to have_status_code(200)
+          end
         end
 
         it 'returns a 400 for invalid includes' do

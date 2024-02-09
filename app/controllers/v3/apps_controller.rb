@@ -37,16 +37,20 @@ class AppsV3Controller < ApplicationController
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = if permission_queryer.can_read_globally?
-                AppListFetcher.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
-              else
-                AppListFetcher.fetch(message, permission_queryer.readable_space_guids,
-                                     eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)
-              end
+    eager_loaded_associations = Presenters::V3::AppPresenter.associated_resources
 
     decorators = []
     decorators << IncludeSpaceDecorator if IncludeSpaceDecorator.match?(message.include)
-    decorators << IncludeOrganizationDecorator if IncludeOrganizationDecorator.match?(message.include)
+    if IncludeOrganizationDecorator.match?(message.include)
+      decorators << IncludeOrganizationDecorator
+      eager_loaded_associations << :space
+    end
+
+    dataset = if permission_queryer.can_read_globally?
+                AppListFetcher.fetch_all(message, eager_loaded_associations:)
+              else
+                AppListFetcher.fetch(message, permission_queryer.readable_space_guids, eager_loaded_associations:)
+              end
 
     page_results = SequelPaginator.new.get_page(dataset, message.try(:pagination_options))
     handle_order_by_presented_value(page_results)
