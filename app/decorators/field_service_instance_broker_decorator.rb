@@ -16,11 +16,18 @@ module VCAP::CloudController
       managed_service_instances = service_instances.select(&:managed_instance?)
       return hash if managed_service_instances.empty?
 
-      hash[:included] ||= {}
-      plans = managed_service_instances.map(&:service_plan).uniq
-      brokers = plans.map(&:service_broker).uniq
+      brokers = ServiceBroker.
+                join(:services, service_broker_id: :service_brokers__id).
+                join(:service_plans, service_id: :services__id).
+                join(:service_instances, service_plan_id: :service_plans__id).
+                where(service_instances__id: managed_service_instances.map(&:id)).
+                distinct.
+                order_by(:service_brokers__created_at).
+                select(:service_brokers__name, :service_brokers__guid, :service_brokers__created_at).
+                all
 
-      hash[:included][:service_brokers] = brokers.sort_by(&:created_at).map do |broker|
+      hash[:included] ||= {}
+      hash[:included][:service_brokers] = brokers.map do |broker|
         broker_view = {}
         broker_view[:name] = broker.name if @fields.include?('name')
         broker_view[:guid] = broker.guid if @fields.include?('guid')
