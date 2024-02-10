@@ -68,6 +68,7 @@ module VCAP::CloudController
           container_metric_batch = ::Logcache::ContainerMetricBatch.new
           container_metric_batch.instance_index = 0
           container_metric_batch.cpu_percentage = 3.92
+          container_metric_batch.cpu_entitlement_percentage = 80.0
           container_metric_batch.memory_bytes = 564
           container_metric_batch.disk_bytes = 5000
           container_metric_batch.memory_bytes_quota = 1234
@@ -97,6 +98,7 @@ module VCAP::CloudController
                 usage: {
                   time: formatted_current_time,
                   cpu: 0.0392,
+                  cpu_entitlement: 0.8,
                   mem: 564,
                   disk: 5000,
                   log_rate: 5
@@ -147,7 +149,7 @@ module VCAP::CloudController
           expected_envelope = Loggregator::V2::Envelope.new(
             source_id: process.app.guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'percentage', value: 10),
                                                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                                                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12)
                                               }),
@@ -159,7 +161,7 @@ module VCAP::CloudController
           other_envelope = Loggregator::V2::Envelope.new(
             source_id: process.app.guid,
             gauge: Loggregator::V2::Gauge.new(metrics: {
-                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+                                                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'percentage', value: 13),
                                                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
                                                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10)
                                               }),
@@ -184,6 +186,7 @@ module VCAP::CloudController
             container_metric_batch = ::Logcache::ContainerMetricBatch.new
             container_metric_batch.instance_index = 0
             container_metric_batch.cpu_percentage = 3.92
+            container_metric_batch.cpu_entitlement_percentage = 80.0
             container_metric_batch.memory_bytes = 564
             container_metric_batch.disk_bytes = 5000
             container_metric_batch.log_rate = 5
@@ -238,14 +241,42 @@ module VCAP::CloudController
             [container_metric_batch]
           end
 
-          it 'sets all the stats to zero' do
+          it 'sets all the stats to their nullish value' do
             result, = instances_reporter.stats_for_app(process)
             expect(result[0][:stats][:usage]).to eq({
                                                       time: formatted_current_time,
                                                       cpu: 0,
+                                                      cpu_entitlement: nil,
                                                       mem: 0,
                                                       disk: 0,
                                                       log_rate: 0
+                                                    })
+          end
+        end
+
+        context 'when log cache returns a response without cpu_entitlement' do
+          let(:log_cache_response) do
+            container_metric_batch = ::Logcache::ContainerMetricBatch.new
+            container_metric_batch.instance_index = 0
+            container_metric_batch.cpu_percentage = 3.92
+            container_metric_batch.memory_bytes = 564
+            container_metric_batch.disk_bytes = 5_000
+            container_metric_batch.memory_bytes_quota = 1_234
+            container_metric_batch.disk_bytes_quota = 10_234
+            container_metric_batch.log_rate = 5
+            container_metric_batch.log_rate_limit = 10
+            [container_metric_batch]
+          end
+
+          it 'sets cpu_entitlement to nil while passing through other metrics' do
+            result, = instances_reporter.stats_for_app(process)
+            expect(result[0][:stats][:usage]).to eq({
+                                                      time: formatted_current_time,
+                                                      cpu: 0.0392,
+                                                      cpu_entitlement: nil,
+                                                      mem: 564,
+                                                      disk: 5000,
+                                                      log_rate: 5
                                                     })
           end
         end
@@ -347,6 +378,7 @@ module VCAP::CloudController
               expect(result[0][:stats][:usage]).to eq({
                                                         time: formatted_current_time,
                                                         cpu: 0,
+                                                        cpu_entitlement: nil,
                                                         mem: 0,
                                                         disk: 0,
                                                         log_rate: 0
