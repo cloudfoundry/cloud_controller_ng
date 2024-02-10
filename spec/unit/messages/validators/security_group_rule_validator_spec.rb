@@ -49,9 +49,9 @@ module VCAP::CloudController::Validators
       it 'returns indexed errors corresponding to each invalid rule' do
         expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
-        expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+        expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
         expect(subject.errors.full_messages).to include "Rules[1]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
-        expect(subject.errors.full_messages).to include 'Rules[1]: destination must be a valid CIDR, IP address, or IP address range'
+        expect(subject.errors.full_messages).to include 'Rules[1]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
       end
     end
 
@@ -97,6 +97,40 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'the destination is valid comma-delimited list' do
+        context 'of CIDRs' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.0.0.0/8,192.168.0.0/16',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the destination' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'of a CIDR, a range and an IP address' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the chimeric destination' do
+            expect(subject).to be_valid
+          end
+        end
+      end
+
       context 'the destination is not a string' do
         let(:rules) do
           [
@@ -125,23 +159,41 @@ module VCAP::CloudController::Validators
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
         end
       end
 
       context 'when the destination field contains whitespace' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '10.10.10.10 '
-            }
-          ]
+        context 'in a single destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '    10.10.10.10'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+          end
         end
 
-        it 'adds an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+        context 'in a comma-delimited destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '    10.10.10.10   ,   192.168.17.12'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+          end
         end
       end
 
@@ -174,7 +226,7 @@ module VCAP::CloudController::Validators
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
         end
       end
 
@@ -183,14 +235,14 @@ module VCAP::CloudController::Validators
           [
             {
               protocol: 'udp',
-              destination: '192.168.10.2-192.168.5.254'
+              destination: '9.9.9.9-0.0.0.0'
             }
           ]
         end
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
         end
       end
 

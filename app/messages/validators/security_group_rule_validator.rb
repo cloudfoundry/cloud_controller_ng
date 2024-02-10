@@ -11,6 +11,24 @@ class RulesValidator < ActiveModel::Validator
     type
   ].freeze
 
+  def initialize(options)
+    super
+
+    conf = VCAP::CloudController::Config.config
+    p conf
+    @config = conf
+  end
+
+  # def config=(value)
+  #   if @config == nil
+  #     @config=value
+  #   end
+  # end
+
+  # def config
+  #   @config || raise('config not set')
+  # end
+
   def validate(record)
     unless record.rules.is_a?(Array)
       record.errors.add :rules, 'must be an array'
@@ -115,7 +133,7 @@ class RulesValidator < ActiveModel::Validator
 
   def valid_destination_type(destination, record, index)
     if destination.nil?
-      add_rule_error('destination must be a valid CIDR, IP address, or IP address range', record, index)
+      add_rule_error('nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges', record, index)
       return false
     end
     unless destination.is_a?(String)
@@ -131,21 +149,38 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def validate_destination(destination, record, index)
-    address_list = destination.split('-')
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
 
-    if address_list.length == 1
-      add_rule_error(error_message, record, index) unless parse_ip(address_list.first)
+    # require 'pry'; binding.pry
+    # config = VCAP::CloudController::Config.config
+    # enable_comma_delimited_ips = config.get(:message_validators, :security_groups, :enable_comma_delimited_ips)
 
-    elsif address_list.length == 2
-      ipv4s = parse_ip(address_list)
-      return add_rule_error(error_message, record, index) unless ipv4s
+    enable_comma_delimited_ips = @config.get(:message_validators, :security_groups, :enable_comma_delimited_ips)
 
-      sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
-      add_rule_error(error_message, record, index) unless ipv4s.first == sorted_ipv4s.first
-
+    if enable_comma_delimited_ips && !destination.index(',').nil?
+      validate_comma_delimited_destination(destination, record, index)
     else
-      add_rule_error(error_message, record, index)
+      address_list = destination.split('-')
+
+      if address_list.length == 1
+        add_rule_error(error_message, record, index) unless parse_ip(address_list.first)
+
+      elsif address_list.length == 2
+        ipv4s = parse_ip(address_list)
+        return add_rule_error('destination IP address range is invalid', record, index) unless ipv4s
+
+        sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
+        reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+        add_rule_error(reversed_range_error, record, index) unless ipv4s.first == sorted_ipv4s.first
+      else
+        add_rule_error(error_message, record, index)
+      end
+    end
+  end
+
+  def validate_comma_delimited_destination(destination, record, index)
+    destination.split(',').each do |dest|
+      validate_destination(dest, record, index)
     end
   end
 

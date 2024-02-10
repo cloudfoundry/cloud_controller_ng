@@ -366,7 +366,13 @@ module VCAP::CloudController
               dataset: String
             },
 
-            update_metric_tags_on_rename: bool
+            update_metric_tags_on_rename: bool,
+
+            message_validators: {
+              security_groups: {
+                enable_comma_delimited_ips: bool
+              }
+            }
           }
         end
         # rubocop:enable Metrics/BlockLength
