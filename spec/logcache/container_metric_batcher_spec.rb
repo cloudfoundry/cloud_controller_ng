@@ -100,8 +100,6 @@ RSpec.describe Logcache::ContainerMetricBatcher do
       let(:filter) { ->(e) { e.gauge.metrics['cpu'].value == 10 } }
 
       it 'filters envelopes' do
-        subject
-
         expect(subject).to have(1).items
         expect(subject.first.instance_index).to eq(1)
         expect(subject.first.cpu_percentage).to eq(10)

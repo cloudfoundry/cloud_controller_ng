@@ -88,6 +88,7 @@ module VCAP::CloudController
         {
           time: formatted_current_time,
           cpu: 0,
+          cpu_entitlement: nil,
           mem: 0,
           disk: 0,
           log_rate: 0
@@ -133,6 +134,7 @@ module VCAP::CloudController
 
       def converted_container_metrics(container_metrics, formatted_current_time)
         cpu = container_metrics.cpu_percentage
+        cpu_entitlement = container_metrics.cpu_entitlement_percentage.nil? ? nil : container_metrics.cpu_entitlement_percentage / 100
         mem = container_metrics.memory_bytes
         disk = container_metrics.disk_bytes
         log_rate = container_metrics.log_rate
@@ -143,6 +145,7 @@ module VCAP::CloudController
           {
             time: formatted_current_time,
             cpu: cpu / 100,
+            cpu_entitlement: cpu_entitlement,
             mem: mem,
             disk: disk,
             log_rate: log_rate
