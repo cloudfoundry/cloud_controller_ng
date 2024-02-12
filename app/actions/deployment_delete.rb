@@ -2,10 +2,11 @@ module VCAP::CloudController
   class DeploymentDelete
     class << self
       def delete(deployments)
-        deployments.each do |deployment|
-          deployment.historical_related_processes.map(&:destroy)
-          deployment.destroy
-        end
+        deployments.delete
+      end
+
+      def delete_for_app(guid)
+        DeploymentModel.where(app_guid: guid).delete
       end
     end
   end

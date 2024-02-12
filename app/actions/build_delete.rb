@@ -4,12 +4,11 @@ module VCAP::CloudController
       @cancel_action = cancel_action
     end
 
-    def delete(builds)
-      builds = Array(builds)
+    def delete_for_app(guid)
+      builds_in_staging_state = BuildModel.where(app_guid: guid, state: BuildModel::STAGING_STATE).all
+      @cancel_action.cancel(builds_in_staging_state)
 
-      @cancel_action.cancel(builds)
-
-      builds.each(&:destroy)
+      BuildModel.where(app_guid: guid).delete
     end
   end
 end
