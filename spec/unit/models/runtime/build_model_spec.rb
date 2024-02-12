@@ -53,24 +53,6 @@ module VCAP::CloudController
         expect(build_model.lifecycle_data).to eq(lifecycle_data)
       end
 
-      context 'kpack' do
-        let(:kpack_lifecycle_data) do
-          KpackLifecycleDataModel.make(
-            build: build_model
-          )
-        end
-
-        before do
-          build_model.buildpack_lifecycle_data = nil
-          build_model.kpack_lifecycle_data = kpack_lifecycle_data
-          build_model.save
-        end
-
-        it 'returns kpack_lifecycle_data if it is on the model' do
-          expect(build_model.lifecycle_data).to eq(kpack_lifecycle_data)
-        end
-      end
-
       it 'is a persistable hash' do
         expect(build_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
         expect(build_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)

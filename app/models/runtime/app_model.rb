@@ -88,7 +88,6 @@ module VCAP::CloudController
 
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
-      return kpack_lifecycle_data if kpack_lifecycle_data
 
       DockerLifecycleDataModel.new
     end

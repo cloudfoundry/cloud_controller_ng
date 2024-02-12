@@ -83,7 +83,6 @@ module VCAP::CloudController
 
         before do
           droplet_model.buildpack_lifecycle_data = nil
-          droplet_model.kpack_lifecycle_data = nil
           droplet_model.save
         end
 
@@ -136,15 +135,6 @@ module VCAP::CloudController
           droplet_model.save
         end
 
-        it 'returns kpack_lifecycle_data if it is on the model' do
-          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
-        end
-
-        it 'is a persistable hash' do
-          expect(droplet_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
-          expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
-        end
-
         it 'deletes the dependent kpack_lifecycle_data_models when a droplet is deleted' do
           expect do
             droplet_model.destroy
@@ -156,7 +146,6 @@ module VCAP::CloudController
         let(:droplet_model) { DropletModel.make(:docker) }
 
         before do
-          droplet_model.kpack_lifecycle_data = nil
           droplet_model.buildpack_lifecycle_data = nil
           droplet_model.save
         end
