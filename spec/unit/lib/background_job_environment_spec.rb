@@ -39,7 +39,7 @@ RSpec.describe BackgroundJobEnvironment do
     end
 
     def open_port_count
-      `lsof -i -P -n | grep LISTEN | wc -l`.to_i
+      `lsof -i -P -n | grep LISTEN | grep #{Process.pid} | wc -l`.to_i
     end
 
     it 'doesnt attempt to open a readiness port' do
