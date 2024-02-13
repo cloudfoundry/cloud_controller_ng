@@ -558,20 +558,38 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'includes' do
-      it 'can include `space.organization`' do
-        space_1 = VCAP::CloudController::Space.make
-        space_2 = VCAP::CloudController::Space.make
-        generate_space_scoped_plan(space_1)
-        generate_space_scoped_plan(space_2)
+      let(:space_1) { VCAP::CloudController::Space.make }
+      let(:space_2) { VCAP::CloudController::Space.make }
 
-        get '/v3/service_plans?include=space.organization', nil, admin_headers
-        expect(last_response).to have_status_code(200)
+      context 'when including `space.organization`' do
+        before do
+          generate_space_scoped_plan(space_1)
+          generate_space_scoped_plan(space_2)
+        end
 
-        expect(parsed_response['included']['spaces']).to have(2).elements
-        expect(parsed_response['included']['spaces'].pluck('guid')).to contain_exactly(space_1.guid, space_2.guid)
+        it 'includes spaces and organizations' do
+          get '/v3/service_plans?include=space.organization', nil, admin_headers
+          expect(last_response).to have_status_code(200)
 
-        expect(parsed_response['included']['organizations']).to have(2).elements
-        expect(parsed_response['included']['organizations'].pluck('guid')).to contain_exactly(space_1.organization.guid, space_2.organization.guid)
+          expect(parsed_response['included']['spaces']).to have(2).elements
+          expect(parsed_response['included']['spaces'].pluck('guid')).to contain_exactly(space_1.guid, space_2.guid)
+
+          expect(parsed_response['included']['organizations']).to have(2).elements
+          expect(parsed_response['included']['organizations'].pluck('guid')).to contain_exactly(space_1.organization.guid, space_2.organization.guid)
+        end
+
+        it 'eagerly loads services.service_brokers to efficiently access service_broker.space_id' do
+          expect(VCAP::CloudController::IncludeServicePlanSpaceOrganizationDecorator).to receive(:decorate) do |_, service_plans|
+            expect(service_plans).not_to be_empty
+            service_plans.each do |sp|
+              expect(sp.associations).to include(:service)
+              expect(sp.associations[:service].associations).to include(:service_broker)
+            end
+          end
+
+          get '/v3/service_plans?include=space.organization', nil, admin_headers
+          expect(last_response).to have_status_code(200)
+        end
       end
 
       it 'can include `service_offering`' do

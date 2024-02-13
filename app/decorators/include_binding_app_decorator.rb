@@ -8,7 +8,7 @@ module VCAP::CloudController
       def decorate(hash, bindings)
         hash.deep_merge({
                           included: {
-                            apps: apps(bindings).map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
+                            apps: apps(bindings)&.map { |app| Presenters::V3::AppPresenter.new(app).to_hash } || []
                           }
                         })
       end
@@ -16,7 +16,10 @@ module VCAP::CloudController
       private
 
       def apps(bindings)
-        AppModel.where(guid: bindings.pluck(:app_guid).uniq).order(:created_at).
+        app_guids = bindings.pluck(:app_guid).compact.uniq
+        return if app_guids.empty?
+
+        AppModel.where(guid: app_guids).order(:created_at).
           eager(Presenters::V3::AppPresenter.associated_resources).all
       end
     end

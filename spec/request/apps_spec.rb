@@ -1246,6 +1246,22 @@ RSpec.describe 'Apps' do
         expect(parsed_response).not_to have_key('included')
       end
     end
+
+    context 'when including orgs' do
+      before do
+        VCAP::CloudController::AppModel.make
+      end
+
+      it 'eagerly loads spaces to efficiently access space.organization_id' do
+        expect(VCAP::CloudController::IncludeOrganizationDecorator).to receive(:decorate) do |_, resources|
+          expect(resources).not_to be_empty
+          resources.each { |r| expect(r.associations).to include(:space) }
+        end
+
+        get '/v3/apps?include=space.organization', nil, admin_header
+        expect(last_response).to have_status_code(200)
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid' do
