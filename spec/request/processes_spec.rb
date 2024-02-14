@@ -536,7 +536,8 @@ RSpec.describe 'Processes' do
             fds_quota: process.file_descriptors,
             usage: {
               time: usage_time,
-              cpu: 80,
+              cpu: 0.8,
+              cpu_entitlement: 0.1,
               mem: 128,
               disk: 1024,
               log_rate: 1024
@@ -560,7 +561,8 @@ RSpec.describe 'Processes' do
           'details' => 'some-details',
           'usage' => {
             'time' => usage_time,
-            'cpu' => 80,
+            'cpu' => 0.8,
+            'cpu_entitlement' => 0.1,
             'mem' => 128,
             'disk' => 1024,
             'log_rate' => 1024
@@ -604,6 +606,21 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
+
+      context 'cpu entitlement usage is not available' do
+        before do
+          stats_for_process[0][:stats][:usage][:cpu_entitlement] = nil
+        end
+
+        it 'returns cpu entitlement as null' do
+          get "/v3/processes/#{process.guid}/stats", nil, developer_headers
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'][0]['usage']['cpu_entitlement']).to be_nil
         end
       end
     end

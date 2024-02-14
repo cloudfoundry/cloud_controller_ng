@@ -76,6 +76,7 @@ module VCAP::CloudController
                                       {
                                         time: stats[:stats][:usage][:time],
                                         cpu: stats[:stats][:usage][:cpu],
+                                        cpu_entitlement: stats[:stats][:usage][:cpu_entitlement],
                                         mem: stats[:stats][:usage][:mem],
                                         disk: stats[:stats][:usage][:disk],
                                         log_rate: stats[:stats][:usage][:log_rate]
