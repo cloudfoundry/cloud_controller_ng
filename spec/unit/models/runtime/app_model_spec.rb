@@ -302,15 +302,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'kpack_lifecycle_data' do
-        let!(:kpack_lifecycle_data) { KpackLifecycleDataModel.make(app: app_model) }
-
-        it 'returns kpack_lifecycle_data if it is on the model' do
-          expect(app_model.lifecycle_data).to eq(kpack_lifecycle_data)
-        end
-      end
-
-      context 'buildpack_lifecycle_data and kpack_lifecycle_data is nil' do
+      context 'buildpack_lifecycle_data is nil' do
         let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do

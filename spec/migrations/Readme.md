@@ -44,7 +44,7 @@ To create resilient and reliable migrations, follow these guidelines:
        ...
      ].freeze
 
-     no_transactions # IMPORTANT: DISABLE AUTOMATIC TRANSACTION MANAGEMENT BY UP/DOWN/CHANGE BLOCKS.
+     no_transaction # IMPORTANT: DISABLE AUTOMATIC TRANSACTION MANAGEMENT BY UP/DOWN/CHANGE BLOCKS.
 
      up do
        annotation_tables.each do |table|

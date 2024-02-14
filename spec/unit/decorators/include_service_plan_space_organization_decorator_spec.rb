@@ -13,10 +13,20 @@ module VCAP::CloudController
       let!(:space_scoped_plan_1) { generate_space_scoped_plan(space1) }
       let!(:space_scoped_plan_2) { generate_space_scoped_plan(space2) }
 
-      it 'does not add space or orgs for global plan' do
-        hash = described_class.decorate({}, [ServicePlan.make(public: true)])
-        expect(hash[:included][:spaces]).to be_empty
-        expect(hash[:included][:organizations]).to be_empty
+      context 'global plan' do
+        let!(:plans) { [ServicePlan.make(public: true)] }
+
+        it 'does not add space or orgs' do
+          hash = described_class.decorate({}, plans)
+          expect(hash[:included][:spaces]).to be_empty
+          expect(hash[:included][:organizations]).to be_empty
+        end
+
+        it 'does not query the database' do
+          expect do
+            described_class.decorate({}, plans)
+          end.to have_queried_db_times(/select \* from .(spaces|organizations). where/i, 0)
+        end
       end
 
       it 'decorates the given hash with spaces and orgs from service plans' do

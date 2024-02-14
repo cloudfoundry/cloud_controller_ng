@@ -2,14 +2,11 @@ module VCAP::CloudController
   class RevisionDelete
     class << self
       def delete(revisions)
-        Array(revisions).each do |revision|
-          delete_process_commands(revision)
-          revision.destroy
-        end
+        revisions.delete
       end
 
-      def delete_process_commands(revision)
-        revision.process_commands.each(&:destroy)
+      def delete_for_app(guid)
+        RevisionModel.where(app_guid: guid).delete
       end
     end
   end

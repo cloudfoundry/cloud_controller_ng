@@ -336,7 +336,7 @@ GEM
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
     mutex_m (0.2.0)
-    mysql2 (0.5.5)
+    mysql2 (0.5.6)
     net-ssh (7.2.1)
     netaddr (2.0.6)
     netrc (0.11.0)
@@ -409,9 +409,9 @@ GEM
     rbs (2.8.4)
     rdoc (6.6.2)
       psych (>= 4.0.0)
-    redis (5.0.8)
+    redis (5.1.0)
       redis-client (>= 0.17.0)
-    redis-client (0.17.1)
+    redis-client (0.19.1)
       connection_pool
     regexp_parser (2.9.0)
     reline (0.4.1)
@@ -630,7 +630,7 @@ DEPENDENCIES
   mock_redis
   multi_json
   multipart-parser
-  mysql2 (~> 0.5.5)
+  mysql2 (~> 0.5.6)
   net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm

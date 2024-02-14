@@ -1202,6 +1202,16 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         expect(parsed_response['included']['spaces'][0]).to match_json_response(space_response_object)
       end
 
+      it 'eagerly loads users to efficiently access user_guid' do
+        expect(VCAP::CloudController::IncludeRoleUserDecorator).to receive(:decorate) do |_, roles|
+          expect(roles).not_to be_empty
+          roles.each { |r| expect(r.associations).to include(:user) }
+        end
+
+        get('/v3/roles?include=user', nil, admin_header)
+        expect(last_response).to have_status_code(200)
+      end
+
       context 'when there are multiple users with multiple roles' do
         let(:another_user) { VCAP::CloudController::User.make(guid: 'another-user-guid') }
         let(:another_org) { VCAP::CloudController::Organization.make }

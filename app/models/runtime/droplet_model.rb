@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     def lifecycle_data
-      buildpack_lifecycle_data || kpack_lifecycle_data || DockerLifecycleDataModel.new
+      buildpack_lifecycle_data || DockerLifecycleDataModel.new
     end
 
     def in_final_state?

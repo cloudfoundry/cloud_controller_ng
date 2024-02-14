@@ -32,7 +32,6 @@ module VCAP::CloudController
 
     describe 'dataset module' do
       let!(:buildpack_process) { ProcessModel.make }
-      let!(:kpack_process) { ProcessModel.make(:kpack) }
       let!(:docker_process) { ProcessModel.make(:docker) }
 
       describe '#buildpack_type' do
@@ -41,15 +40,9 @@ module VCAP::CloudController
         end
       end
 
-      describe '#kpack_type' do
-        it 'only returns processes associated with a kpack app' do
-          expect(ProcessModel.kpack_type.map(&:name)).to contain_exactly(kpack_process.name)
-        end
-      end
-
       describe '#non_docker_type' do
         it 'only returns processes not associated with a docker app' do
-          expect(ProcessModel.non_docker_type.map(&:name)).to contain_exactly(buildpack_process.name, kpack_process.name)
+          expect(ProcessModel.non_docker_type.map(&:name)).to contain_exactly(buildpack_process.name)
         end
       end
     end
