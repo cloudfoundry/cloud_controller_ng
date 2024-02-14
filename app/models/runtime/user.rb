@@ -7,7 +7,8 @@ module VCAP::CloudController
     no_auto_guid
 
     many_to_many :organizations,
-                 before_remove: :validate_organization_roles
+                 before_remove: :validate_organization_roles,
+                 order: :id
 
     many_to_one :default_space, key: :default_space_id, class: 'VCAP::CloudController::Space'
 
@@ -15,40 +16,47 @@ module VCAP::CloudController
                  class: 'VCAP::CloudController::Organization',
                  join_table: 'organizations_managers',
                  right_key: :organization_id, reciprocal: :managers,
-                 before_add: :validate_organization
+                 before_add: :validate_organization,
+                 order: :id
 
     many_to_many :billing_managed_organizations,
                  class: 'VCAP::CloudController::Organization',
                  join_table: 'organizations_billing_managers',
                  right_key: :organization_id,
                  reciprocal: :billing_managers,
-                 before_add: :validate_organization
+                 before_add: :validate_organization,
+                 order: :id
 
     many_to_many :audited_organizations,
                  class: 'VCAP::CloudController::Organization',
                  join_table: 'organizations_auditors',
                  right_key: :organization_id, reciprocal: :auditors,
-                 before_add: :validate_organization
+                 before_add: :validate_organization,
+                 order: :id
 
     many_to_many :spaces,
                  class: 'VCAP::CloudController::Space',
                  join_table: 'spaces_developers',
-                 right_key: :space_id, reciprocal: :developers
+                 right_key: :space_id, reciprocal: :developers,
+                 order: :id
 
     many_to_many :managed_spaces,
                  class: 'VCAP::CloudController::Space',
                  join_table: 'spaces_managers',
-                 right_key: :space_id, reciprocal: :managers
+                 right_key: :space_id, reciprocal: :managers,
+                 order: :id
 
     many_to_many :audited_spaces,
                  class: 'VCAP::CloudController::Space',
                  join_table: 'spaces_auditors',
-                 right_key: :space_id, reciprocal: :auditors
+                 right_key: :space_id, reciprocal: :auditors,
+                 order: :id
 
     many_to_many :supported_spaces,
                  class: 'VCAP::CloudController::Space',
                  join_table: 'spaces_supporters',
-                 right_key: :space_id, reciprocal: :supporters
+                 right_key: :space_id, reciprocal: :supporters,
+                 order: :id
 
     one_to_many :labels, class: 'VCAP::CloudController::UserLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::UserAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -191,35 +199,35 @@ module VCAP::CloudController
     end
 
     def org_user_org_ids
-      OrganizationUser.where(user_id: id).select(:organization_id)
+      OrganizationUser.where(user_id: id).select(:organization_id).order(:user_id)
     end
 
     def org_manager_org_ids
-      OrganizationManager.where(user_id: id).select(:organization_id)
+      OrganizationManager.where(user_id: id).select(:organization_id).order(:user_id)
     end
 
     def org_billing_manager_org_ids
-      OrganizationBillingManager.where(user_id: id).select(:organization_id)
+      OrganizationBillingManager.where(user_id: id).select(:organization_id).order(:user_id)
     end
 
     def org_auditor_org_ids
-      OrganizationAuditor.where(user_id: id).select(:organization_id)
+      OrganizationAuditor.where(user_id: id).select(:organization_id).order(:user_id)
     end
 
     def space_developer_space_ids
-      SpaceDeveloper.where(user_id: id).select(:space_id)
+      SpaceDeveloper.where(user_id: id).select(:space_id).order(:user_id)
     end
 
     def space_auditor_space_ids
-      SpaceAuditor.where(user_id: id).select(:space_id)
+      SpaceAuditor.where(user_id: id).select(:space_id).order(:user_id)
     end
 
     def space_supporter_space_ids
-      SpaceSupporter.where(user_id: id).select(:space_id)
+      SpaceSupporter.where(user_id: id).select(:space_id).order(:user_id)
     end
 
     def space_manager_space_ids
-      SpaceManager.where(user_id: id).select(:space_id)
+      SpaceManager.where(user_id: id).select(:space_id).order(:user_id)
     end
 
     def visible_users_in_my_orgs
