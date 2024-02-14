@@ -74,6 +74,7 @@ module VCAP::CloudController::Presenters::V3
               usage: {
                 time: '2015-12-08 16:54:48 -0800',
                 cpu: 80,
+                cpu_entitlement: 85,
                 mem: 128,
                 disk: 1024,
                 log_rate: 2048
@@ -97,6 +98,7 @@ module VCAP::CloudController::Presenters::V3
               usage: {
                 time: '2015-03-13 16:54:48 -0800',
                 cpu: 70,
+                cpu_entitlement: 75,
                 mem: 128,
                 disk: 1024,
                 log_rate: 7168
@@ -133,6 +135,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:fds_quota]).to eq(process.file_descriptors)
         expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
                                           cpu: 80,
+                                          cpu_entitlement: 85,
                                           mem: 128,
                                           disk: 1024,
                                           log_rate: 2048 })
@@ -148,6 +151,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:uptime]).to eq(42)
         expect(result[1][:usage]).to eq({ time: '2015-03-13 16:54:48 -0800',
                                           cpu: 70,
+                                          cpu_entitlement: 75,
                                           mem: 128,
                                           disk: 1024,
                                           log_rate: 7168 })
@@ -183,6 +187,7 @@ module VCAP::CloudController::Presenters::V3
                 usage: {
                   time: '2015-12-08 16:54:48 -0800',
                   cpu: 80,
+                  cpu_entitlement: 85,
                   mem: 128,
                   disk: 1024,
                   log_rate: 2048
@@ -221,6 +226,7 @@ module VCAP::CloudController::Presenters::V3
                 usage: {
                   time: '2015-12-08 16:54:48 -0800',
                   cpu: 80,
+                  cpu_entitlement: 85,
                   mem: 128,
                   disk: 1024,
                   log_rate: 2048
@@ -289,6 +295,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[0][:fds_quota]).to eq(process.file_descriptors)
           expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
                                             cpu: 80,
+                                            cpu_entitlement: 85,
                                             mem: 128,
                                             disk: 1024,
                                             log_rate: 2048 })
