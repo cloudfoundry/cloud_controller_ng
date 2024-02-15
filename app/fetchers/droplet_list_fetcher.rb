@@ -44,7 +44,9 @@ module VCAP::CloudController
         droplet_table_name = DropletModel.table_name
 
         if message.requested?(:organization_guids)
-          space_guids_from_orgs = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid)
+          space_guids_from_orgs = Space.join(:organizations, id: :organization_id).
+                                  where(organizations__guid: message.organization_guids).
+                                  select(:spaces__guid)
           dataset = dataset.select_all(droplet_table_name).
                     join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
         end
