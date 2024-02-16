@@ -49,9 +49,9 @@ module VCAP::CloudController::Validators
       it 'returns indexed errors corresponding to each invalid rule' do
         expect(subject).not_to be_valid
         expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
-        expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+        expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         expect(subject.errors.full_messages).to include "Rules[1]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
-        expect(subject.errors.full_messages).to include 'Rules[1]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+        expect(subject.errors.full_messages).to include 'Rules[1]: destination must be a valid CIDR, IP address, or IP address range'
       end
     end
 
@@ -97,39 +97,6 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'the destination is valid comma-delimited list' do
-        context 'of CIDRs' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '10.0.0.0/8,192.168.0.0/16',
-                ports: '8080'
-              }
-            ]
-          end
-
-          it 'accepts the destination' do
-            expect(subject).to be_valid
-          end
-        end
-
-        context 'of a CIDR, a range and an IP address' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
-                ports: '8080'
-              }
-            ]
-          end
-
-          it 'accepts the chimeric destination' do
-            expect(subject).to be_valid
-          end
-        end
-      end
 
       context 'the destination is not a string' do
         let(:rules) do
@@ -159,7 +126,7 @@ module VCAP::CloudController::Validators
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
 
@@ -308,6 +275,81 @@ module VCAP::CloudController::Validators
         it 'accepts the valid CIDR notation' do
           expect(subject).to be_valid
         end
+      end
+
+      context 'comma-delimited destinations are enabled' do
+        before do
+          TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+        end
+
+        context 'the destination is valid comma-delimited list' do
+          context 'of CIDRs' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '10.0.0.0/8,192.168.0.0/16',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'accepts the destination' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'of a CIDR, a range and an IP address' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'accepts the chimeric destination' do
+              expect(subject).to be_valid
+            end
+          end
+        end
+
+        context 'the destination is nil' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: nil,
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws a specific error including mention of comma-delimited destinations' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+          end
+        end
+
+        context 'one of the destinations is invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2/24,1.2',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws a specific error to comma-delimited destinations' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address rang(es)'
+          end
+        end
+
       end
     end
 

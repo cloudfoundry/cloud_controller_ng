@@ -89,6 +89,14 @@ module VCAP::CloudController
 
       context 'validates destination' do
         context 'good' do
+          context 'when it is a valid IP' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1') }
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
           context 'when it is a valid CIDR' do
             let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/0') }
 
@@ -101,6 +109,18 @@ module VCAP::CloudController
             let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1.-2.2.2.2') }
 
             it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when comma-delimited destinations are enabled' do
+            before do
+              TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+            end
+
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '10.10.10.10,1.1.1.1-2.2.2.2,0.0.0.0/0') }
+
+            it 'allows a destination with a valid IP, range, and CIDR' do
               expect(subject).to be_valid
             end
           end
@@ -191,13 +211,31 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the range has more than 2 endpoints' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2-3.3.3.3') }
+          context 'when comma-delimited destinations are NOT enabled' do
+            context 'the range has more than 2 endpoints' do
+              let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2-3.3.3.3') }
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+              it 'is not valid' do
+                expect(subject).not_to be_valid
+                expect(subject.errors[:rules].length).to eq 1
+                expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+              end
+            end
+          end
+
+          context 'when comma-delimited destinations are enabled' do
+            before do
+              TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+            end
+
+            context 'and one of the destinations is bogus' do
+              let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '10.0.0.0,1.1.1.1-2.2.2.2-3.3.3.3') }
+
+              it 'is not valid' do
+                expect(subject).not_to be_valid
+                expect(subject.errors[:rules].length).to eq 1
+                expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+              end
             end
           end
 

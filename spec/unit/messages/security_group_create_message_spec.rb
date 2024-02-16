@@ -145,6 +145,34 @@ module VCAP::CloudController
           end
         end
 
+        context 'when comma-delimited destinations are enabled' do
+          before do
+            TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+          end
+
+          context 'when rules are valid' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '10.10.10.0/24,1.0.0.0-1.0.0.200',
+                  ports: '443,80,8080'
+                },
+                {
+                  protocol: 'icmp',
+                  destination: '10.10.10.0/24,1.1.1.1',
+                  type: 8,
+                  code: 0,
+                }
+              ]
+            end
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+        end
+
         context 'when rules are invalid' do
           let(:rules) do
             [

@@ -10,7 +10,7 @@ module CloudController
       return errs unless errs.empty?
 
       destination = rule['destination']
-      errs << 'contains invalid destination' unless validate_destination(destination)
+      errs << 'contains invalid destination' unless validate_destination_type(destination) && validate_destination(destination)
 
       errs << 'contains invalid log value' if rule.key?('log') && !validate_boolean(rule['log'])
 
@@ -24,31 +24,60 @@ module CloudController
         (rule.keys - (required_fields + optional_fields)).map { |key| "contains the invalid field '#{key}'" }
     end
 
+    def self.validate_destination_type(destination)
+      return false if destination.empty?
+
+      return false unless destination.is_a?(String)
+
+      return false if /\s/ =~ destination
+
+      true
+    end
+
     def self.validate_destination(destination)
-      return false if destination.empty? || /\s/ =~ destination
+      if !destination.index(',').nil?
+        return false unless comma_delimited_destinations_enabled?
+
+        destinations = destination.partition(',')
+        first_destination = destinations.first
+        remainder = destinations.last
+        return validate_destination(first_destination) && validate_destination(remainder)
+      end
 
       address_list = destination.split('-')
 
       return false if address_list.length > 2
 
       if address_list.length == 1
-        NetAddr::IPv4Net.parse(address_list.first)
-        return true
+        return true if parse_ip(address_list.first)
       end
 
-      ipv4s = address_list.map do |address|
-        NetAddr::IPv4.parse(address)
-      end
+      ipv4s = parse_ip(address_list)
+      return false if ipv4s.nil?
+
       sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
       return true if ipv4s.first == sorted_ipv4s.first
 
-      false
-    rescue NetAddr::ValidationError
       false
     end
 
     def self.validate_boolean(bool)
       !!bool == bool
+    end
+
+    def self.parse_ip(val)
+      if val.is_a?(Array)
+        val.map { |ip| NetAddr::IPv4.parse(ip) }
+      else
+        NetAddr::IPv4Net.parse(val)
+      end
+    rescue NetAddr::ValidationError
+      nil
+    end
+
+    def self.comma_delimited_destinations_enabled?
+      config = VCAP::CloudController::Config.config
+      config.get(:message_validators, :security_groups, :enable_comma_delimited_ips)
     end
   end
 end
