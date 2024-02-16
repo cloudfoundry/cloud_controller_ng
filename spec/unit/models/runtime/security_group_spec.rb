@@ -115,7 +115,7 @@ module VCAP::CloudController
 
           context 'when comma-delimited destinations are enabled' do
             before do
-              TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+              TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
             end
 
             let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '10.10.10.10,1.1.1.1-2.2.2.2,0.0.0.0/0') }
@@ -225,7 +225,7 @@ module VCAP::CloudController
 
           context 'when comma-delimited destinations are enabled' do
             before do
-              TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+              TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
             end
 
             context 'and one of the destinations is bogus' do

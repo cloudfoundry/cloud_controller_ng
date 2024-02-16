@@ -77,7 +77,7 @@ module CloudController
 
     def self.comma_delimited_destinations_enabled?
       config = VCAP::CloudController::Config.config
-      config.get(:message_validators, :security_groups, :enable_comma_delimited_ips)
+      config.get(:security_groups, :enable_comma_delimited_destinations)
     end
   end
 end

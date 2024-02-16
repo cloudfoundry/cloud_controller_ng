@@ -395,6 +395,5 @@ custom_metric_tag_prefix_list: ["metric.tag.cloudfoundry.org"]
 max_manifest_service_binding_poll_duration_in_seconds: 60
 update_metric_tags_on_rename: true
 
-message_validators:
-  security_groups:
-    enable_comma_delimited_ips: true
+security_groups:
+  enable_comma_delimited_destinations: false

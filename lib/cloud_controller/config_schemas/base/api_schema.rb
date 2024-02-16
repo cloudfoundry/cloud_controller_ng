@@ -142,6 +142,10 @@ module VCAP::CloudController
             default_staging_security_groups: [String],
             default_running_security_groups: [String],
 
+            security_groups: {
+              enable_comma_delimited_destinations: bool
+            },
+
             resource_pool: {
               maximum_size: Integer,
               minimum_size: Integer,
@@ -368,11 +372,6 @@ module VCAP::CloudController
 
             update_metric_tags_on_rename: bool,
 
-            message_validators: {
-              security_groups: {
-                enable_comma_delimited_ips: bool
-              }
-            }
           }
         end
         # rubocop:enable Metrics/BlockLength

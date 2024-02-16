@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         context 'when comma-delimited destinations are enabled' do
           before do
-            TestConfig.config[:message_validators][:security_groups][:enable_comma_delimited_ips] = true
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
           end
 
           context 'when rules are valid' do
