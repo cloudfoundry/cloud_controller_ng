@@ -31,7 +31,7 @@ module VCAP::CloudController
         space_delete.delete([space])
         expect(VCAP::CloudController::Event.count).to eq(2)
 
-        events = VCAP::CloudController::Event.all
+        events = VCAP::CloudController::Event.order(:id).all
         event = events.last
         expect(event.values).to include(
           type: 'audit.space.delete-request',
@@ -48,7 +48,7 @@ module VCAP::CloudController
         expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
         expect(event.timestamp).to be
 
-        event = VCAP::CloudController::Event.first
+        event = events.first
         expect(event.values).to include(
           type: 'audit.app.delete-request'
         )
