@@ -350,6 +350,26 @@ module VCAP::CloudController::Validators
           end
         end
 
+        context 'all of the destinations are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '1.2-7.8,999.999.999.999,200.0.0.0-150.0.0.0,10.0.0.0/500',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for every destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(4)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address rang(es)'
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+            expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+          end
+        end
+
       end
     end
 
