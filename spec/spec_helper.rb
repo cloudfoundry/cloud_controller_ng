@@ -66,7 +66,6 @@ init_block = proc do
   require 'webmock/rspec'
 
   require 'pry'
-  require 'pry-stack_explorer'
 
   require 'cloud_controller'
   require 'allowy/rspec'
