@@ -35,7 +35,7 @@ module CloudController
     end
 
     def self.validate_destination(destination)
-      if !destination.index(',').nil?
+      unless destination.index(',').nil?
         return false unless comma_delimited_destinations_enabled?
 
         destinations = destination.partition(',')
@@ -46,17 +46,16 @@ module CloudController
 
       address_list = destination.split('-')
 
-      return false if address_list.length > 2
-
       if address_list.length == 1
         return true if parse_ip(address_list.first)
+
+      elsif address_list.length == 2
+        ipv4s = parse_ip(address_list)
+        return false if ipv4s.nil?
+
+        sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
+        return true if ipv4s.first == sorted_ipv4s.first
       end
-
-      ipv4s = parse_ip(address_list)
-      return false if ipv4s.nil?
-
-      sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
-      return true if ipv4s.first == sorted_ipv4s.first
 
       false
     end

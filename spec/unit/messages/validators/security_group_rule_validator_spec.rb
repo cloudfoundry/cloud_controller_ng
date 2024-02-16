@@ -327,8 +327,10 @@ module VCAP::CloudController::Validators
           end
 
           it 'throws a specific error including mention of comma-delimited destinations' do
+            expected_error = 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+
             expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+            expect(subject.errors.full_messages).to include expected_error
           end
         end
 
@@ -365,7 +367,9 @@ module VCAP::CloudController::Validators
             expect(subject.errors.full_messages.length).to equal(4)
             expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address rang(es)'
             expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
-            expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+
+            expected_error = 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+            expect(subject.errors.full_messages).to include expected_error
           end
         end
       end

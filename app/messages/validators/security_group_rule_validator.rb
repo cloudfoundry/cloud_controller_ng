@@ -117,11 +117,9 @@ class RulesValidator < ActiveModel::Validator
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
 
     comma_delimited_destinations_enabled = CloudController::RuleValidator.comma_delimited_destinations_enabled?
-    if comma_delimited_destinations_enabled
-      error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address rang(es)'
-    end
+    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address rang(es)' if comma_delimited_destinations_enabled
 
-    if !destination.index(',').nil?
+    unless destination.index(',').nil?
       unless comma_delimited_destinations_enabled
         add_rule_error(error_message, record, index)
         return
@@ -138,6 +136,7 @@ class RulesValidator < ActiveModel::Validator
 
     if address_list.length == 1
       add_rule_error(error_message, record, index) unless CloudController::RuleValidator.parse_ip(address_list.first)
+
     elsif address_list.length == 2
       ipv4s = CloudController::RuleValidator.parse_ip(address_list)
       return add_rule_error('destination IP address range is invalid', record, index) unless ipv4s
@@ -145,6 +144,7 @@ class RulesValidator < ActiveModel::Validator
       sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
       add_rule_error(reversed_range_error, record, index) unless ipv4s.first == sorted_ipv4s.first
+
     else
       add_rule_error(error_message, record, index)
     end
