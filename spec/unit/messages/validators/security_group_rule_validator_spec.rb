@@ -97,7 +97,6 @@ module VCAP::CloudController::Validators
         end
       end
 
-
       context 'the destination is not a string' do
         let(:rules) do
           [
@@ -369,7 +368,6 @@ module VCAP::CloudController::Validators
             expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
           end
         end
-
       end
     end
 

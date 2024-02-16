@@ -85,6 +85,7 @@ class RulesValidator < ActiveModel::Validator
 
   def valid_ports(ports)
     return false unless ports.is_a?(String)
+
     CloudController::TransportRuleValidator.validate_port(ports)
   end
 

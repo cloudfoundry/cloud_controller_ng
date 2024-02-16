@@ -162,7 +162,7 @@ module VCAP::CloudController
                   protocol: 'icmp',
                   destination: '10.10.10.0/24,1.1.1.1',
                   type: 8,
-                  code: 0,
+                  code: 0
                 }
               ]
             end
