@@ -76,6 +76,7 @@ end
 
 group :operations do
   gem 'pry-byebug'
+  gem 'pry-stack_explorer'
 end
 
 group :test do
