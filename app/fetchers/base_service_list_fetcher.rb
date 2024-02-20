@@ -63,7 +63,7 @@ module VCAP::CloudController
                     end.from_self(alias: klass.table_name)
                   end
 
-        dataset.eager(eager_loaded_associations)
+        dataset.distinct.eager(eager_loaded_associations)
       end
 
       def readable_by_plan_org(dataset, readable_orgs_query)
