@@ -16,6 +16,7 @@ module VCAP::CloudController
             external_protocol: String,
             internal_service_hostname: String,
             optional(:internal_service_port) => Integer,
+            optional(:warn_if_below_min_cli_version) => bool,
             info: {
               name: String,
               build: String,

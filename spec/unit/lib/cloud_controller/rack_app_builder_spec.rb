@@ -216,6 +216,28 @@ module VCAP::CloudController
           expect(CloudFoundry::Middleware::CefLogs).to have_received(:new).with(anything, fake_logger, TestConfig.config_instance.get(:local_route))
         end
       end
+
+      describe 'Below Min Cli Warning' do
+        before do
+          allow(CloudFoundry::Middleware::BelowMinCliWarning).to receive(:new)
+        end
+
+        context 'with min_cf_cli_version and warn flag provided' do
+          before do
+            builder.build(TestConfig.override(info: { min_cli_version: '7.0.0' }, warn_if_below_min_cli_version: true), request_metrics, request_logs).to_app
+          end
+
+          it 'enables the BelowMinCliWarning middleware' do
+            expect(CloudFoundry::Middleware::BelowMinCliWarning).to have_received(:new)
+          end
+        end
+
+        context 'without min_cf_cli_version provided and warn flag' do
+          it 'does not enable the BelowMinCliWarning middleware' do
+            expect(CloudFoundry::Middleware::BelowMinCliWarning).not_to have_received(:new)
+          end
+        end
+      end
     end
   end
 end
