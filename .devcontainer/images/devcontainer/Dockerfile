@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/ruby
+FROM mcr.microsoft.com/vscode/devcontainers/ruby:3.2
 
 COPY --from=docker:dind /usr/local/bin/docker /usr/local/bin/
 COPY .devcontainer/images/devcontainer/setup.sh /tmp/setup.sh
