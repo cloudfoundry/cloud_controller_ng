@@ -17,7 +17,7 @@ module VCAP::CloudController
       spaces = resources.map { |r| r.try(:space) || r }.uniq
       orgs = spaces.map(&:organization).uniq
 
-      hash[:included][:organizations] = orgs.sort_by(&:created_at).map do |org|
+      hash[:included][:organizations] = orgs.sort_by { |o| [o.created_at, o.guid] }.map do |org|
         org_view = {}
         org_view[:name] = org.name if @fields.include?('name')
         org_view[:guid] = org.guid if @fields.include?('guid')

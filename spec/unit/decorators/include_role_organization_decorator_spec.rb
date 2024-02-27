@@ -5,20 +5,22 @@ module VCAP::CloudController
   RSpec.describe IncludeRoleOrganizationDecorator do
     subject(:decorator) { IncludeRoleOrganizationDecorator }
 
-    let(:organization1) { Organization.make(name: 'first-organization') }
+    let(:organization1) { Organization.make(name: 'first-organization', created_at: Time.now.utc - 1.second) }
     let(:organization2) { Organization.make(name: 'second-organization') }
+
     let(:org_user) { OrganizationUser.make(organization: organization1) }
     let(:org_auditor) { OrganizationAuditor.make(organization: organization2) }
     let(:space_manager) { SpaceManager.make }
+
     # roles is an array of VCAP::CloudController::Role objects
     let(:roles) { Role.where(guid: [org_user, org_auditor, space_manager].map(&:guid)).all }
 
-    it 'decorates the given hash with organizations from roles' do
+    it 'decorates the given hash with organizations from roles in the correct order' do
       wreathless_hash = { foo: 'bar' }
       hash = subject.decorate(wreathless_hash, roles)
       expect(hash[:foo]).to eq('bar')
-      expect(hash[:included][:organizations]).to contain_exactly(Presenters::V3::OrganizationPresenter.new(organization1).to_hash,
-                                                                 Presenters::V3::OrganizationPresenter.new(organization2).to_hash)
+      expect(hash[:included][:organizations]).to eq([Presenters::V3::OrganizationPresenter.new(organization1).to_hash,
+                                                     Presenters::V3::OrganizationPresenter.new(organization2).to_hash])
     end
 
     it 'does not overwrite other included fields' do

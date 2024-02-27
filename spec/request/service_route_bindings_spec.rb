@@ -215,7 +215,7 @@ RSpec.describe 'v3 service route bindings' do
 
     describe 'include' do
       context 'when including `service_instance`' do
-        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, created_at: Time.now.utc - 1.second) }
         let(:other_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
 
         before do
@@ -244,7 +244,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       it 'can include `route`' do
-        route = VCAP::CloudController::Route.make
+        route = VCAP::CloudController::Route.make(created_at: Time.now.utc - 1.second)
         other_route = VCAP::CloudController::Route.make
 
         si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)

@@ -15,7 +15,7 @@ module VCAP::CloudController
     def decorate(hash, service_offerings)
       hash[:included] ||= {}
       service_brokers = service_offerings.map(&:service_broker).uniq
-      hash[:included][:service_brokers] = service_brokers.sort_by(&:created_at).map do |broker|
+      hash[:included][:service_brokers] = service_brokers.sort_by { |sb| [sb.created_at, sb.guid] }.map do |broker|
         broker_view = {}
         broker_view[:name] = broker.name if @fields.include?('name')
         broker_view[:guid] = broker.guid if @fields.include?('guid')

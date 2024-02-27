@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       def oldest_web_process_with_instances
-        @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by(&:created_at)
+        @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by { |p| [p.created_at, p.id] }
       end
 
       def interim_web_process

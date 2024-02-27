@@ -11,7 +11,7 @@ module VCAP::CloudController
         hash[:included] ||= {}
         organization_ids = roles.reject(&:for_space?).map(&:organization_id).uniq
         unless organization_ids.empty?
-          organizations = Organization.where(id: organization_ids).order(:created_at).
+          organizations = Organization.where(id: organization_ids).order(:created_at, :guid).
                           eager(Presenters::V3::OrganizationPresenter.associated_resources).all
         end
 

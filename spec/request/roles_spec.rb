@@ -4,8 +4,8 @@ require 'request_spec_shared_examples'
 RSpec.describe 'Roles Request' do
   let(:user) { VCAP::CloudController::User.make(guid: 'user_guid') }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make(guid: 'big-org') }
-  let(:space) { VCAP::CloudController::Space.make(guid: 'big-space', organization: org) }
+  let(:org) { VCAP::CloudController::Organization.make(guid: 'big-org', created_at: Time.now.utc - 1.second) }
+  let(:space) { VCAP::CloudController::Space.make(guid: 'big-space', organization: org, created_at: Time.now.utc - 1.second) }
   let(:user_with_role) { VCAP::CloudController::User.make(guid: 'user_with_role') }
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
@@ -822,7 +822,7 @@ RSpec.describe 'Roles Request' do
 
   describe 'GET /v3/roles' do
     let(:api_call) { ->(user_headers) { get '/v3/roles', nil, user_headers } }
-    let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user-guid') }
+    let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user-guid', created_at: Time.now.utc - 1.second) }
 
     let!(:space_auditor) do
       VCAP::CloudController::SpaceAuditor.make(

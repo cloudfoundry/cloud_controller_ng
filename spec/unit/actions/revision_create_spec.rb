@@ -112,7 +112,7 @@ module VCAP::CloudController
             )
           end.to change { RevisionModel.where(app:).count }.by(1)
 
-          expect(RevisionModel.order_by(:created_at).map(&:version)).to eq([1, 2])
+          expect(RevisionModel.order_by(:created_at, :id).map(&:version)).to eq([1, 2])
         end
 
         it 'rolls over to version 1 when we pass version 9999' do
@@ -130,7 +130,7 @@ module VCAP::CloudController
             commands_by_process_type: { 'web' => 'run my app' },
             user_audit_info: user_audit_info
           )
-          expect(RevisionModel.order_by(:created_at).map(&:version)).to eq([2, 9998, 9999, 1])
+          expect(RevisionModel.order_by(:created_at, :id).map(&:version)).to eq([2, 9998, 9999, 1])
         end
 
         it 'replaces any existing revisions after rolling over' do
@@ -148,7 +148,7 @@ module VCAP::CloudController
             commands_by_process_type: { 'web' => 'run my app' },
             user_audit_info: user_audit_info
           )
-          expect(RevisionModel.order_by(:created_at).map(&:version)).to eq([9998, 9999, 1, 2])
+          expect(RevisionModel.order_by(:created_at, :id).map(&:version)).to eq([9998, 9999, 1, 2])
         end
       end
     end
