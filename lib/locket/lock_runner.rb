@@ -25,13 +25,20 @@ module Locket
       raise Error.new('Cannot start more than once') if @thread
 
       @thread = Thread.new do
+        failed = false
         loop do
           begin
             service.lock(build_lock_request)
-            logger.debug("Acquired lock '#{key}' for owner '#{owner}'")
+            if !@lock_acquired then
+              logger.info("Acquired lock '#{key}' for owner '#{owner}'")
+            end
             @lock_acquired = true
+            failed = false
           rescue GRPC::BadStatus => e
-            logger.debug("Failed to acquire lock '#{key}' for owner '#{owner}': #{e.message}")
+            if !failed then
+              logger.info("Failed to acquire lock '#{key}' for owner '#{owner}': #{e.message}")
+            end
+            failed = true
             @lock_acquired = false
           end
 

@@ -80,33 +80,35 @@ RSpec.describe Locket::LockRunner do
     end
 
     context 'when attempting to acquire a lock' do
-      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
       before do
         allow(Steno).to receive(:logger).and_return(fake_logger)
       end
 
       context 'when it does not acquire a lock' do
-        it 'does not report that it has a lock' do
+        it 'reports it does not have the lock exactly once' do
           error = GRPC::BadStatus.new(GRPC::AlreadyExists)
           client.instance_variable_set(:@lock_acquired, true)
           allow(locket_service).to receive(:lock).and_raise(error)
 
           client.start
 
-          wait_for(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
+          wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
           wait_for(-> { client.lock_acquired? }).to be(false)
+          wait_for(fake_logger).to have_received(:info).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").exactly(:once)
         end
       end
 
       context 'when it does acquire a lock' do
-        it 'reports that it has a lock' do
+        it 'reports that it has a lock exactly once' do
           allow(locket_service).to receive(:lock).and_return(Models::LockResponse)
 
           client.start
 
-          wait_for(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
+          wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
           wait_for(-> { client.lock_acquired? }).to be(true)
+          wait_for(fake_logger).to have_received(:info).with("Acquired lock '#{key}' for owner '#{owner}'").exactly(:once)
         end
       end
     end
