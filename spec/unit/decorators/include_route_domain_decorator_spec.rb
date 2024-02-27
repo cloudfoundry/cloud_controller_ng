@@ -25,11 +25,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches include arrays containing "domain"' do
-        expect(decorator.match?(%w[potato domain turnip])).to be true
+        expect(decorator.match?(%w[potato domain turnip])).to be(true)
       end
 
       it 'does not match other include arrays' do
-        expect(decorator.match?(%w[vegetal turnip])).to be false
+        expect(decorator.match?(%w[vegetal turnip])).not_to be(true)
       end
     end
   end

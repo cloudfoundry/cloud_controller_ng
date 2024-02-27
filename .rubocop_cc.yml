@@ -9,7 +9,6 @@ require:
   - ./spec/linters/migration/require_primary_key.rb
   - ./spec/linters/match_requires_with_includes.rb
 
-
 AllCops:
   TargetRubyVersion: 3.2
   Exclude:
@@ -133,6 +132,7 @@ Rails/SkipsModelValidations: # We don`t want any model at all in migrations and 
   Exclude:
     - db/migrations/*
     - spec/migrations/*
+
 #### ENABLED SECTION
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: true
@@ -448,7 +448,7 @@ Capybara/MatchStyle:
   Enabled: false
 Capybara/NegationMatcher:
   Enabled: false
-Capybara/RedundantWithinFind: # new in 2.20
+Capybara/RedundantWithinFind:
   Enabled: true
 Capybara/SpecificActions:
   Enabled: false
@@ -464,7 +464,7 @@ FactoryBot/AssociationStyle:
   Enabled: true
 FactoryBot/ConsistentParenthesesStyle:
   Enabled: true
-FactoryBot/ExcessiveCreateList: # new in 2.25
+FactoryBot/ExcessiveCreateList:
   Enabled: true
 FactoryBot/FactoryAssociationWithStrategy:
   Enabled: true
@@ -510,6 +510,10 @@ RSpec/ReceiveMessages:
   Enabled: true
 RSpec/RedundantAround:
   Enabled: true
+RSpec/RedundantPredicateMatcher:
+  Enabled: true
+RSpec/RemoveConst:
+  Enabled: true
 RSpec/SkipBlockInsideExample:
   Enabled: true
 RSpec/SortMetadata:
@@ -536,6 +540,7 @@ RSpec/Rails/TravelAround:
   Enabled: true
 Style/SingleLineDoEndBlock:
   Enabled: true
+
 ### Broken Cops that break code
 Lint/ShadowedException: # Brakes "bundle exec rake rubocop" if enabled
   Enabled: false
