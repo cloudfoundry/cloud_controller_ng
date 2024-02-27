@@ -9,7 +9,7 @@ module VCAP::CloudController
         hash[:included] ||= {}
         space_ids = roles.select(&:for_space?).map(&:space_id).uniq
         unless space_ids.empty?
-          spaces = Space.where(id: space_ids).order(:created_at).
+          spaces = Space.where(id: space_ids).order(:created_at, :guid).
                    eager(Presenters::V3::SpacePresenter.associated_resources).all
         end
 

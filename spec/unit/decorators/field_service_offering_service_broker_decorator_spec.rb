@@ -5,7 +5,9 @@ require 'field_decorator_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe FieldServiceOfferingServiceBrokerDecorator do
     describe '.decorate' do
-      let(:offering1) { Service.make }
+      let(:broker1) { ServiceBroker.make(created_at: Time.now.utc - 1.second) }
+
+      let(:offering1) { Service.make(service_broker: broker1) }
       let(:offering2) { Service.make }
 
       it 'decorated the given hash with broker name and guid' do

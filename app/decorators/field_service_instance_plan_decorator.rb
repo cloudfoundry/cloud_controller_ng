@@ -19,7 +19,7 @@ module VCAP::CloudController
       hash[:included] ||= {}
       plans = managed_service_instances.map(&:service_plan).uniq
 
-      hash[:included][:service_plans] = plans.sort_by(&:created_at).map do |plan|
+      hash[:included][:service_plans] = plans.sort_by { |p| [p.created_at, p.guid] }.map do |plan|
         plan_view = {}
         plan_view[:guid] = plan.guid if @fields.include?('guid')
         plan_view[:name] = plan.name if @fields.include?('name')
