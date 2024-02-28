@@ -583,7 +583,7 @@ GEM
     xml-simple (1.1.9)
       rexml
     yajl-ruby (1.4.3)
-    yard (0.9.34)
+    yard (0.9.35)
     zeitwerk (2.6.12)
 
 PLATFORMS
