@@ -57,7 +57,7 @@ yq -i e '.nginx.instance_socket=""' tmp/cloud_controller.yml
 
 yq -i e '.logging.file="tmp/cloud_controller.log"' tmp/cloud_controller.yml
 yq -i e '.telemetry_log_path="tmp/cloud_controller_telemetry.log"' tmp/cloud_controller.yml
-yq -i e '.directories.tmpdir="tmp"' tmp/cloud_controller.yml
+TMPDIR=$(pwd)/tmp yq -i e '.directories.tmpdir=env(TMPDIR)' tmp/cloud_controller.yml;
 yq -i e '.directories.diagnostics="tmp"' tmp/cloud_controller.yml
 yq -i e '.security_event_logging.enabled=true' tmp/cloud_controller.yml
 yq -i e '.security_event_logging.file="tmp/cef.log"' tmp/cloud_controller.yml
