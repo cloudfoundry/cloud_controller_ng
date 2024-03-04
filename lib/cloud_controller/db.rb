@@ -139,6 +139,12 @@ class Sequel::Dataset
   end
 end
 
+class Sequel::Migration
+  def logger
+    @logger ||= Steno.logger('cc.db.migrations')
+  end
+end
+
 # Helper to create migrations.  This was added because
 # I wanted to add an index to all the Timestamps so that
 # we can enumerate by :created_at.
