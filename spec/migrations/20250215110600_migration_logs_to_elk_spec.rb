@@ -7,7 +7,7 @@ RSpec.describe 'migration ccdb logs to elk', isolation: :truncation, type: :migr
   end
 
   before do
-    @logger = mock_logger(Steno::Logger)
+    @logger = instance_double(Steno::Logger)
 
     allow(Steno).to receive(:logger).and_return(@logger)
   end
