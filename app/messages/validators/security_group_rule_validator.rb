@@ -117,7 +117,7 @@ class RulesValidator < ActiveModel::Validator
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
 
     comma_delimited_destinations_enabled = CloudController::RuleValidator.comma_delimited_destinations_enabled?
-    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address rang(es)' if comma_delimited_destinations_enabled
+    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if comma_delimited_destinations_enabled
 
     unless destination.index(',').nil?
       unless comma_delimited_destinations_enabled
