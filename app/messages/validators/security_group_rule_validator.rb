@@ -27,7 +27,12 @@ class RulesValidator < ActiveModel::Validator
 
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
-      validate_destination(rule[:destination], record, index) if valid_destination_type(rule[:destination], record, index)
+      if valid_destination_type(rule[:destination], record, index)
+        rule[:destination].split(',').each do |d|
+          validate_destination(d, record, index)
+        end
+      end
+
       validate_description(rule, record, index)
       validate_log(rule, record, index)
 
@@ -90,12 +95,12 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def valid_destination_type(destination, record, index)
-    if destination.nil?
-      error_message = 'destination must be a valid CIDR, IP address, or IP address range'
-      if CloudController::RuleValidator.comma_delimited_destinations_enabled?
-        error_message = 'nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
-      end
+    error_message = 'destination must be a valid CIDR, IP address, or IP address range'
+    if CloudController::RuleValidator.comma_delimited_destinations_enabled?
+      error_message = 'nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+    end
 
+    if destination.nil?
       add_rule_error(error_message, record, index)
       return false
     end
@@ -110,27 +115,17 @@ class RulesValidator < ActiveModel::Validator
       return false
     end
 
+    if !CloudController::RuleValidator.comma_delimited_destinations_enabled? && !destination.index(',').nil?
+      add_rule_error(error_message, record, index)
+      return false
+    end
+
     true
   end
 
   def validate_destination(destination, record, index)
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
-
-    comma_delimited_destinations_enabled = CloudController::RuleValidator.comma_delimited_destinations_enabled?
-    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if comma_delimited_destinations_enabled
-
-    unless destination.index(',').nil?
-      unless comma_delimited_destinations_enabled
-        add_rule_error(error_message, record, index)
-        return
-      end
-
-      destinations = destination.partition(',')
-      destination = destinations.first
-      remainder = destinations.last
-
-      validate_destination(remainder, record, index)
-    end
+    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if CloudController::RuleValidator.comma_delimited_destinations_enabled?
 
     address_list = destination.split('-')
 

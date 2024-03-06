@@ -163,6 +163,22 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'when the destination contains a comma and comma_delimited_destinations are DISABLED' do
+        let(:rules) do
+          [
+            {
+              protocol: 'udp',
+              destination: '10.10.10.10,'
+            }
+          ]
+        end
+
+        it 'is not valid' do
+          expect(subject).not_to be_valid
+          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+        end
+      end
+
       context 'when the destination field is not a valid CIDR or IP range' do
         let(:rules) do
           [
