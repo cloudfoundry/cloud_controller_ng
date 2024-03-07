@@ -10,7 +10,7 @@ module VCAP::CloudController::Serializer
         begin
           MultiJson.load string
         rescue MultiJson::ParseError
-          logger ||= Steno.logger('cc.serializer')
+          logger = Steno.logger('cc.serializer')
           logger.error("Failed to deserialize #{guid}")
           { 'corrupted-env': string }
         end
