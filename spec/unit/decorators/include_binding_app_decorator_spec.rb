@@ -7,16 +7,25 @@ module VCAP::CloudController
     let(:service_credential_bindings) { ServiceCredentialBinding::View.dataset.all }
 
     context 'service bindings' do
-      let!(:bindings) { [ServiceBinding.make, ServiceBinding.make, ServiceBinding.make] }
+      let!(:bindings) do
+        service_instance = ManagedServiceInstance.make
+        app = AppModel.make(space: service_instance.space, created_at: Time.now.utc - 1.second)
+
+        [
+          ServiceBinding.make(service_instance:, app:),
+          ServiceBinding.make
+        ]
+      end
+
       let(:apps) do
         bindings.map { |b| Presenters::V3::AppPresenter.new(b.app).to_hash }
       end
 
-      it 'decorates the given hash with apps from bindings' do
+      it 'decorates the given hash with apps from bindings in the correct order' do
         dict = { foo: 'bar' }
         hash = subject.decorate(dict, service_credential_bindings)
         expect(hash[:foo]).to eq('bar')
-        expect(hash[:included][:apps]).to match_array(apps)
+        expect(hash[:included][:apps]).to eq(apps)
       end
 
       it 'does not overwrite other included fields' do
@@ -29,7 +38,7 @@ module VCAP::CloudController
     end
 
     context 'service keys' do
-      let!(:keys) { [ServiceKey.make] }
+      let(:keys) { [ServiceKey.make] }
 
       it 'does not query the database' do
         expect do

@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       spaces = resources.map { |r| r.try(:space) || r }.uniq
 
-      hash[:included][:spaces] = spaces.sort_by(&:created_at).map do |space|
+      hash[:included][:spaces] = spaces.sort_by { |s| [s.created_at, s.guid] }.map do |space|
         temp = {}
         temp[:guid] = space.guid if @fields.include?('guid')
         temp[:name] = space.name if @fields.include?('name')

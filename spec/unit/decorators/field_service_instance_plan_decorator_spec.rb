@@ -5,11 +5,11 @@ require 'field_decorator_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstancePlanDecorator do
     describe '.decorate' do
-      let(:plan1) { ServicePlan.make }
+      let(:plan1) { ServicePlan.make(created_at: Time.now.utc - 1.second) }
       let(:plan2) { ServicePlan.make }
 
-      let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
-      let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
+      let(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
+      let(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
       it 'decorated the given hash with plan guid and name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       context 'when instances are from the same plan' do
-        let!(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan1) }
+        let(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan1) }
 
         it 'does not duplicate the plan' do
           decorator = described_class.new({ service_plan: ['guid'] })
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       context 'for user provided service instances' do
-        let!(:service_instance_3) { UserProvidedServiceInstance.make }
+        let(:service_instance_3) { UserProvidedServiceInstance.make }
 
         it 'returns the unchanged hash' do
           undecorated_hash = { foo: 'bar' }

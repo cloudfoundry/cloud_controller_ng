@@ -73,7 +73,7 @@ module VCAP::CloudController
           job.perform
 
           expect(BuildModel.count).to be(35)
-          expect(BuildModel.order(Sequel.asc(:created_at)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
+          expect(BuildModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
         end
 
         it 'calls destroy on the BuildModel so association dependencies are respected' do

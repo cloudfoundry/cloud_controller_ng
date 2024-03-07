@@ -20,7 +20,7 @@ module VCAP::CloudController
             deployments_dataset = DeploymentModel.where(app_guid:)
 
             deployments_to_keep = deployments_dataset.
-                                  order(Sequel.desc(:created_at)).
+                                  order(Sequel.desc(:created_at), Sequel.desc(:id)).
                                   limit(max_retained_deployments_per_app).
                                   select(:id)
 

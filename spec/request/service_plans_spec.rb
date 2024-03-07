@@ -558,7 +558,12 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'includes' do
-      let(:space_1) { VCAP::CloudController::Space.make }
+      let(:space_1) do
+        VCAP::CloudController::Space.make(
+          organization: VCAP::CloudController::Organization.make(created_at: Time.now.utc - 1.second),
+          created_at: Time.now.utc - 1.second
+        )
+      end
       let(:space_2) { VCAP::CloudController::Space.make }
 
       context 'when including `space.organization`' do
@@ -608,7 +613,13 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'fields' do
-      let!(:plan_1) { VCAP::CloudController::ServicePlan.make }
+      let!(:plan_1) do
+        VCAP::CloudController::ServicePlan.make(
+          service: VCAP::CloudController::Service.make(
+            service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second)
+          )
+        )
+      end
       let!(:plan_2) { VCAP::CloudController::ServicePlan.make }
 
       it 'can include service broker name and guid' do
