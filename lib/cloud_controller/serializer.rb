@@ -7,7 +7,13 @@ module VCAP::CloudController::Serializer
         string = send("#{accessor_method_name}_without_serialization")
         return if string.blank?
 
-        MultiJson.load string
+        begin
+          MultiJson.load string
+        rescue MultiJson::ParseError
+          logger ||= Steno.logger('cc.serializer')
+          logger.error("Failed to deserialize #{guid}")
+          nil
+        end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
       alias_method accessor_method_name, "#{accessor_method_name}_with_serialization"
