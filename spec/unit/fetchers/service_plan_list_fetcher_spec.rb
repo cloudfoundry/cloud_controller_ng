@@ -45,6 +45,7 @@ module VCAP::CloudController
         let!(:org_restricted_plan_2) { make_org_restricted_plan(org_2) }
         let!(:org_restricted_plan_3) { make_org_restricted_plan(org_3) }
         let!(:org_restricted_plan_4) { make_org_restricted_plan(org_3) }
+        let!(:org_restricted_plan_5) { make_org_restricted_plan(org_1, org_3) }
 
         let(:space_1) { Space.make(organization: org_1) }
         let(:space_2) { Space.make(organization: org_2) }
@@ -53,6 +54,10 @@ module VCAP::CloudController
         let!(:space_scoped_plan_2) { make_space_scoped_plan(space_2) }
         let!(:space_scoped_plan_3) { make_space_scoped_plan(space_3) }
         let!(:space_scoped_plan_4) { make_space_scoped_plan(space_3) }
+
+        it 'is tested with multiple visibilities per plan' do
+          expect(org_restricted_plan_5.service_plan_visibilities.count).to be > 1
+        end
 
         context 'when no authorization is specified' do
           it 'only fetches public plans' do
@@ -76,7 +81,8 @@ module VCAP::CloudController
               org_restricted_plan_1,
               org_restricted_plan_2,
               org_restricted_plan_3,
-              org_restricted_plan_4
+              org_restricted_plan_4,
+              org_restricted_plan_5
             )
           end
         end
@@ -97,7 +103,8 @@ module VCAP::CloudController
               public_plan_2,
               org_restricted_plan_1,
               org_restricted_plan_3,
-              org_restricted_plan_4
+              org_restricted_plan_4,
+              org_restricted_plan_5
             )
           end
         end
@@ -119,7 +126,8 @@ module VCAP::CloudController
               space_scoped_plan_3,
               space_scoped_plan_4,
               org_restricted_plan_3,
-              org_restricted_plan_4
+              org_restricted_plan_4,
+              org_restricted_plan_5
             )
           end
         end
@@ -129,7 +137,8 @@ module VCAP::CloudController
         let(:org_1) { Organization.make }
         let(:org_2) { Organization.make }
         let(:org_3) { Organization.make }
-        let(:space_1) { Space.make(organization: org_1) }
+        let(:space_1_1) { Space.make(organization: org_1) }
+        let!(:space_1_2) { Space.make(organization: org_1) }
         let(:space_2) { Space.make(organization: org_2) }
         let(:space_3) { Space.make(organization: org_3) }
 
@@ -138,10 +147,19 @@ module VCAP::CloudController
         let!(:org_restricted_plan_1) { make_org_restricted_plan(org_1) }
         let!(:org_restricted_plan_2) { make_org_restricted_plan(org_2) }
         let!(:org_restricted_plan_3) { make_org_restricted_plan(org_3) }
+        let!(:org_restricted_plan_4) { make_org_restricted_plan(org_1, org_2) }
 
-        let!(:space_scoped_plan_1) { make_space_scoped_plan(space_1) }
+        let!(:space_scoped_plan_1_1) { make_space_scoped_plan(space_1_1) }
         let!(:space_scoped_plan_2) { make_space_scoped_plan(space_2) }
         let!(:space_scoped_plan_3) { make_space_scoped_plan(space_3) }
+
+        it 'is tested with multiple spaces per organization' do
+          expect(org_1.spaces.count).to be > 1
+        end
+
+        it 'is tested with multiple visibilities per plan' do
+          expect(org_restricted_plan_4.service_plan_visibilities.count).to be > 1
+        end
 
         describe 'organization_guids' do
           context 'omniscient' do
@@ -152,7 +170,7 @@ module VCAP::CloudController
 
               service_plans = fetcher.fetch(message, omniscient: true).all
 
-              expect(service_plans).to contain_exactly(org_restricted_plan_1, org_restricted_plan_2, public_plan, space_scoped_plan_1, space_scoped_plan_2)
+              expect(service_plans).to contain_exactly(org_restricted_plan_1, org_restricted_plan_2, org_restricted_plan_4, public_plan, space_scoped_plan_1_1, space_scoped_plan_2)
             end
 
             it 'only shows public plans when there are no matches' do
@@ -181,7 +199,7 @@ module VCAP::CloudController
                 readable_spaces_query:
               ).all
 
-              expect(service_plans).to contain_exactly(org_restricted_plan_1, public_plan)
+              expect(service_plans).to contain_exactly(org_restricted_plan_1, org_restricted_plan_4, public_plan)
             end
           end
 
@@ -205,10 +223,9 @@ module VCAP::CloudController
           end
 
           context 'when the user only has access to some spaces in an org' do
-            let(:space_1a) { Space.make(organization: org_1) }
-            let!(:space_scoped_plan_1a) { make_space_scoped_plan(space_1a) }
+            let!(:space_scoped_plan_1_2) { make_space_scoped_plan(space_1_2) }
             let(:readable_orgs) { [org_1] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'only shows space-scoped plans for the readable spaces' do
               message = ServicePlansListMessage.from_params({
@@ -221,7 +238,7 @@ module VCAP::CloudController
                 readable_spaces_query:
               ).all
 
-              expect(service_plans).to contain_exactly(public_plan, org_restricted_plan_1, space_scoped_plan_1)
+              expect(service_plans).to contain_exactly(public_plan, org_restricted_plan_1, org_restricted_plan_4, space_scoped_plan_1_1)
             end
           end
         end
@@ -230,10 +247,10 @@ module VCAP::CloudController
           context 'omniscient' do
             it 'can filter by space guids' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(message, omniscient: true).all
-              expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, space_scoped_plan_2, org_restricted_plan_2, public_plan)
+              expect(service_plans).to contain_exactly(space_scoped_plan_1_1, org_restricted_plan_1, org_restricted_plan_4, space_scoped_plan_2, org_restricted_plan_2, public_plan)
             end
 
             it 'only shows public plans when there are no matches' do
@@ -247,35 +264,35 @@ module VCAP::CloudController
 
           context 'only some spaces are readable (SPACE_DEVELOPER, SPACE_AUDITOR etc)' do
             let(:readable_orgs) { [org_1] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1, space_1_2] }
 
             it 'shows only plans for readable spaces and orgs' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_1_2.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
                 message,
                 readable_orgs_query:,
                 readable_spaces_query:
               ).all
-              expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, public_plan)
+              expect(service_plans).to contain_exactly(space_scoped_plan_1_1, org_restricted_plan_1, org_restricted_plan_4, public_plan)
             end
           end
 
           context 'when a filter contains a space guid that the user cannot access' do
             let(:readable_orgs) { [org_1, org_2] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'ignores the unauthorized space guid' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
                 message,
                 readable_orgs_query:,
                 readable_spaces_query:
               ).all
-              expect(service_plans).to contain_exactly(space_scoped_plan_1, org_restricted_plan_1, public_plan)
+              expect(service_plans).to contain_exactly(space_scoped_plan_1_1, org_restricted_plan_1, org_restricted_plan_4, public_plan)
             end
           end
 
@@ -285,7 +302,7 @@ module VCAP::CloudController
 
             it 'shows only public plans' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
 
               service_plans = fetcher.fetch(
@@ -303,16 +320,16 @@ module VCAP::CloudController
           context 'omniscient' do
             it 'results in the overlap' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(','),
+                space_guids: [space_1_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(message, omniscient: true).all
-              expect(service_plans).to contain_exactly(space_scoped_plan_2, org_restricted_plan_2, public_plan)
+              expect(service_plans).to contain_exactly(space_scoped_plan_2, org_restricted_plan_2, org_restricted_plan_4, public_plan)
             end
 
             it 'only shows public plans when there are no matches' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid].join(','),
+                space_guids: [space_1_1.guid].join(','),
                 organization_guids: [org_3.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(message, omniscient: true).all
@@ -322,11 +339,11 @@ module VCAP::CloudController
 
           context 'when only some spaces and orgs are visible' do
             let(:readable_orgs) { [org_1, org_2] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'excludes plans that do not meet all the filter conditions' do
               message = ServicePlansListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(','),
+                space_guids: [space_1_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
               service_plans = fetcher.fetch(
@@ -409,7 +426,11 @@ module VCAP::CloudController
             let!(:instance_3) { ManagedServiceInstance.make(service_plan: plan_3) }
             let!(:instance_4) { ManagedServiceInstance.make(service_plan: plan_1) }
 
-            let(:params) { { service_instance_guids: [instance_1.guid, instance_2.guid].join(',') } }
+            let(:params) { { service_instance_guids: [instance_1.guid, instance_2.guid, instance_4.guid].join(',') } }
+
+            it 'is tested with multiple service instances per plan' do
+              expect(plan_1.service_instances.count).to be > 1
+            end
 
             it 'can filter by service instance guids' do
               expect(service_plans).to contain_exactly(plan_1, plan_2)
@@ -528,9 +549,10 @@ module VCAP::CloudController
         ServicePlan.make(service: service_offering, name: "space-scoped-#{Sham.name}")
       end
 
-      def make_org_restricted_plan(org)
+      def make_org_restricted_plan(org1, org2=nil)
         service_plan = ServicePlan.make(public: false, name: "org-restricted-#{Sham.name}")
-        ServicePlanVisibility.make(organization: org, service_plan: service_plan)
+        ServicePlanVisibility.make(organization: org1, service_plan: service_plan)
+        ServicePlanVisibility.make(organization: org2, service_plan: service_plan) unless org2.nil?
         service_plan
       end
     end

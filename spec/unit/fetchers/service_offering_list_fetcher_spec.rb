@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       describe 'visibility of offerings' do
         let!(:public_offering_1) { make_public_offering }
-        let!(:public_offering_2) { make_public_offering }
+        let!(:public_offering_2) { make_public_offering(number_of_plans: 2) }
 
         let!(:private_offering_1) { make_private_offering }
         let!(:private_offering_2) { make_private_offering }
@@ -32,6 +32,7 @@ module VCAP::CloudController
         let!(:org_restricted_offering_2) { make_org_restricted_offering(org_2) }
         let!(:org_restricted_offering_3) { make_org_restricted_offering(org_3) }
         let!(:org_restricted_offering_4) { make_org_restricted_offering(org_3) }
+        let!(:org_restricted_offering_5) { make_org_restricted_offering(org_1, org_3) }
 
         let(:space_1) { Space.make(organization: org_1) }
         let(:space_2) { Space.make(organization: org_2) }
@@ -40,6 +41,14 @@ module VCAP::CloudController
         let!(:space_scoped_offering_2) { make_space_scoped_offering(space_2) }
         let!(:space_scoped_offering_3) { make_space_scoped_offering(space_3) }
         let!(:space_scoped_offering_4) { make_space_scoped_offering(space_3) }
+
+        it 'is tested with multiple plans per offering' do
+          expect(public_offering_2.service_plans.count).to be > 1
+        end
+
+        it 'is tested with multiple visibilities per plan' do
+          expect(org_restricted_offering_5.service_plans.first.service_plan_visibilities.count).to be > 1
+        end
 
         context 'when no authorization is specified' do
           it 'only fetches public plans' do
@@ -63,7 +72,8 @@ module VCAP::CloudController
               org_restricted_offering_1,
               org_restricted_offering_2,
               org_restricted_offering_3,
-              org_restricted_offering_4
+              org_restricted_offering_4,
+              org_restricted_offering_5
             )
           end
         end
@@ -84,7 +94,8 @@ module VCAP::CloudController
               public_offering_2,
               org_restricted_offering_1,
               org_restricted_offering_3,
-              org_restricted_offering_4
+              org_restricted_offering_4,
+              org_restricted_offering_5
             )
           end
         end
@@ -106,7 +117,8 @@ module VCAP::CloudController
               space_scoped_offering_3,
               space_scoped_offering_4,
               org_restricted_offering_3,
-              org_restricted_offering_4
+              org_restricted_offering_4,
+              org_restricted_offering_5
             )
           end
         end
@@ -116,19 +128,33 @@ module VCAP::CloudController
         let(:org_1) { Organization.make }
         let(:org_2) { Organization.make }
         let(:org_3) { Organization.make }
-        let(:space_1) { Space.make(organization: org_1) }
+        let(:space_1_1) { Space.make(organization: org_1) }
+        let!(:space_1_2) { Space.make(organization: org_1) }
         let(:space_2) { Space.make(organization: org_2) }
         let(:space_3) { Space.make(organization: org_3) }
 
-        let!(:public_offering) { make_public_offering }
+        let!(:public_offering) { make_public_offering(number_of_plans: 2) }
 
         let!(:org_restricted_offering_1) { make_org_restricted_offering(org_1) }
         let!(:org_restricted_offering_2) { make_org_restricted_offering(org_2) }
         let!(:org_restricted_offering_3) { make_org_restricted_offering(org_3) }
+        let!(:org_restricted_offering_4) { make_org_restricted_offering(org_1, org_2) }
 
-        let!(:space_scoped_offering_1) { make_space_scoped_offering(space_1) }
+        let!(:space_scoped_offering_1_1) { make_space_scoped_offering(space_1_1) }
         let!(:space_scoped_offering_2) { make_space_scoped_offering(space_2) }
         let!(:space_scoped_offering_3) { make_space_scoped_offering(space_3) }
+
+        it 'is tested with multiple spaces per organization' do
+          expect(org_1.spaces.count).to be > 1
+        end
+
+        it 'is tested with multiple plans per offering' do
+          expect(public_offering.service_plans.count).to be > 1
+        end
+
+        it 'is tested with multiple visibilities per plan' do
+          expect(org_restricted_offering_4.service_plans.first.service_plan_visibilities.count).to be > 1
+        end
 
         describe 'organization_guids' do
           context 'omniscient' do
@@ -139,7 +165,8 @@ module VCAP::CloudController
 
               service_offerings = ServiceOfferingListFetcher.fetch(message, omniscient: true).all
 
-              expect(service_offerings).to contain_exactly(org_restricted_offering_1, org_restricted_offering_2, public_offering, space_scoped_offering_1, space_scoped_offering_2)
+              expect(service_offerings).to contain_exactly(org_restricted_offering_1, org_restricted_offering_2, org_restricted_offering_4,
+                                                           public_offering, space_scoped_offering_1_1, space_scoped_offering_2)
             end
 
             it 'only shows public plans when there are no matches' do
@@ -168,7 +195,7 @@ module VCAP::CloudController
                 readable_spaces_query:
               ).all
 
-              expect(service_offerings).to contain_exactly(org_restricted_offering_1, public_offering)
+              expect(service_offerings).to contain_exactly(org_restricted_offering_1, org_restricted_offering_4, public_offering)
             end
           end
 
@@ -192,10 +219,9 @@ module VCAP::CloudController
           end
 
           context 'when the user only has access to some spaces in an org' do
-            let(:space_1a) { Space.make(organization: org_1) }
-            let!(:space_scoped_offering_1a) { make_space_scoped_offering(space_1a) }
+            let!(:space_scoped_offering_1_2) { make_space_scoped_offering(space_1_2) }
             let(:readable_orgs) { [org_1] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'only shows space-scoped plans for the readable spaces' do
               message = ServiceOfferingsListMessage.from_params({
@@ -208,7 +234,7 @@ module VCAP::CloudController
                 readable_spaces_query:
               ).all
 
-              expect(service_offerings).to contain_exactly(public_offering, org_restricted_offering_1, space_scoped_offering_1)
+              expect(service_offerings).to contain_exactly(public_offering, org_restricted_offering_1, org_restricted_offering_4, space_scoped_offering_1_1)
             end
           end
         end
@@ -217,10 +243,11 @@ module VCAP::CloudController
           context 'omniscient' do
             it 'can filter by space guids' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(message, omniscient: true).all
-              expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, space_scoped_offering_2, org_restricted_offering_2, public_offering)
+              expect(service_offerings).to contain_exactly(space_scoped_offering_1_1, org_restricted_offering_1, org_restricted_offering_4,
+                                                           space_scoped_offering_2, org_restricted_offering_2, public_offering)
             end
 
             it 'only shows public plans when there are no matches' do
@@ -234,35 +261,35 @@ module VCAP::CloudController
 
           context 'only some spaces are readable (SPACE_DEVELOPER, SPACE_AUDITOR etc)' do
             let(:readable_orgs) { [org_1] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1, space_1_2] }
 
             it 'shows only plans for readable spaces and orgs' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_1_2.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
                 readable_orgs_query:,
                 readable_spaces_query:
               ).all
-              expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
+              expect(service_offerings).to contain_exactly(space_scoped_offering_1_1, org_restricted_offering_1, org_restricted_offering_4, public_offering)
             end
           end
 
           context 'when a filter contains a space guid that the user cannot access' do
             let(:readable_orgs) { [org_1, org_2] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'ignores the unauthorized space guid' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
                 message,
                 readable_orgs_query:,
                 readable_spaces_query:
               ).all
-              expect(service_offerings).to contain_exactly(space_scoped_offering_1, org_restricted_offering_1, public_offering)
+              expect(service_offerings).to contain_exactly(space_scoped_offering_1_1, org_restricted_offering_1, org_restricted_offering_4, public_offering)
             end
           end
 
@@ -272,7 +299,7 @@ module VCAP::CloudController
 
             it 'shows only public plans' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(',')
+                space_guids: [space_1_1.guid, space_2.guid].join(',')
               }.with_indifferent_access)
 
               service_offerings = ServiceOfferingListFetcher.fetch(
@@ -290,16 +317,16 @@ module VCAP::CloudController
           context 'omniscient' do
             it 'results in the overlap' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(','),
+                space_guids: [space_1_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(message, omniscient: true).all
-              expect(service_offerings).to contain_exactly(space_scoped_offering_2, org_restricted_offering_2, public_offering)
+              expect(service_offerings).to contain_exactly(space_scoped_offering_2, org_restricted_offering_2, org_restricted_offering_4, public_offering)
             end
 
             it 'only shows public plans when there are no matches' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid].join(','),
+                space_guids: [space_1_1.guid].join(','),
                 organization_guids: [org_3.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(message, omniscient: true).all
@@ -309,11 +336,11 @@ module VCAP::CloudController
 
           context 'when only some spaces and orgs are visible' do
             let(:readable_orgs) { [org_1, org_2] }
-            let(:readable_spaces) { [space_1] }
+            let(:readable_spaces) { [space_1_1] }
 
             it 'excludes plans that do not meet all the filter conditions' do
               message = ServiceOfferingsListMessage.from_params({
-                space_guids: [space_1.guid, space_2.guid].join(','),
+                space_guids: [space_1_1.guid, space_2.guid].join(','),
                 organization_guids: [org_2.guid, org_3.guid].join(',')
               }.with_indifferent_access)
               service_offerings = ServiceOfferingListFetcher.fetch(
@@ -456,9 +483,9 @@ module VCAP::CloudController
       end
     end
 
-    def make_public_offering
+    def make_public_offering(number_of_plans: 1)
       service_offering = Service.make(label: "public-#{Sham.name}")
-      ServicePlan.make(public: true, active: true, service: service_offering)
+      number_of_plans.times { ServicePlan.make(public: true, active: true, service: service_offering) }
       service_offering
     end
 
@@ -473,10 +500,11 @@ module VCAP::CloudController
       Service.make(service_broker: service_broker, label: "space-scoped-#{Sham.name}")
     end
 
-    def make_org_restricted_offering(org)
+    def make_org_restricted_offering(org1, org2=nil)
       service_offering = Service.make(label: "org-restricted-#{Sham.name}")
       service_plan = ServicePlan.make(public: false, service: service_offering)
-      ServicePlanVisibility.make(organization: org, service_plan: service_plan)
+      ServicePlanVisibility.make(organization: org1, service_plan: service_plan)
+      ServicePlanVisibility.make(organization: org2, service_plan: service_plan) unless org2.nil?
       service_offering
     end
   end

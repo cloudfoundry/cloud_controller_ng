@@ -63,7 +63,7 @@ module VCAP::CloudController
                     end.from_self(alias: klass.table_name)
                   end
 
-        dataset.distinct.eager(eager_loaded_associations)
+        dataset.eager(eager_loaded_associations)
       end
 
       def readable_by_plan_org(dataset, readable_orgs_query)
@@ -156,7 +156,8 @@ module VCAP::CloudController
 
       def join_plan_org_visibilities(dataset)
         dataset = join_service_plans(dataset)
-        join(dataset, :inner, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
+        dataset = join(dataset, :inner, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
+        dataset.distinct # service plans can have multiple visibilities
       end
 
       def join_service_brokers(dataset)
@@ -181,12 +182,14 @@ module VCAP::CloudController
 
       def join_plan_spaces(dataset)
         dataset = join_plan_orgs(dataset)
-        join(dataset, :inner, Sequel[:spaces].as(:plan_spaces), organization_id: Sequel[:plan_orgs][:id])
+        dataset = join(dataset, :inner, Sequel[:spaces].as(:plan_spaces), organization_id: Sequel[:plan_orgs][:id])
+        dataset.distinct # organizations can have multiple spaces
       end
 
       def join_service_instances(dataset)
         dataset = join_service_plans(dataset)
-        join(dataset, :inner, :service_instances, service_plan_id: Sequel[:service_plans][:id])
+        dataset = join(dataset, :inner, :service_instances, service_plan_id: Sequel[:service_plans][:id])
+        dataset.distinct # service plans can have multiple instances
       end
 
       def join(dataset, type, table, on)

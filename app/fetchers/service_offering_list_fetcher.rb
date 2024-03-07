@@ -32,7 +32,8 @@ module VCAP::CloudController
       end
 
       def join_service_plans(dataset)
-        join(dataset, :inner, :service_plans, service_id: Sequel[:services][:id])
+        dataset = join(dataset, :inner, :service_plans, service_id: Sequel[:services][:id])
+        dataset.distinct # services can have multiple plans
       end
     end
   end
