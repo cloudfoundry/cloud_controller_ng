@@ -33,11 +33,11 @@ module VCAP
 
         describe '.match?' do
           it 'matches include arrays containing "app"' do
-            expect(decorator).to be_match(%w[potato service_instance turnip])
+            expect(decorator.match?(%w[potato service_instance turnip])).to be(true)
           end
 
           it 'does not match other include arrays' do
-            expect(decorator).not_to be_match(%w[potato turnip])
+            expect(decorator.match?(%w[potato turnip])).not_to be(true)
           end
         end
       end

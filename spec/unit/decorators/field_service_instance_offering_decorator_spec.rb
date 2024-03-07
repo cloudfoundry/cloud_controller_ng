@@ -186,24 +186,24 @@ module VCAP::CloudController
 
       fields.each do |field|
         it "matches value `#{field}` for key symbol `service_plan.service_offering`" do
-          expect(described_class).to be_match({ 'service_plan.service_offering': [field], other: ['bar'] })
+          expect(described_class.match?({ 'service_plan.service_offering': [field], other: ['bar'] })).to be(true)
         end
       end
 
       it 'matches all fields together for key symbol `service_plan.service_offering`' do
-        expect(described_class).to be_match({ 'service_plan.service_offering': fields, other: ['bar'] })
+        expect(described_class.match?({ 'service_plan.service_offering': fields, other: ['bar'] })).to be(true)
       end
 
       it 'does not match other values for a valid key' do
-        expect(described_class).not_to be_match({ 'service_plan.service_offering': ['foo'] })
+        expect(described_class.match?({ 'service_plan.service_offering': ['foo'] })).not_to be(true)
       end
 
       it 'does not match other key values' do
-        expect(described_class).not_to be_match({ other: ['bar'] })
+        expect(described_class.match?({ other: ['bar'] })).not_to be(true)
       end
 
       it 'does not match non-hashes' do
-        expect(described_class).not_to be_match('foo')
+        expect(described_class.match?('foo')).not_to be(true)
       end
     end
   end

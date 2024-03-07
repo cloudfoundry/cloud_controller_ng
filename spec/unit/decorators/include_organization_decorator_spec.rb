@@ -28,15 +28,15 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches include arrays containing "org"' do
-        expect(decorator).to be_match(%w[potato org turnip])
+        expect(decorator.match?(%w[potato org turnip])).to be(true)
       end
 
       it 'matches include arrays containing "space.organization"' do
-        expect(decorator).to be_match(['potato', 'space.organization', 'turnip'])
+        expect(decorator.match?(['potato', 'space.organization', 'turnip'])).to be(true)
       end
 
       it 'does not match other include arrays' do
-        expect(decorator).not_to be_match(%w[potato turnip])
+        expect(decorator.match?(%w[potato turnip])).not_to be(true)
       end
     end
   end

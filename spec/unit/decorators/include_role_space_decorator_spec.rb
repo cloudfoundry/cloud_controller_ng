@@ -40,11 +40,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches include arrays containing "space"' do
-        expect(decorator).to be_match(%w[potato space turnip])
+        expect(decorator.match?(%w[potato space turnip])).to be(true)
       end
 
       it 'does not match other include arrays' do
-        expect(decorator).not_to be_match(%w[potato turnip])
+        expect(decorator.match?(%w[potato turnip])).not_to be(true)
       end
     end
   end

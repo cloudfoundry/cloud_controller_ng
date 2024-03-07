@@ -30,11 +30,11 @@ module VCAP::CloudController
 
     describe '.match?' do
       it 'matches arrays containing "service_offering"' do
-        expect(described_class).to be_match(%w[potato service_offering turnip])
+        expect(described_class.match?(%w[potato service_offering turnip])).to be(true)
       end
 
       it 'does not match other arrays' do
-        expect(described_class).not_to be_match(%w[potato turnip])
+        expect(described_class.match?(%w[potato turnip])).not_to be(true)
       end
     end
   end
