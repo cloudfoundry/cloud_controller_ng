@@ -41,7 +41,7 @@ Sequel.migration do
   down do
     (annotation_tables + label_tables).each do |table|
       transaction do
-        create_view(:"#{table}_migration_view", self[table.to_sym].select { [id, guid, created_at, updated_at, resource_guid, key_prefix, key_name, value] }, if_exists: true)
+        create_view(:"#{table}_migration_view", self[table.to_sym].select { [id, guid, created_at, updated_at, resource_guid, key_prefix, key_name, value] })
       end
     end
   end
