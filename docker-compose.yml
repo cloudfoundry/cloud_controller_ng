@@ -64,13 +64,15 @@ services:
     ports:
       - "127.0.0.1:9001:9001"
       - "127.0.0.1:9000:9000"
+    environment:
+      MC_HOST_custom: http://localhost:9001
     healthcheck:
       test:
         [
           "CMD",
-          "curl",
-          "-f",
-          "http://localhost:9001/minio/health/live"
+          "mc",
+          "ready",
+          "custom"
         ]
       interval: 30s
       timeout: 20s
