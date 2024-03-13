@@ -218,5 +218,9 @@ module VCAP
         Sequel.function(:get_uuid)
       end
     end
+
+    def self.logging(message)
+      log_info(message)
+    end
   end
 end
