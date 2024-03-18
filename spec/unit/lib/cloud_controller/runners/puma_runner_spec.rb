@@ -135,5 +135,19 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'Logging' do
+      it 'LogWriter.log uses Steno logger with :info level' do
+        expect(logger).to receive(:log).with(:info, /log message/)
+
+        puma_launcher.log_writer.log('log message')
+      end
+
+      it 'LogWriter.error uses Steno logger with :error level' do
+        expect(logger).to receive(:log).with(:error, /ERROR: error message/)
+
+        expect { puma_launcher.log_writer.error('error message') }.to raise_error(SystemExit)
+      end
+    end
   end
 end
