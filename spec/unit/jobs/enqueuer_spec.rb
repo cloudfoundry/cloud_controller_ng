@@ -1,8 +1,11 @@
+require 'spec_helper'
 require 'db_spec_helper'
 require 'jobs/enqueuer'
 require 'jobs/delete_action_job'
 require 'jobs/runtime/model_deletion'
 require 'jobs/error_translator_job'
+require_relative '../../../lib/cloud_controller/user_audit_info'
+require_relative '../../../lib/cloud_controller/security_context'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer, job_context: :api do
@@ -143,6 +146,18 @@ module VCAP::CloudController::Jobs
             original_enqueue.call(enqueued_job, opts)
           end
           Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        end
+
+        context 'and priority from Enqueuer (e.g. from reoccurring jobs)' do
+          it 'uses the priority passed into the Enqueuer' do
+            original_enqueue = Delayed::Job.method(:enqueue)
+            expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+              expect(opts).to include({ priority: 2000 })
+              original_enqueue.call(enqueued_job, opts)
+            end
+            opts[:priority] = 2000
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+          end
         end
       end
     end

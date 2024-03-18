@@ -13,7 +13,7 @@ module VCAP::CloudController
         elsif next_enqueue_would_exceed_maximum_duration?
           expire!
         else
-          enqueue_next_job(pollable_job)
+          enqueue_next_job(pollable_job, current_delayed_job.priority)
         end
       end
 
@@ -75,10 +75,11 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
-      def enqueue_next_job(pollable_job)
+      def enqueue_next_job(pollable_job, priority)
         opts = {
           queue: Jobs::Queues.generic,
-          run_at: Delayed::Job.db_time_now + next_execution_in
+          run_at: Delayed::Job.db_time_now + next_execution_in,
+          priority: priority
         }
 
         @retry_number += 1
