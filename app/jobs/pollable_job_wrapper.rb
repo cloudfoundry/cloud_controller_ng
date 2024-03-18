@@ -24,12 +24,20 @@ module VCAP::CloudController
             resource_type: @handler.resource_type
           )
         else
+          user_guid = VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext).user_guid
+          number_of_active_jobs = 0
+          if (user_guid)
+            number_of_active_jobs = PollableJobModel.number_of_active_jobs_by_user(user_guid)
+            job.values[:priority] += number_of_active_jobs
+          end
+
           PollableJobModel.create(
             delayed_job_guid: job.guid,
             state: PollableJobModel::PROCESSING_STATE,
             operation: @handler.display_name,
             resource_guid: @handler.resource_guid,
-            resource_type: @handler.resource_type
+            resource_type: @handler.resource_type,
+            user_guid: user_guid
           )
         end
       end
