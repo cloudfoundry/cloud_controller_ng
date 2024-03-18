@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'db_spec_helper'
 require 'jobs/enqueuer'
 require 'jobs/delete_action_job'
@@ -133,6 +134,15 @@ module VCAP::CloudController::Jobs
         end
       end
 
+      it 'uses the default priority' do
+        original_enqueue = Delayed::Job.method(:enqueue)
+        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+          expect(opts).not_to include(:priority)
+          original_enqueue.call(enqueued_job, opts)
+        end
+        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+      end
+
       context 'priority from config' do
         let(:priorities) { { priorities: { wrapped_job.display_name.to_sym => 1899 } } }
 
@@ -143,6 +153,18 @@ module VCAP::CloudController::Jobs
             original_enqueue.call(enqueued_job, opts)
           end
           Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        end
+
+        context 'and priority from Enqueuer (e.g. from reoccurring jobs)' do
+          it 'uses the priority passed into the Enqueuer' do
+            original_enqueue = Delayed::Job.method(:enqueue)
+            expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+              expect(opts).to include({ priority: 2000 })
+              original_enqueue.call(enqueued_job, opts)
+            end
+            opts[:priority] = 2000
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+          end
         end
       end
     end

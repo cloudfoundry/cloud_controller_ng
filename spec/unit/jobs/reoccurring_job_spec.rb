@@ -70,6 +70,18 @@ module VCAP
         expect(PollableJobModel.first.delayed_job_guid).not_to eq(pollable_job.delayed_job_guid)
       end
 
+      it 'keeps the delayed job\'s priority when re-enqueuing' do
+        TestConfig.config[:jobs][:priorities] = { 'fake-job': 20 }
+
+        pollable_job = Jobs::Enqueuer.new(FakeJob.new, { queue: Jobs::Queues.generic, priority: 22 }).enqueue_pollable
+        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(22)
+
+        execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
+
+        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(22)
+        expect(PollableJobModel.first.delayed_job_guid).not_to eq(pollable_job.delayed_job_guid)
+      end
+
       it 'waits for the polling interval' do
         job = FakeJob.new
         job.polling_interval_seconds = 95
