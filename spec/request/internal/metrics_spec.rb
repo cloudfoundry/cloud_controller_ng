@@ -83,6 +83,42 @@ RSpec.describe 'Metrics' do
     end
   end
 
+  context 'cc_job_queue_load' do
+    before do
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now })
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now })
+    end
+
+    after do
+      Delayed::Job.dataset.delete
+    end
+
+    it 'includes job queue load metric labelled for each queue' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).to match(/cc_job_queues_load_total{queue="cc_api_0"} 1\.0/)
+      expect(last_response.body).to match(/cc_job_queues_load_total{queue="cc_generic"} 1\.0/)
+    end
+  end
+
+  context 'cc_job_queue_load_not_ready_to_run_now' do
+    before do
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.minute })
+      Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.minute })
+    end
+
+    after do
+      Delayed::Job.dataset.delete
+    end
+
+    it 'includes job queue load metric labelled for each queue' do
+      get '/internal/v4/metrics', nil
+
+      expect(last_response.body).not_to match(/cc_job_queues_load_total{queue="cc_api_0"} 1\.0/)
+      expect(last_response.body).not_to match(/cc_job_queues_load_total{queue="cc_generic"} 1\.0/)
+    end
+  end
+
   context 'cc_thread_info' do
     it 'reports thread info' do
       get '/internal/v4/metrics', nil

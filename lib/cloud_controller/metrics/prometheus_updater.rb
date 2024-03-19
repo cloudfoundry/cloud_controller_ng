@@ -19,6 +19,7 @@ module VCAP::CloudController::Metrics
 
     METRICS = [
       { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue], aggregation: :most_recent },
+      { type: :gauge, name: :cc_job_queues_load_total, docstring: 'Number of background jobs ready to run now ', labels: [:queue], aggregation: :most_recent },
       { type: :gauge, name: :cc_failed_jobs_total, docstring: 'Number of failed jobs of worker processes', labels: [:queue], aggregation: :most_recent },
       { type: :counter, name: :cc_staging_requests_total, docstring: 'Number of staging requests' },
       { type: :histogram, name: :cc_staging_succeeded_duration_seconds, docstring: 'Durations of successful staging events', buckets: DURATION_BUCKETS },
@@ -99,6 +100,12 @@ module VCAP::CloudController::Metrics
     def update_job_queue_length(pending_job_count_by_queue)
       pending_job_count_by_queue.each do |key, value|
         update_gauge_metric(:cc_job_queues_length_total, value, labels: { queue: key.to_s.underscore })
+      end
+    end
+
+    def update_job_queue_load(update_job_queue_load)
+      update_job_queue_load.each do |key, value|
+        update_gauge_metric(:cc_job_queues_load_total, value, labels: { queue: key.to_s.underscore })
       end
     end
 
