@@ -12,7 +12,7 @@ module VCAP::CloudController::Serializer
         rescue MultiJson::ParseError
           logger = Steno.logger('cc.serializer')
           logger.error("Failed to deserialize #{guid}")
-          { 'corrupted-env': string }
+          { 'corrupted-json': string }
         end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
