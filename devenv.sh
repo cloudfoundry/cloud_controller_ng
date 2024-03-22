@@ -11,7 +11,7 @@ help_command() {
   echo "  start      - Starting the development environment(containers), a existing fully set up set of containers must exist."
   echo "  stop       - Stopping but not removing the development environment(containers)"
   echo "  destroy    - Stopping and removing the development environment(containers)"
-  echo "  runconfigs - Copies matching run configurations for intellij and vscode into the respective folders"
+  echo "  runconfigs - Copies matching run configurations for Intellij and VS Code into the respective folders"
   echo "  help       - Print this help text"
 }
 
