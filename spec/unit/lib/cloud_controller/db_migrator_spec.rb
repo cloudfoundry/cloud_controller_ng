@@ -1,9 +1,10 @@
 require 'spec_helper'
 
 RSpec.describe DBMigrator do
+  let(:db) { Sequel::Model.db }
+
   describe '#wait_for_migrations!' do
     let(:migrator) { DBMigrator.new(db, 1) }
-    let(:db) { double(:db) }
 
     it 'blocks until migrations are current or newer' do
       expect(Sequel::Migrator).to receive(:is_current?).with(
@@ -45,6 +46,20 @@ RSpec.describe DBMigrator do
       expect do
         migrator.wait_for_migrations!
       end.to raise_error(UncaughtThrowError)
+    end
+  end
+
+  describe 'postgresql' do
+    it 'sets a default statement timeout' do
+      skip if db.database_type != :postgres
+      expect(db).to receive(:run).with('SET statement_timeout TO 30000')
+      DBMigrator.new(db)
+    end
+
+    it 'sets a config provided statement timeout' do
+      skip if db.database_type != :postgres
+      expect(db).to receive(:run).with('SET statement_timeout TO 60000')
+      DBMigrator.new(db, nil, 60)
     end
   end
 end
