@@ -18,6 +18,7 @@ module VCAP::CloudController::Metrics
       update!
       EM.add_periodic_timer(600) { catch_error { update_user_count } }
       EM.add_periodic_timer(30)  { catch_error { update_job_queue_length } }
+      EM.add_periodic_timer(30)  { catch_error { update_job_queue_load } }
       EM.add_periodic_timer(30)  { catch_error { update_thread_info } }
       EM.add_periodic_timer(30)  { catch_error { update_failed_job_count } }
       EM.add_periodic_timer(30)  { catch_error { update_vitals } }
@@ -30,6 +31,7 @@ module VCAP::CloudController::Metrics
     def update!
       update_user_count
       update_job_queue_length
+      update_job_queue_load
       update_thread_info
       update_failed_job_count
       update_vitals
@@ -89,6 +91,21 @@ module VCAP::CloudController::Metrics
       pending_job_count_by_queue.reverse_merge!(@known_job_queues)
       @statsd_updater.update_job_queue_length(pending_job_count_by_queue, total)
       @prometheus_updater.update_job_queue_length(pending_job_count_by_queue)
+    end
+
+    def update_job_queue_load
+      jobs_by_queue_with_run_now = Delayed::Job.where(Sequel.lit('attempts = ? AND run_at <= ?', 0, Time.now)).group_and_count(:queue)
+
+      total = 0
+      pending_job_load_by_queue = jobs_by_queue_with_run_now.each_with_object({}) do |row, hash|
+        @known_job_queues[row[:queue].to_sym] = 0
+        total += row[:count]
+        hash[row[:queue].to_sym] = row[:count]
+      end
+
+      pending_job_load_by_queue.reverse_merge!(@known_job_queues)
+      @statsd_updater.update_job_queue_load(pending_job_load_by_queue, total)
+      @prometheus_updater.update_job_queue_load(pending_job_load_by_queue)
     end
 
     def update_thread_info

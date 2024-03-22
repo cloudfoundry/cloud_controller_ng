@@ -60,6 +60,32 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe '#update_job_queue_load' do
+      let(:batch) { double(:batch) }
+
+      before do
+        allow(statsd_client).to receive(:batch).and_yield(batch)
+        allow(batch).to receive(:gauge)
+      end
+
+      it 'emits the load of the delayed job queues and total to statsd' do
+        expected_local_load   = 5
+        expected_generic_load = 6
+        total                   = expected_local_load + expected_generic_load
+
+        pending_job_load_by_queue = {
+          cc_local: expected_local_load,
+          cc_generic: expected_generic_load
+        }
+
+        updater.update_job_queue_load(pending_job_load_by_queue, total)
+
+        expect(batch).to have_received(:gauge).with('cc.job_queue_load.cc_local', expected_local_load)
+        expect(batch).to have_received(:gauge).with('cc.job_queue_load.cc_generic', expected_generic_load)
+        expect(batch).to have_received(:gauge).with('cc.job_queue_load.total', total)
+      end
+    end
+
     describe '#update_failed_job_count' do
       let(:batch) { double(:batch) }
 

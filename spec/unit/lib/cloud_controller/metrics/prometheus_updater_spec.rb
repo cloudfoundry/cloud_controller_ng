@@ -78,6 +78,24 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe '#update_job_queue_load' do
+      it 'records the load of the delayed job queues and total' do
+        expected_local_load   = 5
+        expected_generic_load = 6
+
+        pending_job_load_by_queue = {
+          cc_local: expected_local_load,
+          cc_generic: expected_generic_load
+        }
+
+        updater.update_job_queue_load(pending_job_load_by_queue)
+
+        metric = prom_client.get :cc_job_queues_load_total
+        expect(metric.get(labels: { queue: 'cc_local' })).to eq 5
+        expect(metric.get(labels: { queue: 'cc_generic' })).to eq 6
+      end
+    end
+
     describe '#update_failed_job_count' do
       it 'records the number of failed jobs in the delayed job queue and the total to statsd' do
         expected_local_length   = 5

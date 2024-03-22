@@ -72,6 +72,7 @@ module VCAP::CloudController::Metrics
       before do
         allow(statsd_updater).to receive(:update_user_count)
         allow(statsd_updater).to receive(:update_job_queue_length)
+        allow(statsd_updater).to receive(:update_job_queue_load)
         allow(statsd_updater).to receive(:update_thread_info_thin)
         allow(statsd_updater).to receive(:update_failed_job_count)
         allow(statsd_updater).to receive(:update_vitals)
@@ -81,6 +82,7 @@ module VCAP::CloudController::Metrics
 
         allow(prometheus_updater).to receive(:update_user_count)
         allow(prometheus_updater).to receive(:update_job_queue_length)
+        allow(prometheus_updater).to receive(:update_job_queue_load)
         allow(prometheus_updater).to receive(:update_thread_info_thin)
         allow(prometheus_updater).to receive(:update_failed_job_count)
         allow(prometheus_updater).to receive(:update_vitals)
@@ -98,6 +100,11 @@ module VCAP::CloudController::Metrics
 
       it 'bumps the length of cc job queues and sets periodic timer' do
         expect(periodic_updater).to receive(:update_job_queue_length).once
+        periodic_updater.setup_updates
+      end
+
+      it 'bumps the load of cc job queues and sets periodic timer' do
+        expect(periodic_updater).to receive(:update_job_queue_load).once
         periodic_updater.setup_updates
       end
 
@@ -161,44 +168,52 @@ module VCAP::CloudController::Metrics
           @periodic_timers[1][:block].call
         end
 
-        it 'updates thread count and event machine queues' do
+        it 'bumps the load of cc job queues and sets periodic timer' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_thread_info).once
+          expect(periodic_updater).to receive(:update_job_queue_load).once
           expect(@periodic_timers[2][:interval]).to eq(30)
 
           @periodic_timers[2][:block].call
         end
 
-        it 'bumps the length of cc failed job queues and sets periodic timer' do
+        it 'updates thread count and event machine queues' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_failed_job_count).once
+          expect(periodic_updater).to receive(:update_thread_info).once
           expect(@periodic_timers[3][:interval]).to eq(30)
 
           @periodic_timers[3][:block].call
         end
 
-        it 'updates the vitals' do
+        it 'bumps the length of cc failed job queues and sets periodic timer' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_vitals).once
+          expect(periodic_updater).to receive(:update_failed_job_count).once
           expect(@periodic_timers[4][:interval]).to eq(30)
 
           @periodic_timers[4][:block].call
         end
 
-        it 'updates the log counts' do
+        it 'updates the vitals' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_log_counts).once
+          expect(periodic_updater).to receive(:update_vitals).once
           expect(@periodic_timers[5][:interval]).to eq(30)
 
           @periodic_timers[5][:block].call
         end
 
-        it 'updates the task stats' do
+        it 'updates the log counts' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_task_stats).once
+          expect(periodic_updater).to receive(:update_log_counts).once
           expect(@periodic_timers[6][:interval]).to eq(30)
 
           @periodic_timers[6][:block].call
+        end
+
+        it 'updates the task stats' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
+          expect(periodic_updater).to receive(:update_task_stats).once
+          expect(@periodic_timers[7][:interval]).to eq(30)
+
+          @periodic_timers[7][:block].call
         end
       end
     end
@@ -350,6 +365,124 @@ module VCAP::CloudController::Metrics
 
         expect(statsd_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(prometheus_updater).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue)
+      end
+    end
+
+    describe '#update_job_queue_load' do
+      before do
+        allow(statsd_updater).to receive(:update_job_queue_load)
+        allow(prometheus_updater).to receive(:update_job_queue_load)
+      end
+
+      context 'when there are pending jobs ready to run in the local queue' do
+        it 'emits the correct count' do
+          Delayed::Job.enqueue(
+            VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1),
+            queue: VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config),
+            run_at: Time.now
+          )
+          periodic_updater.update_job_queue_load
+
+          expected_pending_job_queue_load = {
+            'cc-api-0': 1
+          }
+          expected_total = 1
+
+          expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+        end
+      end
+
+      context 'when local queue does not have pending jobs' do
+        it 'emits the local queue load as 0 for discoverability' do
+          periodic_updater.update_job_queue_load
+
+          expected_pending_job_queue_load = {
+            'cc-api-0': 0
+          }
+          expected_total = 0
+
+          expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+          expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+        end
+      end
+
+      it 'includes the load of the delayed job queue and the total' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', run_at: Time.now)
+
+        periodic_updater.update_job_queue_load
+
+        expected_pending_job_queue_load = {
+          cc_local: 2,
+          cc_generic: 1,
+          'cc-api-0': 0
+        }
+        expected_total = 3
+
+        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+      end
+
+      it 'finds jobs which have not been attempted yet' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', run_at: Time.now)
+
+        periodic_updater.update_job_queue_load
+
+        expected_pending_job_queue_load = {
+          cc_local: 1,
+          cc_generic: 1,
+          'cc-api-0': 0
+        }
+        expected_total = 2
+
+        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+      end
+
+      it 'ignores jobs that have already been attempted' do
+        job = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1)
+        Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1, run_at: Time.now)
+
+        periodic_updater.update_job_queue_load
+
+        expected_pending_job_queue_load = {
+          'cc-api-0': 0
+        }
+        expected_total = 0
+
+        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+      end
+
+      it '"resets" pending job count to 0 after they have been emitted' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', run_at: Time.now)
+        periodic_updater.update_job_queue_load
+
+        expected_pending_job_queue_load = {
+          cc_local: 1,
+          cc_generic: 1,
+          'cc-api-0': 0
+        }
+        expected_total = 2
+
+        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
+
+        Delayed::Job.dataset.delete
+        periodic_updater.update_job_queue_load
+        expected_pending_job_queue_load = {
+          cc_local: 0,
+          cc_generic: 0,
+          'cc-api-0': 0
+        }
+        expected_total = 0
+
+        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
+        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
       end
     end
 
@@ -644,6 +777,7 @@ module VCAP::CloudController::Metrics
       it 'calls all update methods' do
         expect(periodic_updater).to receive(:update_user_count).once
         expect(periodic_updater).to receive(:update_job_queue_length).once
+        expect(periodic_updater).to receive(:update_job_queue_load).once
         expect(periodic_updater).to receive(:update_thread_info).once
         expect(periodic_updater).to receive(:update_failed_job_count).once
         expect(periodic_updater).to receive(:update_vitals).once
