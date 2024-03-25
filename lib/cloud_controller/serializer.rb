@@ -9,10 +9,10 @@ module VCAP::CloudController::Serializer
 
         begin
           MultiJson.load string
-        rescue MultiJson::ParseError
+        rescue MultiJson::ParseError => e
           logger = Steno.logger('cc.serializer')
-          logger.error("Failed to deserialize #{guid}")
-          { 'corrupted-json': string }
+          logger.error("Failed to deserialize #{guid} for object type #{to_s}. Trying to deserialize #{string.dump}")
+          raise
         end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
