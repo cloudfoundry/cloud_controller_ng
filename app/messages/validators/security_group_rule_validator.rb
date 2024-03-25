@@ -27,7 +27,12 @@ class RulesValidator < ActiveModel::Validator
 
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
-      validate_destination(rule[:destination], record, index) if valid_destination_type(rule[:destination], record, index)
+      if valid_destination_type(rule[:destination], record, index)
+        rule[:destination].split(',').each do |d|
+          validate_destination(d, record, index)
+        end
+      end
+
       validate_description(rule, record, index)
       validate_log(rule, record, index)
 
@@ -80,50 +85,38 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def valid_icmp_format(field)
-    field.is_a?(Integer) && field >= -1 && field <= 255
+    CloudController::ICMPRuleValidator.validate_icmp_control_message(field)
   end
 
   def valid_ports(ports)
     return false unless ports.is_a?(String)
-    return false if /[^\d\s\-,]/.match?(ports)
 
-    port_range = /\A\s*(\d+)\s*-\s*(\d+)\s*\z/.match(ports)
-    if port_range
-      left = port_range.captures[0].to_i
-      right = port_range.captures[1].to_i
-
-      return false if left >= right
-      return false unless port_in_range(left) && port_in_range(right)
-
-      return true
-    end
-
-    port_list = ports.split(',')
-    unless port_list.empty?
-      return false unless port_list.all? { |p| /\A\s*\d+\s*\z/.match(p) }
-      return false unless port_list.all? { |p| port_in_range(p.to_i) }
-
-      return true
-    end
-
-    false
-  end
-
-  def port_in_range(port)
-    port > 0 && port < 65_536
+    CloudController::TransportRuleValidator.validate_port(ports)
   end
 
   def valid_destination_type(destination, record, index)
+    error_message = 'destination must be a valid CIDR, IP address, or IP address range'
+    if CloudController::RuleValidator.comma_delimited_destinations_enabled?
+      error_message = 'nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+    end
+
     if destination.nil?
-      add_rule_error('destination must be a valid CIDR, IP address, or IP address range', record, index)
+      add_rule_error(error_message, record, index)
       return false
     end
+
     unless destination.is_a?(String)
       add_rule_error('destination must be a string', record, index)
       return false
     end
+
     if /\s/ =~ destination
       add_rule_error('destination must not contain whitespace', record, index)
+      return false
+    end
+
+    if !CloudController::RuleValidator.comma_delimited_destinations_enabled? && !destination.index(',').nil?
+      add_rule_error(error_message, record, index)
       return false
     end
 
@@ -131,32 +124,25 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def validate_destination(destination, record, index)
-    address_list = destination.split('-')
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
+    error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if CloudController::RuleValidator.comma_delimited_destinations_enabled?
+
+    address_list = destination.split('-')
 
     if address_list.length == 1
-      add_rule_error(error_message, record, index) unless parse_ip(address_list.first)
+      add_rule_error(error_message, record, index) unless CloudController::RuleValidator.parse_ip(address_list.first)
 
     elsif address_list.length == 2
-      ipv4s = parse_ip(address_list)
-      return add_rule_error(error_message, record, index) unless ipv4s
+      ipv4s = CloudController::RuleValidator.parse_ip(address_list)
+      return add_rule_error('destination IP address range is invalid', record, index) unless ipv4s
 
       sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
-      add_rule_error(error_message, record, index) unless ipv4s.first == sorted_ipv4s.first
+      reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+      add_rule_error(reversed_range_error, record, index) unless ipv4s.first == sorted_ipv4s.first
 
     else
       add_rule_error(error_message, record, index)
     end
-  end
-
-  def parse_ip(val)
-    if val.is_a?(Array)
-      val.map { |ip| NetAddr::IPv4.parse(ip) }
-    else
-      NetAddr::IPv4Net.parse(val)
-    end
-  rescue NetAddr::ValidationError
-    nil
   end
 
   def add_rule_error(message, record, index)

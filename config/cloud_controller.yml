@@ -261,6 +261,9 @@ default_staging_security_groups:
 default_running_security_groups:
 - dummy4
 
+security_groups:
+  enable_comma_delimited_destinations: false
+
 allowed_cors_domains:
 - http://*.appspot.com
 - http://*.inblue.net

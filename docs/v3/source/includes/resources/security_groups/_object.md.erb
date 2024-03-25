@@ -26,7 +26,7 @@ Name | Type | Description
 | Name | Type | Description | Required | Default
 | ---- | ---- | ----------- | -------- | -------
 | **protocol** | _string_ | Protocol type Valid values are `tcp`, `udp`, `icmp`, or `all` | yes | N/A |
-| **destination** | _string_ | Destinations that the rule applies to Valid CIDR, IP address, or IP address range | yes | N/A |
+| **destination** | _string_ | The destination where the rule applies. Must be a singular Valid CIDR, IP address, or IP address range unless `cc.security_groups.enable_comma_delimited_destinations` is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges.  | yes | N/A |
 | **ports** | _string_ | Ports that the rule applies to; can be a single port (`9000`), a comma-separated list (`9000,9001`), or a range (`9000-9200`) | no | `null` |
 | **type** | _integer_ |[Type](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types) required for ICMP protocol; valid values are between -1 and 255 (inclusive), where -1 allows all | no | `null` |
 | **code** | _integer_ |[Code](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes) required for ICMP protocol; valid values are between -1 and 255 (inclusive), where -1 allows all | no | `null` |
