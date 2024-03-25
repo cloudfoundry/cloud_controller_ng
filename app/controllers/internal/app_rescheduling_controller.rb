@@ -18,6 +18,8 @@ module VCAP::CloudController
       rescheduling_payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
 
       Repositories::ProcessEventRepository.record_rescheduling(process, rescheduling_payload)
+
+      [200, '{}']
     end
 
     private

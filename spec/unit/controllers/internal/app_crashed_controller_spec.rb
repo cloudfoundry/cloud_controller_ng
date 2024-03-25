@@ -33,6 +33,7 @@ module VCAP::CloudController
       it 'audits the app crashed event' do
         post url, MultiJson.dump(crashed_request)
         expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq '{}'
 
         app_event = Event.find(actee: diego_process.guid, actor_type: 'app')
 
@@ -51,6 +52,7 @@ module VCAP::CloudController
       it 'audits the process crashed event' do
         post url, MultiJson.dump(crashed_request)
         expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq '{}'
 
         app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
 
@@ -75,6 +77,7 @@ module VCAP::CloudController
           post url, MultiJson.dump(crashed_request)
 
           expect(last_response.status).to eq(404)
+          expect(last_response.body).to match(/ProcessNotFound/)
         end
       end
     end

@@ -19,6 +19,8 @@ module VCAP::CloudController
 
       Repositories::ProcessEventRepository.record_crash(process, crash_payload)
       Repositories::AppEventRepository.new.create_app_crash_event(process, crash_payload)
+
+      [200, '{}']
     end
 
     private

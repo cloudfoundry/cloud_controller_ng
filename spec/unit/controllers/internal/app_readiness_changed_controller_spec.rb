@@ -33,6 +33,7 @@ module VCAP::CloudController
         it 'audits the app readiness changed event' do
           post url, MultiJson.dump(readiness_changed_request)
           expect(last_response.status).to eq(200)
+          expect(last_response.body).to eq '{}'
 
           app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
 
@@ -52,6 +53,7 @@ module VCAP::CloudController
         it 'audits the app readiness changed event' do
           post url, MultiJson.dump(readiness_changed_request)
           expect(last_response.status).to eq(200)
+          expect(last_response.body).to eq '{}'
 
           app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
 

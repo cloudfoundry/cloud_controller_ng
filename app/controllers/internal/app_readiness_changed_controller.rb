@@ -18,6 +18,8 @@ module VCAP::CloudController
       payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
 
       Repositories::ProcessEventRepository.record_readiness_changed(process, payload)
+
+      [200, '{}']
     end
 
     private
