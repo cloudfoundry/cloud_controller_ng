@@ -968,7 +968,7 @@ RSpec.describe 'v3 service credential bindings' do
         it 'fails as can not be done' do
           api_call.call(admin_headers)
 
-          expect(last_response).to have_status_code(502)
+          expect(last_response).to have_status_code(400)
         end
       end
 
@@ -1092,7 +1092,7 @@ RSpec.describe 'v3 service credential bindings' do
         it 'fails as can not be done' do
           api_call.call(admin_headers)
 
-          expect(last_response).to have_status_code(502)
+          expect(last_response).to have_status_code(400)
         end
       end
 

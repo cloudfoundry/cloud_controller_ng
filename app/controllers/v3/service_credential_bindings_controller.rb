@@ -163,9 +163,7 @@ class ServiceCredentialBindingsController < ApplicationController
 
     render status: :ok, json: parameters
   rescue ServiceBindingRead::NotSupportedError
-    raise CloudController::Errors::ApiError.
-      new_from_details('ServiceFetchBindingParametersNotSupported').
-      with_response_code(502)
+    raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
   end
 
   private
