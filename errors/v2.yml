@@ -1357,4 +1357,4 @@
 420001:
   name: DeserializationError
   http_code: 500
-  message: "Failed to deserialize: %s"
+  message: "%s"
