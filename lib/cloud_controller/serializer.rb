@@ -10,10 +10,7 @@ module VCAP::CloudController::Serializer
         begin
           MultiJson.load string
         rescue MultiJson::ParseError
-          logger = Steno.logger('cc.serializer')
-          error_log = "Failed to deserialize #{guid} for object type #{self.class}. Trying to deserialize #{string.dump}. You may have to delete and recreate the object"
-          logger.error(error_log)
-          raise CloudController::Errors::ApiError.new_from_details('DeserializationError', error_log)
+          raise CloudController::Errors::ApiError.new_from_details('DeserializationError', "Failed to deserialize #{guid} for object type #{self.class}. Trying to deserialize #{string}. You may have to delete and recreate the object")
         end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
