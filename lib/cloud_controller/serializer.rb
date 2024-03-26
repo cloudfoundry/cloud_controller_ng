@@ -10,7 +10,8 @@ module VCAP::CloudController::Serializer
         begin
           MultiJson.load string
         rescue MultiJson::ParseError
-          raise CloudController::Errors::ApiError.new_from_details('DeserializationError', "Failed to deserialize #{guid} for object type #{self.class}. Trying to deserialize #{string}. You may have to delete and recreate the object")
+          error = "Failed to deserialize #{guid} for object type #{self.class}. Trying to deserialize #{string}. You may have to delete and recreate the object"
+          raise CloudController::Errors::ApiError.new_from_details('DeserializationError', error)
         end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
