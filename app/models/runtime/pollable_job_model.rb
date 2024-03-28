@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def self.number_of_active_jobs_by_user(user_guid)
-      PollableJobModel.where(state: ['PROCESSING', 'POLLING'], user_guid: user_guid).count
+      PollableJobModel.where(state: %w[PROCESSING POLLING], user_guid: user_guid).count
     end
   end
 end

@@ -26,7 +26,7 @@ module VCAP::CloudController
         else
           user_guid = VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext).user_guid
           number_of_active_jobs = 0
-          if (user_guid)
+          if user_guid
             number_of_active_jobs = PollableJobModel.number_of_active_jobs_by_user(user_guid)
             job.values[:priority] += number_of_active_jobs
           end
