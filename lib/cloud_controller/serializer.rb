@@ -7,7 +7,12 @@ module VCAP::CloudController::Serializer
         string = send("#{accessor_method_name}_without_serialization")
         return if string.blank?
 
-        MultiJson.load string
+        begin
+          MultiJson.load string
+        rescue MultiJson::ParseError
+          error = "Failed to deserialize #{guid} for object type #{self.class}. Trying to deserialize #{string}. You may have to delete and recreate the object"
+          raise CloudController::Errors::ApiError.new_from_details('DeserializationError', error)
+        end
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name
       alias_method accessor_method_name, "#{accessor_method_name}_with_serialization"

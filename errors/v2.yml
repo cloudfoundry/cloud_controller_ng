@@ -1353,3 +1353,8 @@
   name: KorifiError
   http_code: 500
   message: "%s"
+
+420001:
+  name: DeserializationError
+  http_code: 500
+  message: "%s"
