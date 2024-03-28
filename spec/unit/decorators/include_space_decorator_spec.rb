@@ -7,6 +7,10 @@ module VCAP::CloudController
     let(:space2) { Space.make(name: 'second-space') }
     let(:apps) { [AppModel.make(space: space1), AppModel.make(space: space2), AppModel.make(space: space1)] }
 
+    before do
+      allow(Permissions).to receive(:new).and_return(double(can_read_globally?: true))
+    end
+
     it 'decorates the given hash with spaces from apps' do
       undecorated_hash = { foo: 'bar' }
       hash = subject.decorate(undecorated_hash, apps)
