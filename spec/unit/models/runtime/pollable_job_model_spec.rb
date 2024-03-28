@@ -24,6 +24,36 @@ module VCAP::CloudController
       end
     end
 
+    describe('.number_of_active_jobs_by_user') do
+      let(:delayed_job) { Delayed::Backend::Sequel::Job.create }
+
+      context 'with finished and active jobs' do
+        before do
+          PollableJobModel.create(state: 'PROCESSING', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+          PollableJobModel.create(state: 'POLLING', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+          PollableJobModel.create(state: 'FAILED', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+          PollableJobModel.create(state: 'COMPLETE', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+        end
+
+        it 'returns the number of active jobs created by the user' do
+          result = PollableJobModel.number_of_active_jobs_by_user('some-user-guid')
+          expect(result).to eq(2)
+        end
+      end
+
+      context 'without active jobs' do
+        before do
+          PollableJobModel.create(state: 'FAILED', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+          PollableJobModel.create(state: 'COMPLETE', delayed_job_guid: delayed_job.guid, user_guid: 'some-user-guid')
+        end
+
+        it 'returns 0' do
+          result = PollableJobModel.number_of_active_jobs_by_user('some-user-guid')
+          expect(result).to eq(0)
+        end
+      end
+    end
+
     describe '#complete?' do
       context 'when the state is complete' do
         let(:job) { PollableJobModel.make(state: 'COMPLETE') }

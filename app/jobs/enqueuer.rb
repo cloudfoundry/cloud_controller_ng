@@ -43,7 +43,7 @@ module VCAP::CloudController
         request_id = ::VCAP::Request.current_id
         timeout_job = TimeoutJob.new(job, job_timeout)
         logging_context_job = LoggingContextJob.new(timeout_job, request_id)
-        @opts[:priority] = job_priority unless job_priority.nil?
+        @opts[:priority] = job_priority unless @opts[:priority] || job_priority.nil?
         Delayed::Job.enqueue(logging_context_job, @opts)
       end
 
