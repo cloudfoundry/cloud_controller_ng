@@ -9,6 +9,7 @@
     <envs>
       <env name="DB" value="postgres" />
       <env name="DB_CONNECTION_STRING" value="postgres://postgres:supersecret@localhost:5432/ccdb" />
+      <env name="CLOUD_CONTROLLER_NG_CONFIG" value="tmp/cloud_controller.yml" />
       <env name="DISABLE_SPRING" value="true" />
     </envs>
     <EXTENSION ID="BundlerRunConfigurationExtension" BUNDLE_MODE="AUTO" bundleExecEnabled="true" />

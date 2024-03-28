@@ -1,0 +1,11 @@
+{
+  "report_interval": "1m",
+  "ca_file": "/bbs/certs/locket_ca.crt",
+  "cert_file": "/bbs/certs/locket.crt",
+  "key_file": "/bbs/certs/locket.key",
+  "debug_address": "127.0.0.1:17018",
+  "listen_address": "127.0.0.1:8891",
+  "log_level": "debug",
+  "database_connection_string": "postgres://postgres:supersecret@postgres:5432/locket",
+  "database_driver": "postgres"
+}
