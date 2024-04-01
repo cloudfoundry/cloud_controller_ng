@@ -336,7 +336,7 @@ GEM
       ruby2_keywords (~> 0.0.1)
     mutex_m (0.2.0)
     mysql2 (0.5.6)
-    net-ssh (7.2.1)
+    net-ssh (7.2.2)
     netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (9.7.1)
