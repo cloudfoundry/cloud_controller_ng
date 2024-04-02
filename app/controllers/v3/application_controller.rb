@@ -34,6 +34,22 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('BadRequest', message)
   end
 
+  def check_utf8_encoding!(yaml_data)
+    if yaml_data.is_a?(Hash)
+      yaml_data.each_value do |value|
+        check_utf8_encoding!(value)
+      end
+    elsif yaml_data.is_a?(Array)
+      yaml_data.each do |value|
+        check_utf8_encoding!(value)
+      end
+    else
+      return unless yaml_data.is_a?(String) && !yaml_data.force_encoding('UTF-8').valid_encoding?
+
+      message_parse_error!('Invalid UTF-8 encoding in YAML data')
+    end
+  end
+
   def message_parse_error!(message)
     raise CloudController::Errors::ApiError.new_from_details('MessageParseError', message)
   end
@@ -95,6 +111,7 @@ class ApplicationController < ActionController::Base
     yaml = Psych.safe_load(request.body.read, permitted_classes: [], permitted_symbols: [], aliases: allow_yaml_aliases, strict_integer: true)
 
     message_parse_error!('invalid request body') unless yaml.is_a? Hash
+    check_utf8_encoding!(yaml)
     @parsed_yaml = yaml
   rescue Psych::BadAlias
     bad_request!('Manifest does not support Anchors and Aliases')

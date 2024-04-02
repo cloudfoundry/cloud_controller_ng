@@ -218,6 +218,124 @@ RSpec.describe 'Space Manifests' do
       )
     end
 
+    context 'when the manifest contains binary-encoded URL(s) for the buildpack(s)' do
+      context 'and it contains non-valid data' do
+        context 'in the buildpacks section' do
+          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:yml_manifest_with_binary_invalid_buildpacks) do
+            "---
+            applications:
+            - name: #{app1_model.name}
+              buildpacks:
+              - !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0ww=="
+          end
+
+          it 'returns an appropriate error' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_invalid_buildpacks, yml_headers(user_header)
+            expect(last_response.status).to eq(400)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
+          end
+        end
+
+        context 'in the buildpack part' do
+          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:yml_manifest_with_binary_invalid_buildpack) do
+            "---
+            applications:
+            - name: #{app1_model.name}
+              buildpack: !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0ww=="
+          end
+
+          it 'returns an appropriate error' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_invalid_buildpack, yml_headers(user_header)
+            expect(last_response.status).to eq(400)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
+          end
+        end
+
+        context 'mixed with valid data for the buildpacks' do
+          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:yml_manifest_with_binary_buildpacks) do
+            "---
+            applications:
+            - name: #{app1_model.name}
+              buildpacks:
+              - !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0
+              - !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0ww=="
+          end
+
+          it 'returns an appropriate error' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_buildpacks, yml_headers(user_header)
+            expect(last_response.status).to eq(400)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
+          end
+        end
+      end
+
+      context 'and it contains valid data' do
+        context 'for the buildpacks' do
+          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:yml_manifest_with_binary_valid_buildpacks) do
+            "---
+            applications:
+            - name: #{app1_model.name}
+              buildpacks:
+              - !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0
+              - !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2J1aWxkcGFja3MvbXktc3BlY2lhbC1idWlsZHBhY2s="
+          end
+
+          it 'applies the manifest' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_valid_buildpacks, yml_headers(user_header)
+            expect(last_response.status).to eq(202)
+            job_guid = VCAP::CloudController::PollableJobModel.last.guid
+            expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
+
+            Delayed::Worker.new.work_off
+            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+            app1_model.reload
+            lifecycle_data = app1_model.lifecycle_data
+            expect(lifecycle_data.buildpacks.first).to include('https://github.com/cloudfoundry/nginx-buildpack.git')
+            expect(lifecycle_data.buildpacks.second).to include('https://github.com/buildpacks/my-special-buildpack')
+          end
+        end
+
+        context 'for single buildpack' do
+          let(:app1_model) { VCAP::CloudController::AppModel.make(space:) }
+          let(:yml_manifest_with_binary_valid_buildpack) do
+            "---
+            applications:
+            - name: #{app1_model.name}
+              buildpack: !!binary |-
+                  aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZm91bmRyeS9uZ2lueC1idWlsZHBhY2suZ2l0"
+          end
+
+          it 'applies the manifest' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_valid_buildpack, yml_headers(user_header)
+            expect(last_response.status).to eq(202)
+            job_guid = VCAP::CloudController::PollableJobModel.last.guid
+            expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
+
+            Delayed::Worker.new.work_off
+            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+            app1_model.reload
+            lifecycle_data = app1_model.lifecycle_data
+            expect(lifecycle_data.buildpacks.first).to include('https://github.com/cloudfoundry/nginx-buildpack.git')
+          end
+        end
+      end
+    end
+
     context 'service bindings' do
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: {}) }
 
