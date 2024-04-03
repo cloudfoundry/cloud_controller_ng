@@ -92,6 +92,10 @@ Rails/Blank: # Alters logic if NilOrEmpty is true
 Rails/Present:  # Alters logic if NotNilAndNotEmpty is true
   NotNilAndNotEmpty: false
 
+Rails/Output: # Exclude for blobstore benchmark
+  Exclude:
+    - lib/cloud_controller/benchmark/blobstore.rb
+
 Naming/FileName:
   Exclude:
     - Guardfile
