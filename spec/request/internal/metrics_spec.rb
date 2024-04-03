@@ -114,8 +114,8 @@ RSpec.describe 'Metrics' do
     it 'includes job queue load metric labelled for each queue' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.body).not_to match(/cc_job_queues_load_total{queue="cc_api_0"} 1\.0/)
-      expect(last_response.body).not_to match(/cc_job_queues_load_total{queue="cc_generic"} 1\.0/)
+      expect(last_response.body).to match(/cc_job_queues_load_total{queue="cc_api_0"} 0\.0/)
+      expect(last_response.body).to match(/cc_job_queues_load_total{queue="cc_generic"} 0\.0/)
     end
   end
 

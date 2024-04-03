@@ -94,7 +94,9 @@ module VCAP::CloudController::Metrics
     end
 
     def update_job_queue_load
-      jobs_by_queue_with_run_now = Delayed::Job.where(Sequel.lit('attempts = ? AND run_at <= ?', 0, Time.now)).group_and_count(:queue)
+      jobs_by_queue_with_run_now = Delayed::Job.
+                                   where(Sequel.lit('run_at <= ?', Time.now)).
+                                   where(Sequel.lit('failed_at IS NULL')).group_and_count(:queue)
 
       total = 0
       pending_job_load_by_queue = jobs_by_queue_with_run_now.each_with_object({}) do |row, hash|

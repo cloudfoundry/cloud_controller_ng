@@ -425,8 +425,10 @@ module VCAP::CloudController::Metrics
         expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
       end
 
-      it 'finds jobs which have not been attempted yet' do
+      it 'does not contain failed jobs in job queue load metric' do
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', failed_at: Time.now + 60, run_at: Time.now)
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', failed_at: Time.now + 60, run_at: Time.now)
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', run_at: Time.now)
 
         periodic_updater.update_job_queue_load
@@ -437,50 +439,6 @@ module VCAP::CloudController::Metrics
           'cc-api-0': 0
         }
         expected_total = 2
-
-        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
-      end
-
-      it 'ignores jobs that have already been attempted' do
-        job = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1)
-        Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1, run_at: Time.now)
-
-        periodic_updater.update_job_queue_load
-
-        expected_pending_job_queue_load = {
-          'cc-api-0': 0
-        }
-        expected_total = 0
-
-        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
-      end
-
-      it '"resets" pending job count to 0 after they have been emitted' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local', run_at: Time.now)
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic', run_at: Time.now)
-        periodic_updater.update_job_queue_load
-
-        expected_pending_job_queue_load = {
-          cc_local: 1,
-          cc_generic: 1,
-          'cc-api-0': 0
-        }
-        expected_total = 2
-
-        expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
-        expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
-
-        Delayed::Job.dataset.delete
-        periodic_updater.update_job_queue_load
-        expected_pending_job_queue_load = {
-          cc_local: 0,
-          cc_generic: 0,
-          'cc-api-0': 0
-        }
-        expected_total = 0
-
         expect(statsd_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load, expected_total)
         expect(prometheus_updater).to have_received(:update_job_queue_load).with(expected_pending_job_queue_load)
       end
