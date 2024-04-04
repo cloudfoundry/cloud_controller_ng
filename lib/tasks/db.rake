@@ -123,7 +123,7 @@ namespace :db do
   task ensure_migrations_are_current: :environment do
     RakeConfig.context = :migrate
 
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
+    logging_output
     db_logger = Steno.logger('cc.db.migrations')
     VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)

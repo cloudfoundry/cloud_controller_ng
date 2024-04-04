@@ -219,8 +219,8 @@ module VCAP
       end
     end
 
-    def self.logging(message)
-      log_info(message)
+    def self.logger
+      Steno.logger('cc.db.migrations')
     end
   end
 end
