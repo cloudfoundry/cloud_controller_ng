@@ -1,3 +1,5 @@
+require 'migrations/helpers/matchers'
+
 def mktmpsubdir(tmpdir, name)
   dir = File.join(tmpdir, name)
   Dir.mkdir(dir)
@@ -11,6 +13,9 @@ RSpec.shared_context 'migration' do
   let(:db) { Sequel::Model.db }
 
   before do
+    allow(db).to receive(:add_index).with(anything, anything, add_index_options).and_call_original
+    allow(db).to receive(:drop_index).with(anything, anything, drop_index_options).and_call_original
+
     Sequel.extension :migration
 
     # Find all migrations
