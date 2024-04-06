@@ -7,8 +7,7 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
       plugin :vcap_relations
       plugin :vcap_guid
     end
-    self.class.send(:remove_const, name) if self.class.const_defined?(name)
-    self.class.const_set(name, model_klass)
+    stub_const(name.to_s, model_klass)
     model_klass.set_dataset(DbConfig.new.connection[:"#{name.downcase}s"])
   end
 
