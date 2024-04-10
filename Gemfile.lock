@@ -360,7 +360,6 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.5)
-    posix-spawn (0.3.15)
     prometheus-client (4.2.2)
     pry (0.14.1)
       coderay (~> 1.1)
@@ -639,7 +638,6 @@ DEPENDENCIES
   palm_civet
   parallel_tests
   pg
-  posix-spawn (~> 0.3.15)
   prometheus-client
   pry-byebug
   public_suffix
