@@ -67,7 +67,7 @@ Usage: ./devenv.sh COMMAND
 
 Commands:
   create     - Setting up the development environment(containers)
-  start      - Starting the development environment(containers), a existing fully set up set of containers must exist.
+  start      - Starting the development environment(containers), an existing fully set up set of containers must exist.
   stop       - Stopping but not removing the development environment(containers)
   destroy    - Stopping and removing the development environment(containers)
   runconfigs - Copies matching run configurations for intellij and vscode into the respective folders
@@ -87,8 +87,6 @@ To run this script, ensure the following are installed on your local system:
 
 Upon executing `./devenv.sh create`, the necessary containers will be set up and the databases will be initialized and migrated. 
 
-
-
 As an optional step, execute `./devenv.sh runconfigs` to copy predefined settings and run configurations for this project into `.vscode` and `.idea` directories for VSCode and IntelliJ/RubyMine/JetBrains IDEs. These configurations are opinionated and, hence, not provided by default, but they do offer common configurations to debug `rspecs`, `cloud_controller`, `local_worker`, and `generic_worker`.
 
 #### Credentials
@@ -99,7 +97,7 @@ In case you need them to configure them somewhere else (e.g. database visualizer
 - MySQL: root:supersecret@127.0.0.1:3306
 - UAA Admin: 
 ```bash
-uaac target http://localhost:8080 --skip-ssl-validation
+uaac target http://localhost:8080
 uaac token client get admin -s "adminsecret"
 ```
 - CF Admin:
@@ -107,6 +105,26 @@ uaac token client get admin -s "adminsecret"
 cf api http://localhost
 cf login -u ccadmin -p secret
 ```
+
+#### Starting the Cloud Controller locally
+
+When the Docker containers have been set up as described above, you can start the cloud controller locally. Start the main process with:
+```
+./bin/cloud_controller -c ./tmp/cloud_controller.yml
+```
+Then start a local worker:
+```
+export CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml
+bundle exec rake jobs:local
+```
+And finally start a delayed_job worker:
+```
+export CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml
+bundle exec rake jobs:generic
+```
+
+Known limitations:
+- The [uaa_client_manager](https://github.com/cloudfoundry/cloud_controller_ng/blob/96c729fd116843ce06f40e7325a89f59b64d5f86/lib/services/sso/uaa/uaa_client_manager.rb#L29) requires SSL for UAA connections. The UAA instance in the Docker container provides however only plain http connections. You can set `http.use_ssl` to `false` as workaround.
 
 ### Unit Tests
 **TLDR:** Always run `bundle exec rake` before committing
@@ -167,7 +185,7 @@ You should run this before running rake in order to ensure that the `cc_test` da
 
 The development team typically will run the specs to a single file as (e.g.)
 
-    bundle exec rspec spec/controllers/runtime/users_controller_spec.rb
+    bundle exec rspec spec/unit/controllers/runtime/users_controller_spec.rb
 
 #### Running all the unit tests
 

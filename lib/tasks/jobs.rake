@@ -26,7 +26,8 @@ namespace :jobs do
   desc 'Start a delayed_job worker.'
   task :generic, [:name] => :environment do |_t, args|
     puts RUBY_DESCRIPTION
-    args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
+    queue = VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s
+    args.with_defaults(name: queue)
 
     RakeConfig.context = :worker
     queues = [
