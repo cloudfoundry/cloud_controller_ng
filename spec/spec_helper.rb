@@ -70,8 +70,6 @@ init_block = proc do
   require 'cloud_controller'
   require 'allowy/rspec'
 
-  require 'posix/spawn'
-
   require 'rspec_api_documentation'
   require 'services'
 
