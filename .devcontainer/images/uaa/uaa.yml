@@ -7,4 +7,11 @@ scim:
     - ccreader|secret|scim.write,cloud_controller.read
     - ccwriter|secret|scim.write,cloud_controller.write
     - ccauditor|secret|scim.write,cloud_controller.global_auditor
-    - cc-service-dashboards|some-sekret|cloud_controller.read,cloud_controller_service_permissions.read
+oauth:
+  clients:
+    cc-service-dashboards:
+      authorities: clients.read,clients.write,clients.admin
+      authorized-grant-types: client_credentials
+      secret: dashboards-secret
+      scope: openid,cloud_controller_service_permissions.read
+      id: cc-service-dashboards

@@ -22,7 +22,7 @@ create_command(){
   docker buildx bake -f docker-compose.yml &
   docker-compose -p "" pull &
   wait $(jobs -p)
-  docker-compose -p "" up -d
+  docker-compose -p "" up -d --build
   ./.devcontainer/scripts/setupDevelopmentEnvironment.sh
 }
 
