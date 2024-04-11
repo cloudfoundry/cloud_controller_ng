@@ -35,8 +35,8 @@ module VCAP::CloudController
     rescue Sequel::ValidationFailed => e
       validation_error!(e, route.host, route.path, route.port, space, domain)
     rescue Sequel::UniqueConstraintViolation => e
-      logger.warn("error creating route #{e}, retrying once")
-      RouteCreate.new(user_audit_info).create(message:, space:, domain:, manifest_triggered:)
+      logger.warn("error creating route #{e}, retrying")
+      RouteCreate.new(@user_audit_info).create(message:, space:, domain:, manifest_triggered:)
     end
 
     private
