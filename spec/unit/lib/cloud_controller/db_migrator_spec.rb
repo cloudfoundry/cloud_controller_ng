@@ -61,5 +61,19 @@ RSpec.describe DBMigrator do
       expect(db).to receive(:run).with('SET statement_timeout TO 60000')
       DBMigrator.new(db, nil, 60)
     end
+
+    it 'does not set worker_mem' do
+      skip if db.database_type != :postgres
+      expect(db).to receive(:run) # required for 'SET statement_timeout'
+      expect(db).not_to receive(:run).with('SET work_mem = 1234')
+      DBMigrator.new(db, nil, nil)
+    end
+
+    it 'sets worker_mem to provided value' do
+      skip if db.database_type != :postgres
+      expect(db).to receive(:run) # required for 'SET statement_timeout'
+      expect(db).to receive(:run).with('SET work_mem = 1234')
+      DBMigrator.new(db, nil, nil, 1234)
+    end
   end
 end
