@@ -1092,6 +1092,21 @@ RSpec.describe 'Routes Request' do
             ]
           )
         end
+
+        context 'user is org_auditor' do
+          let(:user_header) { set_user_with_header_as_role(user: user, role: 'org_auditor', org: org) }
+
+          it 'includes the unique organizations for the routes, but no spaces' do
+            get "/v3/routes/#{route.guid}?include=space,space.organization", nil, user_header
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['included']).to match_json_response(
+              'spaces' => [],
+              'organizations' => [
+                org_json_generator.call(org)
+              ]
+            )
+          end
+        end
       end
     end
   end
