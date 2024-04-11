@@ -12,6 +12,6 @@ oauth:
     cc-service-dashboards:
       authorities: clients.read,clients.write,clients.admin
       authorized-grant-types: client_credentials
-      secret: dashboards-secret
+      secret: some-sekret
       scope: openid,cloud_controller_service_permissions.read
       id: cc-service-dashboards
