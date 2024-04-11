@@ -218,5 +218,9 @@ module VCAP
         Sequel.function(:get_uuid)
       end
     end
+
+    def self.logger
+      Steno.logger('cc.db.migrations')
+    end
   end
 end

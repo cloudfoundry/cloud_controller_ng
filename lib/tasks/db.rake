@@ -123,7 +123,7 @@ namespace :db do
   task ensure_migrations_are_current: :environment do
     RakeConfig.context = :migrate
 
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
+    logging_output
     db_logger = Steno.logger('cc.db.migrations')
     VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
@@ -228,7 +228,7 @@ namespace :db do
   end
 
   def connect
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
+    logging_output
     logger = Steno.logger('cc.db.connect')
     log_method = lambda do |retries, exception|
       logger.info("[Attempt ##{retries}] Retrying because [#{exception.class} - #{exception.message}]: #{exception.backtrace.first(5).join(' | ')}")
@@ -242,7 +242,7 @@ namespace :db do
   end
 
   def migrate
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
+    logging_output
     db_logger = Steno.logger('cc.db.migrations')
     begin
       require_relative '../../spec/support/bootstrap/db_config'
@@ -254,7 +254,7 @@ namespace :db do
   end
 
   def rollback(number_to_rollback)
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new($stdout)]))
+    logging_output
     db_logger = Steno.logger('cc.db.migrations')
     begin
       require_relative '../../spec/support/bootstrap/db_config'
@@ -263,6 +263,12 @@ namespace :db do
       # Only needed when running tests
     end
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
+  end
+
+  def logging_output
+    VCAP::CloudController::StenoConfigurer.new(RakeConfig.config.get(:logging)).configure do |steno_config_hash|
+      steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout)
+    end
   end
 
   def parse_db_connection_string
