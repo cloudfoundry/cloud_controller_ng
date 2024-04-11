@@ -7,10 +7,10 @@ class DBMigrator
   def self.from_config(config, db_logger)
     VCAP::CloudController::Encryptor.db_encryption_key = config.get(:db_encryption_key)
     db = VCAP::CloudController::DB.connect(config.get(:db), db_logger)
-    new(db, config.get(:max_migration_duration_in_minutes), config.get(:max_migration_statement_runtime_in_seconds))
+    new(db, config.get(:max_migration_duration_in_minutes), config.get(:max_migration_statement_runtime_in_seconds), config.get(:migration_psql_worker_memory_kb))
   end
 
-  def initialize(db, max_migration_duration_in_minutes=nil, max_migration_statement_runtime_in_seconds=nil)
+  def initialize(db, max_migration_duration_in_minutes=nil, max_migration_statement_runtime_in_seconds=nil, migration_psql_worker_memory_kb=nil)
     @db = db
     @timeout_in_minutes = default_two_weeks(max_migration_duration_in_minutes)
 
@@ -20,7 +20,10 @@ class DBMigrator
                                                max_migration_statement_runtime_in_seconds * 1000
                                              end
 
-    @db.run("SET statement_timeout TO #{@max_statement_runtime_in_milliseconds}") if @db.database_type == :postgres
+    return unless @db.database_type == :postgres
+
+    @db.run("SET statement_timeout TO #{@max_statement_runtime_in_milliseconds}")
+    @db.run("SET work_mem = #{migration_psql_worker_memory_kb}") unless migration_psql_worker_memory_kb.nil?
   end
 
   def apply_migrations(opts={})
