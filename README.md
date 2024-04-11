@@ -114,13 +114,15 @@ When the Docker containers have been set up as described above, you can start th
 ```
 Then start a local worker:
 ```
-export CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml
-bundle exec rake jobs:local
+CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:local
 ```
-And finally start a delayed_job worker:
+Start a delayed_job worker:
 ```
-export CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml
-bundle exec rake jobs:generic
+CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:generic
+```
+And finally start the scheduler:
+```
+CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake clock:start
 ```
 
 Known limitations:

@@ -22,7 +22,8 @@ module VCAP::CloudController
     FREQUENTS = [
       { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup },
       { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup },
-      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup }
+      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup },
+      { name: 'service_operations_initial_cleanup', class: Jobs::Runtime::ServiceOperationsInitialCleanup }
     ].freeze
 
     def initialize(config)
