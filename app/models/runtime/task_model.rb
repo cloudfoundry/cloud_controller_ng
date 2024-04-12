@@ -35,7 +35,7 @@ module VCAP::CloudController
       if running_state?
         create_start_event
       elsif terminal_state?
-        create_stop_event
+        create_stop_event_if_needed
       end
     end
 
@@ -104,6 +104,15 @@ module VCAP::CloudController
       Repositories::AppUsageEventRepository.new.create_from_task(self, 'TASK_STARTED')
     end
 
+    def create_stop_event_if_needed
+      app_usage_repo = Repositories::AppUsageEventRepository.new
+
+      start_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STARTED')
+      existing_stop_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STOPPED')
+      return if start_event.nil? || existing_stop_event.present?
+
+      create_stop_event
+    end
     def create_stop_event
       Repositories::AppUsageEventRepository.new.create_from_task(self, 'TASK_STOPPED')
     end
