@@ -29,7 +29,7 @@ jobs:
     - uses: ./.github/workflows/composite/setup
     - name: Run Rubocop
       run: bundle exec rake rubocop
-    - uses: ravsamhq/notify-slack-action@v1.1
+    - uses: ravsamhq/notify-slack-action@v2
       if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
@@ -62,7 +62,7 @@ jobs:
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
       run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake spec
-    - uses: ravsamhq/notify-slack-action@v1.1
+    - uses: ravsamhq/notify-slack-action@v2
       if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
@@ -92,7 +92,7 @@ jobs:
     - uses: ./.github/workflows/composite/setup
     - name: Run tests
       run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake spec
-    - uses: ravsamhq/notify-slack-action@v1.1
+    - uses: ravsamhq/notify-slack-action@v2
       if: github.event_name == 'push'
       with:
         status: ${{ job.status }}
