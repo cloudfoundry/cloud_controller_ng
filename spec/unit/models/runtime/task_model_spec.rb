@@ -16,7 +16,10 @@ module VCAP::CloudController
     describe 'after update' do
       let(:task) { TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE) }
 
-      context 'when the task is moving to SUCCEEDED_STATE' do
+      context 'when the task is moving to the SUCCEEDED_STATE' do
+        let(:task) { TaskModel.make(app: parent_app, state: TaskModel::RUNNING_STATE) }
+        let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+
         it 'creates a TASK_STOPPED event' do
           task.update(state: TaskModel::SUCCEEDED_STATE)
 
@@ -27,14 +30,73 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the task is moving to FAILED_STATE' do
-        it 'creates a TASK_STOPPED event' do
-          task.update(state: TaskModel::FAILED_STATE)
+      context 'when the task is moving to the FAILED_STATE' do
+        context 'when the task is moving from the RUNNING state' do
+          let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::RUNNING_STATE) }
 
-          event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
-          expect(event).not_to be_nil
-          expect(event.task_guid).to eq(task.guid)
-          expect(event.parent_app_guid).to eq(task.app.guid)
+          it 'creates a TASK_STOPPED event' do
+            task.update(state: TaskModel::FAILED_STATE)
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).not_to be_nil
+            expect(event.task_guid).to eq(task.guid)
+            expect(event.parent_app_guid).to eq(task.app.guid)
+          end
+        end
+
+        context 'when the task is moving from the PENDING state' do
+          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE) }
+
+          it 'does not create a TASK_STOPPED event' do
+            task.update(state: TaskModel::FAILED_STATE)
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).to be_nil
+          end
+        end
+
+        context 'when the task is moving from the CANCELING state' do
+          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::CANCELING_STATE) }
+
+          context 'when the task has a TASK_STARTED event' do
+            let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+
+            it 'creates a TASK_STOPPED event' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+              expect(event).not_to be_nil
+              expect(event.task_guid).to eq(task.guid)
+              expect(event.parent_app_guid).to eq(task.app.guid)
+            end
+          end
+
+          context 'when the task does not have a TASK_STARTED event' do
+            let!(:start_event) { nil }
+
+            it 'does not create a TASK_STOPPED event' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+              expect(event).to be_nil
+            end
+          end
+        end
+
+        context 'when the task already has a TASK_STOPPED event' do
+          let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
+
+          before do
+            AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STOPPED')
+          end
+
+          it 'does not create additional TASK_STOPPED event' do
+            task.update(state: TaskModel::FAILED_STATE)
+
+            events = AppUsageEvent.where(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(events.count).to equal(1)
+          end
         end
       end
 
@@ -57,6 +119,7 @@ module VCAP::CloudController
       end
 
       context 'when the state is not changing' do
+        let!(:start_event) { AppUsageEvent.make(task_guid: task.guid, state: 'TASK_STARTED') }
         let(:task) { TaskModel.make(app: parent_app, state: TaskModel::FAILED_STATE) }
 
         it 'does not create a TASK_STOPPED event' do

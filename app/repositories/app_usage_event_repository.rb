@@ -8,6 +8,10 @@ module VCAP::CloudController
         AppUsageEvent.find(guid:)
       end
 
+      def find_by_task_and_state(task:, state:)
+        AppUsageEvent.find(task_guid: task.guid, state: state)
+      end
+
       def create_from_process(process, state_name=nil)
         AppUsageEvent.create(
           state: state_name || process.state,

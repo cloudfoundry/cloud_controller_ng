@@ -42,6 +42,8 @@ module VCAP::CloudController
         context 'when a running CC task is missing from BBS' do
           let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
           let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
+          let!(:start_event_for_running_task) { AppUsageEvent.make(task_guid: running_task.guid, state: 'TASK_STARTED') }
+          let!(:start_event_for_canceling_task) { AppUsageEvent.make(task_guid: canceling_task.guid, state: 'TASK_STARTED') }
           let(:bbs_tasks) { [] }
 
           it 'marks the tasks as failed' do

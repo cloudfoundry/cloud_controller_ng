@@ -4,7 +4,7 @@ require 'cloud_controller/diego/task_completion_handler'
 module VCAP::CloudController
   module Diego
     RSpec.describe TaskCompletionHandler do
-      let!(:task) { TaskModel.make }
+      let!(:task) { TaskModel.make(:pending) }
       let(:handler) { TaskCompletionHandler.new }
       let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
 
@@ -13,6 +13,10 @@ module VCAP::CloudController
       end
 
       describe '#complete_task' do
+        before do
+          task.update(state: TaskModel::RUNNING_STATE)
+        end
+
         context 'when the task succeeds' do
           let(:response) do
             {
