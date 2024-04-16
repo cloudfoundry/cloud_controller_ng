@@ -1,6 +1,7 @@
 require 'puma'
 require 'puma/configuration'
 require 'puma/events'
+require 'cloud_controller/logs/steno_io'
 
 module VCAP::CloudController
   class PumaRunner
@@ -35,7 +36,10 @@ module VCAP::CloudController
         end
       end
 
-      log_writer = Puma::LogWriter.stdio
+      log_writer = Puma::LogWriter.new(StenoIO.new(logger, :info), StenoIO.new(logger, :error))
+
+      # replace PidFormatter as we already have the pid in the Steno log record
+      puma_config.options[:log_formatter] = Puma::LogWriter::DefaultFormatter.new
 
       events = Puma::Events.new
       events.on_booted do
