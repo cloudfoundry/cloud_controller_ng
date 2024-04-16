@@ -43,7 +43,7 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
         expect(db[table.to_sym].columns).to include(:key)
         expect(db[table.to_sym].columns).not_to include(:key_name)
       end
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       annotation_tables.each do |table|
         expect(db[table.to_sym].columns).not_to include(:key)
         expect(db[table.to_sym].columns).to include(:key_name)

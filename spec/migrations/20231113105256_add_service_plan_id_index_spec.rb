@@ -7,6 +7,6 @@ RSpec.describe 'migration to add the service_plan_id index', isolation: :truncat
   end
 
   it 'succeeds' do
-    Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true)
+    Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
   end
 end
