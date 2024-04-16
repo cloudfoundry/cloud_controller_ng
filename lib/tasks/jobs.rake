@@ -66,6 +66,9 @@ namespace :jobs do
     def start_working
       config = RakeConfig.config
       BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
+      OpenTelemetry::SDK.configure do |c|
+        c.service_name = 'cloud_controller_woker'
+      end
 
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")

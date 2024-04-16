@@ -395,3 +395,13 @@ custom_metric_tag_prefix_list: ["metric.tag.cloudfoundry.org"]
 
 max_manifest_service_binding_poll_duration_in_seconds: 60
 update_metric_tags_on_rename: true
+
+otlp:
+  tracing:
+    enabled: false
+    api_url: ''
+    api_token: ''
+    sampling_ratio: 1.0
+    propagation:
+      extractors: ['tracecontext', 'xray', 'jaeger', 'ottrace', 'baggage', 'b3', 'b3multi']
+      injectors: ['tracecontext', 'baggage', 'b3']

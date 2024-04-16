@@ -181,7 +181,20 @@ module VCAP::CloudController
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
             internal_route_vip_range: String,
-            custom_metric_tag_prefix_list: Array
+            custom_metric_tag_prefix_list: Array,
+
+            otlp: {
+              tracing: {
+                enabled: bool,
+                api_url: String,
+                api_token: String,
+                sampling_ratio: Float,
+                propagation: {
+                  extractors: Array,
+                  injectors: Array
+                }
+              }
+            }
           }
         end
         # rubocop:enable Metrics/BlockLength

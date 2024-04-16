@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'active_support/core_ext/string/access'
+require "opentelemetry/sdk"
 
 module CloudFoundry
   module Middleware
@@ -18,6 +19,7 @@ module CloudFoundry
           ::VCAP::Request.current_id = nil
         end
 
+        OpenTelemetry::Trace::current_span.set_attribute('http.request.header.x-vcap-request-id', env['cf.request_id'])
         headers['X-VCAP-Request-ID'] = env['cf.request_id']
         [status, headers, body]
       end

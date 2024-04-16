@@ -16,10 +16,11 @@ module CloudFoundry
           @last_span_id = ::VCAP::Request.b3_span_id
           @last_env_input = env
           [200, {}, 'a body']
+          CloudFoundry::Middleware::Zipkin::Status
         end
       end
 
-      describe 'handling the request' do
+      describe 'old zipkin middleware behaviour' do
         let(:trace_id) { SecureRandom.hex(8) }
         let(:span_id) { SecureRandom.hex(8) }
         let(:request_headers) do

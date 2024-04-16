@@ -9,8 +9,9 @@ require 'rate_limiter'
 require 'service_broker_rate_limiter'
 require 'rate_limiter_v2_api'
 require 'new_relic_custom_attributes'
-require 'zipkin'
 require 'block_v3_only_roles'
+require 'open_telemetry_middleware'
+require 'opentelemetry/sdk'
 require 'below_min_cli_warning'
 
 module VCAP::CloudController
@@ -22,6 +23,7 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
+        use CloudFoundry::Middleware::OpenTelemetryFirstMiddleware
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
         use CloudFoundry::Middleware::VcapRequestId
@@ -29,7 +31,6 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
         use Honeycomb::Rack::Middleware, client: Honeycomb.client if config.get(:honeycomb)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
-        use CloudFoundry::Middleware::Zipkin
         use CloudFoundry::Middleware::RequestLogs, request_logs
         if config.get(:rate_limiter, :enabled)
           use CloudFoundry::Middleware::RateLimiter, {
@@ -64,12 +65,17 @@ module VCAP::CloudController
 
         map '/' do
           use CloudFoundry::Middleware::BlockV3OnlyRoles, { logger: Steno.logger('cc.unsupported_roles') }
+        end
+
+        use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
+
+        map '/' do
           run FrontController.new(config)
         end
 
-        map '/v3' do
-          run Rails.application.app
-        end
+          map '/v3' do
+            run Rails.application.app
+          end
 
         map '/healthz' do
           run ->(_) { [200, { 'Content-Type' => 'application/json' }, ['OK']] }

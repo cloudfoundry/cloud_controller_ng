@@ -1,23 +1,44 @@
 require 'jobs/wrapping_job'
 require 'presenters/error_presenter'
+require 'opentelemetry/sdk'
+require 'opentelemetry-propagator-b3'
 
 module VCAP::CloudController
   module Jobs
     class LoggingContextJob < WrappingJob
       attr_reader :request_id
 
-      def initialize(handler, request_id)
+      def initialize(handler, request_id, carrier)
         super(handler)
         @request_id = request_id
+        @carrier = carrier
       end
 
       def perform
-        with_request_id_set do
-          logger.info("about to run job #{wrapped_handler.class.name}")
-          super
+        tracer = OpenTelemetry.tracer_provider.tracer('cloud_controller_worker')
+        context = OpenTelemetry::Propagator::B3::Single::TextMapPropagator.new.extract(@carrier)
+
+        begin
+          span = tracer.start_span("Delayed_job", with_parent: context)
+          OpenTelemetry::Trace.with_span(span) do
+            span.set_attribute('X-Vcap-Request-Id', @request_id)
+            begin
+              with_request_id_set do
+                logger.info("about to run job #{wrapped_handler.class.name}")
+                super
+              end
+            rescue CloudController::Blobstore::BlobstoreError => e
+              raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
+            end
+          end
+        rescue Exception => e # rubocop:disable Lint/RescueException
+          span&.record_exception(e)
+          span&.status = Status.error("Unhandled exception of type: #{e.class}")
+          raise e
+        ensure
+          span&.finish
         end
-      rescue CloudController::Blobstore::BlobstoreError => e
-        raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
+
       end
 
       def success(job)

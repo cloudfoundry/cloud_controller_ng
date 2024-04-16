@@ -68,6 +68,22 @@ gem 'fog-openstack'
 gem 'cf-uaa-lib', '~> 4.0.4'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
+gem "opentelemetry-sdk", "~> 1.3"
+gem "opentelemetry-exporter-otlp", "~> 0.26.1"
+gem "opentelemetry-instrumentation-delayed_job", "~> 0.22.1"
+gem "opentelemetry-instrumentation-http", "~> 0.23.2"
+gem "opentelemetry-instrumentation-http_client", "~> 0.22.3"
+gem "opentelemetry-instrumentation-mysql2", "~> 0.27.0"
+gem "opentelemetry-instrumentation-pg", "~> 0.27.1"
+gem "opentelemetry-instrumentation-rake", "~> 0.2.1"
+gem "opentelemetry-instrumentation-rack", "~> 0.24"
+gem "opentelemetry-instrumentation-redis", "~> 0.25.3"
+gem "opentelemetry-instrumentation-sinatra", "~> 0.23.2"
+gem "opentelemetry-propagator-b3"
+gem "opentelemetry-propagator-jaeger", "~> 0.21.0"
+gem "opentelemetry-propagator-xray", "~> 0.22.1"
+gem "opentelemetry-propagator-ottrace", "~> 0.21.2"
+
 group :db do
   gem 'mysql2', '~> 0.5.6'
   gem 'pg'
