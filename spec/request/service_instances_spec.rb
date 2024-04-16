@@ -2870,7 +2870,7 @@ RSpec.describe 'V3 service instances' do
         expect(last_response).to have_status_code(204)
 
         get "/v3/service_instances/#{instance.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         expect(VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance).all).to be_empty
         expect(VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance).all).to be_empty
       end
@@ -3649,7 +3649,7 @@ RSpec.describe 'V3 service instances' do
     it 'shares the service instance to the target space and logs audit event' do
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -3713,7 +3713,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3738,7 +3738,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3765,7 +3765,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3792,7 +3792,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422 and does not share the instance' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3822,7 +3822,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422 and does not share the instance' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3846,7 +3846,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422 and the error' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3897,7 +3897,7 @@ RSpec.describe 'V3 service instances' do
     it 'unshares the service instance from the target space and logs audit event' do
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -3927,7 +3927,7 @@ RSpec.describe 'V3 service instances' do
         it 'deletes all bindings and successfully unshares' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
 
           service_instance.reload
           expect(service_instance).not_to be_shared
@@ -3944,7 +3944,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 502 and does not unshare' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_http_status(:bad_gateway)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3983,7 +3983,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -4002,7 +4002,7 @@ RSpec.describe 'V3 service instances' do
         it 'responds with 204' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
         end
       end
     end
@@ -4039,7 +4039,7 @@ RSpec.describe 'V3 service instances' do
     it 'respond with 404 when the user cannot read the originating space' do
       set_current_user_as_role(role: 'space_developer', org: other_space.organization, space: other_space, user: user)
       get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
     end
 
     describe 'fields' do
@@ -4374,7 +4374,7 @@ RSpec.describe 'V3 service instances' do
     }
 
     post "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", share_request.to_json, admin_headers
-    expect(last_response.status).to eq(200)
+    expect(last_response).to have_http_status(:ok)
   end
 
   def enable_sharing!

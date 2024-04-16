@@ -75,7 +75,7 @@ RSpec.describe 'Sidecars' do
       it 'deletes the sidecar' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
         delete "/v3/apps/#{app_model.guid}", nil, user_header
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
       end
     end
 
@@ -90,7 +90,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Name is too long (maximum is 255 characters)'
       end
     end
@@ -106,7 +106,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Process types must have at least 1 process_type'
       end
     end
@@ -124,7 +124,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error if the sidecar memory exceeds the process memory' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
       end
     end
@@ -204,7 +204,7 @@ RSpec.describe 'Sidecars' do
       }
       patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
@@ -235,7 +235,7 @@ RSpec.describe 'Sidecars' do
 
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
@@ -250,7 +250,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         patch "/v3/sidecars/#{other_sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq "Sidecar with name 'My sidecar' already exists for given app"
       end
     end
@@ -262,7 +262,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Command is too long (maximum is 4096 characters)'
       end
     end
@@ -274,7 +274,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Name is too long (maximum is 255 characters)'
       end
     end
@@ -286,7 +286,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Process type is too long (maximum is 255 characters)'
       end
     end
@@ -298,7 +298,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'Process types must have at least 1 process_type'
       end
     end
@@ -306,7 +306,7 @@ RSpec.describe 'Sidecars' do
     describe 'when the sidecar is not found' do
       it 'returns 404' do
         patch '/v3/sidecars/doesntexist', sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
@@ -323,7 +323,7 @@ RSpec.describe 'Sidecars' do
 
       it 'returns an error if the sidecar memory exceeds the process memory' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
       end
     end

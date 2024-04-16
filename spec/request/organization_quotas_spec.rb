@@ -583,7 +583,7 @@ module VCAP::CloudController
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           delete "/v3/organization_quotas/#{org_quota.guid}", nil, base_json_headers
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -603,7 +603,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(422)
 
           get "/v3/organization_quotas/#{org_quota.guid}", {}, admin_headers
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 

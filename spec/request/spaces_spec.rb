@@ -43,7 +43,7 @@ RSpec.describe 'Spaces' do
 
       created_space = VCAP::CloudController::Space.last
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
 
       expect(parsed_response).to be_a_response_like(
         {
@@ -102,7 +102,7 @@ RSpec.describe 'Spaces' do
         }.to_json
 
         post '/v3/spaces', request_body, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
       end
     end
   end
@@ -116,7 +116,7 @@ RSpec.describe 'Spaces' do
     it 'returns the requested space' do
       space1.add_developer(user)
       get "/v3/spaces/#{space1.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -146,7 +146,7 @@ RSpec.describe 'Spaces' do
       space1.add_developer(user)
 
       get "/v3/spaces/#{space1.guid}?include=organization", nil, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       orgs = parsed_response['included']['organizations']
@@ -192,7 +192,7 @@ RSpec.describe 'Spaces' do
 
       it 'returns the requested space including quota relationship and link' do
         get "/v3/spaces/#{space1.guid}", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -282,7 +282,7 @@ RSpec.describe 'Spaces' do
 
       it 'returns a paginated list of spaces the user has access to' do
         get '/v3/spaces?per_page=2', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -373,7 +373,7 @@ RSpec.describe 'Spaces' do
 
       it 'returns the correct spaces' do
         get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceB.guid, spaceC.guid)
@@ -381,7 +381,7 @@ RSpec.describe 'Spaces' do
 
       it 'returns the correct spaces when scoped to an org' do
         get "/v3/spaces?label_selector=!fruit,env=prod,animal in (cat,horse)&organization_guids=#{orgF.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceF.guid)
@@ -395,7 +395,7 @@ RSpec.describe 'Spaces' do
 
       it 'can includes all orgs for spaces' do
         get '/v3/spaces?include=organization', nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
 
         orgs = parsed_response['included']['organizations']
@@ -460,7 +460,7 @@ RSpec.describe 'Spaces' do
 
       it 'flags unsupported includes that contain supported ones' do
         get '/v3/spaces?include=organization,not_supported', nil, admin_header
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
       end
 
       it 'does not include spaces if no one asks for them' do
@@ -813,7 +813,7 @@ RSpec.describe 'Spaces' do
       it 'returns a 422 with a helpful error message' do
         patch "/v3/spaces/#{space1.guid}", { name: 'space2' }.to_json, admin_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq("Organization 'Boardgames' already contains a space with name 'space2'.")
       end
     end
@@ -931,7 +931,7 @@ RSpec.describe 'Spaces' do
 
       it 'removes a label from a space when the value is set to null' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: nil } } }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -965,7 +965,7 @@ RSpec.describe 'Spaces' do
 
       it 'Updates the spaces label' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: 'strawberry' } } }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -1020,7 +1020,7 @@ RSpec.describe 'Spaces' do
 
         execute_all_jobs(expected_successes: 2, expected_failures: 0)
         get "/v3/spaces/#{space.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
     let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}", nil, user_headers } }
@@ -1028,12 +1028,12 @@ RSpec.describe 'Spaces' do
     it 'destroys the requested space and sub resources' do
       expect do
         delete "/v3/spaces/#{space.guid}", nil, admin_header
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
         execute_all_jobs(expected_successes: 2, expected_failures: 0)
         get "/v3/spaces/#{space.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end.to change(VCAP::CloudController::Space, :count).by(-1).
         and change(VCAP::CloudController::AppModel, :count).by(-1).
         and change(VCAP::CloudController::Route, :count).by(-1).
@@ -1098,7 +1098,7 @@ RSpec.describe 'Spaces' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/spaces/#{space.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -1121,10 +1121,10 @@ RSpec.describe 'Spaces' do
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
         get "/v3/routes/#{unmapped_route.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
 
         get "/v3/routes/#{mapped_route.guid}", {}, admin_headers
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
       end
     end
 
@@ -1162,7 +1162,7 @@ RSpec.describe 'Spaces' do
     context 'when user does not specify unmapped query param' do
       it 'returns 422 with helpful error message' do
         delete "v3/spaces/#{space.guid}/routes", nil, admin_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
       end
     end
@@ -1186,7 +1186,7 @@ RSpec.describe 'Spaces' do
       it 'returns a 404' do
         get "v3/spaces/#{guid}/relationships/isolation_segment", nil, admin_headers
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         expect(last_response.body).to include('Space not found')
       end
     end
@@ -1197,7 +1197,7 @@ RSpec.describe 'Spaces' do
       it 'returns a 200 and no isolation segment' do
         get "v3/spaces/#{space.guid}/relationships/isolation_segment", nil, admin_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['data']).to be_nil
       end

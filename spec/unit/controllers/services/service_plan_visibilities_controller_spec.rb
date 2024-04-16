@@ -66,7 +66,7 @@ module VCAP::CloudController
         params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
         post '/v2/service_plan_visibilities', MultiJson.dump(params)
 
-        expect(last_response.status).to eq 201
+        expect(last_response).to have_http_status :created
 
         visibility = ServicePlanVisibility.first
         expect(visibility).to be
@@ -103,7 +103,7 @@ module VCAP::CloudController
       it 'updates the service plan visibility' do
         put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid })
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         service_plan_visibility = ServicePlanVisibility.find(guid: visibility.guid)
         expect(service_plan_visibility.organization_guid).to eq new_organization.guid
       end
@@ -134,7 +134,7 @@ module VCAP::CloudController
       it 'deletes the service plan visibility' do
         delete "/v2/service_plan_visibilities/#{visibility.guid}"
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_http_status(:no_content)
         expect(ServicePlanVisibility.find(guid: visibility.guid)).to be_nil
       end
 
@@ -157,7 +157,7 @@ module VCAP::CloudController
       context 'with ?async=true' do
         it 'returns a job id' do
           delete "/v2/service_plan_visibilities/#{visibility.guid}?async=true"
-          expect(last_response.status).to eq 202
+          expect(last_response).to have_http_status :accepted
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
 

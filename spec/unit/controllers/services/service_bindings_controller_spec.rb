@@ -246,7 +246,7 @@ module VCAP::CloudController
 
             hash_body = JSON.parse(last_response.body)
             expect(hash_body['error_code']).to eq('CF-AppNotFound')
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
           end
 
           context 'because it maps to non-web process' do
@@ -257,7 +257,7 @@ module VCAP::CloudController
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-AppNotFound')
-              expect(last_response.status).to eq(404)
+              expect(last_response).to have_http_status(:not_found)
             end
           end
         end
@@ -275,7 +275,7 @@ module VCAP::CloudController
 
             hash_body = JSON.parse(last_response.body)
             expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
           end
         end
 
@@ -293,7 +293,7 @@ module VCAP::CloudController
 
           it 'returns 403' do
             post '/v2/service_bindings', req
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
         end
 
@@ -304,7 +304,7 @@ module VCAP::CloudController
 
           it 'returns a ServiceBindingAppServiceTaken error' do
             post '/v2/service_bindings', req.to_json
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
           end
         end
@@ -455,7 +455,7 @@ module VCAP::CloudController
                   it 'returns a ServiceBindingAppServiceTaken error' do
                     post '/v2/service_bindings?accepts_incomplete=true', req.to_json
 
-                    expect(last_response.status).to eq(400)
+                    expect(last_response).to have_http_status(:bad_request)
                     expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
                     expect(decoded_response['description']).to eq('The app is already bound to the service.')
                   end
@@ -665,7 +665,7 @@ module VCAP::CloudController
 
             hash_body = JSON.parse(last_response.body)
             expect(hash_body['error_code']).to eq('CF-VolumeMountServiceDisabled')
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
         end
 
@@ -1137,7 +1137,7 @@ module VCAP::CloudController
         context 'with ?async=true' do
           it 'returns a job id' do
             delete "/v2/service_bindings/#{service_binding.guid}?async=true"
-            expect(last_response.status).to eq 202
+            expect(last_response).to have_http_status :accepted
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
           end
@@ -1196,7 +1196,7 @@ module VCAP::CloudController
         ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app, name: 'service-binding-name')
 
         get '/v2/service_bindings?inline-relations-depth=1'
-        expect(last_response.status).to be(200)
+        expect(last_response).to have_http_status(:ok)
 
         service_bindings = decoded_response['resources']
 
@@ -1337,7 +1337,7 @@ module VCAP::CloudController
               name: '3-ring'
             }
             post '/v2/service_bindings', req.to_json
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(decoded_response['description']).to eq('VCAP::CloudController::ServiceBindingCreate::SpaceMismatch')
             expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
           end
@@ -1429,7 +1429,7 @@ module VCAP::CloudController
             binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
 
             get "/v2/service_bindings/#{binding.guid}/parameters"
-            expect(last_response.status).to be(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to include('This service does not support fetching service binding parameters.')
           end
         end
@@ -1453,7 +1453,7 @@ module VCAP::CloudController
 
             it 'returns the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(200)
+              expect(last_response).to have_http_status(:ok)
               expect(last_response.body).to eql({ 'foo' => { 'bar' => true } }.to_json)
             end
           end
@@ -1463,7 +1463,7 @@ module VCAP::CloudController
 
             it 'returns an empty object' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(200)
+              expect(last_response).to have_http_status(:ok)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -1473,7 +1473,7 @@ module VCAP::CloudController
 
             it 'returns an empty object' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(200)
+              expect(last_response).to have_http_status(:ok)
               expect(last_response.body).to eql({}.to_json)
             end
           end
@@ -1483,7 +1483,7 @@ module VCAP::CloudController
 
             it 'returns only the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(200)
+              expect(last_response).to have_http_status(:ok)
               expect(last_response.body).to eql({ 'foo' => 'bar' }.to_json)
             end
           end
@@ -1493,7 +1493,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(502)
+              expect(last_response).to have_http_status(:bad_gateway)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -1505,7 +1505,7 @@ module VCAP::CloudController
             it 'returns a 502 and an error' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
 
-              expect(last_response.status).to be(502)
+              expect(last_response).to have_http_status(:bad_gateway)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
@@ -1516,7 +1516,7 @@ module VCAP::CloudController
 
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(502)
+              expect(last_response).to have_http_status(:bad_gateway)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
@@ -1531,7 +1531,7 @@ module VCAP::CloudController
 
             it 'returns the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(200)
+              expect(last_response).to have_http_status(:ok)
               expect(last_response.body).to eql({ 'foo' => true }.to_json)
             end
           end
@@ -1547,7 +1547,7 @@ module VCAP::CloudController
 
             it 'returns a 403' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
-              expect(last_response.status).to be(403)
+              expect(last_response).to have_http_status(:forbidden)
             end
           end
 
@@ -1611,7 +1611,7 @@ module VCAP::CloudController
           binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
 
           get "/v2/service_bindings/#{binding.guid}/parameters"
-          expect(last_response.status).to be(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(last_response.body).to include('This service does not support fetching service binding parameters.')
         end
       end
@@ -1620,7 +1620,7 @@ module VCAP::CloudController
         it 'returns a 404' do
           set_current_user(developer)
           get '/v2/service_bindings/some-bogus-guid/parameters'
-          expect(last_response.status).to be(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(last_response.body).to include('The service binding could not be found: some-bogus-guid')
         end
       end
@@ -1631,7 +1631,7 @@ module VCAP::CloudController
         it 'returns a 404' do
           set_current_user(developer)
           get "/v2/service_bindings/#{service_key.guid}/parameters"
-          expect(last_response.status).to be(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(last_response.body).to include("The service binding could not be found: #{service_key.guid}")
         end
       end

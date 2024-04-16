@@ -27,7 +27,7 @@ RSpec.describe 'BuildpackBitsController download endpoint exists:' do
       it 'does not return a 404 because the endpoint is still present, or redirect to another endpoint with different auth' do
         get "/v2/buildpacks/#{mister_buildpack.guid}/download"
 
-        expect(last_response.status).not_to eq(404)
+        expect(last_response).not_to have_http_status(:not_found)
         expect(last_response.status).not_to be_between(301, 308)
       end
     end
@@ -41,7 +41,7 @@ RSpec.describe 'StagingsController download endpoint exists:' do
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, or redirect to another endpoint with different auth' do
         get "/staging/v3/droplets/#{droplet.guid}/download", nil, {}
-        expect(last_response.status).not_to eq(404)
+        expect(last_response).not_to have_http_status(:not_found)
         expect(last_response.status).not_to be_between(301, 308)
       end
     end
@@ -55,7 +55,7 @@ RSpec.describe 'DropletsController download endpoint with checksum exists:' do
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, and redirects to the droplet-url' do
         get "/internal/v2/droplets/#{droplet.guid}/#{droplet.sha256_checksum}/download", nil, {}
-        expect(last_response.status).to eq(302)
+        expect(last_response).to have_http_status(:found)
       end
     end
   end

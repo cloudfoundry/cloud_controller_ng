@@ -18,7 +18,7 @@ RSpec.describe 'User Provided Service Instance' do
       space_guid: @space_guid,
       syslog_drain_url: syslog_drain_url
     }.to_json, admin_headers)
-    expect(last_response.status).to eq(201)
+    expect(last_response).to have_http_status(:created)
     json_body             = JSON.parse(last_response.body)
     service_instance_guid = json_body.fetch('metadata').fetch('guid')
 
@@ -27,14 +27,14 @@ RSpec.describe 'User Provided Service Instance' do
       service_instance_guid: service_instance_guid,
       app_guid: @app_guid
     }.to_json, admin_headers)
-    expect(last_response.status).to eq(201)
+    expect(last_response).to have_http_status(:created)
     json_body    = JSON.parse(last_response.body)
     binding_guid = json_body.fetch('metadata').fetch('guid')
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url)
 
     # unbind
     delete("/v2/service_bindings/#{binding_guid}", nil, admin_headers)
-    expect(last_response.status).to eq(204)
+    expect(last_response).to have_http_status(:no_content)
 
     # update service instance
     put("/v2/user_provided_service_instances/#{service_instance_guid}", {
@@ -42,14 +42,14 @@ RSpec.describe 'User Provided Service Instance' do
       space_guid: @space_guid,
       syslog_drain_url: syslog_drain_url2
     }.to_json, admin_headers)
-    expect(last_response.status).to eq(201)
+    expect(last_response).to have_http_status(:created)
 
     # rebind after update
     post('/v2/service_bindings', {
       service_instance_guid: service_instance_guid,
       app_guid: @app_guid
     }.to_json, admin_headers)
-    expect(last_response.status).to eq(201)
+    expect(last_response).to have_http_status(:created)
     json_body = JSON.parse(last_response.body)
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url2)
   end

@@ -41,7 +41,7 @@ RSpec.describe 'Domains Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/domains'
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -199,7 +199,7 @@ RSpec.describe 'Domains Request' do
 
           it 'returns a 403' do
             get '/v3/domains', nil, user_header
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
         end
 
@@ -471,7 +471,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -490,7 +490,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -509,7 +509,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -528,7 +528,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -547,7 +547,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -566,7 +566,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -585,7 +585,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -604,7 +604,7 @@ RSpec.describe 'Domains Request' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -757,7 +757,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 404 with a helpful error message' do
         get '/v3/domains/nonexistent-domain-guid/route_reservations', nil, admin_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         expect(last_response).to have_error_message('Domain not found')
       end
     end
@@ -793,7 +793,7 @@ RSpec.describe 'Domains Request' do
           }
         }.to_json, user_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
         expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
       end
@@ -860,7 +860,7 @@ RSpec.describe 'Domains Request' do
         it 'returns a 503 and helpful error message' do
           post '/v3/domains', domain_params.to_json, user_header
 
-          expect(last_response.status).to eq(503)
+          expect(last_response).to have_http_status(:service_unavailable)
           expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is currently unavailable. Please try again later.'
         end
       end
@@ -875,7 +875,7 @@ RSpec.describe 'Domains Request' do
         it 'returns a 503 with a helpful message' do
           post '/v3/domains', domain_params.to_json, user_header
 
-          expect(last_response.status).to eq(503)
+          expect(last_response).to have_http_status(:service_unavailable)
           expect(parsed_response['errors'][0]['detail']).to eq 'The Routing API is disabled.'
         end
       end
@@ -890,7 +890,7 @@ RSpec.describe 'Domains Request' do
         it 'returns a 503 with a helpful message' do
           post '/v3/domains', domain_params.to_json, user_header
 
-          expect(last_response.status).to eq(503)
+          expect(last_response).to have_http_status(:service_unavailable)
           expect(parsed_response['errors'][0]['detail']).to eq 'Communicating with the Routing API failed because UAA is currently unavailable. Please try again later.'
         end
       end
@@ -1007,7 +1007,7 @@ RSpec.describe 'Domains Request' do
             it 'returns a 403' do
               post '/v3/domains', private_domain_params.to_json, headers
 
-              expect(last_response.status).to eq(403)
+              expect(last_response).to have_http_status(:forbidden)
               expect(parsed_response['errors'][0]['detail']).to eq('Feature Disabled: my name is bob')
             end
           end
@@ -1018,7 +1018,7 @@ RSpec.describe 'Domains Request' do
             it 'allows creation' do
               post '/v3/domains', private_domain_params.to_json, headers
 
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
             end
           end
         end
@@ -1040,7 +1040,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 and a helpful error message' do
             post '/v3/domains', params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'Organization with guid \'non-existent-guid\' does not exist or you do not have access to it.'
           end
@@ -1052,7 +1052,7 @@ RSpec.describe 'Domains Request' do
 
             post '/v3/domains', private_domain_params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq "The number of private domains exceeds the quota for organization \"#{org.name}\""
           end
@@ -1066,7 +1066,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a error message about reserved domains' do
             post '/v3/domains', private_domain_params.merge({ name: 'com.ac' }).to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'The "com.ac" domain is reserved and cannot be used for org-scoped domains.'
           end
@@ -1093,7 +1093,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', missing_shared_org_relationship.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq "Organization with guid 'doesnt-exist' does not exist, or you do not have access to it."
           end
@@ -1127,7 +1127,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', unwriteable_shared_org.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq "You do not have sufficient permissions for organization '#{shared_org3.name}' to share domain."
           end
@@ -1166,7 +1166,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', suspended_shared_org.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq "Organization '#{shared_org3.name}' is suspended."
           end
@@ -1193,7 +1193,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', sharing_to_owning_org_relationship.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'Domain cannot be shared with owning organization.'
           end
@@ -1215,7 +1215,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 with a helpful error message' do
             post '/v3/domains', sharing_without_owning_org_relationship.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'Relationships cannot contain shared_organizations without an owning organization.'
           end
@@ -1239,7 +1239,7 @@ RSpec.describe 'Domains Request' do
           it 'returns a 422 and a helpful error message' do
             post '/v3/domains', params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'Domains scoped to an organization cannot be associated to a router group.'
           end
@@ -1250,7 +1250,7 @@ RSpec.describe 'Domains Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post '/v3/domains', params.to_json, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -1259,7 +1259,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 403' do
         post '/v3/domains', params.to_json, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -1286,7 +1286,7 @@ RSpec.describe 'Domains Request' do
         it 'returns a 422 and an error' do
           post '/v3/domains', params.to_json, headers
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
 
           expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{params[:name]}\" " \
                                                                "cannot be created because \"#{existing_private_domain.name}\" is already reserved by another domain"
@@ -1303,7 +1303,7 @@ RSpec.describe 'Domains Request' do
         it 'returns 422' do
           post '/v3/domains', params.to_json, headers
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
 
           expected_err = [
             'Name does not comply with RFC 1035 standards',
@@ -1328,7 +1328,7 @@ RSpec.describe 'Domains Request' do
           it 'returns 422' do
             post '/v3/domains', params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_domain.name}\" is already in use"
           end
@@ -1348,7 +1348,7 @@ RSpec.describe 'Domains Request' do
           it 'returns 422' do
             post '/v3/domains', params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match(
               /The domain name "#{domain_name}" cannot be created because "#{existing_route.fqdn}" is already reserved by a route/
@@ -1369,7 +1369,7 @@ RSpec.describe 'Domains Request' do
           it 'returns 422' do
             post '/v3/domains', params.to_json, headers
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match(
               /The domain name "#{domain}" cannot be created because "#{existing_route.fqdn}" is already reserved by a route/
@@ -1397,7 +1397,7 @@ RSpec.describe 'Domains Request' do
 
       it 'succeeds' do
         post '/v3/domains', domain_params.to_json, user_header
-        expect(last_response.status).to eq 201
+        expect(last_response).to have_http_status :created
       end
     end
 
@@ -1413,7 +1413,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 422 and a helpful error message' do
         post '/v3/domains', domain_params.to_json, user_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
 
         expect(parsed_response['errors'][0]['detail']).to eq "Router group with guid 'some-other-router-guid' not found."
       end
@@ -1432,7 +1432,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 422 and a helpful error message' do
         post '/v3/domains', domain_params.to_json, user_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
 
         expect(parsed_response['errors'][0]['detail']).to eq 'Internal domains cannot be associated to a router group.'
       end
@@ -1450,7 +1450,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         post "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations", params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq('Domains cannot be shared with other organizations unless they are scoped to an organization.')
       end
     end
@@ -1458,7 +1458,7 @@ RSpec.describe 'Domains Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -1467,14 +1467,14 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 403' do
         post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
     context 'when the domain with specified guid does not exist' do
       it 'returns a 404' do
         post '/v3/domains/domain-does-not-exist/relationships/shared_organizations', params.to_json, user_header
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
@@ -1483,7 +1483,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
       end
     end
 
@@ -1492,7 +1492,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
       end
     end
 
@@ -1605,7 +1605,7 @@ RSpec.describe 'Domains Request' do
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           get "/v3/domains/#{shared_domain.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -1643,7 +1643,7 @@ RSpec.describe 'Domains Request' do
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           get "/v3/domains/#{private_domain.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -1685,7 +1685,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 403' do
         delete "/v3/domains/#{private_domain.guid}", nil, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -1700,7 +1700,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         delete "/v3/domains/#{private_domain.guid}", nil, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq(
           'This domain is shared with other organizations. Unshare before deleting.'
         )
@@ -1718,7 +1718,7 @@ RSpec.describe 'Domains Request' do
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, base_json_headers
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -1727,7 +1727,7 @@ RSpec.describe 'Domains Request' do
 
         it 'returns a 403' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end
@@ -1736,7 +1736,7 @@ RSpec.describe 'Domains Request' do
       context 'when unsharing from invalid org' do
         it 'returns a 422' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/invalid_org", nil, user_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid 'invalid_org' does not exist or you do not have access to it.")
         end
       end
@@ -1746,7 +1746,7 @@ RSpec.describe 'Domains Request' do
 
         it 'returns a 422' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors'][0]['detail']).to eq(
             "Unable to unshare domain from organization with name '#{org2.name}'. Ensure the domain is shared to this organization."
           )
@@ -1756,7 +1756,7 @@ RSpec.describe 'Domains Request' do
       context 'when unsharing from owning org' do
         it 'returns a 422' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{private_domain.owning_organization_guid}", nil, user_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors'][0]['detail']).to eq(
             "Unable to unshare domain from organization with name '#{org.name}'. Ensure the domain is shared to this organization."
           )
@@ -1768,7 +1768,7 @@ RSpec.describe 'Domains Request' do
       context 'when the domain with specified guid does not exist' do
         it 'returns a 404' do
           delete "/v3/domains/domain-does-not-exist/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -1777,7 +1777,7 @@ RSpec.describe 'Domains Request' do
 
         it 'returns a 404' do
           delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -1786,7 +1786,7 @@ RSpec.describe 'Domains Request' do
 
         it 'returns a 422' do
           delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors'][0]['detail']).to eq(
             "Unable to unshare domain from organization with name '#{shared_org1.name}'. Ensure the domain is shared to this organization."
           )
@@ -1804,7 +1804,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{route.space.organization_guid}", nil, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq('This domain has associated routes in this organization. Delete the routes before unsharing.')
       end
     end
@@ -1817,7 +1817,7 @@ RSpec.describe 'Domains Request' do
 
       it 'returns a 422' do
         delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid '#{shared_org1.guid}' does not exist or you do not have access to it.")
       end
     end
@@ -1933,7 +1933,7 @@ RSpec.describe 'Domains Request' do
       it 'returns not found' do
         get '/v3/domains/does-not-exist', nil, user_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
@@ -2121,7 +2121,7 @@ RSpec.describe 'Domains Request' do
       it 'returns not found' do
         patch '/v3/domains/does-not-exist', nil, user_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
@@ -2137,7 +2137,7 @@ RSpec.describe 'Domains Request' do
           }
         }.to_json, user_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
       end
     end

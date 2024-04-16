@@ -28,7 +28,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'cc responds with success' do
           put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", {}.to_json, admin_headers)
 
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
           expect(a_request(:put, service_broker_bind_request)).to have_been_made
         end
       end

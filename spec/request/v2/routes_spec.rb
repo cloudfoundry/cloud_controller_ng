@@ -20,7 +20,7 @@ RSpec.describe 'Routes' do
     it 'lists all routes' do
       get '/v2/routes', nil, headers_for(user)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -60,7 +60,7 @@ RSpec.describe 'Routes' do
       it 'includes related records' do
         get '/v2/routes?inline-relations-depth=1', nil, headers_for(user)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -196,7 +196,7 @@ RSpec.describe 'Routes' do
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -229,7 +229,7 @@ RSpec.describe 'Routes' do
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['entity']['domain_url']).to eq("/v2/private_domains/#{domain.guid}")
@@ -283,7 +283,7 @@ RSpec.describe 'Routes' do
 
     it 'lists associated route mappings' do
       get "/v2/routes/#{route.guid}/route_mappings", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -321,7 +321,7 @@ RSpec.describe 'Routes' do
 
     it 'lists the associated apps' do
       get "/v2/routes/#{route.guid}/apps", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(

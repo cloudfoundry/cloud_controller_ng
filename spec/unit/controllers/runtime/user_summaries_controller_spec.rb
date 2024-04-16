@@ -15,7 +15,7 @@ module VCAP::CloudController
         context 'and the current user is authorized' do
           it 'lists all the organizations the user belongs to' do
             get "/v2/users/#{user.guid}/summary"
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
             expect(decoded_response(symbolize_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
           end
         end
@@ -26,7 +26,7 @@ module VCAP::CloudController
           it 'returns 403 Forbidden' do
             set_current_user(unauthorized_user)
             get "/v2/users/#{user.guid}/summary"
-            expect(last_response.status).to eq 403
+            expect(last_response).to have_http_status :forbidden
           end
         end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
           it 'lists all the organizations the user belongs to' do
             get "/v2/users/#{user.guid}/summary"
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
             expect(decoded_response(symbolize_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
           end
         end
@@ -46,7 +46,7 @@ module VCAP::CloudController
       context 'when the user being summarized does not exist' do
         it 'returns 404 Not Found' do
           get '/v2/users/99999/summary'
-          expect(last_response.status).to eq 404
+          expect(last_response).to have_http_status :not_found
         end
       end
     end

@@ -29,7 +29,7 @@ module VCAP::CloudController
         it 'returns a 204' do
           patch "/internal/v4/packages/#{package.guid}", request_body
 
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
 
         it 'updates the package' do
@@ -53,7 +53,7 @@ module VCAP::CloudController
           it 'returns 422' do
             patch "/internal/v4/packages/#{package.guid}", request_body
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response.body).to include('UnprocessableEntity')
             expect(last_response.body).to include('Checksums required when setting state to READY')
           end
@@ -68,7 +68,7 @@ module VCAP::CloudController
           it 'returns an UnprocessableEntity error' do
             patch "/internal/v4/packages/#{package.guid}", request_body
 
-            expect(last_response.status).to eq 422
+            expect(last_response).to have_http_status :unprocessable_entity
             expect(last_response.body).to include 'UnprocessableEntity'
             expect(last_response.body).to include 'ya done goofed'
           end
@@ -80,7 +80,7 @@ module VCAP::CloudController
           it 'returns a MessageParseError error' do
             patch "/internal/v4/packages/#{package.guid}", request_body
 
-            expect(last_response.status).to eq 400
+            expect(last_response).to have_http_status :bad_request
             expect(last_response.body).to include 'MessageParseError'
             expect(last_response.body).to include 'Request invalid due to parse error'
           end
@@ -90,7 +90,7 @@ module VCAP::CloudController
           it 'returns NotFound error' do
             patch '/internal/v4/packages/idontexist', request_body
 
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
             expect(last_response.body).to include('Package not found')
           end
         end

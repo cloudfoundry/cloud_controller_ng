@@ -37,7 +37,7 @@ module VCAP::CloudController
 
         it 'creates a stack' do
           post '/v2/stacks', MultiJson.dump(params)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         context 'when the description is not provided' do
@@ -45,14 +45,14 @@ module VCAP::CloudController
 
           it 'creates a stack' do
             post '/v2/stacks', MultiJson.dump(params)
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
         end
       end
 
       it 'returns unauthorized' do
         post '/v2/stacks', MultiJson.dump(params)
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
       context 'if no app exist' do
         it 'succeds' do
           delete "/v2/stacks/#{stack.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
         end
       end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
         it 'fails even when recursive' do
           delete "/v2/stacks/#{stack.guid}?recursive=true"
           expect(parsed_response['code']).to eq 10_006
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
         end
       end
     end

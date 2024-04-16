@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         it 'returns a 200 and ProcessGuid' do
           get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
         end
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
           it 'returns a 400' do
             get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
           end
 
           it 'creates an audit event recording this ssh failure' do
@@ -64,7 +64,7 @@ module VCAP::CloudController
           context 'and the user has a valid auth token' do
             it 'returns a 404' do
               get '/internal/apps/does-not-exist/ssh_access/32914083940812934'
-              expect(last_response.status).to eq(404)
+              expect(last_response).to have_http_status(:not_found)
             end
           end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
             it 'returns a 401' do
               expect do
                 get '/internal/apps/non-existant/ssh_access/324342'
-                expect(last_response.status).to eq(401)
+                expect(last_response).to have_http_status(:unauthorized)
               end.not_to(change(Event, :count))
             end
           end
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
           it 'returns a 400' do
             get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
           end
 
           it 'creates an audit event recording this ssh failure' do
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
           it 'returns a 400' do
             get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
           end
 
           it 'creates an audit event recording this ssh failure' do
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
         it 'returns a 200 and ProcessGuid' do
           get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
         end
@@ -163,7 +163,7 @@ module VCAP::CloudController
 
         it 'returns a 403' do
           get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
         it 'returns a 403' do
           get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'creates an audit event recording this auth failure' do
@@ -195,7 +195,7 @@ module VCAP::CloudController
 
         it 'returns a 401' do
           get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
 
         it 'creates an audit event recording this auth failure' do

@@ -71,7 +71,7 @@ module VCAP::CloudController
           expect(build).not_to be_nil
           expect(build.lifecycle_type).to eq('docker')
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
           expect(build).not_to be_nil
           expect(build.lifecycle_type).to eq('buildpack')
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -93,7 +93,7 @@ module VCAP::CloudController
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
         post url, MultiJson.dump(staging_response)
-        expect(last_response.status).to eq(524)
+        expect(last_response).to have_http_status(524)
         expect(last_response.body).to match(/JobTimeout/)
       end
 
@@ -129,14 +129,14 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
 
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'propagates api errors from staging_response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(524)
+          expect(last_response).to have_http_status(524)
           expect(last_response.body).to match(/JobTimeout/)
         end
 
@@ -175,7 +175,7 @@ module VCAP::CloudController
 
         it 'returns 404' do
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(last_response.body).to match(/Droplet not found/)
         end
       end
@@ -185,7 +185,7 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, true)
 
           post "#{url}?start=true", MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -194,7 +194,7 @@ module VCAP::CloudController
           it 'fails with a 400' do
             post url, 'this is not json'
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to match(/MessageParseError/)
           end
         end
@@ -232,14 +232,14 @@ module VCAP::CloudController
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
 
         post url, MultiJson.dump(staging_response)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
       end
 
       it 'propagates api errors from staging_response' do
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
         post url, MultiJson.dump(staging_response)
-        expect(last_response.status).to eq(524)
+        expect(last_response).to have_http_status(524)
         expect(last_response.body).to match(/JobTimeout/)
       end
 
@@ -276,13 +276,13 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
 
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'adds the buildpack info to the droplet' do
           allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           droplet_buildpacks = droplet.buildpack_lifecycle_data&.buildpack_lifecycle_buildpacks
           expect(droplet_buildpacks&.size).to eq(2)
           buildback_lifecycle_buildpack1 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'valley')
@@ -326,7 +326,7 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(524)
+          expect(last_response).to have_http_status(524)
           expect(last_response.body).to match(/JobTimeout/)
         end
 
@@ -346,7 +346,7 @@ module VCAP::CloudController
             expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { error: sanitized_failure_reason }, false)
 
             post url, MultiJson.dump(staging_response)
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
           end
 
           it 'emits metrics for staging failure' do
@@ -365,7 +365,7 @@ module VCAP::CloudController
 
         it 'returns 404' do
           post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(last_response.body).to match(/Build not found/)
         end
       end
@@ -375,7 +375,7 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, true)
 
           post "#{url}?start=true", MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -384,7 +384,7 @@ module VCAP::CloudController
           it 'fails with a 400' do
             post url, 'this is not json'
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to match(/MessageParseError/)
           end
         end

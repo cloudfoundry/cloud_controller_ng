@@ -45,7 +45,7 @@ module VCAP::CloudController
 
         it 'returns admin limits for an admin' do
           get '/info'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         it 'does not return service usage' do
           get '/info'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           hash = MultiJson.load(last_response.body)
           expect(hash).not_to have_key('usage')
         end
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
         it 'returns default limits for a user' do
           get '/info'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           hash = MultiJson.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
@@ -87,7 +87,7 @@ module VCAP::CloudController
         context 'with no apps and services' do
           it 'returns 0 apps and service usage' do
             get '/info'
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
 
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
           it 'returns 2 apps and 3 services' do
             get '/info'
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
             hash = MultiJson.load(last_response.body)
             expect(hash).to have_key('usage')
 

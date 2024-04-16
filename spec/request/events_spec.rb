@@ -464,7 +464,7 @@ RSpec.describe 'Events' do
     context 'when the audit_event does not exist' do
       it 'returns a 404' do
         get '/v3/audit_events/does-not-exist', nil, admin_header
-        expect(last_response.status).to eq 404
+        expect(last_response).to have_http_status :not_found
         expect(last_response).to have_error_message('Event not found')
       end
     end
@@ -488,7 +488,7 @@ RSpec.describe 'Events' do
 
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/audit_events/#{event.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
   end

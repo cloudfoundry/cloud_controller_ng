@@ -2375,7 +2375,7 @@ RSpec.describe 'Routes Request' do
         it 'returns a 503 with a helpful error message' do
           post '/v3/routes', params.to_json, headers
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors'][0]['detail']).to eq 'Route could not be created because the specified domain does not have a valid router group.'
         end
       end
@@ -2809,7 +2809,7 @@ RSpec.describe 'Routes Request' do
     it 'shares the route to the target space and logs audit event' do
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -2829,7 +2829,7 @@ RSpec.describe 'Routes Request' do
     it 'reports that the route is now shared' do
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       route.reload
       expect(route.shared_spaces).to include(target_space_1, target_space_2)
       expect(route).to be_shared
@@ -2888,7 +2888,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -2913,7 +2913,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -2940,7 +2940,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -2967,7 +2967,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -2996,7 +2996,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3113,7 +3113,7 @@ RSpec.describe 'Routes Request' do
 
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -3155,7 +3155,7 @@ RSpec.describe 'Routes Request' do
     it 'responds with 204 when the route is not shared with the specified space' do
       delete "/v3/routes/#{route.guid}/relationships/shared_spaces/#{target_space_not_shared_with_route.guid}", request_body.to_json, space_dev_headers
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
     end
 
     it "responds with 404 when the route doesn't exist" do
@@ -3178,7 +3178,7 @@ RSpec.describe 'Routes Request' do
       it 'responds with 422 and does not unshare the roue' do
         api_call.call(space_dev_headers)
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors']).to include(
           include(
             {
@@ -3201,7 +3201,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3220,7 +3220,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3244,7 +3244,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3345,7 +3345,7 @@ RSpec.describe 'Routes Request' do
     it 'changes the route owner to the given space and logs an event', isolation: :truncation do
       api_call.call(space_dev_headers)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -3383,7 +3383,7 @@ RSpec.describe 'Routes Request' do
       it 'responds with 422' do
         api_call.call(space_dev_headers)
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors']).to include(
           include(
             {
@@ -3408,7 +3408,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3432,7 +3432,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3460,7 +3460,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422 and does not share the route' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3500,7 +3500,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {
@@ -3522,7 +3522,7 @@ RSpec.describe 'Routes Request' do
         it 'responds with 422' do
           api_call.call(space_dev_headers)
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(parsed_response['errors']).to include(
             include(
               {

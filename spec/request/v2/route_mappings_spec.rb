@@ -42,7 +42,7 @@ RSpec.describe 'RouteMappings' do
       non_displayed_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
 
       get "/v2/route_mappings/#{non_displayed_mapping.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
     end
 
     describe 'app_port' do
@@ -52,7 +52,7 @@ RSpec.describe 'RouteMappings' do
 
       it 'displays the app_port' do
         get "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['entity']['app_port']).to eq(9090)
@@ -73,7 +73,7 @@ RSpec.describe 'RouteMappings' do
 
     it 'lists all route mappings' do
       get '/v2/route_mappings', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -123,7 +123,7 @@ RSpec.describe 'RouteMappings' do
       non_web_route_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, process_type: non_web_process.type)
 
       get '/v2/route_mappings', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_web_route_mapping.guid)
@@ -144,7 +144,7 @@ RSpec.describe 'RouteMappings' do
       )
 
       post '/v2/route_mappings', request, headers_for(user)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
 
       parsed_response = MultiJson.load(last_response.body)
       route_mapping   = VCAP::CloudController::RouteMappingModel.last

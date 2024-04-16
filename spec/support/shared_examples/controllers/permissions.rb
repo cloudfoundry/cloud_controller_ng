@@ -56,7 +56,7 @@ shared_examples 'permission enumeration' do |perm_name, opts|
       set_current_user(member_a, user_opts)
       get path
       if expected_count == :not_allowed
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       else
         expect(last_response).to be_ok
         expect(decoded_response['total_results']).to eq(expected_count)

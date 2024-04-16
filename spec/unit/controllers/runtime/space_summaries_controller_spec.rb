@@ -32,7 +32,7 @@ module VCAP::CloudController
     describe 'GET /v2/spaces/:id/summary' do
       it 'contains guid and name for the space' do
         get "/v2/spaces/#{space.guid}/summary"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(decoded_response['guid']).to eq(space.guid)
         expect(decoded_response['name']).to eq(space.name)
       end
@@ -169,7 +169,7 @@ module VCAP::CloudController
 
         it 'ignores the process with the deleted app' do
           get "/v2/spaces/#{space.guid}/summary"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(space.apps).to match([process, deleted_process])
           expect(last_response.body).not_to include(deleted_app_guid)
         end

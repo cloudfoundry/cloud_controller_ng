@@ -59,7 +59,7 @@ RSpec.describe 'Resource Matches' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -75,7 +75,7 @@ RSpec.describe 'Resource Matches' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end

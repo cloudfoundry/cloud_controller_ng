@@ -155,7 +155,7 @@ RSpec.describe 'App Manifests' do
       it 'retrieves an app manifest for the app' do
         get "/v3/apps/#{app_model.guid}/manifest", nil, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(last_response.body).to eq(expected_yml_manifest)
       end
     end
@@ -251,7 +251,7 @@ RSpec.describe 'App Manifests' do
       it 'retrieves an app manifest for the app' do
         get "/v3/apps/#{app_model.guid}/manifest", nil, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(last_response.body).to eq(expected_yml_manifest)
       end
     end
@@ -289,7 +289,7 @@ RSpec.describe 'App Manifests' do
       it 'shows the protocol' do
         get "/v3/apps/#{simple_app.guid}/manifest", nil, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(last_response.body).to eq(expected_yml_manifest)
       end
     end

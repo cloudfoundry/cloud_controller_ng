@@ -273,7 +273,7 @@ module VCAP::CloudController
         it 'returns a 404' do
           set_current_user_as_admin
           get '/v2/spaces/foobar/user_roles'
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -296,7 +296,7 @@ module VCAP::CloudController
         it 'returns a 403' do
           set_current_user(User.make)
           get "/v2/spaces/#{space_one.guid}/user_roles"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end
@@ -704,47 +704,47 @@ module VCAP::CloudController
         it 'is visible to SpaceManagers' do
           set_current_user(manager)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'is not visible to SpaceManagers for another space' do
           set_current_user(outside_manager)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'is visible to SpaceAuditor' do
           set_current_user(auditor)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'is not visible to SpaceAuditors for another space' do
           set_current_user(outside_auditor)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'is visible to users with admin access' do
           set_current_user_as_admin(user: outside_developer)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'is visible to users with admin read access' do
           set_current_user_as_admin_read_only(user: outside_developer)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_guids).to include(@service.guid)
         end
 
         it 'is visible to users with global auditor access' do
           set_current_user_as_global_auditor(user: outside_developer)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_guids).to include(@service.guid)
         end
       end
@@ -1626,7 +1626,7 @@ module VCAP::CloudController
             it 'returns a 200' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
-              expect(last_response.status).to eq 201
+              expect(last_response).to have_http_status :created
             end
           end
 
@@ -1638,7 +1638,7 @@ module VCAP::CloudController
             it 'returns a 201' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
-              expect(last_response.status).to eq 201
+              expect(last_response).to have_http_status :created
               space.reload
               expect(space.isolation_segment_model).to eq(isolation_segment_model)
             end
@@ -1654,7 +1654,7 @@ module VCAP::CloudController
             it 'returns a 404 ResourceNotFound error' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-              expect(last_response.status).to eq 404
+              expect(last_response).to have_http_status :not_found
               expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
             end
           end
@@ -1667,7 +1667,7 @@ module VCAP::CloudController
             it 'returns a 404 ResourceNotFound error' do
               put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-              expect(last_response.status).to eq 404
+              expect(last_response).to have_http_status :not_found
               expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
             end
           end
@@ -1682,7 +1682,7 @@ module VCAP::CloudController
           it 'returns a 403' do
             put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-            expect(last_response.status).to eq 403
+            expect(last_response).to have_http_status :forbidden
           end
         end
 
@@ -1695,7 +1695,7 @@ module VCAP::CloudController
           it 'returns a 403' do
             put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-            expect(last_response.status).to eq 403
+            expect(last_response).to have_http_status :forbidden
           end
         end
 
@@ -1708,7 +1708,7 @@ module VCAP::CloudController
           it 'returns a 403' do
             put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
 
-            expect(last_response.status).to eq 403
+            expect(last_response).to have_http_status :forbidden
           end
         end
       end
@@ -1880,7 +1880,7 @@ module VCAP::CloudController
 
         it 'fails with a 403' do
           delete "/v2/spaces/#{space.guid}/isolation_segment"
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -1892,7 +1892,7 @@ module VCAP::CloudController
 
         it 'fails with a 403' do
           delete "/v2/spaces/#{space.guid}/isolation_segment"
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -1904,7 +1904,7 @@ module VCAP::CloudController
 
         it 'fails with a 403' do
           delete "/v2/spaces/#{space.guid}/isolation_segment"
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -1916,7 +1916,7 @@ module VCAP::CloudController
 
           it 'successfully removes the isolation segment' do
             delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
           end
         end
 
@@ -1927,7 +1927,7 @@ module VCAP::CloudController
 
           it 'successfully removes the isolation segment' do
             delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
           end
         end
       end
@@ -1945,7 +1945,7 @@ module VCAP::CloudController
 
           it 'successfully removes the isolation segment' do
             delete "/v2/spaces/#{space.guid}/isolation_segment"
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
 
             space.reload
             expect(space.isolation_segment_model).to be_nil
@@ -2015,7 +2015,7 @@ module VCAP::CloudController
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
             expect(unmapped_route.exists?).to be(false)
 
             expect(last_response.body).to be_empty
@@ -2030,7 +2030,7 @@ module VCAP::CloudController
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
             expect(mapped_route.exists?).to be(true)
 
             expect(last_response.body).to be_empty
@@ -2046,7 +2046,7 @@ module VCAP::CloudController
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
             expect(mapped_route.exists?).to be(true)
 
             expect(last_response.body).to be_empty
@@ -2073,26 +2073,26 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/staging_security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
       end
 
@@ -2103,26 +2103,26 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/staging_security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
       end
 
@@ -2133,26 +2133,26 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/staging_security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/spaces/#{space.guid}/security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
       end
 
@@ -2163,30 +2163,30 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_staging_security_group(security_group)
 
           get "/v2/spaces/#{space.guid}/staging_security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_security_group(security_group)
 
           get "/v2/spaces/#{space.guid}/security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -2197,30 +2197,30 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_staging_security_group(security_group)
 
           get "/v2/spaces/#{space.guid}/staging_security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_security_group(security_group)
 
           get "/v2/spaces/#{space.guid}/security_groups", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(security_group.guid)
 
           delete "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
     end
@@ -2274,7 +2274,7 @@ module VCAP::CloudController
 
                 put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username, origin: origin1 })
 
-                expect(last_response.status).to eq(201)
+                expect(last_response).to have_http_status(:created)
                 expect(space_one.send(plural_role)).to include(user)
                 expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
               end
@@ -2301,7 +2301,7 @@ module VCAP::CloudController
             it "makes the user a space #{role}" do
               put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(space_one.send(plural_role)).to include(user)
               expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
             end
@@ -2325,7 +2325,7 @@ module VCAP::CloudController
 
               put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(503)
+              expect(last_response).to have_http_status(:service_unavailable)
               expect(decoded_response['code']).to eq(20_004)
             end
 
@@ -2334,7 +2334,7 @@ module VCAP::CloudController
 
               put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(503)
+              expect(last_response).to have_http_status(:service_unavailable)
               expect(decoded_response['code']).to eq(20_004)
             end
 
@@ -2357,14 +2357,14 @@ module VCAP::CloudController
                 set_current_user(user)
                 put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(403)
+                expect(last_response).to have_http_status(:forbidden)
                 expect(decoded_response['code']).to eq(330_002)
               end
 
               it 'succeeds for admins' do
                 put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(201)
+                expect(last_response).to have_http_status(:created)
                 expect(space_one.send(plural_role)).to include(user)
                 expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
               end
@@ -2422,7 +2422,7 @@ module VCAP::CloudController
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
                        MultiJson.dump(username: user.username, origin: origin1)
 
-                  expect(last_response.status).to eq(200)
+                  expect(last_response).to have_http_status(:ok)
                   expect(space_one.reload.send(plural_role)).not_to include(user)
                   expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
                 end
@@ -2443,7 +2443,7 @@ module VCAP::CloudController
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
                        MultiJson.dump(username: user.username)
 
-                  expect(last_response.status).to eq(200)
+                  expect(last_response).to have_http_status(:ok)
                   expect(space_one.reload.send(plural_role)).not_to include(user)
                   expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
                 end
@@ -2456,7 +2456,7 @@ module VCAP::CloudController
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
                        MultiJson.dump({ username: user.username })
 
-                  expect(last_response.status).to eq(400)
+                  expect(last_response).to have_http_status(:bad_request)
                   expect(decoded_response['code']).to eq(20_006)
                 end
               end
@@ -2486,7 +2486,7 @@ module VCAP::CloudController
 
               delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               expect(space_one.reload.send(plural_role)).not_to include(user)
               expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
             end
@@ -2501,7 +2501,7 @@ module VCAP::CloudController
 
               delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
-              expect(last_response.status).to eq(404)
+              expect(last_response).to have_http_status(:not_found)
               expect(decoded_response['code']).to eq(20_003)
             end
 
@@ -2510,7 +2510,7 @@ module VCAP::CloudController
 
               delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(503)
+              expect(last_response).to have_http_status(:service_unavailable)
               expect(decoded_response['code']).to eq(20_004)
             end
 
@@ -2519,7 +2519,7 @@ module VCAP::CloudController
 
               delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-              expect(last_response.status).to eq(503)
+              expect(last_response).to have_http_status(:service_unavailable)
               expect(decoded_response['code']).to eq(20_004)
             end
 
@@ -2539,7 +2539,7 @@ module VCAP::CloudController
 
                 delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(400)
+                expect(last_response).to have_http_status(:bad_request)
                 expect(decoded_response['code']).to eq(20_006)
               end
             end
@@ -2553,7 +2553,7 @@ module VCAP::CloudController
                 set_current_user(user)
                 delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(403)
+                expect(last_response).to have_http_status(:forbidden)
                 expect(decoded_response['code']).to eq(330_002)
               end
 
@@ -2562,7 +2562,7 @@ module VCAP::CloudController
 
                 delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
                 expect(space_one.reload.send(plural_role)).not_to include(user)
                 expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
               end
@@ -2589,7 +2589,7 @@ module VCAP::CloudController
           it "makes the user a space #{role}" do
             put "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
 
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             expect(space.send(plural_role)).to include(user)
             expect(decoded_response['metadata']['guid']).to eq(space.guid)
           end
@@ -2602,7 +2602,7 @@ module VCAP::CloudController
           it 'returns a 400 when the user does not exist' do
             put "/v2/spaces/#{space.guid}/#{plural_role}/bogus-user-id"
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(decoded_response['code']).to eq(1002)
           end
 
@@ -2640,7 +2640,7 @@ module VCAP::CloudController
 
             delete "/v2/spaces/#{space.guid}/#{plural_role}/#{user.guid}"
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
             expect(space.reload.send(plural_role)).not_to include(user)
           end
 
@@ -2653,7 +2653,7 @@ module VCAP::CloudController
             allow(uaa_client).to receive(:usernames_for_ids).and_return({})
             delete "/v2/spaces/#{space.guid}/#{plural_role}/bogus-user-id"
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(decoded_response['code']).to eq(1002)
           end
 

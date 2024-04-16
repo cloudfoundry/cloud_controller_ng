@@ -42,7 +42,7 @@ module VCAP::CloudController
         it 'allows upload even if app_bits_upload flag is disabled' do
           FeatureFlag.make(name: 'app_bits_upload', enabled: false)
           make_request
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
           end
 
           it 'returns FeatureDisabled and does not upload' do
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/app_bits_upload/)
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               make_request
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
 
               process.refresh
@@ -107,7 +107,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               make_request
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
               process.refresh
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
             it 'succeeds to upload' do
               make_request
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(process.refresh.package_hash).not_to be_nil
             end
           end
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
             it 'succeeds to upload' do
               make_request
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(process.refresh.package_hash).not_to be_nil
             end
           end
@@ -147,7 +147,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               make_request
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
 
               process.refresh
@@ -163,7 +163,7 @@ module VCAP::CloudController
 
             it 'succeeds to upload' do
               make_request
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(process.refresh.package_hash).not_to be_nil
             end
           end
@@ -176,7 +176,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               make_request
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(decoded_response['error_code']).to match(/AppBitsUploadInvalid/)
             end
           end
@@ -190,7 +190,7 @@ module VCAP::CloudController
             it 'fails to upload' do
               make_request
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
               process.refresh
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
             it 'succeeds to upload' do
               make_request
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(process.refresh.package_hash).not_to be_nil
             end
 
@@ -228,7 +228,7 @@ module VCAP::CloudController
                   Timecop.travel(Time.now.utc + 1.week + 100.seconds) do
                     put "/v2/apps/#{process.app.guid}/bits", req_body, headers
                   end
-                  expect(last_response.status).to eq(201)
+                  expect(last_response).to have_http_status(:created)
                 end
               end
 
@@ -239,7 +239,7 @@ module VCAP::CloudController
                   Timecop.travel(Time.now.utc + 1.week + 10_000.seconds) do
                     put "/v2/apps/#{process.app.guid}/bits", req_body, headers
                   end
-                  expect(last_response.status).to eq(401)
+                  expect(last_response).to have_http_status(:unauthorized)
                 end
               end
             end
@@ -252,7 +252,7 @@ module VCAP::CloudController
               it 'fails to upload' do
                 make_request
 
-                expect(last_response.status).to eq(400)
+                expect(last_response).to have_http_status(:bad_request)
                 expect(JSON.parse(last_response.body)['description']).to include("'../../lol' is not safe")
 
                 process.refresh
@@ -267,7 +267,7 @@ module VCAP::CloudController
 
                 it 'fails to upload' do
                   make_request
-                  expect(last_response.status).to eq(400)
+                  expect(last_response).to have_http_status(:bad_request)
                   expect(JSON.parse(last_response.body)['description']).to include("'377' with path 'lol' is invalid")
 
                   process.refresh
@@ -281,7 +281,7 @@ module VCAP::CloudController
 
                 it 'fails to upload' do
                   make_request
-                  expect(last_response.status).to eq(400)
+                  expect(last_response).to have_http_status(:bad_request)
                   expect(JSON.parse(last_response.body)['description']).to include("'577' with path 'lol' is invalid")
 
                   process.refresh
@@ -302,7 +302,7 @@ module VCAP::CloudController
 
         it 'returns 403' do
           make_request
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -325,7 +325,7 @@ module VCAP::CloudController
           expect(job.handler).to include(process.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
           expect(response_body).to eq({
                                         metadata: {
                                           guid: job.guid,
@@ -404,7 +404,7 @@ module VCAP::CloudController
         it 'raises an error' do
           make_request
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(decoded_response['error_code']).to match(/UnprocessableEntity/)
           expect(decoded_response['description']).to match(/cannot upload bits to a docker app/)
         end
@@ -441,7 +441,7 @@ module VCAP::CloudController
         it 'fails to copy application bits' do
           post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
 
           expect(decoded_response['error_code']).to match(/AppBitsCopyInvalid/)
           expect(decoded_response['description']).to match(/missing source_app_guid/)
@@ -468,7 +468,7 @@ module VCAP::CloudController
           }
 
           expect(job.queue).to eq(Jobs::Queues.generic)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
           expect(decoded_response).to eq(expected_response)
         end
 
@@ -489,7 +489,7 @@ module VCAP::CloudController
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
 
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
 
           it 'disallows when not a developer of destination space' do
@@ -498,7 +498,7 @@ module VCAP::CloudController
 
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
 
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
 
           it 'disallows when not a developer of source space' do
@@ -507,7 +507,7 @@ module VCAP::CloudController
 
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
 
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
 
           it 'allows when a developer of both spaces' do
@@ -517,7 +517,7 @@ module VCAP::CloudController
             src_process.space.add_developer(user)
 
             post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
         end
       end

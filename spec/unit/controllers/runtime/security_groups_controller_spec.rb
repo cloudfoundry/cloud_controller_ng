@@ -47,7 +47,7 @@ module VCAP::CloudController
       it 'returns SecurityGroupInvalid' do
         post '/v2/security_groups', '{"name":"one\ntwo"}'
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/security group is invalid/)
         expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
       end
@@ -56,7 +56,7 @@ module VCAP::CloudController
         SecurityGroup.make(name: 'foo')
         post '/v2/security_groups', '{"name":"foo"}'
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/name is taken/)
         expect(decoded_response['error_code']).to match(/SecurityGroupNameTaken/)
       end
@@ -82,7 +82,7 @@ module VCAP::CloudController
         it 'returns SecurityGroupInvalid' do
           post '/v2/security_groups', MultiJson.dump(security_group)
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['description']).to match(/must not exceed #{SecurityGroup::MAX_RULES_CHAR_LENGTH} characters/)
           expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
         end
@@ -106,26 +106,26 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
 
         it 'works for running security groups' do
           put "/v2/spaces/#{space.guid}/security_groups/#{security_group.guid}", nil
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           get "/v2/security_groups/#{security_group.guid}/spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 204
+          expect(last_response).to have_http_status :no_content
         end
       end
 
@@ -136,24 +136,24 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           get "/v2/security_groups/#{security_group.guid}/spaces", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -164,30 +164,30 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_staging_security_group(security_group)
 
           get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_security_group(security_group)
 
           get "/v2/security_groups/#{security_group.guid}/spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -198,30 +198,30 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_staging_security_group(security_group)
 
           get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           space.add_security_group(security_group)
 
           get "/v2/security_groups/#{security_group.guid}/spaces", nil
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to include(space.guid)
 
           delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
 
@@ -232,24 +232,24 @@ module VCAP::CloudController
 
         it 'works for staging security groups' do
           put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
 
         it 'works for running security groups' do
           put "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           get "/v2/security_groups/#{security_group.guid}/spaces", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
 
           delete "/v2/security_groups/#{security_group.guid}/spaces/#{space.guid}", nil
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_http_status :forbidden
         end
       end
     end

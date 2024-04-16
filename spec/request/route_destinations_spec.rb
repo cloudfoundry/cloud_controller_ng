@@ -32,7 +32,7 @@ RSpec.describe 'Route Destinations Request' do
         params1[:port] = dst1_specified_port if dst1_specified_port
 
         post "/v3/routes/#{route1.guid}/destinations", { destinations: [params1] }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         params2 = {
           app: { guid: app_model.guid }
@@ -40,22 +40,22 @@ RSpec.describe 'Route Destinations Request' do
         params2[:port] = dst2_specified_port if dst2_specified_port
 
         post "/v3/routes/#{route2.guid}/destinations", { destinations: [params2] }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         actual_dst1_port = parsed_response['destinations'][0]['port']
         expect(actual_dst1_port).to eq(expected_dst1_port)
 
         get "/v3/routes/#{route2.guid}/destinations", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         actual_dst2_port = parsed_response['destinations'][0]['port']
         expect(actual_dst2_port).to eq(expected_dst2_port)
 
         get "/v2/apps/#{app_model.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['entity']['ports']).not_to be_nil
         expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
@@ -87,7 +87,7 @@ RSpec.describe 'Route Destinations Request' do
         params1[:port] = dst1_specified_port if dst1_specified_port
 
         post "/v3/routes/#{route1.guid}/destinations", { destinations: [params1] }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         params2 = {
           app: { guid: app_model.guid }
@@ -95,7 +95,7 @@ RSpec.describe 'Route Destinations Request' do
         params2[:port] = dst2_specified_port if dst2_specified_port
 
         post "/v3/routes/#{route2.guid}/destinations", { destinations: [params2] }.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         droplet = VCAP::CloudController::DropletModel.make(
           :docker,
@@ -108,19 +108,19 @@ RSpec.describe 'Route Destinations Request' do
         app_model.update(droplet:)
 
         get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         actual_dst1_port = parsed_response['destinations'][0]['port']
         expect(actual_dst1_port).to eq(expected_dst1_port)
 
         get "/v3/routes/#{route2.guid}/destinations", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         actual_dst2_port = parsed_response['destinations'][0]['port']
         expect(actual_dst2_port).to eq(expected_dst2_port)
 
         get "/v2/apps/#{app_model.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['entity']['ports']).not_to be_nil
         expect(parsed_response['entity']['ports']).to match_array(expected_exposed_ports)
       end
@@ -175,14 +175,14 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'returns not found' do
         get '/v3/routes/does-not-exist/destinations', nil, user_header
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/routes/guid/destinations'
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -191,7 +191,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'returns a 403' do
         get "/v3/routes/#{route.guid}/destinations", nil, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -341,7 +341,7 @@ RSpec.describe 'Route Destinations Request' do
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -350,7 +350,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'returns a 403' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end
@@ -363,7 +363,7 @@ RSpec.describe 'Route Destinations Request' do
       context 'when the route does not exist' do
         it 'returns not found' do
           post '/v3/routes/does-not-exist/destinations', params.to_json, user_header
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -391,7 +391,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'succeeds' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -419,7 +419,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 403' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
@@ -442,7 +442,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
@@ -466,7 +466,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('Destinations[0]: process must have the structure {"type": "process_type"}')
           end
@@ -498,7 +498,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
@@ -524,7 +524,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
@@ -563,7 +563,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns 422 with a helpful message' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response).to have_error_message('Destinations[0]: weighted destinations can only be used when replacing all destinations.')
           end
         end
@@ -574,7 +574,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'returns 422 with a helpful message' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(last_response).to have_error_message('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
       end
@@ -620,7 +620,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'replaces all destinations on the route' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['destinations'].map { |r| r['app']['process']['type'] }).to contain_exactly('web', 'worker')
         process_types = VCAP::CloudController::RouteMappingModel.where(app: app_model).all.collect(&:process_type)
         expect(process_types).to contain_exactly('web', 'worker')
@@ -667,7 +667,7 @@ RSpec.describe 'Route Destinations Request' do
 
             it "can be changed to #{set_to} even though we are not storing it that way in the DB" do
               patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               expect(parsed_response['destinations'][0]['protocol']).to eq(result)
             end
           end
@@ -689,7 +689,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'stays tcp' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['destinations'][0]['protocol']).to eq(existing_protocol)
         end
       end
@@ -731,7 +731,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'replaces all destinations on the route' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['destinations'].map { |r| r['app']['guid'] }).to contain_exactly(app_model_1.guid)
       end
     end
@@ -755,7 +755,7 @@ RSpec.describe 'Route Destinations Request' do
       it "removes all of the route's destinations" do
         expect(app_model.reload.routes).not_to be_empty
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['destinations']).to be_empty
         expect(app_model.reload.routes).to be_empty
       end
@@ -829,7 +829,7 @@ RSpec.describe 'Route Destinations Request' do
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -838,7 +838,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'returns a 403' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end
@@ -851,7 +851,7 @@ RSpec.describe 'Route Destinations Request' do
       describe 'protocols' do
         it 'replaces all destinations on the route' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['destinations'].pluck('protocol')).to contain_exactly('http1', 'http2')
         end
       end
@@ -859,7 +859,7 @@ RSpec.describe 'Route Destinations Request' do
       context 'when the route does not exist' do
         it 'returns not found' do
           patch '/v3/routes/does-not-exist/destinations', params.to_json, user_header
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -887,7 +887,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 403' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response).to have_error_message("Routes destinations must be in either the route's space or the route's shared spaces")
           end
         end
@@ -910,7 +910,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist.')
           end
@@ -934,7 +934,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('Destinations[0]: process must have the structure {"type": "process_type"}')
           end
@@ -966,7 +966,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a 422' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
 
             expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist.')
           end
@@ -992,7 +992,7 @@ RSpec.describe 'Route Destinations Request' do
 
           it 'returns a' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" you do not have access.")
           end
         end
@@ -1027,7 +1027,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'creates route destinations with weights' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['destinations'].pluck('weight')).to contain_exactly(80, 20)
         rm_hashes = route.reload.route_mappings.map do |rm|
           { process_type: rm.process_type, weight: rm.weight }
@@ -1052,7 +1052,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(last_response).to have_error_message('Destinations must have weights that sum to 100.')
         end
       end
@@ -1079,7 +1079,7 @@ RSpec.describe 'Route Destinations Request' do
 
         it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(last_response).to have_error_message('Destinations cannot contain both weighted and unweighted destinations.')
         end
       end
@@ -1118,7 +1118,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'successfully updates the process ports' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_http_status :ok
       end
     end
 
@@ -1171,7 +1171,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'returns a useful error message' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-        expect(last_response.status).to eq 422
+        expect(last_response).to have_http_status :unprocessable_entity
         expect(parsed_response['errors'][0]['detail']).to eq 'Destinations cannot contain duplicate entries'
       end
     end
@@ -1201,7 +1201,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'succeeds' do
         patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
       end
     end
   end
@@ -1271,14 +1271,14 @@ RSpec.describe 'Route Destinations Request' do
     context 'when the route does not exist' do
       it 'returns not found' do
         patch "/v3/routes/does-not-exist/destinations/#{destination_to_update.guid}", { protocol: 'http1' }.to_json, admin_header
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
     context 'when the destination does not exist' do
       it 'returns 422 with a helpful message' do
         patch "/v3/routes/#{route.guid}/destinations/does-not-exist", { protocol: 'http1' }.to_json, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
       end
     end
@@ -1307,14 +1307,14 @@ RSpec.describe 'Route Destinations Request' do
       context 'and the destination has a protocol of tcp' do
         it 'succeeds' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'tcp' }.to_json, admin_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
       context 'and the destination has a protocol of http1' do
         it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http1' }.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
         end
       end
@@ -1322,7 +1322,7 @@ RSpec.describe 'Route Destinations Request' do
       context 'and the destination has a protocol of http2' do
         it 'returns 422 with a helpful message' do
           patch "/v3/routes/#{tcp_route.guid}/destinations/#{destination.guid}", { protocol: 'http2' }.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           expect(last_response).to have_error_message("Destination protocol must be 'tcp' if the parent route's protocol is 'tcp'")
         end
       end
@@ -1416,14 +1416,14 @@ RSpec.describe 'Route Destinations Request' do
     context 'when the route does not exist' do
       it 'returns not found' do
         delete "/v3/routes/does-not-exist/destinations/#{destination_to_delete.guid}", nil, admin_header
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
 
     context 'when the destination does not exist' do
       it 'returns 422 with a helpful message' do
         delete "/v3/routes/#{route.guid}/destinations/does-not-exist", nil, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
       end
     end
@@ -1433,7 +1433,7 @@ RSpec.describe 'Route Destinations Request' do
 
       it 'returns 422 with a helpful message' do
         delete "/v3/routes/#{route.guid}/destinations/#{existing_destination.guid}", nil, admin_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Weighted destinations cannot be deleted individually.')
       end
     end
@@ -1441,7 +1441,7 @@ RSpec.describe 'Route Destinations Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
   end

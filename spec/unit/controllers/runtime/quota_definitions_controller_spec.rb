@@ -65,22 +65,22 @@ module VCAP::CloudController
 
         it 'does allow creation of a quota def' do
           post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         it 'does allow read of a quota def' do
           get "/v2/quota_definitions/#{existing_quota.guid}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'does allow update of a quota def' do
           put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump({ total_services: 2 })
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         it 'does allow deletion of a quota def' do
           delete "/v2/quota_definitions/#{existing_quota.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
         end
       end
 
@@ -91,22 +91,22 @@ module VCAP::CloudController
 
         it 'does not allow creation of a quota def' do
           post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'does allow read of a quota def' do
           get "/v2/quota_definitions/#{existing_quota.guid}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'does not allow update of a quota def' do
           put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump(quota_attributes)
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'does not allow deletion of a quota def' do
           delete "/v2/quota_definitions/#{existing_quota.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end
@@ -121,7 +121,7 @@ module VCAP::CloudController
 
         put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -1 })
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
       end
 
       it 'returns QuotaDefinitionMemoryLimitInvalid error correctly' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
 
         put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -2 })
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['code']).to eq(240_004)
       end
     end

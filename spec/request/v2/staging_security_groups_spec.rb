@@ -15,7 +15,7 @@ RSpec.describe 'Staging Security Groups' do
     it 'associates the security group with the space during staging' do
       put "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil, headers_for(user)
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       expect(MultiJson.load(last_response.body)['metadata']['guid']).to eq(space.guid)
 
       security_group.reload
@@ -41,7 +41,7 @@ RSpec.describe 'Staging Security Groups' do
     it 'removes the association' do
       expect(space.staging_security_groups).to include(security_group)
       delete "/v2/spaces/#{space.guid}/staging_security_groups/#{security_group.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       space.reload
       security_group.reload
@@ -74,7 +74,7 @@ RSpec.describe 'Staging Security Groups' do
 
     it 'associates the security group with the space during staging' do
       put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil, admin_headers_for(user)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       expect(MultiJson.load(last_response.body)).to be_a_response_like({
                                                                          'metadata' => {
                                                                            'guid' => security_group.guid,
@@ -116,14 +116,14 @@ RSpec.describe 'Staging Security Groups' do
       space.add_manager(user)
 
       put "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil, admin_headers_for(user)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       security_group.reload
       space.reload
     end
 
     it 'allows a space manager to read the security group with the space during staging' do
       get "/v2/security_groups/#{security_group.guid}/staging_spaces", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       space_guids = MultiJson.load(last_response.body)['resources'].map { |i| i['metadata']['guid'] }
       expect(space_guids).to match_array(space.guid)
     end
@@ -147,7 +147,7 @@ RSpec.describe 'Staging Security Groups' do
       expect(space.staging_security_groups).to include(security_group)
 
       delete "/v2/security_groups/#{security_group.guid}/staging_spaces/#{space.guid}", nil, admin_headers_for(user)
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       security_group.reload
       space.reload

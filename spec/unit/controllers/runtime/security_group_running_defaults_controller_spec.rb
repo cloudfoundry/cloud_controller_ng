@@ -9,7 +9,7 @@ module VCAP::CloudController
     it 'allows non-admins to read running security groups' do
       set_current_user_as_admin
       get '/v2/config/staging_security_groups'
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
 
     it 'only returns SecurityGroups that are running defaults' do
@@ -17,7 +17,7 @@ module VCAP::CloudController
       running_default = SecurityGroup.make(running_default: true)
 
       get '/v2/config/running_security_groups'
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(decoded_response['total_results']).to eq(1)
       expect(decoded_response['resources'][0]['metadata']['guid']).to eq(running_default.guid)
     end
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(security_group.reload.running_default).to be true
         expect(decoded_response['metadata']['guid']).to eq(security_group.guid)
       end
@@ -41,12 +41,12 @@ module VCAP::CloudController
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
 
       it 'returns a 400 when the security group does not exist' do
         put '/v2/config/running_security_groups/bogus', {}
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/security group could not be found/)
         expect(decoded_response['error_code']).to match(/SecurityGroupRunningDefaultInvalid/)
       end
@@ -60,7 +60,7 @@ module VCAP::CloudController
         security_group = SecurityGroup.make(running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
 
       it 'sets running_default to false on the security group' do
@@ -68,13 +68,13 @@ module VCAP::CloudController
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_http_status(:no_content)
         expect(security_group.reload.running_default).to be false
       end
 
       it 'returns a 400 when the security group does not exist' do
         delete '/v2/config/running_security_groups/bogus'
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/security group could not be found/)
         expect(decoded_response['error_code']).to match(/SecurityGroupRunningDefaultInvalid/)
       end

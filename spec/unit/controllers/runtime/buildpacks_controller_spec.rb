@@ -56,7 +56,7 @@ module VCAP::CloudController
       it 'can create a buildpack' do
         expect(Buildpack.count).to eq(0)
         post '/v2/buildpacks', req_body
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         expect(Buildpack.count).to eq(1)
         buildpack = Buildpack.first
@@ -67,7 +67,7 @@ module VCAP::CloudController
       it 'defaults stack to nil' do
         expect do
           post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', position: 1 })
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
         expect(buildpack.stack).to be_nil
@@ -76,7 +76,7 @@ module VCAP::CloudController
       it 'uses specified stack' do
         expect do
           post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', stack: stack.name, position: 1 })
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
         expect(buildpack.stack).to eq(stack.name)
@@ -98,14 +98,14 @@ module VCAP::CloudController
       it 'returns duplicate name message correctly' do
         Buildpack.make(name: 'dynamic_test_buildpack', stack: stack.name)
         post '/v2/buildpacks', req_body
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(decoded_response['code']).to eq(290_000)
         expect(Buildpack.count).to eq(1)
       end
 
       it 'returns buildpack invalid message correctly' do
         post '/v2/buildpacks', MultiJson.dump({ name: 'invalid_name!', stack: stack.name })
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['code']).to eq(290_003)
         expect(Buildpack.count).to eq(0)
       end
@@ -114,7 +114,7 @@ module VCAP::CloudController
         set_current_user(user)
 
         post '/v2/buildpacks', req_body
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
         expect(Buildpack.count).to eq(0)
       end
     end
@@ -145,7 +145,7 @@ module VCAP::CloudController
         set_current_user(user)
 
         put "/v2/buildpacks/#{buildpack2.guid}", '{}'
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -156,7 +156,7 @@ module VCAP::CloudController
         set_current_user(user)
 
         delete "/v2/buildpacks/#{buildpack1.guid}"
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
 
       context 'with async true' do
@@ -182,7 +182,7 @@ module VCAP::CloudController
           expect(Delayed::Job.first).to be_nil
           delete "/v2/buildpacks/#{buildpack1.guid}"
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
           expect(Buildpack.find(name: buildpack1.name)).to be_nil
 
           blobstore_delete_job = Delayed::Job.first
@@ -195,7 +195,7 @@ module VCAP::CloudController
           expect(buildpack1.key).to be_nil
 
           delete "/v2/buildpacks/#{buildpack1.guid}"
-          expect(last_response.status).to be(204)
+          expect(last_response).to have_http_status(:no_content)
           expect(Buildpack.find(name: buildpack1.name)).to be_nil
         end
       end

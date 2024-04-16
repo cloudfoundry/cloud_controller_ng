@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       it 'responds to user with 504' do
-        expect(last_response.status).to eq(504)
+        expect(last_response).to have_http_status(:gateway_timeout)
       end
     end
 

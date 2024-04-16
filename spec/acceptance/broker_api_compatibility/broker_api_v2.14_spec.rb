@@ -323,7 +323,7 @@ RSpec.describe 'Service Broker API integration' do
 
             get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
 
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
           end
         end
 
@@ -338,7 +338,7 @@ RSpec.describe 'Service Broker API integration' do
 
             get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
 
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
           end
         end
       end

@@ -62,7 +62,7 @@ module VCAP::CloudController
         it 'succeeds' do
           set_current_user(user)
           get '/v2/test_models'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
         it 'succeeds' do
           set_current_user(User.new)
           get '/v2/test_models'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
           set_current_user(user)
           user.delete
           get '/v2/test_models'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
         it 'succeeds' do
           set_current_user_as_admin
           get '/v2/test_models'
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
 
@@ -148,7 +148,7 @@ module VCAP::CloudController
         model_instance = TestModel.first
         url = "/v2/test_models/#{model_instance.guid}"
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         expect(last_response.location).to eq(url)
         expect(decoded_response['metadata']['url']).to eq(url)
         expect(decoded_response['entity']['unique_value']).to eq('foobar')
@@ -158,7 +158,7 @@ module VCAP::CloudController
         set_current_user_as_admin
         post '/v2/test_models', MultiJson.dump({ extra_field: true, required_attr: true, unique_value: 'foobar' })
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
       end
 
       context 'with attributes for redacting' do
@@ -170,7 +170,7 @@ module VCAP::CloudController
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
           post '/v2/test_model_redact', MultiJson.dump(request_attributes)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
 
@@ -185,7 +185,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           post '/v2/test_model_redact', MultiJson.dump(request_attributes)
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
     end
@@ -225,7 +225,7 @@ module VCAP::CloudController
       it 'updates the data' do
         put "/v2/test_models/#{model.guid}", MultiJson.dump({ unique_value: 'new value' })
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         model.reload
         expect(model.unique_value).to eq('new value')
         expect(decoded_response['entity']['unique_value']).to eq('new value')
@@ -296,7 +296,7 @@ module VCAP::CloudController
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:update, redact_request_attributes)
 
           put "/v2/test_model_redact/#{model.guid}", MultiJson.dump(request_attributes)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
     end
@@ -354,7 +354,7 @@ module VCAP::CloudController
           context 'when deleting non-recursively' do
             it 'raises an association error' do
               delete "/v2/test_models/#{model.guid}?#{query_params}"
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               expect(decoded_response['code']).to eq(10_006)
               expect(decoded_response['description']).to match(/associations/)
             end
@@ -368,7 +368,7 @@ module VCAP::CloudController
             delete "/v2/test_models/#{model.guid}?#{query_params}"
           end.to change(TestModel, :count).by(-1)
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
           expect(last_response.body).to eq('')
         end
 
@@ -386,7 +386,7 @@ module VCAP::CloudController
           it 'returns a 202 with the job information' do
             delete "/v2/test_models/#{model.guid}?#{query_params}"
 
-            expect(last_response.status).to eq(202)
+            expect(last_response).to have_http_status(:accepted)
             job_id = decoded_response['entity']['guid']
             expect(Delayed::Job.where(guid: job_id).first).to exist
           end
@@ -416,14 +416,14 @@ module VCAP::CloudController
           ).and_call_original
 
         get '/v2/test_models'
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(decoded_response['total_results']).to eq(3)
       end
 
       it 'returns the first page' do
         get '/v2/test_models?results-per-page=2'
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(decoded_response['total_results']).to eq(3)
         expect(decoded_response).to have_key('prev_url')
         expect(decoded_response['prev_url']).to be_nil
@@ -435,7 +435,7 @@ module VCAP::CloudController
       it 'returns other pages when requested' do
         get '/v2/test_models?page=2&results-per-page=2'
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(decoded_response['total_results']).to eq(3)
         expect(decoded_response['prev_url']).to include('page=1&results-per-page=2')
         expect(decoded_response).to have_key('next_url')
@@ -512,7 +512,7 @@ module VCAP::CloudController
         it 'can order by approved columns' do
           get '/v2/test_models?order-by=sortable_value'
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           sorted_values = decoded_response['resources'].map { |r| r['entity']['sortable_value'] }
           expect(sorted_values).to eq(%w[artichoke marigold zelda])
         end
@@ -538,21 +538,21 @@ module VCAP::CloudController
 
         it 'returns not found for reads' do
           get '/v2/test_models/99999'
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(decoded_response['code']).to eq 999_999_999
           expect(decoded_response['description']).to match(/Test Model Not Found/)
         end
 
         it 'returns not found for updates' do
           put '/v2/test_models/99999', '{}'
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(decoded_response['code']).to eq 999_999_999
           expect(decoded_response['description']).to match(/Test Model Not Found/)
         end
 
         it 'returns not found for deletes' do
           delete '/v2/test_models/99999'
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(decoded_response['code']).to eq 999_999_999
           expect(decoded_response['description']).to match(/Test Model Not Found/)
         end
@@ -570,7 +570,7 @@ module VCAP::CloudController
 
         it 'returns 400 error for missing attributes; returns a request-id and no location' do
           post '/v2/test_models', '{}'
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to eq 1001
           expect(decoded_response['description']).to match(/invalid/)
           expect(last_response.location).to be_nil
@@ -579,7 +579,7 @@ module VCAP::CloudController
         it 'returns 400 error when validation fails on create' do
           TestModel.make(unique_value: 'unique')
           post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'unique' })
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to eq 999_999_998
           expect(decoded_response['description']).to match(/Validation Error/)
         end
@@ -588,7 +588,7 @@ module VCAP::CloudController
           TestModel.make(unique_value: 'unique')
           test_model = TestModel.make(unique_value: 'not-unique')
           put "/v2/test_models/#{test_model.guid}", MultiJson.dump({ unique_value: 'unique' })
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to eq 999_999_998
           expect(decoded_response['description']).to match(/Validation Error/)
         end
@@ -607,7 +607,7 @@ module VCAP::CloudController
           it 'succeeds when user has access to both objects' do
             put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}'
 
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             model.reload
             expect(model.test_model_many_to_ones).to include(associated_model1)
           end
@@ -620,7 +620,7 @@ module VCAP::CloudController
 
             delete "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model2.guid}", '{}'
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
             model.reload
             expect(model.test_model_many_to_ones).to be_empty
           end
@@ -640,7 +640,7 @@ module VCAP::CloudController
 
               put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}'
 
-              expect(last_response.status).to eq(403)
+              expect(last_response).to have_http_status(:forbidden)
               model.reload
               expect(model.test_model_many_to_ones).not_to include(associated_model1)
             end
@@ -656,7 +656,7 @@ module VCAP::CloudController
         describe 'update' do
           it 'allows associating nested models' do
             put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid] })
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             model.reload
             expect(model.test_model_many_to_manies).to include(associated_model1)
             expect(model.test_model_many_to_manies).to include(associated_model2)
@@ -667,7 +667,7 @@ module VCAP::CloudController
 
             it 'replaces existing associated models' do
               put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model2.guid] })
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
               expect(model.test_model_many_to_manies).to include(associated_model2)
@@ -675,14 +675,14 @@ module VCAP::CloudController
 
             it 'removes associated models when empty array is provided' do
               put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [] })
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
             end
 
             it 'fails invalid guids' do
               put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model2.guid, 'abcd'] })
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_http_status(:bad_request)
               model.reload
               expect(model.test_model_many_to_manies.length).to eq(1)
               expect(model.test_model_many_to_manies).to include(associated_model1)
@@ -695,7 +695,7 @@ module VCAP::CloudController
             it 'returns an empty collection' do
               get "/v2/test_models/#{model.guid}/test_model_many_to_manies"
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               expect(decoded_response['total_results']).to eq(0)
               expect(decoded_response).to have_key('prev_url')
               expect(decoded_response['prev_url']).to be_nil
@@ -714,7 +714,7 @@ module VCAP::CloudController
             it 'returns collection response' do
               get "/v2/test_models/#{model.guid}/test_model_many_to_manies"
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               expect(decoded_response['total_results']).to eq(2)
               found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
               expect(found_guids).to contain_exactly(associated_model1.guid, associated_model2.guid)
@@ -733,7 +733,7 @@ module VCAP::CloudController
               allow_any_instance_of(TestModelManyToOneAccess).to receive(:index?).
                 with(TestModelManyToOne, { related_obj: instance_of(TestModel), related_model: TestModel }).and_return(false)
               get "/v2/test_models/#{model.guid}/test_model_many_to_ones"
-              expect(last_response.status).to eq(403)
+              expect(last_response).to have_http_status(:forbidden)
             end
           end
 

@@ -13,7 +13,7 @@ RSpec.describe 'buildpacks' do
 
     it 'returns 200 OK' do
       get '/v3/buildpacks', nil, headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
 
     it_behaves_like 'list query endpoint' do
@@ -299,7 +299,7 @@ RSpec.describe 'buildpacks' do
       it 'returns 401' do
         post '/v3/buildpacks', nil, headers
 
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -312,7 +312,7 @@ RSpec.describe 'buildpacks' do
 
         post '/v3/buildpacks', params, headers
 
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -342,7 +342,7 @@ RSpec.describe 'buildpacks' do
         it 'returns 201' do
           post '/v3/buildpacks', params.to_json, headers
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         describe 'non-position values' do
@@ -444,7 +444,7 @@ RSpec.describe 'buildpacks' do
 
         get "/v3/buildpacks/#{buildpack.guid}", params, headers
 
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -505,12 +505,12 @@ RSpec.describe 'buildpacks' do
     it 'deletes a buildpack asynchronously' do
       delete "/v3/buildpacks/#{buildpack.guid}", nil, admin_headers
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/buildpacks/#{buildpack.guid}", {}, admin_headers
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
     end
 
     context 'deleting metadata' do
@@ -542,11 +542,11 @@ RSpec.describe 'buildpacks' do
 
       expect(Delayed::Job.count).to eq 1
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
 
       get last_response.headers['Location'], nil, admin_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
   end
 
@@ -559,7 +559,7 @@ RSpec.describe 'buildpacks' do
       patch "/v3/buildpacks/#{buildpack.guid}", params.to_json, admin_headers
 
       expect(parsed_response['enabled']).to be(false)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(buildpack.reload).not_to be_enabled
     end
   end

@@ -17,7 +17,7 @@ RSpec.describe 'Auth' do
   context 'when the user has a valid token' do
     it 'returns as normal' do
       get '/v2/organizations', nil, user_header
-      expect(last_response.status).to eq 200
+      expect(last_response).to have_http_status :ok
     end
   end
 
@@ -25,7 +25,7 @@ RSpec.describe 'Auth' do
     it 'returns a 401' do
       get '/v2/organizations', nil, headers_for(user, expired: true)
 
-      expect(last_response.status).to eq 401
+      expect(last_response).to have_http_status :unauthorized
       expect(last_response.body).to match(/InvalidAuthToken/)
     end
   end
@@ -57,15 +57,15 @@ RSpec.describe 'Auth' do
     describe 'GET /v2 endpoints' do
       it 'errors on request' do
         get '/v2/apps', nil, no_read_headers
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
         expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
 
         get '/v2/organizations', nil, no_read_headers
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
         expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
 
         get '/v2/spaces', nil, no_read_headers
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
         expect(last_response.body).to match 'Your token lacks the necessary scopes to access this resource.'
       end
     end
@@ -85,26 +85,26 @@ RSpec.describe 'Auth' do
       describe 'GET /v2 endpoints' do
         it 'errors on request' do
           get '/v2/apps', nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 
           get '/v2/organizations', nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
 
           get '/v2/spaces', nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
         end
 
         it 'does not error when hitting info' do
           get '/v2/info', nil, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'does not error when hitting root' do
           get '/', nil, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         context 'with multiple role assignments' do
@@ -115,7 +115,7 @@ RSpec.describe 'Auth' do
 
           it 'still throws a 403' do
             get '/v2/spaces', nil, user_header
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(last_response.body).to match %r{You are not authorized to perform the requested action. See section 'Space Supporter Role in V2' https://docs.cloudfoundry.org/concepts/roles.html}
           end
         end
@@ -135,7 +135,7 @@ RSpec.describe 'Auth' do
       describe 'GET /v2 endpoints' do
         it 'succeeds' do
           get '/v2/apps', nil, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
     end
@@ -149,7 +149,7 @@ RSpec.describe 'Auth' do
       describe 'GET /v2 endpoints' do
         it 'succeeds' do
           get '/v2/apps', nil, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
     end

@@ -10,7 +10,7 @@ RSpec.describe 'Feature Flags Request' do
     it 'returns feature flags in alphabetical order' do
       get '/v3/feature_flags', nil, headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       flag_names_in_response = parsed_response['resources'].pluck('name')
       expect(flag_names_in_response).to eq(flag_names_sorted.map(&:to_s))
     end
@@ -56,7 +56,7 @@ RSpec.describe 'Feature Flags Request' do
     context 'there is not an override' do
       it 'returns details of the requested feature flag when' do
         get '/v3/feature_flags/diego_docker', nil, headers
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_http_status :ok
         expect(parsed_response).to be_a_response_like(
           {
             'updated_at' => nil,
@@ -78,7 +78,7 @@ RSpec.describe 'Feature Flags Request' do
 
       it 'returns details of the requested feature flag when there is an override' do
         get "/v3/feature_flags/#{feature_flag.name}", nil, headers
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_http_status :ok
         expect(parsed_response).to be_a_response_like(
           {
             'updated_at' => iso8601,
@@ -109,14 +109,14 @@ RSpec.describe 'Feature Flags Request' do
 
       it 'returns 403 error' do
         patch '/v3/feature_flags/diego_docker', patch_body.to_json, headers
-        expect(last_response.status).to eq 403
+        expect(last_response).to have_http_status :forbidden
       end
     end
 
     context 'user is admin' do
       it 'returns updated feature flag' do
         patch "/v3/feature_flags/#{feature_flag.name}", patch_body.to_json, admin_headers
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_http_status :ok
         expect(parsed_response).to be_a_response_like(
           {
             'updated_at' => iso8601,

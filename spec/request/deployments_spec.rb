@@ -125,7 +125,7 @@ RSpec.describe 'Deployments' do
 
       it 'creates a deployment object with that droplet' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
@@ -283,7 +283,7 @@ RSpec.describe 'Deployments' do
 
       it 'fails' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to match('Cannot set both fields')
@@ -319,7 +319,7 @@ RSpec.describe 'Deployments' do
 
       it 'creates a deployment object with the metadata' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         deployment = VCAP::CloudController::DeploymentModel.last
         expect(deployment).to have_labels(
@@ -483,7 +483,7 @@ RSpec.describe 'Deployments' do
 
       it 'creates a deployment object in state DEPLOYED' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
@@ -532,7 +532,7 @@ RSpec.describe 'Deployments' do
 
       it 'starts the app' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
       end
@@ -540,7 +540,7 @@ RSpec.describe 'Deployments' do
       context 'when "strategy":"rolling" is provided' do
         it 'starts the app' do
           post '/v3/deployments', create_request.merge({ strategy: 'rolling' }).to_json, user_header
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
 
           expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
         end
@@ -651,7 +651,7 @@ RSpec.describe 'Deployments' do
 
         it 'creates a deployment with strategy "rolling"' do
           post '/v3/deployments', create_request.to_json, user_header
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
 
           deployment = VCAP::CloudController::DeploymentModel.last
 
@@ -770,7 +770,7 @@ RSpec.describe 'Deployments' do
 
         it 'returns a 422 and error' do
           post '/v3/deployments', create_request.to_json, user_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
 
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['errors'][0]['detail']).to match("Strategy 'potato' is not a supported deployment strategy")
@@ -800,7 +800,7 @@ RSpec.describe 'Deployments' do
 
       it 'returns a 422 when a quota is violated' do
         post '/v3/deployments', create_request.to_json, user_header
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
 
         expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
       end
@@ -830,7 +830,7 @@ RSpec.describe 'Deployments' do
 
     it 'updates the deployment with metadata' do
       patch "/v3/deployments/#{deployment.guid}", update_request, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
@@ -1100,7 +1100,7 @@ RSpec.describe 'Deployments' do
 
       it 'lists all deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to match_json_response({
@@ -1283,7 +1283,7 @@ RSpec.describe 'Deployments' do
           )
 
           get '/v3/deployments?label_selector=release=stable', nil, admin_user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           expect(parsed_response['resources']).to have(1).items
           expect(parsed_response['resources'][0]['guid']).to eq(deployment2.guid)
@@ -1322,7 +1322,7 @@ RSpec.describe 'Deployments' do
 
       it 'does not include the deployments in the other space' do
         get '/v3/deployments', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({

@@ -108,7 +108,7 @@ RSpec.describe 'Builds' do
           }
         }
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       event = VCAP::CloudController::Event.last
@@ -316,7 +316,7 @@ RSpec.describe 'Builds' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
         expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
         expect(parsed_response).to be_a_response_like({
@@ -396,7 +396,7 @@ RSpec.describe 'Builds' do
 
         get '/v3/builds?label_selector=fruit=strawberry', {}, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(1)
         expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
       end
@@ -404,7 +404,7 @@ RSpec.describe 'Builds' do
       it 'filters on package_guid' do
         get "/v3/builds?package_guids=#{second_package.guid}", {}, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(1)
         expect(parsed_response['resources'][0]['guid']).to eq(second_build.guid)
       end
@@ -412,7 +412,7 @@ RSpec.describe 'Builds' do
       it 'accepts 2 package guids' do
         get "/v3/builds?package_guids=#{package.guid},#{second_package.guid}", {}, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(2)
         expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
         expect(parsed_response['resources'][1]['guid']).to eq(second_build.guid)
@@ -500,7 +500,7 @@ RSpec.describe 'Builds' do
           }
         }
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -638,7 +638,7 @@ RSpec.describe 'Builds' do
             it 'updates the state to STAGED' do
               patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
               parsed_response = MultiJson.load(last_response.body)
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
 
               expect(build_model.reload.state).to eq('STAGED')
               expect(parsed_response['state']).to eq('STAGED')
