@@ -6,6 +6,18 @@ updates:
     interval: daily
     time: '11:00'
   open-pull-requests-limit: 100
+- package-ecosystem: bundler
+  directory: "/docs/v3"
+  schedule:
+    interval: monthly
+    time: '11:00'
+  open-pull-requests-limit: 5
+- package-ecosystem: npm
+  directory: "/docs/v3"
+  schedule:
+    interval: monthly
+    time: '11:00'
+  open-pull-requests-limit: 5
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
