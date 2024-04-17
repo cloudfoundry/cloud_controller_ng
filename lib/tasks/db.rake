@@ -242,26 +242,32 @@ namespace :db do
   end
 
   def migrate
-    logging_output
-    db_logger = Steno.logger('cc.db.migrations')
+    # The following block, which loads the test DB config is only needed for running migrations in parallel (only in tests)
+    # It sets the `DB_CONNECTION_STRING` env variable from `POSTGRES|MYSQL_CONNECTION_PREFIX` + test_database number
     begin
       require_relative '../../spec/support/bootstrap/db_config'
       DbConfig.new
     rescue LoadError
-      # Only needed when running tests
+      # In production the test DB config is not available nor needed, so we ignore this error.
     end
+
+    logging_output
+    db_logger = Steno.logger('cc.db.migrations')
     DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
   def rollback(number_to_rollback)
-    logging_output
-    db_logger = Steno.logger('cc.db.migrations')
+    # The following block, which loads the test DB config is only needed for running migrations in parallel (only in tests)
+    # It sets the `DB_CONNECTION_STRING` env variable from `POSTGRES|MYSQL_CONNECTION_PREFIX` + test_database number
     begin
       require_relative '../../spec/support/bootstrap/db_config'
       DbConfig.new
     rescue LoadError
-      # Only needed when running tests
+      # In production the test DB config is not available nor needed, so we ignore this error.
     end
+
+    logging_output
+    db_logger = Steno.logger('cc.db.migrations')
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end
 
