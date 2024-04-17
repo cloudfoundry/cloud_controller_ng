@@ -130,18 +130,52 @@ module VCAP::CloudController::Validators
       end
 
       context 'when the destination field contains whitespace' do
+        context 'in a single destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '    10.10.10.10'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+          end
+        end
+
+        context 'in a comma-delimited destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '    10.10.10.10   ,   192.168.17.12'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+          end
+        end
+      end
+
+      context 'when the destination contains a comma and comma_delimited_destinations are DISABLED' do
         let(:rules) do
           [
             {
               protocol: 'udp',
-              destination: '10.10.10.10 '
+              destination: '10.10.10.10,'
             }
           ]
         end
 
-        it 'adds an error' do
+        it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
         end
       end
 
@@ -174,7 +208,7 @@ module VCAP::CloudController::Validators
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
         end
       end
 
@@ -183,14 +217,14 @@ module VCAP::CloudController::Validators
           [
             {
               protocol: 'udp',
-              destination: '192.168.10.2-192.168.5.254'
+              destination: '9.9.9.9-0.0.0.0'
             }
           ]
         end
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
         end
       end
 
@@ -255,6 +289,104 @@ module VCAP::CloudController::Validators
 
         it 'accepts the valid CIDR notation' do
           expect(subject).to be_valid
+        end
+      end
+
+      context 'comma-delimited destinations are enabled' do
+        before do
+          TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+        end
+
+        context 'the destination is valid comma-delimited list' do
+          context 'of CIDRs' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '10.0.0.0/8,192.168.0.0/16',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'accepts the destination' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'of a CIDR, a range and an IP address' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'accepts the chimeric destination' do
+              expect(subject).to be_valid
+            end
+          end
+        end
+
+        context 'the destination is nil' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: nil,
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws a specific error including mention of comma-delimited destinations' do
+            expected_error = 'Rules[0]: nil destination; destination must be a comma-delimited list of valid CIDRs, IP addresses, or IP address ranges'
+
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include expected_error
+          end
+        end
+
+        context 'one of the destinations is invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2/24,1.2',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws a specific error to comma-delimited destinations' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+          end
+        end
+
+        context 'all of the destinations are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '1.2-7.8,999.999.999.999,200.0.0.0-150.0.0.0,10.0.0.0/500',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for every destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(4)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+
+            expected_error = 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+            expect(subject.errors.full_messages).to include expected_error
+          end
         end
       end
     end

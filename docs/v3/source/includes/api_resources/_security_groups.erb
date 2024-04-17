@@ -20,6 +20,12 @@
       "type": 8,
       "code": 0,
       "description": "Allow ping requests to private services"
+    },
+    {
+      "protocol": "tcp",
+      "destination": "1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255",
+      "ports": "80,443,8080",
+      "description": "Only valid if cc.security_groups.enable_comma_delimited_destinations is true"
     }
   ],
   "relationships": {

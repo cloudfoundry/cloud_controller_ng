@@ -145,6 +145,10 @@ module VCAP::CloudController
             default_staging_security_groups: [String],
             default_running_security_groups: [String],
 
+            security_groups: {
+              enable_comma_delimited_destinations: bool
+            },
+
             resource_pool: {
               maximum_size: Integer,
               minimum_size: Integer,
