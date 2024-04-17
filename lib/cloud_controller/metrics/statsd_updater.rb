@@ -23,6 +23,15 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    def update_job_queue_load(pending_job_load_by_queue, total)
+      @statsd.batch do |batch|
+        pending_job_load_by_queue.each do |key, value|
+          batch.gauge("cc.job_queue_load.#{key}", value)
+        end
+        batch.gauge('cc.job_queue_load.total', total)
+      end
+    end
+
     def update_thread_info_thin(thread_info)
       @statsd.batch do |batch|
         batch.gauge('cc.thread_info.thread_count', thread_info[:thread_count])
