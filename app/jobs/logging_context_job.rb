@@ -33,7 +33,6 @@ module VCAP::CloudController
           end
         rescue Exception => e # rubocop:disable Lint/RescueException
           span&.record_exception(e)
-          span&.status = Status.error("Unhandled exception of type: #{e.class}")
           raise e
         ensure
           span&.finish

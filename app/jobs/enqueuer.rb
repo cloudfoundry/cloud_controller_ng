@@ -29,9 +29,8 @@ module VCAP::CloudController
         wrapped_job = yield wrapped_job if block_given?
 
         tracer = OpenTelemetry.tracer_provider.tracer("CC_NG")
-        tracer.in_span("enqueue_job") do |span|
-          delayed_job, request_id = enqueue_job(wrapped_job)
-          span.set_attribute('X-Vcap-Request-Id', request_id)
+        tracer.in_span("enqueue_job") do
+          delayed_job = enqueue_job(wrapped_job)
           PollableJobModel.find_by_delayed_job(delayed_job)
         end
       end
@@ -48,12 +47,11 @@ module VCAP::CloudController
           @opts['guid'] = SecureRandom.uuid
           request_id = ::VCAP::Request.current_id
           timeout_job = TimeoutJob.new(job, job_timeout)
-          carrier = {}
-          OpenTelemetry.propagation.inject(carrier)
+          carrier={}
           OpenTelemetry::Propagator::B3::Single::TextMapPropagator.new.inject(carrier)
           logging_context_job = LoggingContextJob.new(timeout_job, request_id, carrier)
           @opts[:priority] = job_priority unless job_priority.nil?
-          return Delayed::Job.enqueue(logging_context_job, @opts), request_id
+          return Delayed::Job.enqueue(logging_context_job, @opts)
       end
 
       def load_delayed_job_plugins
