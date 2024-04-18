@@ -53,7 +53,7 @@ module CloudFoundry
             OpenTelemetry::Trace.with_span(OpenTelemetry::Trace.current_span) do
               # Set return attributes
               span.set_attribute('http.response.status_code', @status)
-              span.set_attribute('http.response.body.size', @body.to_ary[0].bytesize)
+              #span.set_attribute('http.response.body.size', (@body.is_a?(Array) && @body[0]&.bytesize) || 0 )
             end
           end
         end

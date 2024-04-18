@@ -46,6 +46,7 @@ module VCAP::CloudController
         let(:serialized_job) do
           <<~EOS
             --- !ruby/object:VCAP::CloudController::Jobs::LoggingContextJob
+            carrier: {}
             handler: !ruby/object:VCAP::CloudController::Jobs::TimeoutJob
               handler: !ruby/object:VCAP::CloudController::Jobs::PollableJobWrapper
                 existing_guid: #{''}
@@ -121,6 +122,7 @@ module VCAP::CloudController
         let(:serialized_job) do
           <<~EOS
             --- !ruby/object:VCAP::CloudController::Jobs::LoggingContextJob
+            carrier: {}
             handler: !ruby/object:VCAP::CloudController::Jobs::TimeoutJob
               handler: !ruby/object:VCAP::CloudController::Jobs::SpaceApplyManifestActionJob
                 space: !ruby/object:VCAP::CloudController::Space

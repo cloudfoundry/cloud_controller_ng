@@ -65,19 +65,17 @@ module VCAP::CloudController
 
         map '/' do
           use CloudFoundry::Middleware::BlockV3OnlyRoles, { logger: Steno.logger('cc.unsupported_roles') }
-        end
-
-        use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
-
-        map '/' do
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
           run FrontController.new(config)
         end
 
-          map '/v3' do
-            run Rails.application.app
-          end
+        map '/v3' do
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
+          run Rails.application.app
+        end
 
         map '/healthz' do
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
           run ->(_) { [200, { 'Content-Type' => 'application/json' }, ['OK']] }
         end
       end

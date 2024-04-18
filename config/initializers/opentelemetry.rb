@@ -34,9 +34,10 @@ module CCInitializers
     return propagators
   end
   def self.opentelemetry(cc_config)
-    if cc_config[:otlp][:tracing][:enabled] == true
+    if cc_config.dig(:otlp, :tracing, :enabled) == true
       trace_api_url = cc_config[:otlp][:tracing][:api_url]
       trace_api_token = cc_config[:otlp][:tracing][:api_token]
+      sampler = OpenTelemetry::SDK::Trace::Samplers.trace_id_ratio_based(cc_config[:otlp][:tracing][:sampling_ratio])
 
       OpenTelemetry::SDK.configure do |c|
         c.add_span_processor(
@@ -71,8 +72,9 @@ module CCInitializers
       end
 
       #Configuration of sampling
-      sampler = OpenTelemetry::SDK::Trace::Samplers.trace_id_ratio_based(cc_config[:otlp][:tracing][:sampling_ratio])
-      OpenTelemetry.tracer_provider.sampler = sampler
+      if !trace_api_url.empty? && !trace_api_token.empty?
+        OpenTelemetry.tracer_provider.sampler = sampler
+      end
 
       extractors = define_propagators(cc_config[:otlp][:tracing][:propagation][:extractors])
       injectors = define_propagators(cc_config[:otlp][:tracing][:propagation][:injectors])

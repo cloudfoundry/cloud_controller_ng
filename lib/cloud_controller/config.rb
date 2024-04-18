@@ -157,7 +157,6 @@ module VCAP::CloudController
     def run_initializers
       return if @initialized
 
-      run_initializers_in_directory('../../../config/otlp/initializers/*.rb')
       run_initializers_in_directory('../../../config/initializers/*.rb')
       if @config_hash[:newrelic_enabled]
         require 'newrelic_rpm'
