@@ -167,6 +167,7 @@ module VCAP::CloudController
 
             jobs: {
               global: { timeout_in_seconds: Integer },
+              optional(:enable_dynamic_job_priorities) => bool,
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },

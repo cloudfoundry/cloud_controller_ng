@@ -38,6 +38,76 @@ module VCAP::CloudController::Jobs
         expect(job_record.reload.state).to eq('COMPLETE')
       end
 
+      context 'when dynamic job priorities are enabled' do
+        before do
+          TestConfig.config[:jobs][:enable_dynamic_job_priorities] = true
+        end
+
+        context 'when there are several active jobs for the current user' do
+          let(:security_context) { double({ current_user_email: 'user-email', current_user_name: 'user-name', current_user: double({ guid: 'user-guid' }) }) }
+          let(:pollable_job) { PollableJobWrapper.new(job) }
+
+          before do
+            stub_const('VCAP::CloudController::SecurityContext', security_context)
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+          end
+
+          it 'adds +1 to base priority for each active job' do
+            TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
+
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            expect(enqueued_job.priority).to eq(23)
+          end
+
+          context 'when SecurityContext does not have a user guid' do
+            let(:security_context) { double({ current_user_email: 'user-email', current_user_name: 'user-name', current_user: double({}) }) }
+
+            before do
+              stub_const('VCAP::CloudController::SecurityContext', security_context)
+            end
+
+            it 'does not change its delayed job\'s base priority' do
+              TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
+
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+              expect(enqueued_job.priority).to eq(20)
+            end
+
+            it 'uses nil for the user_guid' do
+              TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
+
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+
+              job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
+              expect(job_record.user_guid).to be_nil
+            end
+          end
+        end
+      end
+
+      context 'when dynamic job priorities are disabled' do
+        context 'when there are several active jobs for the current user' do
+          let(:security_context) { double({ current_user_email: 'user-email', current_user_name: 'user-name', current_user: double({ guid: 'user-guid' }) }) }
+          let(:pollable_job) { PollableJobWrapper.new(job) }
+
+          before do
+            stub_const('VCAP::CloudController::SecurityContext', security_context)
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+          end
+
+          it 'does not change its delayed job\'s base priority' do
+            TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
+
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            expect(enqueued_job.priority).to eq(20)
+          end
+        end
+      end
+
       context 'reusing a pollable job' do
         let!(:existing) { VCAP::CloudController::PollableJobModel.make }
         let(:pollable_job) { PollableJobWrapper.new(job, existing_guid: existing.guid) }
@@ -58,6 +128,30 @@ module VCAP::CloudController::Jobs
           expect(job_record.resource_guid).to eq('fake')
           expect(job_record.resource_type).to eq('droplet')
           expect(job_record.cf_api_error).to be_nil
+        end
+
+        context 'when dynamic job priorities are enabled' do
+          before do
+            TestConfig.config[:jobs][:enable_dynamic_job_priorities] = true
+          end
+
+          context 'when there are several active jobs for the current user' do
+            let(:security_context) { double({ current_user_email: 'user-email', current_user_name: 'user-name', current_user: double({ guid: 'user-guid' }) }) }
+
+            before do
+              stub_const('VCAP::CloudController::SecurityContext', security_context)
+              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            end
+
+            it 'does not change its delayed job\'s base priority' do
+              TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
+
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+              expect(enqueued_job.priority).to eq(20)
+            end
+          end
         end
 
         context 'when the job defines its state' do
