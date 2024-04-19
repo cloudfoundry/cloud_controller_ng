@@ -29,7 +29,25 @@ class DBMigrator
   def apply_migrations(opts={})
     Sequel.extension :migration
     require 'vcap/sequel_case_insensitive_string_monkeypatch'
-    Sequel::Migrator.run(@db, SEQUEL_MIGRATIONS, opts)
+
+    if ENV.fetch('WITH_BENCHMARK', false)
+      # rubocop:disable Rails/Output
+      puts('######################################')
+      puts('# Starting migrations with benchmark #')
+      puts('######################################')
+      require 'benchmark'
+      bm_output = Benchmark.measure { Sequel::Migrator.run(@db, SEQUEL_MIGRATIONS, opts) }
+      puts('###########')
+      puts('# Results #')
+      puts('###########')
+      puts("Total time for all migrations: #{bm_output.total} seconds")
+      puts("System time for all migrations: #{bm_output.stime} seconds")
+      puts("User time for all migrations: #{bm_output.utime} seconds")
+      puts("Real time for all migrations: #{bm_output.real} seconds")
+      # rubocop:enable Rails/Output
+    else
+      Sequel::Migrator.run(@db, SEQUEL_MIGRATIONS, opts)
+    end
   end
 
   def rollback(number_to_rollback)

@@ -76,4 +76,22 @@ RSpec.describe DBMigrator do
       DBMigrator.new(db, nil, nil, 1234)
     end
   end
+
+  describe 'benchmark' do
+    let(:migrator) { DBMigrator.new(db) }
+
+    it 'runs migrations without benchmark' do
+      expect(Benchmark).not_to receive(:measure)
+      migrator.apply_migrations
+    end
+
+    context 'when setting WITH_BENCHMARK env' do
+      before { ENV['WITH_BENCHMARK'] = 'true' }
+
+      it 'runs migrations with benchmark' do
+        expect(Benchmark).to receive(:measure).and_return(double(:bm_output, total: 1, stime: 2, utime: 3, real: 4))
+        expect { migrator.apply_migrations }.to output(/Starting migrations with benchmark/).to_stdout
+      end
+    end
+  end
 end
