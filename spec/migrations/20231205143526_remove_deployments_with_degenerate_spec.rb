@@ -20,7 +20,7 @@ RSpec.describe 'migration to clean up degenerate records from deployments record
 
       expect { db[:deployments].where(guid: 'degenerate_guid').delete }.to raise_error(Sequel::ForeignKeyConstraintViolation)
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       expect(db[:deployments].where(status_reason: 'DEGENERATE').count).to eq(0)
 

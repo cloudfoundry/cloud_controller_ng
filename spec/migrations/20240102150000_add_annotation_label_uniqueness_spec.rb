@@ -18,7 +18,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
 
       a1 = annotation.create(resource_guid: i1.guid, key_name: key_name, value: 'some_value')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(a1.reload.key_name).to eq(truncated_key_name)
     end
 
@@ -28,7 +28,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
 
       a1 = annotation.create(resource_guid: i1.guid, key_name: key_name, value: 'some_value')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(a1.reload.key_name).to eq(key_name)
     end
 
@@ -50,7 +50,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(b1.id).to be < b2.id
       expect(b1.id).to be < b3.id
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(annotation.where(key_name:).count).to eq(2)
       expect(a1.reload).to be_a(annotation)
       expect { a2.reload }.to raise_error(Sequel::NoExistingObject)
@@ -76,7 +76,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       b3 = annotation.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_b, value: 'v3')
       b4 = annotation.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key_a, value: 'v4')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       expect(annotation.all.count).to eq(7)
       expect(a1.reload).to be_a(annotation)
@@ -98,7 +98,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       # In case key_prefix is set
       annotation.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v1')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       expect { annotation.create(resource_guid: i1.guid, key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
       expect { annotation.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
@@ -110,7 +110,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       key_a = 'a' * 63
       key_b = 'b' * 63
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       # In case key_prefix is not set
       a1 = annotation.create(resource_guid: i1.guid, key_name: key_a, value: 'v1')
@@ -152,7 +152,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(b1.id).to be < b2.id
       expect(b1.id).to be < b3.id
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(label.where(key_name: key).count).to eq(2)
       expect(a1.reload).to be_a(label)
       expect { a2.reload }.to raise_error(Sequel::NoExistingObject)
@@ -178,7 +178,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       b3 = label.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_b, value: 'v3')
       b4 = label.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key_a, value: 'v4')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       expect(label.all.count).to eq(7)
       expect(a1.reload).to be_a(label)
@@ -200,7 +200,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       # In case key_prefix is set
       label.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v1')
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       expect { label.create(resource_guid: i1.guid, key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
       expect { label.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
@@ -212,7 +212,7 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       key_a = 'a' * 63
       key_b = 'b' * 63
 
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       # In case key_prefix is not set
       a1 = label.create(resource_guid: i1.guid, key_name: key_a, value: 'v1')

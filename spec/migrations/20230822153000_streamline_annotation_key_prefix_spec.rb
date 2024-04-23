@@ -18,7 +18,7 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
         value: 'some_value'
       )
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect(b1[:guid]).to eq a1[:guid]
       expect(b1[:created_at]).to eq a1[:created_at]
@@ -36,7 +36,7 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
       db[:isolation_segment_annotations].insert(guid: 'bommel2', resource_guid: '123', key: 'mykey2', value: 'some_value2')
       b1 = db[:isolation_segment_annotations].first(key: 'mykey')
       b2 = db[:isolation_segment_annotations].first(key: 'mykey2')
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       c1 = db[:isolation_segment_annotations].first(key: 'mykey')
       c2 = db[:isolation_segment_annotations].first(key: 'mykey2')
       expect(b1.values).to eq(c1.values)

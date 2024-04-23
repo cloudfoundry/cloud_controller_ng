@@ -79,8 +79,8 @@ Sequel migration tests have a distinct operation compared to conventional RSpec 
 
 ### Usage
 
-Here’s a guide on how to write a migration spec. The `migration` shared context uses the `migration_file` variable, containing the filename of the migration under review. This shared context also provides a `migration_to_test` variable to perform the specific migration. All other processes, including migrating one version before the test migration and fully migrating the table after the test has finished, are handled automatically.
-
+Here’s a guide on how to write a migration spec. The `migration` shared context uses the `migration_file` variable, containing the filename of the migration under review. This shared context also provides a path to all migrations in `migrations_path` as well as the index of the current migration in `current_migration_index` variable to perform the specific migration. All other processes, including migrating one version before the test migration and fully migrating the table after the test has finished, are handled automatically.
+For testing the down part of a migration one can use `Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true)`
 ```ruby
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
@@ -94,7 +94,7 @@ RSpec.describe 'migration to modify isolation_segments', isolation: :truncation 
     it 'retains the initial name and guid' do
       db[:isolation_segments].insert(name: 'bommel', guid: '123')
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect(b1[:guid]).to eq a1[:guid]
       expect(b1[:name]).to eq a1[:name]

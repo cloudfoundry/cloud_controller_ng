@@ -26,7 +26,7 @@ RSpec.describe 'migration to enable microsecond precision on asg last updated ta
       end
 
       # Change TIMESTAMP to TIMESTAMP(6)
-      expect { Sequel::Migrator.run(db, migration_to_test, allow_missing_migration_files: true) }.not_to raise_error
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       # the migration shouldn't add accuracy to previously inserted values
       t1_post_migration = ds.first(id: 1)
