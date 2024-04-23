@@ -47,6 +47,9 @@ failed_jobs:
   cutoff_age_in_days: 31
   frequency_in_seconds: 144000 #4h
 
+service_operations_initial_cleanup:
+  frequency_in_seconds: 300
+
 completed_tasks:
   cutoff_age_in_days: 31
 

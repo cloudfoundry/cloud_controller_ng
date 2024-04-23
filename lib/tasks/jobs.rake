@@ -34,6 +34,7 @@ namespace :jobs do
       'app_usage_events',
       'audit_events',
       'failed_jobs',
+      'service_operations_initial_cleanup',
       'service_usage_events',
       'completed_tasks',
       'expired_blob_cleanup',
