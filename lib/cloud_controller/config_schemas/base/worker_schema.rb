@@ -189,7 +189,11 @@ module VCAP::CloudController
                 api_url: String,
                 api_token: String,
                 sampling_ratio: Float,
+                redact: {
+                  db_statements: bool,
+                },
                 propagation: {
+                  accept_sampling_instruction: bool,
                   extractors: Array,
                   injectors: Array
                 }

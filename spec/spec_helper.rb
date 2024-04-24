@@ -77,6 +77,7 @@ init_block = proc do
   require 'rspec/collection_matchers'
   require 'rspec/its'
   require 'rspec/wait'
+  require 'rspec-benchmark'
 end
 
 each_run_block = proc do
@@ -104,6 +105,7 @@ each_run_block = proc do
     end
     rspec_config.extend DeprecationHelpers
     rspec_config.include Rack::Test::Methods
+    rspec_config.include RSpec::Benchmark::Matchers
     rspec_config.include ModelCreation
     rspec_config.include TimeHelpers
     rspec_config.include LinkHelpers

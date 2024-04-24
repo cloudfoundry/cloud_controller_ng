@@ -402,6 +402,9 @@ otlp:
     api_url: ''
     api_token: ''
     sampling_ratio: 1.0
+    redact:
+      db_statements: true
     propagation:
-      extractors: ['tracecontext', 'xray', 'jaeger', 'ottrace', 'baggage', 'b3', 'b3multi']
-      injectors: ['tracecontext', 'baggage', 'b3']
+      accept_sampling_instruction: true
+      extractors: ['tracecontext', 'xray', 'jaeger', 'baggage', 'b3', 'b3multi']
+      injectors: ['tracecontext', 'xray', 'jaeger', 'baggage', 'b3', 'b3multi']

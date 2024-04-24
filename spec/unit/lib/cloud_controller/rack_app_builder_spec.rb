@@ -25,6 +25,25 @@ module VCAP::CloudController
         expect(CloudFoundry::Middleware::RequestLogs).to have_received(:new).with(anything, request_logs)
       end
 
+      describe 'OpenTelemetry Middlewares' do
+        before do
+          allow(CloudFoundry::Middleware::OpenTelemetryFirstMiddleware).to receive(:new)
+          allow(CloudFoundry::Middleware::OpenTelemetryLastMiddleware).to receive(:new)
+        end
+
+        it 'uses OpenTelemetryMiddlewares when tracing is enabled' do
+          builder.build(TestConfig.override(otlp: { tracing: {enabled: true, sampling_ratio: 1.0} }), request_metrics, request_logs).to_app
+          expect(CloudFoundry::Middleware::OpenTelemetryFirstMiddleware).to have_received(:new)
+          expect(CloudFoundry::Middleware::OpenTelemetryLastMiddleware).to have_received(:new).exactly(3).times
+        end
+
+        it 'does not use OpenTelemetryMiddlewares when tracing is disabled' do
+          builder.build(TestConfig.override(otlp: { tracing: {enabled: false} }), request_metrics, request_logs).to_app
+          expect(CloudFoundry::Middleware::OpenTelemetryFirstMiddleware).not_to have_received(:new)
+          expect(CloudFoundry::Middleware::OpenTelemetryLastMiddleware).not_to have_received(:new)
+        end
+      end
+
       describe 'Rack::CommonLogger' do
         before do
           allow(Rack::CommonLogger).to receive(:new)

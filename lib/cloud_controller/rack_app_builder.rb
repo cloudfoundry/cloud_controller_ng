@@ -23,7 +23,7 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
-        use CloudFoundry::Middleware::OpenTelemetryFirstMiddleware
+        use CloudFoundry::Middleware::OpenTelemetryFirstMiddleware if config.get(:otlp, :tracing, :enabled)
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
         use CloudFoundry::Middleware::VcapRequestId
@@ -65,17 +65,17 @@ module VCAP::CloudController
 
         map '/' do
           use CloudFoundry::Middleware::BlockV3OnlyRoles, { logger: Steno.logger('cc.unsupported_roles') }
-          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware if config.get(:otlp, :tracing, :enabled)
           run FrontController.new(config)
         end
 
         map '/v3' do
-          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware if config.get(:otlp, :tracing, :enabled)
           run Rails.application.app
         end
 
         map '/healthz' do
-          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware
+          use CloudFoundry::Middleware::OpenTelemetryLastMiddleware if config.get(:otlp, :tracing, :enabled)
           run ->(_) { [200, { 'Content-Type' => 'application/json' }, ['OK']] }
         end
       end

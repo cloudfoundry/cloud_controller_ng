@@ -3,6 +3,8 @@ require "opentelemetry/sdk"
 module CloudFoundry
   module Middleware
     class OpenTelemetryFirstMiddleware
+      attr_reader :initial_span, :initial_baggage
+
       def initialize(app)
         @app = app
         @tracer = OpenTelemetry.tracer_provider.tracer('CC_NG_API', '1.0')
@@ -10,17 +12,16 @@ module CloudFoundry
 
       def call(env)
         # Extract context from request headers
-        context = OpenTelemetry.propagation.extract(
+        tracing_context = OpenTelemetry.propagation.extract(
           env,
           getter: OpenTelemetry::Common::Propagation.rack_env_getter
         )
 
         # Span name SHOULD be set to route:
-        span_name = env['PATH_INFO']
+        span_name = env['PATH_INFO'] || 'unknown'
 
-        # Activate the extracted context
-        OpenTelemetry::Context.with_current(context) do
-
+        # Use the extracted/adopted context
+        OpenTelemetry::Context.with_current(tracing_context) do
           # Span kind MUST be `:server` for a HTTP server span
           @tracer.in_span(
             span_name,
@@ -46,37 +47,36 @@ module CloudFoundry
             OpenTelemetry::Trace.with_span(middleware_pre_app_span) do
               @status, @headers, @body = @app.call(env)
             rescue Exception => e # rubocop:disable Lint/RescueException
-              span&.record_exception(e)
-              span&.status = Status.error("Unhandled exception of type: #{e.class}")
+              span.record_exception(e)
+              span.status=OpenTelemetry::Trace::Status.error("Exception: #{e.class} - #{e.message}")
               raise e
             end
-            OpenTelemetry::Trace.with_span(OpenTelemetry::Trace.current_span) do
-              # Set return attributes
-              span.set_attribute('http.response.status_code', @status)
-              #span.set_attribute('http.response.body.size', (@body.is_a?(Array) && @body[0]&.bytesize) || 0 )
-            end
+            # Set return attributes
+            span.set_attribute('http.response.status_code', @status)
+            span.set_attribute('http.response.body.size',  @body.respond_to?(:bytesize) ? @body.bytesize : 0 )
           end
-        end
 
         [@status, @headers, @body]
       end
-
-      def check_header_value(header_value)
-        if !header_value.is_a? String
-          return ''
-        end
-
-        if header_value.empty?
-          return ''
-        end
-
-        if header_value.bytesize > 100000
-          return ''
-        end
-
-        return header_value
-      end
     end
+
+    def check_header_value(header_value)
+      if !header_value.is_a? String
+        return ''
+      end
+
+      if header_value.empty?
+        return ''
+      end
+
+      if header_value.bytesize > 100000
+        return ''
+      end
+
+      return header_value
+    end
+  end
+
     class OpenTelemetryLastMiddleware
       def initialize(app)
         @app = app
