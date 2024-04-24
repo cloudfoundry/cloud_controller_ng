@@ -19,7 +19,7 @@ module VCAP::CloudController
         context = OpenTelemetry::Propagator::B3::Single::TextMapPropagator.new.extract(@carrier)
 
         begin
-          span = tracer.start_span("Delayed_job", with_parent: context)
+          span = tracer.start_span('Delayed_job', with_parent: context)
           OpenTelemetry::Trace.with_span(span) do
             span.set_attribute('X-Vcap-Request-Id', @request_id)
             begin
@@ -37,7 +37,6 @@ module VCAP::CloudController
         ensure
           span&.finish
         end
-
       end
 
       def success(job)

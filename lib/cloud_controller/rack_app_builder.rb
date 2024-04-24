@@ -16,6 +16,7 @@ require 'below_min_cli_warning'
 
 module VCAP::CloudController
   class RackAppBuilder
+    # rubocop:disable Metrics/BlockLength, Metrics/CyclomaticComplexity
     def build(config, request_metrics, request_logs)
       token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa))
       configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
@@ -80,6 +81,7 @@ module VCAP::CloudController
         end
       end
     end
+    # rubocop:enable Metrics/BlockLength, Metrics/CyclomaticComplexity
 
     private
 

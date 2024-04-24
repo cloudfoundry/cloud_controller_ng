@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs
     RSpec.describe LoggingContextJob, job_context: :worker do
       subject(:logging_context_job) do
-        LoggingContextJob.new(handler, request_id,{})
+        LoggingContextJob.new(handler, request_id, {})
       end
       let(:request_id) { 'abc123' }
       let(:background_logger) { instance_double(Steno::Logger).as_null_object }

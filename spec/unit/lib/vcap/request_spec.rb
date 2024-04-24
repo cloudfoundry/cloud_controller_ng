@@ -55,7 +55,6 @@ module VCAP
       end
     end
 
-
     describe '.user_guid' do
       after do
         Request.user_guid = nil

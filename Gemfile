@@ -68,20 +68,20 @@ gem 'fog-openstack'
 gem 'cf-uaa-lib', '~> 4.0.4'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
-gem "opentelemetry-sdk", "~> 1.3"
-gem "opentelemetry-exporter-otlp", "~> 0.26.1"
-gem "opentelemetry-instrumentation-delayed_job", "~> 0.22.1"
-gem "opentelemetry-instrumentation-net_http", "~> 0.22.4"
-gem "opentelemetry-instrumentation-http_client", "~> 0.22.3"
-gem "opentelemetry-instrumentation-mysql2", "~> 0.27.0"
-gem "opentelemetry-instrumentation-pg", "~> 0.27.1"
-gem "opentelemetry-instrumentation-rake", "~> 0.2.1"
-gem "opentelemetry-instrumentation-rack", "~> 0.24"
-gem "opentelemetry-instrumentation-redis", "~> 0.25.3"
-gem "opentelemetry-instrumentation-sinatra", "~> 0.23.2"
-gem "opentelemetry-propagator-b3"
-gem "opentelemetry-propagator-jaeger", "~> 0.21.0"
-gem "opentelemetry-propagator-xray", "~> 0.22.1"
+gem 'opentelemetry-exporter-otlp', '~> 0.26.1'
+gem 'opentelemetry-instrumentation-delayed_job', '~> 0.22.1'
+gem 'opentelemetry-instrumentation-http_client', '~> 0.22.3'
+gem 'opentelemetry-instrumentation-mysql2', '~> 0.27.0'
+gem 'opentelemetry-instrumentation-net_http', '~> 0.22.4'
+gem 'opentelemetry-instrumentation-pg', '~> 0.27.1'
+gem 'opentelemetry-instrumentation-rack', '~> 0.24'
+gem 'opentelemetry-instrumentation-rake', '~> 0.2.1'
+gem 'opentelemetry-instrumentation-redis', '~> 0.25.3'
+gem 'opentelemetry-instrumentation-sinatra', '~> 0.23.2'
+gem 'opentelemetry-propagator-b3'
+gem 'opentelemetry-propagator-jaeger', '~> 0.21.0'
+gem 'opentelemetry-propagator-xray', '~> 0.22.1'
+gem 'opentelemetry-sdk', '~> 1.3'
 
 group :db do
   gem 'mysql2', '~> 0.5.6'
@@ -99,12 +99,12 @@ group :test do
   gem 'rack-test'
   gem 'rspec', '~> 3.13.0'
   gem 'rspec_api_documentation', '>= 6.1.0'
+  gem 'rspec-benchmark', '~> 0.6.0'
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
   gem 'rspec-rails', '~> 6.1.2'
   gem 'rspec-wait'
-  gem "rspec-benchmark", "~> 0.6.0"
   gem 'rubocop', '~> 1.63.1'
   gem 'rubocop-rails', '~> 2.24'
   gem 'rubocop-rspec', '~> 2.26'

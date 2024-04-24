@@ -1,4 +1,4 @@
-require "opentelemetry/sdk"
+require 'opentelemetry/sdk'
 
 module CloudFoundry
   module Middleware
@@ -29,7 +29,7 @@ module CloudFoundry
               'http.request.method' => check_header_value(env['REQUEST_METHOD']),
               'url.path' => check_header_value(env['PATH_INFO']),
               'url.scheme' => check_header_value(env['rack.url_scheme']),
-              'url.query'=> check_header_value(env['QUERY_STRING']),
+              'url.query' => check_header_value(env['QUERY_STRING']),
               'url.full' => check_header_value(env['REQUEST_URI']),
               'http.host' => check_header_value(env['HTTP_HOST']),
               'user_agent.original' => check_header_value(env['HTTP_USER_AGENT']),
@@ -39,43 +39,37 @@ module CloudFoundry
               'http.request.header.x_forwared_for' => check_header_value(env['HTTP_X_FORWARDED_FOR']),
               'http.request.header.accept' => check_header_value(env['HTTP_ACCEPT']),
               'http.request.header.accept_encoding' => check_header_value(env['HTTP_ACCEPT_ENCODING']),
-              'http.request.body.size' => check_header_value(env['CONTENT_LENGTH']),
+              'http.request.body.size' => check_header_value(env['CONTENT_LENGTH'])
             },
             kind: :server
           ) do |span|
-            middleware_pre_app_span = @tracer.start_span("middleware-pre-app")
+            middleware_pre_app_span = @tracer.start_span('middleware-pre-app')
             OpenTelemetry::Trace.with_span(middleware_pre_app_span) do
               @status, @headers, @body = @app.call(env)
             rescue Exception => e # rubocop:disable Lint/RescueException
               span.record_exception(e)
-              span.status=OpenTelemetry::Trace::Status.error("Exception: #{e.class} - #{e.message}")
+              span.status = OpenTelemetry::Trace::Status.error("Exception: #{e.class} - #{e.message}")
               raise e
             end
             # Set return attributes
             span.set_attribute('http.response.status_code', @status)
-            span.set_attribute('http.response.body.size',  @body.respond_to?(:bytesize) ? @body.bytesize : 0 )
+            span.set_attribute('http.response.body.size', @body.respond_to?(:bytesize) ? @body.bytesize : 0)
           end
 
-        [@status, @headers, @body]
+          [@status, @headers, @body]
+        end
+      end
+
+      def check_header_value(header_value)
+        return '' unless header_value.is_a? String
+
+        return '' if header_value.empty?
+
+        return '' if header_value.bytesize > 100_000
+
+        header_value
       end
     end
-
-    def check_header_value(header_value)
-      if !header_value.is_a? String
-        return ''
-      end
-
-      if header_value.empty?
-        return ''
-      end
-
-      if header_value.bytesize > 100000
-        return ''
-      end
-
-      return header_value
-    end
-  end
 
     class OpenTelemetryLastMiddleware
       def initialize(app)
@@ -84,10 +78,10 @@ module CloudFoundry
       end
 
       def call(env)
-        #Close the span that measures middlewares-pre-app
+        # Close the span that measures middlewares-pre-app
         OpenTelemetry::Trace.current_span.finish
         # Measure application runtime in a seperate span
-        @tracer.in_span("application") do |span|
+        @tracer.in_span('application') do |_span|
           @status, @headers, @body = @app.call(env)
         end
         [@status, @headers, @body]
