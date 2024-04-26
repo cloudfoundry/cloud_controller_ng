@@ -111,6 +111,34 @@
                 "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb",
                 "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
             }
+        },
+        {
+            "name": "[Mariadb] CC Scheduler",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "clock:start",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+            }
+        },
+        {
+            "name": "[Postgres] CC Scheduler",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "clock:start",
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+            }
         }
     ]
 }
