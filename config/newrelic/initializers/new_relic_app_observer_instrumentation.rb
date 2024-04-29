@@ -2,7 +2,7 @@ require 'new_relic/agent/method_tracer'
 require 'cloud_controller/process_observer'
 
 module CCInitializers
-  def self.new_relic_app_observer_instrumentation(_)
+  def self.new_relic_app_observer_instrumentation(_, _)
     VCAP::CloudController::ProcessObserver.class_eval do
       include ::NewRelic::Agent::MethodTracer
 

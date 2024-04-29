@@ -6,7 +6,7 @@
 
 module OpenTelemetry
   module Instrumentation
-    module DelayedJob
+    module CCDelayedJob
       VERSION = '0.22.1'
     end
   end

@@ -9,11 +9,10 @@ require 'opentelemetry-instrumentation-base'
 
 module OpenTelemetry
   module Instrumentation
-    # Contains the OpenTelemetry instrumentation for the DelayedJob gem
-    module DelayedJob
+    module CCDelayedJob
     end
   end
 end
 
-require_relative 'delayed_job/instrumentation'
-require_relative 'delayed_job/version'
+require_relative 'cc_delayed_job/instrumentation'
+require_relative 'cc_delayed_job/version'

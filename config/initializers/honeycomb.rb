@@ -1,7 +1,7 @@
 require 'honeycomb-beeline'
 
 module CCInitializers
-  def self.honeycomb(cc_config)
+  def self.honeycomb(cc_config, _)
     return unless cc_config[:honeycomb]
 
     Honeycomb.configure do |hc|

@@ -13,9 +13,9 @@ unless defined?(SPEC_HELPER_LOADED)
 
   VCAP::CloudController::SpecBootstrap.init(recreate_test_tables: false)
 
-  require 'delayed_job_plugins/deserialization_retry'
-  require 'delayed_job_plugins/after_enqueue_hook'
-  require 'delayed_job_plugins/before_enqueue_hook'
+  require 'delayed_job/plugins/deserialization_retry'
+  require 'delayed_job/plugins/after_enqueue_hook'
+  require 'delayed_job/plugins/before_enqueue_hook'
 
   require 'support/fakes/blueprints'
 

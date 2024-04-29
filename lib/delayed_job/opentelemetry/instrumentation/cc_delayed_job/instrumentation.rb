@@ -6,7 +6,7 @@
 
 module OpenTelemetry
   module Instrumentation
-    module DelayedJob
+    module CCDelayedJob
       # Instrumentation class that detects and installs the DelayedJob instrumentation
       class Instrumentation < OpenTelemetry::Instrumentation::Base
         MINIMUM_VERSION = Gem::Version.new('4.1')

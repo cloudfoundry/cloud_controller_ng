@@ -1,7 +1,7 @@
 require 'active_support/json/encoding'
 
 module CCInitializers
-  def self.json(_cc_config)
+  def self.json(_, _)
     MultiJson.use(:oj)
     Oj::Rails.optimize # Use optimized encoders instead of as_json() methods for available classes.
     Oj.default_options = {
