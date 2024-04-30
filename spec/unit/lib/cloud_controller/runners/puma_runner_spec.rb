@@ -63,7 +63,7 @@ module VCAP::CloudController
         subject
 
         expect(puma_launcher.config.final_options[:workers]).to eq(num_workers)
-        expect(puma_launcher.config.final_options[:min_threads]).to eq(0)
+        expect(puma_launcher.config.final_options[:min_threads]).to eq(max_threads)
         expect(puma_launcher.config.final_options[:max_threads]).to eq(max_threads)
       end
 
@@ -75,6 +75,7 @@ module VCAP::CloudController
           subject
 
           expect(puma_launcher.config.final_options[:workers]).to eq(1)
+          expect(puma_launcher.config.final_options[:min_threads]).to eq(1)
           expect(puma_launcher.config.final_options[:max_threads]).to eq(1)
         end
       end

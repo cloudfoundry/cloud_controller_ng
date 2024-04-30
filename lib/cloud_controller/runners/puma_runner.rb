@@ -16,7 +16,8 @@ module VCAP::CloudController
         end
 
         conf.workers(config.get(:puma, :workers) || 1)
-        conf.threads(0, config.get(:puma, :max_threads) || 1)
+        num_threads = config.get(:puma, :max_threads) || 1
+        conf.threads(num_threads, num_threads)
 
         # In theory there shouldn't be any open connections when shutting down Puma as they have either been gracefully
         # drained or forcefully terminated (after cc.nginx_drain_timeout) by Nginx. Puma has some built-in (i.e. not
