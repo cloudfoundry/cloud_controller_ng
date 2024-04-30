@@ -68,7 +68,10 @@ To create resilient and reliable migrations, follow these guidelines:
    ```
 1. If you're writing a uniqueness constraint where some of the values can be null, remember that `null != null`. For instance, the values `[1, 1, null]` and `[1, 1, null]` are considered unique. Uniqueness constraints only work on columns that do not allow `NULL` as a value. If this is the case, change the column to disallow `NULL` and set the default to an empty string instead.
 1. If you need to execute different operations for MySQL and Postgres, you can check the database type as follows: `... if database_type == :postgres` or `... if database_type == :mysql`. If the differences are too big, consider writing separate migrations for each database type.
-1. Be sure that with real world table sizes and load each sql query will finish in reasonable time inside your migration. **There is a hard limit of 30s in place to protect against outages caused by long-running migrations**. If you need to run a long-running migration, consider breaking it up into smaller parts. If you make use of table locking, be sure to run any query with real world table sizes sub 2 seconds to not cause issues due to table locks and waiting queries. In case a single statement exceeds 30s(default), the migration is aborted. An operator can overwrite this behaviour by setting the `max_migration_statement_runtime_in_seconds` config property.
+1. Be sure that with real world table sizes and load each sql query will finish in reasonable time inside your migration. **There is a hard limit of 30s in place to protect against outages caused by long-running migrations**.
+   If you need to run a long-running migration, consider breaking it up into smaller parts. If you make use of table locking, be sure to run any query with real world table sizes sub 2 seconds to not cause issues due to table locks and waiting queries.
+   In case a single statement exceeds 30s(default), the migration is aborted. An operator can overwrite this behaviour by setting the `max_migration_statement_runtime_in_seconds` config property.  
+   Since index creation can take a long time, especially when using `CONCURRENTLY`, an operator can set the `migration_psql_concurrent_statement_timeout` config property to a higher value to allow for longer running statements.
 
 # Sequel Migration Tests
 

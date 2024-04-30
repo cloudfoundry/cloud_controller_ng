@@ -148,6 +148,8 @@ end
 # the migration methods.
 module VCAP
   module Migration
+    PSQL_DEFAULT_STATEMENT_TIMEOUT = 30_000
+
     def self.timestamps(migration, table_key)
       created_at_idx = :"#{table_key}_created_at_index" if table_key
       updated_at_idx = :"#{table_key}_updated_at_index" if table_key
@@ -217,6 +219,20 @@ module VCAP
       elsif migration.class.name.match?(/postgres/i)
         Sequel.function(:get_uuid)
       end
+    end
+
+    # Concurrent migrations can take a long time to run, so this helper can be used to override 'max_migration_statement_runtime_in_seconds' for a specific migration.
+    # REF: https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY
+    def self.with_concurrent_timeout(db, &block)
+      concurrent_timeout_seconds = VCAP::CloudController::Config.config&.get(:migration_psql_concurrent_statement_timeout_in_seconds) || PSQL_DEFAULT_STATEMENT_TIMEOUT
+
+      if concurrent_timeout_seconds && db.database_type == :postgres
+        original_timeout = db.fetch("select setting from pg_settings where name = 'statement_timeout'").first[:setting]
+        db.run("SET statement_timeout TO #{concurrent_timeout_seconds * 1000}")
+      end
+      block.call
+    ensure
+      db.run("SET statement_timeout TO #{original_timeout}") if original_timeout && db.database_type == :postgres
     end
 
     def self.logger

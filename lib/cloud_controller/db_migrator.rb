@@ -15,7 +15,7 @@ class DBMigrator
     @timeout_in_minutes = default_two_weeks(max_migration_duration_in_minutes)
 
     @max_statement_runtime_in_milliseconds = if max_migration_statement_runtime_in_seconds.nil? || max_migration_statement_runtime_in_seconds <= 0
-                                               30_000
+                                               VCAP::Migration::PSQL_DEFAULT_STATEMENT_TIMEOUT
                                              else
                                                max_migration_statement_runtime_in_seconds * 1000
                                              end
