@@ -1,3 +1,5 @@
+require 'ruby-prof'
+require 'oj'
 module VCAP::CloudController
   class SyslogDrainUrlsInternalController < RestController::BaseController
     # Endpoint uses mutual tls for auth, handled by nginx
@@ -49,12 +51,15 @@ module VCAP::CloudController
     get '/internal/v5/syslog_drain_urls', :listv5
 
     def listv5
+      RubyProf.start
       prepare_aggregate_function
 
+      upsi_service_instance_credential_cache = {}
       bindings = ServiceBinding.
                  join(:apps, guid: :app_guid).
                  join(:spaces, guid: :apps__space_guid).
                  join(:organizations, id: :spaces__organization_id).
+                 join(:service_instances, guid: :service_bindings__service_instance_guid).
                  select(
                    :service_bindings__syslog_drain_url,
                    :service_bindings__credentials,
@@ -62,20 +67,41 @@ module VCAP::CloudController
                    :service_bindings__encryption_key_label,
                    :service_bindings__encryption_iterations,
                    :service_bindings__app_guid,
+                   :service_bindings__service_instance_guid,
                    :apps__name___app_name,
                    :spaces__name___space_name,
-                   :organizations__name___organization_name
+                   :organizations__name___organization_name,
+                   :service_instances__is_gateway_service___is_managed_service
                  ).
                  where(service_bindings__syslog_drain_url: syslog_drain_urls_query).
 
                  each_with_object({}) do |item, injected|
                    syslog_drain_url = item[:syslog_drain_url]
-                   credentials = item.credentials
-                   cert = credentials&.fetch('cert', '') || ''
-                   key = credentials&.fetch('key', '') || ''
-                   ca = credentials&.fetch('ca', '') || ''
+                   
+                   if !item[:is_managed_service]
+
+                     upsi_service_instance_credential_cache[item.service_instance_guid] ||= {}
+                   
+                     if upsi_service_instance_credential_cache[item.service_instance_guid].empty?
+                       credentials = item.credentials
+                       upsi_service_instance_credential_cache[item.service_instance_guid]['cert'] = credentials&.fetch('cert', '') || ''
+                       upsi_service_instance_credential_cache[item.service_instance_guid]['key'] = credentials&.fetch('key', '') || ''
+                       upsi_service_instance_credential_cache[item.service_instance_guid]['ca'] = credentials&.fetch('ca', '') || ''
+                     end
+
+                     cert = upsi_service_instance_credential_cache.fetch('cert', '')
+                     key = upsi_service_instance_credential_cache.fetch('key', '')
+                     ca = upsi_service_instance_credential_cache.fetch('ca', '') 
+                   else
+		     credentials = item.credentials
+                     cert = credentials&.fetch('cert', '') || ''
+                     key = credentials&.fetch('key', '') || ''
+                     ca = credentials&.fetch('ca', '') || ''
+                   end
                    hostname = hostname_from_app_name(item[:organization_name], item[:space_name], item[:app_name])
                    app_guid = item[:app_guid]
+
+
 
                    injected_item = injected[syslog_drain_url] ||= {
                      url: syslog_drain_url,
@@ -99,7 +125,13 @@ module VCAP::CloudController
 
       next_page_token = nil
       next_page_token = last_id + batch_size unless bindings.empty?
-      [HTTP::OK, MultiJson.dump({ results: bindings, next_id: next_page_token }, pretty: true)]
+      response = [HTTP::OK, Oj.dump({ results: bindings, next_id: next_page_token })]
+
+      result = RubyProf.stop
+      puts " =========================================================\n\n\n\n\n\n\n"
+      printer = RubyProf::GraphPrinter.new(result)
+      printer.print(STDOUT, {})
+      response
     end
 
     private

@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-
+gem 'ruby-prof'
 gem 'addressable'
 gem 'allowy', '>= 2.1.0'
 gem 'clockwork', require: false
