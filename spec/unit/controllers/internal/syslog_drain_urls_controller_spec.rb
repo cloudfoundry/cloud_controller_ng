@@ -222,7 +222,7 @@ module VCAP::CloudController
           end
         end
 
-        it 'eventuallies return entire collection, batch after batch' do
+        it 'eventually returns the entire collection, batch after batch' do
           apps       = {}
           total_size = AppModel.count
 
@@ -287,249 +287,272 @@ module VCAP::CloudController
     end
 
     describe 'GET /internal/v5/syslog_drain_urls' do
-      let(:app_obj2) { AppModel.make(name: 'app-2', space: space) }
-      let(:app_obj3) { AppModel.make(name: 'app-3', space: space) }
-      let(:app_obj4) { AppModel.make(name: 'app-4', space: space) }
-      let(:instance3) { UserProvidedServiceInstance.make(space: app_obj2.space) }
-      let(:instance4) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-      let(:instance5) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-      let(:instance6) { UserProvidedServiceInstance.make(space: app_obj4.space) }
-      let(:instance7) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance8) { UserProvidedServiceInstance.make(space: app_obj2.space) }
-      let(:instance9) { UserProvidedServiceInstance.make(space: app_obj3.space) }
-      let(:instance10) { UserProvidedServiceInstance.make(space: app_obj4.space) }
-      let(:instance11) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance12) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance13) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance14) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let(:instance15) { UserProvidedServiceInstance.make(space: app_obj.space) }
-      let!(:binding_with_drain3) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3) }
-      let!(:binding_with_drain4) do
-        ServiceBinding.make(
-          syslog_drain_url: 'barfoo',
-          app: app_obj3,
-          service_instance: instance4,
-          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-        )
-      end
-      let!(:binding_with_drain5) do
-        ServiceBinding.make(
-          syslog_drain_url: 'barfoo2',
-          app: app_obj,
-          service_instance: instance7,
-          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-        )
-      end
-      let!(:binding_with_drain6) do
-        ServiceBinding.make(
-          syslog_drain_url: 'barfoo2',
-          app: app_obj2,
-          service_instance: instance8,
-          credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
-        )
-      end
-      let!(:binding_with_drain7) do
-        ServiceBinding.make(
-          syslog_drain_url: 'barfoo2',
-          app: app_obj3,
-          service_instance: instance5,
-          credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
-        )
-      end
-      let!(:binding_with_drain8) do
-        ServiceBinding.make(
-          syslog_drain_url: 'barfoo2',
-          app: app_obj4,
-          service_instance: instance6,
-          credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
-        )
-      end
-      let!(:binding_with_drain9) do
-        ServiceBinding.make(
-          syslog_drain_url: 'no_credentials_1',
-          app: app_obj3,
-          service_instance: instance9,
-          credentials: nil
-        )
-      end
-      let!(:binding_with_drain10) do
-        ServiceBinding.make(
-          syslog_drain_url: 'no_credentials_2',
-          app: app_obj4,
-          service_instance: instance10,
-          credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
-        )
-      end
-      let!(:binding_with_drain11) do
-        ServiceBinding.make(
-          syslog_drain_url: 'no_credentials_3',
-          app: app_obj,
-          service_instance: instance11,
-          credentials: { 'foo' => '', 'cert' => '', 'ca' => '' }
-        )
-      end
-      let!(:binding_with_drain12) do
-        ServiceBinding.make(
-          syslog_drain_url: 'collision_test',
-          app: app_obj,
-          service_instance: instance12,
-          credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
-        )
-      end
-      let!(:binding_with_drain13) do
-        ServiceBinding.make(
-          syslog_drain_url: 'collision_test',
-          app: app_obj,
-          service_instance: instance13,
-          credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' }
-        )
-      end
-      let!(:binding_with_drain14) do
-        ServiceBinding.make(
-          syslog_drain_url: 'collision_test',
-          app: app_obj,
-          service_instance: instance14,
-          credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' }
-        )
-      end
-      let!(:binding_with_drain15) do
-        ServiceBinding.make(
-          syslog_drain_url: 'collision_test',
-          app: app_obj,
-          service_instance: instance15,
-          credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' }
-        )
+      context 'basic functionality' do
+        let(:app_obj2) { AppModel.make(name: 'app-2', space: space) }
+        let(:app_obj3) { AppModel.make(name: 'app-3', space: space) }
+        let(:app_obj4) { AppModel.make(name: 'app-4', space: space) }
+        let(:app_obj5) { AppModel.make(name: 'app-5', space: space) }
+        let(:instance3) { UserProvidedServiceInstance.make(space: app_obj2.space) }
+        let(:instance4) { UserProvidedServiceInstance.make(space: app_obj3.space) }
+        let(:instance5) { UserProvidedServiceInstance.make(space: app_obj3.space) }
+        let(:instance6) { UserProvidedServiceInstance.make(space: app_obj4.space) }
+        let(:instance7) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:instance8) { UserProvidedServiceInstance.make(space: app_obj2.space) }
+        let(:instance9) { UserProvidedServiceInstance.make(space: app_obj3.space) }
+        let(:instance10) { UserProvidedServiceInstance.make(space: app_obj4.space) }
+        let(:instance11) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:instance12) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:instance13) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:instance14) { UserProvidedServiceInstance.make(space: app_obj.space) }
+        let(:instance15) { UserProvidedServiceInstance.make(space: app_obj.space) }
+
+        before do
+          ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj2, service_instance: instance3)
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo',
+            app: app_obj3,
+            service_instance: instance4,
+            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo2',
+            app: app_obj,
+            service_instance: instance7,
+            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo2',
+            app: app_obj2,
+            service_instance: instance8,
+            credentials: { 'cert' => 'cert1', 'key' => 'key1', 'ca' => 'ca1' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo2',
+            app: app_obj3,
+            service_instance: instance5,
+            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo2',
+            app: app_obj4,
+            service_instance: instance6,
+            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'barfoo2',
+            app: app_obj5,
+            service_instance: instance6,
+            credentials: { 'cert' => 'cert2', 'key' => 'key2', 'ca' => 'ca2' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'no_credentials_1',
+            app: app_obj3,
+            service_instance: instance9,
+            credentials: nil
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'no_credentials_2',
+            app: app_obj4,
+            service_instance: instance10,
+            credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'no_credentials_3',
+            app: app_obj,
+            service_instance: instance11,
+            credentials: { 'foo' => '', 'cert' => '', 'ca' => '' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'collision_test',
+            app: app_obj,
+            service_instance: instance12,
+            credentials: { 'cert' => '', 'key' => '', 'ca' => '' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'collision_test',
+            app: app_obj,
+            service_instance: instance13,
+            credentials: { 'cert' => 'has-cert', 'key' => '', 'ca' => '' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'collision_test',
+            app: app_obj,
+            service_instance: instance14,
+            credentials: { 'cert' => '', 'key' => 'has-key', 'ca' => '' }
+          )
+
+          ServiceBinding.make(
+            syslog_drain_url: 'collision_test',
+            app: app_obj,
+            service_instance: instance15,
+            credentials: { 'key' => '', 'cert' => '', 'ca' => 'has-ca' }
+          )
+        end
+
+        it 'returns a list of syslog drain urls and their credentials' do
+          get '/internal/v5/syslog_drain_urls', '{}'
+          expect(last_response).to be_successful
+
+          sorted_results = decoded_results.sort { |a, b| a['url'] <=> b['url'] }.each do |binding|
+            binding['credentials'].sort! { |a, b| [a['key'], a['cert'], a['ca']] <=> [b['key'], b['cert'], b['ca']] }.each do |credential|
+              credential['apps'].sort! { |a, b| a['hostname'] <=> b['hostname'] }
+            end
+          end
+
+          expect(sorted_results.count).to eq(8)
+
+          expect(sorted_results).to eq(
+            [
+              { 'url' => 'barfoo',
+                'credentials' => [
+                  { 'cert' => 'cert1',
+                    'key' => 'key1',
+                    'ca' => 'ca1',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
+                ] },
+              { 'url' => 'barfoo2',
+                'credentials' => [
+                  { 'cert' => 'cert1',
+                    'key' => 'key1',
+                    'ca' => 'ca1',
+                    'apps' => [
+                      { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                      { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
+                    ] },
+                  { 'cert' => 'cert2',
+                    'key' => 'key2',
+                    'ca' => 'ca2',
+                    'apps' => [
+                      { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
+                      { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid },
+                      { 'hostname' => 'org-1.space-1.app-5', 'app_id' => app_obj5.guid }
+                    ] }
+                ] },
+              { 'url' => 'collision_test',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => 'has-ca',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                  { 'cert' => 'has-cert',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
+                  { 'cert' => '',
+                    'key' => 'has-key',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
+                ] },
+              { 'url' => 'fish%2cfinger',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
+                ] },
+              { 'url' => 'foobar',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [
+                      { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
+                      { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
+                    ] }
+                ] },
+              { 'url' => 'no_credentials_1',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
+                ] },
+              { 'url' => 'no_credentials_2',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }
+                ] },
+              { 'url' => 'no_credentials_3',
+                'credentials' => [
+                  { 'cert' => '',
+                    'key' => '',
+                    'ca' => '',
+                    'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
+                ] }
+            ]
+          )
+        end
+
+        it 'supports paging' do
+          get '/internal/v5/syslog_drain_urls', {
+            'batch_size' => 2
+          }
+          expect(last_response).to be_successful
+          expect(decoded_next_id).to be(2)
+          get '/internal/v5/syslog_drain_urls', {
+            'batch_size' => 2,
+            'next_id' => decoded_next_id
+          }
+          expect(last_response).to be_successful
+          expect(decoded_next_id).to be(4)
+          get '/internal/v5/syslog_drain_urls', {
+            'batch_size' => 2,
+            'next_id' => decoded_next_id
+          }
+          expect(last_response).to be_successful
+          expect(decoded_next_id).to be(6)
+          get '/internal/v5/syslog_drain_urls', {
+            'batch_size' => 2,
+            'next_id' => decoded_next_id
+          }
+          expect(last_response).to be_successful
+          expect(decoded_next_id).to be(8)
+          get '/internal/v5/syslog_drain_urls', {
+            'batch_size' => 2,
+            'next_id' => decoded_next_id
+          }
+          expect(decoded_next_id).to be_nil
+          expect(decoded_results.length).to be(0)
+        end
       end
 
-      it 'returns a list of syslog drain urls and their credentials' do
-        get '/internal/v5/syslog_drain_urls', '{}'
-        expect(last_response).to be_successful
-
-        sorted_results = decoded_results.sort { |a, b| a['url'] <=> b['url'] }.each do |binding|
-          binding['credentials'].sort! { |a, b| [a['key'], a['cert'], a['ca']] <=> [b['key'], b['cert'], b['ca']] }.each do |credential|
-            credential['apps'].sort! { |a, b| a['hostname'] <=> b['hostname'] }
+      describe 'endpoint optimizations' do
+        before do
+          ServiceBinding.dataset.delete
+          10.times do
+            ServiceBinding.make(syslog_drain_url: 'foodbar.example.com', app: AppModel.make(space: instance1.space), service_instance: instance1)
           end
         end
 
-        expect(sorted_results.count).to eq(8)
+        it 'only calls .credentials once on the binding' do
+          receive_count = 0
+          allow_any_instance_of(ServiceBinding).to receive(:credentials) do
+            receive_count += 1
+            {}
+          end
 
-        expect(sorted_results).to eq(
-          [
-            { 'url' => 'barfoo',
-              'credentials' => [
-                { 'cert' => 'cert1',
-                  'key' => 'key1',
-                  'ca' => 'ca1',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
-              ] },
-            { 'url' => 'barfoo2',
-              'credentials' => [
-                { 'cert' => 'cert1',
-                  'key' => 'key1',
-                  'ca' => 'ca1',
-                  'apps' => [
-                    { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
-                  ] },
-                { 'cert' => 'cert2',
-                  'key' => 'key2',
-                  'ca' => 'ca2',
-                  'apps' => [
-                    { 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid },
-                    { 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }
-                  ] }
-              ] },
-            { 'url' => 'collision_test',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => 'has-ca',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
-                { 'cert' => 'has-cert',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] },
-                { 'cert' => '',
-                  'key' => 'has-key',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
-              ] },
-            { 'url' => 'fish%2cfinger',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
-              ] },
-            { 'url' => 'foobar',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [
-                    { 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid },
-                    { 'hostname' => 'org-1.space-1.app-2', 'app_id' => app_obj2.guid }
-                  ] }
-              ] },
-            { 'url' => 'no_credentials_1',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-3', 'app_id' => app_obj3.guid }] }
-              ] },
-            { 'url' => 'no_credentials_2',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-4', 'app_id' => app_obj4.guid }] }
-              ] },
-            { 'url' => 'no_credentials_3',
-              'credentials' => [
-                { 'cert' => '',
-                  'key' => '',
-                  'ca' => '',
-                  'apps' => [{ 'hostname' => 'org-1.space-1.app-1', 'app_id' => app_obj.guid }] }
-              ] }
-          ]
-        )
-      end
-
-      it 'supports paging' do
-        get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2
-        }
-        expect(last_response).to be_successful
-        expect(decoded_next_id).to be(2)
-        get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2,
-          'next_id' => decoded_next_id
-        }
-        expect(last_response).to be_successful
-        expect(decoded_next_id).to be(4)
-        get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2,
-          'next_id' => decoded_next_id
-        }
-        expect(last_response).to be_successful
-        expect(decoded_next_id).to be(6)
-        get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2,
-          'next_id' => decoded_next_id
-        }
-        expect(last_response).to be_successful
-        expect(decoded_next_id).to be(8)
-        get '/internal/v5/syslog_drain_urls', {
-          'batch_size' => 2,
-          'next_id' => decoded_next_id
-        }
-        expect(decoded_next_id).to be_nil
-        expect(decoded_results.length).to be(0)
+          get '/internal/v5/syslog_drain_urls', { batch_size: 100 }
+          expect(last_response).to be_successful
+          expect(receive_count).to eq(1)
+        end
       end
     end
 
