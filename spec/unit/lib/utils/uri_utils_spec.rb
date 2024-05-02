@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'utils/uri_utils'
 
 RSpec.describe UriUtils do
@@ -48,6 +49,58 @@ RSpec.describe UriUtils do
 
     it 'is true if it is a uri' do
       expect(UriUtils.is_buildpack_uri?('http://www.example.com/foobar?baz=bar')).to be true
+    end
+  end
+
+  describe '.is_cnb_buildpack_uri?' do
+    it 'is false if the object is not a string' do
+      expect(UriUtils.is_cnb_buildpack_uri?(1)).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?({})).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?([])).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?(nil)).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?(-> {})).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?(:'www.example.com/path/to/thing')).to be false
+      expect(UriUtils.is_cnb_buildpack_uri?(1.to_c)).to be false
+    end
+
+    it 'is false if it is an git url' do
+      expect(UriUtils.is_cnb_buildpack_uri?('git://user@example.com:repo.git')).to be false
+    end
+
+    it 'is false if it is an ssh git url' do
+      expect(UriUtils.is_cnb_buildpack_uri?('ssh://git@example.com:repo.git')).to be false
+    end
+
+    it 'is true if it is a http uri' do
+      expect(UriUtils.is_cnb_buildpack_uri?('http://www.example.com/foobar?baz=bar')).to be true
+    end
+
+    it 'is true if it is a https uri' do
+      expect(UriUtils.is_cnb_buildpack_uri?('https://www.example.com/foobar?baz=bar')).to be true
+    end
+
+    it 'is true if it is a uri with docker scheme' do
+      expect(UriUtils.is_cnb_buildpack_uri?('docker://nginx')).to be true
+    end
+
+    it 'is true if it is a uri with docker scheme with tag' do
+      expect(UriUtils.is_cnb_buildpack_uri?('docker://nginx:latest')).to be true
+    end
+
+    it 'is true if it is a uri with docker scheme with registry, port and tag' do
+      expect(UriUtils.is_cnb_buildpack_uri?('docker://registry.corp:1111/nginx:latest')).to be true
+    end
+
+    it 'returns false if it is an invalid https uri' do
+      expect(UriUtils.is_cnb_buildpack_uri?('https://nginx:latest')).to be false
+    end
+
+    it 'returns false if it is an invalid docker uri' do
+      expect(UriUtils.is_cnb_buildpack_uri?('docker://nginx?latest')).to be false
+    end
+
+    it 'is false if it is a uri without any scheme' do
+      expect(UriUtils.is_cnb_buildpack_uri?('nginx')).to be false
     end
   end
 
