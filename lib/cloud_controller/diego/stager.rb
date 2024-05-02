@@ -41,10 +41,13 @@ module VCAP::CloudController
       end
 
       def completion_handler(build)
-        if build.lifecycle_type == Lifecycles::BUILDPACK
+        case build.lifecycle_type
+        when Lifecycles::BUILDPACK
           Diego::Buildpack::StagingCompletionHandler.new(build)
-        elsif build.lifecycle_type == Lifecycles::DOCKER
+        when Lifecycles::DOCKER
           Diego::Docker::StagingCompletionHandler.new(build)
+        when Lifecycles::CNB
+          Diego::CNB::StagingCompletionHandler.new(build)
         else
           raise "Unprocessable lifecycle type for stager: #{build.lifecycle_type}"
         end

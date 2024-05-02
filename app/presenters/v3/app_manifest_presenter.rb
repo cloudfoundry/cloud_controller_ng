@@ -6,6 +6,7 @@ require 'presenters/v3/app_manifest_presenters/route_properties_presenter'
 require 'presenters/v3/app_manifest_presenters/metadata_presenter'
 require 'presenters/v3/app_manifest_presenters/process_properties_presenter'
 require 'presenters/v3/app_manifest_presenters/sidecar_properties_presenter'
+require 'presenters/v3/app_manifest_presenters/lifecycle_presenter'
 
 module VCAP::CloudController
   module Presenters
@@ -13,6 +14,7 @@ module VCAP::CloudController
       class AppManifestPresenter
         PROPERTY_PRESENTERS = [
           AppManifestPresenters::NameEnvPresenter.new,
+          AppManifestPresenters::LifecyclePresenter.new,
           AppManifestPresenters::DockerPresenter.new,
           AppManifestPresenters::BuildpackPresenter.new,
           AppManifestPresenters::ServicesPropertiesPresenter.new,

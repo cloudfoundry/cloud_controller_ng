@@ -4,6 +4,8 @@ require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
+require 'cloud_controller/diego/cnb/lifecycle_protocol'
+require 'cloud_controller/diego/cnb/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController
@@ -16,6 +18,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if process.docker? && FeatureFlag.disabled?(:diego_docker)
 
       raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty') if process.package_hash.blank?
+
+      raise CloudController::Errors::ApiError.new_from_details('CNBDisabled') if process.cnb? && FeatureFlag.disabled?(:diego_cnb)
 
       return unless Buildpack.empty? && using_admin_buildpack?(process.app.lifecycle_data.buildpacks)
 
