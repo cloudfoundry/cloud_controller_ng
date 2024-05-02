@@ -10,6 +10,12 @@ module VCAP::CloudController
                 key: :buildpack_lifecycle_data_guid,
                 without_guid_generation: true
 
+    many_to_one :cnb_lifecycle_data,
+                class: 'VCAP::CloudController::CNBLifecycleDataModel',
+                primary_key: :guid,
+                key: :cnb_lifecycle_data_guid,
+                without_guid_generation: true
+
     def name
       buildpack_url || admin_buildpack_name
     end
@@ -23,7 +29,7 @@ module VCAP::CloudController
         errors.add(:base, Sequel.lit('Must specify either a buildpack_url or an admin_buildpack_name'))
       elsif admin_buildpack_name.present?
         errors.add(:admin_buildpack_name, Sequel.lit("Specified unknown buildpack name: \"#{admin_buildpack_name}\"")) if Buildpack.find(name: admin_buildpack_name).nil?
-      elsif !UriUtils.is_buildpack_uri?(buildpack_url)
+      elsif (!UriUtils.is_buildpack_uri?(buildpack_url) && !buildpack_lifecycle_data.nil?) || (!UriUtils.is_cnb_buildpack_uri?(buildpack_url) && !cnb_lifecycle_data.nil?)
         errors.add(:buildpack_url, Sequel.lit("Specified invalid buildpack URL: \"#{buildpack_url}\""))
       end
     end

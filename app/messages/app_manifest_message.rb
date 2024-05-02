@@ -31,6 +31,7 @@ module VCAP::CloudController
       instances
       metadata
       memory
+      lifecycle
       name
       no_route
       processes
@@ -69,6 +70,7 @@ module VCAP::CloudController
     validate :validate_app_update_message!
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
+    validate :validate_cnb_buildpacks!, if: ->(record) { record.lifecycle == 'cnb' }
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
@@ -119,7 +121,13 @@ module VCAP::CloudController
     end
 
     def app_lifecycle_hash
-      lifecycle_data = requested?(:docker) ? docker_lifecycle_data : buildpacks_lifecycle_data
+      lifecycle_data = if requested?(:lifecycle) && @lifecycle == 'cnb'
+                         cnb_lifecycle_data
+                       elsif requested?(:docker)
+                         docker_lifecycle_data
+                       else
+                         buildpacks_lifecycle_data
+                       end
 
       {
         lifecycle: lifecycle_data,
@@ -271,6 +279,25 @@ module VCAP::CloudController
 
     def docker_lifecycle_data
       { type: Lifecycles::DOCKER }
+    end
+
+    def cnb_lifecycle_data
+      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
+
+      if requested?(:buildpacks)
+        requested_buildpacks = @buildpacks
+      elsif requested?(:buildpack)
+        requested_buildpacks = []
+        requested_buildpacks.push(@buildpack)
+      end
+
+      {
+        type: Lifecycles::CNB,
+        data: {
+          buildpacks: requested_buildpacks,
+          stack: @stack
+        }.compact
+      }
     end
 
     def buildpacks_lifecycle_data
@@ -446,6 +473,12 @@ module VCAP::CloudController
       FeatureFlag.raise_unless_enabled!(:diego_docker) if requested?(:docker)
     rescue StandardError => e
       errors.add(:base, e.message)
+    end
+
+    def validate_cnb_buildpacks!
+      return if requested?(:lifecycle) && @lifecycle == 'cnb' && (requested?(:buildpack) || requested?(:buildpacks))
+
+      errors.add(:base, 'Buildpack(s) must be specified when using Cloud Native Buildpacks')
     end
 
     def validate_docker_buildpacks_combination!
