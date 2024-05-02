@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'utils/uri_utils'
 
 module VCAP::CloudController
   RSpec.describe DockerURIConverter do
@@ -129,7 +130,7 @@ module VCAP::CloudController
       it('errors') do
         expect do
           converter.convert image_url
-        end.to raise_error(DockerURIConverter::InvalidDockerURI, 'Docker URI [https://docker.io/repo] should not contain scheme')
+        end.to raise_error(UriUtils::InvalidDockerURI, 'Docker URI [https://docker.io/repo] should not contain scheme')
       end
     end
   end
