@@ -495,6 +495,7 @@ module VCAP::CloudController
 
     def active?
       return false if docker? && !FeatureFlag.enabled?(:diego_docker)
+      return false if cnb? && !FeatureFlag.enabled?(:diego_cnb)
 
       true
     end

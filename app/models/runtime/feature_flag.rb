@@ -13,6 +13,7 @@ module VCAP::CloudController
       route_creation: true,
       service_instance_creation: true,
       diego_docker: false,
+      diego_cnb: false,
       set_roles_by_username: true,
       unset_roles_by_username: true,
       task_creation: true,

@@ -46,6 +46,7 @@ class BuildsController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
 
     lifecycle = LifecycleProvider.provide(package, message)
+    FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
