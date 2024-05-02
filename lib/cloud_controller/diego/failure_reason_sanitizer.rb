@@ -1,13 +1,20 @@
 module VCAP::CloudController
   module Diego
     module CCMessages
-      STAGING_ERROR            = 'StagingError'.freeze
-      INSUFFICIENT_RESOURCES   = 'InsufficientResources'.freeze
-      NO_COMPATIBLE_CELL       = 'NoCompatibleCell'.freeze
-      CELL_COMMUNICATION_ERROR = 'CellCommunicationError'.freeze
-      BUILDPACK_DETECT_FAILED  = 'NoAppDetectedError'.freeze
-      BUILDPACK_COMPILE_FAILED = 'BuildpackCompileFailed'.freeze
-      BUILDPACK_RELEASE_FAILED = 'BuildpackReleaseFailed'.freeze
+      STAGING_ERROR                 = 'StagingError'.freeze
+      INSUFFICIENT_RESOURCES        = 'InsufficientResources'.freeze
+      NO_COMPATIBLE_CELL            = 'NoCompatibleCell'.freeze
+      CELL_COMMUNICATION_ERROR      = 'CellCommunicationError'.freeze
+      BUILDPACK_DETECT_FAILED       = 'NoAppDetectedError'.freeze
+      BUILDPACK_COMPILE_FAILED      = 'BuildpackCompileFailed'.freeze
+      BUILDPACK_RELEASE_FAILED      = 'BuildpackReleaseFailed'.freeze
+      CNB_GENERIC_BUILD_FAILED      = 'CNBGenericBuildFailed'.freeze
+      CNB_DOWNLOAD_BUILDPACK_FAILED = 'CNBDownloadBuildpackFailed'.freeze
+      CNB_DETECTING_FAILED          = 'CNBDetectFailed'.freeze
+      CNB_BUILDING_FAILED           = 'CNBBuildFailed'.freeze
+      CNB_EXPORTING_FAILED          = 'CNBExportFailed'.freeze
+      CNB_LAUNCHING_FAILED          = 'CNBLaunchFailed'.freeze
+      CNB_RESTORING_FAILED          = 'CNBRestoreFailed'.freeze
     end
 
     module DiegoErrors
@@ -36,6 +43,27 @@ module VCAP::CloudController
           message = staging_failed
         elsif message.ends_with?('224')
           id = CCMessages::BUILDPACK_RELEASE_FAILED
+          message = staging_failed
+        elsif message.ends_with?('231')
+          id = CCMessages::CNB_GENERIC_BUILD_FAILED
+          message = staging_failed
+        elsif message.ends_with?('232')
+          id = CCMessages::CNB_DOWNLOAD_BUILDPACK_FAILED
+          message = staging_failed
+        elsif message.ends_with?('233')
+          id = CCMessages::CNB_DETECTING_FAILED
+          message = staging_failed
+        elsif message.ends_with?('234')
+          id = CCMessages::CNB_BUILDING_FAILED
+          message = staging_failed
+        elsif message.ends_with?('235')
+          id = CCMessages::CNB_EXPORTING_FAILED
+          message = staging_failed
+        elsif message.ends_with?('236')
+          id = CCMessages::CNB_LAUNCHING_FAILED
+          message = staging_failed
+        elsif message.ends_with?('237')
+          id = CCMessages::CNB_RESTORING_FAILED
           message = staging_failed
         elsif message.starts_with?(DiegoErrors::INSUFFICIENT_RESOURCES_MESSAGE)
           id = CCMessages::INSUFFICIENT_RESOURCES
