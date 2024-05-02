@@ -152,7 +152,7 @@ class DropletsController < ApplicationController
 
     unauthorized! unless permission_queryer.can_download_droplet?(droplet.space.id, droplet.space.organization_id)
 
-    unprocessable!("Cannot download droplets with 'docker' lifecycle.") unless droplet.buildpack?
+    unprocessable!("Cannot download droplets with 'docker' lifecycle.") if droplet.docker?
 
     unprocessable!('Only staged droplets can be downloaded.') unless droplet.staged?
 

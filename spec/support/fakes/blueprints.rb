@@ -62,6 +62,13 @@ module VCAP::CloudController
     kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save) }
   end
 
+  AppModel.blueprint(:cnb) do
+    name { Sham.name }
+    space { Space.make }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    cnb_lifecycle_data { CNBLifecycleDataModel.make(app: object.save) }
+  end
+
   AppModel.blueprint(:docker) do
     name { Sham.name }
     space { Space.make }
@@ -132,11 +139,22 @@ module VCAP::CloudController
     buildpack_receipt_buildpack { 'a-buildpack' }
     buildpack_receipt_buildpack_guid { Sham.guid }
     buildpack_receipt_detect_output { 'buildpack-output' }
-    docker_receipt_image { 'docker-iamge' }
+    docker_receipt_image { 'docker-image' }
     package_guid { Sham.guid }
     build_guid { Sham.guid }
     docker_receipt_username { 'a-user' }
     sidecars { 'a-sidecar' }
+  end
+
+  DropletModel.blueprint(:cnb) do
+    guid { Sham.guid }
+    droplet_hash { nil }
+    sha256_checksum { nil }
+    state { VCAP::CloudController::DropletModel::STAGED_STATE }
+    app { AppModel.make(:cnb, droplet_guid: guid) }
+    cnb_lifecycle_data { CNBLifecycleDataModel.make(droplet: object.save) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    kpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
   DropletModel.blueprint(:docker) do
@@ -616,6 +634,10 @@ module VCAP::CloudController
     stack { nil }
   end
 
+  CustomBuildpack.blueprint do
+    url { 'http://acme.com' }
+  end
+
   BuildpackLifecycleDataModel.blueprint do
     buildpacks { nil }
     stack { Stack.make.name }
@@ -627,6 +649,19 @@ module VCAP::CloudController
     app_guid { Sham.guid }
     droplet_guid { Sham.guid }
     admin_buildpack_name { 'admin-bp' }
+    build { BuildModel.make }
+  end
+
+  CNBLifecycleDataModel.blueprint do
+    buildpacks { nil }
+    stack { Stack.make.name }
+  end
+
+  CNBLifecycleDataModel.blueprint(:all_fields) do
+    buildpacks { ['docker://gcr.io/paketo-buildpacks/nodejs'] }
+    stack { Stack.make.name }
+    app_guid { Sham.guid }
+    droplet_guid { Sham.guid }
     build { BuildModel.make }
   end
 
@@ -642,6 +677,7 @@ module VCAP::CloudController
 
   BuildpackLifecycleBuildpackModel.blueprint(:all_fields) do
     buildpack_lifecycle_data_guid { BuildpackLifecycleDataModel.make.guid }
+    cnb_lifecycle_data_guid { CNBLifecycleDataModel.make.guid }
     version { Sham.version }
     buildpack_name { Sham.name }
   end

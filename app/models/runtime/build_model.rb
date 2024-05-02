@@ -37,19 +37,24 @@ module VCAP::CloudController
                class: 'VCAP::CloudController::KpackLifecycleDataModel',
                key: :build_guid,
                primary_key: :guid
+    one_to_one :cnb_lifecycle_data,
+               class: 'VCAP::CloudController::CNBLifecycleDataModel',
+               key: :build_guid,
+               primary_key: :guid
 
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
     one_to_many :labels, class: 'VCAP::CloudController::BuildLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::BuildAnnotationModel', key: :resource_guid, primary_key: :guid
 
-    add_association_dependencies buildpack_lifecycle_data: :destroy, kpack_lifecycle_data: :destroy
+    add_association_dependencies buildpack_lifecycle_data: :destroy, kpack_lifecycle_data: :destroy, cnb_lifecycle_data: :destroy
 
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
     def lifecycle_type
       return Lifecycles::BUILDPACK if buildpack_lifecycle_data
+      return Lifecycles::CNB if cnb_lifecycle_data
 
       Lifecycles::DOCKER
     end
@@ -58,8 +63,13 @@ module VCAP::CloudController
       lifecycle_type == Lifecycles::BUILDPACK
     end
 
+    def cnb_lifecycle?
+      lifecycle_type == Lifecycles::CNB
+    end
+
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
+      return cnb_lifecycle_data if cnb_lifecycle_data
 
       DockerLifecycleDataModel.new
     end

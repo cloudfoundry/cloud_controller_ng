@@ -2,6 +2,7 @@ require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/serializer'
 require 'models/helpers/process_types'
 require 'hashdiff'
+require 'models/runtime/cnb_lifecycle_data_model'
 
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
@@ -54,11 +55,17 @@ module VCAP::CloudController
                key: :app_guid,
                primary_key: :guid
 
+    one_to_one :cnb_lifecycle_data,
+               class: 'VCAP::CloudController::CNBLifecycleDataModel',
+               key: :app_guid,
+               primary_key: :guid
+
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
     add_association_dependencies kpack_lifecycle_data: :destroy
+    add_association_dependencies cnb_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
@@ -82,12 +89,14 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
+      return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
 
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
+      return cnb_lifecycle_data if cnb_lifecycle_data
 
       DockerLifecycleDataModel.new
     end
@@ -113,6 +122,10 @@ module VCAP::CloudController
 
     def buildpack?
       lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def cnb?
+      lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def stopped?

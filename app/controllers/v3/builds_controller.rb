@@ -39,7 +39,7 @@ class BuildsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: message.package_guid).
-              eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).first
+              eager(:app, :space, space: :organization, app: %i[buildpack_lifecycle_data cnb_lifecycle_data]).first
     unprocessable_package! unless package &&
                                   permission_queryer.can_manage_apps_in_active_space?(package.space.id) && permission_queryer.is_space_active?(package.space.id)
 
