@@ -3,6 +3,7 @@ require 'cloud_controller/diego/runner'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
+require 'cloud_controller/diego/cnb/lifecycle_protocol'
 require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController

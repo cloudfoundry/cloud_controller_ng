@@ -183,7 +183,8 @@ module VCAP::CloudController::Validators
 
       data_message_class_table = {
         lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage
+        lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
+        lifecycles::CNB => VCAP::CloudController::BuildpackLifecycleDataMessage
       }
 
       lifecycle_data_message_class = data_message_class_table[lifecycle_type]

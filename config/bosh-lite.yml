@@ -257,6 +257,7 @@ diego:
     "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
     "buildpack/windows": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
+    "cnb/cflinuxfs4": "cnb_app_lifecycle/cnb_app_lifecycle.tgz"
   insecure_docker_registry_list: []
   docker_staging_stack: 'cflinuxfs4'
   bbs:
