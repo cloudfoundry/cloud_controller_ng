@@ -423,6 +423,16 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'when process disappeared' do
+            before do
+              process.destroy
+            end
+
+            it 'return an empty object' do
+              expect(ri).to be_empty
+            end
+          end
         end
       end
     end

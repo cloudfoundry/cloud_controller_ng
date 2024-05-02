@@ -9,13 +9,17 @@ module VCAP::CloudController
         end
 
         def routing_info
-          http_info_obj = http_info
-          tcp_info_obj  = tcp_info
+          process_eager = ProcessModel.eager(route_mappings: { route: %i[domain route_binding] }).where(id: process.id).all
+
+          return {} if process_eager.empty?
+
+          http_info_obj = http_info(process_eager)
+          tcp_info_obj  = tcp_info(process_eager)
 
           route_info                    = {}
           route_info['http_routes']     = http_info_obj if http_info_obj.present?
           route_info['tcp_routes']      = tcp_info_obj if tcp_info_obj.present?
-          route_info['internal_routes'] = internal_routes
+          route_info['internal_routes'] = internal_routes(process_eager)
           route_info
         rescue RoutingApi::RoutingApiDisabled
           raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
@@ -27,8 +31,8 @@ module VCAP::CloudController
 
         private
 
-        def http_info
-          route_mappings = process.route_mappings.reject do |route_mapping|
+        def http_info(process_eager)
+          route_mappings = process_eager[0].route_mappings.reject do |route_mapping|
             route_mapping.route.internal? || route_mapping.route.tcp?
           end
 
@@ -43,8 +47,8 @@ module VCAP::CloudController
           end
         end
 
-        def tcp_info
-          route_mappings = process.route_mappings.select do |route_mapping|
+        def tcp_info(process_eager)
+          route_mappings = process_eager[0].route_mappings.select do |route_mapping|
             r = route_mapping.route
             r.tcp? && !r.internal?
           end
@@ -58,8 +62,13 @@ module VCAP::CloudController
           end
         end
 
-        def internal_routes
-          process.routes.select(&:internal?).map do |r|
+        def internal_routes(process_eager)
+          route_mappings = process_eager[0].route_mappings.select do |route_mapping|
+            route_mapping.route.internal?
+          end
+
+          route_mappings.map do |route_mapping|
+            r = route_mapping.route
             { 'hostname' => "#{r.host}.#{r.domain.name}" }
           end
         end
