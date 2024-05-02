@@ -70,6 +70,7 @@ module VCAP::CloudController
     validate :validate_app_update_message!
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
+    validate :validate_cnb_enabled!
     validate :validate_cnb_buildpacks!, if: ->(record) { record.lifecycle == 'cnb' }
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
@@ -471,6 +472,12 @@ module VCAP::CloudController
 
     def validate_docker_enabled!
       FeatureFlag.raise_unless_enabled!(:diego_docker) if requested?(:docker)
+    rescue StandardError => e
+      errors.add(:base, e.message)
+    end
+
+    def validate_cnb_enabled!
+      FeatureFlag.raise_unless_enabled!(:diego_cnb) if requested?(:lifecycle) && @lifecycle == 'cnb'
     rescue StandardError => e
       errors.add(:base, e.message)
     end

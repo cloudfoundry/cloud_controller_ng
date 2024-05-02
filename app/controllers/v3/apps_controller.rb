@@ -94,8 +94,8 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
     FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
-
     lifecycle = AppLifecycleProvider.provide_for_create(message)
+    FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(user_audit_info).create(message, lifecycle)
@@ -166,6 +166,7 @@ class AppsV3Controller < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
     AppStart.start(app:, user_audit_info:)
     TelemetryLogger.v3_emit(
@@ -208,6 +209,7 @@ class AppsV3Controller < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(

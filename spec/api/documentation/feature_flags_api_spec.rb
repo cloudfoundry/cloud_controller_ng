@@ -18,7 +18,7 @@ RSpec.resource 'Feature Flags', type: %i[api legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(17)
+      expect(parsed_response.length).to eq(18)
       expect(parsed_response).to include(
         {
           'name' => 'user_org_creation',
