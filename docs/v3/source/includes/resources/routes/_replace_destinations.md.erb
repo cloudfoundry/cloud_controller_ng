@@ -79,7 +79,10 @@ Content-Type: application/json
 
 Replaces all destinations for a route, removing any destinations not included in the provided list.
 
-If using weighted destinations, all destinations provided here must have a `weight` specified, and all weights
+Weighted destinations are **deprecated**. Development of the experimental Istio Service Mesh routing layer
+was discontinued in 2020 and is no longer supported by the platform. Specifying a `weight` for a destination will take no effect.
+
+If weighted destinations are provided, however, all destinations provided here must have a `weight` specified, and all weights
 for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted
 and unweighted destinations for a route is not allowed.
 
