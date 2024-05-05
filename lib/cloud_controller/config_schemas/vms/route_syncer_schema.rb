@@ -35,10 +35,7 @@ module VCAP::CloudController
               keys: Hash,
               current_key_label: String,
               optional(:pbkdf2_hmac_iterations) => Integer
-            },
-
-            internal_route_vip_range: String
-
+            }
           }
         end
 
