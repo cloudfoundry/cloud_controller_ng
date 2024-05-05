@@ -20,9 +20,9 @@ The recommended way to create sidecars for your app is with a [manifest](#manife
     process_types: [ 'web', 'worker' ]
     command: bundle exec run-authenticator
   - name: performance monitor
-      process_types: [ 'web' ]
-      command: bundle exec run-performance-monitor
-      memory: 128M
+    process_types: [ 'web' ]
+    command: bundle exec run-performance-monitor
+    memory: 128M
 ```
 
 
