@@ -28,7 +28,7 @@ class RulesValidator < ActiveModel::Validator
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
       if valid_destination_type(rule[:destination], record, index)
-        rule[:destination].split(',').each do |d|
+        rule[:destination].split(',', -1).each do |d|
           validate_destination(d, record, index)
         end
       end
@@ -126,6 +126,7 @@ class RulesValidator < ActiveModel::Validator
   def validate_destination(destination, record, index)
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
     error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if CloudController::RuleValidator.comma_delimited_destinations_enabled?
+    add_rule_error('empty destination specified in comma-delimited list', record, index) if destination.empty?
 
     address_list = destination.split('-')
 

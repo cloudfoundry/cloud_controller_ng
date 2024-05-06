@@ -388,6 +388,84 @@ module VCAP::CloudController::Validators
             expect(subject.errors.full_messages).to include expected_error
           end
         end
+
+        context 'empty destinations in the front are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: ',10.10.10.10,11.11.11.11',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for the missing destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(2)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            expect(subject.errors.full_messages).to include 'Rules[0]: empty destination specified in comma-delimited list'
+          end
+        end
+
+        context 'empty destinations in the middle are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.10.10.10,,11.11.11.11',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for the missing destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(2)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            expect(subject.errors.full_messages).to include 'Rules[0]: empty destination specified in comma-delimited list'
+          end
+        end
+
+        context 'empty destinations at the end are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.10.10.10,11.11.11.11,',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for the missing destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(2)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            expect(subject.errors.full_messages).to include 'Rules[0]: empty destination specified in comma-delimited list'
+          end
+        end
+
+        context 'multiple empty destinations are invalid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: ',10.10.10.10,,11.11.11.11,',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'throws an error for each missing destination' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to equal(6)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            expect(subject.errors.full_messages[0]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
+            expect(subject.errors.full_messages[2]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
+            expect(subject.errors.full_messages[4]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
+          end
+        end
       end
     end
 
